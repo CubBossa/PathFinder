@@ -1,0 +1,17 @@
+name: PathFinderSystem
+author: CubBossa
+version: 1.0.0
+main: main.de.bossascrew.pathfinder.PathSystem
+api-version: 1.15
+
+commands:
+  pathsystem:
+    desciption: setup a path system
+    aliases: [ps, paths]
+  pathsystemnew:    
+    desciption: setup a path system
+    aliases: [psn]
+  navigate:
+    description: navigate to certain spot
+  cancelpath:
+    description: cancelling particles

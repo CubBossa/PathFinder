@@ -1,0 +1,12 @@
+#
+#
+# Path finding Settings
+#
+
+editmode:
+  particles:
+    type: FLAME
+    amount: 1
+    distance: 0.3
+    frequence: 10
+    viewdistance: 50
