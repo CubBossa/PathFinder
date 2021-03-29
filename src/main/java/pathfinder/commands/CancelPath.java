@@ -9,7 +9,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import pathfinder.PathPlayer;
 import pathfinder.RoadMap;
-import pathfinder.handler.FindHandler;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
 

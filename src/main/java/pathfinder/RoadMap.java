@@ -2,6 +2,7 @@ package pathfinder;
 
 import lombok.Getter;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -57,5 +58,40 @@ public class RoadMap {
             }
         }
         return null;
+    }
+
+    public void cancelAllEditModes() {
+        //TODO informiere alle Spieler im Editmode, dass roadmap gelöscht wurde
+    }
+
+    public void delete() {
+        //TODO lösche alle visualisierungen
+    }
+
+    public void toggleEditMode(Player player) {
+        setEditMode(player, !isEditing(player));
+    }
+
+    public void setEditMode(Player player, boolean editing) {
+        if(editing) {
+            editingPlayers.add(player.getUniqueId());
+            openEditMode(player);
+        } else {
+            if(editingPlayers.contains(player.getUniqueId()))
+                editingPlayers.remove(player.getUniqueId());
+            closeEditMode(player);
+        }
+    }
+
+    public boolean isEditing(Player player) {
+        return editingPlayers.contains(player.getUniqueId());
+    }
+
+    private void openEditMode(Player player) {
+        //TODO equippe mit wichtigen Items für Editmode
+    }
+
+    private void closeEditMode(Player player) {
+        //TODO entferne Editmode items
     }
 }

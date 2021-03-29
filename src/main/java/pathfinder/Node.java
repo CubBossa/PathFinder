@@ -6,6 +6,9 @@ import org.bukkit.util.Vector;
 import pathfinder.old.system.Edge;
 import pathfinder.util.AStarNode;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,15 +20,13 @@ public class Node {
     private int roadMapId;
     private int nodeGroupId = NO_GROUP_ID;
     private Vector vector;
-    private Edge[] edges;
+    private List<Integer> edges;
 
     private String name;
     @Setter
     private String permission = "none";
     @Setter
     private double bezierTangentLength = 3;
-
-    //AStar intern
 
 
     public Node(int databaseId, int roadMapId, String name, Vector vector){
@@ -34,7 +35,7 @@ public class Node {
         this.name = name;
         this.vector = vector;
 
-        edges = new Edge[] {};
+        edges = new ArrayList<Integer>();
     }
 
     @Override

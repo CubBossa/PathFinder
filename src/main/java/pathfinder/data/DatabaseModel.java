@@ -3,6 +3,7 @@ package pathfinder.data;
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
 import lombok.Getter;
+import org.bukkit.World;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import pathfinder.Node;
@@ -15,8 +16,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,35 +31,104 @@ public class DatabaseModel {
     public DatabaseModel(PathPlugin plugin) {
         this.plugin = plugin;
 
-        //erstelle tabellen
+        createNodesTable();
+        createEdgesTable();
         createFoundNodesTable();
     }
 
-    public void createFoundNodesTable() {
-        //TODO möglicherweise foreign key festlegen, falls roadmap oder player oder node gelöscht wird, dass auch datensatz gelöscht wird
+    public void createRoadMapsTable() {
+        //TODO wenn alle spalten festgelegt sind
+    }
+
+    public void createNodesTable() {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_found` (" +
-                    "`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
-                    "`player` INT NOT NULL UNIQUE , " +
-                    "`node` INT NOT NULL , " +
-                    "`date` TIMESTAMP NULL )")) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodes` (" +
+                    "`node_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`roadmap_id` INT NOT NULL , " +
+                    "`group_id` INT NOT NULL , " +
+                    "`x` DOUBLE NOT NUll , " +
+                    "`y` DOUBLE NOT NUll , " +
+                    "`z` DOUBLE NOT NUll , " +
+                    "`name` VARCHAR(24) NOT NULL , " +
+                    "`tangent_length` DOUBLE NULL , " +
+                    "`permission` VARCHAR(30) NULL , " +
+                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE)")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der settings-Relation", e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Nodes-Tabelle", e);
         }
     }
 
-    //roadmaps laden
+    public void createEdgesTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_edges` (" +
+                    "`node_a_id` INT NOT NULL , " +
+                    "`node_b_id` INT NOT NULL , " +
+                    "FOREIGN KEY (node_a_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE) , " +
+                    "FOREIGN KEY (node_b_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE)")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Edges-Tabelle", e);
+        }
+    }
 
-    //roadmaps speichern
+    public void createFoundNodesTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_found` (" +
+                    "`found_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`player_id` INT NOT NULL , " +
+                    "`node_id` INT NOT NULL , " +
+                    "`date` TIMESTAMP NULL " +
+                    "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE) ," +
+                    "FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE)")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der found-nodes Tabelle", e);
+        }
+    }
 
-    //edges tabelle
+    public void createVisualizerTable() {
+        //TODO
+    }
+
+
+    public @Nullable
+    RoadMap createRoadMap(String name, World world, boolean findableNodes) {
+        return null;
+    }
+
+    public Map<Integer, RoadMap> loadRoadMaps() {
+        return null;
+    }
+
+    public void updateRoadMaps() {
+
+    }
+
+    public boolean deleteRoadMap(RoadMap roadMap) {
+        return deleteRoadMap(roadMap.getDatabaseId());
+    }
+
+    public boolean deleteRoadMap(int roadMapId) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_roadmaps` WHERE `roadmap_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, roadMapId);
+                stmt.executeUpdate();
+                return true;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim löschen der RoadMap: " + roadMapId, e);
+        }
+        return false;
+    }
 
     public void newEdge(Node nodeA, Node nodeB) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_edges` " +
-                    "(node_a, node_b) VALUES (?, ?)")) {
+                    "(node_a_id, node_b_id) VALUES (?, ?)")) {
                 SQLUtils.setInt(stmt, 1, nodeA.getDatabaseId());
                 SQLUtils.setInt(stmt, 2, nodeB.getDatabaseId());
 
@@ -72,7 +140,28 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Map<Integer, Integer> loadEdges
+    Map<Integer, Integer> loadEdges(RoadMap roadMap) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ? "
+            + "AND `pathfinder_nodes`.`node_id` = `pathfinder_edges`.`node_a_id`")) {
+                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, Integer> result = new ConcurrentHashMap<>();
+                    while (resultSet.next()) {
+
+                        int nodeA = SQLUtils.getInt(resultSet, "node_a_id");
+                        int nodeB = SQLUtils.getInt(resultSet, "node_b_id");
+                        result.put(nodeA, nodeB);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Edges zur Roadmap: " + roadMap.getName(), e);
+        }
+        return null;
+    }
 
     public @Nullable
     Node newNode(int roadMapId, int groupId, Vector vector, String name, double tangentLength, String permission) {
@@ -94,7 +183,7 @@ public class DatabaseModel {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
                     Node n = new Node(databaseId, roadMapId, name, vector);
-                    n.setNodeGroupId(groupId);
+                    n.setGroup(groupId);
                     n.setBezierTangentLength(tangentLength);
                     n.setPermission(permission);
                     return n;
@@ -116,7 +205,7 @@ public class DatabaseModel {
                     Map<Integer, Node> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
 
-                        int id = SQLUtils.getInt(resultSet, "id");
+                        int id = SQLUtils.getInt(resultSet, "node_id");
                         int groupId = SQLUtils.getInt(resultSet, "group_id");
                         double x = SQLUtils.getDouble(resultSet, "x");
                         double y = SQLUtils.getDouble(resultSet, "y");
@@ -144,7 +233,7 @@ public class DatabaseModel {
     FoundInfo newFoundInfo(int globalPlayerId, int nodeId, Date foundDate) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_found` " +
-                    "(player, node, date) VALUES " +
+                    "(player_id, node_id, date) VALUES " +
                     "(?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
                 SQLUtils.setInt(stmt, 2, nodeId);
@@ -165,15 +254,15 @@ public class DatabaseModel {
     public @Nullable
     Map<Integer, FoundInfo> loadFoundNodes(int globalPlayerId) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_found` WHERE `player` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_found` WHERE `player_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, FoundInfo> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
-                        int id = SQLUtils.getInt(resultSet, "id");
-                        int player = SQLUtils.getInt(resultSet, "player");
-                        int node = SQLUtils.getInt(resultSet, "node");
+                        int id = SQLUtils.getInt(resultSet, "node_id");
+                        int player = SQLUtils.getInt(resultSet, "player_id");
+                        int node = SQLUtils.getInt(resultSet, "node_id");
                         Date date = SQLUtils.getDate(resultSet, "date");
 
                         FoundInfo info = new FoundInfo(id, player, node, date);
@@ -190,7 +279,7 @@ public class DatabaseModel {
 
     public void deleteFoundNode(FoundInfo info) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_found` WHERE `id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_found` WHERE `found_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, info.getDatabaseId());
                 stmt.executeUpdate();
             }
@@ -198,6 +287,7 @@ public class DatabaseModel {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim löschen der Foundinfo mit ID: " + info.getDatabaseId(), e);
         }
     }
+
 
     //visualizerprofile laden
 

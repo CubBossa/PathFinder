@@ -7,7 +7,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import pathfinder.data.DatabaseModel;
 import pathfinder.data.FoundInfo;
-import pathfinder.handler.FindHandler;
 import pathfinder.util.AStar;
 import pathfinder.util.AStarNode;
 import pathfinder.util.Path;
@@ -82,17 +81,13 @@ public class PathPlayer {
         setPath(player, targetNode);
     }
 
-    public void setPath(Player player, Node targetNode, ) {
-
-        List<AStarNode> aStarNodes = FindHandler.getInstance().generateAStarMap();
+    public void setPath(Player player, Node targetNode) {
 
         AStar aStar = new AStar();
-        aStar.aStarSearch(startNode, goalNode);
-        return aStar.printPath(goalNode);
+        //aStar.aStarSearch(startNode, goalNode);
+        //return aStar.printPath(goalNode);
 
-        //TODO astar aufruf, path erzeugen und setzen
-
-        setPath(null);
+        //TODO astarmap aus roadmap erzeugen, astar aufruf, path erzeugen und setzen
     }
 
     public void setPath(Path path) {

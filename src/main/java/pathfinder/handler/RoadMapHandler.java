@@ -3,13 +3,12 @@ package pathfinder.handler;
 import lombok.Getter;
 import org.bukkit.World;
 import pathfinder.RoadMap;
+import pathfinder.data.DatabaseModel;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class RoadMapHandler {
 
@@ -20,20 +19,27 @@ public class RoadMapHandler {
 
     public RoadMapHandler() {
         instance = this;
-
-        storedRoadMapsByID = null; //aus DatabaseModel laden
+        storedRoadMapsByID = DatabaseModel.getInstance().loadRoadMaps();
     }
 
-    public void createRoadMap() {
-        //TODO erstelle eine Roadmap
+    public @Nullable
+    RoadMap createRoadMap(String name, World world, boolean findableNodes) {
+        RoadMap rm = DatabaseModel.getInstance().createRoadMap(name, world, findableNodes);
+        storedRoadMapsByID.put(rm.getDatabaseId(), rm);
+        return rm;
     }
 
-    public void deleteRoadMap() {
-        //TODO lösche eine RoadMap aus HashMap, Visualizer, zugehörige Nodes und aus Datenbank.
-    }
+    public boolean deleteRoadMap(RoadMap roadMap) {
+        storedRoadMapsByID.remove(roadMap.getDatabaseId());
+        boolean success = DatabaseModel.getInstance().deleteRoadMap(roadMap.getDatabaseId());
 
-    public void loadRoadMaps() {
-        //TODO lade roadmaps aus der Datenbank
+        roadMap.cancelAllEditModes();
+        roadMap.delete();
+
+        //TODO stoppe alle pfade, die in der aktuellen RoadMap aktiv sind.
+        //TODO gucken, ob man alle zugehöring finde objekte etc löschen sollte
+
+        return success;
     }
 
     public Collection<RoadMap> getRoadMaps() {
