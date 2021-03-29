@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import pathfinder.data.DatabaseModel;
 import pathfinder.data.FoundInfo;
+import pathfinder.handler.RoadMapHandler;
 import pathfinder.util.AStar;
 import pathfinder.util.AStarNode;
 import pathfinder.util.Path;
@@ -23,6 +24,8 @@ public class PathPlayer {
     private Map<Integer, FoundInfo> foundInfos;
 
     private Map<Integer, Path> activePaths;
+
+    private int editModeRoadMapId;
 
     public PathPlayer(int globalPlayerId) {
         this.globalPlayerId = globalPlayerId;
@@ -132,6 +135,22 @@ public class PathPlayer {
         for(Path path : activePaths.values()) {
             path.run();
         }
+    }
+
+    public void setEditMode(int roadMapId) {
+        this.editModeRoadMapId = roadMapId;
+    }
+
+    public void clearEditMode() {
+        setEditMode(-1);
+    }
+
+    public boolean isEditing() {
+        return editModeRoadMapId != -1;
+    }
+
+    public RoadMap getEdited() {
+        return RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
     }
 
     public AStarNode asNode(Location location) {

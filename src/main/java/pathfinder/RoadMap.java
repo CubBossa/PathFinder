@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
 import pathfinder.visualisation.PathVisualizer;
 
@@ -111,10 +112,15 @@ public class RoadMap {
     }
 
     public void setEditMode(UUID uuid, boolean editing) {
+
+        PathPlayer editor = PlayerHandler.getInstance().getPlayer(uuid);
+
         if(editing) {
+            editor.setEditMode(databaseId);
             editingPlayers.add(uuid);
             openEditMode(uuid);
         } else {
+            editor.clearEditMode();
             if(editingPlayers.contains(uuid))
                 editingPlayers.remove(uuid);
             closeEditMode(uuid);
