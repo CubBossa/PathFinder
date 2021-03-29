@@ -144,4 +144,26 @@ public class RoadMapCommand extends BaseCommand {
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Welt für " + roadMap.getName() + " wurde erfolgreich gewechselt.\n" +
                     ChatColor.RED + "ACHTUNG! Wegpunke sind möglicherweise nicht da, wo man sie erwartet.");
     }
+
+    @Subcommand("forcefind")
+    @Syntax("[<Straßenkarte>] [<Spieler>] [<Wegpunkt>|*] <ganze Gruppe>")
+    @CommandPermission("bcrew.command.roadmap.forcefind")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
+            " @nodes " + BukkitMain.COMPLETE_BOOLEAN) //TODO nodenamen als completion per map definieren
+    public void onForceFind(Player player, RoadMap roadMap, Player target, String nodename, @Optional boolean grouped) {
+
+        //TODO lasse einen Spieler eine Node finden. Wenn nodename = * dann alle. Wenn grouped, dann als gruppen finden, sonst einzeln.
+
+    }
+
+    @Subcommand("forceforget")
+    @Syntax("[<Straßenkarte>] [<Spieler>] [<Wegpunkt>|*] <ganze Gruppe>")
+    @CommandPermission("bcrew.command.roadmap.forceforget")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
+            " @nodes " + BukkitMain.COMPLETE_BOOLEAN) //TODO nodenamen als completion per map definieren
+    public void onForceForget(Player player, RoadMap roadMap, Player target, String nodename, @Optional boolean grouped) {
+
+        //TODO lasse Spieler nodes vergessen.
+
+    }
 }

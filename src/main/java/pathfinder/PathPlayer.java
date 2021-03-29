@@ -49,6 +49,7 @@ public class PathPlayer {
         assert !hasFound(node.getDatabaseId());
 
         FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, node.getDatabaseId(), new Date());
+        assert info != null;
         foundInfos.put(info.getDatabaseId(), info);
     }
 
@@ -62,6 +63,7 @@ public class PathPlayer {
             if(info.getNodeId() == nodeId)
                 toRemove = info;
         }
+        assert toRemove != null;
         foundInfos.remove(toRemove.getDatabaseId());
 
         DatabaseModel.getInstance().deleteFoundNode(toRemove);
@@ -110,7 +112,7 @@ public class PathPlayer {
         assert toBeCancelled != null;
 
         toBeCancelled.cancel();
-        activePaths.remove(toBeCancelled);
+        activePaths.remove(roadMap.getDatabaseId());
     }
 
     public void pauseActivePath(RoadMap roadMap) {

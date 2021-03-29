@@ -116,13 +116,14 @@ public class RoadMap {
         PathPlayer editor = PlayerHandler.getInstance().getPlayer(uuid);
 
         if(editing) {
+            assert editor != null;
             editor.setEditMode(databaseId);
             editingPlayers.add(uuid);
             openEditMode(uuid);
         } else {
+            assert editor != null;
             editor.clearEditMode();
-            if(editingPlayers.contains(uuid))
-                editingPlayers.remove(uuid);
+            editingPlayers.remove(uuid);
             closeEditMode(uuid);
         }
     }
