@@ -37,4 +37,10 @@ public class NodeGroup {
     public void removeNode(Node node) {
         this.nodes.remove(node);
     }
+
+    public void delete() {
+        for(Node n : nodes) {
+            n.removeGroup();
+        }
+    }
 }

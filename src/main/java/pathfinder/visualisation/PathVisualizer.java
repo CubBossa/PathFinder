@@ -9,10 +9,13 @@ import org.bukkit.Particle;
 @Getter
 public class PathVisualizer {
 
+    int databaseId;
+    String name;
+
     Particle particle;
 
-    public PathVisualizer() {
-
+    public PathVisualizer(String name) {
+        this.name = name;
     }
 
 }

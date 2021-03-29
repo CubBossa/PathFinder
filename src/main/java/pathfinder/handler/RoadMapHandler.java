@@ -87,4 +87,11 @@ public class RoadMapHandler {
         }
         return findableRoadMaps;
     }
+
+    public boolean isNameUnique(String name) {
+        for(RoadMap roadMap : storedRoadMapsByID.values()) {
+            if(roadMap.getName().equals(name)) return false;
+        }
+        return true;
+    }
 }
