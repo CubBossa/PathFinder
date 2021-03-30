@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
+import pathfinder.data.DatabaseModel;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
 import pathfinder.visualisation.PathVisualizer;
@@ -33,6 +35,8 @@ public class RoadMap {
 
     private PathVisualizer visualizer;
     private double nodeFindDistance;
+    @Setter
+    private double defaultBezierTangentLength = 3;
 
     public RoadMap(String name, World world, boolean findableNodes) {
         setName(name);
@@ -50,6 +54,14 @@ public class RoadMap {
         }
     }
 
+    public void createNode(Vector vector, String name) {
+        createNode(vector, name, defaultBezierTangentLength, "none");
+    }
+
+    public void createNode(Vector vector, String name, double bezierTangentLength, String permission) {
+        DatabaseModel.getInstance().newNode(databaseId, Node.NO_GROUP_ID, vector, name, bezierTangentLength, permission);
+    }
+
     public void addNode(Node node) {
         nodes.add(node);
     }
@@ -63,9 +75,14 @@ public class RoadMap {
     }
 
     public @Nullable
-    NodeGroup getNodeGroup(int id) {
+    NodeGroup getNodeGroup(Node node) {
+        return getNodeGroup(node.getNodeGroupId());
+    }
+
+    public @Nullable
+    NodeGroup getNodeGroup(int groupId) {
         for(NodeGroup nodeGroup : groups) {
-            if(nodeGroup.getDatabaseId() == id) {
+            if(nodeGroup.getDatabaseId() == groupId) {
                 return nodeGroup;
             }
         }

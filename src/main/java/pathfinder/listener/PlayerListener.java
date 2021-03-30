@@ -53,7 +53,7 @@ public class PlayerListener implements Listener {
             for(Node node : roadMap.getNodes()) { //TODO sich die finable nodes holen
                 if(pathPlayer.hasFound(node.getDatabaseId())) {
                     if(node.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
-                        pathPlayer.find(roadMap, node);
+                        pathPlayer.findGroup(node);
                     }
                 }
             }

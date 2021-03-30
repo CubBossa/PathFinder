@@ -34,23 +34,50 @@ public class PathPlayer {
         foundInfos = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId);
     }
 
-    public void find(RoadMap roadMap, Node node) {
+    public void findNode(Node node, boolean group) {
+        if(group) {
+            findGroup(node);
+        } else {
+            findNode(node);
+        }
+    }
+
+    public void findGroup(Node node) {
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapId());
         NodeGroup group = roadMap.getNodeGroup(node.getNodeGroupId());
+
         if(group == null) {
-            findUngrouped(node);
+            findNode(node);
         } else {
             for(Node groupedNode : group.getNodes()) {
-                find(roadMap, groupedNode);
+                findNode(groupedNode);
             }
         }
     }
 
-    public void findUngrouped(Node node) {
+    public void findNode(Node node) {
         assert !hasFound(node.getDatabaseId());
 
         FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, node.getDatabaseId(), new Date());
         assert info != null;
         foundInfos.put(info.getDatabaseId(), info);
+    }
+
+    public void unfindNode(Node node, boolean group) {
+        if(group) {
+            unfindGroup(node);
+        } else {
+            unfindNode(node);
+        }
+    }
+
+    public void unfindGroup(Node node) {
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapId());
+        NodeGroup group = roadMap.getNodeGroup(node);
+        assert group != null;
+        for(Node n : group.getNodes()) {
+            unfindNode(n.getDatabaseId());
+        }
     }
 
     public void unfindNode(Node node) {

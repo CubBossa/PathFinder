@@ -6,9 +6,13 @@ import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import pathfinder.Node;
+import pathfinder.PathPlayer;
 import pathfinder.PathPlugin;
 import pathfinder.RoadMap;
+import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
 import pathfinder.visualisation.PathVisualizer;
 
@@ -30,13 +34,14 @@ public class RoadMapCommand extends BaseCommand {
 
 
     @Subcommand("create")
-    @Syntax("[<Name>] [Welt] [entdeckbare Karte]")
+    @Syntax("<Name> [<Welt>] [findbar]")
     @CommandPermission("bcrew.command.roadmap.create")
-    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " " + BukkitMain.COMPLETE_BOOLEAN)
+    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " findbar")
     public void onCreate(Player player, String name,
                          @Optional @Values("@worlds") World world,
-                         @Optional boolean findableNodes) {
+                         @Optional @Single @Values("findbar") String findable) {
 
+        boolean findableNodes = findable != null;
         if(world == null) {
             world = player.getWorld();
         }
@@ -51,7 +56,7 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("delete")
-    @Syntax("[<Straßenkarte>]")
+    @Syntax("<Straßenkarte>")
     @CommandPermission("bcrew.command.roadmap.delete")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onDelete(Player player, RoadMap roadMap) {
@@ -67,7 +72,7 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("editmode")
-    @Syntax("[<Straßenkarte>]")
+    @Syntax("<Straßenkarte>")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     @CommandPermission("bcrew.command.roadmap.editmode")
     public void onEdit(Player player, RoadMap roadMap) {
@@ -99,7 +104,7 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("style")
-    @Syntax("[<Style>]")
+    @Syntax("<Style>")
     @CommandPermission("bcrew.command.roadmap.style")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_VISUALIZER)
     public void onStyle(Player player, RoadMap roadMap, PathVisualizer visualizer) {
@@ -109,7 +114,7 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("rename")
-    @Syntax("[<Straßenkarte>] [<neuer Name>]")
+    @Syntax("<Straßenkarte> <neuer Name>")
     @CommandPermission("bcrew.command.roadmap.rename")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onRename(Player player, RoadMap roadMap, @Single String nameNew) {
@@ -124,11 +129,21 @@ public class RoadMapCommand extends BaseCommand {
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte erfolgreich umbenannt: " + nameNew);
     }
 
+    @Subcommand("tangent-strength")
+    @Syntax("<Wert>")
+    @CommandPermission("bcrew.command.roadmap.tangentstrength")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+    public void onChangeTangentStrength(CommandSender sender, RoadMap roadMap, double strength) {
+        roadMap.setDefaultBezierTangentLength(strength);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Standard-Tangentenstärke erfolgreich gesetzt: " + strength);
+    }
+
     @Subcommand("changeworld")
-    @Syntax("[<Straßenkarte>] [<Welt>] [erzwingen]")
+    @Syntax("<Straßenkarte> <Welt> [erzwingen]")
     @CommandPermission("bcrew.command.roadmap.changeworld")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " " + BukkitMain.COMPLETE_BOOLEAN)
-    public void onChangeWorld(Player player, RoadMap roadMap, World world, boolean force) {
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " erzwingen")
+    public void onChangeWorld(Player player, RoadMap roadMap, World world, @Optional @Single @Values("erzwingen") String forceString) {
+        boolean force = forceString != null;
 
         if(!force && roadMap.isEdited()) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Diese Straßenkarte wird gerade bearbeitet. " +
@@ -146,24 +161,44 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("forcefind")
-    @Syntax("[<Straßenkarte>] [<Spieler>] [<Wegpunkt>|*] <ganze Gruppe>")
+    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [gruppiert]")
     @CommandPermission("bcrew.command.roadmap.forcefind")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
             " @nodes " + BukkitMain.COMPLETE_BOOLEAN) //TODO nodenamen als completion per map definieren
-    public void onForceFind(Player player, RoadMap roadMap, Player target, String nodename, @Optional boolean grouped) {
+    public void onForceFind(Player player, RoadMap roadMap, Player target, String nodename,
+                            @Optional @Single @Values("ungruppiert") String ungrouped) {
 
-        //TODO lasse einen Spieler eine Node finden. Wenn nodename = * dann alle. Wenn grouped, dann als gruppen finden, sonst einzeln.
+        boolean findSingle = ungrouped != null;
+        PathPlayer pathPlayer = PlayerHandler.getInstance().getPlayer(target.getUniqueId());
+        assert pathPlayer != null;
 
+        boolean all = nodename.equals("*");
+        for(Node n : roadMap.getNodes()) {
+            if(n.getName().equals(nodename) || all) {
+                pathPlayer.findNode(n, !findSingle);
+                if(!all) return;
+            }
+        }
     }
 
     @Subcommand("forceforget")
-    @Syntax("[<Straßenkarte>] [<Spieler>] [<Wegpunkt>|*] <ganze Gruppe>")
+    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [gruppiert]")
     @CommandPermission("bcrew.command.roadmap.forceforget")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
-            " @nodes " + BukkitMain.COMPLETE_BOOLEAN) //TODO nodenamen als completion per map definieren
-    public void onForceForget(Player player, RoadMap roadMap, Player target, String nodename, @Optional boolean grouped) {
+            " @nodes ungruppiert") //TODO nodenamen als completion per map definieren
+    public void onForceForget(Player player, RoadMap roadMap, Player target, String nodename,
+                              @Optional @Single @Values("ungruppiert") String ungrouped) {
 
-        //TODO lasse Spieler nodes vergessen.
+        boolean findSingle = ungrouped != null;
+        PathPlayer pathPlayer = PlayerHandler.getInstance().getPlayer(target.getUniqueId());
+        assert pathPlayer != null;
 
+        boolean all = nodename.equals("*");
+        for(Node n : roadMap.getNodes()) {
+            if(n.getName().equals(nodename) || all) {
+                pathPlayer.unfindNode(n, !findSingle);
+                if(!all) return;
+            }
+        }
     }
 }
