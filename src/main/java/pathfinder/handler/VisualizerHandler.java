@@ -1,10 +1,12 @@
 package pathfinder.handler;
 
 import lombok.Getter;
+import pathfinder.data.DatabaseModel;
+import pathfinder.util.Path;
+import pathfinder.visualisation.EditModeVisualizer;
 import pathfinder.visualisation.PathVisualizer;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,16 +19,27 @@ public class VisualizerHandler {
     @Getter
     private static VisualizerHandler instance;
 
-    private Map<Integer, PathVisualizer> visualizerMap;
+    private final Map<Integer, PathVisualizer> pathVisualizerMap;
+    private final Map<Integer, EditModeVisualizer> editVisualizerMap;
 
     public VisualizerHandler() {
+        this.pathVisualizerMap = null;
+        this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
 
-        this.visualizerMap = null; //TODO lade aus datenbank
+        if(!pathVisualizerMap.containsKey(0)) {
+            PathVisualizer vis = new PathVisualizer(0, "default");
+            pathVisualizerMap.put(0, vis);
+        }
+
+        if(!editVisualizerMap.containsKey(0)) {
+            EditModeVisualizer vis = new EditModeVisualizer(0, "default");
+            editVisualizerMap.put(0, vis);
+        }
     }
 
     public @Nullable
-    PathVisualizer getVisualizer(String name) {
-        for(PathVisualizer v : visualizerMap.values()) {
+    PathVisualizer getPathVisualizer(String name) {
+        for(PathVisualizer v : pathVisualizerMap.values()) {
             if(v.getName().equals(name))
                 return v;
         }
@@ -34,8 +47,26 @@ public class VisualizerHandler {
     }
 
     public @Nullable
-    PathVisualizer getVisualizer(int databaseId) {
-        for(PathVisualizer v : visualizerMap.values()) {
+    PathVisualizer getPathVisualizer(int databaseId) {
+        for(PathVisualizer v : pathVisualizerMap.values()) {
+            if(v.getDatabaseId() == databaseId)
+                return v;
+        }
+        return null;
+    }
+
+    public @Nullable
+    EditModeVisualizer getEditVisualizer(String name) {
+        for(EditModeVisualizer v : editVisualizerMap.values()) {
+            if(v.getName().equals(name))
+                return v;
+        }
+        return null;
+    }
+
+    public @Nullable
+    EditModeVisualizer getEditVisualizer(int databaseId) {
+        for(EditModeVisualizer v : editVisualizerMap.values()) {
             if(v.getDatabaseId() == databaseId)
                 return v;
         }

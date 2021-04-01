@@ -1,20 +1,23 @@
 package pathfinder.visualisation;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Particle;
 
 /**
  * Visualisiert einen Pfad aus Locations mit Partikeln
  */
 @Getter
+@Setter
 public class PathVisualizer {
 
-    int databaseId;
-    String name;
+    private final int databaseId;
+    private String name;
 
     Particle particle;
 
-    public PathVisualizer(String name) {
+    public PathVisualizer(int databaseId, String name) {
+        this.databaseId = databaseId;
         this.name = name;
     }
 

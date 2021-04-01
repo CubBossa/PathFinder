@@ -1,6 +1,7 @@
 package pathfinder;
 
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.util.PluginUtils;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ import pathfinder.handler.RoadMapHandler;
 import pathfinder.inventory.EditmodeUtils;
 import pathfinder.inventory.HotbarMenu;
 import pathfinder.inventory.HotbarMenuHandler;
+import pathfinder.util.PathTask;
 import pathfinder.visualisation.EditModeVisualizer;
 import pathfinder.visualisation.PathVisualizer;
 
@@ -50,7 +52,7 @@ public class RoadMap {
     private double defaultBezierTangentLength = 3;
 
     private Collection<ArmorStand> editModeArmorStands;
-    private int schedulerId;
+    private PathTask editModeTask = null;
 
     public RoadMap(String name, World world, boolean findableNodes) {
         setName(name);
@@ -234,25 +236,32 @@ public class RoadMap {
                     editModeVisualizer.getEdgeHeadId());
             editModeArmorStands.add(edgeArmorStand);
         }
-        schedulerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(PathPlugin.getInstance(), () -> {
+        assert editModeTask.isCancelled();
+        editModeTask = (PathTask) Bukkit.getScheduler().runTaskTimerAsynchronously(PathPlugin.getInstance(), () -> {
 
             List<Player> players = new ArrayList<>();
             for(UUID uuid : editingPlayers.keySet()) {
                 players.add(Bukkit.getPlayer(uuid));
             }
+            int particlesSpawned = 0;
             for(Pair<Node, Node> edge : edges) {
                 Location a = edge.first.getVector().toLocation(world);
                 Location b = edge.second.getVector().toLocation(world);
+
                 double dist = a.distance(b);
                 double step = editModeVisualizer.getParticleDistance();
                 @NotNull Location dir = b.clone().subtract(a);
                 for(double i = step; i < dist; i += step){
                     for(Player player : players) {
-                        if(player == null) continue;
+                        Location particleLocation = a.clone().add(dir.clone().multiply(i));
+                        if(player == null || particlesSpawned >= editModeVisualizer.getParticleLimit()) continue;
+                        if(player.getLocation().distanceSquared(particleLocation) >
+                                editModeVisualizer.getParticleDistanceSquared()) continue;
+
                         player.spawnParticle(
                                 editModeVisualizer.getParticle(),
-                                a.clone().add(dir.clone().multiply(i)),
-                                1);
+                                particleLocation, 1);
+                        particlesSpawned++;
                     }
                 }
             }
@@ -264,13 +273,33 @@ public class RoadMap {
             armorStand.remove();
         }
         editModeArmorStands.clear();
-        Bukkit.getScheduler().cancelTask(schedulerId);
+        Bukkit.getScheduler().cancelTask(editModeTask.getTaskId());
     }
 
+    public void setNodeFindDistance(double nodeFindDistance) {
+        this.nodeFindDistance = nodeFindDistance;
+        updateData();
+    }
 
+    public void setFindableNodes(boolean findableNodes) {
+        this.findableNodes = findableNodes;
+        updateData();
+    }
+
+    public void setVisualizer(EditModeVisualizer visualizer) {
+        this.editModeVisualizer = visualizer;
+        updateData();
+    }
 
     public void setVisualizer(PathVisualizer visualizer) {
         this.visualizer = visualizer;
+        updateData();
         //TODO alle aktuellen paths updaten.
+    }
+
+    private void updateData() {
+        PluginUtils.getInstance().runAsync(() -> {
+            DatabaseModel.getInstance().updateRoadMap(this);
+        });
     }
 }

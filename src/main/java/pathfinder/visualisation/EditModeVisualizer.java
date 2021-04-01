@@ -1,6 +1,7 @@
 package pathfinder.visualisation;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Particle;
 
 /**
@@ -9,17 +10,28 @@ import org.bukkit.Particle;
  *
  */
 @Getter
+@Setter
 public class EditModeVisualizer {
 
-    Particle particle;
-    double particleDistance;
+    private String name;
+    private final int databaseId;
 
-    int schedulerStartDelay;
-    int schedulerPeriod;
+    private Particle particle = Particle.FLAME;
+    private double particleDistance = 50;
+    private int particleLimit = 10000;
 
-    int nodeHeadId;
-    int edgeHeadId;
+    private int schedulerStartDelay = 0;
+    private int schedulerPeriod = 50;
 
+    private int nodeHeadId = 8621;
+    private int edgeHeadId = 8619;
 
+    public EditModeVisualizer(int databaseId, String name) {
+        this.databaseId = databaseId;
+        this.name = name;
+    }
 
+    public double getParticleDistanceSquared() {
+        return Math.pow(particleDistance, 2);
+    }
 }

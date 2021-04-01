@@ -4,6 +4,7 @@ import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +12,7 @@ import pathfinder.Node;
 import pathfinder.PathPlugin;
 import pathfinder.RoadMap;
 import pathfinder.old.system.Edge;
+import pathfinder.visualisation.EditModeVisualizer;
 
 import javax.annotation.Nullable;
 import java.sql.Connection;
@@ -31,6 +33,7 @@ public class DatabaseModel {
     public DatabaseModel(PathPlugin plugin) {
         this.plugin = plugin;
 
+        createRoadMapsTable();
         createNodesTable();
         createEdgesTable();
         createFoundNodesTable();
@@ -94,6 +97,10 @@ public class DatabaseModel {
         //TODO
     }
 
+    public void createEditModeVisualizerTable() {
+        //TODO
+    }
+
 
     public @Nullable
     RoadMap createRoadMap(String name, World world, boolean findableNodes) {
@@ -104,8 +111,30 @@ public class DatabaseModel {
         return null;
     }
 
-    public void updateRoadMaps() {
-
+    public void updateRoadMap(RoadMap roadMap) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_roadmaps` SET " +
+                    "`name` = ?, " +
+                    "`world` = ?, " +
+                    "`findable` = ?, " +
+                    "`path_visualizer` = ?, " +
+                    "`editmode_visualizer` = ?, " +
+                    "`node_find_distance` = ?, " +
+                    "`default_tangent_length` = ?, " +
+                    "WHERE `roadmap_id` = ?")) {
+                SQLUtils.setString(stmt, 1, roadMap.getName());
+                SQLUtils.setString(stmt, 2, roadMap.getWorld().getName());
+                SQLUtils.setBoolean(stmt, 3, roadMap.isFindableNodes());
+                SQLUtils.setInt(stmt, 4, roadMap.getVisualizer().getDatabaseId());
+                SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer().getDatabaseId());
+                SQLUtils.setDouble(stmt, 6, roadMap.getNodeFindDistance());
+                SQLUtils.setDouble(stmt, 7, roadMap.getDefaultBezierTangentLength());
+                SQLUtils.setInt(stmt, 8, roadMap.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der RoadMap: " + roadMap.getName(), e);
+        }
     }
 
     public boolean deleteRoadMap(RoadMap roadMap) {
@@ -195,6 +224,34 @@ public class DatabaseModel {
         return null;
     }
 
+    public void updateNode(Node node) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
+                    "`roadmap_id` = ?, " +
+                    "`group_id` = ?, " +
+                    "`x` = ?, " +
+                    "`y` = ?, " +
+                    "`z` = ?, " +
+                    "`name` = ?, " +
+                    "`tangent_length` = ?, " +
+                    "`permission` = ?, " +
+                    "WHERE `node_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, node.getRoadMapId());
+                SQLUtils.setInt(stmt, 2, node.getNodeGroupId());
+                SQLUtils.setDouble(stmt, 3, node.getVector().getX());
+                SQLUtils.setDouble(stmt, 4, node.getVector().getY());
+                SQLUtils.setDouble(stmt, 5, node.getVector().getZ());
+                SQLUtils.setString(stmt, 6, node.getName());
+                SQLUtils.setDouble(stmt, 7, node.getBezierTangentLength());
+                SQLUtils.setString(stmt, 8, node.getPermission());
+                SQLUtils.setInt(stmt, 9, node.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Node: " + node.getName(), e);
+        }
+    }
+
     public @Nullable
     Map<Integer, Node> loadNodes(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
@@ -204,14 +261,13 @@ public class DatabaseModel {
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, Node> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
-
                         int id = SQLUtils.getInt(resultSet, "node_id");
                         int groupId = SQLUtils.getInt(resultSet, "group_id");
                         double x = SQLUtils.getDouble(resultSet, "x");
                         double y = SQLUtils.getDouble(resultSet, "y");
                         double z = SQLUtils.getDouble(resultSet, "z");
                         String name = SQLUtils.getString(resultSet, "name");
-                        double tangentLength = SQLUtils.getDouble(resultSet, "tangent_length");
+                        Double tangentLength = SQLUtils.getDouble(resultSet, "tangent_length");
                         String permission = SQLUtils.getString(resultSet, "permission");
 
                         Node node = new Node(id, roadMap.getDatabaseId(), name, new Vector(x, y, z));
@@ -290,6 +346,50 @@ public class DatabaseModel {
 
 
     //visualizerprofile laden
+
+    public @Nullable
+    Map<Integer, EditModeVisualizer> loadEditModeVisualizer() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_visualizer_editmode`")) {
+
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, EditModeVisualizer> result = new ConcurrentHashMap<>();
+                    while (resultSet.next()) {
+                        int id = SQLUtils.getInt(resultSet, "visualizer_id");
+                        String name = SQLUtils.getString(resultSet, "name");
+                        String particleName = SQLUtils.getString(resultSet, "particle");
+                        int particleLimit = SQLUtils.getInt(resultSet, "particleLimit");
+                        double particleDistance = SQLUtils.getDouble(resultSet, "particleDistance");
+                        int schedulerStartDelay = SQLUtils.getInt(resultSet, "schedulerStartDelay");
+                        int schedulerPeriod = SQLUtils.getInt(resultSet, "schedulerPeriod");
+                        int nodeHeadId = SQLUtils.getInt(resultSet, "nodeHeadId");
+                        int edgeHeadId = SQLUtils.getInt(resultSet, "edgeHeadId");
+
+                        Particle particle;
+                        try {
+                            particle = Particle.valueOf(particleName);
+                        } catch (IllegalArgumentException e) {
+                            continue;
+                        }
+
+                        EditModeVisualizer vis = new EditModeVisualizer(id, name);
+                        vis.setParticle(particle);
+                        vis.setParticleLimit(particleLimit);
+                        vis.setParticleDistance(particleDistance);
+                        vis.setSchedulerStartDelay(schedulerStartDelay);
+                        vis.setSchedulerPeriod(schedulerPeriod);
+                        vis.setNodeHeadId(nodeHeadId);
+                        vis.setEdgeHeadId(edgeHeadId);
+                        result.put(id, vis);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der EditModeVisualizer", e);
+        }
+        return null;
+    }
 
     //visualizerprofile speichern
 }

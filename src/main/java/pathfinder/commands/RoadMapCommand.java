@@ -14,7 +14,10 @@ import pathfinder.PathPlugin;
 import pathfinder.RoadMap;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
+import pathfinder.visualisation.EditModeVisualizer;
 import pathfinder.visualisation.PathVisualizer;
+
+import java.awt.*;
 
 @CommandAlias("roadmap|rm")
 public class RoadMapCommand extends BaseCommand {
@@ -30,6 +33,16 @@ public class RoadMapCommand extends BaseCommand {
 
         //TODO dynamisches system oder fertig hardcoden
         PlayerUtils.sendMessage(player, help);
+    }
+
+    @Subcommand("info")
+    @Syntax("<Straßenkarte>")
+    @CommandPermission("bcrew.command.roadmap.info")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+    public void onInfo(Player player, RoadMap roadMap) {
+
+        //TODO
+
     }
 
 
@@ -104,10 +117,20 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("style")
-    @Syntax("<Style>")
-    @CommandPermission("bcrew.command.roadmap.style")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_VISUALIZER)
+    @Syntax("<Straßenkarte> path|editmode <Style>")
+    @CommandPermission("bcrew.command.roadmap.style.path")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " path " + PathPlugin.COMPLETE_VISUALIZER)
     public void onStyle(Player player, RoadMap roadMap, PathVisualizer visualizer) {
+
+        roadMap.setVisualizer(visualizer);
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikel-m    Style erfolgreich auf Straßenkarte angewendet.");
+    }
+
+    @Subcommand("style")
+    @Syntax("<Straßenkarte> path|editmode <Style>")
+    @CommandPermission("bcrew.command.roadmap.style.editmode")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " editmode " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    public void onStyleEditMode(Player player, RoadMap roadMap, EditModeVisualizer visualizer) {
 
         roadMap.setVisualizer(visualizer);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikel-m    Style erfolgreich auf Straßenkarte angewendet.");
@@ -201,4 +224,24 @@ public class RoadMapCommand extends BaseCommand {
             }
         }
     }
+
+    @Subcommand("set-findable")
+    @Syntax("<Straßenkarte> <findbare Nodes>")
+    @CommandPermission("bcrew.command.roadmap.set-findable")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_BOOLEAN)
+    public void onSetFindable(CommandSender sender, RoadMap roadMap, Boolean findbar) {
+        roadMap.setFindableNodes(findbar);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node-Findbarkeit umgestellt auf: " + ChatColor.GREEN + (findbar ? "an" : "aus"));
+    }
+
+    @Subcommand("set-find-distance")
+    @Syntax("<Straßenkarte> <finde-entfernung>")
+    @CommandPermission("bcrew.command.roadmap.set-find-distance")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+    public void onFindDistance(CommandSender sender, RoadMap roadMap, double findDistance) {
+        //TODO nur positive doubles
+        roadMap.setNodeFindDistance(findDistance);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Finde-Entfernung erfolgreich gesetzt: " + ChatColor.GREEN + findDistance);
+    }
+
 }
