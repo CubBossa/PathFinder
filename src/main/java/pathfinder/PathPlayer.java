@@ -171,6 +171,10 @@ public class PathPlayer {
     }
 
     public void clearEditMode() {
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
+        if(roadMap != null) {
+            roadMap.setEditMode(uuid, false);
+        }
         setEditMode(-1);
     }
 

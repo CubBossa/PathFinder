@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
 import pathfinder.handler.VisualizerHandler;
+import pathfinder.inventory.HotbarMenuHandler;
 import pathfinder.visualisation.PathVisualizer;
 
 public class PathPlugin extends JavaPlugin {
@@ -22,6 +23,11 @@ public class PathPlugin extends JavaPlugin {
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder " + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
 
     @Getter
+    private static PathPlugin instance;
+
+    @Getter
+    private HotbarMenuHandler hotbarMenuHandler;
+    @Getter
     private RoadMapHandler roadMapHandler;
     @Getter
     private PlayerHandler playerHandler;
@@ -30,6 +36,9 @@ public class PathPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
+
+        this.hotbarMenuHandler = new HotbarMenuHandler(this);
         this.roadMapHandler = new RoadMapHandler();
         this.playerHandler = new PlayerHandler();
         this.visualizerHandler = new VisualizerHandler();

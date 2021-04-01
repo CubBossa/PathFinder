@@ -77,7 +77,7 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.editmode")
     public void onEdit(Player player, RoadMap roadMap) {
 
-        roadMap.toggleEditMode(player);
+        roadMap.toggleEditMode(player.getUniqueId());
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Bearbeitungsmodus: " +
                 (roadMap.isEditing(player) ? "AKTIVIERT" : "DEAKTIVIERT"));
     }
@@ -152,7 +152,7 @@ public class RoadMapCommand extends BaseCommand {
         }
 
         if(roadMap.isEdited()) {
-            roadMap.cancelAllEditModes();
+            roadMap.cancelEditModes();
         }
 
         roadMap.setWorld(world);
@@ -161,10 +161,10 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("forcefind")
-    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [gruppiert]")
+    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [ungruppiert]")
     @CommandPermission("bcrew.command.roadmap.forcefind")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
-            " @nodes " + BukkitMain.COMPLETE_BOOLEAN) //TODO nodenamen als completion per map definieren
+            " @nodes ungruppiert") //TODO nodenamen als completion per map definieren
     public void onForceFind(Player player, RoadMap roadMap, Player target, String nodename,
                             @Optional @Single @Values("ungruppiert") String ungrouped) {
 
@@ -182,7 +182,7 @@ public class RoadMapCommand extends BaseCommand {
     }
 
     @Subcommand("forceforget")
-    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [gruppiert]")
+    @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [ungruppiert]")
     @CommandPermission("bcrew.command.roadmap.forceforget")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
             " @nodes ungruppiert") //TODO nodenamen als completion per map definieren

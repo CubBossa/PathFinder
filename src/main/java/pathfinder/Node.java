@@ -3,6 +3,7 @@ package pathfinder;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.util.Vector;
+import pathfinder.handler.RoadMapHandler;
 import pathfinder.old.system.Edge;
 import pathfinder.util.AStarNode;
 
@@ -18,6 +19,7 @@ public class Node {
 
     private int databaseId;
     private int roadMapId;
+    private RoadMap roadMap;
     private int nodeGroupId = NO_GROUP_ID;
     private Vector vector;
     private List<Integer> edges;
@@ -26,12 +28,13 @@ public class Node {
     @Setter
     private String permission = "none";
     @Setter
-    private double bezierTangentLength = 3;
+    private Double bezierTangentLength = null;
 
 
     public Node(int databaseId, int roadMapId, String name, Vector vector){
         this.databaseId = databaseId;
         this.roadMapId = roadMapId;
+        this.roadMap = RoadMapHandler.getInstance().getRoadMap(roadMapId);
         this.name = name;
         this.vector = vector;
 
@@ -53,6 +56,17 @@ public class Node {
 
     public void removeGroup() {
         nodeGroupId = NO_GROUP_ID;
+    }
+
+    public Double getBezierTangentLength() {
+        return bezierTangentLength;
+    }
+
+    public double getEffectiveBezierTangentLength() {
+        if(bezierTangentLength == null) {
+            return roadMap.getDefaultBezierTangentLength();
+        }
+        return bezierTangentLength;
     }
 
     public AStarNode getAStarNode(Vector startPoint) {

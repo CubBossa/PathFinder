@@ -2,6 +2,7 @@ package pathfinder.data;
 
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
+import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
@@ -16,8 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -140,19 +140,19 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Map<Integer, Integer> loadEdges(RoadMap roadMap) {
+    Collection<Pair<Integer, Integer>> loadEdges(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ? "
             + "AND `pathfinder_nodes`.`node_id` = `pathfinder_edges`.`node_a_id`")) {
                 SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, Integer> result = new ConcurrentHashMap<>();
+                    Collection<Pair<Integer, Integer>> result = new ArrayList<>();
                     while (resultSet.next()) {
 
                         int nodeA = SQLUtils.getInt(resultSet, "node_a_id");
                         int nodeB = SQLUtils.getInt(resultSet, "node_b_id");
-                        result.put(nodeA, nodeB);
+                        result.add(new Pair<Integer, Integer>(nodeA, nodeB));
                     }
                     return result;
                 }
@@ -164,7 +164,7 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Node newNode(int roadMapId, int groupId, Vector vector, String name, double tangentLength, String permission) {
+    Node newNode(int roadMapId, int groupId, Vector vector, String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, group_id, x, y, z, name, tangent_length, permission) VALUES " +

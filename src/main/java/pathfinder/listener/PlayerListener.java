@@ -29,6 +29,11 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+
+        PathPlayer player = PlayerHandler.getInstance().getPlayer(event.getPlayer().getUniqueId());
+        assert player != null;
+        if(player.isEditing()) player.clearEditMode();
+
         //speichere gefundendaten eines Spielers in datenbank
     }
 
