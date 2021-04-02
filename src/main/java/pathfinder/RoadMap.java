@@ -126,6 +126,15 @@ public class RoadMap {
     }
 
     public @Nullable
+    NodeGroup getNodeGroup(String name) {
+        for(NodeGroup nodeGroup : groups) {
+            if(nodeGroup.getName().equalsIgnoreCase(name))
+                return nodeGroup;
+        }
+        return null;
+    }
+
+    public @Nullable
     NodeGroup getNodeGroup(Node node) {
         return getNodeGroup(node.getNodeGroupId());
     }
@@ -140,15 +149,23 @@ public class RoadMap {
         return null;
     }
 
+
+
+    public void deleteNodeGroup(int nodeGroupId) {
+        //TODO database gruppe löschen
+        DatabaseModel.getInstance();
+    }
+
     public @Nullable
-    NodeGroup addGroup(String name) {
+    NodeGroup addNodeGroup(String name) {
         if(isGroupNameUnique(name)) {
+            DatabaseModel.getInstance();
             //TODO neue Gruppe im DatabaseModel erstellen und laden.
         }
         return null;
     }
 
-    private boolean isGroupNameUnique(String name) {
+    public boolean isGroupNameUnique(String name) {
         for(NodeGroup group : groups) {
             if(group.getName().equals(name)) return false;
         }

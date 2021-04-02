@@ -130,7 +130,9 @@ public class WaypointCommand {
     }
 
     //TODO
+    //info
+    //list
     //group clear
-    //group set
-    //disconnect 1|*
+    //group set <group>
+    //disconnect <node>|*
 }

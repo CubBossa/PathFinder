@@ -1,6 +1,7 @@
 package pathfinder;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -9,8 +10,11 @@ import java.util.Collection;
 @Getter
 public class NodeGroup {
 
-    private int databaseId;
+    private final int databaseId;
+    @Setter
     private String name;
+    @Setter
+    private boolean findable;
     private Collection<Node> nodes;
 
     public NodeGroup(int databaseId, String name) {
@@ -21,6 +25,7 @@ public class NodeGroup {
         this.databaseId = databaseId;
         this.name = name;
         this.nodes = new ArrayList<Node>();
+        this.findable = false;
         if(nodes != null) {
             this.nodes = nodes;
         }

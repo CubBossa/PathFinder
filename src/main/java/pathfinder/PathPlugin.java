@@ -30,6 +30,7 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
     public static final String COMPLETE_NODES = "@nodes";
+    public static final String COMPLETE_NODE_GROUPS = "@nodegroups";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder " + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
 
@@ -80,6 +81,16 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
                 .map(Particle::name)
                 .collect(Collectors.toSet()));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODE_GROUPS, context -> {
+            Player player = context.getPlayer();
+            PathPlayer pPlayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            assert pPlayer != null;
+            RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+            assert rm != null;
+            return rm.getGroups().stream()
+                    .map(NodeGroup::getName)
+                    .collect(Collectors.toSet());
+          });
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
             Player player = context.getPlayer();
             PathPlayer pPlayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -89,7 +100,7 @@ public class PathPlugin extends JavaPlugin {
             return rm.getNodes().stream()
                     .map(Node::getName)
                     .collect(Collectors.toSet());
-          });
+        });
     }
 
     private void registerContexts() {
@@ -144,6 +155,21 @@ public class PathPlugin extends JavaPlugin {
                 throw new InvalidCommandArgument("Diese Node existiert nicht.");
             }
             return node;
+        });
+        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(NodeGroup.class, context -> {
+            String search = context.popFirstArg();
+            Player player = context.getPlayer();
+            PathPlayer pPlayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            assert pPlayer != null;
+            RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+            if(roadMap == null) {
+                throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
+            }
+            NodeGroup group = roadMap.getNodeGroup(search);
+            if(group == null) {
+                throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
+            }
+            return group;
         });
     }
 }
