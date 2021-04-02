@@ -8,6 +8,7 @@ import pathfinder.visualisation.PathVisualizer;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Managed alle Visualizer Profile, mit denen man einen Pfad darstellen kann. Roadmaps und die Art, wie ein Pfad dargestellt wird
@@ -35,6 +36,18 @@ public class VisualizerHandler {
             EditModeVisualizer vis = new EditModeVisualizer(0, "default");
             editVisualizerMap.put(0, vis);
         }
+    }
+
+    public boolean isNameUniquePath(String name) {
+        return pathVisualizerMap.values().stream()
+                .map(PathVisualizer::getName)
+                .anyMatch(element -> element.equalsIgnoreCase(name));
+    }
+
+    public boolean isNameUniqueEditMode(String name) {
+        return editVisualizerMap.values().stream()
+                .map(EditModeVisualizer::getName)
+                .anyMatch(element -> element.equalsIgnoreCase(name));
     }
 
     public @Nullable
@@ -71,5 +84,13 @@ public class VisualizerHandler {
                 return v;
         }
         return null;
+    }
+
+    public Stream<PathVisualizer> getPathVisualizers() {
+        return pathVisualizerMap.values().stream();
+    }
+
+    public Stream<EditModeVisualizer> getEditModeVisualizer() {
+        return editVisualizerMap.values().stream();
     }
 }

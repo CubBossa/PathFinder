@@ -5,7 +5,9 @@ import de.bossascrew.acf.InvalidCommandArgument;
 import de.bossascrew.acf.MessageKeys;
 import de.bossascrew.core.BukkitMain;
 import lombok.Getter;
+import net.bytebuddy.pool.TypePool;
 import org.bukkit.ChatColor;
+import org.bukkit.Particle;
 import org.bukkit.plugin.java.JavaPlugin;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
@@ -14,14 +16,18 @@ import pathfinder.inventory.HotbarMenuHandler;
 import pathfinder.visualisation.EditModeVisualizer;
 import pathfinder.visualisation.PathVisualizer;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class PathPlugin extends JavaPlugin {
 
-    public static final String PERM_COMMAND_PATHSYSTEM = "bcrew.pathfinder.command.pathsystem.*";
     public static final String COMPLETE_ROADMAPS = "@roadmaps";
     public static final String COMPLETE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@visualizer";
+    public static final String COMPLETE_PARTICLES = "@particles";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder " + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
+
 
     @Getter
     private static PathPlugin instance;
@@ -39,14 +45,14 @@ public class PathPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        registerCompletions();
+        registerContexts();
 
         this.visualizerHandler = new VisualizerHandler();
         this.hotbarMenuHandler = new HotbarMenuHandler(this);
         this.roadMapHandler = new RoadMapHandler();
         this.playerHandler = new PlayerHandler();
 
-        registerContexts();
+        registerCompletions();
     }
 
     @Override
@@ -55,6 +61,20 @@ public class PathPlugin extends JavaPlugin {
     }
 
     private void registerCompletions() {
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ROADMAPS, context -> RoadMapHandler.getInstance().getRoadMapsStream()
+                .map(RoadMap::getName)
+                .collect(Collectors.toSet()));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_VISUALIZER, context -> VisualizerHandler
+                .getInstance().getPathVisualizers()
+                .map(PathVisualizer::getName)
+                .collect(Collectors.toSet()));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_EDITMODE_VISUALIZER, context -> VisualizerHandler
+                .getInstance().getEditModeVisualizer()
+                .map(EditModeVisualizer::getName)
+                .collect(Collectors.toSet()));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
+                .map(Particle::name)
+                .collect(Collectors.toSet()));
 
     }
 
@@ -64,8 +84,7 @@ public class PathPlugin extends JavaPlugin {
 
             RoadMap roadMap = roadMapHandler.getRoadMap(search);
             if (roadMap == null) {
-                //TODO richtiges MessageKeys
-                throw new InvalidCommandArgument(MessageKeys.INVALID_SYNTAX, "{search}", search);
+                throw new InvalidCommandArgument("Ungültige Roadmap");
             }
             return roadMap;
         });
@@ -74,8 +93,7 @@ public class PathPlugin extends JavaPlugin {
 
             PathVisualizer visualizer = visualizerHandler.getPathVisualizer(search);
             if (visualizer == null) {
-                //TODO richtiges MessageKeys
-                throw new InvalidCommandArgument(MessageKeys.INVALID_SYNTAX, "{search}", search);
+                throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer");
             }
             return visualizer;
         });
@@ -84,10 +102,19 @@ public class PathPlugin extends JavaPlugin {
 
             EditModeVisualizer visualizer = visualizerHandler.getEditVisualizer(search);
             if (visualizer == null) {
-                //TODO richtiges MessageKeys
-                throw new InvalidCommandArgument(MessageKeys.INVALID_SYNTAX, "{search}", search);
+                throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer");
             }
             return visualizer;
+        });
+        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Particle.class, context -> {
+            String search = context.popFirstArg();
+            Particle particle = null;
+            try {
+                particle = Particle.valueOf(search);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidCommandArgument("Ungültige Partikel");
+            }
+            return particle;
         });
     }
 }

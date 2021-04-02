@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class RoadMapHandler {
 
@@ -33,7 +34,7 @@ public class RoadMapHandler {
         storedRoadMapsByID.remove(roadMap.getDatabaseId());
         boolean success = DatabaseModel.getInstance().deleteRoadMap(roadMap.getDatabaseId());
 
-        roadMap.cancelAllEditModes();
+        roadMap.cancelEditModes();
         roadMap.delete();
 
         //TODO stoppe alle pfade, die in der aktuellen RoadMap aktiv sind.
@@ -76,6 +77,10 @@ public class RoadMapHandler {
                 roadMaps.add(roadMap);
         }
         return roadMaps;
+    }
+
+    public Stream<RoadMap> getRoadMapsStream() {
+        return storedRoadMapsByID.values().stream();
     }
 
     public Collection<RoadMap> getRoadMapsFindable(World world) {

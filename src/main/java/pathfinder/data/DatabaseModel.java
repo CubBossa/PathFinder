@@ -224,6 +224,17 @@ public class DatabaseModel {
         return null;
     }
 
+    public void deleteNode(int nodeId) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_nodes` WHERE `node_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, nodeId);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen der Node mit ID: " + nodeId, e);
+        }
+    }
+
     public void updateNode(Node node) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
@@ -340,12 +351,18 @@ public class DatabaseModel {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim löschen der Foundinfo mit ID: " + info.getDatabaseId(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen der Foundinfo mit ID: " + info.getDatabaseId(), e);
         }
     }
 
 
     //visualizerprofile laden
+
+    public @Nullable
+    EditModeVisualizer newEditModeVisualizer(String name, Particle particle, double particleDistance, int particleLimit,
+                                             int schedulerStartDelay, int schedulerPeriod, int nodeHeadId, int edgeHeadId) {
+        return null;
+    }
 
     public @Nullable
     Map<Integer, EditModeVisualizer> loadEditModeVisualizer() {

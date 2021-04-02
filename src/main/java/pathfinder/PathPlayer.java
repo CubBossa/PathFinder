@@ -26,6 +26,8 @@ public class PathPlayer {
     private Map<Integer, Path> activePaths;
 
     private int editModeRoadMapId;
+    @Getter
+    private int selectedRoadMapId;
 
     public PathPlayer(int globalPlayerId) {
         this.globalPlayerId = globalPlayerId;
@@ -168,6 +170,7 @@ public class PathPlayer {
 
     public void setEditMode(int roadMapId) {
         this.editModeRoadMapId = roadMapId;
+        this.selectedRoadMapId = roadMapId;
     }
 
     public void clearEditMode() {
@@ -184,6 +187,19 @@ public class PathPlayer {
 
     public RoadMap getEdited() {
         return RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
+    }
+
+    public void setSelectedRoadMap(int roadMapId) {
+        this.selectedRoadMapId = roadMapId;
+    }
+
+    public void deselectRoadMap() {
+        deselectRoadMap(selectedRoadMapId);
+    }
+
+    public void deselectRoadMap(int id) {
+        if(selectedRoadMapId == id)
+            selectedRoadMapId = -1;
     }
 
     public AStarNode asNode(Location location) {

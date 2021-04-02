@@ -73,12 +73,26 @@ public class RoadMap {
         }
     }
 
+    public boolean isNodeNameUnique(String name) {
+        return nodes.stream().map(Node::getName).anyMatch(context -> context.equalsIgnoreCase("name"));
+    }
+
+    public void deleteNode(int nodeId) {
+        deleteNode(getNode(nodeId));
+    }
+
+    public void deleteNode(Node node) {
+        DatabaseModel.getInstance().deleteNode(node.getDatabaseId());
+        nodes.remove(node);
+    }
+
     public void createNode(Vector vector, String name) {
         createNode(vector, name, defaultBezierTangentLength, "none");
     }
 
     public void createNode(Vector vector, String name, double bezierTangentLength, String permission) {
-        DatabaseModel.getInstance().newNode(databaseId, Node.NO_GROUP_ID, vector, name, bezierTangentLength, permission);
+        Node node = DatabaseModel.getInstance().newNode(databaseId, Node.NO_GROUP_ID, vector, name, bezierTangentLength, permission);
+        if(node != null) addNode(node);
     }
 
     public void addNode(Node node) {
@@ -91,6 +105,15 @@ public class RoadMap {
 
     public void addNodes(Collection<Node> nodes) {
         this.nodes.addAll(nodes);
+    }
+
+    public @Nullable
+    Node getNode(String name) {
+        for(Node node : nodes) {
+            if(node.getName().equalsIgnoreCase(name))
+                return node;
+        }
+        return null;
     }
 
     public @Nullable
