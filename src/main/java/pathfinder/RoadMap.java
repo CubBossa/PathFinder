@@ -1,5 +1,6 @@
 package pathfinder;
 
+import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.PluginUtils;
 import jdk.internal.net.http.common.Pair;

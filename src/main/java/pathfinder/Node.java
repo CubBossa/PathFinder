@@ -92,6 +92,7 @@ public class Node {
     }
 
     public void setVector(Vector vector) {
+        //TODO teleportiere zugehörigen Armorstand mit
         this.vector = vector;
         updateData();
     }

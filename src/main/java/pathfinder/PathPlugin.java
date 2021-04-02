@@ -4,10 +4,14 @@ import de.bossascrew.acf.CommandManager;
 import de.bossascrew.acf.InvalidCommandArgument;
 import de.bossascrew.acf.MessageKeys;
 import de.bossascrew.core.BukkitMain;
+import de.bossascrew.core.bukkit.player.PlayerUtils;
 import lombok.Getter;
 import net.bytebuddy.pool.TypePool;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import pathfinder.handler.PlayerHandler;
 import pathfinder.handler.RoadMapHandler;
@@ -25,6 +29,7 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
+    public static final String COMPLETE_NODES = "@nodes";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder " + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
 
@@ -75,7 +80,16 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
                 .map(Particle::name)
                 .collect(Collectors.toSet()));
-
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
+            Player player = context.getPlayer();
+            PathPlayer pPlayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            assert pPlayer != null;
+            RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+            assert rm != null;
+            return rm.getNodes().stream()
+                    .map(Node::getName)
+                    .collect(Collectors.toSet());
+          });
     }
 
     private void registerContexts() {
@@ -84,7 +98,7 @@ public class PathPlugin extends JavaPlugin {
 
             RoadMap roadMap = roadMapHandler.getRoadMap(search);
             if (roadMap == null) {
-                throw new InvalidCommandArgument("Ungültige Roadmap");
+                throw new InvalidCommandArgument("Ungültige Roadmap.");
             }
             return roadMap;
         });
@@ -93,7 +107,7 @@ public class PathPlugin extends JavaPlugin {
 
             PathVisualizer visualizer = visualizerHandler.getPathVisualizer(search);
             if (visualizer == null) {
-                throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer");
+                throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer.");
             }
             return visualizer;
         });
@@ -102,7 +116,7 @@ public class PathPlugin extends JavaPlugin {
 
             EditModeVisualizer visualizer = visualizerHandler.getEditVisualizer(search);
             if (visualizer == null) {
-                throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer");
+                throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
             }
             return visualizer;
         });
@@ -112,9 +126,24 @@ public class PathPlugin extends JavaPlugin {
             try {
                 particle = Particle.valueOf(search);
             } catch (IllegalArgumentException e) {
-                throw new InvalidCommandArgument("Ungültige Partikel");
+                throw new InvalidCommandArgument("Ungültige Partikel.");
             }
             return particle;
+        });
+        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Node.class, context -> {
+            String search = context.popFirstArg();
+            Player player = context.getPlayer();
+            PathPlayer pPlayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            assert pPlayer != null;
+            RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+            if(roadMap == null) {
+                throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
+            }
+            Node node = roadMap.getNode(search);
+            if(node == null) {
+                throw new InvalidCommandArgument("Diese Node existiert nicht.");
+            }
+            return node;
         });
     }
 }
