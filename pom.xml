@@ -3,9 +3,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.bossascrew</groupId>
-    <artifactId>PathFinder</artifactId>
-    <version>1.1.0</version>
+    <artifactId>bossascrew-pathfinder</artifactId>
+    <version>1.0.0</version>
+    <name>bossascrew-pathfinder</name>
+
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -17,8 +26,7 @@
             </plugin>
         </plugins>
     </build>
-    <name>PathFinderSystem</name>
-    <description>Lets you navigate through your Minecraft world</description>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +41,6 @@
     </repositories>
 
     <dependencies>
-
         <dependency>
             <groupId>de.bossascrew</groupId>
             <artifactId>bossascrew-core-bukkit</artifactId>
