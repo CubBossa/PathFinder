@@ -7,6 +7,7 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -23,15 +24,17 @@ public class VisualizerHandler {
     private final Map<Integer, EditModeVisualizer> editVisualizerMap;
 
     public VisualizerHandler() {
-        this.pathVisualizerMap = null;
+        this.pathVisualizerMap = DatabaseModel.getInstance().loadVisualizer();
         this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
 
-        if(!pathVisualizerMap.containsKey(0)) {
+        assert pathVisualizerMap != null && editVisualizerMap != null;
+
+        if(!pathVisualizerMap.isEmpty()) {
             PathVisualizer vis = new PathVisualizer(0, "default");
             pathVisualizerMap.put(0, vis);
         }
 
-        if(!editVisualizerMap.containsKey(0)) {
+        if(!editVisualizerMap.isEmpty()) {
             EditModeVisualizer vis = new EditModeVisualizer(0, "default");
             editVisualizerMap.put(0, vis);
         }

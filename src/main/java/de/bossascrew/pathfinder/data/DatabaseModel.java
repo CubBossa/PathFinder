@@ -2,10 +2,18 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
+import de.bossascrew.pathfinder.NodeGroup;
+import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.inventory.HotbarMenu;
+import de.bossascrew.pathfinder.util.PathTask;
+import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.util.Vector;
 import de.bossascrew.pathfinder.Node;
 import de.bossascrew.pathfinder.PathPlugin;
@@ -37,8 +45,25 @@ public class DatabaseModel {
         createFoundNodesTable();
     }
 
+
     public void createRoadMapsTable() {
-        //TODO wenn alle spalten festgelegt sind
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_roadmaps` (" +
+                    "`roadmap_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`name` VARCHAR(36) NOT NULL , " +
+                    "`world` VARCHAR(24) NOT NULL , " +
+                    "`findable` BOOLEAN , " +
+                    "`path_visualizer_id` INT NOT NULL , " +
+                    "`editmode_visualizer_id` INT NOT NULL , " +
+                    "`node_find_distance` DOUBLE NOT NUll , " +
+                    "`default_tangent_length` DOUBLE NOT NUll , " +
+                    "FOREIGN KEY (path_visualizer_id) REFERENCES pathfinder_path_visualizer(path_visualizer_id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (editmode_visualizer_id) REFERENCES pathfinder_path_visualizer(editmode_visualizer_id) ON DELETE CASCADE))")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Roadmap-Tabelle", e);
+        }
     }
 
     public void createNodesTable() {
@@ -99,13 +124,78 @@ public class DatabaseModel {
         //TODO
     }
 
-
     public @Nullable
     RoadMap createRoadMap(String name, World world, boolean findableNodes) {
+        return createRoadMap(name, world, findableNodes, 0, 0, 3, 3);
+    }
+
+    public @Nullable
+    RoadMap createRoadMap(String name, World world, boolean findableNodes, int pathVis, int editModeVis, double findDist, double tangentLength) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
+                    "(name, world, findable, path_visualizer_id, editmode_visualizer_id, node_find_distance, default_tangent_length) VALUES " +
+                    "(?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                SQLUtils.setString(stmt, 1, name);
+                SQLUtils.setString(stmt, 2, world.getName());
+                SQLUtils.setBoolean(stmt, 3, findableNodes);
+                SQLUtils.setInt(stmt, 4, pathVis);
+                SQLUtils.setInt(stmt, 5, editModeVis);
+                SQLUtils.setDouble(stmt, 6, findDist);
+                SQLUtils.setDouble(stmt, 7, tangentLength);
+
+                stmt.executeUpdate();
+                try (ResultSet resultSet = stmt.getGeneratedKeys()) {
+                    resultSet.next();
+                    int databaseId = resultSet.getInt(1);
+
+                    PathVisualizer pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(pathVis);
+                    EditModeVisualizer editModeVisualizer = VisualizerHandler.getInstance().getEditVisualizer(editModeVis);
+
+                    RoadMap roadMap = new RoadMap(databaseId, name, world, findableNodes,
+                            pathVisualizer, editModeVisualizer, findDist, tangentLength);
+                    return roadMap;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Ertellen einer Roadmap in der Pathfinder Datenbank", e);
+        }
         return null;
     }
 
-    public Map<Integer, RoadMap> loadRoadMaps() {
+    public @Nullable
+    Map<Integer, RoadMap> loadRoadMaps() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_roadmaps`")) {
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, RoadMap> result = new ConcurrentHashMap<>();
+                    while (resultSet.next()) {
+
+                        int databaseId = SQLUtils.getInt(resultSet, "roadmap_id");
+                        String name = SQLUtils.getString(resultSet, "name");
+                        String worldName = SQLUtils.getString(resultSet, "world");
+                        boolean findable = SQLUtils.getBoolean(resultSet, "findable");
+                        int pathVisId = SQLUtils.getInt(resultSet, "path_visualizer_id");
+                        int editModeVisId = SQLUtils.getInt(resultSet, "editmode_visualizer_id");
+                        double findDistance = SQLUtils.getDouble(resultSet, "node_find_distance");
+                        double tangentLength = SQLUtils.getDouble(resultSet, "default_tangent_length");
+
+                        World world = Bukkit.getWorld(worldName);
+                        PathVisualizer pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(pathVisId);
+                        EditModeVisualizer editModeVisualizer = VisualizerHandler.getInstance().getEditVisualizer(editModeVisId);
+                        assert world != null;
+                        //TODO nach schönerem weg gucken, die defaults zu laden
+                        if(pathVisualizer == null) pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(0);
+                        if(editModeVisualizer == null) editModeVisualizer = VisualizerHandler.getInstance().getEditVisualizer(0);
+
+                        RoadMap rm = new RoadMap(databaseId, name, world, findable, pathVisualizer, editModeVisualizer, findDistance, tangentLength);
+                        result.put(databaseId, rm);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Roadmaps", e);
+        }
         return null;
     }
 
@@ -404,6 +494,10 @@ public class DatabaseModel {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der EditModeVisualizer", e);
         }
         return null;
+    }
+
+    public Map<Integer, PathVisualizer> loadVisualizer() {
+        return new ConcurrentHashMap<>();
     }
 
     //visualizerprofile speichern

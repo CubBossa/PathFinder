@@ -37,29 +37,33 @@ public class RoadMap {
 
     private int databaseId;
     private String name;
-    @Setter
     private World world;
     private boolean findableNodes = false;
 
     private Collection<Node> nodes;
-    private Collection<Pair<Node, Node>> edges;
-    private Collection<NodeGroup> groups;
-    private Map<UUID, HotbarMenu> editingPlayers;
+    private final Collection<Pair<Node, Node>> edges;
+    private final Collection<NodeGroup> groups;
+    private final Map<UUID, HotbarMenu> editingPlayers;
 
     private PathVisualizer visualizer;
     private EditModeVisualizer editModeVisualizer;
     private double nodeFindDistance;
-    @Setter
-    private double defaultBezierTangentLength = 3;
+    private double defaultBezierTangentLength;
 
-    private Map<Node, ArmorStand> editModeNodeArmorStands;
-    private Map<Pair<Node, Node>, ArmorStand> editModeEdgeArmorStands;
+    private final Map<Node, ArmorStand> editModeNodeArmorStands;
+    private final Map<Pair<Node, Node>, ArmorStand> editModeEdgeArmorStands;
     private PathTask editModeTask = null;
 
-    public RoadMap(String name, World world, boolean findableNodes) {
-        setName(name);
+    public RoadMap(int databaseId, String name, World world, boolean findableNodes, PathVisualizer pathVisualizer,
+                   EditModeVisualizer editModeVisualizer, double nodeFindDistance, double defaultBezierTangentLength) {
+        this.databaseId = databaseId;
+        this.name = name;
         this.world = world;
         this.findableNodes = findableNodes;
+        this.visualizer = pathVisualizer;
+        this.editModeVisualizer = editModeVisualizer;
+        this.nodeFindDistance = nodeFindDistance;
+        this.defaultBezierTangentLength = defaultBezierTangentLength;
 
         this.nodes = new ArrayList<Node>();
         this.edges = loadEdgesFromIds(Objects.requireNonNull(DatabaseModel.getInstance().loadEdges(this)));
@@ -74,6 +78,7 @@ public class RoadMap {
         if(RoadMapHandler.getInstance().isNameUnique(name)) {
             this.name = name;
         }
+        updateData();
     }
 
     public boolean isNodeNameUnique(String name) {
@@ -346,6 +351,17 @@ public class RoadMap {
         this.visualizer = visualizer;
         updateData();
         //TODO alle aktuellen paths updaten.
+    }
+
+    public void setDefaultBezierTangentLength(double length) {
+        this.defaultBezierTangentLength = length;
+        updateData();
+    }
+
+    public void setWorld(World world) {
+        assert world != null;
+        this.world = world;
+        updateData();
     }
 
     private void updateData() {

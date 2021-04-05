@@ -26,6 +26,7 @@ public class RoadMapHandler {
     public @Nullable
     RoadMap createRoadMap(String name, World world, boolean findableNodes) {
         RoadMap rm = DatabaseModel.getInstance().createRoadMap(name, world, findableNodes);
+        assert rm != null;
         storedRoadMapsByID.put(rm.getDatabaseId(), rm);
         return rm;
     }
