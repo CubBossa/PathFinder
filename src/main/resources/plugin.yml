@@ -1,10 +1,11 @@
 name: ${project.name}
 version: ${project.version}
 author: CubBossa
-main: main.java.bossascrew.pathfinder.PathPlugin
+main: de.bossascrew.pathfinder.PathPlugin
 api-version: 1.16
 
-depends: ["bossascrew-core-bukkit"]
+depend:
+  - bossascrew-core-bukkit
 
 commands:
   cancelpath:

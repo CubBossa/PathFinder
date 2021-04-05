@@ -246,14 +246,14 @@ public class RoadMap {
             editor.setEditMode(databaseId);
             HotbarMenu menu = EditmodeUtils.getNewMenu();
             editingPlayers.put(uuid, menu);
-            menu.openInventory(player);
+            //menu.openInventory(player);
         } else {
             editor.clearEditMode();
             editingPlayers.remove(uuid);
 
             if(isEdited()) stopEditModeVisualizer();
             if(player != null) {
-                editingPlayers.get(uuid).handleInventoryClose(player);
+                //editingPlayers.get(uuid).handleInventoryClose(player);
             }
         }
     }

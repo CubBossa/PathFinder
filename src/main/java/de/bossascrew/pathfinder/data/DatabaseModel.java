@@ -2,18 +2,13 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
-import de.bossascrew.pathfinder.NodeGroup;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.inventory.HotbarMenu;
-import de.bossascrew.pathfinder.util.PathTask;
 import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.util.Vector;
 import de.bossascrew.pathfinder.Node;
 import de.bossascrew.pathfinder.PathPlugin;
@@ -39,12 +34,48 @@ public class DatabaseModel {
     public DatabaseModel(PathPlugin plugin) {
         this.plugin = plugin;
 
+        createVisualizerTable();
+        createEditModeVisualizerTable();
         createRoadMapsTable();
         createNodesTable();
         createEdgesTable();
         createFoundNodesTable();
     }
 
+    public void createVisualizerTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_visualizer` (" +
+                    "`path_visualizer_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`name` VARCHAR(36) NOT NULL , " +
+                    "`particle` VARCHAR(24) NOT NULL , " +
+                    "`particle_distance` DOUBLE NOT NUll , " +
+                    "`scheduler_start_delay` INT NOT NUll , " +
+                    "`scheduler_period` INT NOT NULL )")) { //TODO später mehr werte ändern, tabelle löschen und neu generieren
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Path-Visualizer-Tabelle", e);
+        }
+    }
+
+    public void createEditModeVisualizerTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_editmode_visualizer` (" +
+                    "`editmode_visualizer_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`name` VARCHAR(36) NOT NULL , " +
+                    "`particle` VARCHAR(24) NOT NULL , " +
+                    "`particle_limit` INT NOT NUll , " +
+                    "`particle_distance` DOUBLE NOT NUll , " +
+                    "`scheduler_start_delay` INT NOT NUll , " +
+                    "`scheduler_period` INT NOT NULL , " +
+                    "`node_head_id` INT NOT NULL , " +
+                    "`edge_head_id` INT NOT NULL )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Editmode-Visualizer-Tabelle", e);
+        }
+    }
 
     public void createRoadMapsTable() {
         try (Connection connection = MySQL.getConnection()) {
@@ -53,12 +84,12 @@ public class DatabaseModel {
                     "`name` VARCHAR(36) NOT NULL , " +
                     "`world` VARCHAR(24) NOT NULL , " +
                     "`findable` BOOLEAN , " +
-                    "`path_visualizer_id` INT NOT NULL , " +
-                    "`editmode_visualizer_id` INT NOT NULL , " +
+                    "`path_visualizer_id` INT NULL , " +
+                    "`editmode_visualizer_id` INT NULL , " +
                     "`node_find_distance` DOUBLE NOT NUll , " +
                     "`default_tangent_length` DOUBLE NOT NUll , " +
-                    "FOREIGN KEY (path_visualizer_id) REFERENCES pathfinder_path_visualizer(path_visualizer_id) ON DELETE CASCADE, " +
-                    "FOREIGN KEY (editmode_visualizer_id) REFERENCES pathfinder_path_visualizer(editmode_visualizer_id) ON DELETE CASCADE))")) {
+                    "FOREIGN KEY (path_visualizer_id) REFERENCES pathfinder_path_visualizer(path_visualizer_id) ON DELETE SET NULL , " +
+                    "FOREIGN KEY (editmode_visualizer_id) REFERENCES pathfinder_editmode_visualizer(editmode_visualizer_id) ON DELETE SET NULL )")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -78,7 +109,7 @@ public class DatabaseModel {
                     "`name` VARCHAR(24) NOT NULL , " +
                     "`tangent_length` DOUBLE NULL , " +
                     "`permission` VARCHAR(30) NULL , " +
-                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE)")) {
+                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE )")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -91,8 +122,8 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_edges` (" +
                     "`node_a_id` INT NOT NULL , " +
                     "`node_b_id` INT NOT NULL , " +
-                    "FOREIGN KEY (node_a_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE) , " +
-                    "FOREIGN KEY (node_b_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE)")) {
+                    "FOREIGN KEY (node_a_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE , " +
+                    "FOREIGN KEY (node_b_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE )")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -106,22 +137,14 @@ public class DatabaseModel {
                     "`found_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
                     "`player_id` INT NOT NULL , " +
                     "`node_id` INT NOT NULL , " +
-                    "`date` TIMESTAMP NULL " +
-                    "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE) ," +
-                    "FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE)")) {
+                    "`date` TIMESTAMP NULL , " +
+                    "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE ," +
+                    "FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE )")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der found-nodes Tabelle", e);
         }
-    }
-
-    public void createVisualizerTable() {
-        //TODO
-    }
-
-    public void createEditModeVisualizerTable() {
-        //TODO
     }
 
     public @Nullable
@@ -444,18 +467,49 @@ public class DatabaseModel {
     }
 
 
-    //visualizerprofile laden
-
     public @Nullable
     EditModeVisualizer newEditModeVisualizer(String name, Particle particle, double particleDistance, int particleLimit,
                                              int schedulerStartDelay, int schedulerPeriod, int nodeHeadId, int edgeHeadId) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_visualizer_editmode` " +
+                    "(name, particle, particle_distance, particle_limit, scheduler_start_delay, scheduler_period" +
+                    ", node_head_id, edge_head_id) VALUES " +
+                    "(?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                SQLUtils.setString(stmt, 1, name);
+                SQLUtils.setString(stmt, 2, particle.name());
+                SQLUtils.setDouble(stmt, 3, particleDistance);
+                SQLUtils.setInt(stmt, 4, particleLimit);
+                SQLUtils.setInt(stmt, 5, schedulerStartDelay);
+                SQLUtils.setInt(stmt, 6, schedulerPeriod);
+                SQLUtils.setInt(stmt, 7, nodeHeadId);
+                SQLUtils.setInt(stmt, 8, edgeHeadId);
+
+                stmt.executeUpdate();
+                try (ResultSet resultSet = stmt.getGeneratedKeys()) {
+                    resultSet.next();
+
+                    int databaseId = resultSet.getInt(1);
+                    EditModeVisualizer vis = new EditModeVisualizer(databaseId, name);
+                    vis.setParticle(particle);
+                    vis.setParticleLimit(particleLimit);
+                    vis.setParticleDistance(particleDistance);
+                    vis.setSchedulerPeriod(schedulerPeriod);
+                    vis.setSchedulerStartDelay(schedulerStartDelay);
+                    vis.setNodeHeadId(nodeHeadId);
+                    vis.setEdgeHeadId(edgeHeadId);
+                    return vis;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Ertellen einer Node in der Pathfinder Datenbank", e);
+        }
         return null;
     }
 
     public @Nullable
     Map<Integer, EditModeVisualizer> loadEditModeVisualizer() {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_visualizer_editmode`")) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_editmode_visualizer`")) {
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, EditModeVisualizer> result = new ConcurrentHashMap<>();
@@ -463,12 +517,12 @@ public class DatabaseModel {
                         int id = SQLUtils.getInt(resultSet, "visualizer_id");
                         String name = SQLUtils.getString(resultSet, "name");
                         String particleName = SQLUtils.getString(resultSet, "particle");
-                        int particleLimit = SQLUtils.getInt(resultSet, "particleLimit");
-                        double particleDistance = SQLUtils.getDouble(resultSet, "particleDistance");
-                        int schedulerStartDelay = SQLUtils.getInt(resultSet, "schedulerStartDelay");
-                        int schedulerPeriod = SQLUtils.getInt(resultSet, "schedulerPeriod");
-                        int nodeHeadId = SQLUtils.getInt(resultSet, "nodeHeadId");
-                        int edgeHeadId = SQLUtils.getInt(resultSet, "edgeHeadId");
+                        int particleLimit = SQLUtils.getInt(resultSet, "particle_limit");
+                        double particleDistance = SQLUtils.getDouble(resultSet, "particle_distance");
+                        int schedulerStartDelay = SQLUtils.getInt(resultSet, "scheduler_start_delay");
+                        int schedulerPeriod = SQLUtils.getInt(resultSet, "scheduler_period");
+                        int nodeHeadId = SQLUtils.getInt(resultSet, "node_head_id");
+                        int edgeHeadId = SQLUtils.getInt(resultSet, "edge_head_id");
 
                         Particle particle;
                         try {
@@ -493,6 +547,11 @@ public class DatabaseModel {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der EditModeVisualizer", e);
         }
+        return null;
+    }
+
+    public @Nullable
+    PathVisualizer newPathVisualizer(String name, Particle particle) {
         return null;
     }
 

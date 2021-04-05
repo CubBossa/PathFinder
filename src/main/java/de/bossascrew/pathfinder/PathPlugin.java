@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder;
 import de.bossascrew.acf.InvalidCommandArgument;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
+import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.handler.PlayerHandler;
 import lombok.Getter;
 import org.bukkit.ChatColor;
@@ -46,6 +47,7 @@ public class PathPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        new DatabaseModel(this);
         this.visualizerHandler = new VisualizerHandler();
         this.hotbarMenuHandler = new HotbarMenuHandler(this);
         this.roadMapHandler = new RoadMapHandler();

@@ -6,7 +6,7 @@ import de.bossascrew.pathfinder.PathPlugin;
 import org.bukkit.entity.Player;
 
 @CommandAlias("pathsystem|ps")
-@CommandPermission(PathPlugin.PERM_COMMAND_PATHSYSTEM)
+@CommandPermission("brew.command.pathsystem")
 public class PathSystemCommand extends BaseCommand {
 
     @Default

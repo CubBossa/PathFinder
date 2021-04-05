@@ -30,8 +30,8 @@ public class HotbarMenuHandler {
         if (invMenu == null) {
             return false;
         }
-
-        return invMenu.handleInventoryClick(player, event);
+        return false;
+        //return invMenu.handleInventoryClick(player, event);
     }
 
     public boolean handleInventoryClose(Player player) {
@@ -40,7 +40,7 @@ public class HotbarMenuHandler {
         if (invMenu == null) {
             return false;
         }
-
-        return invMenu.handleInventoryClose(player);
+        return false;
+        //return invMenu.handleInventoryClose(player);
     }
 }

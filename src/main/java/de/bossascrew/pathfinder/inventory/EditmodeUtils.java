@@ -55,11 +55,11 @@ public class EditmodeUtils {
     public static HotbarMenu getNewMenu() {
         HotbarMenu menu = new HotbarMenu();
 
-        menu.setSpecialItemAndClickHandler(0, EditmodeUtils.EDGE_TOOL, (integer, whoClicked) -> {
+        //menu.setSpecialItemAndClickHandler(0, EditmodeUtils.EDGE_TOOL, (integer, whoClicked) -> {
 
             //TODO
 
-        });
+        //});
 
 
         //TODO equippe mit wichtigen Items für Editmode

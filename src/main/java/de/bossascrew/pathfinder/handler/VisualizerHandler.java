@@ -4,6 +4,7 @@ import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import lombok.Getter;
+import org.bukkit.Particle;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -24,18 +25,20 @@ public class VisualizerHandler {
     private final Map<Integer, EditModeVisualizer> editVisualizerMap;
 
     public VisualizerHandler() {
-        this.pathVisualizerMap = DatabaseModel.getInstance().loadVisualizer();
+        this.pathVisualizerMap = new ConcurrentHashMap<>();
         this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
 
         assert pathVisualizerMap != null && editVisualizerMap != null;
 
-        if(!pathVisualizerMap.isEmpty()) {
-            PathVisualizer vis = new PathVisualizer(0, "default");
-            pathVisualizerMap.put(0, vis);
+        if(pathVisualizerMap.isEmpty()) {
+            //TODO
+            //pathVisualizerMap.put(0, vis);
+            pathVisualizerMap.put(0, new PathVisualizer(0, "default"));
         }
 
-        if(!editVisualizerMap.isEmpty()) {
-            EditModeVisualizer vis = new EditModeVisualizer(0, "default");
+        if(editVisualizerMap.isEmpty()) {
+            EditModeVisualizer vis = DatabaseModel.getInstance().newEditModeVisualizer("default", Particle.FLAME,
+                    50, 10000, 20, 20, 8621, 8619);
             editVisualizerMap.put(0, vis);
         }
     }
