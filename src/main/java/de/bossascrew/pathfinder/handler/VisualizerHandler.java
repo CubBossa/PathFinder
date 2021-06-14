@@ -25,14 +25,12 @@ public class VisualizerHandler {
     private final Map<Integer, EditModeVisualizer> editVisualizerMap;
 
     public VisualizerHandler() {
-        this.pathVisualizerMap = new ConcurrentHashMap<>();
+        this.pathVisualizerMap = new ConcurrentHashMap<>(); //TODO databasemodel
         this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
 
         assert pathVisualizerMap != null && editVisualizerMap != null;
 
         if (pathVisualizerMap.isEmpty()) {
-            //TODO
-            //pathVisualizerMap.put(0, vis);
             pathVisualizerMap.put(0, new PathVisualizer(0, "default"));
         }
 

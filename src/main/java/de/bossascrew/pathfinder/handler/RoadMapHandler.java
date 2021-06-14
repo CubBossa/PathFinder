@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.handler;
 
-import de.bossascrew.pathfinder.RoadMap;
+import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import lombok.Getter;
 import org.bukkit.World;
@@ -31,17 +32,9 @@ public class RoadMapHandler {
         return rm;
     }
 
-    public boolean deleteRoadMap(RoadMap roadMap) {
+    public void deleteRoadMap(RoadMap roadMap) {
         storedRoadMapsByID.remove(roadMap.getDatabaseId());
-        boolean success = DatabaseModel.getInstance().deleteRoadMap(roadMap.getDatabaseId());
-
-        roadMap.cancelEditModes();
-        roadMap.delete();
-
-        //TODO stoppe alle pfade, die in der aktuellen RoadMap aktiv sind.
-        //TODO gucken, ob man alle zugehöring finde objekte etc löschen sollte
-
-        return success;
+        PluginUtils.getInstance().runAsync(roadMap::delete);
     }
 
     public Collection<RoadMap> getRoadMaps() {

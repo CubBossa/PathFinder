@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.listener;
 
-import de.bossascrew.pathfinder.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
@@ -37,11 +37,6 @@ public class EditModeListener implements Listener {
         }
         event.setCancelled(true);
         //TODO sende Message: bearbeitung abgebrochen
-    }
-
-    @EventHandler
-    public void onPickup(PlayerAttemptPickupItemEvent event) {
-        //TODO wenn in editmode cancellen
     }
 
     @EventHandler

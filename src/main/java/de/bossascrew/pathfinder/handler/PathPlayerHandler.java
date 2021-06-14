@@ -1,10 +1,11 @@
 package de.bossascrew.pathfinder.handler;
 
 import de.bossascrew.core.player.GlobalPlayer;
-import de.bossascrew.pathfinder.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +18,10 @@ public class PathPlayerHandler {
 
     public PathPlayerHandler() {
         instance = this;
+    }
+
+    public Collection<PathPlayer> getPlayers() {
+        return pathPlayer.values();
     }
 
     public @Nullable

@@ -4,6 +4,11 @@ import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.*;
+import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.PagedChatMenu;
@@ -38,7 +43,7 @@ public class WaypointCommand extends BaseCommand {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
-        roadMap.deleteNode(node);
+        roadMap.deleteFindable(node);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich gelöscht: " + ChatColor.GREEN + node.getName());
     }
 
@@ -146,17 +151,17 @@ public class WaypointCommand extends BaseCommand {
             page = 1;
         }
 
-        for (Node node : roadMap.getNodes()) {
+        for (Findable findable : roadMap.getFindables()) {
 
-            NodeGroup group = roadMap.getNodeGroup(node);
+            FindableGroup group = roadMap.getFindableGroup(findable);
             String groupName = "-";
             if (group != null) {
                 groupName = group.getName();
             }
 
-            Component entry = Component.text(node.getName(), NamedTextColor.GREEN)
+            Component entry = Component.text(findable.getName(), NamedTextColor.GREEN)
                     .append(getSeperator()).append(Component.text("ID: ", NamedTextColor.GRAY))
-                    .append(Component.text(node.getDatabaseId(), NamedTextColor.DARK_GREEN))
+                    .append(Component.text(findable.getDatabaseId(), NamedTextColor.DARK_GREEN))
                     .append(getSeperator().append(Component.text("Gruppe: ", NamedTextColor.GRAY)))
                     .append(Component.text(groupName, NamedTextColor.DARK_GREEN));
             menu.addEntry(entry);
@@ -164,7 +169,6 @@ public class WaypointCommand extends BaseCommand {
         player.sendMessage(menu.getPage(page));
     }
 
-    //TODO ComponentUtils?
     private Component getSeperator() {
         return Component.text(" | ", NamedTextColor.DARK_GRAY);
     }

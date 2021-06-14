@@ -1,10 +1,12 @@
-package de.bossascrew.pathfinder;
+package de.bossascrew.pathfinder.data.findable;
 
 import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.AStarNode;
 import lombok.Getter;
+import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
@@ -12,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class Node {
+public class Node implements Findable {
 
     public static final int NO_GROUP_ID = -1;
 
@@ -35,7 +37,7 @@ public class Node {
         this.name = name;
         this.vector = vector;
 
-        edges = new ArrayList<Integer>();
+        edges = new ArrayList<>();
     }
 
     @Override
@@ -48,28 +50,28 @@ public class Node {
         updateData();
     }
 
-    public void setGroup(NodeGroup nodeGroup) {
+    public void setGroup(FindableGroup nodeGroup) {
         setGroup(nodeGroup.getDatabaseId());
     }
 
-    public void removeGroup() {
+    public void removeFindableGroup() {
         nodeGroupId = NO_GROUP_ID;
         updateData();
     }
 
-    public Double getBezierTangentLength() {
+    public @Nullable
+    Double getBezierTangentLength() {
         return bezierTangentLength;
     }
 
-    public double getEffectiveBezierTangentLength() {
+    /**
+     * @return Gibt die Bezierwichtung zurück, und falls diese nicht gesetzt ist den vorgegebenen Defaultwert der Roadmap.
+     */
+    public double getBezierTangentLengthOrDefault() {
         if (bezierTangentLength == null) {
             return roadMap.getDefaultBezierTangentLength();
         }
         return bezierTangentLength;
-    }
-
-    public AStarNode getAStarNode(Vector startPoint) {
-        return new AStarNode(databaseId, startPoint.distance(vector));
     }
 
     public void setName(String name) {
@@ -102,5 +104,13 @@ public class Node {
         PluginUtils.getInstance().runAsync(() -> {
             DatabaseModel.getInstance().updateNode(this);
         });
+    }
+
+    public Location getLocation() {
+        return vector.toLocation(roadMap.getWorld());
+    }
+
+    public FindableGroup getFindableGroup() {
+        return roadMap.getFindableGroup(this);
     }
 }

@@ -1,8 +1,8 @@
-package de.bossascrew.pathfinder;
+package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.player.PlayerHandler;
-import de.bossascrew.pathfinder.data.DatabaseModel;
-import de.bossascrew.pathfinder.data.FoundInfo;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.AStar;
 import de.bossascrew.pathfinder.util.AStarNode;
@@ -43,57 +43,74 @@ public class PathPlayer {
         foundInfos = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId);
     }
 
-    public void findNode(Node node, boolean group, Date date) {
+    public void find(Findable findable, boolean group, Date date) {
         if (group) {
-            findGroup(node, date);
+            findGroup(findable, date);
         } else {
-            findNode(node, date);
+            find(findable, date);
         }
     }
 
-    public void findGroup(Node node, Date date) {
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapId());
-        NodeGroup group = roadMap.getNodeGroup(node.getNodeGroupId());
+    public void findGroup(Findable findable, Date date) {
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
+        if(roadMap == null) {
+            return;
+        }
+        FindableGroup group = roadMap.getFindableGroup(findable.getNodeGroupId());
 
         if (group == null) {
-            findNode(node, date);
+            find(findable, date);
         } else {
-            for (Node groupedNode : group.getNodes()) {
-                findNode(groupedNode, date);
+            for (Findable grouped : group.getFindables()) {
+                find(grouped, date);
             }
         }
     }
 
-    public void findNode(Node node, Date date) {
-        assert !hasFound(node.getDatabaseId());
-
-        FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, node.getDatabaseId(), date);
-        assert info != null;
-        foundInfos.put(node.getDatabaseId(), info);
+    public void find(Findable findable, Date date) {
+        if(hasFound(findable.getDatabaseId())) {
+            return;
+        }
+        FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, findable.getDatabaseId(), date);
+        if(info == null) {
+            return;
+        }
+        foundInfos.put(findable.getDatabaseId(), info);
     }
 
-    public void unfindNode(Node node, boolean group) {
+    public void unfind(Findable findable, boolean group) {
         if (group) {
-            unfindGroup(node);
+            unfindGroup(findable);
         } else {
-            unfindNode(node);
+            unfind(findable);
         }
     }
 
-    public void unfindGroup(Node node) {
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapId());
-        NodeGroup group = roadMap.getNodeGroup(node);
-        assert group != null;
-        for (Node n : group.getNodes()) {
-            unfindNode(n.getDatabaseId());
+    public void unfindGroup(Findable findable) {
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
+        if(roadMap == null) {
+            return;
+        }
+        FindableGroup group = roadMap.getFindableGroup(findable);
+        if(group == null) {
+            return;
+        }
+        for (Findable n : group.getFindables()) {
+            unfind(n.getDatabaseId());
         }
     }
 
-    public void unfindNode(Node node) {
-        unfindNode(node.getDatabaseId());
+    public void unfindNodes(RoadMap roadMap) {
+        for(Findable findable : roadMap.getFindables()) {
+            unfind(findable);
+        }
     }
 
-    public void unfindNode(int nodeId) {
+    public void unfind(Findable findable) {
+        unfind(findable.getDatabaseId());
+    }
+
+    public void unfind(int nodeId) {
         DatabaseModel.getInstance().deleteFoundNode(globalPlayerId, nodeId);
         foundInfos.remove(nodeId);
     }
@@ -123,12 +140,16 @@ public class PathPlayer {
         //aStar.aStarSearch(startNode, goalNode);
         //return aStar.printPath(goalNode);
 
-        //TODO astarmap aus roadmap erzeugen, astar aufruf, path erzeugen und setzen
+        //TODO astarmap aus roadmap erzeugen, astar aufruf, path erzeugen und setzen //aber bitte auslagern
     }
 
     public void setPath(Path path) {
         assert path != null;
         activePaths.put(path.getRoadMapId(), path);
+    }
+
+    public Collection<Path> getActivePaths() {
+        return activePaths.values();
     }
 
     public void cancelPaths() {

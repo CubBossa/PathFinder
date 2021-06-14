@@ -4,6 +4,11 @@ import de.bossascrew.acf.InvalidCommandArgument;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
@@ -17,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class PathPlugin extends JavaPlugin {
@@ -24,6 +30,7 @@ public class PathPlugin extends JavaPlugin {
     public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
 
     public static final String COMPLETE_ROADMAPS = "@roadmaps";
+    public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
     public static final String COMPLETE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
@@ -77,6 +84,11 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ROADMAPS, context -> RoadMapHandler.getInstance().getRoadMapsStream()
                 .map(RoadMap::getName)
                 .collect(Collectors.toSet()));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ACTIVE_ROADMAPS, context -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer().getUniqueId()).getActivePaths().stream()
+                .map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMapId()))
+                .filter(Objects::nonNull)
+                .map(RoadMap::getName)
+                .collect(Collectors.toSet()));
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_VISUALIZER, context -> VisualizerHandler
                 .getInstance().getPathVisualizers()
                 .map(PathVisualizer::getName)
@@ -95,7 +107,7 @@ public class PathPlugin extends JavaPlugin {
             RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
             assert rm != null;
             return rm.getGroups().stream()
-                    .map(NodeGroup::getName)
+                    .map(FindableGroup::getName)
                     .collect(Collectors.toSet());
         });
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
@@ -104,8 +116,8 @@ public class PathPlugin extends JavaPlugin {
             assert pPlayer != null;
             RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
             assert rm != null;
-            return rm.getNodes().stream()
-                    .map(Node::getName)
+            return rm.getFindables().stream()
+                    .map(Findable::getName)
                     .collect(Collectors.toSet());
         });
     }
@@ -148,7 +160,7 @@ public class PathPlugin extends JavaPlugin {
             }
             return particle;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Node.class, context -> {
+        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Findable.class, context -> {
             String search = context.popFirstArg();
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -157,13 +169,13 @@ public class PathPlugin extends JavaPlugin {
             if (roadMap == null) {
                 throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
             }
-            Node node = roadMap.getNode(search);
-            if (node == null) {
+            Findable findable = roadMap.getFindable(search);
+            if (findable == null) {
                 throw new InvalidCommandArgument("Diese Node existiert nicht.");
             }
-            return node;
+            return findable;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(NodeGroup.class, context -> {
+        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(FindableGroup.class, context -> {
             String search = context.popFirstArg();
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -172,7 +184,7 @@ public class PathPlugin extends JavaPlugin {
             if (roadMap == null) {
                 throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
             }
-            NodeGroup group = roadMap.getNodeGroup(search);
+            FindableGroup group = roadMap.getFindableGroup(search);
             if (group == null) {
                 throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
             }

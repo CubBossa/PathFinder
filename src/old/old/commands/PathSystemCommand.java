@@ -35,6 +35,7 @@ public class PathSystemCommand implements TabExecutor {
             return false;
         }
         if (args[0].equalsIgnoreCase("list")) {
+
             TextComponent message = new TextComponent("Alle geladenen Stra�enkarten:\n");
             for (RoadMap roadmap : RoadMap.getRoadMaps()) {
                 TextComponent nodeString = new TextComponent(" �8- �a" + roadmap.getKey() + "�7, Welt: �a" + roadmap.getWorld().getName()

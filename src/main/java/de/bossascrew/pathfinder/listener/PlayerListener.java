@@ -2,15 +2,21 @@ package de.bossascrew.pathfinder.listener;
 
 import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.Node;
-import de.bossascrew.pathfinder.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.RoadMap;
+import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -41,8 +47,6 @@ public class PlayerListener implements Listener {
         if (player.isEditing()) {
             player.clearEditMode();
         }
-
-        //TODO speichere gefundendaten eines Spielers in datenbank
     }
 
     @EventHandler
@@ -52,19 +56,22 @@ public class PlayerListener implements Listener {
         final Player player = event.getPlayer();
 
         PluginUtils.getInstance().runAsync(() -> {
-            Collection<RoadMap> roadMaps = RoadMapHandler.getInstance().getRoadMapsFindable(world);
-            if (roadMaps.isEmpty()) {
-                return;
-            }
-
-            if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
-                return;
-            }
             GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
             assert globalPlayer != null;
             PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
 
-            Node found = getFirstNodeInDistance(pathPlayer, event.getTo(), roadMaps);
+            Collection<RoadMap> roadMaps = RoadMapHandler.getInstance().getRoadMapsFindable(world);
+            if (roadMaps.isEmpty()) {
+                return;
+            }
+            if (pathPlayer.isEditing()) {
+                return;
+            }
+            if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
+                return;
+            }
+
+            Findable found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
             if (found == null) {
                 return;
             }
@@ -79,18 +86,31 @@ public class PlayerListener implements Listener {
                 }
                 pathPlayer.findGroup(findEvent.getNode(), findEvent.getDate());
 
-                //TODO Title anzeigen und Sound abspielen (in Methode auslagern)
+                player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
+                        .append(Component.text(found.getName()).color(NamedTextColor.WHITE))));
+                player.playSound(found.getVector().toLocation(found.getRoadMap().getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
             });
         });
     }
 
 
     private @Nullable
-    Node getFirstNodeInDistance(PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
+    Findable getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
-            for (Node node : roadMap.getFindableNodes(pathPlayer)) {
-                if (node.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
-                    return node;
+            for (FindableGroup group : roadMap.getGroups()) {
+                if (!group.isFindable()) {
+                    continue;
+                }
+                for (Findable findable : group.getFindables()) {
+                    if (pathPlayer.hasFound(findable.getDatabaseId())) {
+                        continue;
+                    }
+                    if (player.hasPermission(findable.getPermission())) {
+                        continue;
+                    }
+                    if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
+                        return findable;
+                    }
                 }
             }
         }

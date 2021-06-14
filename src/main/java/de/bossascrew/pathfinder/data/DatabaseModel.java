@@ -2,9 +2,9 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
-import de.bossascrew.pathfinder.Node;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.RoadMap;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.visualisation.PathVisualizer;
@@ -272,7 +272,7 @@ public class DatabaseModel {
         return false;
     }
 
-    public void newEdge(Node nodeA, Node nodeB) {
+    public void newEdge(Findable nodeA, Findable nodeB) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_edges` " +
                     "(node_a_id, node_b_id) VALUES (?, ?)")) {
@@ -342,7 +342,7 @@ public class DatabaseModel {
         return null;
     }
 
-    public void deleteNode(int nodeId) {
+    public void deleteFindable(int nodeId) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_nodes` WHERE `node_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, nodeId);

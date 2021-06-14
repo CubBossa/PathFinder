@@ -3,10 +3,10 @@ package de.bossascrew.pathfinder.commands;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.pathfinder.NodeGroup;
-import de.bossascrew.pathfinder.PathPlayer;
+import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.RoadMap;
+import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.PagedChatMenu;
@@ -46,12 +46,12 @@ public class NodeGroupCommand extends BaseCommand {
             page = 1;
         }
 
-        for (NodeGroup group : roadMap.getGroups()) {
+        for (FindableGroup group : roadMap.getGroups()) {
             Component entry = Component.text(group.getName(), NamedTextColor.GREEN)
                     .append(getSeperator()).append(Component.text("ID: ", NamedTextColor.GRAY))
                     .append(Component.text(group.getDatabaseId(), NamedTextColor.DARK_GREEN))
                     .append(getSeperator()).append(Component.text("Größe: ", NamedTextColor.GRAY))
-                    .append(Component.text(group.getNodes().size(), NamedTextColor.DARK_GREEN));
+                    .append(Component.text(group.getFindables().size(), NamedTextColor.DARK_GREEN));
             menu.addEntry(entry);
         }
         player.sendMessage(menu.getPage(page));
@@ -73,7 +73,7 @@ public class NodeGroupCommand extends BaseCommand {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
             return;
         }
-        roadMap.addNodeGroup(name);
+        roadMap.addFindableGroup(name);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich erstellt: " + ChatColor.GREEN + name);
     }
 
@@ -81,11 +81,11 @@ public class NodeGroupCommand extends BaseCommand {
     @Syntax("<Gruppe>")
     @CommandPermission("bcrew.command.nodegroup.delete")
     @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
-    public void onDelete(Player player, NodeGroup group) {
+    public void onDelete(Player player, FindableGroup group) {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
-        roadMap.deleteNodeGroup(group.getDatabaseId());
+        roadMap.deleteFindableGroup(group.getDatabaseId());
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich gelöscht: " + ChatColor.GREEN + group.getName());
     }
 
@@ -93,7 +93,7 @@ public class NodeGroupCommand extends BaseCommand {
     @Syntax("<Gruppe> <neuer Name>")
     @CommandPermission("bcrew.command.nodegroup.rename")
     @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
-    public void onRename(Player player, NodeGroup group, @Single String newName) {
+    public void onRename(Player player, FindableGroup group, @Single String newName) {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
@@ -109,7 +109,7 @@ public class NodeGroupCommand extends BaseCommand {
     @Syntax("<Gruppe> <findbar>")
     @CommandPermission("bcrew.command.nodegroup.setfindable")
     @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
-    public void onSetFindable(Player player, NodeGroup group, boolean findable) {
+    public void onSetFindable(Player player, FindableGroup group, boolean findable) {
         group.setFindable(findable);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + ChatColor.GREEN + (findable ? "an" : "aus"));
     }

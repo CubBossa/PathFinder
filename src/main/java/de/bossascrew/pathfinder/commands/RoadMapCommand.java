@@ -5,10 +5,10 @@ import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.ComponentUtils;
-import de.bossascrew.pathfinder.Node;
-import de.bossascrew.pathfinder.PathPlayer;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.RoadMap;
+import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
@@ -22,6 +22,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.Date;
 
 @CommandAlias("roadmap|rm")
 public class RoadMapCommand extends BaseCommand {
@@ -99,12 +101,7 @@ public class RoadMapCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onDelete(CommandSender sender, RoadMap roadMap) {
 
-        if (!RoadMapHandler.getInstance().deleteRoadMap(roadMap)) {
-            PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Fehler beim Löschen der Straßenkarte: "
-                    + roadMap + ".");
-            return;
-        }
-
+        RoadMapHandler.getInstance().deleteRoadMap(roadMap);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte " + ChatColor.GREEN + roadMap.getName() +
                 ChatColor.GRAY + " erfolgreich gelöscht.");
     }
@@ -223,9 +220,9 @@ public class RoadMapCommand extends BaseCommand {
         assert pathPlayer != null;
 
         boolean all = nodename.equals("*");
-        for (Node n : roadMap.getNodes()) {
-            if (n.getName().equals(nodename) || all) {
-                pathPlayer.findNode(n, !findSingle);
+        for (Findable findable : roadMap.getFindables()) {
+            if (findable.getName().equals(nodename) || all) {
+                pathPlayer.find(findable, !findSingle, new Date());
                 if (!all) {
                     break;
                 }
@@ -248,9 +245,9 @@ public class RoadMapCommand extends BaseCommand {
         assert pathPlayer != null;
 
         boolean all = nodename.equals("*");
-        for (Node n : roadMap.getNodes()) {
-            if (n.getName().equals(nodename) || all) {
-                pathPlayer.unfindNode(n, !findSingle);
+        for (Findable findable : roadMap.getFindables()) {
+            if (findable.getName().equals(nodename) || all) {
+                pathPlayer.unfind(findable, !findSingle);
                 if (!all) {
                     break;
                 }
@@ -274,7 +271,10 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.set-find-distance")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onFindDistance(CommandSender sender, RoadMap roadMap, double findDistance) {
-        //TODO nur positive doubles
+        if(findDistance < 0.05) {
+            PlayerUtils.sendMessage(sender, ChatColor.RED + "Die angebenene Distanz ist zu klein.");
+            return;
+        }
         roadMap.setNodeFindDistance(findDistance);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Finde-Entfernung erfolgreich gesetzt: " + ChatColor.GREEN + findDistance);
     }
