@@ -12,19 +12,24 @@ import de.tr7zw.nbtapi.NBTItem;
 
 public class EntityDamageListener implements Listener {
 
-	@EventHandler
-	public void onArmorstandDestroy(EntityDamageEvent e) {
-		if(e == null) return;
-		if(e.getEntityType() == EntityType.ARMOR_STAND) {
-			ArmorStand as = (ArmorStand) e.getEntity();
-			if(as.getName().equalsIgnoreCase(VisualizerEditMode.WAYPOINT_NAME)) {
-				NBTItem i = new NBTItem(as.getEquipment().getHelmet());
-				RoadMap rm = RoadMap.getRoadMap(i.getString(VisualizerEditMode.ROADMAP_KEY));
-				if(rm == null) return;
-				
-				if(!rm.getEditMode().isEmpty())
-					e.setCancelled(true);
-			}
-		}
-	}
+    @EventHandler
+    public void onArmorstandDestroy(EntityDamageEvent e) {
+        if (e == null) {
+            return;
+        }
+        if (e.getEntityType() == EntityType.ARMOR_STAND) {
+            ArmorStand as = (ArmorStand) e.getEntity();
+            if (as.getName().equalsIgnoreCase(VisualizerEditMode.WAYPOINT_NAME)) {
+                NBTItem i = new NBTItem(as.getEquipment().getHelmet());
+                RoadMap rm = RoadMap.getRoadMap(i.getString(VisualizerEditMode.ROADMAP_KEY));
+                if (rm == null) {
+                    return;
+                }
+
+                if (!rm.getEditMode().isEmpty()) {
+                    e.setCancelled(true);
+                }
+            }
+        }
+    }
 }

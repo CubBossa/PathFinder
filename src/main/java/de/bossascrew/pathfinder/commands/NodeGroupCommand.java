@@ -7,14 +7,14 @@ import de.bossascrew.pathfinder.NodeGroup;
 import de.bossascrew.pathfinder.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.RoadMap;
-import de.bossascrew.pathfinder.handler.PlayerHandler;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.PagedChatMenu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 
 @CommandAlias("nodegroup|ng")
 public class NodeGroupCommand extends BaseCommand {
@@ -27,20 +27,26 @@ public class NodeGroupCommand extends BaseCommand {
         assert roadMap != null;
 
         int page = 0;
-        if(pageInput != null) page = pageInput - 1;
+        if (pageInput != null) {
+            page = pageInput - 1;
+        }
 
         Component title = Component.text("===] ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(roadMap.getName() + "-Gruppen", NamedTextColor.WHITE)
-                    .decoration(TextDecoration.UNDERLINED, true))
+                        .decoration(TextDecoration.UNDERLINED, true))
                 .append(Component.text(" [==", NamedTextColor.DARK_GRAY));
 
         PagedChatMenu menu = new PagedChatMenu(title, 10, "nodegroup list %PAGE%");
 
         //outofbounds verhindern
-        if(page >= menu.getPageCount()) page = menu.getPageCount()-1;
-        if(page < 1) page = 1;
+        if (page >= menu.getPageCount()) {
+            page = menu.getPageCount() - 1;
+        }
+        if (page < 1) {
+            page = 1;
+        }
 
-        for(NodeGroup group : roadMap.getGroups()) {
+        for (NodeGroup group : roadMap.getGroups()) {
             Component entry = Component.text(group.getName(), NamedTextColor.GREEN)
                     .append(getSeperator()).append(Component.text("ID: ", NamedTextColor.GRAY))
                     .append(Component.text(group.getDatabaseId(), NamedTextColor.DARK_GREEN))
@@ -63,7 +69,7 @@ public class NodeGroupCommand extends BaseCommand {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
-        if(!roadMap.isGroupNameUnique(name)) {
+        if (!roadMap.isGroupNameUnique(name)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
             return;
         }
@@ -91,7 +97,7 @@ public class NodeGroupCommand extends BaseCommand {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
-        if(!roadMap.isGroupNameUnique(newName)) {
+        if (!roadMap.isGroupNameUnique(newName)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
             return;
         }
@@ -112,10 +118,10 @@ public class NodeGroupCommand extends BaseCommand {
     //info
 
     private RoadMap getRoadMap(Player player) {
-        PathPlayer pplayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         assert pplayer != null;
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());
-        if(roadMap == null) {
+        if (roadMap == null) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Du musst eine RoadMap auswählen. (/roadmap select)");
             return null;
         }

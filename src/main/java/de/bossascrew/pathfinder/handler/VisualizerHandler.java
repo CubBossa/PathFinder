@@ -30,13 +30,13 @@ public class VisualizerHandler {
 
         assert pathVisualizerMap != null && editVisualizerMap != null;
 
-        if(pathVisualizerMap.isEmpty()) {
+        if (pathVisualizerMap.isEmpty()) {
             //TODO
             //pathVisualizerMap.put(0, vis);
             pathVisualizerMap.put(0, new PathVisualizer(0, "default"));
         }
 
-        if(editVisualizerMap.isEmpty()) {
+        if (editVisualizerMap.isEmpty()) {
             EditModeVisualizer vis = DatabaseModel.getInstance().newEditModeVisualizer("default", Particle.FLAME,
                     50, 10000, 20, 20, 8621, 8619);
             editVisualizerMap.put(0, vis);
@@ -57,36 +57,40 @@ public class VisualizerHandler {
 
     public @Nullable
     PathVisualizer getPathVisualizer(String name) {
-        for(PathVisualizer v : pathVisualizerMap.values()) {
-            if(v.getName().equals(name))
+        for (PathVisualizer v : pathVisualizerMap.values()) {
+            if (v.getName().equals(name)) {
                 return v;
+            }
         }
         return null;
     }
 
     public @Nullable
     PathVisualizer getPathVisualizer(int databaseId) {
-        for(PathVisualizer v : pathVisualizerMap.values()) {
-            if(v.getDatabaseId() == databaseId)
+        for (PathVisualizer v : pathVisualizerMap.values()) {
+            if (v.getDatabaseId() == databaseId) {
                 return v;
+            }
         }
         return null;
     }
 
     public @Nullable
     EditModeVisualizer getEditVisualizer(String name) {
-        for(EditModeVisualizer v : editVisualizerMap.values()) {
-            if(v.getName().equals(name))
+        for (EditModeVisualizer v : editVisualizerMap.values()) {
+            if (v.getName().equals(name)) {
                 return v;
+            }
         }
         return null;
     }
 
     public @Nullable
     EditModeVisualizer getEditVisualizer(int databaseId) {
-        for(EditModeVisualizer v : editVisualizerMap.values()) {
-            if(v.getDatabaseId() == databaseId)
+        for (EditModeVisualizer v : editVisualizerMap.values()) {
+            if (v.getDatabaseId() == databaseId) {
                 return v;
+            }
         }
         return null;
     }

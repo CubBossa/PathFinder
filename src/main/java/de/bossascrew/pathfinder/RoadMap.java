@@ -3,10 +3,15 @@ package de.bossascrew.pathfinder;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
-import de.bossascrew.pathfinder.handler.PlayerHandler;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.inventory.EditmodeUtils;
+import de.bossascrew.pathfinder.inventory.HotbarMenu;
+import de.bossascrew.pathfinder.util.PathTask;
+import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
+import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -15,16 +20,11 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.inventory.EditmodeUtils;
-import de.bossascrew.pathfinder.inventory.HotbarMenu;
-import de.bossascrew.pathfinder.util.PathTask;
-import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
-import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Eine Straßenkarte, die verschiedene Wegpunkte enthält und
@@ -75,7 +75,7 @@ public class RoadMap {
     }
 
     public void setName(String name) {
-        if(RoadMapHandler.getInstance().isNameUnique(name)) {
+        if (RoadMapHandler.getInstance().isNameUnique(name)) {
             this.name = name;
         }
         updateData();
@@ -100,7 +100,9 @@ public class RoadMap {
 
     public void createNode(Vector vector, String name, double bezierTangentLength, String permission) {
         Node node = DatabaseModel.getInstance().newNode(databaseId, Node.NO_GROUP_ID, vector, name, bezierTangentLength, permission);
-        if(node != null) addNode(node);
+        if (node != null) {
+            addNode(node);
+        }
     }
 
     public void addNode(Node node) {
@@ -117,26 +119,30 @@ public class RoadMap {
 
     public @Nullable
     Node getNode(String name) {
-        for(Node node : nodes) {
-            if(node.getName().equalsIgnoreCase(name))
+        for (Node node : nodes) {
+            if (node.getName().equalsIgnoreCase(name)) {
                 return node;
+            }
         }
         return null;
     }
 
     public @Nullable
     Node getNode(int nodeId) {
-        for(Node node : nodes) {
-            if(node.getDatabaseId() == nodeId) return node;
+        for (Node node : nodes) {
+            if (node.getDatabaseId() == nodeId) {
+                return node;
+            }
         }
         return null;
     }
 
     public @Nullable
     NodeGroup getNodeGroup(String name) {
-        for(NodeGroup nodeGroup : groups) {
-            if(nodeGroup.getName().equalsIgnoreCase(name))
+        for (NodeGroup nodeGroup : groups) {
+            if (nodeGroup.getName().equalsIgnoreCase(name)) {
                 return nodeGroup;
+            }
         }
         return null;
     }
@@ -148,8 +154,8 @@ public class RoadMap {
 
     public @Nullable
     NodeGroup getNodeGroup(int groupId) {
-        for(NodeGroup nodeGroup : groups) {
-            if(nodeGroup.getDatabaseId() == groupId) {
+        for (NodeGroup nodeGroup : groups) {
+            if (nodeGroup.getDatabaseId() == groupId) {
                 return nodeGroup;
             }
         }
@@ -163,7 +169,7 @@ public class RoadMap {
 
     public @Nullable
     NodeGroup addNodeGroup(String name) {
-        if(isGroupNameUnique(name)) {
+        if (isGroupNameUnique(name)) {
             DatabaseModel.getInstance();
             //TODO neue Gruppe im DatabaseModel erstellen und laden.
         }
@@ -171,8 +177,10 @@ public class RoadMap {
     }
 
     public boolean isGroupNameUnique(String name) {
-        for(NodeGroup group : groups) {
-            if(group.getName().equals(name)) return false;
+        for (NodeGroup group : groups) {
+            if (group.getName().equals(name)) {
+                return false;
+            }
         }
         return true;
     }
@@ -189,11 +197,13 @@ public class RoadMap {
 
     private Collection<Pair<Node, Node>> loadEdgesFromIds(Collection<Pair<Integer, Integer>> edgesById) {
         Collection<Pair<Node, Node>> result = new ArrayList<>();
-        for(Pair<Integer, Integer> pair : edgesById) {
+        for (Pair<Integer, Integer> pair : edgesById) {
             Node a = getNode(pair.first);
             Node b = getNode(pair.second);
 
-            if(a == null || b == null) continue;
+            if (a == null || b == null) {
+                continue;
+            }
             a.getEdges().add(b.getDatabaseId());
             b.getEdges().add(a.getDatabaseId());
 
@@ -204,7 +214,7 @@ public class RoadMap {
     }
 
     public void delete() {
-        for(UUID uuid : editingPlayers.keySet()) {
+        for (UUID uuid : editingPlayers.keySet()) {
             Player p = Bukkit.getPlayer(uuid);
             assert p != null;
             PlayerUtils.sendMessage(p, PathPlugin.PREFIX + ChatColor.RED + "Die Straßenkarte, die du gerade bearbeitet hast, wurde gelöscht.");
@@ -229,19 +239,21 @@ public class RoadMap {
     }
 
     public void cancelEditModes() {
-        for(UUID uuid : editingPlayers.keySet()) {
+        for (UUID uuid : editingPlayers.keySet()) {
             setEditMode(uuid, false);
         }
     }
 
     public void setEditMode(UUID uuid, boolean editing) {
         Player player = Bukkit.getPlayer(uuid);
-        PathPlayer editor = PlayerHandler.getInstance().getPlayer(uuid);
+        PathPlayer editor = PathPlayerHandler.getInstance().getPlayer(uuid);
         assert editor != null;
 
-        if(editing) {
+        if (editing) {
             assert player != null;
-            if(!isEdited()) startEditModeVisualizer();
+            if (!isEdited()) {
+                startEditModeVisualizer();
+            }
 
             editor.setEditMode(databaseId);
             HotbarMenu menu = EditmodeUtils.getNewMenu();
@@ -251,8 +263,10 @@ public class RoadMap {
             editor.clearEditMode();
             editingPlayers.remove(uuid);
 
-            if(isEdited()) stopEditModeVisualizer();
-            if(player != null) {
+            if (isEdited()) {
+                stopEditModeVisualizer();
+            }
+            if (player != null) {
                 //editingPlayers.get(uuid).handleInventoryClose(player);
             }
         }
@@ -271,7 +285,7 @@ public class RoadMap {
         assert as != null;
         as.teleport(node.getVector().toLocation(world).add(ARMORSTAND_OFFSET));
 
-        for(Pair<Node, Node> edge : getEdges(node)) {
+        for (Pair<Node, Node> edge : getEdges(node)) {
             ArmorStand asEdge = editModeEdgeArmorStands.get(edge);
             assert asEdge != null;
             asEdge.teleport(getEdgeCenter(edge).add(ARMORSTAND_OFFSET));
@@ -280,13 +294,13 @@ public class RoadMap {
 
     public void startEditModeVisualizer() {
 
-        for(Node node : nodes) {
+        for (Node node : nodes) {
             Location nodeLocation = node.getVector().toLocation(world).add(ARMORSTAND_OFFSET);
             ArmorStand nodeArmorStand = EditmodeUtils.getNewArmorStand(nodeLocation, node.getName(),
                     editModeVisualizer.getNodeHeadId());
             editModeNodeArmorStands.put(node, nodeArmorStand);
         }
-        for(Pair<Node, Node> edge : edges) {
+        for (Pair<Node, Node> edge : edges) {
             Location center = getEdgeCenter(edge).add(ARMORSTAND_OFFSET);
             ArmorStand edgeArmorStand = EditmodeUtils.getNewArmorStand(center, null,
                     editModeVisualizer.getEdgeHeadId());
@@ -296,23 +310,27 @@ public class RoadMap {
         editModeTask = (PathTask) Bukkit.getScheduler().runTaskTimerAsynchronously(PathPlugin.getInstance(), () -> {
 
             List<Player> players = new ArrayList<>();
-            for(UUID uuid : editingPlayers.keySet()) {
+            for (UUID uuid : editingPlayers.keySet()) {
                 players.add(Bukkit.getPlayer(uuid));
             }
             int particlesSpawned = 0;
-            for(Pair<Node, Node> edge : edges) {
+            for (Pair<Node, Node> edge : edges) {
                 Location a = edge.first.getVector().toLocation(world);
                 Location b = edge.second.getVector().toLocation(world);
 
                 double dist = a.distance(b);
                 double step = editModeVisualizer.getParticleDistance();
                 @NotNull Location dir = b.clone().subtract(a);
-                for(double i = step; i < dist; i += step){
-                    for(Player player : players) {
+                for (double i = step; i < dist; i += step) {
+                    for (Player player : players) {
                         Location particleLocation = a.clone().add(dir.clone().multiply(i));
-                        if(player == null || particlesSpawned >= editModeVisualizer.getParticleLimit()) continue;
-                        if(player.getLocation().distanceSquared(particleLocation) >
-                                editModeVisualizer.getParticleDistanceSquared()) continue;
+                        if (player == null || particlesSpawned >= editModeVisualizer.getParticleLimit()) {
+                            continue;
+                        }
+                        if (player.getLocation().distanceSquared(particleLocation) >
+                                editModeVisualizer.getParticleDistanceSquared()) {
+                            continue;
+                        }
 
                         player.spawnParticle(
                                 editModeVisualizer.getParticle(),
@@ -325,7 +343,7 @@ public class RoadMap {
     }
 
     public void stopEditModeVisualizer() {
-        for(ArmorStand armorStand : editModeNodeArmorStands.values()) {
+        for (ArmorStand armorStand : editModeNodeArmorStands.values()) {
             armorStand.remove();
         }
         editModeNodeArmorStands.clear();
@@ -381,10 +399,17 @@ public class RoadMap {
 
     private Collection<Pair<Node, Node>> getEdges(Node node) {
         Collection<Pair<Node, Node>> ret = new ArrayList<>();
-        for(Pair<Node, Node> edge : edges) {
-            if(edge.first.equals(node) ||edge.second.equals(node))
+        for (Pair<Node, Node> edge : edges) {
+            if (edge.first.equals(node) || edge.second.equals(node)) {
                 ret.add(edge);
+            }
         }
         return ret;
+    }
+
+    public Collection<Node> getFindableNodes(PathPlayer player) {
+        return getNodes().stream()
+                .filter(node -> !player.hasFound(node.getDatabaseId()))
+                .collect(Collectors.toSet());
     }
 }

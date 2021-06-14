@@ -9,7 +9,8 @@ import de.bossascrew.pathfinder.Node;
 import de.bossascrew.pathfinder.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.RoadMap;
-import de.bossascrew.pathfinder.handler.PlayerHandler;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import net.kyori.adventure.text.Component;
@@ -21,7 +22,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 
 @CommandAlias("roadmap|rm")
 public class RoadMapCommand extends BaseCommand {
@@ -30,7 +30,7 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.help")
     @Default
     public void onHelp(Player player) {
-        String help = "\n" + ChatColor.DARK_GRAY + "===] "+ ChatColor.WHITE + ChatColor.UNDERLINE +
+        String help = "\n" + ChatColor.DARK_GRAY + "===] " + ChatColor.WHITE + ChatColor.UNDERLINE +
                 "Roadmap Befehle" + ChatColor.DARK_GRAY + " [===";
         help += "\n" + ChatColor.GRAY + " - /rm create <Name> [Welt] [entdeckbare Karte]" + ChatColor.DARK_GRAY + " - " +
                 ChatColor.GRAY + "erstelle eine Straßenkarte";
@@ -48,7 +48,7 @@ public class RoadMapCommand extends BaseCommand {
         Component text = Component.text("===] ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(roadMap.getName(), NamedTextColor.WHITE)
                         .decoration(TextDecoration.UNDERLINED, true)
-                .append(Component.text(" [===", NamedTextColor.DARK_GRAY)))
+                        .append(Component.text(" [===", NamedTextColor.DARK_GRAY)))
                 .append(getInfoEntry("Name: " + ChatColor.GREEN + roadMap.getName(),
                         "/roadmap rename " + roadMap.getName() + " <neuer Name>",
                         "Klicke, um den Namen zu ändern."))
@@ -80,12 +80,12 @@ public class RoadMapCommand extends BaseCommand {
                          @Optional @Single @Values("findbar") String findable) {
 
         boolean findableNodes = findable != null;
-        if(world == null) {
+        if (world == null) {
             world = player.getWorld();
         }
 
         RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(name, world, findableNodes);
-        if(roadMap == null) {
+        if (roadMap == null) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Fehler beim Erstellen der Roadmap");
             return;
         }
@@ -124,14 +124,14 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.list")
     public void onList(CommandSender sender) {
 
-        String list = "\n" + ChatColor.DARK_GRAY + "===] "+ ChatColor.WHITE + ChatColor.UNDERLINE +
+        String list = "\n" + ChatColor.DARK_GRAY + "===] " + ChatColor.WHITE + ChatColor.UNDERLINE +
                 "Roadmaps" + ChatColor.DARK_GRAY + " [===";
 
-        for(RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
+        for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
 
             String isEditing = "";
-            if(sender instanceof Player) {
-                if(roadMap.isEditing((Player) sender)) {
+            if (sender instanceof Player) {
+                if (roadMap.isEditing((Player) sender)) {
                     isEditing = ChatColor.GREEN + " BEARBEITUNGSMODUS";
                 }
             }
@@ -171,7 +171,7 @@ public class RoadMapCommand extends BaseCommand {
         String nameOld = roadMap.getName();
         roadMap.setName(nameNew);
 
-        if(nameOld.equals(roadMap.getName())) {
+        if (nameOld.equals(roadMap.getName())) {
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben.");
             return;
         }
@@ -195,19 +195,19 @@ public class RoadMapCommand extends BaseCommand {
     public void onChangeWorld(CommandSender sender, RoadMap roadMap, World world, @Optional @Single @Values("erzwingen") String forceString) {
         boolean force = forceString != null;
 
-        if(!force && roadMap.isEdited()) {
+        if (!force && roadMap.isEdited()) {
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Diese Straßenkarte wird gerade bearbeitet. " +
                     "Nutze den [erzwingen] Parameter, um die Welt dennoch zu verwenden.");
             return;
         }
 
-        if(roadMap.isEdited()) {
+        if (roadMap.isEdited()) {
             roadMap.cancelEditModes();
         }
 
         roadMap.setWorld(world);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Die Welt für " + roadMap.getName() + " wurde erfolgreich gewechselt.\n" +
-                    ChatColor.RED + "ACHTUNG! Wegpunke sind möglicherweise nicht da, wo man sie erwartet.");
+                ChatColor.RED + "ACHTUNG! Wegpunke sind möglicherweise nicht da, wo man sie erwartet.");
     }
 
     @Subcommand("forcefind")
@@ -219,14 +219,16 @@ public class RoadMapCommand extends BaseCommand {
                             @Optional @Single @Values("ungruppiert") String ungrouped) {
 
         boolean findSingle = ungrouped != null;
-        PathPlayer pathPlayer = PlayerHandler.getInstance().getPlayer(target.getUniqueId());
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
         assert pathPlayer != null;
 
         boolean all = nodename.equals("*");
-        for(Node n : roadMap.getNodes()) {
-            if(n.getName().equals(nodename) || all) {
+        for (Node n : roadMap.getNodes()) {
+            if (n.getName().equals(nodename) || all) {
                 pathPlayer.findNode(n, !findSingle);
-                if(!all) break;
+                if (!all) {
+                    break;
+                }
             }
         }
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Spieler " + ChatColor.GREEN + target.getName() +
@@ -242,14 +244,16 @@ public class RoadMapCommand extends BaseCommand {
                               @Optional @Single @Values("ungruppiert") String ungrouped) {
 
         boolean findSingle = ungrouped != null;
-        PathPlayer pathPlayer = PlayerHandler.getInstance().getPlayer(target.getUniqueId());
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
         assert pathPlayer != null;
 
         boolean all = nodename.equals("*");
-        for(Node n : roadMap.getNodes()) {
-            if(n.getName().equals(nodename) || all) {
+        for (Node n : roadMap.getNodes()) {
+            if (n.getName().equals(nodename) || all) {
                 pathPlayer.unfindNode(n, !findSingle);
-                if(!all) break;
+                if (!all) {
+                    break;
+                }
             }
         }
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Spieler " + ChatColor.GREEN + target.getName() +

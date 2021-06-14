@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.util;
 
-import com.google.common.collect.Lists;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -24,9 +23,9 @@ public class PagedChatMenu {
     private static final String colorDarkened = "#5a2d00";
 
     /**
-     * @param title Titel des Menüs. Header-Balken müssen im Title enthalten sein, macht das Menü nicht automatisch
+     * @param title          Titel des Menüs. Header-Balken müssen im Title enthalten sein, macht das Menü nicht automatisch
      * @param entriesPerPage Einträge pro Seite
-     * @param command wird ausgeführt wenn nächste oder vorherige Seite aufgerufen werden. %PAGE% wird durch die Seitennummer ersetzt
+     * @param command        wird ausgeführt wenn nächste oder vorherige Seite aufgerufen werden. %PAGE% wird durch die Seitennummer ersetzt
      */
     public PagedChatMenu(Component title, int entriesPerPage, String command) {
         this.title = title;
@@ -52,7 +51,7 @@ public class PagedChatMenu {
     private int calcPageCount() {
         int ret = 1;
         double pages = ((double) entries.size()) / entriesPerPage;
-        if(pages != (int) pages) {
+        if (pages != (int) pages) {
             ret = (int) pages + 1;
         }
         return ret;
@@ -69,7 +68,9 @@ public class PagedChatMenu {
         boolean isClickable = page == calcPageCount() - 1;
         String hex = isClickable ? color : colorDarkened;
         Component button = getBoxedComponent(Component.text("Weiter", TextColor.fromHexString(hex)));
-        if(isClickable) return button;
+        if (isClickable) {
+            return button;
+        }
 
         button.hoverEvent(HoverEvent.showText(Component.text("Klicke, um die nächste Seite zu öffnen")))
                 .clickEvent(ClickEvent.runCommand(command.replace("%PAGE%", page + "")));
@@ -80,7 +81,9 @@ public class PagedChatMenu {
         boolean isClickable = page > 0;
         String hex = isClickable ? color : colorDarkened;
         Component button = getBoxedComponent(Component.text("Zurück", TextColor.fromHexString(hex)));
-        if(!isClickable) return button;
+        if (!isClickable) {
+            return button;
+        }
 
         button.hoverEvent(HoverEvent.showText(Component.text("Klicke, um die vorherige Seite zu öffnen")))
                 .clickEvent(ClickEvent.runCommand(command.replace("%PAGE%", page + "")));

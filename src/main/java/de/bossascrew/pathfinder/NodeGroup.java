@@ -25,7 +25,7 @@ public class NodeGroup {
         this.name = name;
         this.nodes = new ArrayList<Node>();
         this.findable = false;
-        if(nodes != null) {
+        if (nodes != null) {
             this.nodes = nodes;
         }
     }
@@ -43,7 +43,7 @@ public class NodeGroup {
     }
 
     public void delete() {
-        for(Node n : nodes) {
+        for (Node n : nodes) {
             n.removeGroup();
         }
     }

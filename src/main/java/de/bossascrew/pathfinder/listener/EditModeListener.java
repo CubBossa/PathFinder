@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.listener;
 
 import de.bossascrew.pathfinder.PathPlayer;
-import de.bossascrew.pathfinder.handler.PlayerHandler;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,16 +23,16 @@ public class EditModeListener implements Listener {
 
     @EventHandler
     public void onGamemodeChange(PlayerGameModeChangeEvent event) {
-        if(event.getNewGameMode().equals(GameMode.CREATIVE)
+        if (event.getNewGameMode().equals(GameMode.CREATIVE)
                 || event.getNewGameMode().equals(GameMode.SPECTATOR)) {
             return;
         }
 
         UUID uuid = event.getPlayer().getUniqueId();
-        PathPlayer player = PlayerHandler.getInstance().getPlayer(uuid);
+        PathPlayer player = PathPlayerHandler.getInstance().getPlayer(uuid);
         assert player != null;
 
-        if(!player.isEditing()) {
+        if (!player.isEditing()) {
             return;
         }
         event.setCancelled(true);

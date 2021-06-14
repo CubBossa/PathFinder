@@ -7,7 +7,6 @@ import org.bukkit.Particle;
 /**
  * stil um den editmode anzuzeigen
  * partikeltyp, Nodekopf, Edgekopf
- *
  */
 @Getter
 @Setter

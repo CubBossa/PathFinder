@@ -1,21 +1,21 @@
 package de.bossascrew.pathfinder.handler;
 
 import de.bossascrew.core.player.GlobalPlayer;
-import lombok.Getter;
 import de.bossascrew.pathfinder.PathPlayer;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 
-public class PlayerHandler {
+public class PathPlayerHandler {
 
     @Getter
-    private static PlayerHandler instance;
+    private static PathPlayerHandler instance;
 
     private Map<Integer, PathPlayer> pathPlayer;
 
-    public PlayerHandler() {
+    public PathPlayerHandler() {
         instance = this;
     }
 
@@ -23,11 +23,13 @@ public class PlayerHandler {
     PathPlayer getPlayer(UUID uuid) {
         PathPlayer pathPlayer = getLoadedPlayer(uuid);
 
-        if(pathPlayer == null) {
+        if (pathPlayer == null) {
             GlobalPlayer player = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(uuid);
 
             //return null, wenn spieler noch nie auf bossascrew gespielt hat und nicht über UUID findbar
-            if(player == null) return null;
+            if (player == null) {
+                return null;
+            }
             pathPlayer = createPlayer(player.getDatabaseId());
         }
         return pathPlayer;
@@ -35,7 +37,7 @@ public class PlayerHandler {
 
     public PathPlayer getPlayer(int globalPlayerId) {
         PathPlayer pathPlayer = getLoadedPlayer(globalPlayerId);
-        if(pathPlayer == null) {
+        if (pathPlayer == null) {
             //player wurde nicht aus der Datenbank geladen, also neuen anlegen
             pathPlayer = createPlayer(globalPlayerId);
         }
@@ -44,8 +46,8 @@ public class PlayerHandler {
 
     private @Nullable
     PathPlayer getLoadedPlayer(UUID uuid) {
-        for(PathPlayer pathPlayer : pathPlayer.values()) {
-            if(pathPlayer.getUuid().equals(uuid)) {
+        for (PathPlayer pathPlayer : pathPlayer.values()) {
+            if (pathPlayer.getUuid().equals(uuid)) {
                 return pathPlayer;
             }
         }
@@ -54,9 +56,10 @@ public class PlayerHandler {
 
     private @Nullable
     PathPlayer getLoadedPlayer(int globalPlayerId) {
-        for(PathPlayer pathPlayer : pathPlayer.values()) {
-            if(pathPlayer.getGlobalPlayerId() == globalPlayerId)
+        for (PathPlayer pathPlayer : pathPlayer.values()) {
+            if (pathPlayer.getGlobalPlayerId() == globalPlayerId) {
                 return pathPlayer;
+            }
         }
         return null;
     }

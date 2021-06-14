@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.util;
 
-import lombok.Getter;
 import de.bossascrew.pathfinder.visualisation.PathVisualizer;
+import lombok.Getter;
 
 /**
  * Enthält alle wichtigen Informationen zum Anzeigen des Pfades gecached und läuft die Repeating Tasks

@@ -24,13 +24,9 @@ public class AStar {
             public int compare(AStarNode i, AStarNode j) {
                 if (i.f_scores > j.f_scores) {
                     return 1;
-                }
-
-                else if (i.f_scores < j.f_scores) {
+                } else if (i.f_scores < j.f_scores) {
                     return -1;
-                }
-
-                else {
+                } else {
                     return 0;
                 }
             }

@@ -2,9 +2,9 @@ package de.bossascrew.pathfinder.old.system;
 
 import org.bukkit.util.Vector;
 
-public class Node{
+public class Node {
 
-	public final int id;
+    public final int id;
     public String value;
     public double g_scores;
     public double h_scores;
@@ -16,16 +16,16 @@ public class Node{
     public boolean tangentReachSetManually = false;
     public float tangentReach;
 
-    public Node(int id, String val, double hVal, Vector Loc){
-    	this.id = id;
+    public Node(int id, String val, double hVal, Vector Loc) {
+        this.id = id;
         value = val;
         h_scores = hVal;
         loc = Loc;
-        adjacencies = new Edge[] {};
+        adjacencies = new Edge[]{};
     }
 
     @Override
-	public String toString(){
+    public String toString() {
         return value;
     }
 }

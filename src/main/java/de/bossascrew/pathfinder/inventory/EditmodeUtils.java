@@ -39,15 +39,16 @@ public class EditmodeUtils {
                 ArmorStand.class,
                 armorStand -> {
                     armorStand.setVisible(false);
-                    if(name != null) {
+                    if (name != null) {
                         armorStand.setCustomNameVisible(true);
                         armorStand.setCustomName(name);
                     }
                     armorStand.setGravity(false);
                     armorStand.setInvulnerable(true);
                     ItemStack helmet = HeadDBUtils.getHeadById(headDbId);
-                    if(armorStand.getEquipment() != null && helmet != null)
+                    if (armorStand.getEquipment() != null && helmet != null) {
                         armorStand.getEquipment().setHelmet(helmet);
+                    }
                 });
         return as;
     }
@@ -57,7 +58,7 @@ public class EditmodeUtils {
 
         //menu.setSpecialItemAndClickHandler(0, EditmodeUtils.EDGE_TOOL, (integer, whoClicked) -> {
 
-            //TODO
+        //TODO
 
         //});
 

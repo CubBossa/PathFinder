@@ -55,8 +55,8 @@ public class RoadMapHandler {
 
     public @Nullable
     RoadMap getRoadMap(String name) {
-        for(RoadMap roadMap : storedRoadMapsByID.values()) {
-            if(roadMap.getName().equals(name)) {
+        for (RoadMap roadMap : storedRoadMapsByID.values()) {
+            if (roadMap.getName().equals(name)) {
                 return roadMap;
             }
         }
@@ -65,7 +65,7 @@ public class RoadMapHandler {
 
     public Collection<World> getRoadMapWorlds() {
         Collection<World> worlds = new ArrayList<World>();
-        for(RoadMap roadMap : storedRoadMapsByID.values()) {
+        for (RoadMap roadMap : storedRoadMapsByID.values()) {
             worlds.add(roadMap.getWorld());
         }
         return worlds;
@@ -73,9 +73,10 @@ public class RoadMapHandler {
 
     public Collection<RoadMap> getRoadMaps(World world) {
         Collection<RoadMap> roadMaps = new ArrayList<RoadMap>();
-        for(RoadMap roadMap : storedRoadMapsByID.values()) {
-            if(roadMap.getWorld().equals(world))
+        for (RoadMap roadMap : storedRoadMapsByID.values()) {
+            if (roadMap.getWorld().equals(world)) {
                 roadMaps.add(roadMap);
+            }
         }
         return roadMaps;
     }
@@ -86,8 +87,8 @@ public class RoadMapHandler {
 
     public Collection<RoadMap> getRoadMapsFindable(World world) {
         Collection<RoadMap> findableRoadMaps = new ArrayList<RoadMap>();
-        for(RoadMap roadMap : getRoadMaps(world)) {
-            if(roadMap.isFindableNodes()) {
+        for (RoadMap roadMap : getRoadMaps(world)) {
+            if (roadMap.isFindableNodes()) {
                 findableRoadMaps.add(roadMap);
             }
         }
@@ -95,8 +96,10 @@ public class RoadMapHandler {
     }
 
     public boolean isNameUnique(String name) {
-        for(RoadMap roadMap : storedRoadMapsByID.values()) {
-            if(roadMap.getName().equals(name)) return false;
+        for (RoadMap roadMap : storedRoadMapsByID.values()) {
+            if (roadMap.getName().equals(name)) {
+                return false;
+            }
         }
         return true;
     }

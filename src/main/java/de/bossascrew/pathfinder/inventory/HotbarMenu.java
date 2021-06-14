@@ -1,14 +1,11 @@
 package de.bossascrew.pathfinder.inventory;
 
-import com.google.common.base.Preconditions;
 import de.bossascrew.core.functional.Consumer3;
-import de.bossascrew.pathfinder.PathPlugin;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
@@ -17,7 +14,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 /**
  * GUI bei dem nur die 9 Items in der Hotbar belegt werden und durch Interagieren getriggert werden
@@ -65,14 +61,14 @@ public class HotbarMenu {
     }
 
     public HotbarMenu(@Nullable BiConsumer<Integer, Player> defaultClickHandler,
-                   @Nullable Consumer<Player> closeHandler) {
+                      @Nullable Consumer<Player> closeHandler) {
         this(defaultClickHandler, closeHandler, false);
     }
 
     @SuppressWarnings("unchecked")
     public HotbarMenu(@Nullable BiConsumer<Integer, Player> defaultClickHandler,
-                   @Nullable Consumer<Player> closeHandler,
-                   boolean allowPlayerModifyInventory) {
+                      @Nullable Consumer<Player> closeHandler,
+                      boolean allowPlayerModifyInventory) {
 
         this.defaultClickHandler = defaultClickHandler;
         this.allowPlayerModifyInventory = allowPlayerModifyInventory;

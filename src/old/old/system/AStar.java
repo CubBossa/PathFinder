@@ -15,116 +15,113 @@ import main.de.bossascrew.pathfinder.PathSystem;
 
 public class AStar {
 
-	public List<Node> AStaraufruf(RoadMap rm, Location pLoc, Node zielnode, Node...startnodes) {
+    public List<Node> AStaraufruf(RoadMap rm, Location pLoc, Node zielnode, Node... startnodes) {
 
-		List<Node> nodes = new ArrayList<Node>(rm.getFile().getWaypoints(pLoc));
-		if(startnodes != null && startnodes.length > 0) {
-			nodes = new ArrayList<Node>();
-			for(Node n : startnodes) {
-				nodes.add(n);
-			}
-		};
-		
-		Node nearestNode = nodes.get(0);
-		double distance = pLoc.toVector().distance(nearestNode.loc);
-		for (Node n : nodes) {
-			double distTemp = pLoc.toVector().distance(n.loc);
-			if (distTemp < distance) {
-				distance = distTemp;
-				nearestNode = n;
-			}
-		}
-		Node playerNode = new Node(0, PathSystem.PLAYER_NODE, 0, pLoc.toVector());
-		playerNode.adjacencies = new Edge[] { new Edge(nearestNode, distance) };
+        List<Node> nodes = new ArrayList<Node>(rm.getFile().getWaypoints(pLoc));
+        if (startnodes != null && startnodes.length > 0) {
+            nodes = new ArrayList<Node>();
+            for (Node n : startnodes) {
+                nodes.add(n);
+            }
+        }
+        ;
 
-		AstarSearch(playerNode, zielnode);
-		return printPath(zielnode);
-	}
+        Node nearestNode = nodes.get(0);
+        double distance = pLoc.toVector().distance(nearestNode.loc);
+        for (Node n : nodes) {
+            double distTemp = pLoc.toVector().distance(n.loc);
+            if (distTemp < distance) {
+                distance = distTemp;
+                nearestNode = n;
+            }
+        }
+        Node playerNode = new Node(0, PathSystem.PLAYER_NODE, 0, pLoc.toVector());
+        playerNode.adjacencies = new Edge[]{new Edge(nearestNode, distance)};
 
-	public List<Node> printPath(Node target) {
-		List<Node> path = new ArrayList<Node>();
+        AstarSearch(playerNode, zielnode);
+        return printPath(zielnode);
+    }
 
-		for (Node node = target; node != null; node = node.parent) {
-			path.add(node);
-		}
+    public List<Node> printPath(Node target) {
+        List<Node> path = new ArrayList<Node>();
 
-		Collections.reverse(path);
-		return path;
-	}
+        for (Node node = target; node != null; node = node.parent) {
+            path.add(node);
+        }
 
-	public void AstarSearch(Node source, Node goal) {
+        Collections.reverse(path);
+        return path;
+    }
 
-		Set<Node> explored = new HashSet<Node>();
+    public void AstarSearch(Node source, Node goal) {
 
-		PriorityQueue<Node> queue = new PriorityQueue<Node>(20, new Comparator<Node>() {
-			@Override
-			public int compare(Node i, Node j) {
-				if (i.f_scores > j.f_scores) {
-					return 1;
-				}
+        Set<Node> explored = new HashSet<Node>();
 
-				else if (i.f_scores < j.f_scores) {
-					return -1;
-				}
+        PriorityQueue<Node> queue = new PriorityQueue<Node>(20, new Comparator<Node>() {
+            @Override
+            public int compare(Node i, Node j) {
+                if (i.f_scores > j.f_scores) {
+                    return 1;
+                } else if (i.f_scores < j.f_scores) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
 
-				else {
-					return 0;
-				}
-			}
-		});
+        // cost from start
+        source.g_scores = 0;
 
-		// cost from start
-		source.g_scores = 0;
+        queue.add(source);
 
-		queue.add(source);
+        boolean found = false;
 
-		boolean found = false;
+        while ((!queue.isEmpty()) && (!found)) {
 
-		while ((!queue.isEmpty()) && (!found)) {
+            // the node in having the lowest f_score value
+            Node current = queue.poll();
 
-			// the node in having the lowest f_score value
-			Node current = queue.poll();
+            explored.add(current);
 
-			explored.add(current);
+            // goal found
+            if (current.id == goal.id) {
+                found = true;
+            }
 
-			// goal found
-			if (current.id == goal.id) {
-				found = true;
-			}
+            // check every child of current node
+            for (Edge e : current.adjacencies) {
+                Node child = e.target;
+                double cost = e.cost;
+                double temp_g_scores = current.g_scores + cost;
+                double temp_f_scores = temp_g_scores + child.h_scores;
 
-			// check every child of current node
-			for (Edge e : current.adjacencies) {
-				Node child = e.target;
-				double cost = e.cost;
-				double temp_g_scores = current.g_scores + cost;
-				double temp_f_scores = temp_g_scores + child.h_scores;
+                /*
+                 * if child node has been evaluated and the newer f_score is higher, skip
+                 */
 
-				/*
-				 * if child node has been evaluated and the newer f_score is higher, skip
-				 */
+                if ((explored.contains(child)) && (temp_f_scores >= child.f_scores)) {
+                    continue;
+                }
 
-				if ((explored.contains(child)) && (temp_f_scores >= child.f_scores)) {
-					continue;
-				}
+                /*
+                 * else if child node is not in queue or newer f_score is lower
+                 */
 
-				/*
-				 * else if child node is not in queue or newer f_score is lower
-				 */
+                else if ((!queue.contains(child)) || (temp_f_scores < child.f_scores)) {
 
-				else if ((!queue.contains(child)) || (temp_f_scores < child.f_scores)) {
+                    child.parent = current;
+                    child.g_scores = temp_g_scores;
+                    child.f_scores = temp_f_scores;
 
-					child.parent = current;
-					child.g_scores = temp_g_scores;
-					child.f_scores = temp_f_scores;
+                    if (queue.contains(child)) {
+                        queue.remove(child);
+                    }
 
-					if (queue.contains(child)) {
-						queue.remove(child);
-					}
+                    queue.add(child);
 
-					queue.add(child);
-
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 }

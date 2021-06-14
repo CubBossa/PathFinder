@@ -4,14 +4,14 @@ import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.*;
-import de.bossascrew.pathfinder.handler.PlayerHandler;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.PagedChatMenu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 
 @CommandAlias("waypoint|wp")
 public class WaypointCommand extends BaseCommand {
@@ -22,7 +22,7 @@ public class WaypointCommand extends BaseCommand {
     public void onCreate(Player player, @Single String name) {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
-        if(!roadMap.isNodeNameUnique(name)) {
+        if (!roadMap.isNodeNameUnique(name)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Der Name ist bereits vergeben.");
             return;
         }
@@ -36,7 +36,7 @@ public class WaypointCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_NODES)
     public void onDelete(Player player, Node node) {
         RoadMap roadMap = getRoadMap(player);
-        assert  roadMap != null;
+        assert roadMap != null;
 
         roadMap.deleteNode(node);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich gelöscht: " + ChatColor.GREEN + node.getName());
@@ -60,7 +60,7 @@ public class WaypointCommand extends BaseCommand {
         RoadMap roadMap = getRoadMap(player);
         assert roadMap != null;
 
-        if(!roadMap.isNodeNameUnique(newName)) {
+        if (!roadMap.isNodeNameUnique(newName)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Der Name ist bereits vergeben.");
             return;
         }
@@ -74,11 +74,11 @@ public class WaypointCommand extends BaseCommand {
     @CommandPermission("bcrew.command.waypoint.connect")
     @CommandCompletion(PathPlugin.COMPLETE_NODES + " " + PathPlugin.COMPLETE_NODES)
     public void onConnect(Player player, Node a, Node b) {
-        if(a.getDatabaseId() == b.getDatabaseId()) {
+        if (a.getDatabaseId() == b.getDatabaseId()) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Die Wegpunkte sind identisch.");
             return;
         }
-        if(a.getEdges().contains(b.getDatabaseId())
+        if (a.getEdges().contains(b.getDatabaseId())
                 || b.getEdges().contains(a.getDatabaseId())) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Die Wegpunkte sind bereits verunden.");
             return;
@@ -127,7 +127,9 @@ public class WaypointCommand extends BaseCommand {
         assert roadMap != null;
 
         int page = 0;
-        if(pageInput != null) page = pageInput - 1;
+        if (pageInput != null) {
+            page = pageInput - 1;
+        }
 
         Component title = Component.text("===] ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(roadMap.getName() + " Wegpunkte", NamedTextColor.WHITE)
@@ -137,14 +139,20 @@ public class WaypointCommand extends BaseCommand {
         PagedChatMenu menu = new PagedChatMenu(title, 20, "waypoint list %page%");
 
         //outofbounds verhindern
-        if(page >= menu.getPageCount()) page = menu.getPageCount()-1;
-        if(page < 1) page = 1;
+        if (page >= menu.getPageCount()) {
+            page = menu.getPageCount() - 1;
+        }
+        if (page < 1) {
+            page = 1;
+        }
 
-        for(Node node : roadMap.getNodes()) {
+        for (Node node : roadMap.getNodes()) {
 
             NodeGroup group = roadMap.getNodeGroup(node);
             String groupName = "-";
-            if(group != null) groupName = group.getName();
+            if (group != null) {
+                groupName = group.getName();
+            }
 
             Component entry = Component.text(node.getName(), NamedTextColor.GREEN)
                     .append(getSeperator()).append(Component.text("ID: ", NamedTextColor.GRAY))
@@ -162,10 +170,10 @@ public class WaypointCommand extends BaseCommand {
     }
 
     private RoadMap getRoadMap(Player player) {
-        PathPlayer pplayer = PlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         assert pplayer != null;
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());
-        if(roadMap == null) {
+        if (roadMap == null) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Du musst eine RoadMap auswählen. (/roadmap select)");
             return null;
         }
