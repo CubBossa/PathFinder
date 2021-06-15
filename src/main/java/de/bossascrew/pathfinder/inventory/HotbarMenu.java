@@ -47,7 +47,7 @@ public class HotbarMenu {
     @Getter
     private boolean locked;
 
-    private Map<UUID, ItemStack[]> playerItems;
+    private final Map<UUID, ItemStack[]> playerItems;
     private final ItemStack[] specialItems;
     //private final Consumer3<Integer, Player, Block>[] clickHandlersBlocks;
 

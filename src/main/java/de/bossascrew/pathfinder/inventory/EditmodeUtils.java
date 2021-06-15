@@ -35,7 +35,7 @@ public class EditmodeUtils {
     }
 
     public static ArmorStand getNewArmorStand(Location location, String name, int headDbId) {
-        ArmorStand as = (ArmorStand) location.getWorld().spawn(location,
+        ArmorStand as = location.getWorld().spawn(location,
                 ArmorStand.class,
                 armorStand -> {
                     armorStand.setVisible(false);

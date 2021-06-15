@@ -20,15 +20,15 @@ import java.util.UUID;
 public class PathPlayer {
 
     @Getter
-    private int globalPlayerId;
+    private final int globalPlayerId;
     @Getter
-    private UUID uuid;
+    private final UUID uuid;
 
     /**
      * Key = NodeID
      * Value = FoundInfo Objekt
      */
-    private Map<Integer, FoundInfo> foundInfos;
+    private final Map<Integer, FoundInfo> foundInfos;
 
     private Map<Integer, Path> activePaths;
 
@@ -194,7 +194,6 @@ public class PathPlayer {
         if (paused == null) {
             return;
         }
-        ;
         paused.run();
     }
 

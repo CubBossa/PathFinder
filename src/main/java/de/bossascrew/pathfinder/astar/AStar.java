@@ -76,9 +76,7 @@ public class AStar {
                     child.g_scores = temp_g_scores;
                     child.f_scores = temp_f_scores;
 
-                    if (queue.contains(child)) {
-                        queue.remove(child);
-                    }
+                    queue.remove(child);
 
                     queue.add(child);
 

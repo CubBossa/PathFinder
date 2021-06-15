@@ -8,7 +8,7 @@ import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import jdk.internal.net.http.common.Pair;
+import de.bossascrew.pathfinder.util.Pair;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
@@ -32,7 +32,7 @@ public class DatabaseModel {
     @Getter
     private static DatabaseModel instance;
 
-    private PathPlugin plugin;
+    private final PathPlugin plugin;
 
     public DatabaseModel(PathPlugin plugin) {
         this.plugin = plugin;

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class HotbarMenuHandler {
 
-    private PathPlugin plugin;
+    private final PathPlugin plugin;
 
     @Getter
     private static HotbarMenuHandler instance;
