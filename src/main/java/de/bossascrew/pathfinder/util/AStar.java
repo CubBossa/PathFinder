@@ -5,7 +5,7 @@ import java.util.*;
 public class AStar {
 
     public List<AStarNode> printPath(AStarNode target) {
-        List<AStarNode> path = new ArrayList<AStarNode>();
+        List<AStarNode> path = new ArrayList<>();
 
         for (AStarNode node = target; node != null; node = node.parent) {
             path.add(node);
@@ -47,7 +47,7 @@ public class AStar {
             explored.add(current);
 
             // goal found
-            if (current.nodeId == goal.nodeId) {
+            if (current.findable != null && current.findable.equals(goal.findable)) {
                 found = true;
             }
 

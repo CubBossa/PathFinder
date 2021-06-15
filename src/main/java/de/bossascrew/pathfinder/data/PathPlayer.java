@@ -1,11 +1,14 @@
 package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.player.PlayerHandler;
+import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.findable.PlayerFindable;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.AStar;
 import de.bossascrew.pathfinder.util.AStarNode;
+import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.Path;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -53,7 +56,7 @@ public class PathPlayer {
 
     public void findGroup(Findable findable, Date date) {
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
-        if(roadMap == null) {
+        if (roadMap == null) {
             return;
         }
         FindableGroup group = roadMap.getFindableGroup(findable.getNodeGroupId());
@@ -68,11 +71,11 @@ public class PathPlayer {
     }
 
     public void find(Findable findable, Date date) {
-        if(hasFound(findable.getDatabaseId())) {
+        if (hasFound(findable.getDatabaseId())) {
             return;
         }
         FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, findable.getDatabaseId(), date);
-        if(info == null) {
+        if (info == null) {
             return;
         }
         foundInfos.put(findable.getDatabaseId(), info);
@@ -88,11 +91,11 @@ public class PathPlayer {
 
     public void unfindGroup(Findable findable) {
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
-        if(roadMap == null) {
+        if (roadMap == null) {
             return;
         }
         FindableGroup group = roadMap.getFindableGroup(findable);
-        if(group == null) {
+        if (group == null) {
             return;
         }
         for (Findable n : group.getFindables()) {
@@ -101,7 +104,7 @@ public class PathPlayer {
     }
 
     public void unfindNodes(RoadMap roadMap) {
-        for(Findable findable : roadMap.getFindables()) {
+        for (Findable findable : roadMap.getFindables()) {
             unfind(findable);
         }
     }
@@ -134,18 +137,22 @@ public class PathPlayer {
         setPath(player, targetNode);
     }
 
-    public void setPath(Player player, Node targetNode) {
-
-        AStar aStar = new AStar();
-        //aStar.aStarSearch(startNode, goalNode);
-        //return aStar.printPath(goalNode);
-
-        //TODO astarmap aus roadmap erzeugen, astar aufruf, path erzeugen und setzen //aber bitte auslagern
+    public void setPath(final Player player, final Findable target) {
+        final PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        if (pathPlayer == null) {
+            return;
+        }
+        final PlayerFindable playerFindable = new PlayerFindable(player, target.getRoadMap());
+        PluginUtils.getInstance().runAsync(() -> {
+            AStarUtils.startPath(pathPlayer, playerFindable, target);
+        });
     }
 
     public void setPath(Path path) {
-        assert path != null;
-        activePaths.put(path.getRoadMapId(), path);
+        if (path == null) {
+            return;
+        }
+        activePaths.put(path.getRoadMap().getDatabaseId(), path);
     }
 
     public Collection<Path> getActivePaths() {
@@ -161,7 +168,9 @@ public class PathPlayer {
 
     public void cancelPath(RoadMap roadMap) {
         Path toBeCancelled = activePaths.get(roadMap.getDatabaseId());
-        assert toBeCancelled != null;
+        if (toBeCancelled == null) {
+            return;
+        }
 
         toBeCancelled.cancel();
         activePaths.remove(roadMap.getDatabaseId());
@@ -169,7 +178,9 @@ public class PathPlayer {
 
     public void pauseActivePath(RoadMap roadMap) {
         Path active = activePaths.get(roadMap.getDatabaseId());
-        assert active != null;
+        if(active == null) {
+            return;
+        }
         active.cancel();
     }
 
@@ -181,7 +192,9 @@ public class PathPlayer {
 
     public void resumePausedPath(RoadMap roadMap) {
         Path paused = activePaths.get(roadMap.getDatabaseId());
-        assert paused != null;
+        if(paused == null) {
+            return;
+        };
         paused.run();
     }
 
@@ -224,9 +237,5 @@ public class PathPlayer {
         if (selectedRoadMapId == id) {
             selectedRoadMapId = -1;
         }
-    }
-
-    public AStarNode asNode(Location location) {
-        return new AStarNode(-1, 0);
     }
 }

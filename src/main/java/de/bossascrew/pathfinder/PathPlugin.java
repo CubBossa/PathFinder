@@ -85,7 +85,7 @@ public class PathPlugin extends JavaPlugin {
                 .map(RoadMap::getName)
                 .collect(Collectors.toSet()));
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ACTIVE_ROADMAPS, context -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer().getUniqueId()).getActivePaths().stream()
-                .map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMapId()))
+                .map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMap().getDatabaseId()))
                 .filter(Objects::nonNull)
                 .map(RoadMap::getName)
                 .collect(Collectors.toSet()));

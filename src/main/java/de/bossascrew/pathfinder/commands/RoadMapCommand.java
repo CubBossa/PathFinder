@@ -1,10 +1,12 @@
 package de.bossascrew.pathfinder.commands;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.BukkitMain;
+import de.bossascrew.core.base.ComponentMenu;
+import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
@@ -45,33 +47,34 @@ public class RoadMapCommand extends BaseCommand {
     @Syntax("<Straßenkarte>")
     @CommandPermission("bcrew.command.roadmap.info")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
-    public void onInfo(Player player, RoadMap roadMap) {
+    public void onInfo(CommandSender sender, RoadMap roadMap) {
 
-        Component text = Component.text("===] ", NamedTextColor.DARK_GRAY)
-                .append(Component.text(roadMap.getName(), NamedTextColor.WHITE)
-                        .decoration(TextDecoration.UNDERLINED, true)
-                        .append(Component.text(" [===", NamedTextColor.DARK_GRAY)))
-                .append(getInfoEntry("Name: " + ChatColor.GREEN + roadMap.getName(),
-                        "/roadmap rename " + roadMap.getName() + " <neuer Name>",
-                        "Klicke, um den Namen zu ändern."))
-                .append(getInfoEntry("Welt: " + ChatColor.GREEN + roadMap.getWorld(),
-                        "/roadmap setworld " + roadMap.getName() + " <Name>",
-                        "Klicke, um die Welt zu ändern."))
-                .append(getInfoEntry("Pfadvisualisierer: " + ChatColor.GREEN + roadMap.getVisualizer().getName(),
-                        "/roadmap style " + roadMap.getName() + " path <Style>",
-                        "Klicke, um den Partikelstyle zu wechseln"))
-                .append(getInfoEntry("Editmode-visualisierer: " + ChatColor.GREEN + roadMap.getEditModeVisualizer().getName(),
-                        "/roadmap style " + roadMap.getName() + " editmode <Style>",
-                        "Klicke, um den Editmode-Partikelstyle zu wechseln"));
+        Menu menu = new Menu(ChatColor.DARK_GRAY + "===] " + ChatColor.WHITE + ChatColor.UNDERLINE + roadMap.getName() + ChatColor.DARK_GRAY + " [===");
+        menu.addSub(getSubMenu(
+                Component.text("Name: ").append(Component.text(roadMap.getName(), NamedTextColor.GREEN)),
+                Component.text("Klicke, um den Namen zu ändern."),
+                "/roadmap rename " + roadMap.getName() + " <neuer Name>"));
+        menu.addSub(getSubMenu(
+                Component.text("Welt: ").append(Component.text(roadMap.getWorld().getName(), NamedTextColor.GREEN)),
+                Component.text("Klicke, um die Welt zu ändern."),
+                "/roadmap setworld " + roadMap.getName() + " <Welt>"));
+        menu.addSub(getSubMenu(
+                Component.text("Pfadvisualisierer: ").append(Component.text(roadMap.getVisualizer().getName(), NamedTextColor.GREEN)),
+                Component.text("Klicke, um den Partikelstyle zu wechseln"),
+                "/roadmap style " + roadMap.getName() + " path <Style>"));
+        menu.addSub(getSubMenu(
+                Component.text("Editmode-Visualisierer: ").append(Component.text(roadMap.getEditModeVisualizer().getName(), NamedTextColor.GREEN)),
+                Component.text("Klicke, um den Editmode-Partikelstyle zu wechseln"),
+                "/roadmap style " + roadMap.getName() + " editmode <Style>"));
+
+        PlayerUtils.sendComponents(sender, menu.toComponents());
     }
 
-    private Component getInfoEntry(String name, String suggest, String hover) {
-        Component text = ComponentUtils.translateLegacy(ChatColor.WHITE + "\n » " + name)
-                .hoverEvent(HoverEvent.showText(ComponentUtils.translateLegacy(hover)))
-                .clickEvent(ClickEvent.suggestCommand(suggest));
-        return text;
+    private ComponentMenu getSubMenu(Component text, Component hover, String command) {
+        return new ComponentMenu(text
+                .hoverEvent(HoverEvent.showText(hover))
+                .clickEvent(ClickEvent.suggestCommand(command)));
     }
-
 
     @Subcommand("create")
     @Syntax("<Name> [<Welt>] [findbar]")
@@ -121,8 +124,9 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.list")
     public void onList(CommandSender sender) {
 
-        String list = "\n" + ChatColor.DARK_GRAY + "===] " + ChatColor.WHITE + ChatColor.UNDERLINE +
-                "Roadmaps" + ChatColor.DARK_GRAY + " [===";
+        Component list = Component.text("===] ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("Roadmaps").color(NamedTextColor.WHITE).decoration(TextDecoration.UNDERLINED, true))
+                .append(Component.text(" [===", NamedTextColor.DARK_GRAY));
 
         for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
 
@@ -133,17 +137,22 @@ public class RoadMapCommand extends BaseCommand {
                 }
             }
 
-            list += "\n" + ChatColor.GRAY + " - " + ChatColor.GREEN + roadMap.getName() +
-                    ChatColor.DARK_GRAY + "(ID: " + roadMap.getDatabaseId() + ") " + ChatColor.GRAY + "Welt: " +
-                    roadMap.getWorld().getName() + isEditing;
+            list = list.append(Component.newline())
+                    .append(Component.text(" - ", NamedTextColor.GRAY))
+                    .append(Component.text(roadMap.getName() + "(#" + roadMap.getDatabaseId() + ")", NamedTextColor.DARK_GREEN))
+                    .append(Component.text(", Welt: ", NamedTextColor.GRAY))
+                    .append(Component.text(roadMap.getWorld().getName(), NamedTextColor.GREEN)
+                            .hoverEvent(HoverEvent.showText(Component.text("Klicke zum Teleportieren")))
+                            .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "world " + roadMap.getWorld().getName()))) //TODO zu erster node teleportieren
+                    .append(Component.text(isEditing, NamedTextColor.RED));
         }
-        PlayerUtils.sendMessage(sender, list);
+        PlayerUtils.sendComponents(sender, Lists.newArrayList(list));
     }
 
     @Subcommand("style")
     @Syntax("<Straßenkarte> path|editmode <Style>")
     @CommandPermission("bcrew.command.roadmap.style.path")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " path " + PathPlugin.COMPLETE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " path|editmode " + PathPlugin.COMPLETE_VISUALIZER)
     public void onStyle(Player player, RoadMap roadMap, String pathmode, PathVisualizer visualizer) {
 
         roadMap.setVisualizer(visualizer);
@@ -194,7 +203,7 @@ public class RoadMapCommand extends BaseCommand {
 
         if (!force && roadMap.isEdited()) {
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Diese Straßenkarte wird gerade bearbeitet. " +
-                    "Nutze den [erzwingen] Parameter, um die Welt dennoch zu verwenden.");
+                    "Nutze den [erzwingen] Parameter, um die Welt trotzdem zu ändern.");
             return;
         }
 
