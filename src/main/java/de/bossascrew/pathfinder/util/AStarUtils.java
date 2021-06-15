@@ -8,7 +8,6 @@ import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
-import jdk.internal.net.http.common.Pair;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
