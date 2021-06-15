@@ -7,14 +7,14 @@ import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
-import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -226,7 +226,9 @@ public class RoadMapCommand extends BaseCommand {
 
         boolean findSingle = ungrouped != null;
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
-        assert pathPlayer != null;
+        if (pathPlayer == null) {
+            return;
+        }
 
         boolean all = nodename.equals("*");
         for (Findable findable : roadMap.getFindables()) {
@@ -251,7 +253,9 @@ public class RoadMapCommand extends BaseCommand {
 
         boolean findSingle = ungrouped != null;
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
-        assert pathPlayer != null;
+        if (pathPlayer == null) {
+            return;
+        }
 
         boolean all = nodename.equals("*");
         for (Findable findable : roadMap.getFindables()) {
@@ -280,7 +284,7 @@ public class RoadMapCommand extends BaseCommand {
     @CommandPermission("bcrew.command.roadmap.set-find-distance")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onFindDistance(CommandSender sender, RoadMap roadMap, double findDistance) {
-        if(findDistance < 0.05) {
+        if (findDistance < 0.05) {
             PlayerUtils.sendMessage(sender, ChatColor.RED + "Die angebenene Distanz ist zu klein.");
             return;
         }

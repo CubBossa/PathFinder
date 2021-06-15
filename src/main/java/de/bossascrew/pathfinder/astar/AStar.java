@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.util;
+package de.bossascrew.pathfinder.astar;
 
 import java.util.*;
 

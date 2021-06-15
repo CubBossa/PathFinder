@@ -1,15 +1,15 @@
 package de.bossascrew.pathfinder.data;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Date;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Getter
 public class FoundInfo {
 
-    private int globalPlayerId;
-    private int nodeId;
-    private Date foundDate;
+    private final int globalPlayerId;
+    private final int nodeId;
+    private final Date foundDate;
 }

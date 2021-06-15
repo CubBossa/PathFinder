@@ -5,13 +5,13 @@ import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.inventory.EditmodeUtils;
 import de.bossascrew.pathfinder.inventory.HotbarMenu;
 import de.bossascrew.pathfinder.util.PathTask;
-import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
-import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -218,13 +218,13 @@ public class RoadMap {
         cancelEditModes();
         for (UUID uuid : editingPlayers.keySet()) {
             Player player = Bukkit.getPlayer(uuid);
-            if(player == null) {
+            if (player == null) {
                 continue;
             }
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Die Straßenkarte, die du gerade bearbeitet hast, wurde gelöscht.");
         }
 
-        for(PathPlayer player : PathPlayerHandler.getInstance().getPlayers()) {
+        for (PathPlayer player : PathPlayerHandler.getInstance().getPlayers()) {
             player.deselectRoadMap(getDatabaseId());
             player.cancelPath(this);
         }
@@ -252,16 +252,21 @@ public class RoadMap {
 
     /**
      * Setzt den Bearbeitungsmodus für einen Spieler, wobei auch Hotbarmenü etc gesetzt werden => nicht threadsafe
-     * @param uuid des Spielers, dessen Modus gesetzt wird
+     *
+     * @param uuid    des Spielers, dessen Modus gesetzt wird
      * @param editing ob der Modus aktiviert oder deaktiviert wird
      */
     public void setEditMode(UUID uuid, boolean editing) {
         Player player = Bukkit.getPlayer(uuid);
         PathPlayer editor = PathPlayerHandler.getInstance().getPlayer(uuid);
-        assert editor != null;
+        if (editor == null) {
+            return;
+        }
 
         if (editing) {
-            assert player != null;
+            if (player == null) {
+                return;
+            }
             if (!isEdited()) {
                 startEditModeVisualizer();
             }
@@ -293,12 +298,16 @@ public class RoadMap {
 
     public void updateArmorStandPosition(Findable findable) {
         ArmorStand as = editModeNodeArmorStands.get(findable);
-        assert as != null;
+        if (as == null) {
+            return;
+        }
         as.teleport(findable.getVector().toLocation(world).add(ARMORSTAND_OFFSET));
 
         for (Pair<Findable, Findable> edge : getEdges(findable)) {
             ArmorStand asEdge = editModeEdgeArmorStands.get(edge);
-            assert asEdge != null;
+            if (asEdge == null) {
+                return;
+            }
             asEdge.teleport(getEdgeCenter(edge).add(ARMORSTAND_OFFSET));
         }
     }
@@ -317,7 +326,7 @@ public class RoadMap {
                     editModeVisualizer.getEdgeHeadId());
             editModeEdgeArmorStands.put(edge, edgeArmorStand);
         }
-        assert editModeTask.isCancelled();
+        editModeTask.cancel();
         editModeTask = (PathTask) Bukkit.getScheduler().runTaskTimerAsynchronously(PathPlugin.getInstance(), () -> {
 
             List<Player> players = new ArrayList<>();
@@ -339,7 +348,7 @@ public class RoadMap {
                             continue;
                         }
                         if (player.getLocation().distanceSquared(particleLocation) >
-                                editModeVisualizer.getParticleDistanceSquared()) {
+                                Math.pow(editModeVisualizer.getParticleDistance(), 2)) {
                             continue;
                         }
 
@@ -379,7 +388,6 @@ public class RoadMap {
     public void setVisualizer(PathVisualizer visualizer) {
         this.visualizer = visualizer;
         updateData();
-        //TODO alle aktuellen paths updaten.
     }
 
     public void setDefaultBezierTangentLength(double length) {
@@ -388,7 +396,9 @@ public class RoadMap {
     }
 
     public void setWorld(World world) {
-        assert world != null;
+        if (world == null) {
+            return;
+        }
         this.world = world;
         updateData();
     }
@@ -402,7 +412,10 @@ public class RoadMap {
     private Location getEdgeCenter(Pair<Findable, Findable> edge) {
         Findable a = edge.first;
         Findable b = edge.second;
-        assert a != null && b != null;
+        if (a == null || b == null) {
+            return null;
+        }
+
         Vector va = a.getVector().clone();
         Vector vb = b.getVector().clone();
         return va.add(vb.subtract(va)).toLocation(world);
@@ -420,7 +433,7 @@ public class RoadMap {
 
     public Collection<Findable> getFindables(PathPlayer player) {
         Player bukkitPlayer = Bukkit.getPlayer(player.getUuid());
-        if(bukkitPlayer == null) {
+        if (bukkitPlayer == null) {
             return new ArrayList<>();
         }
         return getFindables().stream()

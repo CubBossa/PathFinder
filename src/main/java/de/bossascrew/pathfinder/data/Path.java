@@ -1,7 +1,6 @@
-package de.bossascrew.pathfinder.util;
+package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.util.Vector;
@@ -26,7 +25,9 @@ public class Path extends ArrayList<Vector> {
     }
 
     public void run() {
-        assert !active;
+        if (active) {
+            return;
+        }
         this.active = true;
 
         System.out.println("showing path");
@@ -36,7 +37,9 @@ public class Path extends ArrayList<Vector> {
     }
 
     public void cancel() {
-        assert active;
+        if (!active) {
+            return;
+        }
         this.active = false;
 
         System.out.println("cancelling path");

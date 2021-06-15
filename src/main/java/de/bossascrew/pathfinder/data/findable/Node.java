@@ -1,9 +1,9 @@
 package de.bossascrew.pathfinder.data.findable;
 
 import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import lombok.Getter;
 import org.bukkit.Location;

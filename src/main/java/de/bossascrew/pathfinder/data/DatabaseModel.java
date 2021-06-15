@@ -2,12 +2,12 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.SQLUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
-import de.bossascrew.pathfinder.visualisation.PathVisualizer;
 import jdk.internal.net.http.common.Pair;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -208,7 +208,9 @@ public class DatabaseModel {
                         World world = Bukkit.getWorld(worldName);
                         PathVisualizer pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(pathVisId);
                         EditModeVisualizer editModeVisualizer = VisualizerHandler.getInstance().getEditVisualizer(editModeVisId);
-                        assert world != null;
+                        if (world == null) {
+                            return null;
+                        }
                         //TODO nach schönerem weg gucken, die defaults zu laden
                         if (pathVisualizer == null) {
                             pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(0);
@@ -473,8 +475,8 @@ public class DatabaseModel {
 
 
     public @Nullable
-    EditModeVisualizer newEditModeVisualizer(String name, Particle particle, double particleDistance, int particleLimit,
-                                             int schedulerStartDelay, int schedulerPeriod, int nodeHeadId, int edgeHeadId) {
+    EditModeVisualizer newEditModeVisualizer(String name, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit,
+                                             @Nullable Integer schedulerStartDelay, @Nullable Integer schedulerPeriod, @Nullable Integer nodeHeadId, @Nullable Integer edgeHeadId) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_visualizer_editmode` " +
                     "(name, particle, particle_distance, particle_limit, scheduler_start_delay, scheduler_period" +

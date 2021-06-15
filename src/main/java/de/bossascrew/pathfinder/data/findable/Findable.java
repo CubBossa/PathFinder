@@ -68,7 +68,8 @@ public interface Findable {
     /**
      * @return Gibt die Bezierwichtung zurück, oder falls nicht gesetzt null.
      */
-    @Nullable Double getBezierTangentLength();
+    @Nullable
+    Double getBezierTangentLength();
 
     /**
      * @return Gibt die Bezierwichtung zurück, und falls diese nicht gesetzt ist den vorgegebenen Defaultwert der Roadmap.

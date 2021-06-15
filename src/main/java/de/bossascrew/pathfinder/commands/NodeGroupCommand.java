@@ -3,9 +3,9 @@ package de.bossascrew.pathfinder.commands;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
@@ -24,7 +24,9 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandPermission("bcrew.command.nodegroup.list")
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = getRoadMap(player);
-        assert roadMap != null;
+        if (roadMap == null) {
+            return;
+        }
 
         int page = 0;
         if (pageInput != null) {
@@ -67,7 +69,9 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandPermission("bcrew.command.nodegroup.create")
     public void onCreate(Player player, String name) {
         RoadMap roadMap = getRoadMap(player);
-        assert roadMap != null;
+        if (roadMap == null) {
+            return;
+        }
 
         if (!roadMap.isGroupNameUnique(name)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
@@ -83,7 +87,9 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
     public void onDelete(Player player, FindableGroup group) {
         RoadMap roadMap = getRoadMap(player);
-        assert roadMap != null;
+        if (roadMap == null) {
+            return;
+        }
 
         roadMap.deleteFindableGroup(group.getDatabaseId());
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich gelöscht: " + ChatColor.GREEN + group.getName());
@@ -95,7 +101,9 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
     public void onRename(Player player, FindableGroup group, @Single String newName) {
         RoadMap roadMap = getRoadMap(player);
-        assert roadMap != null;
+        if (roadMap == null) {
+            return;
+        }
 
         if (!roadMap.isGroupNameUnique(newName)) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
@@ -119,7 +127,9 @@ public class NodeGroupCommand extends BaseCommand {
 
     private RoadMap getRoadMap(Player player) {
         PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-        assert pplayer != null;
+        if (pplayer == null) {
+            return null;
+        }
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());
         if (roadMap == null) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Du musst eine RoadMap auswählen. (/roadmap select)");

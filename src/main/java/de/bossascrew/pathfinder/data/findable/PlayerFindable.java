@@ -3,7 +3,6 @@ package de.bossascrew.pathfinder.data.findable;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -51,7 +50,8 @@ public class PlayerFindable implements Findable {
         return null;
     }
 
-    public void removeFindableGroup() {}
+    public void removeFindableGroup() {
+    }
 
     public Double getBezierTangentLength() {
         return roadMap.getDefaultBezierTangentLength();

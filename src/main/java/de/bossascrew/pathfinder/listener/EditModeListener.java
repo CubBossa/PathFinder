@@ -5,7 +5,10 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.UUID;
 
@@ -30,7 +33,9 @@ public class EditModeListener implements Listener {
 
         UUID uuid = event.getPlayer().getUniqueId();
         PathPlayer player = PathPlayerHandler.getInstance().getPlayer(uuid);
-        assert player != null;
+        if (player == null) {
+            return;
+        }
 
         if (!player.isEditing()) {
             return;

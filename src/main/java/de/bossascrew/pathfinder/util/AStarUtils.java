@@ -1,12 +1,15 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.pathfinder.astar.AStar;
+import de.bossascrew.pathfinder.astar.AStarEdge;
+import de.bossascrew.pathfinder.astar.AStarNode;
+import de.bossascrew.pathfinder.data.Path;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import jdk.internal.net.http.common.Pair;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
@@ -20,7 +23,7 @@ public class AStarUtils {
 
     public static void startPath(PathPlayer player, PlayerFindable start, Findable target) {
         Pair<AStarNode, AStarNode> pair = createAStarRelations(target.getRoadMap(), player, start.getLocation(), target);
-        if(pair == null) {
+        if (pair == null) {
             return;
         }
         AStar aStar = new AStar();
@@ -38,6 +41,7 @@ public class AStarUtils {
 
     /**
      * Threadsafe, kann asynchron ausgeführt werden.
+     *
      * @param roadMap Die Straßenkarte, aus der der AStar erzeugt wird.
      * @param start   Die Startposition für den Algorithmus. Aus ihr wird die Startnode erzeugt.
      * @param player  Der PathPlayer, für den die Straßenkarte angepasst wird. Für ihn laufen die Permissionabfragen und "Gefunden"-Abfragen
@@ -63,7 +67,7 @@ public class AStarUtils {
                 nearest = aStarNode;
                 nearestDist = dist;
             }
-            if(findable.getDatabaseId() == target.getDatabaseId()) {
+            if (findable.getDatabaseId() == target.getDatabaseId()) {
                 targetNode = aStarNode;
             }
         }
@@ -85,7 +89,7 @@ public class AStarUtils {
             }
             aStarNode.adjacencies = adjacencies;
         }
-        if(targetNode == null) {
+        if (targetNode == null) {
             return null;
         }
         return new Pair<>(playerNode, targetNode);

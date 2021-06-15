@@ -1,8 +1,6 @@
-package de.bossascrew.pathfinder.util;
+package de.bossascrew.pathfinder.astar;
 
 import de.bossascrew.pathfinder.data.findable.Findable;
-
-import javax.annotation.Nullable;
 
 public class AStarNode {
 
@@ -14,7 +12,7 @@ public class AStarNode {
     public AStarNode parent;
     public AStarEdge[] adjacencies;
 
-    public AStarNode(@Nullable Findable findable, double h_scores) {
+    public AStarNode(Findable findable, double h_scores) {
         this.findable = findable;
         this.h_scores = h_scores;
     }

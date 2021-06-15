@@ -7,7 +7,6 @@ import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
@@ -35,7 +34,9 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
 
         GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(event.getPlayer().getUniqueId());
-        assert globalPlayer != null;
+        if (globalPlayer == null) {
+            return;
+        }
         PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
     }
 
@@ -43,7 +44,9 @@ public class PlayerListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
 
         PathPlayer player = PathPlayerHandler.getInstance().getPlayer(event.getPlayer().getUniqueId());
-        assert player != null;
+        if (player == null) {
+            return;
+        }
         if (player.isEditing()) {
             player.clearEditMode();
         }
@@ -57,7 +60,9 @@ public class PlayerListener implements Listener {
 
         PluginUtils.getInstance().runAsync(() -> {
             GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
-            assert globalPlayer != null;
+            if (globalPlayer == null) {
+                return;
+            }
             PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
 
             Collection<RoadMap> roadMaps = RoadMapHandler.getInstance().getRoadMapsFindable(world);

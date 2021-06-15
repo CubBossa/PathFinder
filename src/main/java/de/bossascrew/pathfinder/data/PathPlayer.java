@@ -7,12 +7,9 @@ import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.AStarNode;
 import de.bossascrew.pathfinder.util.AStarUtils;
-import de.bossascrew.pathfinder.util.Path;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -133,7 +130,9 @@ public class PathPlayer {
 
     public void setPath(Node targetNode) {
         Player player = Bukkit.getPlayer(uuid);
-        assert player != null;
+        if (player == null) {
+            return;
+        }
         setPath(player, targetNode);
     }
 
@@ -178,7 +177,7 @@ public class PathPlayer {
 
     public void pauseActivePath(RoadMap roadMap) {
         Path active = activePaths.get(roadMap.getDatabaseId());
-        if(active == null) {
+        if (active == null) {
             return;
         }
         active.cancel();
@@ -192,9 +191,10 @@ public class PathPlayer {
 
     public void resumePausedPath(RoadMap roadMap) {
         Path paused = activePaths.get(roadMap.getDatabaseId());
-        if(paused == null) {
+        if (paused == null) {
             return;
-        };
+        }
+        ;
         paused.run();
     }
 

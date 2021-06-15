@@ -1,8 +1,8 @@
 package de.bossascrew.pathfinder.handler;
 
 import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.RoadMap;
 import lombok.Getter;
 import org.bukkit.World;
 
@@ -27,7 +27,9 @@ public class RoadMapHandler {
     public @Nullable
     RoadMap createRoadMap(String name, World world, boolean findableNodes) {
         RoadMap rm = DatabaseModel.getInstance().createRoadMap(name, world, findableNodes);
-        assert rm != null;
+        if (rm == null) {
+            return null;
+        }
         storedRoadMapsByID.put(rm.getDatabaseId(), rm);
         return rm;
     }

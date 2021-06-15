@@ -6,8 +6,8 @@ import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.visualisation.EditModeVisualizer;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
@@ -22,7 +22,9 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandPermission("bcrew.command.visualizer.editmode.create")
     public void onCreate(CommandSender sender, @Single String name, Particle particle) {
         EditModeVisualizer edit = VisualizerHandler.getInstance().getEditVisualizer("default");
-        assert edit != null;
+        if (edit == null) {
+            return;
+        }
 
         if (!VisualizerHandler.getInstance().isNameUniqueEditMode(name)) {
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Der Name ist bereits vergeben");
