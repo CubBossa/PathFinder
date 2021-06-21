@@ -6,12 +6,3 @@ api-version: 1.16
 
 depend:
   - bossascrew-core-bukkit
-
-commands:
-  cancelpath:
-  editmode-visualizer:
-  finde:
-  nodegroup:
-  pathsystem:
-  roadmap:
-  waypoint:
