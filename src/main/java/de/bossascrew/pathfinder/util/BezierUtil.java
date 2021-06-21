@@ -30,14 +30,14 @@ public class BezierUtil {
     }
 
     /**
-     * Berechnet eine Liste aus Vektoren, die auf der Tangentenkurve zwischen Punkt A und B liegen. Es wird nur ein Tangentenpunkt
-     * entgegen genommen, es findet also eine vereinfachte Bezierberechnung statt.
+     * Berechnet eine Liste aus Vektoren, die auf der Bezierkurve zwischen Punkt A und B liegen. Es wird nur ein Kontrollpunkt
+     * benötigt, es findet also eine vereinfachte Bezierberechnung statt.
      *
      * @param steps              Wie viele Punkte auf der Kurve berechnet werden sollen
      * @param pointA             Der Startpunkt der Kurve
      * @param pointB             Der Schlusspunkt der Kurve
-     * @param sharedTangentPoint der Tangentenpunkt für beide Punkte.
-     * @return eine Liste aus Vektoren, die auf der Tangente liegen
+     * @param sharedTangentPoint der Kontrollpunkt für beide Punkte.
+     * @return eine Liste aus Vektoren, die auf der Kurve liegen
      * @see <a href="https://javascript.info/bezier-curve">bezier curve</a>
      */
     public List<Vector> getBezierCurve(int steps, Vector pointA, Vector pointB, Vector sharedTangentPoint) {
@@ -55,14 +55,14 @@ public class BezierUtil {
     }
 
     /**
-     * Gibt eine Liste aus Vektoren, die auf der Bezierkurve zwischen den Punkten A und B mit den zugehörigen Tangentengreifern liegen, zurück.
+     * Gibt eine Liste aus Vektoren, die auf der Bezierkurve zwischen den Punkten A und B mit den zugehörigen Kontrollpunkten liegen, zurück.
      *
      * @param steps    Wie viele Punkte auf der Kurve berechnet werden sollen
      * @param pointA   Der Startpunkt der Kurve
      * @param pointB   Der Schlusspunkt der Kurve
-     * @param tangentA Der Tangentengreifer für den Startpunkt der Kurve (als Punkt, nicht als Vektor)
-     * @param tangentB Der Tangentengreifer für den Schlusspunkt der Kurve (als Punkt, nicht als Vektor)
-     * @return eine Liste aus Vektoren, die auf der Tangente liegen
+     * @param tangentA Der Kontrollpunkt für den Startpunkt der Kurve (als Punkt, nicht als Vektor)
+     * @param tangentB Der Kontrollpunkt für den Schlusspunkt der Kurve (als Punkt, nicht als Vektor)
+     * @return eine Liste aus Vektoren, die auf der Kurve liegen
      * @see <a href="https://javascript.info/bezier-curve">bezier curve</a>
      */
     public List<Vector> getBezierCurve(int steps, Vector pointA, Vector pointB, Vector tangentA, Vector tangentB) {
