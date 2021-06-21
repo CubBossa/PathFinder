@@ -16,10 +16,4 @@ public class PathSystemCommand extends BaseCommand {
     public void onHelp(Player player) {
         //TODO bedienungsanleitung senden
     }
-
-
-    @Subcommand("reload")
-    public void onReload(Player player) {
-        //TODO falls gebündelte chatmessages, messages neuladen
-    }
 }

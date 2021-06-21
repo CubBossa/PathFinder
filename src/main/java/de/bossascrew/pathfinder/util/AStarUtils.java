@@ -3,7 +3,7 @@ package de.bossascrew.pathfinder.util;
 import de.bossascrew.pathfinder.astar.AStar;
 import de.bossascrew.pathfinder.astar.AStarEdge;
 import de.bossascrew.pathfinder.astar.AStarNode;
-import de.bossascrew.pathfinder.data.Path;
+import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -20,6 +20,13 @@ import java.util.stream.Collectors;
 
 public class AStarUtils {
 
+    /**
+     * Threadsafe, kann asynchron ausgeführt werden.
+     * Startet die Pfaddarstellung für einen Spieler
+     * @param player Der Spieler, für den die Pfaddarstellung gestartet werden soll.
+     * @param start Der Spieler als Findable für die Berechnung mit Startwegpunkt an der Spielerposition
+     * @param target Das Findable, das der Spieler sucht
+     */
     public static void startPath(PathPlayer player, PlayerFindable start, Findable target) {
         Pair<AStarNode, AStarNode> pair = createAStarRelations(target.getRoadMap(), player, start.getLocation(), target);
         if (pair == null) {
@@ -32,7 +39,7 @@ public class AStarUtils {
                 .map(Findable::getVector)
                 .collect(Collectors.toList());
 
-        Path path = new Path(start.getRoadMap());
+        ParticlePath path = new ParticlePath(start.getRoadMap());
         path.addAll(pathVectors);
 
         player.setPath(path);

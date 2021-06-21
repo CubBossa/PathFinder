@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.HotbarMenu;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
@@ -10,7 +11,6 @@ import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.inventory.EditmodeUtils;
-import de.bossascrew.pathfinder.inventory.HotbarMenu;
 import de.bossascrew.pathfinder.util.Pair;
 import de.bossascrew.pathfinder.util.PathTask;
 import lombok.Getter;
@@ -272,7 +272,7 @@ public class RoadMap {
             }
 
             editor.setEditMode(databaseId);
-            HotbarMenu menu = EditmodeUtils.getNewMenu();
+            HotbarMenu menu = getHotbarMenu();
             editingPlayers.put(uuid, menu);
             //menu.openInventory(player);
         } else {
@@ -286,6 +286,18 @@ public class RoadMap {
                 //editingPlayers.get(uuid).handleInventoryClose(player);
             }
         }
+    }
+
+    private HotbarMenu getHotbarMenu() { //TODO
+        //wegpunkt werkzeug: rechtsklick setzen, linksklick löschen
+        //kantenwerkzeug: rechtsklick kante aufspannen, linksklick alle kanten eines nodes löschen. Linksklick auf kante = löschen
+        //kompass: tp zum nächsten Node
+        //Slimeball: Rundung der Tangenten einstellen
+        //nametag: Permissionnode setzen
+        //Kiste: GruppenGUI: erstes item barriere = keine gruppe. dann alle gruppen als nametags. unten rechts emerald für neue gruppe.
+        //rechtsklick auf gruppe = zuweisen. Linksklick mit Confirm = gruppe löschen.
+        //Gruppenicons haben in der Lore eine Liste aller Nodes, die Teil der Gruppe sind.
+        return new HotbarMenu();
     }
 
     public boolean isEditing(UUID uuid) {
@@ -359,7 +371,7 @@ public class RoadMap {
                     }
                 }
             }
-        }, editModeVisualizer.getSchedulerStartDelay(), editModeVisualizer.getSchedulerPeriod());
+        }, 0, editModeVisualizer.getSchedulerPeriod());
     }
 
     public void stopEditModeVisualizer() {

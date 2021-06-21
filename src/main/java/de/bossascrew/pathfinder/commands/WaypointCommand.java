@@ -18,7 +18,9 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-@CommandAlias("waypoint|wp")
+import javax.annotation.Nullable;
+
+@CommandAlias("waypoint|wp|node")
 public class WaypointCommand extends BaseCommand {
 
     @Subcommand("create")
@@ -189,9 +191,13 @@ public class WaypointCommand extends BaseCommand {
         return Component.text(" | ", NamedTextColor.DARK_GRAY);
     }
 
-    private RoadMap getRoadMap(Player player) {
+    private @Nullable
+    RoadMap getRoadMap(Player player) {
         PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         if (pplayer == null) {
+            return null;
+        }
+        if (pplayer.getSelectedRoadMapId() == null) {
             return null;
         }
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());

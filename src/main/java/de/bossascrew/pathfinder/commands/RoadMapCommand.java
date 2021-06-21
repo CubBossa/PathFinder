@@ -27,12 +27,12 @@ import org.bukkit.entity.Player;
 
 import java.util.Date;
 
-@CommandAlias("roadmap|rm")
+@CommandAlias("roadmap")
 public class RoadMapCommand extends BaseCommand {
 
     @Subcommand("help")
+    @CatchUnknown
     @CommandPermission("bcrew.command.roadmap.help")
-    @Default
     public void onHelp(Player player) {
         String help = "\n" + ChatColor.DARK_GRAY + "===] " + ChatColor.WHITE + ChatColor.UNDERLINE +
                 "Roadmap Befehle" + ChatColor.DARK_GRAY + " [===";
@@ -95,7 +95,7 @@ public class RoadMapCommand extends BaseCommand {
             return;
         }
 
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Roadmap + " + ChatColor.GREEN + name + ChatColor.GRAY + " erfolgreich erstellt");
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Roadmap " + ChatColor.GREEN + name + ChatColor.GRAY + " erfolgreich erstellt");
     }
 
     @Subcommand("delete")
@@ -143,35 +143,35 @@ public class RoadMapCommand extends BaseCommand {
                     .append(Component.text(", Welt: ", NamedTextColor.GRAY))
                     .append(Component.text(roadMap.getWorld().getName(), NamedTextColor.GREEN)
                             .hoverEvent(HoverEvent.showText(Component.text("Klicke zum Teleportieren")))
-                            .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "world " + roadMap.getWorld().getName()))) //TODO zu erster node teleportieren
+                            .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/world " + roadMap.getWorld().getName()))) //TODO zu erster node teleportieren
                     .append(Component.text(isEditing, NamedTextColor.RED));
         }
         PlayerUtils.sendComponents(sender, Lists.newArrayList(list));
     }
 
-    @Subcommand("style")
-    @Syntax("<Straßenkarte> path|editmode <Style>")
-    @CommandPermission("bcrew.command.roadmap.style.path")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " path|editmode " + PathPlugin.COMPLETE_VISUALIZER)
-    public void onStyle(Player player, RoadMap roadMap, String pathmode, PathVisualizer visualizer) {
+    @Subcommand("set path-visualizer")
+    @Syntax("<Straßenkarte> <Style>")
+    @CommandPermission("bcrew.command.roadmap.set.path-visualizer")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_PATH_VISUALIZER)
+    public void onStyle(Player player, RoadMap roadMap, PathVisualizer visualizer) {
 
         roadMap.setVisualizer(visualizer);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
     }
 
-    @Subcommand("style")
-    @Syntax("<Straßenkarte> path|editmode <Style>")
-    @CommandPermission("bcrew.command.roadmap.style.editmode")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " editmode " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
-    public void onStyleEditMode(Player player, RoadMap roadMap, String editmode, EditModeVisualizer visualizer) {
+    @Subcommand("set editmode-visualizer")
+    @Syntax("<Straßenkarte> <Style>")
+    @CommandPermission("bcrew.command.roadmap.set.editmode-visualizer")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    public void onStyleEditMode(Player player, RoadMap roadMap, EditModeVisualizer visualizer) {
 
         roadMap.setVisualizer(visualizer);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
     }
 
-    @Subcommand("rename")
+    @Subcommand("set name")
     @Syntax("<Straßenkarte> <neuer Name>")
-    @CommandPermission("bcrew.command.roadmap.rename")
+    @CommandPermission("bcrew.command.roadmap.set.name")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onRename(CommandSender sender, RoadMap roadMap, @Single String nameNew) {
         String nameOld = roadMap.getName();
@@ -194,9 +194,9 @@ public class RoadMapCommand extends BaseCommand {
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Standard-Tangentenstärke erfolgreich gesetzt: " + strength);
     }
 
-    @Subcommand("setworld")
+    @Subcommand("set world")
     @Syntax("<Straßenkarte> <Welt> [erzwingen]")
-    @CommandPermission("bcrew.command.roadmap.setworld")
+    @CommandPermission("bcrew.command.roadmap.set.world")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " erzwingen")
     public void onChangeWorld(CommandSender sender, RoadMap roadMap, World world, @Optional @Single @Values("erzwingen") String forceString) {
         boolean force = forceString != null;
@@ -270,18 +270,18 @@ public class RoadMapCommand extends BaseCommand {
                 ChatColor.GRAY + " hat " + ChatColor.GREEN + nodename + ChatColor.GRAY + " vergessen.");
     }
 
-    @Subcommand("set-findable")
+    @Subcommand("set findable")
     @Syntax("<Straßenkarte> <findbare Nodes>")
-    @CommandPermission("bcrew.command.roadmap.set-findable")
+    @CommandPermission("bcrew.command.roadmap.set.findable")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(CommandSender sender, RoadMap roadMap, Boolean findbar) {
         roadMap.setFindableNodes(findbar);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node-Findbarkeit umgestellt auf: " + ChatColor.GREEN + (findbar ? "an" : "aus"));
     }
 
-    @Subcommand("set-find-distance")
+    @Subcommand("set find-distance")
     @Syntax("<Straßenkarte> <finde-entfernung>")
-    @CommandPermission("bcrew.command.roadmap.set-find-distance")
+    @CommandPermission("bcrew.command.roadmap.set.find-distance")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
     public void onFindDistance(CommandSender sender, RoadMap roadMap, double findDistance) {
         if (findDistance < 0.05) {
@@ -292,4 +292,27 @@ public class RoadMapCommand extends BaseCommand {
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Finde-Entfernung erfolgreich gesetzt: " + ChatColor.GREEN + findDistance);
     }
 
+    @Subcommand("select")
+    @Syntax("<Straßenkarte>")
+    @CommandPermission("bcrew.command.roadmap.select")
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+    public void onSelect(Player player, RoadMap roadMap) {
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        if(pathPlayer == null) {
+            return;
+        }
+        pathPlayer.setSelectedRoadMap(roadMap.getDatabaseId());
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte ausgewählt: " + roadMap.getName());
+    }
+
+    @Subcommand("deselect")
+    @CommandPermission("bcrew.command.roadmap.select")
+    public void onDeselect(Player player) {
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        if(pathPlayer == null) {
+            return;
+        }
+        pathPlayer.deselectRoadMap();
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte nicht mehr ausgewählt.");
+    }
 }

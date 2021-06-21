@@ -9,9 +9,11 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -30,11 +32,12 @@ public class PathPlayer {
      */
     private final Map<Integer, FoundInfo> foundInfos;
 
-    private Map<Integer, Path> activePaths;
+    private Map<Integer, ParticlePath> activePaths;
 
     private int editModeRoadMapId;
     @Getter
-    private int selectedRoadMapId;
+    @Nullable
+    private Integer selectedRoadMapId = null;
 
     public PathPlayer(int globalPlayerId) {
         this.globalPlayerId = globalPlayerId;
@@ -147,26 +150,26 @@ public class PathPlayer {
         });
     }
 
-    public void setPath(Path path) {
+    public void setPath(ParticlePath path) {
         if (path == null) {
             return;
         }
         activePaths.put(path.getRoadMap().getDatabaseId(), path);
     }
 
-    public Collection<Path> getActivePaths() {
+    public Collection<ParticlePath> getActivePaths() {
         return activePaths.values();
     }
 
     public void cancelPaths() {
-        for (Path path : activePaths.values()) {
+        for (ParticlePath path : activePaths.values()) {
             path.cancel();
         }
         activePaths.clear();
     }
 
     public void cancelPath(RoadMap roadMap) {
-        Path toBeCancelled = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath toBeCancelled = activePaths.get(roadMap.getDatabaseId());
         if (toBeCancelled == null) {
             return;
         }
@@ -176,7 +179,7 @@ public class PathPlayer {
     }
 
     public void pauseActivePath(RoadMap roadMap) {
-        Path active = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath active = activePaths.get(roadMap.getDatabaseId());
         if (active == null) {
             return;
         }
@@ -184,22 +187,22 @@ public class PathPlayer {
     }
 
     public void pauseActivePaths() {
-        for (Path path : activePaths.values()) {
+        for (ParticlePath path : activePaths.values()) {
             path.cancel();
         }
     }
 
     public void resumePausedPath(RoadMap roadMap) {
-        Path paused = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath paused = activePaths.get(roadMap.getDatabaseId());
         if (paused == null) {
             return;
         }
-        paused.run();
+        paused.run(uuid);
     }
 
     public void resumePausedPaths() {
-        for (Path path : activePaths.values()) {
-            path.run();
+        for (ParticlePath path : activePaths.values()) {
+            path.run(uuid);
         }
     }
 
@@ -225,16 +228,22 @@ public class PathPlayer {
     }
 
     public void setSelectedRoadMap(int roadMapId) {
+        deselectRoadMap();
         this.selectedRoadMapId = roadMapId;
     }
 
     public void deselectRoadMap() {
+        if(selectedRoadMapId == null) {
+            return;
+        }
         deselectRoadMap(selectedRoadMapId);
     }
 
-    public void deselectRoadMap(int id) {
-        if (selectedRoadMapId == id) {
-            selectedRoadMapId = -1;
+    public boolean deselectRoadMap(int id) {
+        if (selectedRoadMapId != null && selectedRoadMapId == id) {
+            selectedRoadMapId = null;
+            return true;
         }
+        return false;
     }
 }

@@ -33,6 +33,4 @@ public class FindeCommand extends BaseCommand {
     public void onFindeShop(Player player) {
 
     }
-
-
 }

@@ -1,7 +1,11 @@
 package de.bossascrew.pathfinder.data.visualisation;
 
+import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.data.DatabaseModel;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 /**
  * Definiert, wie der Editmode dargestellt wird. Ist eine Variable auf null gesetzt, wird der Default geladen.
@@ -10,34 +14,11 @@ import lombok.Setter;
 @Setter
 public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
 
-    private Integer schedulerStartDelay = null;
-    private Integer schedulerPeriod = null;
-
     private Integer nodeHeadId = null;
     private Integer edgeHeadId = null;
 
-    public EditModeVisualizer(int databaseId, String name) {
-        super(databaseId, name);
-    }
-
-    public Integer getSchedulerStartDelay() {
-        if (schedulerStartDelay == null) {
-            if (parent == null) {
-                return null;
-            }
-            return parent.getSchedulerStartDelay();
-        }
-        return schedulerStartDelay;
-    }
-
-    public Integer getSchedulerPeriod() {
-        if (schedulerPeriod == null) {
-            if (parent == null) {
-                return null;
-            }
-            return parent.getSchedulerPeriod();
-        }
-        return schedulerPeriod;
+    public EditModeVisualizer(int databaseId, String name, @Nullable Integer parentId) {
+        super(databaseId, name, parentId);
     }
 
     public Integer getNodeHeadId() {
@@ -50,6 +31,11 @@ public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
         return nodeHeadId;
     }
 
+    public @Nullable
+    Integer getUnsafeNodeHeadId() {
+        return nodeHeadId;
+    }
+
     public Integer getEdgeHeadId() {
         if (edgeHeadId == null) {
             if (parent == null) {
@@ -58,5 +44,24 @@ public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
             return parent.getEdgeHeadId();
         }
         return edgeHeadId;
+    }
+
+    public @Nullable
+    Integer getUnsafeEdgeHeadId() {
+        return edgeHeadId;
+    }
+
+    public void setAndSaveNodeHeadId(@Nullable Integer nodeHeadId) {
+        this.nodeHeadId = nodeHeadId;
+        saveData();
+    }
+
+    public void setAndSaveEdgeHeadId(@Nullable Integer edgeHeadId) {
+        this.edgeHeadId = edgeHeadId;
+        saveData();
+    }
+
+    public void saveData() {
+        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateEditModeVisualizer(this));
     }
 }

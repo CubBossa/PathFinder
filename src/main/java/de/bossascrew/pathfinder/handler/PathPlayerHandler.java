@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.handler;
 
+import com.google.common.collect.Maps;
 import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class PathPlayerHandler {
 
     public PathPlayerHandler() {
         instance = this;
+        pathPlayer = Maps.newHashMap(); //TODO pathplayer aus datenbank laden?
     }
 
     public Collection<PathPlayer> getPlayers() {

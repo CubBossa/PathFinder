@@ -52,28 +52,4 @@ public class EditmodeUtils {
                 });
         return as;
     }
-
-    public static HotbarMenu getNewMenu() {
-        HotbarMenu menu = new HotbarMenu();
-
-        //menu.setSpecialItemAndClickHandler(0, EditmodeUtils.EDGE_TOOL, (integer, whoClicked) -> {
-
-        //TODO
-
-        //});
-
-
-        //TODO equippe mit wichtigen Items für Editmode
-
-        //wegpunkt werkzeug: rechtsklick setzen, linksklick löschen
-        //kantenwerkzeug: rechtsklick kante aufspannen, linksklick alle kanten eines nodes löschen. Linksklick auf kante = löschen
-        //kompass: tp zum nächsten Node
-        //Slimeball: Rundung der Tangenten einstellen
-        //nametag: Permissionnode setzen
-        //Kiste: GruppenGUI: erstes item barriere = keine gruppe. dann alle gruppen als nametags. unten rechts emerald für neue gruppe.
-        //rechtsklick auf gruppe = zuweisen. Linksklick mit Confirm = gruppe löschen.
-        //Gruppenicons haben in der Lore eine Liste aller Nodes, die Teil der Gruppe sind.
-
-        return menu;
-    }
 }
