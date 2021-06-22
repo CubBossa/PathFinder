@@ -180,7 +180,7 @@ public class DatabaseModel {
                     int databaseId = resultSet.getInt(1);
 
                     PathVisualizer pathVisualizer = VisualizerHandler.getInstance().getPathVisualizer(pathVis);
-                    EditModeVisualizer editModeVisualizer = VisualizerHandler.getInstance().getEditVisualizer(editModeVis);
+                    EditModeVisualizer editModeVisualizer = VisualizerHandler.getInstance().getEditModeVisualizer(editModeVis);
 
                     return new RoadMap(databaseId, name, world, findableNodes,
                             pathVisualizer, editModeVisualizer, findDist, tangentLength);
@@ -211,7 +211,7 @@ public class DatabaseModel {
 
                         World world = Bukkit.getWorld(worldName);
                         PathVisualizer pathVisualizer = pathVisId == null ? null : VisualizerHandler.getInstance().getPathVisualizer(pathVisId);
-                        EditModeVisualizer editModeVisualizer = editModeVisId == null ? null : VisualizerHandler.getInstance().getEditVisualizer(editModeVisId);
+                        EditModeVisualizer editModeVisualizer = editModeVisId == null ? null : VisualizerHandler.getInstance().getEditModeVisualizer(editModeVisId);
                         if (world == null) {
                             return null;
                         }

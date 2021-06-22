@@ -9,6 +9,7 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.util.VisualizerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -21,12 +22,6 @@ import org.bukkit.command.CommandSender;
 @CommandAlias("editmode-visualizer|emv")
 public class EditModeVisualizerCommand extends BaseCommand {
 
-    private interface VisualizerProperty<T> {
-        Component accept(T visualizer);
-    }
-
-    public static final Component NULL_COMPONENT = Component.text("null", NamedTextColor.GRAY);
-
     @Subcommand("list")
     @CommandPermission("bcrew.command.visualizer.editmode.list")
     public void onList(CommandSender sender) {
@@ -37,7 +32,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
             menu.addSub(new ComponentMenu(Component.text(vis.getName() + "(#" + vis.getDatabaseId() + ")", NamedTextColor.DARK_GREEN)
                     .append(Component.text(", Parent: ", NamedTextColor.GRAY))
                     .append(vis.getParent() == null ?
-                            NULL_COMPONENT :
+                            VisualizerUtils.NULL_COMPONENT :
                             Component.text(vis.getParent().getName(), NamedTextColor.GREEN))
                     .clickEvent(ClickEvent.runCommand("/emv info " + vis.getName()))));
         }
@@ -55,7 +50,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Der Name ist bereits vergeben");
             return;
         }
-        EditModeVisualizer parentVis = VisualizerHandler.getInstance().getEditVisualizer(parent);
+        EditModeVisualizer parentVis = VisualizerHandler.getInstance().getEditModeVisualizer(parent);
         if (parentVis == null) {
             PlayerUtils.sendMessage(sender, ChatColor.RED + "Unbekannter Visualizer: \"" + parent + "\". Setze Default-Visualizer");
         }
@@ -90,33 +85,45 @@ public class EditModeVisualizerCommand extends BaseCommand {
                         .clickEvent(ClickEvent.suggestCommand("/emv set name " + visualizer.getName() + " <Neuer Name>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Parent: ")
-                .append(getParentComponent(visualizer, false, visualizer1 -> Component.text(visualizer1.getName(), NamedTextColor.GREEN)))
+                .append(VisualizerUtils.getParentList(visualizer))
                 .hoverEvent(HoverEvent.showText(Component.text("Parent setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set parent " + visualizer.getName() + " <Parent>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel: ")
-                .append(getParentComponent(visualizer, true, visualizer1 ->
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticle() == null ? null : Component.text(visualizer1.getUnsafeParticle().name(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle " + visualizer.getName() + " <Partikel>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Limit: ")
-                .append(getParentComponent(visualizer, true, visualizer1 ->
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticleLimit() == null ? null : Component.text(visualizer1.getUnsafeParticleLimit(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Limit setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle-limit " + visualizer.getName() + " <Partikellimit>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Distanz: ")
-                .append(getParentComponent(visualizer, true, visualizer1 ->
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticleDistance() == null ? null : Component.text(visualizer1.getUnsafeParticleDistance(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Distanz setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle-distance " + visualizer.getName() + " <Partikeldistanz>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Scheduler-Wiederholrate: ")
-                .append(getParentComponent(visualizer, true, visualizer1 ->
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeSchedulerPeriod() == null ? null : Component.text(visualizer1.getUnsafeSchedulerPeriod(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Scheduler-Wiederholrate setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set scheduler-period " + visualizer.getName() + " <Wiederholrate in Ticks>"))));
+
+        menu.addSub(new ComponentMenu(Component.text("Node Head-ID: ")
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                        visualizer1.getUnsafeNodeHeadId() == null ? null : Component.text(visualizer1.getUnsafeNodeHeadId(), NamedTextColor.GREEN)))
+                .hoverEvent(HoverEvent.showText(Component.text("Node Head-ID setzen")))
+                .clickEvent(ClickEvent.suggestCommand("/emv set node-head-id " + visualizer.getName() + " <HeadID>"))));
+
+        menu.addSub(new ComponentMenu(Component.text("Edge Head-ID: ")
+                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                        visualizer1.getUnsafeEdgeHeadId() == null ? null : Component.text(visualizer1.getUnsafeEdgeHeadId(), NamedTextColor.GREEN)))
+                .hoverEvent(HoverEvent.showText(Component.text("Edge Head-ID setzen")))
+                .clickEvent(ClickEvent.suggestCommand("/emv set edge-head-id " + visualizer.getName() + " <HeadID>"))));
 
         PlayerUtils.sendComponents(sender, menu.toComponents());
     }
@@ -168,7 +175,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetParticleLimit(CommandSender sender, EditModeVisualizer edit, String limitString) {
         Integer limit = null;
-        if (limitString.equalsIgnoreCase("null")) {
+        if (!limitString.equalsIgnoreCase("null")) {
             try {
                 limit = Integer.parseInt(limitString);
             } catch (IllegalArgumentException exc) {
@@ -186,7 +193,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetParticleDistance(CommandSender sender, EditModeVisualizer edit, String distanceString) {
         Double distance = null;
-        if (distanceString.equalsIgnoreCase("null")) {
+        if (!distanceString.equalsIgnoreCase("null")) {
             try {
                 distance = Double.parseDouble(distanceString);
             } catch (IllegalArgumentException exc) {
@@ -204,7 +211,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetSchedulerPeriod(CommandSender sender, EditModeVisualizer edit, String schedulerPeriodString) {
         Integer schedulerPeriod = null;
-        if (schedulerPeriodString.equalsIgnoreCase("null")) {
+        if (!schedulerPeriodString.equalsIgnoreCase("null")) {
             try {
                 schedulerPeriod = Integer.parseInt(schedulerPeriodString);
             } catch (IllegalArgumentException exc) {
@@ -212,7 +219,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
                 return;
             }
         }
-        edit.setAndSaveNodeHeadId(schedulerPeriod);
+        edit.setAndSaveSchedulerPeriod(schedulerPeriod);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Scheduler-Wiederholdauer aktuallisiert: " + schedulerPeriodString);
     }
 
@@ -222,7 +229,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetNodeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {
         Integer nodeHeadId = null;
-        if (idString.equalsIgnoreCase("null")) {
+        if (!idString.equalsIgnoreCase("null")) {
             try {
                 nodeHeadId = Integer.parseInt(idString);
             } catch (IllegalArgumentException exc) {
@@ -240,7 +247,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetEdgeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {
         Integer edgeHeadId = null;
-        if (idString.equalsIgnoreCase("null")) {
+        if (!idString.equalsIgnoreCase("null")) {
             try {
                 edgeHeadId = Integer.parseInt(idString);
             } catch (IllegalArgumentException exc) {
@@ -250,24 +257,6 @@ public class EditModeVisualizerCommand extends BaseCommand {
         }
         edit.setAndSaveEdgeHeadId(edgeHeadId);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Edge-Head-ID aktuallisiert: " + idString);
-    }
-
-    private Component getParentComponent(EditModeVisualizer visualizer, boolean cancelAtFirstValid, VisualizerProperty<EditModeVisualizer> property) {
-        return getParentComponent(Component.empty(), visualizer, property, true, cancelAtFirstValid);
-    }
-
-    private Component getParentComponent(Component component, EditModeVisualizer visualizer, VisualizerProperty<EditModeVisualizer> property, boolean first, boolean cancelAtFirstValid) {
-        Component separator = Component.text(first ? "" : "«", NamedTextColor.DARK_GRAY);
-        if (visualizer == null) {
-            return component;
-        }
-        Component propertyComp = property.accept(visualizer);
-        Component part = Component.empty().append(separator).append(propertyComp == null ? NULL_COMPONENT : propertyComp);
-        if (visualizer.getParent() != null && (propertyComp == null || !cancelAtFirstValid)) {
-            return component.append(part).append(getParentComponent(component, visualizer.getParent(), property, false, cancelAtFirstValid));
-        } else {
-            return component.append(part);
-        }
     }
 }
 

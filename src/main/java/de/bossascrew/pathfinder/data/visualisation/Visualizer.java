@@ -46,7 +46,7 @@ public abstract class Visualizer<T extends Visualizer> {
         if (parent == null) {
             return false;
         }
-        if (parent.getDatabaseId() != toCheck.getDatabaseId()) {
+        if (parent.getDatabaseId() == toCheck.getDatabaseId()) {
             return true;
         }
         return parent.hasParent(toCheck);
@@ -118,7 +118,7 @@ public abstract class Visualizer<T extends Visualizer> {
 
     public @Nullable
     Integer getParentId() {
-        return parent == null ? null : parent.getParentId();
+        return parent == null ? null : parent.getDatabaseId();
     }
 
     public void setAndSaveName(String name) {

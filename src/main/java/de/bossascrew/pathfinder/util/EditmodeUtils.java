@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.inventory;
+package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;

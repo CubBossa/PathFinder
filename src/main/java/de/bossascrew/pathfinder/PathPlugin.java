@@ -148,7 +148,7 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(EditModeVisualizer.class, context -> {
             String search = context.popFirstArg();
 
-            EditModeVisualizer visualizer = visualizerHandler.getEditVisualizer(search);
+            EditModeVisualizer visualizer = visualizerHandler.getEditModeVisualizer(search);
             if (visualizer == null) {
                 throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
             }

@@ -174,14 +174,14 @@ public class VisualizerHandler {
     }
 
     public @Nullable
-    EditModeVisualizer getEditVisualizer(String name) {
+    EditModeVisualizer getEditModeVisualizer(String name) {
         return getEditModeVisualizerStream()
                 .filter(editModeVisualizer -> editModeVisualizer.getName().equals(name))
                 .findAny().orElse(null);
     }
 
     public @Nullable
-    EditModeVisualizer getEditVisualizer(int databaseId) {
+    EditModeVisualizer getEditModeVisualizer(int databaseId) {
         return getEditModeVisualizerStream()
                 .filter(editModeVisualizer -> editModeVisualizer.getDatabaseId() == databaseId)
                 .findAny().orElse(null);
