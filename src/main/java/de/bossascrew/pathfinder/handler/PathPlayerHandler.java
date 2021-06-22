@@ -1,12 +1,17 @@
 package de.bossascrew.pathfinder.handler;
 
 import com.google.common.collect.Maps;
+import de.bossascrew.core.base.settings.SettingsHandler;
 import de.bossascrew.core.player.GlobalPlayer;
+import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import lombok.Getter;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,11 +20,14 @@ public class PathPlayerHandler {
     @Getter
     private static PathPlayerHandler instance;
 
-    private Map<Integer, PathPlayer> pathPlayer;
+    @Getter
+    private final PathPlayer consolePathPlayer;
+    private final Map<Integer, PathPlayer> pathPlayer;
 
     public PathPlayerHandler() {
         instance = this;
-        pathPlayer = Maps.newHashMap(); //TODO pathplayer aus datenbank laden?
+        consolePathPlayer = new PathPlayer(-1, SettingsHandler.GLOBAL_UUID);
+        pathPlayer = Maps.newHashMap();
     }
 
     public Collection<PathPlayer> getPlayers() {
@@ -27,13 +35,19 @@ public class PathPlayerHandler {
     }
 
     public @Nullable
+    PathPlayer getPlayer(CommandSender sender) {
+        if(sender instanceof Player) {
+            Player player = (Player) sender;
+            return getPlayer(player.getUniqueId());
+        }
+        return consolePathPlayer;
+    }
+
+    public @Nullable
     PathPlayer getPlayer(UUID uuid) {
         PathPlayer pathPlayer = getLoadedPlayer(uuid);
-
         if (pathPlayer == null) {
-            GlobalPlayer player = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(uuid);
-
-            //return null, wenn spieler noch nie auf bossascrew gespielt hat und nicht über UUID findbar
+            GlobalPlayer player = PlayerHandler.getInstance().getGlobalPlayer(uuid);
             if (player == null) {
                 return null;
             }
@@ -53,25 +67,17 @@ public class PathPlayerHandler {
 
     private @Nullable
     PathPlayer getLoadedPlayer(UUID uuid) {
-        for (PathPlayer pathPlayer : pathPlayer.values()) {
-            if (pathPlayer.getUuid().equals(uuid)) {
-                return pathPlayer;
-            }
-        }
-        return null;
+        return pathPlayer.values().stream().filter(player -> player.getUuid().equals(uuid)).findAny().orElse(null);
     }
 
     private @Nullable
     PathPlayer getLoadedPlayer(int globalPlayerId) {
-        for (PathPlayer pathPlayer : pathPlayer.values()) {
-            if (pathPlayer.getGlobalPlayerId() == globalPlayerId) {
-                return pathPlayer;
-            }
-        }
-        return null;
+        return pathPlayer.get(globalPlayerId);
     }
 
     private PathPlayer createPlayer(int globalPlayerId) {
-        return new PathPlayer(globalPlayerId);
+        PathPlayer newPlayer = new PathPlayer(globalPlayerId);
+        pathPlayer.put(globalPlayerId, newPlayer);
+        return newPlayer;
     }
 }

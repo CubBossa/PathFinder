@@ -84,7 +84,7 @@ public class RoadMap {
     }
 
     public boolean isNodeNameUnique(String name) {
-        return findables.stream().map(Findable::getName).anyMatch(context -> context.equalsIgnoreCase("name"));
+        return findables.stream().map(Findable::getName).noneMatch(context -> context.equalsIgnoreCase("name"));
     }
 
     public void deleteFindable(int findableId) {

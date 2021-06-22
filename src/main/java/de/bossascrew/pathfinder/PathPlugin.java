@@ -1,7 +1,9 @@
 package de.bossascrew.pathfinder;
 
 import de.bossascrew.acf.BukkitCommandExecutionContext;
+import de.bossascrew.acf.CommandContexts;
 import de.bossascrew.acf.InvalidCommandArgument;
+import de.bossascrew.acf.MessageKeys;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.data.DatabaseModel;
@@ -31,13 +33,13 @@ public class PathPlugin extends JavaPlugin {
 
     public static final String COMPLETE_ROADMAPS = "@roadmaps";
     public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
-    public static final String COMPLETE_PATH_VISUALIZER = "@visualizer";
-    public static final String COMPLETE_EDITMODE_VISUALIZER = "@visualizer";
+    public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
+    public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
     public static final String COMPLETE_NODES = "@nodes";
     public static final String COMPLETE_NODE_GROUPS = "@nodegroups";
 
-    public static final String PREFIX = ChatColor.BLUE + "Pathfinder " + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
+    public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
 
 
     @Getter
@@ -110,7 +112,7 @@ public class PathPlugin extends JavaPlugin {
                     .map(FindableGroup::getName)
                     .collect(Collectors.toSet());
         });
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> { //TODO wirft fehler
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
             if (pPlayer == null) {
@@ -127,46 +129,59 @@ public class PathPlugin extends JavaPlugin {
     }
 
     private void registerContexts() {
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(RoadMap.class, context -> {
+        CommandContexts<BukkitCommandExecutionContext> cm = BukkitMain.getInstance().getCommandManager().getCommandContexts();
+        cm.registerContext(RoadMap.class, context -> {
             String search = context.popFirstArg();
 
             RoadMap roadMap = roadMapHandler.getRoadMap(search);
             if (roadMap == null) {
-                throw new InvalidCommandArgument("Ungültige Roadmap.");
+                if (context.isOptional()) {
+                    return null;
+                }
+                throw new InvalidCommandArgument("Ungültige Roadmap: " + search);
             }
             return roadMap;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(PathVisualizer.class, context -> {
+        cm.registerContext(PathVisualizer.class, context -> {
             String search = context.popFirstArg();
 
             PathVisualizer visualizer = visualizerHandler.getPathVisualizer(search);
             if (visualizer == null) {
+                if(context.isOptional()) {
+                    return null;
+                }
                 throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer.");
             }
             return visualizer;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(EditModeVisualizer.class, context -> {
+        cm.registerContext(EditModeVisualizer.class, context -> {
             String search = context.popFirstArg();
 
             EditModeVisualizer visualizer = visualizerHandler.getEditModeVisualizer(search);
             if (visualizer == null) {
+                if(context.isOptional()) {
+                    return null;
+                }
                 throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
             }
             return visualizer;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Particle.class, context -> {
+        cm.registerContext(Particle.class, context -> {
             String search = context.popFirstArg();
             Particle particle = null;
             try {
                 particle = Particle.valueOf(search);
             } catch (IllegalArgumentException e) {
+                if(context.isOptional()) {
+                    return null;
+                }
                 throw new InvalidCommandArgument("Ungültige Partikel.");
             }
             return particle;
         });
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Findable.class, this::resolveFindable);
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(Node.class, this::resolveFindable);
-        BukkitMain.getInstance().getCommandManager().getCommandContexts().registerContext(FindableGroup.class, context -> {
+        cm.registerContext(Findable.class, this::resolveFindable);
+        cm.registerContext(Node.class, this::resolveFindable);
+        cm.registerContext(FindableGroup.class, context -> {
             String search = context.popFirstArg();
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -179,9 +194,30 @@ public class PathPlugin extends JavaPlugin {
             }
             FindableGroup group = roadMap.getFindableGroup(search);
             if (group == null) {
+                if(context.isOptional()) {
+                    return null;
+                }
                 throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
             }
             return group;
+        });
+        cm.registerContext(Double.class, context -> {
+            String number = context.popFirstArg();
+            if (number.equalsIgnoreCase("null")) {
+                return null;
+            }
+            try {
+                Double value = Double.parseDouble(number);
+                if (value > Double.MAX_VALUE) {
+                    return Double.MAX_VALUE;
+                }
+                if (value < -Double.MAX_VALUE) {
+                    return -Double.MAX_VALUE;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                throw new InvalidCommandArgument(MessageKeys.MUST_BE_A_NUMBER, "{num}", number);
+            }
         });
     }
 
@@ -198,6 +234,9 @@ public class PathPlugin extends JavaPlugin {
         }
         Node findable = (Node) roadMap.getFindable(search);
         if (findable == null) {
+            if(context.isOptional()) {
+                return null;
+            }
             throw new InvalidCommandArgument("Diese Node existiert nicht.");
         }
         return findable;

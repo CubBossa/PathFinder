@@ -1,15 +1,21 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.acf.ConditionFailedException;
 import de.bossascrew.core.graphics.ColorUtils;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.visualisation.Visualizer;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.command.CommandSender;
 
 @SuppressWarnings("ALL")
 @UtilityClass
-public class VisualizerUtils {
+public class CommandUtils {
 
     public interface VisualizerProperty<T> {
         Component accept(T visualizer);
@@ -17,6 +23,22 @@ public class VisualizerUtils {
 
     public static final TextColor NULL_COLOR = TextColor.color(ColorUtils.fromHex("99ff99").getRGB());
     public static final Component NULL_COMPONENT = Component.text("null", NULL_COLOR);
+
+    public RoadMap getSelectedRoadMap(CommandSender sender) {
+        return getSelectedRoadMap(sender, true);
+    }
+
+    public RoadMap getSelectedRoadMap(CommandSender sender, boolean cancelIfUnselected) {
+        PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(sender);
+        if (pplayer.getSelectedRoadMapId() == null) {
+            if (!cancelIfUnselected) {
+                return null;
+            }
+            throw new ConditionFailedException("Du musst eine Straßenkarte ausgewählt haben. (/roadmap select <Straßenkarte>)");
+        }
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());
+        return roadMap;
+    }
 
     public <T extends Visualizer> Component getParentList(Visualizer<T> visualizer) {
         return getParentList(Component.empty(), visualizer, true);
@@ -41,13 +63,11 @@ public class VisualizerUtils {
             return component;
         }
         Component propertyComp = property.accept((T) visualizer);
-        Component part = Component.empty().append(separator).append(propertyComp == null ? NULL_COMPONENT : propertyComp.color(NULL_COLOR));
+        Component part = Component.empty().append(separator).append(propertyComp == null ? NULL_COMPONENT : propertyComp.color(NamedTextColor.GREEN));
         if (visualizer.getParent() != null && (propertyComp == null || !cancelAtFirstValid)) {
             return component.append(part).append(getPropertyComponent(component, visualizer.getParent(), property, false, cancelAtFirstValid));
         } else {
             return component.append(part);
         }
     }
-
-
 }

@@ -9,7 +9,7 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.util.VisualizerUtils;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -32,7 +32,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
             menu.addSub(new ComponentMenu(Component.text(vis.getName() + "(#" + vis.getDatabaseId() + ")", NamedTextColor.DARK_GREEN)
                     .append(Component.text(", Parent: ", NamedTextColor.GRAY))
                     .append(vis.getParent() == null ?
-                            VisualizerUtils.NULL_COMPONENT :
+                            CommandUtils.NULL_COMPONENT :
                             Component.text(vis.getParent().getName(), NamedTextColor.GREEN))
                     .clickEvent(ClickEvent.runCommand("/emv info " + vis.getName()))));
         }
@@ -85,42 +85,42 @@ public class EditModeVisualizerCommand extends BaseCommand {
                         .clickEvent(ClickEvent.suggestCommand("/emv set name " + visualizer.getName() + " <Neuer Name>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Parent: ")
-                .append(VisualizerUtils.getParentList(visualizer))
+                .append(CommandUtils.getParentList(visualizer))
                 .hoverEvent(HoverEvent.showText(Component.text("Parent setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set parent " + visualizer.getName() + " <Parent>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticle() == null ? null : Component.text(visualizer1.getUnsafeParticle().name(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle " + visualizer.getName() + " <Partikel>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Limit: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticleLimit() == null ? null : Component.text(visualizer1.getUnsafeParticleLimit(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Limit setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle-limit " + visualizer.getName() + " <Partikellimit>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Distanz: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeParticleDistance() == null ? null : Component.text(visualizer1.getUnsafeParticleDistance(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Distanz setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set particle-distance " + visualizer.getName() + " <Partikeldistanz>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Scheduler-Wiederholrate: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeSchedulerPeriod() == null ? null : Component.text(visualizer1.getUnsafeSchedulerPeriod(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Scheduler-Wiederholrate setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set scheduler-period " + visualizer.getName() + " <Wiederholrate in Ticks>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Node Head-ID: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeNodeHeadId() == null ? null : Component.text(visualizer1.getUnsafeNodeHeadId(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Node Head-ID setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set node-head-id " + visualizer.getName() + " <HeadID>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Edge Head-ID: ")
-                .append(VisualizerUtils.getPropertyComponent(visualizer, visualizer1 ->
+                .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
                         visualizer1.getUnsafeEdgeHeadId() == null ? null : Component.text(visualizer1.getUnsafeEdgeHeadId(), NamedTextColor.GREEN)))
                 .hoverEvent(HoverEvent.showText(Component.text("Edge Head-ID setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/emv set edge-head-id " + visualizer.getName() + " <HeadID>"))));

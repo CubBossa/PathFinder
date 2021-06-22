@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
+import com.google.common.collect.Maps;
 import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -9,7 +10,6 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -34,10 +34,19 @@ public class PathPlayer {
 
     private Map<Integer, ParticlePath> activePaths;
 
-    private int editModeRoadMapId;
+    @Getter
+    @Nullable
+    private Integer editModeRoadMapId = null;
     @Getter
     @Nullable
     private Integer selectedRoadMapId = null;
+
+    public PathPlayer(int globalPlayerId, UUID uuid) {
+        this.globalPlayerId = globalPlayerId;
+        this.uuid = uuid;
+
+        foundInfos = Maps.newHashMap();
+    }
 
     public PathPlayer(int globalPlayerId) {
         this.globalPlayerId = globalPlayerId;
@@ -212,15 +221,19 @@ public class PathPlayer {
     }
 
     public void clearEditMode() {
+        if(editModeRoadMapId == null) {
+            return;
+        }
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
         if (roadMap != null) {
             roadMap.setEditMode(uuid, false);
         }
-        setEditMode(-1);
+        this.editModeRoadMapId = null;
+        this.selectedRoadMapId = null;
     }
 
     public boolean isEditing() {
-        return editModeRoadMapId != -1;
+        return editModeRoadMapId != null;
     }
 
     public RoadMap getEdited() {
@@ -233,17 +246,12 @@ public class PathPlayer {
     }
 
     public void deselectRoadMap() {
-        if(selectedRoadMapId == null) {
-            return;
-        }
-        deselectRoadMap(selectedRoadMapId);
+        selectedRoadMapId = null;
     }
 
-    public boolean deselectRoadMap(int id) {
+    public void deselectRoadMap(int id) {
         if (selectedRoadMapId != null && selectedRoadMapId == id) {
             selectedRoadMapId = null;
-            return true;
         }
-        return false;
     }
 }
