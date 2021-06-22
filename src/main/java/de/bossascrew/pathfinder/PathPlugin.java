@@ -37,6 +37,7 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
     public static final String COMPLETE_NODES = "@nodes";
+    public static final String COMPLETE_NODES_CONNECTED = "@nodes_connected";
     public static final String COMPLETE_NODE_GROUPS = "@nodegroups";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;

@@ -13,6 +13,7 @@ import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
 import de.bossascrew.pathfinder.util.Pair;
 import de.bossascrew.pathfinder.util.PathTask;
+import lombok.Data;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -84,7 +85,7 @@ public class RoadMap {
     }
 
     public boolean isNodeNameUnique(String name) {
-        return findables.stream().map(Findable::getName).noneMatch(context -> context.equalsIgnoreCase("name"));
+        return findables.stream().map(Findable::getName).noneMatch(context -> context.equalsIgnoreCase(name));
     }
 
     public void deleteFindable(int findableId) {
@@ -194,6 +195,14 @@ public class RoadMap {
         DatabaseModel.getInstance().newEdge(a, b);
         a.getEdges().add(b.getDatabaseId());
         b.getEdges().add(a.getDatabaseId());
+        edges.add(new Pair<>(a, b));
+    }
+
+    public void disconnectNodes(Findable a, Findable b) {
+        DatabaseModel.getInstance();
+        //TODO database
+        a.getEdges().remove((Integer) b.getDatabaseId());
+        b.getEdges().remove((Integer) a.getDatabaseId());
         edges.add(new Pair<>(a, b));
     }
 

@@ -1,28 +1,82 @@
 package de.bossascrew.pathfinder.commands;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
+import de.bossascrew.core.base.ComponentMenu;
+import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
-import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
-import de.bossascrew.pathfinder.util.PagedChatMenu;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import javax.annotation.Nullable;
-
 @CommandAlias("waypoint|wp|node")
 public class WaypointCommand extends BaseCommand {
+
+    @Subcommand("info")
+    @Syntax("<Node>")
+    @CommandPermission("bcrew.command.waypoint.info")
+    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    public void onInfo(Player player, Node node) {
+        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+
+        ComponentMenu menu = new ComponentMenu(Component.text("Wegpunkt ")
+                .append(Component.text(node.getName() + "(#" + node.getDatabaseId() + ")", NamedTextColor.DARK_GREEN))
+                .hoverEvent(HoverEvent.showText(Component.text("Name ändern")))
+                .clickEvent(ClickEvent.suggestCommand("/waypoint set name " + node.getName() + " <Neuer Name>")));
+
+        FindableGroup group = roadMap.getFindableGroup(node.getNodeGroupId());
+        menu.addSub(getSub("Gruppe: ", group == null ? "-" : group.getName(), "Gruppe ändern",
+                "/waypoint set nodegroup " + node.getName() + " <NodeGroup>"));
+
+        menu.addSub(getSub("Permission: ", node.getPermission(), "Perission ändern",
+                "/waypoint set permission " + node.getName() + " <Permission>"));
+
+        menu.addSub(getSub("Rundung: ", node.getBezierTangentLength() == null ? "null«" + node.getBezierTangentLengthOrDefault() : node.getBezierTangentLength() + "",
+                "Tangentenwichtung ändern",
+                "/waypoint set tangent " + node.getName() + " <Stärke>"));
+
+        menu.addSub(new ComponentMenu(Component.text("Position: ")
+                .append(Component.text(node.getRoadMap().getWorld().getName() + "|" +
+                        String.format("%,.1f", node.getVector().getX()) + "," +
+                        String.format("%,.1f", node.getVector().getY()) + "," +
+                        String.format("%,.1f", node.getVector().getZ()), NamedTextColor.GREEN))
+                .hoverEvent(Component.text("Klicke zum Teleportieren"))
+                .clickEvent(ClickEvent.runCommand("/teleport " + node.getRoadMap().getWorld().getName() + " " + node.getVector().getX() + " "
+                        + node.getVector().getY() + " " + node.getVector().getZ()))));
+
+        Menu edges = new Menu("Kanten: " + (node.getEdges().isEmpty() ? ChatColor.GRAY + "-" : ""));
+        for (int edge : node.getEdges()) {
+            Findable target = roadMap.getFindable(edge);
+            if (target == null) {
+                continue;
+            }
+            Component targetComp = Component.text(target.getName() + "(#" + target.getDatabaseId() + ")", CommandUtils.NULL_COLOR)
+                    .append(Component.text(", Entfernung: " + String.format("%,.2f", node.getVector().distance(target.getVector())) + "m ", NamedTextColor.GRAY))
+                    .append(Component.text("[X]", NamedTextColor.RED)
+                            .hoverEvent(HoverEvent.showText(Component.text("Verbindung löschen")))
+                            .clickEvent(ClickEvent.runCommand("/waypoint disconnect " + node.getName() + " " + target.getName())));
+            edges.addSub(new ComponentMenu(targetComp));
+        }
+        menu.addSub(edges);
+        PlayerUtils.sendComponents(player, menu.toComponents());
+    }
+
+    private ComponentMenu getSub(String attributeName, String value, String hover, String command) {
+        return new ComponentMenu(Component.text(attributeName)
+                .append(Component.text(value, NamedTextColor.GREEN))
+                .hoverEvent(HoverEvent.showText(Component.text(hover)))
+                .clickEvent(ClickEvent.suggestCommand(command)));
+    }
 
     @Subcommand("create")
     @Syntax("<Name>")
@@ -92,6 +146,20 @@ public class WaypointCommand extends BaseCommand {
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Wegpunke erfolgreich verbunden.");
     }
 
+    @Subcommand("disconnect")
+    @Syntax("<Node> <Node>")
+    @CommandPermission("bcrew.command.waypoint.disconnect")
+    @CommandCompletion(PathPlugin.COMPLETE_NODES + " " + PathPlugin.COMPLETE_NODES)
+    public void onDisconnect(Player player, Node a, Node b) {
+        if (!a.getEdges().contains(b.getDatabaseId())) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Der Wegpunkt " + b.getName() + " ist nicht mit " + a.getName() + " verbunden.");
+            return;
+        }
+        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+        roadMap.disconnectNodes(a, b);
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Verbindung aufgelöst.");
+    }
+
     @Subcommand("set permission")
     @Syntax("<Node> <Permission>")
     @CommandPermission("bcrew.command.waypoint.setpermission")
@@ -100,7 +168,7 @@ public class WaypointCommand extends BaseCommand {
         if (node == null) {
             return;
         }
-        if(perm.equalsIgnoreCase("null")) {
+        if (perm.equalsIgnoreCase("null")) {
             perm = null;
         }
         node.setPermission(perm);
@@ -125,22 +193,20 @@ public class WaypointCommand extends BaseCommand {
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        //TODO wenn dann mit richtigem paged menu
-        String string = "";
-        for(Findable findable : roadMap.getFindables()) {
-            string += findable.getName() + ", ";
+        Component nodes = Component.text("Wegpunkte: " + ChatColor.GREEN + roadMap.getName()).append(Component.newline());
+        int count = 0;
+        for (Findable findable : roadMap.getFindables()) {
+            nodes = nodes.append(Component.text(findable.getName(), NamedTextColor.WHITE))
+                    .hoverEvent(HoverEvent.showText(Component.text("Informationen anzeigen")))
+                    .clickEvent(ClickEvent.runCommand("/waypoint info " + findable.getName()));
+            if (count < roadMap.getFindables().size() - 1) {
+                nodes = nodes.append(Component.text(", ", NamedTextColor.GRAY));
+            }
+            count++;
         }
-        PlayerUtils.sendMessage(player, string);
-    }
-
-    private Component getSeparator() {
-        return Component.text(" | ", NamedTextColor.DARK_GRAY);
+        PlayerUtils.sendComponents(player, Lists.newArrayList(nodes));
     }
 
     //TODO
-    //info
-    //list
-    //group clear
     //group set <group>
-    //disconnect <node>|*
 }
