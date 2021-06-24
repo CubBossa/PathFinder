@@ -17,7 +17,9 @@ import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.listener.PlayerListener;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -72,11 +74,13 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().getCommandManager().registerCommand(new RoadMapCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointCommand());
         registerCompletions();
+
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
     }
 
     @Override
     public void onDisable() {
-
+        RoadMapHandler.getInstance().cancelAllEditModes();
     }
 
     private void registerCompletions() {

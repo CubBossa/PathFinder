@@ -4,7 +4,6 @@ import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -30,10 +29,10 @@ public class Node implements Findable {
     private Double bezierTangentLength = null;
 
 
-    public Node(int databaseId, int roadMapId, String name, Vector vector) {
+    public Node(int databaseId, RoadMap roadMap, String name, Vector vector) {
         this.databaseId = databaseId;
-        this.roadMapId = roadMapId;
-        this.roadMap = RoadMapHandler.getInstance().getRoadMap(roadMapId);
+        this.roadMap = roadMap;
+        this.roadMapId = roadMap.getDatabaseId();
         this.name = name;
         this.vector = vector;
 
@@ -76,11 +75,13 @@ public class Node implements Findable {
 
     public void setName(String name) {
         this.name = name;
+        roadMap.updateArmorStandDisplay(this);
         updateData();
     }
 
     public void setNodeGroupId(int groupId) {
         this.nodeGroupId = groupId;
+        roadMap.updateArmorStandDisplay(this);
         updateData();
     }
 
@@ -92,6 +93,7 @@ public class Node implements Findable {
     public void setVector(Vector vector) {
         this.vector = vector;
         roadMap.updateArmorStandPosition(this);
+        roadMap.updateEditModeParticles();
         updateData();
     }
 

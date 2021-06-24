@@ -11,10 +11,13 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -63,7 +66,7 @@ public class RoadMapCommand extends BaseCommand {
                 Component.text("Klicke, um die Welt zu ändern."),
                 "/roadmap setworld " + roadMap.getName() + " <Welt>"));
         menu.addSub(getSubMenu(
-                Component.text("Pfadvisualisierer: ").append(Component.text(roadMap.getVisualizer().getName(), NamedTextColor.GREEN)),
+                Component.text("Pfadvisualisierer: ").append(Component.text(roadMap.getPathVisualizer().getName(), NamedTextColor.GREEN)),
                 Component.text("Klicke, um den Partikelstyle zu wechseln"),
                 "/roadmap style " + roadMap.getName() + " path <Style>"));
         menu.addSub(getSubMenu(
@@ -175,7 +178,7 @@ public class RoadMapCommand extends BaseCommand {
     public void onStyle(CommandSender sender, PathVisualizer visualizer) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 
-        roadMap.setVisualizer(visualizer);
+        roadMap.setPathVisualizer(visualizer);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
     }
 
@@ -186,7 +189,7 @@ public class RoadMapCommand extends BaseCommand {
     public void onStyleEditMode(CommandSender sender, EditModeVisualizer visualizer) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 
-        roadMap.setVisualizer(visualizer);
+        roadMap.setEditModeVisualizer(visualizer);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
     }
 
@@ -327,5 +330,18 @@ public class RoadMapCommand extends BaseCommand {
 
         pathPlayer.deselectRoadMap();
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte nicht mehr ausgewählt.");
+    }
+
+    @Subcommand("test navigate")
+    @CommandPermission("bcrew.command.roadmap.test.navigate")
+    @Syntax("<Findable>")
+    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    public void onTestNavigate(Player player, Node node) {
+        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+
+        PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), node);
+
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Testpfad gestartet.");
     }
 }

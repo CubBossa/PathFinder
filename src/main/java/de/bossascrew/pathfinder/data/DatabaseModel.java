@@ -248,7 +248,7 @@ public class DatabaseModel {
                 SQLUtils.setString(stmt, 1, roadMap.getName());
                 SQLUtils.setString(stmt, 2, roadMap.getWorld().getName());
                 SQLUtils.setBoolean(stmt, 3, roadMap.isFindableNodes());
-                SQLUtils.setInt(stmt, 4, roadMap.getVisualizer().getDatabaseId());
+                SQLUtils.setInt(stmt, 4, roadMap.getPathVisualizer().getDatabaseId());
                 SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer().getDatabaseId());
                 SQLUtils.setDouble(stmt, 6, roadMap.getNodeFindDistance());
                 SQLUtils.setDouble(stmt, 7, roadMap.getDefaultBezierTangentLength());
@@ -266,13 +266,13 @@ public class DatabaseModel {
 
     public boolean deleteRoadMap(int roadMapId) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_roadmaps` WHERE `roadmap_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_roadmaps` WHERE `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, roadMapId);
                 stmt.executeUpdate();
                 return true;
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim löschen der RoadMap: " + roadMapId, e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen der RoadMap: " + roadMapId, e);
         }
         return false;
     }
@@ -316,12 +316,12 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Node newNode(int roadMapId, int groupId, Vector vector, String name, Double tangentLength, String permission) {
+    Node newNode(RoadMap roadMap, int groupId, Vector vector, String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, group_id, x, y, z, name, tangent_length, permission) VALUES " +
                     "(?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                SQLUtils.setInt(stmt, 1, roadMapId);
+                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
                 SQLUtils.setInt(stmt, 2, groupId);
                 SQLUtils.setDouble(stmt, 3, vector.getX());
                 SQLUtils.setDouble(stmt, 4, vector.getY());
@@ -334,7 +334,7 @@ public class DatabaseModel {
                 try (ResultSet resultSet = stmt.getGeneratedKeys()) {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
-                    Node n = new Node(databaseId, roadMapId, name, vector);
+                    Node n = new Node(databaseId, roadMap, name, vector);
                     n.setGroup(groupId);
                     n.setBezierTangentLength(tangentLength);
                     n.setPermission(permission);
@@ -349,7 +349,7 @@ public class DatabaseModel {
 
     public void deleteFindable(int nodeId) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_nodes` WHERE `node_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_nodes` WHERE `node_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, nodeId);
                 stmt.executeUpdate();
             }
@@ -386,8 +386,7 @@ public class DatabaseModel {
         }
     }
 
-    public @Nullable
-    Map<Integer, Node> loadNodes(RoadMap roadMap) {
+    public Map<Integer, Node> loadNodes(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
@@ -404,7 +403,7 @@ public class DatabaseModel {
                         Double tangentLength = SQLUtils.getDouble(resultSet, "tangent_length");
                         String permission = SQLUtils.getString(resultSet, "permission");
 
-                        Node node = new Node(id, roadMap.getDatabaseId(), name, new Vector(x, y, z));
+                        Node node = new Node(id, roadMap, name, new Vector(x, y, z));
                         node.setPermission(permission);
                         node.setBezierTangentLength(tangentLength);
                         node.setGroup(groupId);
@@ -466,7 +465,7 @@ public class DatabaseModel {
 
     public void deleteFoundNode(int globalPlayerId, int nodeId) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_found` WHERE `player_id` = ? AND `node_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_found` WHERE `player_id` = ? AND `node_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
                 SQLUtils.setInt(stmt, 2, nodeId);
                 stmt.executeUpdate();
@@ -615,7 +614,7 @@ public class DatabaseModel {
                         if(particleName != null) {
                             try {
                                 particle = Particle.valueOf(particleName);
-                            } catch (IllegalArgumentException e) {}
+                            } catch (IllegalArgumentException ignored) {}
                         }
                         PathVisualizer vis = new PathVisualizer(id, name, parentId);
                         vis.setParticle(particle);
@@ -626,6 +625,9 @@ public class DatabaseModel {
                         result.put(id, vis);
                     }
                     for (PathVisualizer vis : result.values()) {
+                        if(vis.getParentId() == null) {
+                            continue;
+                        }
                         vis.setParent(result.get(vis.getParentId()));
                     }
                     return result;
@@ -693,7 +695,7 @@ public class DatabaseModel {
 
     public void deletePathVisualizer(PathVisualizer visualizer) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_path_visualizer` WHERE `path_visualizer_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_path_visualizer` WHERE `path_visualizer_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
                 stmt.executeUpdate();
             }
@@ -704,7 +706,7 @@ public class DatabaseModel {
 
     public void deleteEditModeVisualizer(EditModeVisualizer visualizer) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE * FROM `pathfinder_editmode_visualizer` WHERE `editmode_visualizer_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_editmode_visualizer` WHERE `editmode_visualizer_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
                 stmt.executeUpdate();
             }

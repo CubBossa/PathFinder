@@ -35,6 +35,10 @@ public class EditmodeUtils {
     }
 
     public static ArmorStand getNewArmorStand(Location location, String name, int headDbId) {
+        return getNewArmorStand(location, name, headDbId, false);
+    }
+
+    public static ArmorStand getNewArmorStand(Location location, String name, int headDbId, boolean small) {
         ArmorStand as = location.getWorld().spawn(location,
                 ArmorStand.class,
                 armorStand -> {
@@ -45,6 +49,7 @@ public class EditmodeUtils {
                     }
                     armorStand.setGravity(false);
                     armorStand.setInvulnerable(true);
+                    armorStand.setSmall(small);
                     ItemStack helmet = HeadDBUtils.getHeadById(headDbId);
                     if (armorStand.getEquipment() != null && helmet != null) {
                         armorStand.getEquipment().setHelmet(helmet);

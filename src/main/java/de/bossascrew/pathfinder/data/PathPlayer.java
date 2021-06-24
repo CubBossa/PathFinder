@@ -14,10 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class PathPlayer {
 
@@ -32,7 +29,7 @@ public class PathPlayer {
      */
     private final Map<Integer, FoundInfo> foundInfos;
 
-    private Map<Integer, ParticlePath> activePaths;
+    private final Map<Integer, ParticlePath> activePaths;
 
     @Getter
     @Nullable
@@ -44,6 +41,7 @@ public class PathPlayer {
     public PathPlayer(int globalPlayerId, UUID uuid) {
         this.globalPlayerId = globalPlayerId;
         this.uuid = uuid;
+        this.activePaths = new HashMap<>();
 
         foundInfos = Maps.newHashMap();
     }
@@ -51,6 +49,7 @@ public class PathPlayer {
     public PathPlayer(int globalPlayerId) {
         this.globalPlayerId = globalPlayerId;
         this.uuid = PlayerHandler.getInstance().getGlobalPlayer(globalPlayerId).getPlayerId();
+        this.activePaths = new HashMap<>();
 
         foundInfos = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId);
     }
@@ -220,16 +219,8 @@ public class PathPlayer {
         this.selectedRoadMapId = roadMapId;
     }
 
-    public void clearEditMode() {
-        if(editModeRoadMapId == null) {
-            return;
-        }
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
-        if (roadMap != null) {
-            roadMap.setEditMode(uuid, false);
-        }
+    public void clearEditedRoadmap() {
         this.editModeRoadMapId = null;
-        this.selectedRoadMapId = null;
     }
 
     public boolean isEditing() {

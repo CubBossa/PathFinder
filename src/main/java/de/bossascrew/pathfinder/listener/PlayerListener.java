@@ -20,7 +20,6 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -28,6 +27,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
 
@@ -49,7 +49,7 @@ public class PlayerListener implements Listener {
             return;
         }
         if (player.isEditing()) {
-            player.clearEditMode();
+            player.getEdited().setEditMode(player.getUuid(), false);
         }
     }
 
@@ -76,7 +76,6 @@ public class PlayerListener implements Listener {
             if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
                 return;
             }
-
             Findable found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
             if (found == null) {
                 return;
@@ -117,6 +116,17 @@ public class PlayerListener implements Listener {
                     if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
                         return findable;
                     }
+                }
+            }
+            for(Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getFindableGroup() == null).collect(Collectors.toSet())) {
+                if (pathPlayer.hasFound(findable.getDatabaseId())) {
+                    continue;
+                }
+                if (player.hasPermission(findable.getPermission())) {
+                    continue;
+                }
+                if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
+                    return findable;
                 }
             }
         }

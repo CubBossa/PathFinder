@@ -58,7 +58,7 @@ public interface Findable {
     /**
      * @return Die Nodegruppe, der das Objekt angehört.
      */
-    FindableGroup getFindableGroup();
+    @Nullable FindableGroup getFindableGroup();
 
     /**
      * Löscht die gesetzte Gruppe.

@@ -4,6 +4,7 @@ import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.bukkit.Particle;
 
 import javax.annotation.Nullable;
@@ -21,11 +22,14 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
         super(databaseId, name, parentId);
     }
 
-    public @Nullable
-    Integer getParticleSteps() {
+    public Integer getParticleSteps() {
         if (particleSteps == null) {
             if (parent == null) {
-                return null;
+                try {
+                    throw new VisualizerParentException();
+                } catch (VisualizerParentException e) {
+                    e.printStackTrace();
+                }
             }
             return parent.getParticleSteps();
         }

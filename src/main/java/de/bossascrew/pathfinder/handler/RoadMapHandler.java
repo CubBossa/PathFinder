@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RoadMapHandler {
@@ -39,6 +40,12 @@ public class RoadMapHandler {
         PluginUtils.getInstance().runAsync(roadMap::delete);
     }
 
+    public void cancelAllEditModes() {
+        for(RoadMap roadMap : getRoadMaps()) {
+            roadMap.cancelEditModes();
+        }
+    }
+
     public Collection<RoadMap> getRoadMaps() {
         return storedRoadMapsByID.values();
     }
@@ -50,30 +57,15 @@ public class RoadMapHandler {
 
     public @Nullable
     RoadMap getRoadMap(String name) {
-        for (RoadMap roadMap : storedRoadMapsByID.values()) {
-            if (roadMap.getName().equals(name)) {
-                return roadMap;
-            }
-        }
-        return null;
+        return getRoadMapsStream().filter(rm -> rm.getName().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 
     public Collection<World> getRoadMapWorlds() {
-        Collection<World> worlds = new ArrayList<World>();
-        for (RoadMap roadMap : storedRoadMapsByID.values()) {
-            worlds.add(roadMap.getWorld());
-        }
-        return worlds;
+        return getRoadMapsStream().map(RoadMap::getWorld).collect(Collectors.toSet());
     }
 
     public Collection<RoadMap> getRoadMaps(World world) {
-        Collection<RoadMap> roadMaps = new ArrayList<RoadMap>();
-        for (RoadMap roadMap : storedRoadMapsByID.values()) {
-            if (roadMap.getWorld().equals(world)) {
-                roadMaps.add(roadMap);
-            }
-        }
-        return roadMaps;
+        return getRoadMapsStream().filter(roadMap -> roadMap.getWorld().equals(world)).collect(Collectors.toSet());
     }
 
     public Stream<RoadMap> getRoadMapsStream() {
@@ -81,21 +73,10 @@ public class RoadMapHandler {
     }
 
     public Collection<RoadMap> getRoadMapsFindable(World world) {
-        Collection<RoadMap> findableRoadMaps = new ArrayList<RoadMap>();
-        for (RoadMap roadMap : getRoadMaps(world)) {
-            if (roadMap.isFindableNodes()) {
-                findableRoadMaps.add(roadMap);
-            }
-        }
-        return findableRoadMaps;
+        return getRoadMapsStream().filter(RoadMap::isFindableNodes).filter(roadMap -> roadMap.getWorld().equals(world)).collect(Collectors.toSet());
     }
 
     public boolean isNameUnique(String name) {
-        for (RoadMap roadMap : storedRoadMapsByID.values()) {
-            if (roadMap.getName().equals(name)) {
-                return false;
-            }
-        }
-        return true;
+        return getRoadMapsStream().map(RoadMap::getName).noneMatch(rmName -> rmName.equalsIgnoreCase(name));
     }
 }

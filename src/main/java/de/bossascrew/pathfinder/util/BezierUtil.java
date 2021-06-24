@@ -12,6 +12,19 @@ public class BezierUtil {
     /**
      * Berechnet eine Liste aus Vektoren, die auf der Gerade zwischen den zwei angegebenen Punkten liegen.
      *
+     * @param distance Mit wie viel Abstand die Punkte auf der Geraden liegen sollen.
+     * @param pointA   Der Startpunkt der Gerade
+     * @param pointB   Der Schlusspunkt der Gerade
+     * @return eine Liste aus Vektoren, die auf der Gerade liegen
+     */
+    public List<Vector> getBezierCurveDistanced(double distance, Vector pointA, Vector pointB) {
+        int steps = (int) (pointA.distance(pointB) / distance);
+        return getBezierCurve(steps, pointA, pointB);
+    }
+
+    /**
+     * Berechnet eine Liste aus Vektoren, die auf der Gerade zwischen den zwei angegebenen Punkten liegen.
+     *
      * @param steps  Wie viele Punkte auf der Kurve berechnet werden sollen
      * @param pointA Der Startpunkt der Gerade
      * @param pointB Der Schlusspunkt der Gerade

@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data.findable;
 
+import de.bossascrew.pathfinder.data.RoadMap;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -8,8 +9,8 @@ public class DtlTraderNode extends Node implements NpcFindable {
 
     private final NPC npc;
 
-    public DtlTraderNode(int databaseId, int roadMapId, String name, Vector vector, NPC npc) {
-        super(databaseId, roadMapId, name, vector);
+    public DtlTraderNode(int databaseId, RoadMap roadMap, String name, Vector vector, NPC npc) {
+        super(databaseId, roadMap, name, vector);
         this.npc = npc;
     }
 

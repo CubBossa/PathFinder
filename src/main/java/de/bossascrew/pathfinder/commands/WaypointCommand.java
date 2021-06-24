@@ -18,6 +18,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 @CommandAlias("waypoint|wp|node")
 public class WaypointCommand extends BaseCommand {
@@ -35,7 +36,7 @@ public class WaypointCommand extends BaseCommand {
                 .clickEvent(ClickEvent.suggestCommand("/waypoint set name " + node.getName() + " <Neuer Name>")));
 
         FindableGroup group = roadMap.getFindableGroup(node.getNodeGroupId());
-        menu.addSub(getSub("Gruppe: ", group == null ? "-" : group.getName(), "Gruppe ändern",
+        menu.addSub(getSub("Gruppe: ", group == null ? Component.text("-", NamedTextColor.GRAY) : Component.text(group.getName(), NamedTextColor.GREEN), "Gruppe ändern",
                 "/waypoint set nodegroup " + node.getName() + " <NodeGroup>"));
 
         menu.addSub(getSub("Permission: ", node.getPermission(), "Perission ändern",
@@ -46,15 +47,18 @@ public class WaypointCommand extends BaseCommand {
                 "/waypoint set tangent " + node.getName() + " <Stärke>"));
 
         menu.addSub(new ComponentMenu(Component.text("Position: ")
-                .append(Component.text(node.getRoadMap().getWorld().getName() + "|" +
-                        String.format("%,.1f", node.getVector().getX()) + "," +
-                        String.format("%,.1f", node.getVector().getY()) + "," +
-                        String.format("%,.1f", node.getVector().getZ()), NamedTextColor.GREEN))
+                .append(Component.text(node.getRoadMap().getWorld().getName())
+                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getX()), NamedTextColor.GREEN))
+                        .append(Component.text(", ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getY()), NamedTextColor.GREEN))
+                        .append(Component.text(", ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getZ()), NamedTextColor.GREEN)))
                 .hoverEvent(Component.text("Klicke zum Teleportieren"))
                 .clickEvent(ClickEvent.runCommand("/teleport " + node.getRoadMap().getWorld().getName() + " " + node.getVector().getX() + " "
                         + node.getVector().getY() + " " + node.getVector().getZ()))));
 
-        Menu edges = new Menu("Kanten: " + (node.getEdges().isEmpty() ? ChatColor.GRAY + "-" : ""));
+        Menu edges = new Menu("Verbindungen: " + (node.getEdges().isEmpty() ? ChatColor.GRAY + "-" : ""));
         for (int edge : node.getEdges()) {
             Findable target = roadMap.getFindable(edge);
             if (target == null) {
@@ -72,8 +76,12 @@ public class WaypointCommand extends BaseCommand {
     }
 
     private ComponentMenu getSub(String attributeName, String value, String hover, String command) {
+        return getSub(attributeName, Component.text(value, NamedTextColor.GREEN), hover, command);
+    }
+
+    private ComponentMenu getSub(String attributeName, Component value, String hover, String command) {
         return new ComponentMenu(Component.text(attributeName)
-                .append(Component.text(value, NamedTextColor.GREEN))
+                .append(value)
                 .hoverEvent(HoverEvent.showText(Component.text(hover)))
                 .clickEvent(ClickEvent.suggestCommand(command)));
     }
@@ -87,7 +95,7 @@ public class WaypointCommand extends BaseCommand {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben.");
             return;
         }
-        roadMap.createNode(player.getLocation().toVector(), name);
+        roadMap.createNode(player.getLocation().toVector().add(new Vector(0, 1, 0)), name);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + ChatColor.GREEN + name);
     }
 

@@ -82,9 +82,10 @@ public class AStarUtils {
             return null;
         }
         playerNode.adjacencies = new AStarEdge[]{new AStarEdge(nearest, nearestDist)};
+        nearest.adjacencies = new AStarEdge[]{new AStarEdge(playerNode, nearestDist)};
 
         for (Findable findable : findables) {
-            AStarEdge[] adjacencies = new AStarEdge[findables.size()];
+            AStarEdge[] adjacencies = new AStarEdge[findable.getEdges().size()];
             AStarNode aStarNode = aStarNodes.get(findable.getDatabaseId());
 
             int i = 0;
