@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
-public class BezierUtil {
+public class BezierUtils {
 
     /**
      * Berechnet eine Liste aus Vektoren, die auf der Gerade zwischen den zwei angegebenen Punkten liegen.

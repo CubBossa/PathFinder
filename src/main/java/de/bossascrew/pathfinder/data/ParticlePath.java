@@ -1,12 +1,12 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.core.bukkit.util.VectorUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.core.util.Tuple3;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
-import de.bossascrew.pathfinder.util.BezierUtil;
-import de.bossascrew.pathfinder.util.VectorSpaceUtils;
+import de.bossascrew.pathfinder.util.BezierUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -19,6 +19,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Enthält alle wichtigen Informationen zum Anzeigen des Pfades gecached und läuft die Repeating Tasks
@@ -38,8 +39,6 @@ public class ParticlePath extends ArrayList<Findable> {
     private double cachedDistance = -1;
     private final List<Vector> calculatedPoints;
 
-    private final List<Vector> targetPoints;
-
     public ParticlePath(RoadMap roadMap, UUID playerUuid) {
         this.roadMap = roadMap;
         this.playerUuid = playerUuid;
@@ -47,7 +46,6 @@ public class ParticlePath extends ArrayList<Findable> {
         this.taskIds = new ArrayList<>();
         this.visualizer = roadMap.getPathVisualizer();
         this.calculatedPoints = new ArrayList<>();
-        this.targetPoints = new ArrayList<>();
     }
 
     public void calculate() {
@@ -61,7 +59,7 @@ public class ParticlePath extends ArrayList<Findable> {
         cachedDistance = visualizer.getParticleDistance();
 
         Findable target = this.get(this.size() - 1);
-        calculatedPoints.addAll(VectorSpaceUtils.getCircle(target.getVector(), visualizer.getParticleDistance(), roadMap.getNodeFindDistance()));
+        calculatedPoints.addAll(VectorUtils.getCircle(target.getVector(), visualizer.getParticleDistance(), roadMap.getNodeFindDistance()));
     }
 
     private void calculateLinear() {
@@ -69,17 +67,22 @@ public class ParticlePath extends ArrayList<Findable> {
             if (i == this.size() - 1) {
                 continue;
             }
-            calculatedPoints.addAll(BezierUtil.getBezierCurveDistanced(visualizer.getParticleDistance(), get(i).getVector(), get(i + 1).getVector()));
+            calculatedPoints.addAll(BezierUtils.getBezierCurveDistanced(visualizer.getParticleDistance(), get(i).getVector(), get(i + 1).getVector()));
         }
     }
 
     private void calculateSmooth() {
         List<Tuple3<Vector, Vector, Vector>> tangentPoints = getTangentPoints();
         for (int i = 0; i < tangentPoints.size() - 1; i++) {
-            calculatedPoints.addAll(BezierUtil.getBezierCurveDistanced(visualizer.getParticleDistance(), tangentPoints.get(i).getMiddle(), tangentPoints.get(i + 1).getMiddle(),
-                    tangentPoints.get(i).getRight(), tangentPoints.get(i + 1).getLeft()));
+            final int fi = i;
+            final Vector fv = tangentPoints.get(i + 1).getMiddle();
+            calculatedPoints.addAll(BezierUtils.getBezierCurveDistanced(visualizer.getParticleDistance(), tangentPoints.get(i).getMiddle(), tangentPoints.get(i + 1).getMiddle(),
+                    tangentPoints.get(i).getRight(), tangentPoints.get(i + 1).getLeft())
+                    .stream()
+                    .filter(vector -> (fi != tangentPoints.size() - 2) || vector.distance(fv) > roadMap.getNodeFindDistance())
+                    .collect(Collectors.toList()));
         }
-        List<Vector> evenSpacing = BezierUtil.getEvenSpacing(calculatedPoints, visualizer.getParticleDistance());
+        List<Vector> evenSpacing = BezierUtils.getEvenSpacing(calculatedPoints, visualizer.getParticleDistance());
         calculatedPoints.clear();
         calculatedPoints.addAll(evenSpacing);
     }
@@ -138,36 +141,42 @@ public class ParticlePath extends ArrayList<Findable> {
 
     public void run(UUID uuid) {
         PluginUtils.getInstance().runSync(() -> {
+            System.out.println("Erst cancellen.");
             cancelSync();
             this.active = true;
 
-            PluginUtils.getInstance().runAsync(() -> {
-                int steps = visualizer.getParticleSteps();
-                ParticleEffect effect = ParticleEffect.valueOf(visualizer.getParticle().name());
-                int period = visualizer.getSchedulerPeriod();
-                World world = roadMap.getWorld();
+            //PluginUtils.getInstance().runAsync(() -> {
+            int steps = visualizer.getParticleSteps();
+            ParticleEffect effect = ParticleEffect.valueOf(visualizer.getParticle().name());
+            int period = visualizer.getSchedulerPeriod();
+            World world = roadMap.getWorld();
 
-                if (visualizer.getParticleDistance() != cachedDistance) {
-                    calculate();
-                }
+            if (visualizer.getParticleDistance() != cachedDistance) {
+                calculate();
+            }
 
-                PluginUtils.getInstance().runSync(() -> {
-                    for (int i = 0; i < steps; i++) {
-                        final int fi = i;
-                        final List<Object> packets = new ArrayList<>();
-                        ParticleBuilder particle = new ParticleBuilder(effect);
-                        int moduloCount = 0;
-                        for (Vector vector : calculatedPoints) {
-                            if (moduloCount % steps == i) {
-                                packets.add(particle.setLocation(vector.toLocation(world)).toPacket());
-                            }
-                            moduloCount++;
-                        }
-                        Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(),
-                                () -> taskIds.add(TaskManager.startSingularTask(packets, period * steps, uuid)), (long) fi * period);
+            //PluginUtils.getInstance().runSync(() -> {
+            for (int i = 0; i < steps; i++) {
+                final List<Object> packets = new ArrayList<>();
+                ParticleBuilder particle = new ParticleBuilder(effect);
+
+                int moduloCount = 0;
+                for (Vector vector : calculatedPoints) {
+                    if (moduloCount % steps == i) {
+                        packets.add(particle.setLocation(vector.toLocation(world)).toPacket());
                     }
-                });
-            });
+                    moduloCount++;
+                }
+                System.out.println("Starte Scheduler:");
+                Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
+                    int id = TaskManager.startSingularTask(packets, period * steps, uuid);
+                    System.out.println("Add ID: " + id);
+                    this.taskIds.add(id);
+                    System.out.println(taskIds.size());
+                }, (long) i * period);
+            }
+            //});
+            //});
         });
     }
 
@@ -179,14 +188,15 @@ public class ParticlePath extends ArrayList<Findable> {
      * Nur im Mainthread aufrufen
      */
     public void cancelSync() {
-        if (!active) {
-            return;
+        System.out.println(taskIds.size());
+        List<Integer> tasksToRemove = new ArrayList<>();
+        for(int i = 0; i < taskIds.size(); i++) {
+            int taskId = taskIds.get(i);
+            System.out.println("Cancelling Task: " + taskId);
+            Bukkit.getScheduler().cancelTask(taskId);
+            tasksToRemove.add(taskId);
         }
+        taskIds.removeAll(tasksToRemove);
         this.active = false;
-
-        for (int taskId : taskIds) {
-            TaskManager.getTaskManager().stopTask(taskId);
-        }
-        taskIds.clear();
     }
 }

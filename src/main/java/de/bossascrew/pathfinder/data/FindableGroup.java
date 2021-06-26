@@ -7,41 +7,33 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 @Getter
-public class FindableGroup {
+public class FindableGroup extends HashSet<Findable> {
 
     private final int databaseId;
+
+    private final RoadMap roadMap;
     @Setter
     private String name;
     @Setter
     private boolean findable;
     private Collection<Findable> findables;
 
-    public FindableGroup(int databaseId, String name) {
-        this(databaseId, name, null);
+    public FindableGroup(int databaseId, RoadMap roadMap, String name) {
+        this(databaseId, roadMap, name, null);
     }
 
-    public FindableGroup(int databaseId, String name, Collection<Findable> nodes) {
+    public FindableGroup(int databaseId, RoadMap roadMap, String name, Collection<Findable> nodes) {
         this.databaseId = databaseId;
+        this.roadMap = roadMap;
         this.name = name;
         this.findables = new ArrayList<>();
         this.findable = false;
         if (nodes != null) {
             this.findables = nodes;
         }
-    }
-
-    public void addNode(Node node) {
-        this.findables.add(node);
-    }
-
-    public void addNodes(Collection<Node> nodes) {
-        this.findables.addAll(nodes);
-    }
-
-    public void removeNode(Node node) {
-        this.findables.remove(node);
     }
 
     public void delete() {

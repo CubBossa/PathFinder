@@ -43,6 +43,7 @@ public class DatabaseModel {
         createEditModeVisualizerTable();
         createRoadMapsTable();
         createNodesTable();
+        createFindableGroupTable();
         createEdgesTable();
         createFoundNodesTable();
     }
@@ -121,6 +122,21 @@ public class DatabaseModel {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Nodes-Tabelle", e);
+        }
+    }
+
+    public void createFindableGroupTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_node_groups` (" +
+                    "`group_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
+                    "`roadmap_id` INT NOT NULL , " +
+                    "`name` VARCHAR(24) NOT NULL , " +
+                    "`findable` BOOLEAN NOT NUll , " +
+                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der Nodegroup-Tabelle", e);
         }
     }
 
@@ -318,6 +334,7 @@ public class DatabaseModel {
     public void deleteEdge(Pair<Findable, Findable> edge) {
         deleteEdge(edge.first, edge.second);
     }
+
     public void deleteEdge(Findable a, Findable b) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_edges` WHERE ( `node_a_id` = ? AND `node_b_id` = ? ) OR ( `node_a_id` = ? AND `node_b_id` = ? )")) {
@@ -433,6 +450,87 @@ public class DatabaseModel {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodes zur Roadmap: " + roadMap.getName(), e);
         }
         return null;
+    }
+
+    public @Nullable
+    FindableGroup newFindableGroup(RoadMap roadMap, String name, boolean findable) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_node_groups` " +
+                    "(roadmap_id, name, findable) VALUES " +
+                    "(?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setString(stmt, 2, name);
+                SQLUtils.setBoolean(stmt, 3, findable);
+
+                stmt.executeUpdate();
+                try (ResultSet resultSet = stmt.getGeneratedKeys()) {
+                    resultSet.next();
+                    int databaseId = resultSet.getInt(1);
+                    FindableGroup group = new FindableGroup(databaseId, roadMap, name);
+                    group.setFindable(findable);
+                    return group;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Ertellen einer Nodegruppe in der Pathfinder Datenbank", e);
+        }
+        return null;
+    }
+
+    public void deleteFindableGroup(FindableGroup group) {
+        deleteFindableGroup(group.getDatabaseId());
+    }
+
+    public void deleteFindableGroup(int groupId) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_node_groups` WHERE `group_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, groupId);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen der Nodegruppe mit ID: " + groupId, e);
+        }
+    }
+
+    public Map<Integer, FindableGroup> loadFindableGroups(RoadMap roadMap) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_node_groups` WHERE `roadmap_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, FindableGroup> result = new ConcurrentHashMap<>();
+                    while (resultSet.next()) {
+                        int id = SQLUtils.getInt(resultSet, "group_id");
+                        String name = SQLUtils.getString(resultSet, "name");
+                        boolean findable = SQLUtils.getBoolean(resultSet, "findable");
+
+                        FindableGroup group = new FindableGroup(id, roadMap, name);
+                        group.setFindable(findable);
+                        result.put(id, group);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodegroups zur Roadmap: " + roadMap.getName(), e);
+        }
+        return null;
+    }
+
+    public void updateFindableGroup(FindableGroup group) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_node_groups` SET " +
+                    "`name` = ?, " +
+                    "`findable` = ?, " +
+                    "WHERE `group_id` = ?")) {
+                SQLUtils.setString(stmt, 1, group.getName());
+                SQLUtils.setBoolean(stmt, 2, group.isFindable());
+                SQLUtils.setInt(stmt, 3, group.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Nodegroup: " + group.getDatabaseId(), e);
+        }
     }
 
     public @Nullable

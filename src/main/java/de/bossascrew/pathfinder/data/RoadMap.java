@@ -12,7 +12,7 @@ import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.BezierUtil;
+import de.bossascrew.pathfinder.util.BezierUtils;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
 import de.bossascrew.pathfinder.util.Pair;
 import lombok.Getter;
@@ -188,27 +188,29 @@ public class RoadMap {
         return null;
     }
 
-    public void deleteFindableGroup(int nodeGroupId) {
-        //TODO database gruppe löschen
-        DatabaseModel.getInstance();
+    public void deleteFindableGroup(FindableGroup findableGroup) {
+        findableGroup.delete();
+        this.groups.remove(findableGroup);
+        DatabaseModel.getInstance().deleteFindableGroup(findableGroup);
     }
 
     public @Nullable
     FindableGroup addFindableGroup(String name) {
-        if (isGroupNameUnique(name)) {
-            DatabaseModel.getInstance();
-            //TODO neue Gruppe im DatabaseModel erstellen und laden.
+        return addFindableGroup(name, true);
+    }
+
+    public @Nullable
+    FindableGroup addFindableGroup(String name, boolean findable) {
+        if (!isGroupNameUnique(name)) {
+            return null;
         }
-        return null;
+        FindableGroup group = DatabaseModel.getInstance().newFindableGroup(this, name, findable);
+        this.groups.add(group);
+        return group;
     }
 
     public boolean isGroupNameUnique(String name) {
-        for (FindableGroup group : groups) {
-            if (group.getName().equals(name)) {
-                return false;
-            }
-        }
-        return true;
+        return groups.stream().map(FindableGroup::getName).noneMatch(g -> g.equalsIgnoreCase(name));
     }
 
     /**
@@ -456,7 +458,7 @@ public class RoadMap {
                 if (processedFindables.contains(edge)) {
                     continue;
                 }
-                List<Vector> points = BezierUtil.getBezierCurveDistanced(editModeVisualizer.getParticleDistance(), edge.first.getVector(), edge.second.getVector());
+                List<Vector> points = BezierUtils.getBezierCurveDistanced(editModeVisualizer.getParticleDistance(), edge.first.getVector(), edge.second.getVector());
                 packets.addAll(points.stream()
                         .map(vector -> vector.toLocation(world))
                         .map(location -> particle.setLocation(location).toPacket())
@@ -559,7 +561,7 @@ public class RoadMap {
     }
 
     public void updateActivePaths() {
-        if(PathPlayerHandler.getInstance() == null) {
+        if (PathPlayerHandler.getInstance() == null) {
             return;
         }
         //Jeder spieler kann pro Roadmap nur einen aktiven Pfad haben, weshalb man PathPlayer auf ParticlePath mappen kann

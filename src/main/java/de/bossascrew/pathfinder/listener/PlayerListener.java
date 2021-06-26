@@ -124,7 +124,7 @@ public class PlayerListener implements Listener {
                     if (pathPlayer.hasFound(findable.getDatabaseId())) {
                         continue;
                     }
-                    if (player.hasPermission(findable.getPermission())) {
+                    if (!player.hasPermission(findable.getPermission())) {
                         continue;
                     }
                     if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
@@ -136,7 +136,7 @@ public class PlayerListener implements Listener {
                 if (pathPlayer.hasFound(findable.getDatabaseId())) {
                     continue;
                 }
-                if (player.hasPermission(findable.getPermission())) {
+                if (!player.hasPermission(findable.getPermission())) {
                     continue;
                 }
                 if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
