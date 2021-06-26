@@ -44,6 +44,18 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
     public void setAndSaveParticleSteps(int particleSteps) {
         this.particleSteps = particleSteps;
         saveData();
+        callParticleStepsSubscribers(this);
+    }
+
+    private void callParticleStepsSubscribers(PathVisualizer vis) {
+        vis.updateParticle.perform(null);
+        for (PathVisualizer child : children) {
+            if (child.getUnsafeParticle() != null) {
+                continue;
+            }
+            child.updateParticle.perform(null);
+            vis.callParticleStepsSubscribers(child);
+        }
     }
 
     public void saveData() {

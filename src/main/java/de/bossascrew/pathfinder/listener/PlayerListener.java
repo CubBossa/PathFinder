@@ -1,9 +1,11 @@
 package de.bossascrew.pathfinder.listener;
 
+import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -59,6 +61,18 @@ public class PlayerListener implements Listener {
         final World world = event.getTo().getWorld();
         final Player player = event.getPlayer();
 
+        PluginUtils.getInstance().runAsync(() -> {
+             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            for (ParticlePath path : pPlayer.getActivePaths()) {
+                RoadMap rm = path.getRoadMap();
+                Findable findable = path.get(path.size() - 1);
+                if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance()) {
+                    pPlayer.cancelPath(rm);
+                    player.sendMessage(Component.text("Ziel erreicht: ", NamedTextColor.GRAY)
+                            .append(Component.text(findable.getName(), NamedTextColor.WHITE)));
+                }
+            }
+        });
         PluginUtils.getInstance().runAsync(() -> {
             GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
             if (globalPlayer == null) {
@@ -118,7 +132,7 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-            for(Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getFindableGroup() == null).collect(Collectors.toSet())) {
+            for (Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getFindableGroup() == null).collect(Collectors.toSet())) {
                 if (pathPlayer.hasFound(findable.getDatabaseId())) {
                     continue;
                 }

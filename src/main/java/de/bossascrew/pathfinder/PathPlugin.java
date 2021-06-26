@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.acf.BukkitCommandExecutionContext;
 import de.bossascrew.acf.CommandContexts;
 import de.bossascrew.acf.InvalidCommandArgument;
@@ -18,7 +19,13 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.util.hooks.BSkyblockHook;
+import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
+import de.bossascrew.pathfinder.util.hooks.QuestsHook;
+import de.bossascrew.pathfinder.util.hooks.TradersHook;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
@@ -43,7 +50,10 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_NODE_GROUPS = "@nodegroups";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
-
+    public static final Component PREFIX_COMP = Component
+            .text("Pathfinder", NamedTextColor.BLUE)
+            .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+            .append(Component.text("", NamedTextColor.GRAY));
 
     @Getter
     private static PathPlugin instance;
@@ -67,7 +77,7 @@ public class PathPlugin extends JavaPlugin {
 
         BukkitMain.getInstance().getCommandManager().registerCommand(new CancelPath());
         BukkitMain.getInstance().getCommandManager().registerCommand(new EditModeVisualizerCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new FindeCommand());
+        BukkitMain.getInstance().getCommandManager().registerCommand(new FindCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new NodeGroupCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new PathSystemCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new PathVisualizerCommand());
@@ -76,6 +86,19 @@ public class PathPlugin extends JavaPlugin {
         registerCompletions();
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+
+        if(Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
+            new ChestShopHook(this);
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("Quests")) {
+            new QuestsHook(this);
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
+            new TradersHook(this);
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
+            new BSkyblockHook(this);
+        }
     }
 
     @Override
@@ -109,6 +132,9 @@ public class PathPlugin extends JavaPlugin {
             if (pPlayer == null) {
                 return null;
             }
+            if(pPlayer.getSelectedRoadMapId() == null) {
+                return Lists.newArrayList("keine Roadmap ausgewählt.");
+            }
             RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
             if (rm == null) {
                 return null;
@@ -117,11 +143,14 @@ public class PathPlugin extends JavaPlugin {
                     .map(FindableGroup::getName)
                     .collect(Collectors.toSet());
         });
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> { //TODO wirft fehler
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
             if (pPlayer == null) {
                 return null;
+            }
+            if(pPlayer.getSelectedRoadMapId() == null) {
+                return Lists.newArrayList("keine Roadmap ausgewählt.");
             }
             RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
             if (rm == null) {
@@ -152,7 +181,7 @@ public class PathPlugin extends JavaPlugin {
 
             PathVisualizer visualizer = visualizerHandler.getPathVisualizer(search);
             if (visualizer == null) {
-                if(context.isOptional()) {
+                if (context.isOptional()) {
                     return null;
                 }
                 throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer.");
@@ -164,7 +193,7 @@ public class PathPlugin extends JavaPlugin {
 
             EditModeVisualizer visualizer = visualizerHandler.getEditModeVisualizer(search);
             if (visualizer == null) {
-                if(context.isOptional()) {
+                if (context.isOptional()) {
                     return null;
                 }
                 throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
@@ -177,7 +206,7 @@ public class PathPlugin extends JavaPlugin {
             try {
                 particle = Particle.valueOf(search);
             } catch (IllegalArgumentException e) {
-                if(context.isOptional()) {
+                if (context.isOptional()) {
                     return null;
                 }
                 throw new InvalidCommandArgument("Ungültige Partikel.");
@@ -199,7 +228,7 @@ public class PathPlugin extends JavaPlugin {
             }
             FindableGroup group = roadMap.getFindableGroup(search);
             if (group == null) {
-                if(context.isOptional()) {
+                if (context.isOptional()) {
                     return null;
                 }
                 throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
@@ -239,7 +268,7 @@ public class PathPlugin extends JavaPlugin {
         }
         Node findable = (Node) roadMap.getFindable(search);
         if (findable == null) {
-            if(context.isOptional()) {
+            if (context.isOptional()) {
                 return null;
             }
             throw new InvalidCommandArgument("Diese Node existiert nicht.");

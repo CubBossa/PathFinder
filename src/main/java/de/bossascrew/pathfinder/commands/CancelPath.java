@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.commands;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.CommandAlias;
 import de.bossascrew.acf.annotation.CommandCompletion;
+import de.bossascrew.acf.annotation.Default;
 import de.bossascrew.acf.annotation.Optional;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.player.GlobalPlayer;
@@ -17,6 +18,7 @@ import org.bukkit.entity.Player;
 @CommandAlias("cancelpath")
 public class CancelPath extends BaseCommand {
 
+    @Default
     @CommandCompletion(PathPlugin.COMPLETE_ACTIVE_ROADMAPS)
     public void onCancel(Player player, @Optional String roadMapName) {
         GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
@@ -36,5 +38,6 @@ public class CancelPath extends BaseCommand {
             }
             pathPlayer.cancelPath(roadMap);
         }
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Wegweisung abgebrochen.");
     }
 }

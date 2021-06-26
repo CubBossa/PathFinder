@@ -12,10 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AStarUtils {
@@ -23,8 +20,9 @@ public class AStarUtils {
     /**
      * Threadsafe, kann asynchron ausgeführt werden.
      * Startet die Pfaddarstellung für einen Spieler
+     *
      * @param player Der Spieler, für den die Pfaddarstellung gestartet werden soll.
-     * @param start Der Spieler als Findable für die Berechnung mit Startwegpunkt an der Spielerposition
+     * @param start  Der Spieler als Findable für die Berechnung mit Startwegpunkt an der Spielerposition
      * @param target Das Findable, das der Spieler sucht
      */
     public static void startPath(PathPlayer player, PlayerFindable start, Findable target) {
@@ -34,14 +32,14 @@ public class AStarUtils {
         }
         AStar aStar = new AStar();
         aStar.aStarSearch(pair.first, pair.second);
-        List<Vector> pathVectors = aStar.printPath(pair.second).stream()
+
+        List<AStarNode> pathNodes = aStar.printPath(pair.second);
+        List<Findable> pathVar = pathNodes.stream()
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
-                .map(Findable::getVector)
                 .collect(Collectors.toList());
 
-        ParticlePath path = new ParticlePath(start.getRoadMap());
-        path.addAll(pathVectors);
-
+        ParticlePath path = new ParticlePath(start.getRoadMap(), player.getUuid());
+        path.addAll(pathVar);
         player.setPath(path);
     }
 

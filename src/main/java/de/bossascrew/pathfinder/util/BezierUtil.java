@@ -68,6 +68,14 @@ public class BezierUtil {
     }
 
     /**
+     * Bisher sehr ungenaue Annäherung, exakte Punkteverteilung mit getEvenSpacing()
+     * Mathematisch gesehen wird die Menge der Punkte aus dem Punktabstand für die Länge der Gerade AB berechnet und dann auf die Kurve angewandt.
+     */
+    public List<Vector> getBezierCurveDistanced(double distance, Vector pointA, Vector pointB, Vector tangentA, Vector tangentB) {
+        return getBezierCurve((int) (pointA.distance(pointB) / distance), pointA, pointB, tangentA, tangentB); //TODO
+    }
+
+    /**
      * Gibt eine Liste aus Vektoren, die auf der Bezierkurve zwischen den Punkten A und B mit den zugehörigen Kontrollpunkten liegen, zurück.
      *
      * @param steps    Wie viele Punkte auf der Kurve berechnet werden sollen
@@ -88,6 +96,27 @@ public class BezierUtil {
                     .add(tangentA.clone().multiply(Math.pow(1 - t, 2) * t * 3))
                     .add(tangentB.clone().multiply(Math.pow(t, 2) * (1 - t) * 3))
                     .add(pointB.clone().multiply(Math.pow(t, 3))));
+        }
+        return ret;
+    }
+
+    //TODO kommentar
+    public List<Vector> getEvenSpacing(List<Vector> input, double distance) {
+
+        List<Vector> ret = new ArrayList<>();
+        ret.add(input.get(0));
+        double left = 0;
+
+        for (int i = 0; i < input.size() - 1; i++) { //TODO fall behandlung, falls alle größeren abstand haben und left immer negativer werden.
+            Vector a = input.get(i);
+            Vector b = input.get(i + 1);
+            if (left > distance) {
+                left = left - distance;
+                continue;
+            }
+            left += distance - a.distance(b);
+            b.clone().setX(a.getX()).setY(a.getY()).setZ(a.getZ()).add(b.clone().subtract(a).normalize().multiply(distance));
+            ret.add(b);
         }
         return ret;
     }

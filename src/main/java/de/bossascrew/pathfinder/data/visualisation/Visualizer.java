@@ -28,7 +28,7 @@ public abstract class Visualizer<T extends Visualizer> {
     private Integer particleLimit = null;
     private Integer schedulerPeriod = null;
 
-    private final SubscribtionHandler<Integer, Integer> updateParticle;
+    protected final SubscribtionHandler<Integer, Integer> updateParticle;
 
     public Visualizer(int databaseId, String name, @Nullable Integer parentId) {
         this.databaseId = databaseId;
@@ -181,7 +181,7 @@ public abstract class Visualizer<T extends Visualizer> {
         callSchedulerPeriodSubscribers(this);
     }
 
-    private <A> void callParticleSubscribers(Visualizer vis) {
+    private void callParticleSubscribers(Visualizer vis) {
         vis.updateParticle.perform(null);
         for (Visualizer child : children) {
             if (child.getUnsafeParticle() != null) {

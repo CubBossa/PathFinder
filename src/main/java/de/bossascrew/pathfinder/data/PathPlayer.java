@@ -162,6 +162,7 @@ public class PathPlayer {
         if (path == null) {
             return;
         }
+        path.run(uuid);
         activePaths.put(path.getRoadMap().getDatabaseId(), path);
     }
 
@@ -237,12 +238,18 @@ public class PathPlayer {
     }
 
     public void deselectRoadMap() {
+        if(selectedRoadMapId != null) {
+            RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(selectedRoadMapId);
+            if(roadMap != null) {
+                roadMap.setEditMode(this.uuid, false);
+            }
+        }
         selectedRoadMapId = null;
     }
 
     public void deselectRoadMap(int id) {
         if (selectedRoadMapId != null && selectedRoadMapId == id) {
-            selectedRoadMapId = null;
+            deselectRoadMap();
         }
     }
 }

@@ -19,6 +19,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 
+
+//TODO checks dass werte nicht negativ sind und so weiter
+
 @CommandAlias("editmode-visualizer|emv")
 public class EditModeVisualizerCommand extends BaseCommand {
 

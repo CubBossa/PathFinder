@@ -248,8 +248,8 @@ public class DatabaseModel {
                 SQLUtils.setString(stmt, 1, roadMap.getName());
                 SQLUtils.setString(stmt, 2, roadMap.getWorld().getName());
                 SQLUtils.setBoolean(stmt, 3, roadMap.isFindableNodes());
-                SQLUtils.setInt(stmt, 4, roadMap.getPathVisualizer().getDatabaseId());
-                SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer().getDatabaseId());
+                SQLUtils.setInt(stmt, 4, roadMap.getPathVisualizer() == null ? null : roadMap.getPathVisualizer().getDatabaseId());
+                SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer() == null ? null : roadMap.getEditModeVisualizer().getDatabaseId());
                 SQLUtils.setDouble(stmt, 6, roadMap.getNodeFindDistance());
                 SQLUtils.setDouble(stmt, 7, roadMap.getDefaultBezierTangentLength());
                 SQLUtils.setInt(stmt, 8, roadMap.getDatabaseId());
@@ -313,6 +313,23 @@ public class DatabaseModel {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Edges zur Roadmap: " + roadMap.getName(), e);
         }
         return null;
+    }
+
+    public void deleteEdge(Pair<Findable, Findable> edge) {
+        deleteEdge(edge.first, edge.second);
+    }
+    public void deleteEdge(Findable a, Findable b) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_edges` WHERE ( `node_a_id` = ? AND `node_b_id` = ? ) OR ( `node_a_id` = ? AND `node_b_id` = ? )")) {
+                SQLUtils.setInt(stmt, 1, a.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, b.getDatabaseId());
+                SQLUtils.setInt(stmt, 3, b.getDatabaseId());
+                SQLUtils.setInt(stmt, 4, a.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen einer Edge", e);
+        }
     }
 
     public @Nullable

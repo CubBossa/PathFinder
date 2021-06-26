@@ -228,7 +228,7 @@ public class RoadMap {
     }
 
     public void disconnectNodes(Findable a, Findable b) {
-        DatabaseModel.getInstance(); //TODO database
+        DatabaseModel.getInstance().deleteEdge(a, b);
         a.getEdges().remove((Integer) b.getDatabaseId());
         b.getEdges().remove((Integer) a.getDatabaseId());
 
@@ -493,7 +493,7 @@ public class RoadMap {
     }
 
     private ArmorStand getEdgeArmorStand(Pair<Findable, Findable> edge, ArmorStand toEdit) {
-        String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") | " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
+        String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") ↔ " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
 
         if (toEdit == null) {
             toEdit = EditmodeUtils.getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), name, editModeVisualizer.getEdgeHeadId(), true);
@@ -522,6 +522,8 @@ public class RoadMap {
             this.editModeVisualizer.getUpdateParticle().unsubscribe(this.getDatabaseId());
         }
         this.editModeVisualizer = editModeVisualizer;
+        updateData();
+
         this.editModeVisualizer.getNodeHeadSubscribers().subscribe(this.getDatabaseId(), integer -> PluginUtils.getInstance().runSync(() -> {
             if (isEdited()) {
                 this.updateArmorStandNodeHeads();
@@ -543,12 +545,30 @@ public class RoadMap {
             updateArmorStandNodeHeads();
             updateEditModeParticles();
         }
-        updateData();
     }
 
     public void setPathVisualizer(PathVisualizer pathVisualizer) {
+        if (this.pathVisualizer != null) {
+            this.pathVisualizer.getUpdateParticle().unsubscribe(this.getDatabaseId());
+        }
         this.pathVisualizer = pathVisualizer;
         updateData();
+
+        this.pathVisualizer.getUpdateParticle().subscribe(this.getDatabaseId(), integer -> this.updateActivePaths());
+        updateActivePaths();
+    }
+
+    public void updateActivePaths() {
+        if(PathPlayerHandler.getInstance() == null) {
+            return;
+        }
+        //Jeder spieler kann pro Roadmap nur einen aktiven Pfad haben, weshalb man PathPlayer auf ParticlePath mappen kann
+        PathPlayerHandler.getInstance().getPlayers().stream()
+                .map(player -> player.getActivePaths().stream()
+                        .filter(particlePath -> particlePath.getRoadMap().getDatabaseId() == this.getDatabaseId())
+                        .findFirst().orElse(null))
+                .filter(Objects::nonNull)
+                .forEach(ParticlePath::run);
     }
 
     public void setDefaultBezierTangentLength(double length) {

@@ -7,6 +7,7 @@ import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
@@ -342,6 +343,9 @@ public class RoadMapCommand extends BaseCommand {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), node);
 
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Testpfad gestartet.");
+        player.sendMessage(PathPlugin.PREFIX_COMP
+                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
+                .append(ComponentUtils.getCommandComponent("/cancelpath"))
+                .append(Component.text(")", NamedTextColor.GRAY)));
     }
 }
