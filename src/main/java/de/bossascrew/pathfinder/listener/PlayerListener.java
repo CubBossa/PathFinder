@@ -112,7 +112,6 @@ public class PlayerListener implements Listener {
         });
     }
 
-
     private @Nullable
     Findable getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
@@ -132,7 +131,7 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-            for (Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getFindableGroup() == null).collect(Collectors.toSet())) {
+            for (Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getGroup() == null).collect(Collectors.toSet())) {
                 if (pathPlayer.hasFound(findable.getDatabaseId())) {
                     continue;
                 }
