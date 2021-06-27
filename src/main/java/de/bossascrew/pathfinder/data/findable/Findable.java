@@ -2,77 +2,100 @@ package de.bossascrew.pathfinder.data.findable;
 
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
-public interface Findable {
+@Getter
+public abstract class Findable {
 
-    /**
-     * @return Die DatenbankID für Findables, die in einer Datenbank gespeichert werden können.
-     */
-    int getDatabaseId();
+    public static final int NO_GROUP_ID = -1;
 
-    /**
-     * @return Die ID der übergeordneten Straßenkarte
-     */
-    int getRoadMapId();
+    protected final int databaseId;
+    protected final int roadMapId;
+    protected final RoadMap roadMap;
+    protected final List<Integer> edges;
+    protected int nodeGroupId = NO_GROUP_ID;
 
-    /**
-     * @return Gibt die übergeordnete Straßenkarte zurück, in der sich das Objekt befindet.
-     */
-    RoadMap getRoadMap();
+    protected Double bezierTangentLength = null;
+    private String permission = null;
 
-    /**
-     * @return Gibt den Namen des Objektes an, die hauptsächliche Verwendung findet dieser im /find Befehl.
-     */
-    String getName();
+    public Findable(int databaseId, RoadMap roadMap) {
+        this.databaseId = databaseId;
+        this.roadMap = roadMap;
+        this.roadMapId = roadMap.getDatabaseId();
 
-    /**
-     * @return Gibt die Position des Objektes als Vektor an. Dieser lässt sich mit der Welt der Roadmap zu einer Location konvertieren.
-     */
-    Vector getVector();
+        edges = new ArrayList<>();
+    }
 
-    /**
-     * @return Gibt die Location des Objektes mit Welt an.
-     */
-    Location getLocation();
+    public void setGroup(int nodeGroupId) {
+        this.nodeGroupId = nodeGroupId;
+        updateData();
+    }
 
-    /**
-     * @return Eine Liste aller Nodes als ID, die eine direkte Anbindung zum Objekt haben.
-     */
-    List<Integer> getEdges();
+    public void setGroup(FindableGroup nodeGroup) {
+        setGroup(nodeGroup.getDatabaseId());
+    }
 
-    /**
-     * @return Die Permissionnode, die notwendig ist um dieses Objekt zu finden. "none" ist der Platzhalter, um eine Permissionabfrage zu umgehen.
-     */
-    String getPermission();
+    public void setGroupId(int groupId) {
+        this.nodeGroupId = groupId;
+        roadMap.updateArmorStandDisplay(this);
+        updateData();
+    }
 
-    /**
-     * @return Die ID der Nodegruppe, in der das Objekt sich befindet. Node.NO_GROUP_ID, um Gruppe zu entfernen
-     */
-    int getNodeGroupId();
+    public void removeFindableGroup() {
+        nodeGroupId = NO_GROUP_ID;
+        updateData();
+    }
 
-    /**
-     * @return Die Nodegruppe, der das Objekt angehört.
-     */
-    @Nullable FindableGroup getFindableGroup();
+    public @Nullable
+    FindableGroup getGroup() {
+        return roadMap.getFindableGroup(nodeGroupId);
+    }
 
-    /**
-     * Löscht die gesetzte Gruppe.
-     */
-    void removeFindableGroup();
-
-    /**
-     * @return Gibt die Bezierwichtung zurück, oder falls nicht gesetzt null.
-     */
-    @Nullable
-    Double getBezierTangentLength();
+    public @Nullable
+    Double getBezierTangentLength() {
+        return bezierTangentLength;
+    }
 
     /**
      * @return Gibt die Bezierwichtung zurück, und falls diese nicht gesetzt ist den vorgegebenen Defaultwert der Roadmap.
      */
-    double getBezierTangentLengthOrDefault();
+    public double getBezierTangentLengthOrDefault() {
+        if (bezierTangentLength == null) {
+            return roadMap.getDefaultBezierTangentLength();
+        }
+        return bezierTangentLength;
+    }
+
+    public void setBezierTangentLength(@Nullable Double bezierTangentLength) {
+        this.bezierTangentLength = bezierTangentLength;
+        updateData();
+    }
+
+    public void setPermission(@Nullable String permission) {
+        this.permission = permission;
+        updateData();
+    }
+
+    /**
+     * @return Gibt den Namen des Objektes an, die hauptsächliche Verwendung findet dieser im /find Befehl.
+     */
+    public abstract String getName();
+
+    /**
+     * @return Gibt die Position des Objektes als Vektor an. Dieser lässt sich mit der Welt der Roadmap zu einer Location konvertieren.
+     */
+    public abstract Vector getVector();
+
+    /**
+     * @return Gibt die Location des Objektes mit Welt an.
+     */
+    public abstract Location getLocation();
+
+    abstract void updateData();
 }

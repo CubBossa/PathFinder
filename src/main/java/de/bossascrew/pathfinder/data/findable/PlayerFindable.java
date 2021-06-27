@@ -10,13 +10,14 @@ import org.bukkit.util.Vector;
 import java.util.List;
 
 @Getter
-public class PlayerFindable implements Findable {
+public class PlayerFindable extends Findable {
 
     private final String name;
     private final Location location;
     private final RoadMap roadMap;
 
     public PlayerFindable(Player player, RoadMap roadMap) {
+        super(-1, roadMap);
         this.name = player.getName();
         this.location = player.getLocation();
         this.roadMap = roadMap;
@@ -50,8 +51,7 @@ public class PlayerFindable implements Findable {
         return null;
     }
 
-    public void removeFindableGroup() {
-    }
+    public void removeFindableGroup() {}
 
     public Double getBezierTangentLength() {
         return roadMap.getDefaultBezierTangentLength();
@@ -60,4 +60,7 @@ public class PlayerFindable implements Findable {
     public double getBezierTangentLengthOrDefault() {
         return roadMap.getDefaultBezierTangentLength();
     }
+
+    @Override
+    void updateData() {}
 }

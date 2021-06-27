@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.findable.DtlTraderNode;
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
 
@@ -10,12 +9,13 @@ import java.util.Map;
 @Getter
 public class Shop {
 
+    private final int npcId;
     private final String identifier;
     private final String name;
-    private DtlTraderNode traderNode;
     private final Map<ItemStack, String> itemStackPermissionMap;
 
-    public Shop(File file) {
+    public Shop(int npcId, File file) {
+        this.npcId = npcId;
         this.identifier = "";
         this.name = "";
         this.itemStackPermissionMap = loadItemStacksAndPermission();

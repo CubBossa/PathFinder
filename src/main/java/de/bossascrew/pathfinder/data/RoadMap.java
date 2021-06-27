@@ -477,7 +477,7 @@ public class RoadMap {
 
     private ArmorStand getNodeArmorStand(Findable findable, ArmorStand toEdit) {
         String name = findable.getName() + " #" + findable.getDatabaseId() +
-                (findable.getFindableGroup() == null ? "" : " (" + findable.getFindableGroup().getName() + ")");
+                (findable.getGroup() == null ? "" : " (" + findable.getGroup().getName() + ")");
 
         if (toEdit == null) {
             toEdit = EditmodeUtils.getNewArmorStand(findable.getLocation().clone().add(ARMORSTAND_OFFSET), name, editModeVisualizer.getNodeHeadId());
