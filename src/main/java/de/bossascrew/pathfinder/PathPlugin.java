@@ -45,9 +45,9 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
-    public static final String COMPLETE_NODES = "@nodes";
+    public static final String COMPLETE_FINDABLES = "@nodes";
     public static final String COMPLETE_NODES_CONNECTED = "@nodes_connected";
-    public static final String COMPLETE_NODE_GROUPS = "@nodegroups";
+    public static final String COMPLETE_FINDABLE_GROUPS = "@nodegroups";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
     public static final Component PREFIX_COMP = Component
@@ -68,6 +68,19 @@ public class PathPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        if(Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
+            new ChestShopHook(this);
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("Quests")) {
+            new QuestsHook(this);
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
+            new TradersHook(this).loadShopsFromDir();
+        }
+        if(Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
+            new BSkyblockHook(this);
+        }
+
         new DatabaseModel(this);
         this.visualizerHandler = new VisualizerHandler();
         this.roadMapHandler = new RoadMapHandler();
@@ -83,22 +96,16 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().getCommandManager().registerCommand(new PathVisualizerCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new RoadMapCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointCommand());
+        if(TradersHook.getInstance() != null) {
+            BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointTraderCommand());
+        }
+        if(QuestsHook.getInstance() != null) {
+            BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointQuesterCommand());
+        }
+
         registerCompletions();
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
-
-        if(Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
-            new ChestShopHook(this);
-        }
-        if(Bukkit.getPluginManager().isPluginEnabled("Quests")) {
-            new QuestsHook(this);
-        }
-        if(Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
-            new TradersHook(this);
-        }
-        if(Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
-            new BSkyblockHook(this);
-        }
     }
 
     @Override
@@ -126,7 +133,7 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
                 .map(Particle::name)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODE_GROUPS, context -> {
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> {
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
             if (pPlayer == null) {
@@ -143,7 +150,7 @@ public class PathPlugin extends JavaPlugin {
                     .map(FindableGroup::getName)
                     .collect(Collectors.toSet());
         });
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_NODES, context -> {
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES, context -> {
             Player player = context.getPlayer();
             PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
             if (pPlayer == null) {

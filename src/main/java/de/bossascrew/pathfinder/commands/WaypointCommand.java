@@ -26,7 +26,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("info")
     @Syntax("<Node>")
     @CommandPermission("bcrew.command.waypoint.info")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onInfo(Player player, Node node) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
@@ -86,7 +86,7 @@ public class WaypointCommand extends BaseCommand {
                 .clickEvent(ClickEvent.suggestCommand(command)));
     }
 
-    @Subcommand("create")
+    @Subcommand("create default")
     @Syntax("<Name>")
     @CommandPermission("bcrew.command.waypoint.create")
     public void onCreate(Player player, @Single String name) {
@@ -102,7 +102,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("delete")
     @Syntax("<Node>")
     @CommandPermission("bcrew.command.waypoint.delete")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onDelete(Player player, Node node) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
@@ -113,7 +113,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("tphere")
     @Syntax("<Node>")
     @CommandPermission("bcrew.command.waypoint.tphere")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onTphere(Player player, Node node) {
         node.setVector(player.getLocation().toVector());
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich zu deiner Position verschoben");
@@ -122,7 +122,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("set name")
     @Syntax("<Node> <neuer Name>")
     @CommandPermission("bcrew.command.waypoint.rename")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onRename(Player player, Node node, @Single String newName) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
@@ -138,7 +138,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("connect")
     @Syntax("<Node> <Node>")
     @CommandPermission("bcrew.command.waypoint.connect")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES + " " + PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES + " " + PathPlugin.COMPLETE_FINDABLES)
     public void onConnect(Player player, Node a, Node b) {
         if (a.getDatabaseId() == b.getDatabaseId()) {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Die Wegpunkte sind identisch.");
@@ -157,7 +157,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("disconnect")
     @Syntax("<Node> <Node>")
     @CommandPermission("bcrew.command.waypoint.disconnect")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES + " " + PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES + " " + PathPlugin.COMPLETE_FINDABLES)
     public void onDisconnect(Player player, Node a, Node b) {
         if (!a.getEdges().contains(b.getDatabaseId())) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Der Wegpunkt " + b.getName() + " ist nicht mit " + a.getName() + " verbunden.");
@@ -171,7 +171,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("set permission")
     @Syntax("<Node> <Permission>")
     @CommandPermission("bcrew.command.waypoint.setpermission")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES + " some.custom.permission")
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES + " some.custom.permission")
     public void onSetPermission(Player player, Node node, @Single String perm) {
         if (node == null) {
             return;
@@ -186,7 +186,7 @@ public class WaypointCommand extends BaseCommand {
     @Subcommand("set tangent")
     @Syntax("<Node> <Rundungsstärke>")
     @CommandPermission("bcrew.command.waypoint.settangent")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onSetTangent(Player player, Node node, Double strength) {
         if (node == null) {
             return;
