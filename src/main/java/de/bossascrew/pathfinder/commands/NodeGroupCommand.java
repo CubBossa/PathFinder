@@ -12,7 +12,6 @@ import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -53,7 +52,7 @@ public class NodeGroupCommand extends BaseCommand {
     @Subcommand("delete")
     @Syntax("<Gruppe>")
     @CommandPermission("bcrew.command.nodegroup.delete")
-    @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS)
     public void onDelete(Player player, FindableGroup group) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
@@ -64,7 +63,7 @@ public class NodeGroupCommand extends BaseCommand {
     @Subcommand("set name")
     @Syntax("<Gruppe> <neuer Name>")
     @CommandPermission("bcrew.command.nodegroup.rename")
-    @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS)
     public void onRename(Player player, FindableGroup group, @Single String newName) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
@@ -79,7 +78,7 @@ public class NodeGroupCommand extends BaseCommand {
     @Subcommand("set findable")
     @Syntax("<Gruppe> <findbar>")
     @CommandPermission("bcrew.command.nodegroup.setfindable")
-    @CommandCompletion(PathPlugin.COMPLETE_NODE_GROUPS + " " + BukkitMain.COMPLETE_BOOLEAN)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(Player player, FindableGroup group, boolean findable) {
         group.setFindable(findable);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + ChatColor.GREEN + (findable ? "an" : "aus"));

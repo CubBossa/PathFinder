@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.astar.AStar;
 import de.bossascrew.pathfinder.astar.AStarEdge;
 import de.bossascrew.pathfinder.astar.AStarNode;
@@ -8,6 +9,8 @@ import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
@@ -30,6 +33,11 @@ public class AStarUtils {
         if (pair == null) {
             return;
         }
+        if(pair.second == null) {
+            PlayerUtils.sendMessage(Bukkit.getPlayer(player.getUuid()), ChatColor.RED + "Es konnte kein kürzester Weg ermittelt werden.");
+            return;
+        }
+
         AStar aStar = new AStar();
         aStar.aStarSearch(pair.first, pair.second);
 

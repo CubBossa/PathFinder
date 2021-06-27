@@ -240,7 +240,7 @@ public class RoadMapCommand extends BaseCommand {
     @Subcommand("forcefind")
     @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [ungruppiert]")
     @CommandPermission("bcrew.command.roadmap.forcefind")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS + " " + PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS + " " + PathPlugin.COMPLETE_FINDABLES)
     public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, String nodename,
                             @Optional @Single @Values("ungruppiert") String ungrouped) {
 
@@ -336,7 +336,7 @@ public class RoadMapCommand extends BaseCommand {
     @Subcommand("test navigate")
     @CommandPermission("bcrew.command.roadmap.test.navigate")
     @Syntax("<Findable>")
-    @CommandCompletion(PathPlugin.COMPLETE_NODES)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
     public void onTestNavigate(Player player, Node node) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 

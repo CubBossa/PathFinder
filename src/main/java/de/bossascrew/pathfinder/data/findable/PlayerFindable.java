@@ -47,7 +47,7 @@ public class PlayerFindable extends Findable {
         return -1;
     }
 
-    public FindableGroup getFindableGroup() {
+    public FindableGroup getGroup() {
         return null;
     }
 
