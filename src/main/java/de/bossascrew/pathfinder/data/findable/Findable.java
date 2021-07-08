@@ -13,16 +13,14 @@ import java.util.List;
 @Getter
 public abstract class Findable {
 
-    public static final int NO_GROUP_ID = -1;
-
     protected final int databaseId;
     protected final int roadMapId;
     protected final RoadMap roadMap;
     protected final List<Integer> edges;
-    protected int nodeGroupId = NO_GROUP_ID;
+    protected @Nullable Integer nodeGroupId = null;
 
-    protected Double bezierTangentLength = null;
-    private String permission = null;
+    protected @Nullable Double bezierTangentLength = null;
+    private @Nullable String permission = null;
 
     public Findable(int databaseId, RoadMap roadMap) {
         this.databaseId = databaseId;
@@ -32,24 +30,24 @@ public abstract class Findable {
         edges = new ArrayList<>();
     }
 
-    public void setGroup(int nodeGroupId) {
-        this.nodeGroupId = nodeGroupId;
-        updateData();
+    public void setGroup(Integer groupId) {
+        setGroup(groupId, true);
     }
 
-    public void setGroup(FindableGroup nodeGroup) {
-        setGroup(nodeGroup.getDatabaseId());
-    }
-
-    public void setGroupId(int groupId) {
+    public void setGroup(Integer groupId, boolean updateArmorStands) {
         this.nodeGroupId = groupId;
-        roadMap.updateArmorStandDisplay(this);
+        if(updateArmorStands) {
+            roadMap.updateArmorStandDisplay(this);
+        }
         updateData();
+    }
+
+    public void setGroup(@Nullable FindableGroup nodeGroup) {
+        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), true);
     }
 
     public void removeFindableGroup() {
-        nodeGroupId = NO_GROUP_ID;
-        updateData();
+        setGroup((Integer) null, true);
     }
 
     public @Nullable
@@ -96,6 +94,8 @@ public abstract class Findable {
      * @return Gibt die Location des Objektes mit Welt an.
      */
     public abstract Location getLocation();
+
+    public abstract String getScope();
 
     abstract void updateData();
 }

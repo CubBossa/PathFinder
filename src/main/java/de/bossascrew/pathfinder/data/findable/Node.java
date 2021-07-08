@@ -10,6 +10,8 @@ import org.bukkit.util.Vector;
 @Getter
 public class Node extends Findable {
 
+    public static final String SCOPE = "NODE";
+
     private Vector vector;
     private String name;
 
@@ -37,7 +39,12 @@ public class Node extends Findable {
     }
 
     @Override
+    public String getScope() {
+        return "NODE";
+    }
+
+    @Override
     public void updateData() {
-        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateNode(this));
+        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateFindable(this));
     }
 }

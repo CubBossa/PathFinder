@@ -72,7 +72,7 @@ public class BezierUtils {
      * Mathematisch gesehen wird die Menge der Punkte aus dem Punktabstand für die Länge der Gerade AB berechnet und dann auf die Kurve angewandt.
      */
     public List<Vector> getBezierCurveDistanced(double distance, Vector pointA, Vector pointB, Vector tangentA, Vector tangentB) {
-        return getBezierCurve((int) (pointA.distance(pointB) / distance), pointA, pointB, tangentA, tangentB); //TODO
+        return getBezierCurve((int) (pointA.distance(pointB) / distance), pointA, pointB, tangentA, tangentB);
     }
 
     /**
@@ -115,9 +115,41 @@ public class BezierUtils {
                 continue;
             }
             left += distance - a.distance(b);
-            b.clone().setX(a.getX()).setY(a.getY()).setZ(a.getZ()).add(b.clone().subtract(a).normalize().multiply(distance));
-            ret.add(b);
+            Vector c = b.clone().setX(a.getX()).setY(a.getY()).setZ(a.getZ()).add(b.clone().subtract(a).normalize().multiply(distance));
+            ret.add(c);
         }
         return ret;
+    }
+
+    public List<Vector> getEvenSpacing2(List<Vector> input, double distance) {
+        List<Vector> ret = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++) {
+            System.out.println("V: " + input.get(i));
+            Vector v;
+            if ((v = moveAlongCurve(input.get(i).clone(), distance * i, input, 0)) != null) {
+                ret.add(v);
+                System.out.println("Vp: " + v);
+            }
+        }
+        return ret;
+    }
+
+    public Vector moveAlongCurve(Vector toMove, double distance, List<Vector> curve, int startIndex) {
+        double processed = 0;
+        for (int i = startIndex; i < curve.size(); i++) {
+            if (i == 0) {
+                continue;
+            }
+            double missingDistance = distance - processed;
+            Vector segment = curve.get(i);
+            Vector dir = segment.clone().subtract(curve.get(i - 1));
+            if (distance < dir.length()) {
+                System.out.println(distance+ " vs " + dir.length());
+                return toMove.add(dir.clone().normalize().multiply(missingDistance));
+            }
+            toMove.add(dir);
+            processed += dir.length();
+        }
+        return toMove;
     }
 }

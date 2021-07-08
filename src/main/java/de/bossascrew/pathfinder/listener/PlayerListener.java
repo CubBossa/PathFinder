@@ -96,7 +96,7 @@ public class PlayerListener implements Listener {
             }
             Date findDate = new Date();
 
-            NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found, found.getNodeGroupId(), findDate);
+            NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found, found.getNodeGroupId() == null ? null : found.getNodeGroupId(), findDate);
             PluginUtils.getInstance().runSync(() -> {
 
                 Bukkit.getPluginManager().callEvent(findEvent);
@@ -105,9 +105,16 @@ public class PlayerListener implements Listener {
                 }
                 pathPlayer.findGroup(findEvent.getNode(), findEvent.getDate());
 
+                RoadMap rm = found.getRoadMap();
+                double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getFindables().stream().filter(f -> f.getGroup() == null || f.getGroup().isFindable()).count();
+
                 player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
-                        .append(Component.text(found.getName()).color(NamedTextColor.WHITE))));
-                player.playSound(found.getVector().toLocation(found.getRoadMap().getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
+                        .append(Component.text(found.getGroup() != null ? found.getGroup().getName() : found.getName()).color(NamedTextColor.WHITE))));
+                player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
+                player.sendActionBar(
+                        Component.text(rm.getName(), NamedTextColor.GREEN)
+                        .append(Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY))
+                        .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
             });
         });
     }
@@ -115,7 +122,7 @@ public class PlayerListener implements Listener {
     private @Nullable
     Findable getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
-            for (FindableGroup group : roadMap.getGroups()) {
+            for (FindableGroup group : roadMap.getGroups().values()) {
                 if (!group.isFindable()) {
                     continue;
                 }
@@ -123,7 +130,7 @@ public class PlayerListener implements Listener {
                     if (pathPlayer.hasFound(findable.getDatabaseId())) {
                         continue;
                     }
-                    if (!player.hasPermission(findable.getPermission())) {
+                    if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
                         continue;
                     }
                     if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {
@@ -135,7 +142,7 @@ public class PlayerListener implements Listener {
                 if (pathPlayer.hasFound(findable.getDatabaseId())) {
                     continue;
                 }
-                if (!player.hasPermission(findable.getPermission())) {
+                if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
                     continue;
                 }
                 if (findable.getVector().distance(location.toVector()) < roadMap.getNodeFindDistance()) {

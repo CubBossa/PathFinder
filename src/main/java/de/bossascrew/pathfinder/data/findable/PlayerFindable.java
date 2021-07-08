@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 @Getter
@@ -27,12 +28,13 @@ public class PlayerFindable extends Findable {
         return -1;
     }
 
-    public int getRoadMapId() {
-        return roadMap.getDatabaseId();
-    }
-
     public Vector getVector() {
         return location.toVector();
+    }
+
+    @Override
+    public String getScope() {
+        return "PLAYER";
     }
 
     public List<Integer> getEdges() {
@@ -43,15 +45,15 @@ public class PlayerFindable extends Findable {
         return "none";
     }
 
-    public int getNodeGroupId() {
-        return -1;
-    }
-
-    public FindableGroup getGroup() {
+    @Override
+    public @Nullable Integer getNodeGroupId() {
         return null;
     }
 
-    public void removeFindableGroup() {}
+    @Override
+    public FindableGroup getGroup() {
+        return null;
+    }
 
     public Double getBezierTangentLength() {
         return roadMap.getDefaultBezierTangentLength();
@@ -62,5 +64,6 @@ public class PlayerFindable extends Findable {
     }
 
     @Override
-    void updateData() {}
+    void updateData() {
+    }
 }

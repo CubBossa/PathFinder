@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PathPlayer {
 
@@ -139,6 +140,16 @@ public class PathPlayer {
         return false;
     }
 
+    /**
+     * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
+     */
+    public int getFoundAmount(RoadMap roadMap) {
+        Collection<Integer> ids = roadMap.getFindables().stream().map(Findable::getDatabaseId).collect(Collectors.toSet());
+        return (int) foundInfos.values().stream()
+                .filter(fi -> ids.contains(fi.getNodeId()))
+                .count();
+    }
+
     public void setPath(Node targetNode) {
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
@@ -154,7 +165,7 @@ public class PathPlayer {
         }
         final PlayerFindable playerFindable = new PlayerFindable(player, target.getRoadMap());
         PluginUtils.getInstance().runAsync(() -> {
-            AStarUtils.startPath(pathPlayer, playerFindable, target);
+            AStarUtils.startPath(pathPlayer, playerFindable, target, false);
         });
     }
 

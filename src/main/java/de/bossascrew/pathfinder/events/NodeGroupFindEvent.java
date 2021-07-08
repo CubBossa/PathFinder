@@ -7,6 +7,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -17,7 +18,8 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
     @Getter
     private final UUID playerId;
     @Getter
-    private final int groupId;
+    private @Nullable
+    final Integer groupId;
     @Getter
     @Setter
     private Findable node;
@@ -27,7 +29,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
 
     private boolean cancelled;
 
-    public NodeGroupFindEvent(UUID playerId, Findable node, int groupId, Date date) {
+    public NodeGroupFindEvent(UUID playerId, Findable node, @Nullable Integer groupId, Date date) {
         this.playerId = playerId;
         this.node = node;
         this.date = date;

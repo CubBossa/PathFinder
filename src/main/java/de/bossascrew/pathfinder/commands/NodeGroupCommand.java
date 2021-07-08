@@ -15,7 +15,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-@CommandAlias("nodegroup|ng")
+@CommandAlias("nodegroup|ng|findablegroup")
 public class NodeGroupCommand extends BaseCommand {
 
     @Subcommand("list")
@@ -26,7 +26,7 @@ public class NodeGroupCommand extends BaseCommand {
 
         Menu menu = new Menu(ChatColor.DARK_GREEN + "Gruppen für " + roadMap.getName());
 
-        for (FindableGroup group : roadMap.getGroups()) {
+        for (FindableGroup group : roadMap.getGroups().values()) {
             Component entry = Component.text(group.getName() + " (#" + group.getDatabaseId() + ")", NamedTextColor.GREEN)
                     .append(Component.text(", Größe: ", NamedTextColor.GRAY))
                     .append(Component.text(group.getFindables().size(), NamedTextColor.GREEN));
@@ -45,6 +45,7 @@ public class NodeGroupCommand extends BaseCommand {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
             return;
         }
+        //TODO wirft exception
         roadMap.addFindableGroup(name);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich erstellt: " + ChatColor.GREEN + name);
     }

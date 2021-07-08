@@ -12,7 +12,6 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
@@ -267,11 +266,11 @@ public class RoadMapCommand extends BaseCommand {
     @Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [ungruppiert]")
     @CommandPermission("bcrew.command.roadmap.forceforget")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
-            " @nodes ungruppiert") //TODO nodenamen als completion per map definieren
-    public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, String nodename,
-                              @Optional @Single @Values("ungruppiert") String ungrouped) {
+            " " + PathPlugin.COMPLETE_FINDABLES_FOUND + "|* ungruppiert")
+    public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, @Single String nodename,
+                              @Optional @Single String ungrouped) {
 
-        boolean findSingle = ungrouped != null;
+        boolean findSingle = ungrouped != null && ungrouped.equalsIgnoreCase("ungruppiert");
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
         if (pathPlayer == null) {
             return;
@@ -333,19 +332,44 @@ public class RoadMapCommand extends BaseCommand {
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte nicht mehr ausgewählt.");
     }
 
-    @Subcommand("test navigate")
-    @CommandPermission("bcrew.command.roadmap.test.navigate")
-    @Syntax("<Findable>")
-    @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
-    public void onTestNavigate(Player player, Node node) {
-        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+    @Subcommand("test")
+    @CommandPermission("bcrew.command.roadmap.test")
+    public class RoadMapTestCommand extends BaseCommand {
 
-        PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-        AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), node);
+        @Subcommand("navigate")
+        @Syntax("<Findable>")
+        @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
+        public void onTestNavigate(Player player, Findable findable) {
+            RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        player.sendMessage(PathPlugin.PREFIX_COMP
-                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
-                .append(ComponentUtils.getCommandComponent("/cancelpath"))
-                .append(Component.text(")", NamedTextColor.GRAY)));
+            PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), findable, true)) {
+                PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
+                return;
+            }
+
+            player.sendMessage(PathPlugin.PREFIX_COMP
+                    .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
+                    .append(ComponentUtils.getCommandComponent("/cancelpath"))
+                    .append(Component.text(")", NamedTextColor.GRAY)));
+        }
+
+        @Subcommand("find")
+        @Syntax("<Findable>")
+        @CommandCompletion(PathPlugin.COMPLETE_FINDABLES_FINDABLE)
+        public void onTestFind(Player player, Findable findable) {
+            RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+
+            PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), findable, false)) {
+                PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
+                return;
+            }
+
+            player.sendMessage(PathPlugin.PREFIX_COMP
+                    .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
+                    .append(ComponentUtils.getCommandComponent("/cancelpath"))
+                    .append(Component.text(")", NamedTextColor.GRAY)));
+        }
     }
 }

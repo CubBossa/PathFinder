@@ -6,6 +6,8 @@ import de.bossascrew.core.util.SQLUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.findable.QuestFindable;
+import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
@@ -21,10 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -110,10 +109,11 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodes` (" +
                     "`node_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY , " +
                     "`roadmap_id` INT NOT NULL , " +
-                    "`group_id` INT NOT NULL , " +
-                    "`x` DOUBLE NOT NUll , " +
-                    "`y` DOUBLE NOT NUll , " +
-                    "`z` DOUBLE NOT NUll , " +
+                    "`scope` VARCHAR(12) NOT NULL , " +
+                    "`group_id` INT NULL , " +
+                    "`x` DOUBLE NUll , " +
+                    "`y` DOUBLE NUll , " +
+                    "`z` DOUBLE NUll , " +
                     "`name` VARCHAR(24) NOT NULL , " +
                     "`tangent_length` DOUBLE NULL , " +
                     "`permission` VARCHAR(30) NULL , " +
@@ -350,29 +350,42 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Node newNode(RoadMap roadMap, int groupId, Vector vector, String name, Double tangentLength, String permission) {
+    Findable newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
-                    "(roadmap_id, group_id, x, y, z, name, tangent_length, permission) VALUES " +
-                    "(?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    "(roadmap_id, scope, group_id, x, y, z, name, tangent_length, permission) VALUES " +
+                    "(?, ?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                 SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, groupId);
-                SQLUtils.setDouble(stmt, 3, vector.getX());
-                SQLUtils.setDouble(stmt, 4, vector.getY());
-                SQLUtils.setDouble(stmt, 5, vector.getZ());
-                SQLUtils.setString(stmt, 6, name);
-                SQLUtils.setDouble(stmt, 7, tangentLength);
-                SQLUtils.setString(stmt, 8, permission);
+                SQLUtils.setString(stmt, 2, scope);
+                SQLUtils.setInt(stmt, 3, groupId);
+                SQLUtils.setDouble(stmt, 4, x);
+                SQLUtils.setDouble(stmt, 5, y);
+                SQLUtils.setDouble(stmt, 6, z);
+                SQLUtils.setString(stmt, 7, name);
+                SQLUtils.setDouble(stmt, 8, tangentLength);
+                SQLUtils.setString(stmt, 9, permission);
 
                 stmt.executeUpdate();
                 try (ResultSet resultSet = stmt.getGeneratedKeys()) {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
-                    Node n = new Node(databaseId, roadMap, name, vector);
-                    n.setGroup(groupId);
-                    n.setBezierTangentLength(tangentLength);
-                    n.setPermission(permission);
-                    return n;
+
+                    Findable ret = null;
+                    switch (scope) {
+                        case Node.SCOPE:
+                            ret = new Node(databaseId, roadMap, name, new Vector(x, y, z));
+                            break;
+                        case TraderFindable.SCOPE:
+                            ret = new TraderFindable(databaseId, roadMap, (int) (x.doubleValue()));
+                            break;
+                        case QuestFindable.SCOPE:
+                            ret = new QuestFindable(databaseId, roadMap, (int) (x.doubleValue()));
+                            break;
+                    }
+                    ret.setGroup(groupId, false);
+                    ret.setBezierTangentLength(tangentLength);
+                    ret.setPermission(permission);
+                    return ret;
                 }
             }
         } catch (SQLException e) {
@@ -392,7 +405,7 @@ public class DatabaseModel {
         }
     }
 
-    public void updateNode(Node node) {
+    public void updateFindable(Findable findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
                     "`roadmap_id` = ?, " +
@@ -404,44 +417,56 @@ public class DatabaseModel {
                     "`tangent_length` = ?, " +
                     "`permission` = ? " +
                     "WHERE `node_id` = ?")) {
-                SQLUtils.setInt(stmt, 1, node.getRoadMapId());
-                SQLUtils.setInt(stmt, 2, node.getNodeGroupId());
-                SQLUtils.setDouble(stmt, 3, node.getVector().getX());
-                SQLUtils.setDouble(stmt, 4, node.getVector().getY());
-                SQLUtils.setDouble(stmt, 5, node.getVector().getZ());
-                SQLUtils.setString(stmt, 6, node.getName());
-                SQLUtils.setDouble(stmt, 7, node.getBezierTangentLength());
-                SQLUtils.setString(stmt, 8, node.getPermission());
-                SQLUtils.setInt(stmt, 9, node.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, findable.getRoadMapId());
+                SQLUtils.setInt(stmt, 2, findable.getNodeGroupId());
+                SQLUtils.setDouble(stmt, 3, findable.getVector().getX());
+                SQLUtils.setDouble(stmt, 4, findable.getVector().getY());
+                SQLUtils.setDouble(stmt, 5, findable.getVector().getZ());
+                SQLUtils.setString(stmt, 6, findable.getName());
+                SQLUtils.setDouble(stmt, 7, findable.getBezierTangentLength());
+                SQLUtils.setString(stmt, 8, findable.getPermission());
+                SQLUtils.setInt(stmt, 9, findable.getDatabaseId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Node: " + node.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Node: " + findable.getName(), e);
         }
     }
 
-    public Map<Integer, Node> loadNodes(RoadMap roadMap) {
+    public Map<Integer, Findable> loadFindables(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, Node> result = new ConcurrentHashMap<>();
+                    Map<Integer, Findable> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
                         int id = SQLUtils.getInt(resultSet, "node_id");
-                        int groupId = SQLUtils.getInt(resultSet, "group_id");
-                        double x = SQLUtils.getDouble(resultSet, "x");
-                        double y = SQLUtils.getDouble(resultSet, "y");
-                        double z = SQLUtils.getDouble(resultSet, "z");
+                        String scope = SQLUtils.getString(resultSet, "scope");
+                        Integer groupId = SQLUtils.getInt(resultSet, "group_id");
+                        Double x = SQLUtils.getDouble(resultSet, "x");
+                        Double y = SQLUtils.getDouble(resultSet, "y");
+                        Double z = SQLUtils.getDouble(resultSet, "z");
                         String name = SQLUtils.getString(resultSet, "name");
                         Double tangentLength = SQLUtils.getDouble(resultSet, "tangent_length");
                         String permission = SQLUtils.getString(resultSet, "permission");
 
-                        Node node = new Node(id, roadMap, name, new Vector(x, y, z));
-                        node.setPermission(permission);
-                        node.setBezierTangentLength(tangentLength);
-                        node.setGroup(groupId);
-                        result.put(id, node);
+                        Findable ret = null;
+                        switch (scope) {
+                            case Node.SCOPE:
+                                ret = new Node(id, roadMap, name, new Vector(x, y, z));
+                                break;
+                            case TraderFindable.SCOPE:
+                                ret = new TraderFindable(id, roadMap, (int) (x.doubleValue()));
+                                break;
+                            case QuestFindable.SCOPE:
+                                ret = new QuestFindable(id, roadMap, (int) (x.doubleValue()));
+                                break;
+                        }
+                        ret.setGroup(groupId, false);
+                        ret.setBezierTangentLength(tangentLength);
+                        ret.setPermission(permission);
+                        result.put(id, ret);
                     }
                     return result;
                 }
@@ -498,7 +523,7 @@ public class DatabaseModel {
                 SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, FindableGroup> result = new ConcurrentHashMap<>();
+                    Map<Integer, FindableGroup> result = new HashMap<>();
                     while (resultSet.next()) {
                         int id = SQLUtils.getInt(resultSet, "group_id");
                         String name = SQLUtils.getString(resultSet, "name");
@@ -648,10 +673,11 @@ public class DatabaseModel {
                         Integer edgeHeadId = SQLUtils.getInt(resultSet, "edge_head_id");
 
                         Particle particle = null;
-                        if(particleName != null) {
+                        if (particleName != null) {
                             try {
                                 particle = Particle.valueOf(particleName);
-                            } catch (IllegalArgumentException ignored) {}
+                            } catch (IllegalArgumentException ignored) {
+                            }
                         }
                         EditModeVisualizer vis = new EditModeVisualizer(id, name, parentId);
                         vis.setParticle(particle);
@@ -726,10 +752,11 @@ public class DatabaseModel {
                         Integer schedulerPeriod = SQLUtils.getInt(resultSet, "scheduler_period");
 
                         Particle particle = null;
-                        if(particleName != null) {
+                        if (particleName != null) {
                             try {
                                 particle = Particle.valueOf(particleName);
-                            } catch (IllegalArgumentException ignored) {}
+                            } catch (IllegalArgumentException ignored) {
+                            }
                         }
                         PathVisualizer vis = new PathVisualizer(id, name, parentId);
                         vis.setParticle(particle);
@@ -740,7 +767,7 @@ public class DatabaseModel {
                         result.put(id, vis);
                     }
                     for (PathVisualizer vis : result.values()) {
-                        if(vis.getParentId() == null) {
+                        if (vis.getParentId() == null) {
                             continue;
                         }
                         vis.setParent(result.get(vis.getParentId()));

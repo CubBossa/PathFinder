@@ -1,10 +1,14 @@
 package de.bossascrew.pathfinder.data;
 
 import com.google.common.collect.Maps;
+import de.bossascrew.core.bukkit.inventory.DefaultSpecialItem;
+import de.bossascrew.core.bukkit.inventory.menu.AnvilMenu;
+import de.bossascrew.core.bukkit.inventory.menu.HotbarAction;
+import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
+import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.HotbarMenu;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
@@ -13,16 +17,21 @@ import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.BezierUtils;
+import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
 import de.bossascrew.pathfinder.util.Pair;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
@@ -31,6 +40,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +60,7 @@ public class RoadMap {
 
     private final Map<Integer, Findable> findables = Maps.newHashMap();
     private final Collection<Pair<Findable, Findable>> edges;
-    private final Collection<FindableGroup> groups;
+    private final Map<Integer, FindableGroup> groups;
     private final Map<UUID, HotbarMenu> editingPlayers;
 
     private PathVisualizer pathVisualizer;
@@ -64,6 +74,11 @@ public class RoadMap {
 
     public RoadMap(int databaseId, String name, World world, boolean findableNodes, PathVisualizer pathVisualizer,
                    EditModeVisualizer editModeVisualizer, double nodeFindDistance, double defaultBezierTangentLength) {
+
+        this.editingPlayers = new HashMap<>();
+        this.editModeNodeArmorStands = new ConcurrentHashMap<>();
+        this.editModeEdgeArmorStands = new ConcurrentHashMap<>();
+
         this.databaseId = databaseId;
         this.name = name;
         this.world = world;
@@ -71,13 +86,9 @@ public class RoadMap {
         this.nodeFindDistance = nodeFindDistance;
         this.defaultBezierTangentLength = defaultBezierTangentLength;
 
-        this.findables.putAll(DatabaseModel.getInstance().loadNodes(this));
+        this.findables.putAll(DatabaseModel.getInstance().loadFindables(this));
         this.edges = loadEdgesFromIds(Objects.requireNonNull(DatabaseModel.getInstance().loadEdges(this)));
-        this.groups = new ArrayList<>(); //TODO aus datenbank laden
-
-        this.editingPlayers = new HashMap<>();
-        this.editModeNodeArmorStands = new ConcurrentHashMap<>();
-        this.editModeEdgeArmorStands = new ConcurrentHashMap<>();
+        this.groups = DatabaseModel.getInstance().loadFindableGroups(this);
 
         setPathVisualizer(pathVisualizer);
         setEditModeVisualizer(editModeVisualizer);
@@ -99,7 +110,7 @@ public class RoadMap {
     }
 
     public void deleteFindable(Findable findable) {
-        for (int edge : findable.getEdges()) {
+        for (int edge : new ArrayList<>(findable.getEdges())) {
             Findable target = getFindable(edge);
             if (target == null) {
                 continue;
@@ -117,11 +128,12 @@ public class RoadMap {
     }
 
     public void createNode(Vector vector, String name) {
-        createNode(vector, name, defaultBezierTangentLength, "none");
+        createNode(vector, name, null, null);
     }
 
-    public void createNode(Vector vector, String name, double bezierTangentLength, String permission) {
-        Node node = DatabaseModel.getInstance().newNode(this, Node.NO_GROUP_ID, vector, name, bezierTangentLength, permission);
+    public void createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
+        Node node = (Node) DatabaseModel.getInstance().newFindable(this, Node.SCOPE, null,
+                vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
         if (node != null) {
             addFindable(node);
         }
@@ -145,32 +157,17 @@ public class RoadMap {
 
     public @Nullable
     Findable getFindable(String name) {
-        for (Findable findable : findables.values()) {
-            if (findable.getName().equalsIgnoreCase(name)) {
-                return findable;
-            }
-        }
-        return null;
+        return findables.values().stream().filter(f -> f.getName().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 
     public @Nullable
     Findable getFindable(int findableId) {
-        for (Findable findable : findables.values()) {
-            if (findable.getDatabaseId() == findableId) {
-                return findable;
-            }
-        }
-        return null;
+        return findables.values().stream().filter(f -> f.getDatabaseId() == findableId).findAny().orElse(null);
     }
 
     public @Nullable
     FindableGroup getFindableGroup(String name) {
-        for (FindableGroup nodeGroup : groups) {
-            if (nodeGroup.getName().equalsIgnoreCase(name)) {
-                return nodeGroup;
-            }
-        }
-        return null;
+        return groups.values().stream().filter(g -> g.getName().equalsIgnoreCase(name)).findAny().orElse(null);
     }
 
     public @Nullable
@@ -179,13 +176,11 @@ public class RoadMap {
     }
 
     public @Nullable
-    FindableGroup getFindableGroup(int groupId) {
-        for (FindableGroup nodeGroup : groups) {
-            if (nodeGroup.getDatabaseId() == groupId) {
-                return nodeGroup;
-            }
+    FindableGroup getFindableGroup(Integer groupId) {
+        if (groupId == null) {
+            return null;
         }
-        return null;
+        return groups.values().stream().filter(group -> group.getDatabaseId() == groupId).findAny().orElse(null);
     }
 
     public void deleteFindableGroup(FindableGroup findableGroup) {
@@ -205,12 +200,15 @@ public class RoadMap {
             return null;
         }
         FindableGroup group = DatabaseModel.getInstance().newFindableGroup(this, name, findable);
-        this.groups.add(group);
+        if(group == null) {
+            return null;
+        }
+        groups.put(group.getDatabaseId(), group);
         return group;
     }
 
     public boolean isGroupNameUnique(String name) {
-        return groups.stream().map(FindableGroup::getName).noneMatch(g -> g.equalsIgnoreCase(name));
+        return groups.values().stream().map(FindableGroup::getName).noneMatch(g -> g.equalsIgnoreCase(name));
     }
 
     /**
@@ -319,34 +317,23 @@ public class RoadMap {
             if (!isEdited()) {
                 startEditModeVisualizer();
             }
-
             editor.setEditMode(databaseId);
-            HotbarMenu menu = getHotbarMenu();
+            HotbarMenu menu = new EditModeMenu(player, this).getHotbarMenu();
             editingPlayers.put(uuid, menu);
-            //menu.openInventory(player);
+            menu.openInventory(player);
         } else {
-            editor.clearEditedRoadmap();
+            if (player != null) {
+                editingPlayers.get(uuid).closeInventory(player);
+            }
+
             editingPlayers.remove(uuid);
+            editor.clearEditedRoadmap();
 
             if (!isEdited()) {
                 stopEditModeVisualizer();
             }
-            if (player != null) {
-                //editingPlayers.get(uuid).handleInventoryClose(player);
-            }
-        }
-    }
 
-    private HotbarMenu getHotbarMenu() { //TODO
-        //wegpunkt werkzeug: rechtsklick setzen, linksklick löschen
-        //kantenwerkzeug: rechtsklick kante aufspannen, linksklick alle kanten eines nodes löschen. Linksklick auf kante = löschen
-        //kompass: tp zum nächsten Node
-        //Slimeball: Rundung der Tangenten einstellen
-        //nametag: Permissionnode setzen
-        //Kiste: GruppenGUI: erstes item barriere = keine gruppe. dann alle gruppen als nametags. unten rechts emerald für neue gruppe.
-        //rechtsklick auf gruppe = zuweisen. Linksklick mit Confirm = gruppe löschen.
-        //Gruppenicons haben in der Lore eine Liste aller Nodes, die Teil der Gruppe sind.
-        return new HotbarMenu();
+        }
     }
 
     public boolean isEditing(UUID uuid) {
@@ -479,7 +466,7 @@ public class RoadMap {
 
     private ArmorStand getNodeArmorStand(Findable findable, ArmorStand toEdit) {
         String name = findable.getName() + " #" + findable.getDatabaseId() +
-                (findable.getGroup() == null ? "" : " (" + findable.getGroup().getName() + ")");
+                (findable.getGroup() == null ? "" : (findable.getGroup().isFindable() ? ChatColor.GRAY : ChatColor.DARK_GRAY) + " (" + findable.getGroup().getName() + ")");
 
         if (toEdit == null) {
             toEdit = EditmodeUtils.getNewArmorStand(findable.getLocation().clone().add(ARMORSTAND_OFFSET), name, editModeVisualizer.getNodeHeadId());
@@ -621,8 +608,8 @@ public class RoadMap {
             return new ArrayList<>();
         }
         return getFindables().stream()
-                .filter(node -> !player.hasFound(node.getDatabaseId()))
-                .filter(node -> bukkitPlayer.hasPermission(node.getPermission()))
+                .filter(node -> (node.getGroup() != null && !node.getGroup().isFindable()) || player.hasFound(node.getDatabaseId()))
+                .filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
                 .collect(Collectors.toSet());
     }
 

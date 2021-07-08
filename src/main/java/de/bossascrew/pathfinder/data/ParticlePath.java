@@ -8,6 +8,7 @@ import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.util.BezierUtils;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -17,6 +18,7 @@ import xyz.xenondevs.particle.ParticleEffect;
 import xyz.xenondevs.particle.task.TaskManager;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,6 +29,19 @@ import java.util.stream.Collectors;
 @Getter
 public class ParticlePath extends ArrayList<Findable> {
 
+    @RequiredArgsConstructor
+    @Getter @Setter
+    private static class SchedulerHandler {
+
+        private final long id;
+        private final List<Integer> schedulerIds;
+        private boolean cancelled = false;
+
+        public SchedulerHandler(long id) {
+            this(id, new ArrayList<>());
+        }
+    }
+
     private final RoadMap roadMap;
     private final UUID playerUuid;
     @Setter
@@ -34,7 +49,7 @@ public class ParticlePath extends ArrayList<Findable> {
     @Setter
     private PathVisualizer visualizer;
 
-    private final List<Integer> taskIds;
+    private final List<SchedulerHandler> schedulerHandlers;
 
     private double cachedDistance = -1;
     private final List<Vector> calculatedPoints;
@@ -43,7 +58,7 @@ public class ParticlePath extends ArrayList<Findable> {
         this.roadMap = roadMap;
         this.playerUuid = playerUuid;
         this.active = false;
-        this.taskIds = new ArrayList<>();
+        this.schedulerHandlers = new ArrayList<>();
         this.visualizer = roadMap.getPathVisualizer();
         this.calculatedPoints = new ArrayList<>();
     }
@@ -82,9 +97,10 @@ public class ParticlePath extends ArrayList<Findable> {
                     .filter(vector -> (fi != tangentPoints.size() - 2) || vector.distance(fv) > roadMap.getNodeFindDistance())
                     .collect(Collectors.toList()));
         }
-        List<Vector> evenSpacing = BezierUtils.getEvenSpacing(calculatedPoints, visualizer.getParticleDistance());
-        calculatedPoints.clear();
-        calculatedPoints.addAll(evenSpacing);
+        //TODO smoothing
+        //List<Vector> evenSpacing = BezierUtils.getEvenSpacing(calculatedPoints, visualizer.getParticleDistance());
+        //calculatedPoints.clear();
+        //calculatedPoints.addAll(evenSpacing);
     }
 
     /**
@@ -141,7 +157,6 @@ public class ParticlePath extends ArrayList<Findable> {
 
     public void run(UUID uuid) {
         PluginUtils.getInstance().runSync(() -> {
-            System.out.println("Erst cancellen.");
             cancelSync();
             this.active = true;
 
@@ -156,6 +171,9 @@ public class ParticlePath extends ArrayList<Findable> {
             }
 
             //PluginUtils.getInstance().runSync(() -> {
+
+            final SchedulerHandler schedulerHandler = new SchedulerHandler(new Date().getTime());
+            schedulerHandlers.add(schedulerHandler);
             for (int i = 0; i < steps; i++) {
                 final List<Object> packets = new ArrayList<>();
                 ParticleBuilder particle = new ParticleBuilder(effect);
@@ -167,12 +185,12 @@ public class ParticlePath extends ArrayList<Findable> {
                     }
                     moduloCount++;
                 }
-                System.out.println("Starte Scheduler:");
                 Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
+                    if(schedulerHandler.isCancelled()) {
+                        return;
+                    }
                     int id = TaskManager.startSingularTask(packets, period * steps, uuid);
-                    System.out.println("Add ID: " + id);
-                    this.taskIds.add(id);
-                    System.out.println(taskIds.size());
+                    schedulerHandler.getSchedulerIds().add(id);
                 }, (long) i * period);
             }
             //});
@@ -188,15 +206,14 @@ public class ParticlePath extends ArrayList<Findable> {
      * Nur im Mainthread aufrufen
      */
     public void cancelSync() {
-        System.out.println(taskIds.size());
-        List<Integer> tasksToRemove = new ArrayList<>();
-        for(int i = 0; i < taskIds.size(); i++) {
-            int taskId = taskIds.get(i);
-            System.out.println("Cancelling Task: " + taskId);
-            Bukkit.getScheduler().cancelTask(taskId);
-            tasksToRemove.add(taskId);
+        List<SchedulerHandler> handlers = new ArrayList<>(schedulerHandlers);
+        for(SchedulerHandler handler : handlers) {
+            handler.setCancelled(true);
+            for(int i : handler.getSchedulerIds()) {
+                Bukkit.getScheduler().cancelTask(i);
+            }
+            schedulerHandlers.remove(handler);
         }
-        taskIds.removeAll(tasksToRemove);
         this.active = false;
     }
 }

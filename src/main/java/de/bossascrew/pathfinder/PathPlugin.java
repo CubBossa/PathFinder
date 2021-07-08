@@ -1,10 +1,7 @@
 package de.bossascrew.pathfinder;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.acf.BukkitCommandExecutionContext;
-import de.bossascrew.acf.CommandContexts;
-import de.bossascrew.acf.InvalidCommandArgument;
-import de.bossascrew.acf.MessageKeys;
+import de.bossascrew.acf.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.data.DatabaseModel;
@@ -33,6 +30,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -46,7 +44,9 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
     public static final String COMPLETE_PARTICLES = "@particles";
     public static final String COMPLETE_FINDABLES = "@nodes";
-    public static final String COMPLETE_NODES_CONNECTED = "@nodes_connected";
+    public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
+    public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
+    public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
     public static final String COMPLETE_FINDABLE_GROUPS = "@nodegroups";
 
     public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
@@ -68,16 +68,16 @@ public class PathPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        if(Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
+        if (Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
             new ChestShopHook(this);
         }
-        if(Bukkit.getPluginManager().isPluginEnabled("Quests")) {
+        if (Bukkit.getPluginManager().isPluginEnabled("Quests")) {
             new QuestsHook(this);
         }
-        if(Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
+        if (Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
             new TradersHook(this).loadShopsFromDir();
         }
-        if(Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
+        if (Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
             new BSkyblockHook(this);
         }
 
@@ -92,14 +92,13 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().getCommandManager().registerCommand(new EditModeVisualizerCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new FindCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new NodeGroupCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new PathSystemCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new PathVisualizerCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new RoadMapCommand());
         BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointCommand());
-        if(TradersHook.getInstance() != null) {
+        if (TradersHook.getInstance() != null) {
             BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointTraderCommand());
         }
-        if(QuestsHook.getInstance() != null) {
+        if (QuestsHook.getInstance() != null) {
             BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointQuesterCommand());
         }
 
@@ -133,40 +132,52 @@ public class PathPlugin extends JavaPlugin {
         BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
                 .map(Particle::name)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> {
-            Player player = context.getPlayer();
-            PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-            if (pPlayer == null) {
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
+                roadMap.getGroups().values().stream()
+                        .map(FindableGroup::getName)
+                        .collect(Collectors.toSet())));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
+                roadMap.getFindables().stream()
+                        .map(Findable::getName)
+                        .collect(Collectors.toSet())));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_CONNECTED, context -> resolveFromRoadMap(context, rm -> {
+            Findable prev = context.getContextValue(Findable.class, 1);
+            if (prev == null) {
                 return null;
             }
-            if(pPlayer.getSelectedRoadMapId() == null) {
-                return Lists.newArrayList("keine Roadmap ausgewählt.");
-            }
-            RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
-            if (rm == null) {
-                return null;
-            }
-            return rm.getGroups().stream()
-                    .map(FindableGroup::getName)
+            return prev.getEdges().stream()
+                    .map(edge -> rm.getFindable(edge).getName())
                     .collect(Collectors.toSet());
-        });
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES, context -> {
-            Player player = context.getPlayer();
-            PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-            if (pPlayer == null) {
-                return null;
-            }
-            if(pPlayer.getSelectedRoadMapId() == null) {
-                return Lists.newArrayList("keine Roadmap ausgewählt.");
-            }
-            RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
-            if (rm == null) {
-                return null;
-            }
-            return rm.getFindables().stream()
-                    .map(Findable::getName)
-                    .collect(Collectors.toSet());
-        });
+        }));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
+                .filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
+                .filter(findable -> findable.getPermission() == null || context.getPlayer().hasPermission(findable.getPermission()))
+                .map(Findable::getName)
+                .collect(Collectors.toSet())));
+        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
+                .filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
+                .map(Findable::getName)
+                .collect(Collectors.toSet())));
+    }
+
+    private interface Converter<A, B> {
+        B convert(A a);
+    }
+
+    private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Converter<RoadMap, Collection<String>> fromRoadmap) {
+        Player player = context.getPlayer();
+        PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        if (pPlayer == null) {
+            return null;
+        }
+        if (pPlayer.getSelectedRoadMapId() == null) {
+            return Lists.newArrayList("keine Roadmap ausgewählt.");
+        }
+        RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+        if (rm == null) {
+            return null;
+        }
+        return fromRoadmap.convert(rm);
     }
 
     private void registerContexts() {
