@@ -14,11 +14,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.block.Block;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -38,76 +34,76 @@ public class EditModeMenu {
 
     public HotbarMenu getHotbarMenu() {
         HotbarMenu menu = new HotbarMenu();
-        menu.setItemAndClickHandler(0, EditmodeUtils.NODE_TOOl, (player1, integer, hotbarActionObjectPair) -> {
-            if(hotbarActionObjectPair.first == HotbarAction.LEFT_CLICK_ENTITY) {
-                Entity clicked = (Entity) hotbarActionObjectPair.second;
-                Findable clickedFindable = getClickedFindable(clicked);
-                if(clickedFindable != null) {
-                    roadMap.deleteFindable(clickedFindable);
-                    player1.playSound(player1.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
-                }
-            } else if(hotbarActionObjectPair.first == HotbarAction.RIGHT_CLICK_BLOCK) {
-                Block b = (Block) hotbarActionObjectPair.second;
-                if(b != null) {
-                    openNodeNameMenu(player1, b.getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)));
-                }
+
+        menu.setDefaultActionHandler(HotbarAction.DROP_ITEM, (player1, integer, stack) -> {
+            Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> roadMap.setEditMode(player.getUniqueId(), false), 1L);
+        });
+
+        menu.setItem(0, EditmodeUtils.NODE_TOOl);
+        menu.setActionHandler(0, HotbarAction.LEFT_CLICK_ENTITY, (player1, integer, entity) -> {
+            Findable clickedFindable = getClickedFindable(entity);
+            if (clickedFindable != null) {
+                roadMap.deleteFindable(clickedFindable);
+                player1.playSound(player1.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
             }
         });
-        menu.setItemAndClickHandler(1, EditmodeUtils.EDGE_TOOL, (player1, integer, hotbarActionObjectPair) -> {
-            if(hotbarActionObjectPair.first == HotbarAction.RIGHT_CLICK_ENTITY) {
-                Entity e = (Entity) hotbarActionObjectPair.second;
-                if(e == null) {
-                    return;
-                }
-                Findable clicked = getClickedFindable(e);
-                if(clicked == null) {
-                    return;
-                }
-                if(this.firstFindableEdgeCreate == null) {
-                    firstFindableEdgeCreate = clicked;
-                    PlayerUtils.sendMessage(player1, PathPlugin.PREFIX + "Klicke einen weiteren Wegpunkt zum verbinden.");
-                } else {
-                    roadMap.connectNodes(firstFindableEdgeCreate, clicked);
-                    firstFindableEdgeCreate = null;
-                    player1.playSound(player1.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
-                }
+        menu.setActionHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, (player1, integer, block) ->
+                openNodeNameMenu(player1, block.getLocation().toVector().add(new Vector(0.5, 1.5, 0.5))));
+
+        menu.setItem(1, EditmodeUtils.EDGE_TOOL);
+        menu.setActionHandler(1, HotbarAction.RIGHT_CLICK_ENTITY, (player1, integer, entity) -> {
+            Findable clicked = getClickedFindable(entity);
+            if (clicked == null) {
+                return;
             }
-            //TODO leftclick
+            if (this.firstFindableEdgeCreate == null) {
+                firstFindableEdgeCreate = clicked;
+                PlayerUtils.sendMessage(player1, PathPlugin.PREFIX + "Klicke einen weiteren Wegpunkt zum verbinden.");
+            } else {
+                roadMap.connectNodes(firstFindableEdgeCreate, clicked);
+                firstFindableEdgeCreate = null;
+                player1.playSound(player1.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
+            }
         });
-        menu.setItemAndClickHandler(2, EditmodeUtils.TP_TOOL, (player1, integer, hotbarActionObjectPair) -> {
+        //TODO leftclick
+
+        menu.setItem(2, EditmodeUtils.TP_TOOL);
+        menu.setActionHandler(2, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, (player1, integer) -> {
             double dist = -1;
             Findable nearest = null;
-            for(Findable findable : roadMap.getFindables()) {
+            for (Findable findable : roadMap.getFindables()) {
                 double _dist = findable.getVector().distance(player.getLocation().toVector());
-                if(dist == -1 || _dist < dist) {
+                if (dist == -1 || _dist < dist) {
                     nearest = findable;
                     dist = _dist;
                 }
             }
-            if(nearest == null) {
+            if (nearest == null) {
                 return;
             }
             Location newLoc = nearest.getLocation().setDirection(player1.getLocation().getDirection());
             player1.teleport(newLoc);
             player1.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
         });
-        menu.setItemAndClickHandler(3, EditmodeUtils.TANGENT_TOOL, (player1, integer, hotbarActionObjectPair) -> {
-            if(hotbarActionObjectPair.first == HotbarAction.RIGHT_CLICK_ENTITY) {
-                Findable clicked = getClickedFindable((Entity) hotbarActionObjectPair.second);
-                if(clicked != null) {
-                    openTangentStrengthMenu(player1, clicked);
-                }
+
+        menu.setItem(3, EditmodeUtils.TANGENT_TOOL);
+        menu.setActionHandler(3, HotbarAction.RIGHT_CLICK_ENTITY, (player1, integer, entity) -> {
+            Findable clicked = getClickedFindable(entity);
+            if (clicked != null) {
+                openTangentStrengthMenu(player1, clicked);
             }
         });
-        menu.setItemAndClickHandler(4, EditmodeUtils.PERMISSION_TOOL, (player1, integer, hotbarActionObjectPair) -> {
-            if(hotbarActionObjectPair.first == HotbarAction.RIGHT_CLICK_ENTITY) {
-                Findable clicked = getClickedFindable((Entity) hotbarActionObjectPair.second);
-                if(clicked != null) {
-                    openNodePermissionMenu(player1, clicked);
-                }
+
+        menu.setItem(4, EditmodeUtils.PERMISSION_TOOL);
+        menu.setActionHandler(4, HotbarAction.RIGHT_CLICK_ENTITY, (player1, integer, entity) -> {
+            Findable clicked = getClickedFindable(entity);
+            if (clicked != null) {
+                openNodePermissionMenu(player1, clicked);
             }
         });
-        menu.setItemAndClickHandler(6, EditmodeUtils.GROUP_TOOl, (player1, integer, hotbarActionObjectPair) -> {
+
+        menu.setItem(6, EditmodeUtils.GROUP_TOOl);
+        menu.setActionHandler(6, HotbarAction.RIGHT_CLICK_ENTITY, (player1, integer, entity) -> {
             //TODO chestmenu öffnen?
         });
         //Kiste: GruppenGUI: erstes item barriere = keine gruppe. dann alle gruppen als nametags. unten rechts emerald für neue gruppe.
@@ -119,9 +115,9 @@ public class EditModeMenu {
     private @Nullable
     Findable getClickedFindable(Entity entity) {
         Findable clickedFindable = null;
-        for(Findable f : roadMap.getEditModeNodeArmorStands().keySet()) {
+        for (Findable f : roadMap.getEditModeNodeArmorStands().keySet()) {
             Entity e = roadMap.getEditModeNodeArmorStands().get(f);
-            if(e.equals(entity)) {
+            if (e.equals(entity)) {
                 clickedFindable = f;
                 break;
             }
@@ -140,7 +136,7 @@ public class EditModeMenu {
 
         menu.setItem(0, info);
         menu.setTextInputHandler((player1, s) -> {
-            if(!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
+            if (!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
                 menu.setItem(2, error);
             } else {
                 ItemStackUtils.setNameAndLore(result, s, "");
@@ -148,7 +144,7 @@ public class EditModeMenu {
             }
         });
         menu.setItemAndClickHandler(2, result, (player1, integer, clickType) -> {
-            if(!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
+            if (!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
                 player1.playSound(player1.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return;
             }
@@ -166,17 +162,17 @@ public class EditModeMenu {
         ItemStack info = result.clone();
         ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Tangentenstärke setzen",
                 CommandUtils.wordWrap(ChatColor.GRAY + "Mit der Tangentenstärke setzt man, wie weit die Kontrollpunkte von dem Wegpunkt entfernt sein " +
-                        "sollen und damit, wie sehr der Pfad gerundet werden soll. Die Eingaben none oder null setzen den Wert auf den Straßenkarten-Standard.",
+                                "sollen und damit, wie sehr der Pfad gerundet werden soll. Die Eingaben none oder null setzen den Wert auf den Straßenkarten-Standard.",
                         "\n" + ChatColor.GRAY, 35));
         ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Beispiel: 7.3");
 
         menu.setItem(0, info);
         menu.setTextInputHandler((player1, s) -> {
-            if(s == null) {
+            if (s == null) {
                 menu.setItem(2, error);
                 return;
             }
-            if(s.equalsIgnoreCase("null") || s.equalsIgnoreCase("none")) {
+            if (s.equalsIgnoreCase("null") || s.equalsIgnoreCase("none")) {
                 ItemStackUtils.setNameAndLore(result, ChatColor.WHITE + "Keine", "");
                 menu.setItem(2, result);
                 return;
@@ -193,11 +189,11 @@ public class EditModeMenu {
         });
         menu.setItemAndClickHandler(2, result, (player1, integer, clickType) -> {
             String in = menu.getTextBoxText();
-            if(in == null) {
+            if (in == null) {
                 return;
             }
             Double val = null;
-            if(in.equalsIgnoreCase("null") || in.equalsIgnoreCase("none")) {
+            if (in.equalsIgnoreCase("null") || in.equalsIgnoreCase("none")) {
                 player1.playSound(player1.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
                 findable.setBezierTangentLength(val);
                 menu.closeInventory();
@@ -222,7 +218,7 @@ public class EditModeMenu {
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
         ItemStack info = result.clone();
         ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Permission setzen", CommandUtils.wordWrap(ChatColor.GRAY +
-                "Hier kann bestimmt werden, welche Nodes ein Spieler finden darf und welche nicht. Die Eingaben null und none deaktivieren die Permissionabfrage",
+                        "Hier kann bestimmt werden, welche Nodes ein Spieler finden darf und welche nicht. Die Eingaben null und none deaktivieren die Permissionabfrage",
                 "\n" + ChatColor.GRAY, 35));
         ItemStackUtils.setNameAndLore(result, ChatColor.GREEN + "Bestätigen", "");
 
@@ -232,7 +228,7 @@ public class EditModeMenu {
         });
         menu.setItemAndClickHandler(2, result, (player1, integer, clickType) -> {
             String in = menu.getTextBoxText();
-            if(in == null) {
+            if (in == null) {
                 return;
             }
             findable.setPermission(in.equalsIgnoreCase("null") || in.equalsIgnoreCase("none") ? null : in);
