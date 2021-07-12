@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.commands;
+package de.bossascrew.pathfinder.commands.dependencies;
 
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.CommandAlias;

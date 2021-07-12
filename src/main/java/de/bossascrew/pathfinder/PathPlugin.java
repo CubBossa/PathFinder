@@ -4,12 +4,15 @@ import com.google.common.collect.Lists;
 import de.bossascrew.acf.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
+import de.bossascrew.pathfinder.commands.dependencies.*;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.findable.QuestFindable;
+import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -23,13 +26,12 @@ import de.bossascrew.pathfinder.util.hooks.TradersHook;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -42,19 +44,24 @@ public class PathPlugin extends JavaPlugin {
     public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
     public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
     public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
-    public static final String COMPLETE_PARTICLES = "@particles";
     public static final String COMPLETE_FINDABLES = "@nodes";
     public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
     public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
     public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
     public static final String COMPLETE_FINDABLE_GROUPS = "@nodegroups";
+    public static final String COMPLETE_FINDABLE_FINDABLE_GROUPS = "@nodegroups_findable";
+    public static final String COMPLETE_TRADERS = "@nodes_traders";
+    public static final String COMPLETE_QUESTERS = "@nodes_questers";
 
-    public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
+    public static final String PREFIX = ChatColor.BLUE + "" + ChatColor.BOLD + "|" + ChatColor.GRAY + " ";
+    public static final Component PREFIX_COMP = Component.text("|", NamedTextColor.BLUE, TextDecoration.BOLD).append(Component.text(" ", NamedTextColor.GRAY));
+
+    /*public static final String PREFIX = ChatColor.BLUE + "Pathfinder" + ChatColor.DARK_GRAY + " | " + ChatColor.GRAY;
     public static final Component PREFIX_COMP = Component
             .text("Pathfinder", NamedTextColor.BLUE)
             .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
             .append(Component.text("", NamedTextColor.GRAY));
-
+    */
     @Getter
     private static PathPlugin instance;
     @Getter
@@ -64,21 +71,34 @@ public class PathPlugin extends JavaPlugin {
     @Getter
     private VisualizerHandler visualizerHandler;
 
+    @Getter
+    private boolean chestShop = false;
+    @Getter
+    private boolean quests = false;
+    @Getter
+    private boolean traders = false;
+    @Getter
+    private boolean bentobox = false;
+
     @Override
     public void onEnable() {
         instance = this;
 
         if (Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
             new ChestShopHook(this);
+            chestShop = true;
         }
         if (Bukkit.getPluginManager().isPluginEnabled("Quests")) {
             new QuestsHook(this);
+            quests = true;
         }
         if (Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
             new TradersHook(this).loadShopsFromDir();
+            traders = true;
         }
         if (Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
             new BSkyblockHook(this);
+            bentobox = true;
         }
 
         new DatabaseModel(this);
@@ -88,18 +108,28 @@ public class PathPlugin extends JavaPlugin {
 
         registerContexts();
 
-        BukkitMain.getInstance().getCommandManager().registerCommand(new CancelPath());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new EditModeVisualizerCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new FindCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new NodeGroupCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new PathVisualizerCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new RoadMapCommand());
-        BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointCommand());
-        if (TradersHook.getInstance() != null) {
-            BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointTraderCommand());
+        PaperCommandManager cm = BukkitMain.getInstance().getCommandManager();
+
+        cm.registerCommand(new CancelPath());
+        cm.registerCommand(new EditModeVisualizerCommand());
+        cm.registerCommand(new FindCommand());
+        cm.registerCommand(new NodeGroupCommand());
+        cm.registerCommand(new PathVisualizerCommand());
+        cm.registerCommand(new RoadMapCommand());
+        cm.registerCommand(new WaypointCommand());
+        if (traders) {
+            cm.registerCommand(new WaypointTraderCommand());
+            cm.registerCommand(new FindTraderCommand());
         }
-        if (QuestsHook.getInstance() != null) {
-            BukkitMain.getInstance().getCommandManager().registerCommand(new WaypointQuesterCommand());
+        if (quests) {
+            cm.registerCommand(new WaypointQuesterCommand());
+            cm.registerCommand(new FindQuesterCommand());
+        }
+        if(chestShop && bentobox) {
+            cm.registerCommand(new FindChestShopsCommand());
+        }
+        if(traders || quests || (chestShop && bentobox)) {
+            cm.registerCommand(new FindItemCommand());
         }
 
         registerCompletions();
@@ -113,34 +143,37 @@ public class PathPlugin extends JavaPlugin {
     }
 
     private void registerCompletions() {
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ROADMAPS, context -> RoadMapHandler.getInstance().getRoadMapsStream()
+        BukkitMain bm = BukkitMain.getInstance();
+        bm.registerAsyncCompletion(COMPLETE_ROADMAPS, context -> RoadMapHandler.getInstance().getRoadMapsStream()
                 .map(RoadMap::getName)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_ACTIVE_ROADMAPS, context -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer().getUniqueId()).getActivePaths().stream()
+        bm.registerAsyncCompletion(COMPLETE_ACTIVE_ROADMAPS, context -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer().getUniqueId()).getActivePaths().stream()
                 .map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMap().getDatabaseId()))
                 .filter(Objects::nonNull)
                 .map(RoadMap::getName)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PATH_VISUALIZER, context -> VisualizerHandler
+        bm.registerAsyncCompletion(COMPLETE_PATH_VISUALIZER, context -> VisualizerHandler
                 .getInstance().getPathVisualizerStream()
                 .map(PathVisualizer::getName)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_EDITMODE_VISUALIZER, context -> VisualizerHandler
+        bm.registerAsyncCompletion(COMPLETE_EDITMODE_VISUALIZER, context -> VisualizerHandler
                 .getInstance().getEditModeVisualizerStream()
                 .map(EditModeVisualizer::getName)
                 .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_PARTICLES, context -> Arrays.stream(Particle.values())
-                .map(Particle::name)
-                .collect(Collectors.toSet()));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
+        bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
                 roadMap.getGroups().values().stream()
                         .map(FindableGroup::getName)
                         .collect(Collectors.toSet())));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
+        bm.registerAsyncCompletion(COMPLETE_FINDABLE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
+                roadMap.getGroups().values().stream()
+                        .filter(FindableGroup::isFindable)
+                        .map(FindableGroup::getName)
+                        .collect(Collectors.toSet())));
+        bm.registerAsyncCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
                 roadMap.getFindables().stream()
                         .map(Findable::getName)
                         .collect(Collectors.toSet())));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_CONNECTED, context -> resolveFromRoadMap(context, rm -> {
+        bm.registerAsyncCompletion(COMPLETE_FINDABLES_CONNECTED, context -> resolveFromRoadMap(context, rm -> {
             Findable prev = context.getContextValue(Findable.class, 1);
             if (prev == null) {
                 return null;
@@ -149,15 +182,29 @@ public class PathPlugin extends JavaPlugin {
                     .map(edge -> rm.getFindable(edge).getName())
                     .collect(Collectors.toSet());
         }));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
+        bm.registerAsyncCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
                 .filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
                 .filter(findable -> findable.getPermission() == null || context.getPlayer().hasPermission(findable.getPermission()))
                 .map(Findable::getName)
                 .collect(Collectors.toSet())));
-        BukkitMain.getInstance().registerAsyncCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
+        bm.registerAsyncCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
                 .filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
                 .map(Findable::getName)
                 .collect(Collectors.toSet())));
+        bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {
+            RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
+            return roadMap.getFindables().stream()
+                    .filter(findable -> findable instanceof TraderFindable)
+                    .map(Findable::getName)
+                    .collect(Collectors.toSet());
+        });
+        bm.registerAsyncCompletion(COMPLETE_QUESTERS, context -> {
+            RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
+            return roadMap.getFindables().stream()
+                    .filter(findable -> findable instanceof QuestFindable)
+                    .map(Findable::getName)
+                    .collect(Collectors.toSet());
+        });
     }
 
     private interface Converter<A, B> {
@@ -217,19 +264,6 @@ public class PathPlugin extends JavaPlugin {
                 throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
             }
             return visualizer;
-        });
-        cm.registerContext(Particle.class, context -> {
-            String search = context.popFirstArg();
-            Particle particle = null;
-            try {
-                particle = Particle.valueOf(search);
-            } catch (IllegalArgumentException e) {
-                if (context.isOptional()) {
-                    return null;
-                }
-                throw new InvalidCommandArgument("Ungültige Partikel.");
-            }
-            return particle;
         });
         cm.registerContext(Findable.class, this::resolveFindable);
         cm.registerContext(Node.class, this::resolveFindable);
