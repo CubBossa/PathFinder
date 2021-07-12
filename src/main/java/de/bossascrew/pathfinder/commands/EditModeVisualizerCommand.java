@@ -45,7 +45,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
 
     @Subcommand("create")
     @Syntax("<Name> <Partikel>")
-    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + PathPlugin.COMPLETE_PARTICLES + " " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_PARTICLES + " " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     @CommandPermission("bcrew.command.visualizer.editmode.create")
     public void onCreate(CommandSender sender, @Single String name, @Optional Particle particle, @Optional String parent) {
 
@@ -157,7 +157,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set particle")
     @CommandPermission("bcrew.command.visualizer.editmode.set.particle")
     @Syntax("<Editmode-Visualizer> <Partikel>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " " + PathPlugin.COMPLETE_PARTICLES)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " " + BukkitMain.COMPLETE_PARTICLES)
     public void onSetParticle(CommandSender sender, EditModeVisualizer edit, String particleName) {
         Particle particle = null;
         if (!particleName.equalsIgnoreCase("null")) {
