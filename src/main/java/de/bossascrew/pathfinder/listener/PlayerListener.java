@@ -112,8 +112,7 @@ public class PlayerListener implements Listener {
                         .append(Component.text(found.getGroup() != null ? found.getGroup().getName() : found.getName()).color(NamedTextColor.WHITE))));
                 player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
                 player.sendActionBar(
-                        Component.text(rm.getName(), NamedTextColor.GREEN)
-                        .append(Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY))
+                        Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY)
                         .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
             });
         });
