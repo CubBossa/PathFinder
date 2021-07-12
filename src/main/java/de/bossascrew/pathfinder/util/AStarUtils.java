@@ -1,5 +1,8 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.util.ComponentUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.astar.AStar;
 import de.bossascrew.pathfinder.astar.AStarEdge;
 import de.bossascrew.pathfinder.astar.AStarNode;
@@ -8,7 +11,12 @@ import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -18,6 +26,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AStarUtils {
+
+    public static void startPath(Player player, Findable target) {
+        startPath(player, target, false);
+    }
+
+    public static void startPath(Player player, Findable target, boolean findGroup) {
+        PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+        if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, target.getRoadMap()), target, true)) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
+            return;
+        }
+
+        player.sendMessage(PathPlugin.PREFIX_COMP
+                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
+                .append(ComponentUtils.getCommandComponent("/cancelpath"))
+                .append(Component.text(")", NamedTextColor.GRAY)));
+    }
 
     /**
      * Threadsafe, kann asynchron ausgeführt werden.
@@ -29,20 +54,31 @@ public class AStarUtils {
      * @return false, wenn das Ziel nicht erreicht werden konnte.
      */
     public static boolean startPath(PathPlayer player, PlayerFindable start, Findable target, boolean ignoreUnfound) {
-        Pair<AStarNode, AStarNode> pair = createAStarRelations(target.getRoadMap(), player, start, start.getLocation(), target, ignoreUnfound);
+        return startPath(player, start, target, ignoreUnfound, false);
+    }
+
+    public static boolean startPath(PathPlayer player, PlayerFindable start, Findable target, boolean ignoreUnfound, boolean findGroup) {
+        Pair<AStarNode, AStarNode> pair = createAStarRelations(target.getRoadMap(), player, start, start.getLocation(), target, ignoreUnfound, findGroup);
         if (pair == null || pair.first == null || pair.second == null) {
             return false;
         }
 
         AStar aStar = new AStar();
-        aStar.aStarSearch(pair.first, pair.second);
+        aStar.aStarSearch(pair.first, pair.second, findGroup);
 
         List<AStarNode> pathNodes = aStar.printPath(pair.second);
         List<Findable> pathVar = pathNodes.stream()
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
                 .collect(Collectors.toList());
 
-        if(pathVar.get(pathVar.size() - 1).getDatabaseId() != target.getDatabaseId()) {
+        Findable foundLast = pathVar.get(pathVar.size() - 1);
+        if (foundLast == null) {
+            return false;
+        }
+        if (findGroup && target.getGroup() == null) {
+            return false;
+        }
+        if ((findGroup && !target.getGroup().contains(foundLast)) && foundLast.getDatabaseId() != target.getDatabaseId()) {
             //Es konnte kein Pfad ermittelt werden, wenn das letzte Node des Abbruchpfades nicht das Target ist
             return false;
         }
@@ -62,7 +98,7 @@ public class AStarUtils {
      * @return Die aus der Spielerinformation erzeugte StartNode und Zielnode des AStar Algorithmus. Sie wird benötigt, um den Algorithmus zu starten. Der Return-Wert nimmt null an, wenn keine passenden Nodes gefunden wurden.
      */
     public @Nullable
-    static Pair<AStarNode, AStarNode> createAStarRelations(RoadMap roadMap, PathPlayer player, PlayerFindable playerFindable, Location start, Findable target, boolean ignoreUnfound) {
+    static Pair<AStarNode, AStarNode> createAStarRelations(RoadMap roadMap, PathPlayer player, PlayerFindable playerFindable, Location start, Findable target, boolean ignoreUnfound, boolean findGrouped) {
 
         Collection<Findable> findables = ignoreUnfound ? roadMap.getFindables() : roadMap.getFindables(player);
         Map<Integer, AStarNode> aStarNodes = new HashMap<>();
@@ -76,6 +112,7 @@ public class AStarUtils {
         for (Findable findable : findables) {
             double dist = start.distance(findable.getLocation());
             AStarNode aStarNode = new AStarNode(findable, dist);
+            aStarNode.groupId = findable.getGroup() != null ? findable.getGroup().getDatabaseId() : null;
             aStarNodes.put(findable.getDatabaseId(), aStarNode);
             if (nearestDist == null || dist < nearestDist) {
                 nearest = aStarNode;
@@ -100,7 +137,7 @@ public class AStarUtils {
 
             int i = 0;
             for (Integer edgeId : findable.getEdges()) {
-                if(findables.stream().noneMatch(f -> f.getDatabaseId() == edgeId)) {
+                if (findables.stream().noneMatch(f -> f.getDatabaseId() == edgeId)) {
                     continue;
                 }
                 AStarEdge edgeTarget = new AStarEdge(aStarNodes.get(edgeId), start.distance(findable.getLocation()));

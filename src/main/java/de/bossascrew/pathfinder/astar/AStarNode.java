@@ -11,6 +11,7 @@ public class AStarNode {
     public double f_scores = 0;
     public AStarNode parent;
     public AStarEdge[] adjacencies;
+    public Integer groupId;
 
     public AStarNode(Findable findable, double h_scores) {
         this.findable = findable;

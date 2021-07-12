@@ -15,7 +15,10 @@ public class AStar {
         return path;
     }
 
-    public void aStarSearch(AStarNode source, AStarNode goal) {
+    public void aStarSearch(AStarNode source, AStarNode goal, boolean searchGroup) {
+        if (searchGroup) {
+            Objects.requireNonNull(goal.groupId);
+        }
 
         Set<AStarNode> explored = new HashSet<AStarNode>();
 
@@ -47,7 +50,7 @@ public class AStar {
             explored.add(current);
 
             // goal found
-            if (current.findable != null && current.findable.equals(goal.findable)) {
+            if (current.findable != null && current.findable.equals(goal.findable) || searchGroup && current.groupId.equals(goal.groupId)) {
                 found = true;
             }
 
