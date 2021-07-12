@@ -1,13 +1,9 @@
 package de.bossascrew.pathfinder.data;
 
 import com.google.common.collect.Maps;
-import de.bossascrew.core.bukkit.inventory.DefaultSpecialItem;
-import de.bossascrew.core.bukkit.inventory.menu.AnvilMenu;
-import de.bossascrew.core.bukkit.inventory.menu.HotbarAction;
 import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
-import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -21,17 +17,13 @@ import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
 import de.bossascrew.pathfinder.util.Pair;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
@@ -40,7 +32,6 @@ import xyz.xenondevs.particle.task.TaskManager;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -596,6 +587,10 @@ public class RoadMap {
             }
         }
         return ret;
+    }
+
+    public int getFindablesSize() {
+        return getFindables().size();
     }
 
     public Collection<Findable> getFindables() {

@@ -37,17 +37,17 @@ public abstract class Findable {
     public void setGroup(Integer groupId, boolean updateArmorStands) {
         this.nodeGroupId = groupId;
         if(updateArmorStands) {
-            roadMap.updateArmorStandDisplay(this);
+            roadMap.updateArmorStandDisplay(this, false);
         }
         updateData();
     }
 
     public void setGroup(@Nullable FindableGroup nodeGroup) {
-        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), true);
+        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), false);
     }
 
     public void removeFindableGroup() {
-        setGroup((Integer) null, true);
+        setGroup(null, true);
     }
 
     public @Nullable

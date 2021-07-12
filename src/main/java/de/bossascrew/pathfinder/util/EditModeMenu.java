@@ -58,7 +58,7 @@ public class EditModeMenu {
             }
             if (this.firstFindableEdgeCreate == null) {
                 firstFindableEdgeCreate = clicked;
-                PlayerUtils.sendMessage(player1, PathPlugin.PREFIX + "Klicke einen weiteren Wegpunkt zum verbinden.");
+                PlayerUtils.sendMessage(player1, PathPlugin.PREFIX + "Klicke einen weiteren Wegpunkt zum Verbinden.");
             } else {
                 roadMap.connectNodes(firstFindableEdgeCreate, clicked);
                 firstFindableEdgeCreate = null;
