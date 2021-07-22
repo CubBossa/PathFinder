@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import com.google.common.collect.Maps;
 import de.bossascrew.core.sql.MySQL;
+import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.SQLUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -11,7 +12,6 @@ import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.util.Pair;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
