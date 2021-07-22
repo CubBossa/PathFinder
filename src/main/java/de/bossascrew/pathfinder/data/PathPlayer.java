@@ -12,6 +12,7 @@ import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -164,14 +165,13 @@ public class PathPlayer {
             return;
         }
         final PlayerFindable playerFindable = new PlayerFindable(player, target.getRoadMap());
-        PluginUtils.getInstance().runAsync(() -> {
-            AStarUtils.startPath(pathPlayer, playerFindable, target, false);
-        });
+        PluginUtils.getInstance().runAsync(() -> AStarUtils.startPath(pathPlayer, playerFindable, target, false));
     }
 
-    public void setPath(ParticlePath path) {
-        if (path == null) {
-            return;
+    public void setPath(@NotNull ParticlePath path) {
+        ParticlePath active = activePaths.get(path.getRoadMap().getDatabaseId());
+        if (active != null) {
+            active.cancel();
         }
         path.run(uuid);
         activePaths.put(path.getRoadMap().getDatabaseId(), path);
@@ -250,9 +250,11 @@ public class PathPlayer {
 
     public void deselectRoadMap() {
         if(selectedRoadMapId != null) {
-            RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(selectedRoadMapId);
-            if(roadMap != null) {
-                roadMap.setEditMode(this.uuid, false);
+            if (editModeRoadMapId != null) {
+                RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
+                if (roadMap != null) {
+                    roadMap.setEditMode(this.uuid, false);
+                }
             }
         }
         selectedRoadMapId = null;

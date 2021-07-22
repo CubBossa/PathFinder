@@ -160,7 +160,6 @@ public class ParticlePath extends ArrayList<Findable> {
             cancelSync();
             this.active = true;
 
-            //PluginUtils.getInstance().runAsync(() -> {
             int steps = visualizer.getParticleSteps();
             ParticleEffect effect = ParticleEffect.valueOf(visualizer.getParticle().name());
             int period = visualizer.getSchedulerPeriod();
@@ -169,8 +168,6 @@ public class ParticlePath extends ArrayList<Findable> {
             if (visualizer.getParticleDistance() != cachedDistance) {
                 calculate();
             }
-
-            //PluginUtils.getInstance().runSync(() -> {
 
             final SchedulerHandler schedulerHandler = new SchedulerHandler(new Date().getTime());
             schedulerHandlers.add(schedulerHandler);
@@ -193,8 +190,6 @@ public class ParticlePath extends ArrayList<Findable> {
                     schedulerHandler.getSchedulerIds().add(id);
                 }, (long) i * period);
             }
-            //});
-            //});
         });
     }
 
