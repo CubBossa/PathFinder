@@ -32,12 +32,12 @@ public class WaypointCommand extends BaseCommand {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
         ComponentMenu menu = new ComponentMenu(Component.text("Wegpunkt ")
-                .append(Component.text(node.getName() + "(#" + node.getDatabaseId() + ")", NamedTextColor.DARK_GREEN))
+                .append(Component.text(node.getName() + "(#" + node.getDatabaseId() + ")", PathPlugin.COLOR_DARK))
                 .hoverEvent(HoverEvent.showText(Component.text("Name ändern")))
                 .clickEvent(ClickEvent.suggestCommand("/waypoint set name " + node.getName() + " <Neuer Name>")));
 
         FindableGroup group = roadMap.getFindableGroup(node.getNodeGroupId());
-        menu.addSub(getSub("Gruppe: ", group == null ? Component.text("-", NamedTextColor.GRAY) : Component.text(group.getName(), NamedTextColor.GREEN), "Gruppe ändern",
+        menu.addSub(getSub("Gruppe: ", group == null ? Component.text("-", NamedTextColor.GRAY) : Component.text(group.getName(), PathPlugin.COLOR_LIGHT), "Gruppe ändern",
                 "/waypoint set nodegroup " + node.getName() + " <NodeGroup>"));
 
         menu.addSub(getSub("Permission: ", node.getPermission(), "Perission ändern",
@@ -50,11 +50,11 @@ public class WaypointCommand extends BaseCommand {
         menu.addSub(new ComponentMenu(Component.text("Position: ")
                 .append(Component.text(node.getRoadMap().getWorld().getName())
                         .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text(String.format("%,.1f", node.getVector().getX()), NamedTextColor.GREEN))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getX()), PathPlugin.COLOR_LIGHT))
                         .append(Component.text(", ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text(String.format("%,.1f", node.getVector().getY()), NamedTextColor.GREEN))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getY()), PathPlugin.COLOR_LIGHT))
                         .append(Component.text(", ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text(String.format("%,.1f", node.getVector().getZ()), NamedTextColor.GREEN)))
+                        .append(Component.text(String.format("%,.1f", node.getVector().getZ()), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(Component.text("Klicke zum Teleportieren"))
                 .clickEvent(ClickEvent.runCommand("/teleport " + node.getRoadMap().getWorld().getName() + " " + node.getVector().getX() + " "
                         + node.getVector().getY() + " " + node.getVector().getZ()))));
@@ -77,7 +77,7 @@ public class WaypointCommand extends BaseCommand {
     }
 
     private ComponentMenu getSub(String attributeName, String value, String hover, String command) {
-        return getSub(attributeName, Component.text(value, NamedTextColor.GREEN), hover, command);
+        return getSub(attributeName, Component.text(value, PathPlugin.COLOR_LIGHT), hover, command);
     }
 
     private ComponentMenu getSub(String attributeName, Component value, String hover, String command) {
@@ -97,7 +97,7 @@ public class WaypointCommand extends BaseCommand {
             return;
         }
         roadMap.createNode(player.getLocation().toVector().add(new Vector(0, 1, 0)), name);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + ChatColor.GREEN + name);
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
     }
 
     @Subcommand("delete")
@@ -108,7 +108,7 @@ public class WaypointCommand extends BaseCommand {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
         roadMap.deleteFindable(node);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich gelöscht: " + ChatColor.GREEN + node.getName());
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Node erfolgreich gelöscht: " + PathPlugin.CHAT_COLOR_LIGHT + node.getName());
     }
 
     @Subcommand("tphere")
@@ -126,7 +126,7 @@ public class WaypointCommand extends BaseCommand {
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        Component nodes = Component.text("Wegpunkte: " + ChatColor.GREEN + roadMap.getName()).append(Component.newline());
+        Component nodes = Component.text("Wegpunkte: " + PathPlugin.CHAT_COLOR_LIGHT + roadMap.getName()).append(Component.newline());
         int count = 0;
         for (Findable findable : roadMap.getFindables()) {
             nodes = nodes.append(Component.text(findable.getName(), NamedTextColor.WHITE))
@@ -189,7 +189,7 @@ public class WaypointCommand extends BaseCommand {
             }
             node.setName(newName);
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Name erfolgreich geändert zu: " +
-                    ChatColor.GREEN + newName);
+                    PathPlugin.CHAT_COLOR_LIGHT + newName);
         }
 
         @Subcommand("permission")
@@ -201,7 +201,7 @@ public class WaypointCommand extends BaseCommand {
                 perm = null;
             }
             node.setPermission(perm);
-            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Permission erfolgreich gesetzt: " + ChatColor.GREEN + perm);
+            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Permission erfolgreich gesetzt: " + PathPlugin.CHAT_COLOR_LIGHT + perm);
         }
 
         @Subcommand("tangent")
@@ -210,7 +210,7 @@ public class WaypointCommand extends BaseCommand {
         @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
         public void onSetTangent(Player player, Findable findable, Double strength) {
             findable.setBezierTangentLength(strength);
-            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Rundungsstärke gesetzt: " + ChatColor.GREEN + strength);
+            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Rundungsstärke gesetzt: " + PathPlugin.CHAT_COLOR_LIGHT + strength);
         }
 
         @Subcommand("group")

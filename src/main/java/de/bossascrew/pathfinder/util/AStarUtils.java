@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.ComponentUtils;
+import de.bossascrew.core.util.Pair;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.astar.AStar;
 import de.bossascrew.pathfinder.astar.AStarEdge;
@@ -14,6 +15,7 @@ import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -39,7 +41,7 @@ public class AStarUtils {
         }
 
         player.sendMessage(PathPlugin.PREFIX_COMP
-                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY))
+                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
                 .append(ComponentUtils.getCommandComponent("/cancelpath"))
                 .append(Component.text(")", NamedTextColor.GRAY)));
     }

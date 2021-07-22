@@ -43,7 +43,7 @@ public abstract class Findable {
     }
 
     public void setGroup(@Nullable FindableGroup nodeGroup) {
-        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), false);
+        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), true);
     }
 
     public void removeFindableGroup() {

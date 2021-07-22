@@ -24,12 +24,12 @@ public class NodeGroupCommand extends BaseCommand {
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        Menu menu = new Menu(ChatColor.DARK_GREEN + "Gruppen für " + roadMap.getName());
+        Menu menu = new Menu(PathPlugin.CHAT_COLOR_DARK + "Gruppen für " + roadMap.getName());
 
         for (FindableGroup group : roadMap.getGroups().values()) {
-            Component entry = Component.text(group.getName() + " (#" + group.getDatabaseId() + ")", NamedTextColor.GREEN)
+            Component entry = Component.text(group.getName() + " (#" + group.getDatabaseId() + ")", PathPlugin.COLOR_LIGHT)
                     .append(Component.text(", Größe: ", NamedTextColor.GRAY))
-                    .append(Component.text(group.getFindables().size(), NamedTextColor.GREEN));
+                    .append(Component.text(group.getFindables().size(), PathPlugin.COLOR_LIGHT));
             menu.addSub(new ComponentMenu(entry));
         }
         PlayerUtils.sendComponents(player, menu.toComponents());
@@ -47,7 +47,7 @@ public class NodeGroupCommand extends BaseCommand {
         }
         //TODO wirft exception
         roadMap.addFindableGroup(name);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich erstellt: " + ChatColor.GREEN + name);
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
     }
 
     @Subcommand("delete")
@@ -58,7 +58,7 @@ public class NodeGroupCommand extends BaseCommand {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
         roadMap.deleteFindableGroup(group);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich gelöscht: " + ChatColor.GREEN + group.getName());
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich gelöscht: " + PathPlugin.CHAT_COLOR_LIGHT + group.getName());
     }
 
     @Subcommand("set name")
@@ -73,7 +73,7 @@ public class NodeGroupCommand extends BaseCommand {
             return;
         }
         group.setName(newName);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich umbenannt: " + ChatColor.GREEN + newName);
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich umbenannt: " + PathPlugin.CHAT_COLOR_LIGHT + newName);
     }
 
     @Subcommand("set findable")
@@ -82,7 +82,7 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(Player player, FindableGroup group, boolean findable) {
         group.setFindable(findable);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + ChatColor.GREEN + (findable ? "an" : "aus"));
+        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findable ? "an" : "aus"));
     }
     //TODO
     //info

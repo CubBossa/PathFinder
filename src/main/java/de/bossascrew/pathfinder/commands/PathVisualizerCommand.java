@@ -32,12 +32,12 @@ public class PathVisualizerCommand extends BaseCommand {
         ComponentMenu menu = new ComponentMenu(Component.text("Pfad-Visualizer").color(NamedTextColor.WHITE).decoration(TextDecoration.UNDERLINED, true));
 
         for (PathVisualizer vis : VisualizerHandler.getInstance().getPathVisualizers()) {
-            menu.addSub(new ComponentMenu(Component.text(vis.getName() + "(#" + vis.getDatabaseId() + ")", NamedTextColor.DARK_GREEN)
-                    .append(Component.text(", Parent: ", NamedTextColor.GRAY))
-                    .append(vis.getParent() == null ?
-                            CommandUtils.NULL_COMPONENT :
-                            Component.text(vis.getParent().getName(), NamedTextColor.GREEN))
-                    .clickEvent(ClickEvent.runCommand("/path-visualizer info " + vis.getName()))));
+            menu.addSub(new ComponentMenu(Component.text(vis.getName() + "(#" + vis.getDatabaseId() + ")", PathPlugin.COLOR_DARK)
+					.append(Component.text(", Parent: ", NamedTextColor.GRAY))
+					.append(vis.getParent() == null ?
+							CommandUtils.NULL_COMPONENT :
+							Component.text(vis.getParent().getName(), PathPlugin.COLOR_LIGHT))
+					.clickEvent(ClickEvent.runCommand("/path-visualizer info " + vis.getName()))));
         }
         PlayerUtils.sendComponents(sender, menu.toComponents());
     }
@@ -59,8 +59,8 @@ public class PathVisualizerCommand extends BaseCommand {
         }
         VisualizerHandler.getInstance().createPathVisualizer(name, parentVis, particle, null, null, null, null);
 
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Pfad-Visualizer erstellt: " + ChatColor.GREEN + name);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Nutze /path-visualizer " + name + " <Einstellung> <Wert>, um ihn zu bearbeiten");
+		PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Pfad-Visualizer erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
+		PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Nutze /path-visualizer " + name + " <Einstellung> <Wert>, um ihn zu bearbeiten");
     }
 
     @Subcommand("delete")
@@ -72,7 +72,7 @@ public class PathVisualizerCommand extends BaseCommand {
             PlayerUtils.sendMessage(sender, ChatColor.RED + "Fehler beim Löschen von Pfad-Visualizer: " + visualizer.getName() + ".");
             return;
         }
-        PlayerUtils.sendMessage(sender, ChatColor.GREEN + "Visualizer erfolgreich gelöscht.");
+		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Visualizer erfolgreich gelöscht.");
     }
 
     @Subcommand("info")
@@ -83,7 +83,7 @@ public class PathVisualizerCommand extends BaseCommand {
 
         ComponentMenu menu = new ComponentMenu(Component.text("Pfad-Visualizer: ", NamedTextColor.WHITE)
                 .append(Component.text(visualizer.getName() + " (#" + visualizer.getDatabaseId() + ")")
-                        .color(NamedTextColor.DARK_GREEN)
+						.color(PathPlugin.COLOR_DARK)
                         .hoverEvent(HoverEvent.showText(Component.text("Klicken zum Umbenennnen")))
                         .clickEvent(ClickEvent.suggestCommand("/path-visualizer set name " + visualizer.getName() + " <Neuer Name>"))));
 
@@ -94,31 +94,31 @@ public class PathVisualizerCommand extends BaseCommand {
 
         menu.addSub(new ComponentMenu(Component.text("Partikel: ")
                 .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
-                        visualizer1.getUnsafeParticle() == null ? null : Component.text(visualizer1.getUnsafeParticle().name(), NamedTextColor.GREEN)))
+						visualizer1.getUnsafeParticle() == null ? null : Component.text(visualizer1.getUnsafeParticle().name(), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/path-visualizer set particle " + visualizer.getName() + " <Partikel>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Limit: ")
                 .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
-                        visualizer1.getUnsafeParticleLimit() == null ? null : Component.text(visualizer1.getUnsafeParticleLimit(), NamedTextColor.GREEN)))
+						visualizer1.getUnsafeParticleLimit() == null ? null : Component.text(visualizer1.getUnsafeParticleLimit(), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Limit setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/path-visualizer set particle-limit " + visualizer.getName() + " <Partikellimit>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Distanz: ")
                 .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
-                        visualizer1.getUnsafeParticleDistance() == null ? null : Component.text(visualizer1.getUnsafeParticleDistance(), NamedTextColor.GREEN)))
+						visualizer1.getUnsafeParticleDistance() == null ? null : Component.text(visualizer1.getUnsafeParticleDistance(), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Distanz setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/path-visualizer set particle-distance " + visualizer.getName() + " <Partikeldistanz>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Partikel-Schritte: ")
                 .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
-                        visualizer1.getUnsafeParticleSteps() == null ? null : Component.text(visualizer1.getUnsafeParticleSteps(), NamedTextColor.GREEN)))
+						visualizer1.getUnsafeParticleSteps() == null ? null : Component.text(visualizer1.getUnsafeParticleSteps(), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(HoverEvent.showText(Component.text("Partikel-Distanz setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/path-visualizer set particle-steps " + visualizer.getName() + " <Partikelschritte>"))));
 
         menu.addSub(new ComponentMenu(Component.text("Scheduler-Wiederholrate: ")
                 .append(CommandUtils.getPropertyComponent(visualizer, visualizer1 ->
-                        visualizer1.getUnsafeSchedulerPeriod() == null ? null : Component.text(visualizer1.getUnsafeSchedulerPeriod(), NamedTextColor.GREEN)))
+						visualizer1.getUnsafeSchedulerPeriod() == null ? null : Component.text(visualizer1.getUnsafeSchedulerPeriod(), PathPlugin.COLOR_LIGHT)))
                 .hoverEvent(HoverEvent.showText(Component.text("Scheduler-Wiederholrate setzen")))
                 .clickEvent(ClickEvent.suggestCommand("/path-visualizer set scheduler-period " + visualizer.getName() + " <Wiederholrate in Ticks>"))));
 
@@ -135,8 +135,8 @@ public class PathVisualizerCommand extends BaseCommand {
             return;
         }
         edit.setParent(parent);
-        DatabaseModel.getInstance().updatePathVisualizer(edit);
-        PlayerUtils.sendMessage(sender, ChatColor.GREEN + "Parent aktuallisiert: " + parent.getName());
+		DatabaseModel.getInstance().updatePathVisualizer(edit);
+		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Parent aktuallisiert: " + parent.getName());
     }
 
     @Subcommand("set name")

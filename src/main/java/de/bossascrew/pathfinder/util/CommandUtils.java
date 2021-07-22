@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.acf.ConditionFailedException;
 import de.bossascrew.core.graphics.ColorUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.visualisation.Visualizer;
@@ -47,7 +48,7 @@ public class CommandUtils {
     public <T extends Visualizer> Component getParentList(Component startComponent, Visualizer<T> visualizer, boolean first) {
         Component separator = Component.text(first ? "" : "«", NamedTextColor.DARK_GRAY);
         if (visualizer.getParent() != null) {
-            return startComponent.append(separator).append(Component.text(visualizer.getParent().getName(), NamedTextColor.GREEN))
+            return startComponent.append(separator).append(Component.text(visualizer.getParent().getName(), PathPlugin.COLOR_LIGHT))
                     .append(getParentList(startComponent, visualizer.getParent(), false));
         }
         return startComponent;
@@ -63,7 +64,7 @@ public class CommandUtils {
             return component;
         }
         Component propertyComp = property.accept((T) visualizer);
-        Component part = Component.empty().append(separator).append(propertyComp == null ? NULL_COMPONENT : propertyComp.color(NamedTextColor.GREEN));
+        Component part = Component.empty().append(separator).append(propertyComp == null ? NULL_COMPONENT : propertyComp.color(PathPlugin.COLOR_LIGHT));
         if (visualizer.getParent() != null && (propertyComp == null || !cancelAtFirstValid)) {
             return component.append(part).append(getPropertyComponent(component, visualizer.getParent(), property, false, cancelAtFirstValid));
         } else {

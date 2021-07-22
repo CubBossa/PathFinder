@@ -72,7 +72,7 @@ public class FindItemCommand extends BaseCommand {
         }
         if (ChestShopHook.getInstance() != null) {
             menu.addSub(new ComponentMenu(Component.text("Spielershops: ")
-                    .append(Component.text("[Übersicht öffnen]", NamedTextColor.GREEN))));
+					.append(Component.text("[Übersicht öffnen]", PathPlugin.COLOR_LIGHT))));
         }
 
         if (menu.hasSubs()) {
