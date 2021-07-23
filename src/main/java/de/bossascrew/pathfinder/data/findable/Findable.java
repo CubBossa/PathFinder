@@ -36,6 +36,12 @@ public abstract class Findable {
 
     public void setGroup(Integer groupId, boolean updateArmorStands) {
         this.nodeGroupId = groupId;
+        if(groupId != null) {
+            FindableGroup g = roadMap.getFindableGroup(groupId);
+            if(g != null) {
+                g.getFindables().add(this);
+            }
+        }
         if(updateArmorStands) {
             roadMap.updateArmorStandDisplay(this, false);
         }

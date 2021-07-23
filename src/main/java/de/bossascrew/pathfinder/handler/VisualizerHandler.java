@@ -121,6 +121,10 @@ public class VisualizerHandler {
         return vis;
     }
 
+    public boolean deletePathVisualizer(int databaseId) {
+        return deletePathVisualizer(getPathVisualizer(databaseId));
+    }
+
     public boolean deletePathVisualizer(PathVisualizer visualizer) {
         for(PathVisualizer vis : pathVisualizerMap.values()) {
             if(vis.getParent() != null && vis.getParent().getDatabaseId() == visualizer.getDatabaseId()) {
@@ -132,6 +136,10 @@ public class VisualizerHandler {
             return true;
         }
         return false;
+    }
+
+    public boolean deleteEditModeVisualizer(int databaseId) {
+        return deleteEditModeVisualizer(getEditModeVisualizer(databaseId));
     }
 
     public boolean deleteEditModeVisualizer(EditModeVisualizer visualizer) {

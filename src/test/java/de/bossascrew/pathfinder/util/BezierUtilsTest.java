@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
-import com.google.common.collect.Lists;
+import de.bossascrew.core.bukkit.util.BezierUtils;
 import junit.framework.TestCase;
 import org.apache.commons.lang.time.StopWatch;
 import org.bukkit.util.Vector;
@@ -52,6 +52,5 @@ public class BezierUtilsTest extends TestCase {
         Vector b = new Vector(10, 0, 0);
         Vector c = new Vector(10, 10, 0);
 
-        BezierUtils.getEvenSpacing2(Lists.newArrayList(a, b, c), 15).forEach(System.out::println);
     }
 }

@@ -3,11 +3,13 @@ package de.bossascrew.pathfinder.util;
 import de.bossascrew.core.bukkit.inventory.menu.AnvilMenu;
 import de.bossascrew.core.bukkit.inventory.menu.HotbarAction;
 import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
+import de.bossascrew.core.bukkit.inventory.menu.PagedChestMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.CommandUtils;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import lombok.Getter;
@@ -18,10 +20,12 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 public class EditModeMenu {
@@ -110,12 +114,53 @@ public class EditModeMenu {
 
         menu.setItem(6, EditmodeUtils.GROUP_TOOl);
         menu.setClickHandler(6, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            //TODO chestmenu öffnen?
+            Findable clicked = getClickedFindable((Entity) context.getTarget());
+            if (clicked == null) {
+                return;
+            }
+            openGroupMenu(context.getPlayer(), clicked);
         });
-        //Kiste: GruppenGUI: erstes item barriere = keine gruppe. dann alle gruppen als nametags. unten rechts emerald für neue gruppe.
-        //rechtsklick auf gruppe = zuweisen. Linksklick mit Confirm = gruppe löschen.
-        //Gruppenicons haben in der Lore eine Liste aller Nodes, die Teil der Gruppe sind.
         return menu;
+    }
+
+    private void openGroupMenu(Player player, Findable clicked) {
+
+        PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 3);
+        for (FindableGroup group : clicked.getRoadMap().getGroups().values()) {
+            ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
+            if (clicked.getGroup() != null && clicked.getGroup().getDatabaseId() == group.getDatabaseId()) {
+                ItemStackUtils.setGlowing(stack);
+            }
+            StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
+                    + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
+
+            int counter = 0;
+            for (Findable f : group.getFindables()) {
+                lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getName()).append(" (#").append(f.getDatabaseId()).append(")");
+                if (counter > 15) {
+                    lore.append("\n...");
+                    break;
+                }
+                counter++;
+            }
+
+            ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getName() + " (#" + group.getDatabaseId() + ")", lore.toString());
+            groupMenu.addMenuEntry(stack, ClickType.LEFT, c -> {
+                clicked.setGroup(group);
+                c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+
+            });
+        }
+        ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
+        groupMenu.setNavigationEntry(8, create, c -> {
+            //TODO neues Menü öffnen etc
+        });
+        groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
+            clicked.setGroup((FindableGroup) null);
+            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+            openGroupMenu(c.getPlayer(), clicked);
+        });
+        groupMenu.openInventory(player);
     }
 
     private @Nullable

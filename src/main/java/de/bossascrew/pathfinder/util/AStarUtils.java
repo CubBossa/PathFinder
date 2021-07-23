@@ -14,6 +14,7 @@ import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
@@ -42,7 +43,7 @@ public class AStarUtils {
 
         player.sendMessage(PathPlugin.PREFIX_COMP
                 .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
-                .append(ComponentUtils.getCommandComponent("/cancelpath"))
+                .append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
                 .append(Component.text(")", NamedTextColor.GRAY)));
     }
 

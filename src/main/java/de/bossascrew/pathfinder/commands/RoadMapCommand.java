@@ -351,7 +351,7 @@ public class RoadMapCommand extends BaseCommand {
 
 			player.sendMessage(PathPlugin.PREFIX_COMP
 					.append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
-					.append(ComponentUtils.getCommandComponent("/cancelpath"))
+					.append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
 					.append(Component.text(")", NamedTextColor.GRAY)));
 		}
 
@@ -369,7 +369,7 @@ public class RoadMapCommand extends BaseCommand {
 
 			player.sendMessage(PathPlugin.PREFIX_COMP
 					.append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
-					.append(ComponentUtils.getCommandComponent("/cancelpath"))
+					.append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
 					.append(Component.text(")", NamedTextColor.GRAY)));
 		}
 	}

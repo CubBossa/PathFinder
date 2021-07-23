@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.data;
 import com.google.common.collect.Maps;
 import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.bukkit.util.BezierUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.PluginUtils;
@@ -13,7 +14,6 @@ import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.BezierUtils;
 import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
 import lombok.Getter;
@@ -77,9 +77,9 @@ public class RoadMap {
 		this.nodeFindDistance = nodeFindDistance;
 		this.defaultBezierTangentLength = defaultBezierTangentLength;
 
+		this.groups = DatabaseModel.getInstance().loadFindableGroups(this);
 		this.findables.putAll(DatabaseModel.getInstance().loadFindables(this));
 		this.edges = loadEdgesFromIds(Objects.requireNonNull(DatabaseModel.getInstance().loadEdges(this)));
-		this.groups = DatabaseModel.getInstance().loadFindableGroups(this);
 
 		setPathVisualizer(pathVisualizer);
 		setEditModeVisualizer(editModeVisualizer);
@@ -118,11 +118,11 @@ public class RoadMap {
 		}
 	}
 
-	public void createNode(Vector vector, String name) {
-		createNode(vector, name, null, null);
+	public Findable createNode(Vector vector, String name) {
+		return createNode(vector, name, null, null);
 	}
 
-	public void createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
+	public Findable createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
 		Node node = (Node) DatabaseModel.getInstance().newFindable(this, Node.SCOPE, null,
 				vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
 		if (node != null) {
@@ -131,6 +131,7 @@ public class RoadMap {
 		if (isEdited()) {
 			this.editModeNodeArmorStands.put(node, getNodeArmorStand(node));
 		}
+		return node;
 	}
 
 	public void addFindable(Findable findable) {
@@ -178,6 +179,9 @@ public class RoadMap {
 		findableGroup.delete();
 		this.groups.remove(findableGroup);
 		DatabaseModel.getInstance().deleteFindableGroup(findableGroup);
+		for(Findable f : findableGroup.getFindables()) {
+			updateArmorStandDisplay(f, false);
+		}
 	}
 
 	public @Nullable

@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.listener;
 
-import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
@@ -68,7 +67,7 @@ public class PlayerListener implements Listener {
                 Findable findable = path.get(path.size() - 1);
                 if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance()) {
                     pPlayer.cancelPath(rm);
-                    player.sendMessage(Component.text("Ziel erreicht: ", NamedTextColor.GRAY)
+                    player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
                             .append(Component.text(findable.getName(), NamedTextColor.WHITE)));
                 }
             }

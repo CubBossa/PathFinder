@@ -1,12 +1,12 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.core.bukkit.util.BezierUtils;
 import de.bossascrew.core.bukkit.util.VectorUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.core.util.Tuple3;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
-import de.bossascrew.pathfinder.util.BezierUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -52,7 +52,7 @@ public class ParticlePath extends ArrayList<Findable> {
     private final List<SchedulerHandler> schedulerHandlers;
 
     private double cachedDistance = -1;
-    private final List<Vector> calculatedPoints;
+    private List<Vector> calculatedPoints;
 
     public ParticlePath(RoadMap roadMap, UUID playerUuid) {
         this.roadMap = roadMap;
@@ -97,10 +97,8 @@ public class ParticlePath extends ArrayList<Findable> {
                     .filter(vector -> (fi != tangentPoints.size() - 2) || vector.distance(fv) > roadMap.getNodeFindDistance())
                     .collect(Collectors.toList()));
         }
-        //TODO smoothing
-        //List<Vector> evenSpacing = BezierUtils.getEvenSpacing(calculatedPoints, visualizer.getParticleDistance());
-        //calculatedPoints.clear();
-        //calculatedPoints.addAll(evenSpacing);
+        List<Vector> evenSpacing = BezierUtils.getEvenlySpacedPoints(calculatedPoints, visualizer.getParticleDistance());
+        calculatedPoints = new ArrayList<>(evenSpacing);
     }
 
     /**
