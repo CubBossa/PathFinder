@@ -27,7 +27,7 @@ public class WaypointQuesterCommand extends BaseCommand {
             PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser NPC ist bereits ein Wegpunkt.");
             return;
         }
-        roadMap.createQuestFindable(id, name == null ? npc.getName() : name, null, null);
+        roadMap.createQuestFindable(id, name, null, null);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
     }
 }

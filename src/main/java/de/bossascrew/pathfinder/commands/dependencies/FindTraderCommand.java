@@ -24,14 +24,12 @@ public class FindTraderCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_TRADERS)
     public void onFindeShop(Player player, RoadMap roadMap, String shopName) {
 
-        Findable target = null;
-        for (Findable f : roadMap.getFindables().stream().filter(findable -> findable instanceof TraderFindable).collect(Collectors.toList())) {
-            TraderFindable tf = (TraderFindable) f;
-            if (tf.getShop().getName().equalsIgnoreCase(shopName)) {
-                target = tf;
-                break;
-            }
-        }
+        Findable target = roadMap.getFindables().stream()
+                .filter(findable -> findable instanceof TraderFindable)
+                .map(f -> (TraderFindable) f)
+                .filter(f -> f.getFinalName().equalsIgnoreCase(f.getFinalName()))
+                .findAny().orElse(null);
+
         if (target == null) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein Shop mit diesem Namen gefunden werden: " + shopName);
             return;

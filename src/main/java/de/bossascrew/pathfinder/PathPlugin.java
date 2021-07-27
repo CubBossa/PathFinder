@@ -274,7 +274,7 @@ public class PathPlugin extends JavaPlugin {
 			return visualizer;
 		});
 		cm.registerContext(Findable.class, this::resolveFindable);
-		cm.registerContext(Node.class, this::resolveFindable);
+		cm.registerContext(Node.class, context -> (Node) resolveFindable(context));
 		cm.registerContext(FindableGroup.class, context -> {
 			String search = context.popFirstArg();
 			Player player = context.getPlayer();
@@ -326,7 +326,7 @@ public class PathPlugin extends JavaPlugin {
 		});
 	}
 
-	private Node resolveFindable(BukkitCommandExecutionContext context) {
+	private Findable resolveFindable(BukkitCommandExecutionContext context) {
 		String search = context.popFirstArg();
 		Player player = context.getPlayer();
 		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -337,7 +337,7 @@ public class PathPlugin extends JavaPlugin {
 		if (roadMap == null) {
 			throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
 		}
-		Node findable = (Node) roadMap.getFindable(search);
+		Findable findable = roadMap.getFindable(search);
 		if (findable == null) {
 			if (context.isOptional()) {
 				return null;

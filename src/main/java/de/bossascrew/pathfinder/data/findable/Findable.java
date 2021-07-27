@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data.findable;
 
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -105,6 +106,11 @@ public abstract class Findable {
      * @return Gibt die Location des Objektes mit Welt an.
      */
     public abstract Location getLocation();
+
+
+    public String getFriendlyName() {
+        return StringUtils.replaceBlanks(name);
+    }
 
     public abstract String getScope();
 

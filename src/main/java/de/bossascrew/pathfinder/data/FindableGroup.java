@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,5 +58,9 @@ public class FindableGroup {
         for (Findable findable : findables) {
             findable.removeFindableGroup(true);
         }
+    }
+
+    public String getFriendlyName() {
+        return StringUtils.replaceBlanks(name);
     }
 }

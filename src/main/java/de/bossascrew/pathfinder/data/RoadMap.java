@@ -127,11 +127,15 @@ public class RoadMap {
 	}
 
 	public QuestFindable createQuestFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
-		return DatabaseModel.getInstance().newQuestFindable(this, null, npcId, name, bezierTangentLength, permission);
+		QuestFindable findable =  DatabaseModel.getInstance().newQuestFindable(this, null, npcId, name, bezierTangentLength, permission);
+		addFindable(findable);
+		return findable;
 	}
 
 	public TraderFindable createTraderFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
-		return DatabaseModel.getInstance().newTraderFindable(this, null, npcId, name, bezierTangentLength, permission);
+		TraderFindable findable =  DatabaseModel.getInstance().newTraderFindable(this, null, npcId, name, bezierTangentLength, permission);
+		addFindable(findable);
+		return findable;
 	}
 
 	public Findable createNode(Vector vector, String name) {

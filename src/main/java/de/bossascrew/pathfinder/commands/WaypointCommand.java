@@ -104,7 +104,7 @@ public class WaypointCommand extends BaseCommand {
     @Syntax("<Node>")
     @CommandPermission("bcrew.command.waypoint.delete")
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
-    public void onDelete(Player player, Node node) {
+    public void onDelete(Player player, Findable node) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
         roadMap.deleteFindable(node);

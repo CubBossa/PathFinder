@@ -68,7 +68,7 @@ public class PlayerListener implements Listener {
                 if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance()) {
                     pPlayer.cancelPath(rm);
                     player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
-                            .append(Component.text(findable.getGroup() != null ? findable.getGroup().getName() : findable.getName(), NamedTextColor.WHITE)));
+                            .append(Component.text(findable.getGroup() != null ? findable.getGroup().getFriendlyName() : findable.getFriendlyName(), NamedTextColor.WHITE)));
                 }
             }
         });
@@ -108,7 +108,7 @@ public class PlayerListener implements Listener {
                 double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getFindables().stream().filter(f -> f.getGroup() == null || f.getGroup().isFindable()).count();
 
                 player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
-                        .append(Component.text(found.getGroup() != null ? found.getGroup().getName() : found.getName()).color(NamedTextColor.WHITE))));
+                        .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));
                 player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
                 player.sendActionBar(
                         Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY)
