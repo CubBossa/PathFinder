@@ -18,7 +18,7 @@ public class PlayerFindable extends Findable {
     private final RoadMap roadMap;
 
     public PlayerFindable(Player player, RoadMap roadMap) {
-        super(-1, roadMap);
+        super(-1, roadMap, player.getName());
         this.name = player.getName();
         this.location = player.getLocation();
         this.roadMap = roadMap;

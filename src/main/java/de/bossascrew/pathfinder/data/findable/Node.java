@@ -13,18 +13,10 @@ public class Node extends Findable {
     public static final String SCOPE = "NODE";
 
     private Vector vector;
-    private String name;
 
     public Node(int databaseId, RoadMap roadMap, String name, Vector vector) {
-        super(databaseId, roadMap);
-        this.name = name;
+        super(databaseId, roadMap, name);
         this.vector = vector;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-        roadMap.updateArmorStandDisplay(this);
-        updateData();
     }
 
     public void setVector(Vector vector) {

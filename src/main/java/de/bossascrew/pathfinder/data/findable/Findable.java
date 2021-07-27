@@ -14,6 +14,7 @@ import java.util.List;
 public abstract class Findable {
 
     protected final int databaseId;
+    protected String name;
     protected final int roadMapId;
     protected final RoadMap roadMap;
     protected final List<Integer> edges;
@@ -22,10 +23,11 @@ public abstract class Findable {
     protected @Nullable Double bezierTangentLength = null;
     private @Nullable String permission = null;
 
-    public Findable(int databaseId, RoadMap roadMap) {
+    public Findable(int databaseId, RoadMap roadMap, @Nullable String name) {
         this.databaseId = databaseId;
         this.roadMap = roadMap;
         this.roadMapId = roadMap.getDatabaseId();
+        this.name = name;
 
         edges = new ArrayList<>();
     }
@@ -86,10 +88,11 @@ public abstract class Findable {
         updateData();
     }
 
-    /**
-     * @return Gibt den Namen des Objektes an, die hauptsächliche Verwendung findet dieser im /find Befehl.
-     */
-    public abstract String getName();
+    public void setName(String name) {
+        this.name = name;
+        roadMap.updateArmorStandDisplay(this);
+        updateData();
+    }
 
     /**
      * @return Gibt die Position des Objektes als Vektor an. Dieser lässt sich mit der Welt der Roadmap zu einer Location konvertieren.

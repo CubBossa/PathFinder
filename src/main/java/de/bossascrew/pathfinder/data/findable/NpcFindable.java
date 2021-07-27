@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data.findable;
 
 import de.bossascrew.pathfinder.data.RoadMap;
 import lombok.Getter;
+import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -9,30 +10,31 @@ import org.bukkit.util.Vector;
 @Getter
 public abstract class NpcFindable extends Findable {
 
-    NPC npc;
+    protected final int id;
+    protected NPC npc = null;
 
-    public NpcFindable(int databaseId, RoadMap roadMap, NPC npc) {
-        super(databaseId, roadMap);
-        this.npc = npc;
+    public NpcFindable(int databaseId, RoadMap roadMap, int id, String name) {
+        super(databaseId, roadMap, name);
+        this.id = id;
     }
 
     public int getNpcId() {
-        return npc.getId();
+        return id;
     }
 
     public NPC getNpc() {
-        return npc;
+        return npc == null ? CitizensAPI.getNPCRegistry().getById(id) : npc;
     }
 
     public Location getLocation() {
-        return npc.getEntity().getLocation();
+        return getNpc().getEntity().getLocation();
     }
 
     public Vector getVector() {
         return getLocation().toVector();
     }
 
-    public String getName() {
-        return npc.getFullName();
+    public String getFinalName() {
+        return name == null ? getNpc().getFullName() : name;
     }
 }

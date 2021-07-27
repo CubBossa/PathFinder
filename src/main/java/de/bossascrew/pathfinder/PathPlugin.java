@@ -35,6 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.awt.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -96,7 +97,7 @@ public class PathPlugin extends JavaPlugin {
 			new QuestsHook(this);
 			quests = true;
 		}
-		if (Bukkit.getPluginManager().isPluginEnabled("DTLTraders")) {
+		if (Bukkit.getPluginManager().isPluginEnabled("dtlTraders") || Bukkit.getPluginManager().isPluginEnabled("dtlTradersPlus")) {
 			new TradersHook(this).loadShopsFromDir();
 			traders = true;
 		}
@@ -279,17 +280,28 @@ public class PathPlugin extends JavaPlugin {
 				return null;
 			}
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
-			if (roadMap == null) {
-				throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
+
+			List<FindableGroup> possibleResults = roadMapHandler.getRoadMapsStream()
+					.map(rm -> rm.getFindableGroup(search))
+					.collect(Collectors.toList());
+
+			FindableGroup ret;
+			if (roadMap != null) {
+				//Ausgewählte Roadmap bevorzugen
+				ret = possibleResults.stream()
+						.filter(g -> g.getRoadMap().getDatabaseId() == roadMap.getDatabaseId())
+						.findFirst().orElse(null);
+			} else {
+				ret = possibleResults.stream().findAny().orElse(null);
 			}
-			FindableGroup group = roadMap.getFindableGroup(search);
-			if (group == null) {
+
+			if (ret == null) {
 				if (context.isOptional()) {
 					return null;
 				}
 				throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
 			}
-			return group;
+			return ret;
 		});
 		cm.registerContext(Double.class, context -> {
 			String number = context.popFirstArg();

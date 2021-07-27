@@ -143,14 +143,11 @@ public class EditModeMenu {
                 clicked.setGroup(group);
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                 c.getPlayer().closeInventory();
-                c.setItemStack(buildGroupItem(clicked, group));
             });
         }
         ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
         groupMenu.setNavigationEntry(8, create, c -> {
-            PlayerUtils.sendMessage(c.getPlayer(), "Hatte noch keine Zeit, nutze /nodegroup create <Name>");
-            //TODO neues Menü öffnen etc
-            //TODO Leertasten durch underscores ersetzen
+            openCreateGroupMenu(c.getPlayer(), clicked);
         });
         groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
             clicked.setGroup((FindableGroup) null);
@@ -160,26 +157,57 @@ public class EditModeMenu {
         groupMenu.openInventory(player);
     }
 
+    private void openCreateGroupMenu(Player player, Findable findable) {
+        AnvilMenu menu = new AnvilMenu(Component.text("Nodegruppe erstellen:"));
+
+        ItemStack result = new ItemStack(Material.CHEST);
+        ItemStack info = result.clone();
+        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Gruppe erstellen",
+                CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen eindeutigen Gruppennamen an. Gruppen dienen als findbare Orte auf der Karte. Zum Beispiel sollten alle Wegpunkte der Markthalle in einer Gruppe namens Markthalle sein.", "\n" + ChatColor.GRAY, 30));
+        ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Name vergeben.");
+
+        menu.setItem(0, info);
+        menu.setTextInputHandler((player1, s) -> {
+            if (!roadMap.isGroupNameUnique(menu.getTextBoxText())) {
+                menu.setItem(2, error);
+            } else {
+                ItemStackUtils.setNameAndLore(result, s, "");
+                menu.setItem(2, result);
+            }
+        });
+        menu.setItemAndClickHandler(2, result, context -> {
+            Player p = context.getPlayer();
+            if (!roadMap.isGroupNameUnique(menu.getTextBoxText())) {
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                return;
+            }
+            FindableGroup group = roadMap.addFindableGroup(menu.getTextBoxText(), true);
+            findable.setGroup(group);
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
+            menu.closeInventory();
+        });
+        menu.open(player);
+    }
 
     private ItemStack buildGroupItem(Findable clicked, FindableGroup group) {
         ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
-        if (clicked.getGroup() != null && clicked.getGroup().getDatabaseId() == group.getDatabaseId()) {
-            ItemStackUtils.setGlowing(stack);
-        }
-
         StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
                 + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
 
         int counter = 0;
         for (Findable f : group.getFindables()) {
-            lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getName()).append(" (#").append(f.getDatabaseId()).append(")");
-            if (counter > 15) {
-                lore.append("\n...");
+            if (counter > 10) {
+                lore.append("\n" + ChatColor.DARK_GRAY + "...");
                 break;
+            } else {
+                lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getName()).append(" (#").append(f.getDatabaseId()).append(")");
             }
             counter++;
         }
         ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getName() + " (#" + group.getDatabaseId() + ")", lore.toString());
+        if (clicked.getGroup() != null && clicked.getGroup().equals(group)) {
+            ItemStackUtils.setGlowing(stack);
+        }
         return stack;
     }
 

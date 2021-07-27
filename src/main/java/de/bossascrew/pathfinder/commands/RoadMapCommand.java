@@ -25,6 +25,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -371,6 +372,15 @@ public class RoadMapCommand extends BaseCommand {
 					.append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
 					.append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
 					.append(Component.text(")", NamedTextColor.GRAY)));
+		}
+
+		@Subcommand("visible")
+		@Syntax("true|false")
+		@CommandCompletion("true|false")
+		public void onTestVisible(Player player, boolean visible) {
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+			roadMap.toggleArmorStandsVisible(player, visible);
+			player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Visibility gesetzt: " + visible)));
 		}
 	}
 }

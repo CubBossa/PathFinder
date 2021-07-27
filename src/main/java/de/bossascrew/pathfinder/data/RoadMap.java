@@ -8,14 +8,14 @@ import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.data.findable.*;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.EditmodeUtils;
+import de.bossascrew.pathfinder.util.EntityHider;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -53,6 +53,7 @@ public class RoadMap {
 	private final Collection<Pair<Findable, Findable>> edges;
 	private final Map<Integer, FindableGroup> groups;
 	private final Map<UUID, HotbarMenu> editingPlayers;
+	private EntityHider entityHider;
 
 	private PathVisualizer pathVisualizer;
 	private EditModeVisualizer editModeVisualizer;
@@ -96,6 +97,13 @@ public class RoadMap {
 		return findables.values().stream().map(Findable::getName).noneMatch(context -> context.equalsIgnoreCase(name));
 	}
 
+	public boolean isNodeNPC(int id) {
+		return findables.values().stream()
+				.filter(findable -> findable instanceof NpcFindable)
+				.map(findable -> (NpcFindable) findable)
+				.anyMatch(npcFindable -> npcFindable.getNpcId() == id);
+	}
+
 	public void deleteFindable(int findableId) {
 		deleteFindable(Objects.requireNonNull(getFindable(findableId)));
 	}
@@ -116,6 +124,14 @@ public class RoadMap {
 			editModeNodeArmorStands.get(findable).remove();
 			editModeNodeArmorStands.remove(findable);
 		}
+	}
+
+	public QuestFindable createQuestFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
+		return DatabaseModel.getInstance().newQuestFindable(this, null, npcId, name, bezierTangentLength, permission);
+	}
+
+	public TraderFindable createTraderFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
+		return DatabaseModel.getInstance().newTraderFindable(this, null, npcId, name, bezierTangentLength, permission);
 	}
 
 	public Findable createNode(Vector vector, String name) {
@@ -329,9 +345,11 @@ public class RoadMap {
 			HotbarMenu menu = new EditModeMenu(player, this).getHotbarMenu();
 			editingPlayers.put(uuid, menu);
 			menu.openInventory(player);
+			toggleArmorStandsVisible(player, true);
 		} else {
 			if (player != null) {
 				editingPlayers.get(uuid).closeInventory(player);
+				toggleArmorStandsVisible(player, false);
 			}
 
 			editingPlayers.remove(uuid);
@@ -340,7 +358,24 @@ public class RoadMap {
 			if (!isEdited()) {
 				stopEditModeVisualizer();
 			}
+		}
+	}
 
+	public void toggleArmorStandsVisible(Player player, boolean show) {
+		if(show) {
+			for(ArmorStand as : getEditModeEdgeArmorStands().values()) {
+				entityHider.showEntity(player, as);
+			}
+			for(ArmorStand as : getEditModeNodeArmorStands().values()) {
+				entityHider.showEntity(player, as);
+			}
+		} else {
+			for(ArmorStand as : getEditModeEdgeArmorStands().values()) {
+				entityHider.hideEntity(player, as);
+			}
+			for(ArmorStand as : getEditModeNodeArmorStands().values()) {
+				entityHider.hideEntity(player, as);
+			}
 		}
 	}
 
@@ -353,6 +388,7 @@ public class RoadMap {
 	}
 
 	public void startEditModeVisualizer() {
+		entityHider = new EntityHider(PathPlugin.getInstance(), EntityHider.Policy.BLACKLIST);
 
 		for (Findable findable : findables.values()) {
 			ArmorStand nodeArmorStand = getNodeArmorStand(findable);
@@ -371,6 +407,9 @@ public class RoadMap {
 	}
 
 	public void stopEditModeVisualizer() {
+		entityHider.destroy();
+		entityHider = null;
+
 		for (ArmorStand armorStand : editModeNodeArmorStands.values()) {
 			armorStand.remove();
 		}

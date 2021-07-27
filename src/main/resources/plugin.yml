@@ -6,3 +6,8 @@ api-version: 1.16
 
 depend:
   - bossascrew-core-bukkit
+  - ProtocolLib
+
+softdepend:
+  - dtlTradersPlus
+  - Citizens
