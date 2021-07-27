@@ -353,6 +353,16 @@ public class DatabaseModel {
     }
 
     public @Nullable
+    QuestFindable newQuestFindable(RoadMap roadMap, Integer groupId, int npcId, String name, Double tangentLength, String permission) {
+        return (QuestFindable) newFindable(roadMap, QuestFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
+    }
+
+    public @Nullable
+    TraderFindable newTraderFindable(RoadMap roadMap, Integer groupId, int npcId, String name, Double tangentLength, String permission) {
+        return (TraderFindable) newFindable(roadMap, TraderFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
+    }
+
+    public @Nullable
     Findable newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
@@ -379,10 +389,10 @@ public class DatabaseModel {
                             ret = new Node(databaseId, roadMap, name, new Vector(x, y, z));
                             break;
                         case TraderFindable.SCOPE:
-                            ret = new TraderFindable(databaseId, roadMap, (int) (x.doubleValue()));
+                            ret = new TraderFindable(databaseId, roadMap, (int) (x.doubleValue()), name);
                             break;
                         case QuestFindable.SCOPE:
-                            ret = new QuestFindable(databaseId, roadMap, (int) (x.doubleValue()));
+                            ret = new QuestFindable(databaseId, roadMap, (int) (x.doubleValue()), name);
                             break;
                     }
                     ret.setGroup(groupId, false);
@@ -454,16 +464,20 @@ public class DatabaseModel {
                         Double tangentLength = SQLUtils.getDouble(resultSet, "tangent_length");
                         String permission = SQLUtils.getString(resultSet, "permission");
 
+                        if(x == null) {
+                            continue;
+                        }
+
                         Findable ret = null;
                         switch (scope) {
                             case Node.SCOPE:
                                 ret = new Node(id, roadMap, name, new Vector(x, y, z));
                                 break;
                             case TraderFindable.SCOPE:
-                                ret = new TraderFindable(id, roadMap, (int) (x.doubleValue()));
+                                ret = new TraderFindable(id, roadMap, (int) (x.doubleValue()), name);
                                 break;
                             case QuestFindable.SCOPE:
-                                ret = new QuestFindable(id, roadMap, (int) (x.doubleValue()));
+                                ret = new QuestFindable(id, roadMap, (int) (x.doubleValue()), name);
                                 break;
                         }
                         ret.setGroup(groupId, false);
@@ -549,7 +563,7 @@ public class DatabaseModel {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_node_groups` SET " +
                     "`name` = ?, " +
-                    "`findable` = ?, " +
+                    "`findable` = ? " +
                     "WHERE `group_id` = ?")) {
                 SQLUtils.setString(stmt, 1, group.getName());
                 SQLUtils.setBoolean(stmt, 2, group.isFindable());

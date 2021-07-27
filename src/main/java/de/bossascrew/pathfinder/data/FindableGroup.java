@@ -1,16 +1,15 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.findable.Node;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 @Getter
-public class FindableGroup extends HashSet<Findable> {
+public class FindableGroup {
 
     private final int databaseId;
 
@@ -34,6 +33,24 @@ public class FindableGroup extends HashSet<Findable> {
         if (nodes != null) {
             this.findables = nodes;
         }
+    }
+
+    public void setName(String name, boolean update) {
+        this.name = name;
+        if(update) {
+            update();
+        }
+    }
+
+    public void setFindable(boolean findable, boolean update) {
+        this.findable = findable;
+        if(update) {
+            update();
+        }
+    }
+
+    public void update() {
+        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateFindableGroup(this));
     }
 
     public void delete() {

@@ -72,7 +72,7 @@ public class NodeGroupCommand extends BaseCommand {
             PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
             return;
         }
-        group.setName(newName);
+        group.setName(newName, true);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich umbenannt: " + PathPlugin.CHAT_COLOR_LIGHT + newName);
     }
 
@@ -81,7 +81,7 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandPermission("bcrew.command.nodegroup.setfindable")
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(Player player, FindableGroup group, boolean findable) {
-        group.setFindable(findable);
+        group.setFindable(findable, true);
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findable ? "an" : "aus"));
     }
     //TODO
