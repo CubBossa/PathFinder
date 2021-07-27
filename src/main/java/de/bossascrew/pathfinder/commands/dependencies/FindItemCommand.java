@@ -50,12 +50,12 @@ public class FindItemCommand extends BaseCommand {
                 if (buy == null && sell == null) {
                     continue;
                 }
-                traderMenu.addSub(new ComponentMenu(getTargetComponent(Component.text(trader.getName(), NamedTextColor.BLUE)
+                traderMenu.addSub(new ComponentMenu(getTargetComponent(Component.text(trader.getFinalName(), NamedTextColor.BLUE)
                                 .append(Component.text(" | Ankauf: " + buy.getPrice() + "D ")
                                         .hoverEvent(HoverEvent.showItem(Key.key(material.getKey().asString()), 1)))
                                 .append(Component.text(" | Verkauf: " + buy.getPrice() + "D ")
                                         .hoverEvent(HoverEvent.showItem(Key.key(material.getKey().asString()), 1))),
-                        "/find shop " + trader.getName())));
+                        "/find shop " + trader.getFinalName())));
             }
             if (traderMenu.hasSubs()) {
                 menu.addSub(traderMenu);

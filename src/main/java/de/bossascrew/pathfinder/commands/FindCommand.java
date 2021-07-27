@@ -39,7 +39,7 @@ public class FindCommand extends BaseCommand {
     @Syntax("<Ort>")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_FINDABLE_GROUPS)
     public void onFindeOrt(Player player, RoadMap roadMap, FindableGroup group) {
-        Findable findable = group.stream().findAny().orElse(null);
+        Findable findable = group.getFindables().stream().findAny().orElse(null);
         if (findable == null) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Ein Fehler ist aufgetreten.");
             return;
