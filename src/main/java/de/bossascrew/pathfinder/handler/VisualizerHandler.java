@@ -1,9 +1,12 @@
 package de.bossascrew.pathfinder.handler;
 
+import de.bossascrew.core.networking.handling.PacketHandler;
+import de.bossascrew.core.networking.handling.PacketListener;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.networking.EditModeVisualizerUpdatePacket;
 import lombok.Getter;
 import org.bukkit.Particle;
 
@@ -19,18 +22,18 @@ import java.util.stream.Stream;
  * sind unabhängig voneinander. Man kann also verschiedene Darstellungsprofile mit verschiedenen Partikeln anlegen und sagen, welche Roadmap mit welchem
  * Visualizer angezeigt werden soll. So könnte man Spielern später sogar die Möglichkeit geben, den Partikel-Style zu ändern.
  */
-public class VisualizerHandler {
+public class VisualizerHandler implements PacketListener {
 
-    @Getter
-    private static VisualizerHandler instance;
+	@Getter
+	private static VisualizerHandler instance;
 
-    @Getter
-    private final PathVisualizer defaultPathVisualizer;
-    @Getter
-    private final EditModeVisualizer defaultEditModeVisualizer;
+	@Getter
+	private final PathVisualizer defaultPathVisualizer;
+	@Getter
+	private final EditModeVisualizer defaultEditModeVisualizer;
 
 
-    private Map<Integer, PathVisualizer> pathVisualizerMap;
+	private Map<Integer, PathVisualizer> pathVisualizerMap;
     private Map<Integer, EditModeVisualizer> editVisualizerMap;
 
     public VisualizerHandler() {
@@ -157,25 +160,47 @@ public class VisualizerHandler {
 
     public boolean isNameUniquePath(String name) {
         return pathVisualizerMap.values().stream()
-                .map(PathVisualizer::getName)
-                .noneMatch(element -> element.equalsIgnoreCase(name));
-    }
+				.map(PathVisualizer::getName)
+				.noneMatch(element -> element.equalsIgnoreCase(name));
+	}
 
-    public boolean isNameUniqueEditMode(String name) {
-        return editVisualizerMap.values().stream()
-                .map(EditModeVisualizer::getName)
-                .noneMatch(element -> element.equalsIgnoreCase(name));
-    }
+	public boolean isNameUniqueEditMode(String name) {
+		return editVisualizerMap.values().stream()
+				.map(EditModeVisualizer::getName)
+				.noneMatch(element -> element.equalsIgnoreCase(name));
+	}
 
-    public @Nullable
-    PathVisualizer getPathVisualizer(String name) {
-        return getPathVisualizerStream()
-                .filter(pathVisualizer -> pathVisualizer.getName().equals(name))
-                .findAny().orElse(null);
-    }
+	@PacketHandler
+	public void onUpdateEditModeVisualizer(EditModeVisualizerUpdatePacket packet) {
+		EditModeVisualizer visualizer = getEditModeVisualizer(packet.getDatabaseId());
+		visualizer.setParent(getEditModeVisualizer(packet.getParentId()));
+		visualizer.setName(packet.getName());
+		if (!visualizer.getParticle().equals(packet.getParticle())) {
+			visualizer.setParticle(packet.getParticle());
+			visualizer.getUpdateParticle().perform();
+			visualizer.callSchedulerPeriodSubscribers(visualizer);
+		}
 
-    public @Nullable
-    PathVisualizer getPathVisualizer(int databaseId) {
+		if (visualizer.getEdgeHeadId() != packet.getEdgeHeadId()) {
+			visualizer.setEdgeHeadId(packet.getEdgeHeadId());
+			visualizer.callEdgeHeadSubscriber(visualizer);
+		}
+		if (visualizer.getNodeHeadId() != packet.getNodeHeadId()) {
+			visualizer.setNodeHeadId(packet.getNodeHeadId());
+			visualizer.callNodeHeadSubscriber(visualizer);
+		}
+		//TODO supplier allgemein hierher verlagern und ordentlicher
+	}
+
+	public @Nullable
+	PathVisualizer getPathVisualizer(String name) {
+		return getPathVisualizerStream()
+				.filter(pathVisualizer -> pathVisualizer.getName().equals(name))
+				.findAny().orElse(null);
+	}
+
+	public @Nullable
+	PathVisualizer getPathVisualizer(int databaseId) {
         return getPathVisualizerStream()
                 .filter(pathVisualizer -> pathVisualizer.getDatabaseId() == databaseId)
                 .findAny().orElse(null);

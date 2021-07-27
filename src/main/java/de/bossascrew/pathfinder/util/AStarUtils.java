@@ -74,14 +74,18 @@ public class AStarUtils {
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
                 .collect(Collectors.toList());
 
+        System.out.println("Path:");
+        pathVar.forEach(v -> System.out.print(v.getName() + ", "));
+
         Findable foundLast = pathVar.get(pathVar.size() - 1);
         if (foundLast == null) {
             return false;
         }
+        System.out.println(foundLast.getName());
         if (findGroup && target.getGroup() == null) {
             return false;
         }
-        if ((findGroup && !target.getGroup().contains(foundLast)) && foundLast.getDatabaseId() != target.getDatabaseId()) {
+        if ((findGroup && !target.getGroup().contains(foundLast)) || !findGroup && foundLast.getDatabaseId() != target.getDatabaseId()) {
             //Es konnte kein Pfad ermittelt werden, wenn das letzte Node des Abbruchpfades nicht das Target ist
             return false;
         }

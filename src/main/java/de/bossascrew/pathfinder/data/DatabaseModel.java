@@ -219,6 +219,9 @@ public class DatabaseModel {
                         int databaseId = SQLUtils.getInt(resultSet, "roadmap_id");
                         String name = SQLUtils.getString(resultSet, "name");
                         String worldName = SQLUtils.getString(resultSet, "world");
+                        if (Bukkit.getWorlds().stream().map(World::getName).noneMatch(s -> s.equalsIgnoreCase(worldName))) {
+                            continue;
+                        }
                         boolean findable = SQLUtils.getBoolean(resultSet, "findable");
                         Integer pathVisId = SQLUtils.getInt(resultSet, "path_visualizer_id");
                         Integer editModeVisId = SQLUtils.getInt(resultSet, "editmode_visualizer_id");
@@ -229,7 +232,7 @@ public class DatabaseModel {
                         PathVisualizer pathVisualizer = pathVisId == null ? null : VisualizerHandler.getInstance().getPathVisualizer(pathVisId);
                         EditModeVisualizer editModeVisualizer = editModeVisId == null ? null : VisualizerHandler.getInstance().getEditModeVisualizer(editModeVisId);
                         if (world == null) {
-                            return null;
+                            continue;
                         }
                         if (pathVisualizer == null) {
                             pathVisualizer = VisualizerHandler.getInstance().getDefaultPathVisualizer();

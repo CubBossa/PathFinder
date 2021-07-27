@@ -225,6 +225,13 @@ public class RoadMap {
 		}
 	}
 
+	public void disconnectNodes(Pair<Findable, Findable> edge) {
+		if(edge.first == null) {
+			return;
+		}
+		disconnectNodes(edge.first, edge.second);
+	}
+
 	public void disconnectNodes(Findable a, Findable b) {
 		if (a.equals(b)) {
 			return;

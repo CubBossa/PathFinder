@@ -2,15 +2,11 @@ package de.bossascrew.pathfinder.data.visualisation;
 
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
-import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.util.SubscribtionHandler;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Definiert, wie der Editmode dargestellt wird. Ist eine Variable auf null gesetzt, wird der Default geladen.
@@ -76,10 +72,10 @@ public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
         callNodeHeadSubscriber(this);
     }
 
-    private void callNodeHeadSubscriber(EditModeVisualizer visualizer) {
+    public void callNodeHeadSubscriber(EditModeVisualizer visualizer) {
         visualizer.nodeHeadSubscribers.perform(getNodeHeadId());
-        for(EditModeVisualizer child : children) {
-            if(child.getUnsafeNodeHeadId() != null) {
+        for (EditModeVisualizer child : children) {
+            if (child.getUnsafeNodeHeadId() != null) {
                 continue;
             }
             visualizer.callNodeHeadSubscriber(child);
@@ -92,10 +88,10 @@ public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
         callEdgeHeadSubscriber(this);
     }
 
-    private void callEdgeHeadSubscriber(EditModeVisualizer visualizer) {
+    public void callEdgeHeadSubscriber(EditModeVisualizer visualizer) {
         visualizer.edgeHeadSubscribers.perform(getEdgeHeadId());
-        for(EditModeVisualizer child : children) {
-            if(child.getUnsafeEdgeHeadId() != null) {
+        for (EditModeVisualizer child : children) {
+            if (child.getUnsafeEdgeHeadId() != null) {
                 continue;
             }
             visualizer.callEdgeHeadSubscriber(child);

@@ -8,6 +8,7 @@ import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.CommandUtils;
+import de.bossascrew.core.util.Pair;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
@@ -25,7 +26,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
 
 @RequiredArgsConstructor
 public class EditModeMenu {
@@ -76,7 +76,18 @@ public class EditModeMenu {
                 p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
             }
         });
-        //TODO leftclick
+        menu.setClickHandler(1, HotbarAction.LEFT_CLICK_ENTITY, context -> {
+            Player player = context.getPlayer();
+            int clickedId = ((Entity) context.getTarget()).getEntityId();
+            Pair<Findable, Findable> edge = roadMap.getEditModeEdgeArmorStands().keySet().stream()
+                    .filter(key -> roadMap.getEditModeEdgeArmorStands().get(key).getEntityId() == clickedId)
+                    .findAny().orElse(null);
+            if (edge == null) {
+                return;
+            }
+            roadMap.disconnectNodes(edge);
+            player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
+        });
 
         menu.setItem(2, EditmodeUtils.TP_TOOL);
         menu.setClickHandler(2, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, context -> {
@@ -127,33 +138,19 @@ public class EditModeMenu {
 
         PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 3);
         for (FindableGroup group : clicked.getRoadMap().getGroups().values()) {
-            ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
-            if (clicked.getGroup() != null && clicked.getGroup().getDatabaseId() == group.getDatabaseId()) {
-                ItemStackUtils.setGlowing(stack);
-            }
-            StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
-                    + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
 
-            int counter = 0;
-            for (Findable f : group.getFindables()) {
-                lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getName()).append(" (#").append(f.getDatabaseId()).append(")");
-                if (counter > 15) {
-                    lore.append("\n...");
-                    break;
-                }
-                counter++;
-            }
-
-            ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getName() + " (#" + group.getDatabaseId() + ")", lore.toString());
-            groupMenu.addMenuEntry(stack, ClickType.LEFT, c -> {
+            groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
                 clicked.setGroup(group);
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-
+                c.getPlayer().closeInventory();
+                c.setItemStack(buildGroupItem(clicked, group));
             });
         }
         ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
         groupMenu.setNavigationEntry(8, create, c -> {
+            PlayerUtils.sendMessage(c.getPlayer(), "Hatte noch keine Zeit, nutze /nodegroup create <Name>");
             //TODO neues Menü öffnen etc
+            //TODO Leertasten durch underscores ersetzen
         });
         groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
             clicked.setGroup((FindableGroup) null);
@@ -161,6 +158,29 @@ public class EditModeMenu {
             openGroupMenu(c.getPlayer(), clicked);
         });
         groupMenu.openInventory(player);
+    }
+
+
+    private ItemStack buildGroupItem(Findable clicked, FindableGroup group) {
+        ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
+        if (clicked.getGroup() != null && clicked.getGroup().getDatabaseId() == group.getDatabaseId()) {
+            ItemStackUtils.setGlowing(stack);
+        }
+
+        StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
+                + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
+
+        int counter = 0;
+        for (Findable f : group.getFindables()) {
+            lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getName()).append(" (#").append(f.getDatabaseId()).append(")");
+            if (counter > 15) {
+                lore.append("\n...");
+                break;
+            }
+            counter++;
+        }
+        ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getName() + " (#" + group.getDatabaseId() + ")", lore.toString());
+        return stack;
     }
 
     private @Nullable

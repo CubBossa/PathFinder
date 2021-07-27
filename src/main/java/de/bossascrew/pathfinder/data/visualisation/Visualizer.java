@@ -9,7 +9,6 @@ import org.bukkit.Particle;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.Supplier;
 
 @Getter
 @Setter
@@ -181,16 +180,16 @@ public abstract class Visualizer<T extends Visualizer> {
         callSchedulerPeriodSubscribers(this);
     }
 
-    private void callParticleSubscribers(Visualizer vis) {
-        vis.updateParticle.perform(null);
-        for (Visualizer child : children) {
-            if (child.getUnsafeParticle() != null) {
-                continue;
-            }
-            child.updateParticle.perform(null);
-            vis.callParticleSubscribers(child);
-        }
-    }
+    public void callParticleSubscribers(Visualizer vis) {
+		vis.updateParticle.perform(null);
+		for (Visualizer child : children) {
+			if (child.getUnsafeParticle() != null) {
+				continue;
+			}
+			child.updateParticle.perform(null);
+			vis.callParticleSubscribers(child);
+		}
+	}
 
     private void callParticleDistanceSubscribers(Visualizer vis) {
         vis.updateParticle.perform(null);
@@ -214,16 +213,16 @@ public abstract class Visualizer<T extends Visualizer> {
         }
     }
 
-    private void callSchedulerPeriodSubscribers(Visualizer vis) {
-        vis.updateParticle.perform(null);
-        for (Visualizer child : children) {
-            if (child.getUnsafeSchedulerPeriod() != null) {
-                continue;
-            }
-            child.updateParticle.perform(null);
-            vis.callSchedulerPeriodSubscribers(child);
-        }
-    }
+	public void callSchedulerPeriodSubscribers(Visualizer vis) {
+		vis.updateParticle.perform(null);
+		for (Visualizer child : children) {
+			if (child.getUnsafeSchedulerPeriod() != null) {
+				continue;
+			}
+			child.updateParticle.perform(null);
+			vis.callSchedulerPeriodSubscribers(child);
+		}
+	}
 
     public abstract void saveData();
 }
