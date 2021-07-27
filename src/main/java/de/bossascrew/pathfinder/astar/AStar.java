@@ -4,10 +4,13 @@ import java.util.*;
 
 public class AStar {
 
-    public List<AStarNode> printPath(AStarNode target) {
+    public List<AStarNode> printPath(AStarNode target, boolean findGrouped) {
         List<AStarNode> path = new ArrayList<>();
 
         for (AStarNode node = target; node != null; node = node.parent) {
+            if(node.groupId != null && target.groupId != null && node.groupId.equals(target.groupId)) {
+                path = new ArrayList<>();
+            }
             path.add(node);
         }
 
@@ -15,11 +18,7 @@ public class AStar {
         return path;
     }
 
-    public void aStarSearch(AStarNode source, AStarNode goal, boolean searchGroup) {
-        if (searchGroup) {
-            Objects.requireNonNull(goal.groupId);
-        }
-
+    public void aStarSearch(AStarNode source, AStarNode goal) {
         Set<AStarNode> explored = new HashSet<AStarNode>();
 
         PriorityQueue<AStarNode> queue = new PriorityQueue<AStarNode>(20, new Comparator<AStarNode>() {
@@ -50,7 +49,7 @@ public class AStar {
             explored.add(current);
 
             // goal found
-            if (current.findable != null && current.findable.equals(goal.findable) || searchGroup && current.groupId.equals(goal.groupId)) {
+            if (current.findable != null && current.findable.equals(goal.findable)) {
                 found = true;
             }
 

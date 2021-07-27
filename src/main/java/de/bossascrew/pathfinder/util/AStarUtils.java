@@ -36,7 +36,7 @@ public class AStarUtils {
 
     public static void startPath(Player player, Findable target, boolean findGroup) {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-        if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, target.getRoadMap()), target, true)) {
+        if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, target.getRoadMap()), target, false, findGroup)) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
             return;
         }
@@ -67,9 +67,9 @@ public class AStarUtils {
         }
 
         AStar aStar = new AStar();
-        aStar.aStarSearch(pair.first, pair.second, findGroup);
+        aStar.aStarSearch(pair.first, pair.second);
 
-        List<AStarNode> pathNodes = aStar.printPath(pair.second);
+        List<AStarNode> pathNodes = aStar.printPath(pair.second, findGroup);
         List<Findable> pathVar = pathNodes.stream()
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
                 .collect(Collectors.toList());
@@ -77,16 +77,12 @@ public class AStarUtils {
         System.out.println("Path:");
         pathVar.forEach(v -> System.out.print(v.getName() + ", "));
 
-        Findable foundLast = pathVar.get(pathVar.size() - 1);
+        Findable foundLast = pathVar.get(0);
         if (foundLast == null) {
             return false;
         }
-        System.out.println(foundLast.getName());
-        if (findGroup && target.getGroup() == null) {
-            return false;
-        }
-        if ((findGroup && !target.getGroup().contains(foundLast)) || !findGroup && foundLast.getDatabaseId() != target.getDatabaseId()) {
-            //Es konnte kein Pfad ermittelt werden, wenn das letzte Node des Abbruchpfades nicht das Target ist
+        if (foundLast.getDatabaseId() != start.getDatabaseId()) {
+            //Es konnte kein Pfad ermittelt werden, wenn das letzte Node des Abbruchpfades nicht der Startpunkt ist
             return false;
         }
 
