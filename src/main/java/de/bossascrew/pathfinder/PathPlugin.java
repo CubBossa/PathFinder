@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 
 public class PathPlugin extends JavaPlugin {
 
+	public static final String NBT_ARMORSTAND_KEY = "pathfinder_armorstand";
+
 	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
@@ -115,6 +117,7 @@ public class PathPlugin extends JavaPlugin {
 
 		PaperCommandManager cm = BukkitMain.getInstance().getCommandManager();
 
+		cm.registerCommand(new PathFinderCommand());
 		cm.registerCommand(new CancelPath());
 		cm.registerCommand(new EditModeVisualizerCommand());
 		cm.registerCommand(new FindCommand());

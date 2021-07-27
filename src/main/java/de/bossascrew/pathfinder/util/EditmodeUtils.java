@@ -1,7 +1,9 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.core.bukkit.nbt.NBTEntity;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import lombok.experimental.UtilityClass;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -55,6 +57,9 @@ public class EditmodeUtils {
                         armorStand.getEquipment().setHelmet(helmet);
                     }
                 });
+
+        NBTEntity e = new NBTEntity(as);
+        e.getPersistentDataContainer().addCompound(PathPlugin.NBT_ARMORSTAND_KEY);
         return as;
     }
 }
