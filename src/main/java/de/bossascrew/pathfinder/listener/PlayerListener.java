@@ -68,7 +68,7 @@ public class PlayerListener implements Listener {
                 if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance()) {
                     pPlayer.cancelPath(rm);
                     player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
-                            .append(Component.text(findable.getName(), NamedTextColor.WHITE)));
+                            .append(Component.text(findable.getGroup() != null ? findable.getGroup().getName() : findable.getName(), NamedTextColor.WHITE)));
                 }
             }
         });
