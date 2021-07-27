@@ -226,7 +226,7 @@ public class WaypointCommand extends BaseCommand {
                 PlayerUtils.sendMessage(sender, ChatColor.RED + "Es existiert keine Node-Gruppe mit diesem Namen.");
                 return;
             }
-            findable.setGroup(group);
+            findable.setGroup(group, true);
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Gruppe gesetzt: " + groupName);
         }
     }

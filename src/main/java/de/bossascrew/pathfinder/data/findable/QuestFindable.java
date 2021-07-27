@@ -1,5 +1,7 @@
 package de.bossascrew.pathfinder.data.findable;
 
+import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.RoadMap;
 
 public class QuestFindable extends NpcFindable {
@@ -17,6 +19,6 @@ public class QuestFindable extends NpcFindable {
 
     @Override
     void updateData() {
-
+        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateFindable(this));
     }
 }

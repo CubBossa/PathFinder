@@ -55,7 +55,7 @@ public class FindableGroup {
 
     public void delete() {
         for (Findable findable : findables) {
-            findable.removeFindableGroup();
+            findable.removeFindableGroup(true);
         }
     }
 }

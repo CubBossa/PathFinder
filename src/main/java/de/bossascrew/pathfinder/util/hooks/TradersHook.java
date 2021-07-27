@@ -5,10 +5,16 @@ import de.bossascrew.pathfinder.data.Shop;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.api.trait.Trait;
+import org.apache.commons.io.filefilter.FileFileFilter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileFilter;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class TradersHook extends Hook {
 
@@ -25,17 +31,36 @@ public class TradersHook extends Hook {
     }
 
     public void loadShopsFromDir() {
-        File dir = new File(getPlugin().getDataFolder().getParent(),"dtlTradersPlus/shops/");
-        for(File file : dir.listFiles()) {
-            System.out.println("Lade Shop aus File: " + file.getName());
-            NPC trader = null;
-            for(NPC npc : CitizensAPI.getNPCRegistry().sorted()) {
-                //TODO wenn npc trait trader mit filenamen hat, zwischenspeichern
+        File dirShops = new File(getPlugin().getDataFolder().getParent(),"dtlTradersPlus/shops/");
+        File npcs = new File(getPlugin().getDataFolder().getParent(),"Citizens/saves.yml");
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(npcs);
+
+        Map<String, Integer> npcShopMap = new HashMap<>();
+        ConfigurationSection npcSection = cfg.getConfigurationSection("npc");
+        for(String key : npcSection.getKeys(false)) {
+            ConfigurationSection certainNpcSection = npcSection.getConfigurationSection(key);
+            int id = Integer.parseInt(key);
+            ConfigurationSection traitsSection = certainNpcSection.getConfigurationSection("traits");
+            if(traitsSection.isConfigurationSection("trader")) {
+                ConfigurationSection traderSection = traitsSection.getConfigurationSection("trader");
+                String guiName = traderSection.getString("guiName").toLowerCase();
+                npcShopMap.put(guiName, id);
             }
-            if(trader == null) {
+        }
+
+        for(File file : dirShops.listFiles()) {
+            System.out.println("Lade Shop aus File: " + file.getName());
+            File subFile = Arrays.stream(file.listFiles()).filter(f -> f.getName().equals(file.getName() + ".yml")).findFirst().orElse(null);
+            if(subFile == null) {
+                PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Laden eines Files: " + file.getName());
                 continue;
             }
-            shops.add(new Shop(trader.getId(), file));
+            Integer id = npcShopMap.get(file.getName());
+            if(id != null) {
+                shops.add(new Shop(id, subFile));
+            } else {
+                PathPlugin.getInstance().getLogger().log(Level.SEVERE, "NPC-ID in Shop-Mapping nicht gefunden: " + file.getName());
+            }
         }
     }
 }

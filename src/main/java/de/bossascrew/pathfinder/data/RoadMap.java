@@ -248,6 +248,12 @@ public class RoadMap {
 		disconnectNodes(edge.first, edge.second);
 	}
 
+	public void disconnectNode(Findable f) {
+		for(int edge : new HashSet<>(f.getEdges())) {
+			disconnectNodes(f, getFindable(edge));
+		}
+	}
+
 	public void disconnectNodes(Findable a, Findable b) {
 		if (a.equals(b)) {
 			return;
@@ -391,6 +397,9 @@ public class RoadMap {
 		entityHider = new EntityHider(PathPlugin.getInstance(), EntityHider.Policy.BLACKLIST);
 
 		for (Findable findable : findables.values()) {
+			if(findable instanceof NpcFindable) {
+				continue;
+			}
 			ArmorStand nodeArmorStand = getNodeArmorStand(findable);
 			editModeNodeArmorStands.put(findable, nodeArmorStand);
 		}

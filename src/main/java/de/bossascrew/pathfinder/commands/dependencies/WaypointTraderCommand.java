@@ -30,7 +30,6 @@ public class WaypointTraderCommand extends BaseCommand {
         }
 
         TraderFindable f = roadMap.createTraderFindable(id, name == null ? npc.getName() : name, null, null);
-        f.setShop(TradersHook.getInstance().getShops().stream().filter(s -> s.getNpcId() == id).findAny().orElse(null));
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
     }
 }

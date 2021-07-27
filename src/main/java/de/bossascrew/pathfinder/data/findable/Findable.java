@@ -32,11 +32,11 @@ public abstract class Findable {
         edges = new ArrayList<>();
     }
 
-    public void setGroup(Integer groupId) {
-        setGroup(groupId, true);
+    public void setGroup(Integer groupId, boolean update) {
+        setGroup(groupId, true, update);
     }
 
-    public void setGroup(Integer groupId, boolean updateArmorStands) {
+    public void setGroup(Integer groupId, boolean updateArmorStands, boolean update) {
         this.nodeGroupId = groupId;
         if(groupId != null) {
             FindableGroup g = roadMap.getFindableGroup(groupId);
@@ -47,15 +47,17 @@ public abstract class Findable {
         if(updateArmorStands) {
             roadMap.updateArmorStandDisplay(this, false);
         }
-        updateData();
+        if(update) {
+            updateData();
+        }
     }
 
-    public void setGroup(@Nullable FindableGroup nodeGroup) {
-        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), true);
+    public void setGroup(@Nullable FindableGroup nodeGroup, boolean update) {
+        setGroup(nodeGroup == null ? null : nodeGroup.getDatabaseId(), true, update);
     }
 
-    public void removeFindableGroup() {
-        setGroup(null, true);
+    public void removeFindableGroup(boolean update) {
+        setGroup(null, true, update);
     }
 
     public @Nullable

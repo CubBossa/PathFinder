@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.data;
 
-import com.comphenix.protocol.injector.BukkitUnwrapper;
 import de.bossascrew.core.util.PluginUtils;
+import de.bossascrew.pathfinder.PathPlugin;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 @Getter
 public class Shop {
@@ -40,25 +41,33 @@ public class Shop {
 
     private void loadItemStacksAndPermission(File file) {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection pages = cfg.getDefaultSection().getConfigurationSection("pages");
-        for(String pageKey : pages.getKeys(false)) {
-            ConfigurationSection page = pages.getConfigurationSection(pageKey);
-            ConfigurationSection buyItems = page.getConfigurationSection("buy-items");
-            for(String itemKey : buyItems.getKeys(false)) {
-                ConfigurationSection item = buyItems.getConfigurationSection(itemKey);
-                ItemStack stack = item.getItemStack("item");
-                String permission = item.getString("permission");
-                double price = item.getDouble("trade-price");
-                buyItemMap.put(stack, new ShopItem(stack, permission, price));
+        try {
+            ConfigurationSection pages = cfg.getConfigurationSection(cfg.getKeys(false).stream().findAny().get()).getConfigurationSection("pages");
+            for (String pageKey : pages.getKeys(false)) {
+                ConfigurationSection page = pages.getConfigurationSection(pageKey);
+                ConfigurationSection buyItems = page.getConfigurationSection("buy-items");
+                if(buyItems != null) {
+                    for (String itemKey : buyItems.getKeys(false)) {
+                        ConfigurationSection item = buyItems.getConfigurationSection(itemKey);
+                        ItemStack stack = item.getItemStack("item");
+                        String permission = item.getString("permission");
+                        double price = item.getDouble("trade-price");
+                        buyItemMap.put(stack, new ShopItem(stack, permission, price));
+                    }
+                }
+                ConfigurationSection sellItems = page.getConfigurationSection("sell-items");
+                if(sellItems != null) {
+                    for(String itemKey : sellItems.getKeys(false)) {
+                        ConfigurationSection item = sellItems.getConfigurationSection(itemKey);
+                        ItemStack stack = item.getItemStack("item");
+                        String permission = item.getString("permission");
+                        double price = item.getDouble("trade-price");
+                        sellItemMap.put(stack, new ShopItem(stack, permission, price));
+                    }
+                }
             }
-            ConfigurationSection sellItems = page.getConfigurationSection("sell-items");
-            for(String itemKey : sellItems.getKeys(false)) {
-                ConfigurationSection item = sellItems.getConfigurationSection(itemKey);
-                ItemStack stack = item.getItemStack("item");
-                String permission = item.getString("permission");
-                double price = item.getDouble("trade-price");
-                sellItemMap.put(stack, new ShopItem(stack, permission, price));
-            }
+        } catch (Exception ignored) {
+            PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Konnte Shop.yml nicht laden: " + file.getName(), ignored);
         }
     }
 }

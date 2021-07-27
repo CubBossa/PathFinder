@@ -395,7 +395,7 @@ public class DatabaseModel {
                             ret = new QuestFindable(databaseId, roadMap, (int) (x.doubleValue()), name);
                             break;
                     }
-                    ret.setGroup(groupId, false);
+                    ret.setGroup(groupId, false, false);
                     ret.setBezierTangentLength(tangentLength);
                     ret.setPermission(permission);
                     return ret;
@@ -480,7 +480,7 @@ public class DatabaseModel {
                                 ret = new QuestFindable(id, roadMap, (int) (x.doubleValue()), name);
                                 break;
                         }
-                        ret.setGroup(groupId, false);
+                        ret.setGroup(groupId, false, false);
                         ret.setBezierTangentLength(tangentLength);
                         ret.setPermission(permission);
                         result.put(id, ret);

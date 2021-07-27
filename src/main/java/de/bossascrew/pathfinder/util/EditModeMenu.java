@@ -1,9 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
-import de.bossascrew.core.bukkit.inventory.menu.AnvilMenu;
-import de.bossascrew.core.bukkit.inventory.menu.HotbarAction;
-import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
-import de.bossascrew.core.bukkit.inventory.menu.PagedChestMenu;
+import de.bossascrew.core.bukkit.inventory.menu.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
@@ -13,6 +10,8 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.NpcFindable;
+import de.bossascrew.pathfinder.util.hooks.CitizensHook;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -26,6 +25,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class EditModeMenu {
@@ -54,7 +54,16 @@ public class EditModeMenu {
             }
         });
         menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, context ->
-                openNodeNameMenu(context.getPlayer(), ((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5))));
+                openNodeNameMenu(context.getPlayer(), s -> {
+                    roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
+
+                }));
+        menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
+            Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID((Entity) context.getTarget());
+            if(npcId != null) {
+                openNodeTypeMenu(player, npcId);
+            }
+        });
 
         menu.setItem(1, EditmodeUtils.EDGE_TOOL);
         menu.setClickHandler(1, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
@@ -77,6 +86,11 @@ public class EditModeMenu {
             }
         });
         menu.setClickHandler(1, HotbarAction.LEFT_CLICK_ENTITY, context -> {
+            Findable f = getClickedFindable((Entity) context.getTarget());
+            if(f != null) {
+                roadMap.disconnectNode(f);
+                return;
+            }
             Player player = context.getPlayer();
             int clickedId = ((Entity) context.getTarget()).getEntityId();
             Pair<Findable, Findable> edge = roadMap.getEditModeEdgeArmorStands().keySet().stream()
@@ -140,7 +154,7 @@ public class EditModeMenu {
         for (FindableGroup group : clicked.getRoadMap().getGroups().values()) {
 
             groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
-                clicked.setGroup(group);
+                clicked.setGroup(group, true);
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                 c.getPlayer().closeInventory();
             });
@@ -150,7 +164,7 @@ public class EditModeMenu {
             openCreateGroupMenu(c.getPlayer(), clicked);
         });
         groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
-            clicked.setGroup((FindableGroup) null);
+            clicked.setGroup((FindableGroup) null, true);
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
             openGroupMenu(c.getPlayer(), clicked);
         });
@@ -182,7 +196,7 @@ public class EditModeMenu {
                 return;
             }
             FindableGroup group = roadMap.addFindableGroup(menu.getTextBoxText(), true);
-            findable.setGroup(group);
+            findable.setGroup(group, true);
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
             menu.closeInventory();
         });
@@ -213,6 +227,13 @@ public class EditModeMenu {
 
     private @Nullable
     Findable getClickedFindable(Entity entity) {
+        Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID(entity);
+        if(npcId != null) {
+            return roadMap.getFindables().stream()
+                    .filter(f -> f instanceof NpcFindable)
+                    .filter(f -> ((NpcFindable) f).getNpcId() == npcId)
+                    .findAny().orElse(null);
+        }
         Findable clickedFindable = null;
         for (Findable f : roadMap.getEditModeNodeArmorStands().keySet()) {
             Entity e = roadMap.getEditModeNodeArmorStands().get(f);
@@ -224,13 +245,27 @@ public class EditModeMenu {
         return clickedFindable;
     }
 
-    private void openNodeNameMenu(Player player, Vector position) {
+    private void openNodeTypeMenu(Player player, int npcId) {
+        ChestMenu menu = new ChestMenu(Component.text("Wähle einen Wegpunkt-Typ:"), 1);
+        menu.setItemAndClickHandler(0, ItemStackUtils.createItemStack(Material.GOLD_INGOT, "Händler", ""), context -> {
+            openNodeNameMenu(context.getPlayer(), s -> {
+                roadMap.createTraderFindable(npcId, s.equalsIgnoreCase("null") ? null : s, null, null);
+            });
+        });
+        menu.setItemAndClickHandler(1, ItemStackUtils.createItemStack(Material.WRITABLE_BOOK, "Quest-NPC", ""), context -> {
+            openNodeNameMenu(context.getPlayer(), s -> {
+                roadMap.createQuestFindable(npcId, s.equalsIgnoreCase("null") ? null : s, null, null);
+            });
+        });
+    }
+
+    private void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
         AnvilMenu menu = new AnvilMenu(Component.text("Node erstellen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
         ItemStack info = result.clone();
         ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Wegpunkt erstellen",
-                CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen für diese Straßenkarte einzigartigen Namen an.", "\n" + ChatColor.GRAY, 30));
+                CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen für diese Straßenkarte einzigartigen Namen oder 'null' an.", "\n" + ChatColor.GRAY, 30));
         ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Name vergeben.");
 
         menu.setItem(0, info);
@@ -248,7 +283,7 @@ public class EditModeMenu {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return;
             }
-            roadMap.createNode(position, menu.getTextBoxText());
+            nodeFactory.accept(menu.getTextBoxText());
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
             menu.closeInventory();
         });

@@ -50,12 +50,24 @@ public class FindItemCommand extends BaseCommand {
                 if (buy == null && sell == null) {
                     continue;
                 }
-                traderMenu.addSub(new ComponentMenu(getTargetComponent(Component.text(trader.getFinalName(), NamedTextColor.BLUE)
-                                .append(Component.text(" | Ankauf: " + buy.getPrice() + "D ")
-                                        .hoverEvent(HoverEvent.showItem(Key.key(material.getKey().asString()), 1)))
-                                .append(Component.text(" | Verkauf: " + buy.getPrice() + "D ")
-                                        .hoverEvent(HoverEvent.showItem(Key.key(material.getKey().asString()), 1))),
-                        "/find shop " + trader.getFinalName())));
+                Component c = getTargetComponent(Component.text(trader.getFinalName(), NamedTextColor.BLUE), "/find shop " + trader.getFinalName());
+                Key materialKey = Key.key(material.getKey().asString());
+                if (sell != null) {
+                    c = c.append(Component
+                            .text(" | Verkauft für ", NamedTextColor.GRAY)
+                            .append(Component.text(sell.getPrice() + "", NamedTextColor.YELLOW))
+                            .append(Component.text("D", NamedTextColor.GOLD))
+                            .hoverEvent(HoverEvent.showItem(materialKey, 1)));
+                }
+                if (buy != null) {
+                    c = c.append(Component
+                            .text(" | Kauft für ", NamedTextColor.GRAY)
+                            .append(Component.text(buy.getPrice() + "", NamedTextColor.YELLOW))
+                            .append(Component.text("D", NamedTextColor.GOLD))
+                            .hoverEvent(HoverEvent.showItem(materialKey, 1)));
+                }
+                traderMenu.addSub(new ComponentMenu(c));
+
             }
             if (traderMenu.hasSubs()) {
                 menu.addSub(traderMenu);
