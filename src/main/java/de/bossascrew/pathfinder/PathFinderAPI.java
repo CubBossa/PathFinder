@@ -37,7 +37,7 @@ public class PathFinderAPI {
         pathPlayer.unfind(findable, false);
     }
 
-    public void findFindableGrouped(Player player, Findable findable) {
+    public void findFindableGroup(Player player, Findable findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -45,7 +45,7 @@ public class PathFinderAPI {
         pathPlayer.find(findable, true, new Date());
     }
 
-    public void forgetFindableGrouped(Player player, Findable findable) {
+    public void forgetFindableGroup(Player player, Findable findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;

@@ -672,7 +672,7 @@ public class RoadMap {
 			return new ArrayList<>();
 		}
 		return getFindables().stream()
-				.filter(node -> (node.getGroup() != null && !node.getGroup().isFindable()) || player.hasFound(node.getDatabaseId()))
+				.filter(player::hasFound)
 				.filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
 				.collect(Collectors.toSet());
 	}

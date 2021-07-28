@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.data;
 
-import com.google.common.collect.Maps;
 import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -29,7 +28,8 @@ public class PathPlayer {
      * Key = NodeID
      * Value = FoundInfo Objekt
      */
-    private final Map<Integer, FoundInfo> foundInfos;
+    private final Map<Integer, FoundInfo> foundFindables;
+    private final Map<Integer, FoundInfo> foundGroups;
 
     private final Map<Integer, ParticlePath> activePaths;
 
@@ -40,105 +40,80 @@ public class PathPlayer {
     @Nullable
     private Integer selectedRoadMapId = null;
 
+    public PathPlayer(int globalPlayerId) {
+        this(globalPlayerId, PlayerHandler.getInstance().getGlobalPlayer(globalPlayerId).getPlayerId());
+    }
+
     public PathPlayer(int globalPlayerId, UUID uuid) {
         this.globalPlayerId = globalPlayerId;
         this.uuid = uuid;
         this.activePaths = new HashMap<>();
 
-        foundInfos = Maps.newHashMap();
-    }
-
-    public PathPlayer(int globalPlayerId) {
-        this.globalPlayerId = globalPlayerId;
-        this.uuid = PlayerHandler.getInstance().getGlobalPlayer(globalPlayerId).getPlayerId();
-        this.activePaths = new HashMap<>();
-
-        foundInfos = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId);
+        foundFindables = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, false);
+        foundGroups = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, true);
     }
 
     public void find(Findable findable, boolean group, Date date) {
         if (group) {
-            findGroup(findable, date);
-        } else {
-            find(findable, date);
-        }
-    }
-
-    public void findGroup(Findable findable, Date date) {
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
-        if (roadMap == null) {
-            return;
-        }
-        FindableGroup group = roadMap.getFindableGroup(findable.getNodeGroupId());
-
-        if (group == null) {
-            find(findable, date);
-        } else {
-            for (Findable grouped : group.getFindables()) {
-                find(grouped, date);
+            if (findable.getGroup() != null) {
+                find(findable.getGroup().getDatabaseId(), true, date);
             }
+        } else {
+            find(findable.getDatabaseId(), false, date);
         }
     }
 
-    public void find(Findable findable, Date date) {
-        if (hasFound(findable.getDatabaseId())) {
+    public void find(int id, boolean group, Date date) {
+        if (hasFound(id, group)) {
             return;
         }
-        FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, findable.getDatabaseId(), date);
-        if (info == null) {
-            return;
+        FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, id, group, date);
+        if (group) {
+            foundFindables.put(id, info);
+        } else {
+            foundGroups.put(id, info);
         }
-        foundInfos.put(findable.getDatabaseId(), info);
     }
 
     public void unfind(Findable findable, boolean group) {
-        if (group) {
-            unfindGroup(findable);
-        } else {
-            unfind(findable);
-        }
+        unfind(group ? findable.getNodeGroupId() : findable.getDatabaseId(), group);
     }
 
-    public void unfindGroup(Findable findable) {
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(findable.getRoadMapId());
-        if (roadMap == null) {
-            return;
+    public void unfind(RoadMap roadMap) {
+        for (FindableGroup group : roadMap.getGroups().values()) {
+            unfind(group.getDatabaseId(), true);
         }
-        FindableGroup group = roadMap.getFindableGroup(findable);
-        if (group == null) {
-            return;
-        }
-        for (Findable n : group.getFindables()) {
-            unfind(n.getDatabaseId());
-        }
-    }
-
-    public void unfindNodes(RoadMap roadMap) {
         for (Findable findable : roadMap.getFindables()) {
-            unfind(findable);
+            unfind(findable.getDatabaseId(), false);
         }
     }
 
-    public void unfind(Findable findable) {
-        unfind(findable.getDatabaseId());
-    }
-
-    public void unfind(int nodeId) {
-        DatabaseModel.getInstance().deleteFoundNode(globalPlayerId, nodeId);
-        foundInfos.remove(nodeId);
-    }
-
-    public boolean hasFound(int nodeId) {
-        return hasFound(foundInfos.values(), nodeId);
-    }
-
-    public boolean hasFound(Collection<FoundInfo> infos, int nodeId) {
-        for (FoundInfo info : infos) {
-            if (info.getNodeId() == nodeId) {
-                return true;
-            }
+    public void unfind(int id, boolean group) {
+        if(group) {
+            foundGroups.remove(id);
+        } else {
+            foundFindables.remove(id);
         }
-        return false;
+        DatabaseModel.getInstance().deleteFoundNode(globalPlayerId, id, group);
+    }
+
+    public boolean hasFound(FindableGroup group) {
+        return hasFound(group.getDatabaseId(), true);
+    }
+
+    public boolean hasFound(int id, boolean group) {
+        if (group) {
+            return foundGroups.containsKey(id);
+        } else {
+            return foundFindables.containsKey(id);
+        }
+    }
+
+    public boolean hasFound(Findable findable) {
+        if (findable.getGroup() != null) {
+            return foundGroups.containsKey(findable.getGroup().getDatabaseId());
+        }
+        return foundFindables.containsKey(findable.getDatabaseId());
     }
 
     /**
@@ -146,8 +121,8 @@ public class PathPlayer {
      */
     public int getFoundAmount(RoadMap roadMap) {
         Collection<Integer> ids = roadMap.getFindables().stream().map(Findable::getDatabaseId).collect(Collectors.toSet());
-        return (int) foundInfos.values().stream()
-                .filter(fi -> ids.contains(fi.getNodeId()))
+        return (int) foundFindables.values().stream()
+                .filter(fi -> ids.contains(fi.getFoundId()))
                 .count();
     }
 

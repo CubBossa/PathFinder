@@ -191,12 +191,12 @@ public class PathPlugin extends JavaPlugin {
 					.collect(Collectors.toSet());
 		}));
 		bm.registerAsyncCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
-				.filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
+				.filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.filter(findable -> findable.getPermission() == null || context.getPlayer().hasPermission(findable.getPermission()))
 				.map(Findable::getName)
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
-				.filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable.getDatabaseId()))
+				.filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.map(Findable::getName)
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {

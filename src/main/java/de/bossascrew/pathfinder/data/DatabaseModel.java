@@ -45,6 +45,7 @@ public class DatabaseModel {
         createFindableGroupTable();
         createEdgesTable();
         createFoundNodesTable();
+        createFoundGroupsTable();
     }
 
     public void createPathVisualizerTable() {
@@ -156,17 +157,33 @@ public class DatabaseModel {
 
     public void createFoundNodesTable() {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_found` (" +
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_found_nodes` (" +
                     "`player_id` INT NOT NULL , " +
-                    "`node_id` INT NOT NULL , " +
+                    "`found_id` INT NOT NULL , " +
                     "`date` TIMESTAMP NULL , " +
-                    "PRIMARY KEY (`player_id`, `node_id`) , " +
+                    "PRIMARY KEY (`player_id`, `found_id`) , " +
                     "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE , " +
-                    "FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE )")) {
+                    "FOREIGN KEY (found_id) REFERENCES pathfinder_nodes(node_id) ON DELETE CASCADE )")) {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der found-nodes Tabelle", e);
+        }
+    }
+
+    public void createFoundGroupsTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_found_groups` (" +
+                    "`player_id` INT NOT NULL , " +
+                    "`found_id` INT NOT NULL , " +
+                    "`date` TIMESTAMP NULL , " +
+                    "PRIMARY KEY (`player_id`, `found_id`) , " +
+                    "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE , " +
+                    "FOREIGN KEY (found_id) REFERENCES pathfinder_node_groups(group_id) ON DELETE CASCADE )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der found-groups Tabelle", e);
         }
     }
 
@@ -576,15 +593,23 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    FoundInfo newFoundInfo(int globalPlayerId, int nodeId, Date foundDate) {
+    FoundInfo newFoundInfo(int globalPlayerId, int foundId, boolean group, Date foundDate) {
+        return group ?
+                newFoundInfo(globalPlayerId, foundId, foundDate, "INSERT INTO `pathfinder_found_nodes` " +
+                        "(player_id, found_id, date) VALUES (?, ?, ?)") :
+                newFoundInfo(globalPlayerId, foundId, foundDate, "INSERT INTO `pathfinder_found_groups` " +
+                        "(player_id, found_id, date) VALUES (?, ?, ?)");
+    }
+
+    private @Nullable
+    FoundInfo newFoundInfo(int globalPlayerId, int foundId, Date foundDate, String statement) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_found` " +
-                    "(player_id, node_id, date) VALUES (?, ?, ?)")) {
+            try (PreparedStatement stmt = connection.prepareStatement(statement)) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
-                SQLUtils.setInt(stmt, 2, nodeId);
+                SQLUtils.setInt(stmt, 2, foundId);
                 SQLUtils.setDate(stmt, 3, foundDate);
                 stmt.executeUpdate();
-                return new FoundInfo(globalPlayerId, nodeId, foundDate);
+                return new FoundInfo(globalPlayerId, foundId, foundDate);
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Eintragen eines gefundenen Nodes in die Datenbank", e);
@@ -596,16 +621,23 @@ public class DatabaseModel {
      * @return Map mit NodeID als Key und FoundInfo Objekt als Value für den angegebenen Spieler
      */
     public @Nullable
-    Map<Integer, FoundInfo> loadFoundNodes(int globalPlayerId) {
+    Map<Integer, FoundInfo> loadFoundNodes(int globalPlayerId, boolean group) {
+        return group ?
+                loadFoundNodes(globalPlayerId, "SELECT * FROM `pathfinder_found_groups` WHERE `player_id` = ?") :
+                loadFoundNodes(globalPlayerId, "SELECT * FROM `pathfinder_found_nodes` WHERE `player_id` = ?");
+    }
+
+    private @Nullable
+    Map<Integer, FoundInfo> loadFoundNodes(int globalPlayerId, String statement) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_found` WHERE `player_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement(statement)) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, FoundInfo> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
                         int player = SQLUtils.getInt(resultSet, "player_id");
-                        int node = SQLUtils.getInt(resultSet, "node_id");
+                        int node = SQLUtils.getInt(resultSet, "found_id");
                         Date date = SQLUtils.getDate(resultSet, "date");
 
                         FoundInfo info = new FoundInfo(player, node, date);
@@ -620,9 +652,18 @@ public class DatabaseModel {
         return null;
     }
 
-    public void deleteFoundNode(int globalPlayerId, int nodeId) {
+    public void deleteFoundNode(int globalPlayerId, int nodeId, boolean group) {
+        if(group) {
+            deleteFoundNode(globalPlayerId, nodeId, "DELETE FROM `pathfinder_found_groups` WHERE `player_id` = ? AND `found_id` = ?");
+        } else {
+            deleteFoundNode(globalPlayerId, nodeId, "DELETE FROM `pathfinder_found_nodes` WHERE `player_id` = ? AND `found_id` = ?");
+        }
+
+    }
+
+    private void deleteFoundNode(int globalPlayerId, int nodeId, String statement) {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_found` WHERE `player_id` = ? AND `node_id` = ?")) {
+            try (PreparedStatement stmt = connection.prepareStatement(statement)) {
                 SQLUtils.setInt(stmt, 1, globalPlayerId);
                 SQLUtils.setInt(stmt, 2, nodeId);
                 stmt.executeUpdate();

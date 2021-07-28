@@ -10,6 +10,6 @@ import java.util.Date;
 public class FoundInfo {
 
     private final int globalPlayerId;
-    private final int nodeId;
+    private final int foundId;
     private final Date foundDate;
 }

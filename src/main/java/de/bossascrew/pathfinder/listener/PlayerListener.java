@@ -102,7 +102,7 @@ public class PlayerListener implements Listener {
                 if (event.isCancelled()) {
                     return;
                 }
-                pathPlayer.findGroup(findEvent.getNode(), findEvent.getDate());
+                pathPlayer.find(findEvent.getNode(), true, findEvent.getDate());
 
                 RoadMap rm = found.getRoadMap();
                 double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getFindables().stream().filter(f -> f.getGroup() == null || f.getGroup().isFindable()).count();
@@ -125,7 +125,7 @@ public class PlayerListener implements Listener {
                     continue;
                 }
                 for (Findable findable : group.getFindables()) {
-                    if (pathPlayer.hasFound(findable.getDatabaseId())) {
+                    if (pathPlayer.hasFound(findable.getDatabaseId(), true)) {
                         continue;
                     }
                     if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
@@ -137,7 +137,7 @@ public class PlayerListener implements Listener {
                 }
             }
             for (Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getGroup() == null).collect(Collectors.toSet())) {
-                if (pathPlayer.hasFound(findable.getDatabaseId())) {
+                if (pathPlayer.hasFound(findable.getDatabaseId(), false)) {
                     continue;
                 }
                 if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
