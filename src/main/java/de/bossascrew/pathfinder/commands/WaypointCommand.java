@@ -215,7 +215,7 @@ public class WaypointCommand extends BaseCommand {
 
         @Subcommand("group")
         @Syntax("<Node> <Gruppe>")
-        @CommandCompletion(PathPlugin.COMPLETE_FINDABLES + " null|" + PathPlugin.COMPLETE_FINDABLE_GROUPS)
+        @CommandCompletion(PathPlugin.COMPLETE_FINDABLES + " null|" + PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
         public void onSetGroup(CommandSender sender, Findable findable, @Single String groupName) {
 
             FindableGroup group = null;

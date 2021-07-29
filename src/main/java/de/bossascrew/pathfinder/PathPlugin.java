@@ -34,7 +34,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -45,6 +44,10 @@ public class PathPlugin extends JavaPlugin {
 	public static final String NBT_ARMORSTAND_KEY = "pathfinder_armorstand";
 
 	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
+	public static final String PERM_COMMAND_FIND_ITEMS = "bcrew.command.find.items";
+	public static final String PERM_COMMAND_FIND_LOCATIONS = "bcrew.command.find.location";
+	public static final String PERM_COMMAND_FIND_QUESTS = "bcrew.command.find.quest";
+	public static final String PERM_COMMAND_FIND_TRADERS = "bcrew.command.find.trader";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
@@ -54,8 +57,9 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
 	public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
 	public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
-	public static final String COMPLETE_FINDABLE_GROUPS = "@nodegroups";
-	public static final String COMPLETE_FINDABLE_FINDABLE_GROUPS = "@nodegroups_findable";
+	public static final String COMPLETE_GROUPS_BY_PARAMETER = "@nodegroups_parametered";
+	public static final String COMPLETE_FINDABLE_GROUPS_BY_PARAMETER = "@nodegroups_findable_parametered";
+	public static final String COMPLETE_FINDABLE_GROUPS_BY_SELECTION = "@nodegroups_findable_selection";
 	public static final String COMPLETE_TRADERS = "@nodes_traders";
 	public static final String COMPLETE_QUESTERS = "@nodes_questers";
 
@@ -169,15 +173,14 @@ public class PathPlugin extends JavaPlugin {
 				.getInstance().getEditModeVisualizerStream()
 				.map(EditModeVisualizer::getName)
 				.collect(Collectors.toSet()));
-		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
+		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
 				roadMap.getGroups().values().stream()
 						.map(FindableGroup::getName)
 						.collect(Collectors.toSet())));
-		bm.registerAsyncCompletion(COMPLETE_FINDABLE_FINDABLE_GROUPS, context -> resolveFromRoadMap(context, roadMap ->
-				roadMap.getGroups().values().stream() //TODO ohne selection
-						.filter(FindableGroup::isFindable)
-						.map(FindableGroup::getName)
-						.collect(Collectors.toSet())));
+		bm.registerAsyncCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> context.getContextValue(RoadMap.class).getGroups().values().stream()
+				.map(FindableGroup::getName).collect(Collectors.toList()));
+		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> context.getContextValue(RoadMap.class).getGroups().values().stream()
+				.filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList()));
 		bm.registerAsyncCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
 				roadMap.getFindables().stream()
 						.map(Findable::getName)
@@ -202,8 +205,10 @@ public class PathPlugin extends JavaPlugin {
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {
 			RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
+			PathPlayer player = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
 			return roadMap.getFindables().stream()
 					.filter(findable -> findable instanceof TraderFindable)
+					.filter(player::hasFound)
 					.map(Findable::getName)
 					.collect(Collectors.toSet());
 		});

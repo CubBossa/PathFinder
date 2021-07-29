@@ -117,6 +117,7 @@ public class ParticlePath extends ArrayList<Findable> {
             tangentPoints.add(new Tuple3<>(null, this.get(0).getVector(), null));
             return tangentPoints;
         }
+        Tuple3<Vector, Vector, Vector> lastTangentSet = null;
         for (Findable findable : this) {
             if (count == 0) {
                 //Gerade in Richtung nächsten Punktes
@@ -142,7 +143,16 @@ public class ParticlePath extends ArrayList<Findable> {
                 //Kontrollpunktrichtung:
                 Vector dir = middle.clone().crossProduct(up).normalize().multiply(findable.getBezierTangentLengthOrDefault());
 
-                tangentPoints.add(new Tuple3<>(b.clone().add(dir), findable.getVector(), b.clone().add(dir.clone().multiply(-1))));
+                Vector left = b.clone().add(dir);
+                Vector right = b.clone().add(dir.clone().multiply(-1));
+
+                if(lastTangentSet != null) {
+                    //if(lastTangentSet.getRight().length() + left.length() > )
+                }
+
+                Tuple3<Vector, Vector, Vector> last = new Tuple3<>(left, findable.getVector(), right);
+                tangentPoints.add(last);
+                lastTangentSet = last;
             }
             count++;
         }

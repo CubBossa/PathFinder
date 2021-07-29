@@ -33,7 +33,7 @@ public abstract class NpcFindable extends Findable {
     }
 
     public Location getLocation() {
-        return getNpc().getEntity().getLocation();
+        return getNpc().getEntity().getLocation().clone().add(0, 0.5, 0);
     }
 
     public Vector getVector() {

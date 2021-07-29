@@ -37,7 +37,8 @@ public class FindCommand extends BaseCommand {
 
     @Subcommand("ort")
     @Syntax("<Ort>")
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_FINDABLE_GROUPS)
+    @CommandPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_PARAMETER)
     public void onFindeOrt(Player player, RoadMap roadMap, FindableGroup group) {
         Findable findable = group.getFindables().stream().findAny().orElse(null);
         if (findable == null) {

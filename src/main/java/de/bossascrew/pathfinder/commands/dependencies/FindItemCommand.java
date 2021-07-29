@@ -1,10 +1,7 @@
 package de.bossascrew.pathfinder.commands.dependencies;
 
 import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.CommandAlias;
-import de.bossascrew.acf.annotation.CommandCompletion;
-import de.bossascrew.acf.annotation.Subcommand;
-import de.bossascrew.acf.annotation.Syntax;
+import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
@@ -33,6 +30,7 @@ public class FindItemCommand extends BaseCommand {
 
     @Subcommand("item")
     @Syntax("<Straßenkarte> <Item>")
+    @CommandPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_MATERIALS)
     public void onFindeItem(Player player, RoadMap roadMap, Material material) {
 
