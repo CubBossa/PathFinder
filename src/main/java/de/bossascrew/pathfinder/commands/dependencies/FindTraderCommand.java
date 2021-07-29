@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 public class FindTraderCommand extends BaseCommand {
 
     @Subcommand("shop")
-    @Syntax("<Shop>")
+    @Syntax("<Straßenkarte> <Shop>")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_TRADERS)
     public void onFindeShop(Player player, RoadMap roadMap, String shopName) {
 
         Findable target = roadMap.getFindables().stream()
                 .filter(findable -> findable instanceof TraderFindable)
                 .map(f -> (TraderFindable) f)
-                .filter(f -> f.getFinalName().equalsIgnoreCase(f.getFinalName()))
+                .filter(f -> f.getName().equalsIgnoreCase(shopName))
                 .findAny().orElse(null);
 
         if (target == null) {

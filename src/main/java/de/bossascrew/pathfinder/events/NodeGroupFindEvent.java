@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.events;
 
+import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,24 +19,23 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
     @Getter
     private final UUID playerId;
     @Getter
-    private @Nullable
-    final Integer groupId;
+    private final Findable triggeringFindable;
     @Getter
     @Setter
-    private Findable node;
+    private @Nullable FindableGroup group;
     @Getter
     @Setter
     private Date date;
-
+    @Getter
+    @Setter
     private boolean cancelled;
 
-    public NodeGroupFindEvent(UUID playerId, Findable node, @Nullable Integer groupId, Date date) {
+    public NodeGroupFindEvent(UUID playerId, FindableGroup group, Findable triggeringFindable, Date date) {
         this.playerId = playerId;
-        this.node = node;
+        this.group = group;
+        this.triggeringFindable = triggeringFindable;
         this.date = date;
-        this.groupId = groupId;
     }
-
 
     public HandlerList getHandlers() {
         return handlers;
@@ -43,15 +43,5 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
 
     public static HandlerList getHandlerList() {
         return handlers;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
     }
 }

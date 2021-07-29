@@ -7,7 +7,6 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.util.CommandUtils;
-import de.bossascrew.pathfinder.util.hooks.TradersHook;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.ChatColor;
@@ -30,7 +29,7 @@ public class WaypointTraderCommand extends BaseCommand {
         }
 
         TraderFindable f = roadMap.createTraderFindable(id, name, null, null);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + f.getFinalName());
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + f.getName());
     }
 }
 

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class FindItemCommand extends BaseCommand {
 
     @Subcommand("item")
-    @Syntax("<Item>")
+    @Syntax("<Straßenkarte> <Item>")
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_MATERIALS)
     public void onFindeItem(Player player, RoadMap roadMap, Material material) {
 
@@ -50,7 +50,7 @@ public class FindItemCommand extends BaseCommand {
                 if (buy == null && sell == null) {
                     continue;
                 }
-                Component c = getTargetComponent(Component.text(trader.getFinalName(), NamedTextColor.BLUE), "/find shop " + trader.getFinalName());
+                Component c = getTargetComponent(Component.text(trader.getName(), NamedTextColor.BLUE), "/finde shop " + trader.getRoadMap().getName() + " " + trader.getName());
                 Key materialKey = Key.key(material.getKey().asString());
                 if (sell != null) {
                     c = c.append(Component

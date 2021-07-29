@@ -8,6 +8,7 @@ import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.events.NodeFindEvent;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
@@ -93,16 +94,27 @@ public class PlayerListener implements Listener {
             if (found == null) {
                 return;
             }
-            Date findDate = new Date();
 
-            NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found, found.getNodeGroupId() == null ? null : found.getNodeGroupId(), findDate);
             PluginUtils.getInstance().runSync(() -> {
+                Date findDate = new Date();
+                boolean group = found.getGroup() != null;
 
-                Bukkit.getPluginManager().callEvent(findEvent);
+                int id;
+                if(group) {
+                    NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found.getGroup(), found, findDate);
+                    Bukkit.getPluginManager().callEvent(findEvent);
+                    findDate = findEvent.getDate();
+                    id = findEvent.getGroup().getDatabaseId();
+                } else {
+                    NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
+                    Bukkit.getPluginManager().callEvent(findEvent);
+                    findDate = findEvent.getDate();
+                    id = findEvent.getFindable().getDatabaseId();
+                }
                 if (event.isCancelled()) {
                     return;
                 }
-                pathPlayer.find(findEvent.getNode(), true, findEvent.getDate());
+                pathPlayer.find(id, group, findDate);
 
                 RoadMap rm = found.getRoadMap();
                 double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getFindables().stream().filter(f -> f.getGroup() == null || f.getGroup().isFindable()).count();
@@ -120,14 +132,17 @@ public class PlayerListener implements Listener {
     private @Nullable
     Findable getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
+            if(roadMap.isEdited()) {
+                continue;
+            }
             for (FindableGroup group : roadMap.getGroups().values()) {
                 if (!group.isFindable()) {
                     continue;
                 }
+                if(pathPlayer.hasFound(group.getDatabaseId(), true)) {
+                    continue;
+                }
                 for (Findable findable : group.getFindables()) {
-                    if (pathPlayer.hasFound(findable.getDatabaseId(), true)) {
-                        continue;
-                    }
                     if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
                         continue;
                     }

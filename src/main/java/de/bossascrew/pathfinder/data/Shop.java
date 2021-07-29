@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -25,15 +26,12 @@ public class Shop {
     }
 
     private final int npcId;
-    private final String identifier;
-    private final String name;
+    private String name;
     private final Map<ItemStack, ShopItem> buyItemMap;
     private final Map<ItemStack, ShopItem> sellItemMap;
 
     public Shop(int npcId, File file) {
         this.npcId = npcId;
-        this.identifier = "";
-        this.name = "";
         this.buyItemMap = new HashMap<>();
         this.sellItemMap = new HashMap<>();
         PluginUtils.getInstance().runAsync(() -> loadItemStacksAndPermission(file));
@@ -42,7 +40,11 @@ public class Shop {
     private void loadItemStacksAndPermission(File file) {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
         try {
-            ConfigurationSection pages = cfg.getConfigurationSection(cfg.getKeys(false).stream().findAny().get()).getConfigurationSection("pages");
+            ConfigurationSection base = cfg.getConfigurationSection(cfg.getKeys(false).stream().findAny().get());
+            String title = base.getString("title");
+            this.name = title;
+
+            ConfigurationSection pages = base.getConfigurationSection("pages");
             for (String pageKey : pages.getKeys(false)) {
                 ConfigurationSection page = pages.getConfigurationSection(pageKey);
                 ConfigurationSection buyItems = page.getConfigurationSection("buy-items");

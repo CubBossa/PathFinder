@@ -69,9 +69,9 @@ public class PathPlayer {
         }
         FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, id, group, date);
         if (group) {
-            foundFindables.put(id, info);
-        } else {
             foundGroups.put(id, info);
+        } else {
+            foundFindables.put(id, info);
         }
     }
 

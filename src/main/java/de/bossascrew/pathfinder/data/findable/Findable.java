@@ -81,9 +81,23 @@ public abstract class Findable {
         return bezierTangentLength;
     }
 
+    public void setBezierTangentLength(@Nullable Double bezierTangentLength, boolean update) {
+        this.bezierTangentLength = bezierTangentLength;
+        if(update) {
+            updateData();
+        }
+    }
+
     public void setBezierTangentLength(@Nullable Double bezierTangentLength) {
         this.bezierTangentLength = bezierTangentLength;
         updateData();
+    }
+
+    public void setPermission(@Nullable String permission, boolean update) {
+        this.permission = permission;
+        if(update) {
+            updateData();
+        }
     }
 
     public void setPermission(@Nullable String permission) {
@@ -109,7 +123,12 @@ public abstract class Findable {
 
 
     public String getFriendlyName() {
-        return StringUtils.replaceBlanks(name);
+        String name = getName();
+        return name == null ? "" : StringUtils.replaceSpaces(name);
+    }
+
+    public @Nullable String getNameCore() {
+        return name;
     }
 
     public abstract String getScope();

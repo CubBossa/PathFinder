@@ -671,8 +671,11 @@ public class RoadMap {
 		if (bukkitPlayer == null) {
 			return new ArrayList<>();
 		}
+		if(!findableNodes) {
+			return getFindables();
+		}
 		return getFindables().stream()
-				.filter(player::hasFound)
+				.filter(node -> node.getGroup() != null && !node.getGroup().isFindable() || player.hasFound(node))
 				.filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
 				.collect(Collectors.toSet());
 	}

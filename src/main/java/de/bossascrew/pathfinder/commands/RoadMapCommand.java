@@ -184,7 +184,7 @@ public class RoadMapCommand extends BaseCommand {
 
 		boolean all = nodename.equals("*");
 		for (Findable findable : roadMap.getFindables()) {
-			if (findable.getName().equals(nodename) || all) {
+			if (findable.getName().equalsIgnoreCase(nodename) || all) {
 				pathPlayer.find(findable, !findSingle, new Date());
 				if (!all) {
 					break;
@@ -211,7 +211,7 @@ public class RoadMapCommand extends BaseCommand {
 
 		boolean all = nodename.equals("*");
 		for (Findable findable : roadMap.getFindables()) {
-			if (findable.getName().equals(nodename) || all) {
+			if (all || findable.getName().equalsIgnoreCase(nodename)) {
 				pathPlayer.unfind(findable, !findSingle);
 				if (!all) {
 					break;

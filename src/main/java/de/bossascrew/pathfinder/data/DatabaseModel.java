@@ -5,10 +5,7 @@ import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.SQLUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.findable.Findable;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.QuestFindable;
-import de.bossascrew.pathfinder.data.findable.TraderFindable;
+import de.bossascrew.pathfinder.data.findable.*;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
@@ -17,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.sql.Connection;
@@ -115,7 +113,7 @@ public class DatabaseModel {
                     "`x` DOUBLE NUll , " +
                     "`y` DOUBLE NUll , " +
                     "`z` DOUBLE NUll , " +
-                    "`name` VARCHAR(24) NOT NULL , " +
+                    "`name` VARCHAR(24) , " +
                     "`tangent_length` DOUBLE NULL , " +
                     "`permission` VARCHAR(30) NULL , " +
                     "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE )")) {
@@ -370,17 +368,17 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    QuestFindable newQuestFindable(RoadMap roadMap, Integer groupId, int npcId, String name, Double tangentLength, String permission) {
+    QuestFindable newQuestFindable(RoadMap roadMap, Integer groupId, int npcId, @Nullable String name, Double tangentLength, String permission) {
         return (QuestFindable) newFindable(roadMap, QuestFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
     }
 
     public @Nullable
-    TraderFindable newTraderFindable(RoadMap roadMap, Integer groupId, int npcId, String name, Double tangentLength, String permission) {
+    TraderFindable newTraderFindable(RoadMap roadMap, Integer groupId, int npcId, @Nullable String name, Double tangentLength, String permission) {
         return (TraderFindable) newFindable(roadMap, TraderFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
     }
 
     public @Nullable
-    Findable newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission) {
+    Findable newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, scope, group_id, x, y, z, name, tangent_length, permission) VALUES " +
@@ -435,7 +433,7 @@ public class DatabaseModel {
         }
     }
 
-    public void updateFindable(Findable findable) {
+    public void updateFindable(@NotNull Findable findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
                     "`roadmap_id` = ?, " +
@@ -449,10 +447,16 @@ public class DatabaseModel {
                     "WHERE `node_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, findable.getRoadMapId());
                 SQLUtils.setInt(stmt, 2, findable.getNodeGroupId());
-                SQLUtils.setDouble(stmt, 3, findable.getVector().getX());
-                SQLUtils.setDouble(stmt, 4, findable.getVector().getY());
-                SQLUtils.setDouble(stmt, 5, findable.getVector().getZ());
-                SQLUtils.setString(stmt, 6, findable.getName());
+                if(findable instanceof NpcFindable) {
+                    SQLUtils.setDouble(stmt, 3, (double) ((NpcFindable) findable).getNpcId());
+                    SQLUtils.setDouble(stmt, 4, null);
+                    SQLUtils.setDouble(stmt, 5, null);
+                } else {
+                    SQLUtils.setDouble(stmt, 3, findable.getVector().getX());
+                    SQLUtils.setDouble(stmt, 4, findable.getVector().getY());
+                    SQLUtils.setDouble(stmt, 5, findable.getVector().getZ());
+                }
+                SQLUtils.setString(stmt, 6, findable.getNameCore());
                 SQLUtils.setDouble(stmt, 7, findable.getBezierTangentLength());
                 SQLUtils.setString(stmt, 8, findable.getPermission());
                 SQLUtils.setInt(stmt, 9, findable.getDatabaseId());
@@ -498,8 +502,8 @@ public class DatabaseModel {
                                 break;
                         }
                         ret.setGroup(groupId, false, false);
-                        ret.setBezierTangentLength(tangentLength);
-                        ret.setPermission(permission);
+                        ret.setBezierTangentLength(tangentLength, false);
+                        ret.setPermission(permission, false);
                         result.put(id, ret);
                     }
                     return result;
@@ -595,9 +599,9 @@ public class DatabaseModel {
     public @Nullable
     FoundInfo newFoundInfo(int globalPlayerId, int foundId, boolean group, Date foundDate) {
         return group ?
-                newFoundInfo(globalPlayerId, foundId, foundDate, "INSERT INTO `pathfinder_found_nodes` " +
-                        "(player_id, found_id, date) VALUES (?, ?, ?)") :
                 newFoundInfo(globalPlayerId, foundId, foundDate, "INSERT INTO `pathfinder_found_groups` " +
+                        "(player_id, found_id, date) VALUES (?, ?, ?)") :
+                newFoundInfo(globalPlayerId, foundId, foundDate, "INSERT INTO `pathfinder_found_nodes` " +
                         "(player_id, found_id, date) VALUES (?, ?, ?)");
     }
 

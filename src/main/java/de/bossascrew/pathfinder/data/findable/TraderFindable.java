@@ -23,6 +23,11 @@ public class TraderFindable extends NpcFindable {
     }
 
     @Override
+    public String getName() {
+        return shop.getName();
+    }
+
+    @Override
     public String getScope() {
         return SCOPE;
     }
