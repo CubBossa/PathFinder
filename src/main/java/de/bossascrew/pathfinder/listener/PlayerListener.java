@@ -117,7 +117,7 @@ public class PlayerListener implements Listener {
                 pathPlayer.find(id, group, findDate);
 
                 RoadMap rm = found.getRoadMap();
-                double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getFindables().stream().filter(f -> f.getGroup() == null || f.getGroup().isFindable()).count();
+                double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getMaxFoundSize();
 
                 player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
                         .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));

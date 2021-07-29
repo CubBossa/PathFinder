@@ -688,4 +688,15 @@ public class RoadMap {
 				.findAny()
 				.orElse(null);
 	}
+
+	public int getMaxFoundSize() {
+		List<Integer> sizes = groups.values().stream().filter(FindableGroup::isFindable).map(g -> g.getFindables().size()).collect(Collectors.toList());
+		sizes.add((int) findables.values().stream().filter(f -> f.getGroup() == null).count());
+
+		int size = 0;
+		for(int i : sizes) {
+			size += i;
+		}
+		return size;
+	}
 }
