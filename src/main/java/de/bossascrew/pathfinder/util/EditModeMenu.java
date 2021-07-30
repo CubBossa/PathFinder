@@ -182,6 +182,7 @@ public class EditModeMenu {
 
         menu.setItem(0, info);
         menu.setTextInputHandler((player1, s) -> {
+            s = StringUtils.replaceSpaces(s);
             if (!roadMap.isGroupNameUnique(menu.getTextBoxText())) {
                 menu.setItem(2, error);
             } else {
@@ -190,12 +191,16 @@ public class EditModeMenu {
             }
         });
         menu.setItemAndClickHandler(2, result, context -> {
+            if(menu.getTextBoxText() == null) {
+                return;
+            }
+            String s = StringUtils.replaceSpaces(menu.getTextBoxText());
             Player p = context.getPlayer();
-            if (!roadMap.isGroupNameUnique(menu.getTextBoxText())) {
+            if (!roadMap.isGroupNameUnique(s)) {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return;
             }
-            FindableGroup group = roadMap.addFindableGroup(menu.getTextBoxText(), true);
+            FindableGroup group = roadMap.addFindableGroup(s, true);
             findable.setGroup(group, true);
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
             menu.closeInventory();
@@ -270,6 +275,7 @@ public class EditModeMenu {
 
         menu.setItem(0, info);
         menu.setTextInputHandler((player1, s) -> {
+            s = StringUtils.replaceSpaces(s);
             if (!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
                 menu.setItem(2, error);
             } else {
@@ -279,11 +285,15 @@ public class EditModeMenu {
         });
         menu.setItemAndClickHandler(2, result, context -> {
             Player p = context.getPlayer();
-            if (!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
+            if(menu.getTextBoxText() == null) {
+                return;
+            }
+            String s = StringUtils.replaceSpaces(menu.getTextBoxText());
+            if (!roadMap.isNodeNameUnique(s)) {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return;
             }
-            nodeFactory.accept(menu.getTextBoxText());
+            nodeFactory.accept(s);
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
             menu.closeInventory();
         });

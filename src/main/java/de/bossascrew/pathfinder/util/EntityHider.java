@@ -1,8 +1,8 @@
 package de.bossascrew.pathfinder.util;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.Plugin;
@@ -26,12 +27,13 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 public class EntityHider implements Listener {
+
+	protected List<Integer> globalHide = new ArrayList<>();
 	protected Table<Integer, Integer, Boolean> observerEntityMap = HashBasedTable.create();
 
 	// Packets that update remote player entities
 	private static final PacketType[] ENTITY_PACKETS = {
 			PacketType.Play.Server.ENTITY_EQUIPMENT,
-			PacketType.Play.Server.BED,
 			PacketType.Play.Server.ANIMATION,
 			PacketType.Play.Server.NAMED_ENTITY_SPAWN,
 			PacketType.Play.Server.COLLECT,
@@ -105,6 +107,7 @@ public class EntityHider implements Listener {
 		EntityDeathEvent.getHandlerList().unregister(bukkitListener);
 		ChunkUnloadEvent.getHandlerList().unregister(bukkitListener);
 		PlayerQuitEvent.getHandlerList().unregister(bukkitListener);
+		PlayerJoinEvent.getHandlerList().unregister(bukkitListener);
 	}
 
 	/**
@@ -193,6 +196,14 @@ public class EntityHider implements Listener {
 	 */
 	private Listener constructBukkit() {
 		return new Listener() {
+
+			@EventHandler
+			public void onJoin(PlayerJoinEvent e) {
+				for(int entityId : globalHide) {
+					setVisibility(e.getPlayer(), entityId, false);
+				}
+			}
+
 			@EventHandler
 			public void onEntityDeath(EntityDeathEvent e) {
 				removeEntity(e.getEntity(), true);
@@ -262,6 +273,29 @@ public class EntityHider implements Listener {
 			manager.updateEntity(entity, Arrays.asList(observer));
 		}
 		return hiddenBefore;
+	}
+
+	public void showEntity(Entity entity) {
+		if(globalHide.remove(entity.getEntityId()) != null) {
+			//Nur Spieler, die das Entity nicht manuell gesetzt haben
+			for(Player player : Bukkit.getOnlinePlayers().stream()
+					.filter(player -> !observerEntityMap.contains(player.getEntityId(), entity.getEntityId()))
+					.collect(Collectors.toList())) {
+
+				showEntity(player, entity);
+			}
+		}
+	}
+
+	public void hideEntity(Entity entity) {
+		globalHide.add(entity.getEntityId());
+		//Nur Spieler, die das Entity nicht manuell gesetzt haben
+		for(Player player : Bukkit.getOnlinePlayers().stream()
+				.filter(player -> !observerEntityMap.contains(player.getEntityId(), entity.getEntityId()))
+				.collect(Collectors.toList())) {
+
+			hideEntity(player, entity);
+		}
 	}
 
 	/**

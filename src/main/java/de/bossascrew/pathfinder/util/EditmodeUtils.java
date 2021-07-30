@@ -35,31 +35,4 @@ public class EditmodeUtils {
         ItemStackUtils.setNameAndLore(item, name, lore);
         return item;
     }
-
-    public static ArmorStand getNewArmorStand(Location location, String name, int headDbId) {
-        return getNewArmorStand(location, name, headDbId, false);
-    }
-
-    public static ArmorStand getNewArmorStand(Location location, String name, int headDbId, boolean small) {
-        ArmorStand as = location.getWorld().spawn(location,
-                ArmorStand.class,
-                armorStand -> {
-                    armorStand.setVisible(false);
-                    if (name != null) {
-                        armorStand.setCustomNameVisible(true);
-                        armorStand.setCustomName(name);
-                    }
-                    armorStand.setGravity(false);
-                    armorStand.setInvulnerable(true);
-                    armorStand.setSmall(small);
-                    ItemStack helmet = HeadDBUtils.getHeadById(headDbId);
-                    if (armorStand.getEquipment() != null && helmet != null) {
-                        armorStand.getEquipment().setHelmet(helmet);
-                    }
-                });
-
-        NBTEntity e = new NBTEntity(as);
-        e.getPersistentDataContainer().addCompound(PathPlugin.NBT_ARMORSTAND_KEY);
-        return as;
-    }
 }

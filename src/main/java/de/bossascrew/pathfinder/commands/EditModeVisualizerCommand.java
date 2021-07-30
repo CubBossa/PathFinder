@@ -175,7 +175,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set particle-limit")
     @CommandPermission("bcrew.command.visualizer.editmode.set.particle-limit")
     @Syntax("<Editmode-Visualizer> <Limit>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetParticleLimit(CommandSender sender, EditModeVisualizer edit, String limitString) {
         Integer limit = null;
         if (!limitString.equalsIgnoreCase("null")) {
@@ -193,7 +193,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set particle-distance")
     @CommandPermission("bcrew.command.visualizer.editmode.set.particle-distance")
     @Syntax("<Editmode-Visualizer> <Distanz>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetParticleDistance(CommandSender sender, EditModeVisualizer edit, String distanceString) {
         Double distance = null;
         if (!distanceString.equalsIgnoreCase("null")) {
@@ -211,7 +211,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set scheduler-period")
     @CommandPermission("bcrew.command.visualizer.editmode.set.scheduler-period")
     @Syntax("<Editmode-Visualizer> <Scheduler-Wiederholabstand>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetSchedulerPeriod(CommandSender sender, EditModeVisualizer edit, String schedulerPeriodString) {
         Integer schedulerPeriod = null;
         if (!schedulerPeriodString.equalsIgnoreCase("null")) {
@@ -229,7 +229,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set node-head-id")
     @CommandPermission("bcrew.command.visualizer.editmode.set.node-head-id")
     @Syntax("<Editmode-Visualizer> <Kopf-ID>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetNodeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {
         Integer nodeHeadId = null;
         if (!idString.equalsIgnoreCase("null")) {
@@ -247,7 +247,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("set edge-head-id")
     @CommandPermission("bcrew.command.visualizer.editmode.set.edge-head-id")
     @Syntax("<Editmode-Visualizer> <Kopf-ID>")
-    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
+    @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetEdgeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {
         Integer edgeHeadId = null;
         if (!idString.equalsIgnoreCase("null")) {

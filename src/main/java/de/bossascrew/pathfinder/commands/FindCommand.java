@@ -8,8 +8,10 @@ import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -38,13 +40,33 @@ public class FindCommand extends BaseCommand {
     @Subcommand("ort")
     @Syntax("<Ort>")
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_PARAMETER)
-    public void onFindeOrt(Player player, RoadMap roadMap, FindableGroup group) {
-        Findable findable = group.getFindables().stream().findAny().orElse(null);
-        if (findable == null) {
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_LOCATIONS)
+    public void onFindeOrt(Player player, RoadMap roadMap, String searched) {
+        PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
+        if(pp == null) {
+            return;
+        }
+
+        Findable f = roadMap.getFindables().stream()
+                .filter(findable -> findable.getGroup() == null)
+                .filter(findable -> findable.getName().equalsIgnoreCase(searched))
+                .findFirst().orElse(null);
+        if(f == null) {
+            FindableGroup group = roadMap.getGroups().values().stream()
+                    .filter(FindableGroup::isFindable)
+                    .filter(g -> g.getName().equalsIgnoreCase(searched))
+                    .filter(g -> pp.hasFound(g.getDatabaseId(), true))
+                    .findAny().orElse(null);
+            if(group == null) {
+                PlayerUtils.sendMessage(player, ChatColor.RED + "Dieses Ziel gibt es nicht.");
+                return;
+            }
+            f = group.getFindables().stream().findAny().orElse(null);
+        }
+        if (f == null) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Ein Fehler ist aufgetreten.");
             return;
         }
-        AStarUtils.startPath(player, findable, true);
+        AStarUtils.startPath(player, f, true);
     }
 }

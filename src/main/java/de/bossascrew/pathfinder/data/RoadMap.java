@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import com.google.common.collect.Maps;
 import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
+import de.bossascrew.core.bukkit.nbt.NBTEntity;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.BezierUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
@@ -14,7 +15,6 @@ import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.EditModeMenu;
-import de.bossascrew.pathfinder.util.EditmodeUtils;
 import de.bossascrew.pathfinder.util.EntityHider;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -276,7 +276,11 @@ public class RoadMap {
 		edges.remove(edge);
 		if (isEdited()) {
 			updateEditModeParticles();
-			editModeEdgeArmorStands.get(edge).remove();
+			ArmorStand edgeArmorStand = editModeEdgeArmorStands.get(edge);
+			if (edgeArmorStand != null) {
+				edgeArmorStand.remove();
+				editModeEdgeArmorStands.remove(edge);
+			}
 		}
 	}
 
@@ -529,7 +533,7 @@ public class RoadMap {
 				(findable.getGroup() == null ? "" : (findable.getGroup().isFindable() ? ChatColor.GRAY : ChatColor.DARK_GRAY) + " (" + findable.getGroup().getName() + ")");
 
 		if (toEdit == null) {
-			toEdit = EditmodeUtils.getNewArmorStand(findable.getLocation().clone().add(ARMORSTAND_OFFSET), name, editModeVisualizer.getNodeHeadId());
+			toEdit = getNewArmorStand(findable.getLocation().clone().add(ARMORSTAND_OFFSET), name, editModeVisualizer.getNodeHeadId());
 		} else {
 			toEdit.setCustomName(name);
 			toEdit.getEquipment().setHelmet(HeadDBUtils.getHeadById(editModeVisualizer.getNodeHeadId()));
@@ -545,7 +549,7 @@ public class RoadMap {
 		String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") ↔ " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
 
 		if (toEdit == null) {
-			toEdit = EditmodeUtils.getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), name, editModeVisualizer.getEdgeHeadId(), true);
+			toEdit = getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), name, editModeVisualizer.getEdgeHeadId(), true);
 		} else {
 			toEdit.setCustomName(name);
 			toEdit.getEquipment().setHelmet(HeadDBUtils.getHeadById(editModeVisualizer.getEdgeHeadId()));
@@ -643,16 +647,21 @@ public class RoadMap {
 		Findable a = edge.first;
 		Findable b = edge.second;
 
-		Vector va = a.getVector().clone();
-		Vector vb = b.getVector().clone();
-		return va.add(vb.subtract(va).multiply(0.5)).toLocation(world);
+		if (edge.first != null && edge.second != null) {
+			Vector va = a.getVector().clone();
+			Vector vb = b.getVector().clone();
+			return va.add(vb.subtract(va).multiply(0.5)).toLocation(world);
+		}
+		return null;
 	}
 
 	private Collection<Pair<Findable, Findable>> getEdges(Findable findable) {
 		Collection<Pair<Findable, Findable>> ret = new ArrayList<>();
 		for (Pair<Findable, Findable> edge : edges) {
-			if (edge.first.equals(findable) || edge.second.equals(findable)) {
-				ret.add(edge);
+			if (edge.first != null && edge.second != null) {
+				if (edge.first.equals(findable) || edge.second.equals(findable)) {
+					ret.add(edge);
+				}
 			}
 		}
 		return ret;
@@ -683,6 +692,7 @@ public class RoadMap {
 	public @Nullable
 	Pair<Findable, Findable> getEdge(int aId, int bId) {
 		return edges.stream()
+				.filter(pair -> pair.first != null && pair.second != null)
 				.filter(pair -> (pair.first.getDatabaseId() == aId && pair.second.getDatabaseId() == bId) ||
 						(pair.second.getDatabaseId() == aId && pair.first.getDatabaseId() == bId))
 				.findAny()
@@ -694,9 +704,41 @@ public class RoadMap {
 		sizes.add((int) findables.values().stream().filter(f -> f.getGroup() == null).count());
 
 		int size = 0;
-		for(int i : sizes) {
+		for (int i : sizes) {
 			size += i;
 		}
 		return size;
+	}
+
+
+	private ArmorStand getNewArmorStand(Location location, String name, int headDbId) {
+		return getNewArmorStand(location, name, headDbId, false);
+	}
+
+	private ArmorStand getNewArmorStand(Location location, String name, int headDbId, boolean small) {
+		ArmorStand as = location.getWorld().spawn(location,
+				ArmorStand.class,
+				armorStand -> {
+					entityHider.hideEntity(armorStand);
+					for (UUID uuid : editingPlayers.keySet()) {
+						entityHider.showEntity(Bukkit.getPlayer(uuid), armorStand);
+					}
+					armorStand.setVisible(false);
+					if (name != null) {
+						armorStand.setCustomNameVisible(true);
+						armorStand.setCustomName(name);
+					}
+					armorStand.setGravity(false);
+					armorStand.setInvulnerable(true);
+					armorStand.setSmall(small);
+					ItemStack helmet = HeadDBUtils.getHeadById(headDbId);
+					if (armorStand.getEquipment() != null && helmet != null) {
+						armorStand.getEquipment().setHelmet(helmet);
+					}
+				});
+
+		NBTEntity e = new NBTEntity(as);
+		e.getPersistentDataContainer().addCompound(PathPlugin.NBT_ARMORSTAND_KEY);
+		return as;
 	}
 }

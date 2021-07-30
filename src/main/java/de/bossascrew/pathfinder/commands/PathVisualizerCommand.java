@@ -10,6 +10,7 @@ import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import de.bossascrew.pathfinder.util.StringUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -143,7 +144,8 @@ public class PathVisualizerCommand extends BaseCommand {
     @CommandPermission("bcrew.command.visualizer.path.set.name")
     @Syntax("<Pfad-Visualizer> <Neuer Name>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-    public void onSetName(CommandSender sender, PathVisualizer edit, @Single String newName) {
+    public void onSetName(CommandSender sender, PathVisualizer edit, String newName) {
+        newName = StringUtils.replaceSpaces(newName);
         edit.setAndSaveName(newName);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Name aktuallisiert: " + newName);
     }
@@ -169,8 +171,8 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("set particle-limit")
     @CommandPermission("bcrew.command.visualizer.path.set.particle-limit")
     @Syntax("<Pfad-Visualizer> <Limit>")
-    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-    public void onSetParticleLimit(CommandSender sender, PathVisualizer edit, String limitString) {
+    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER  + " null")
+    public void onSetParticleLimit(CommandSender sender, PathVisualizer edit, @Single String limitString) {
         Integer limit = null;
         if (!limitString.equalsIgnoreCase("null")) {
             try {
@@ -187,8 +189,8 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("set particle-distance")
     @CommandPermission("bcrew.command.visualizer.path.set.particle-distance")
     @Syntax("<Pfad-Visualizer> <Distanz>")
-    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-    public void onSetParticleDistance(CommandSender sender, PathVisualizer edit, String distanceString) {
+    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER  + " null")
+    public void onSetParticleDistance(CommandSender sender, PathVisualizer edit, @Single String distanceString) {
         Double distance = null;
         if (!distanceString.equalsIgnoreCase("null")) {
             try {
@@ -205,8 +207,8 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("set particle-steps")
     @CommandPermission("bcrew.command.visualizer.path.set.particle-steps")
     @Syntax("<Pfad-Visualizer> <Schritte>")
-    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-    public void onSetParticleSteps(CommandSender sender, PathVisualizer edit, String stepString) {
+    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
+    public void onSetParticleSteps(CommandSender sender, PathVisualizer edit, @Single String stepString) {
         Integer steps = null;
         if (!stepString.equalsIgnoreCase("null")) {
             try {
@@ -223,8 +225,8 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("set scheduler-period")
     @CommandPermission("bcrew.command.visualizer.path.set.scheduler-period")
     @Syntax("<Pfad-Visualizer> <Scheduler-Wiederholabstand>")
-    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-    public void onSetSchedulerPeriod(CommandSender sender, PathVisualizer edit, String schedulerPeriodString) {
+    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
+    public void onSetSchedulerPeriod(CommandSender sender, PathVisualizer edit, @Single String schedulerPeriodString) {
         Integer schedulerPeriod = null;
         if (!schedulerPeriodString.equalsIgnoreCase("null")) {
             try {

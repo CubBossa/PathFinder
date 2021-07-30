@@ -42,7 +42,7 @@ public class AStarUtils {
         }
 
         player.sendMessage(PathPlugin.PREFIX_COMP
-                .append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
+                .append(Component.text("Navigation gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
                 .append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
                 .append(Component.text(")", NamedTextColor.GRAY)));
     }

@@ -121,9 +121,20 @@ public class PathPlayer {
      */
     public int getFoundAmount(RoadMap roadMap) {
         Collection<Integer> ids = roadMap.getFindables().stream().map(Findable::getDatabaseId).collect(Collectors.toSet());
+        Collection<Integer> counts = foundGroups.values().stream()
+                .map(fi -> roadMap.getFindableGroup(fi.getFoundId()))
+                .filter(Objects::nonNull)
+                .filter(FindableGroup::isFindable)
+                .map(g -> g.getFindables().size())
+                .collect(Collectors.toList());
+
+        int count = 0;
+        for (int i : counts) {
+            count += i;
+        }
         return (int) foundFindables.values().stream()
                 .filter(fi -> ids.contains(fi.getFoundId()))
-                .count();
+                .count() + count;
     }
 
     public void setPath(Node targetNode) {

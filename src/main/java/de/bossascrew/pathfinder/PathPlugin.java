@@ -60,6 +60,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_GROUPS_BY_PARAMETER = "@nodegroups_parametered";
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_PARAMETER = "@nodegroups_findable_parametered";
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_SELECTION = "@nodegroups_findable_selection";
+	public static final String COMPLETE_FINDABLE_LOCATIONS = "@findable_locations";
 	public static final String COMPLETE_TRADERS = "@nodes_traders";
 	public static final String COMPLETE_QUESTERS = "@nodes_questers";
 
@@ -181,6 +182,23 @@ public class PathPlugin extends JavaPlugin {
 				.map(FindableGroup::getName).collect(Collectors.toList()));
 		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> context.getContextValue(RoadMap.class).getGroups().values().stream()
 				.filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList()));
+		bm.registerAsyncCompletion(COMPLETE_FINDABLE_LOCATIONS, context -> {
+			PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
+			if (pp == null) {
+				return null;
+			}
+			RoadMap roadMap = context.getContextValue(RoadMap.class);
+			Collection<String> ret = roadMap.getGroups().values().stream()
+					.filter(FindableGroup::isFindable)
+					.filter(g -> pp.hasFound(g.getDatabaseId(), true))
+					.map(FindableGroup::getName)
+					.collect(Collectors.toList());
+			ret.addAll(roadMap.getFindables().stream()
+					.filter(f -> pp.hasFound(f.getDatabaseId(), false))
+					.map(Findable::getName)
+					.collect(Collectors.toList()));
+			return ret;
+		});
 		bm.registerAsyncCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
 				roadMap.getFindables().stream()
 						.map(Findable::getName)
@@ -295,7 +313,7 @@ public class PathPlugin extends JavaPlugin {
 					.collect(Collectors.toList());
 
 			FindableGroup ret;
-			if (roadMap != null) {
+			  if (roadMap != null) {
 				//Ausgewählte Roadmap bevorzugen
 				ret = possibleResults.stream()
 						.filter(g -> g.getRoadMap().getDatabaseId() == roadMap.getDatabaseId())
