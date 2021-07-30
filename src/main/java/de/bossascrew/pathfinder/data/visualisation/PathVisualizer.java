@@ -4,8 +4,6 @@ import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
-import org.bukkit.Particle;
 
 import javax.annotation.Nullable;
 
@@ -42,6 +40,12 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
     }
 
     public void setAndSaveParticleSteps(int particleSteps) {
+        if (particleSteps < 1) {
+            particleSteps = 1;
+        }
+        if (particleSteps > 100) {
+            particleSteps = 100;
+        }
         this.particleSteps = particleSteps;
         saveData();
         callParticleStepsSubscribers(this);

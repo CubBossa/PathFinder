@@ -172,7 +172,7 @@ public class RoadMapCommand extends BaseCommand {
 	@Syntax("<Straßenkarte> <Spieler> <Wegpunkt>|* [ungruppiert]")
 	@CommandPermission("bcrew.command.roadmap.forcefind")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS + " " + PathPlugin.COMPLETE_FINDABLES)
-	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, String nodename,
+	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, @Single String nodename,
 							@Optional @Single @Values("ungruppiert") String ungrouped) {
 
 		boolean findSingle = ungrouped != null;

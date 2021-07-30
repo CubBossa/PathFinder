@@ -167,6 +167,12 @@ public abstract class Visualizer<T extends Visualizer> {
     }
 
     public void setAndSaveParticleDistance(@Nullable Double particleDistance) {
+        if (particleDistance < 0.01) {
+            particleDistance = 0.01;
+        }
+        if (particleDistance > 10) {
+            particleDistance = 10.;
+        }
         this.particleDistance = particleDistance;
         updateParticle.perform();
         saveData();

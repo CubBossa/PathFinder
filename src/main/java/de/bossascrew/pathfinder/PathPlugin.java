@@ -316,6 +316,7 @@ public class PathPlugin extends JavaPlugin {
 			  if (roadMap != null) {
 				//Ausgewählte Roadmap bevorzugen
 				ret = possibleResults.stream()
+						.filter(Objects::nonNull)
 						.filter(g -> g.getRoadMap().getDatabaseId() == roadMap.getDatabaseId())
 						.findFirst().orElse(null);
 			} else {
