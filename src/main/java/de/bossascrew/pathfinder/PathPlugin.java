@@ -194,7 +194,9 @@ public class PathPlugin extends JavaPlugin {
 					.map(FindableGroup::getName)
 					.collect(Collectors.toList());
 			ret.addAll(roadMap.getFindables().stream()
+					.filter(f -> f.getGroup() == null)
 					.filter(f -> pp.hasFound(f.getDatabaseId(), false))
+					.filter(f -> f instanceof Node)
 					.map(Findable::getName)
 					.collect(Collectors.toList()));
 			return ret;

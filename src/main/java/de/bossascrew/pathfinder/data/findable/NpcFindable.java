@@ -62,6 +62,6 @@ public abstract class NpcFindable extends Findable {
             } catch (StringIndexOutOfBoundsException ignored) {
             }
         }
-        return StringUtils.replaceSpaces(ret);
+        return StringUtils.replaceBlanks(ret);
     }
 }

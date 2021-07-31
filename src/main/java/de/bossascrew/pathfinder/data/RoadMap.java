@@ -24,6 +24,7 @@ import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
@@ -63,6 +64,8 @@ public class RoadMap {
 	private final Map<Findable, ArmorStand> editModeNodeArmorStands;
 	private final Map<Pair<Findable, Findable>, ArmorStand> editModeEdgeArmorStands;
 	private int editModeTask = -1;
+
+	private BukkitTask armorStandDistanceTask = null;
 
 	public RoadMap(int databaseId, String name, World world, boolean findableNodes, PathVisualizer pathVisualizer,
 				   EditModeVisualizer editModeVisualizer, double nodeFindDistance, double defaultBezierTangentLength) {
@@ -197,7 +200,7 @@ public class RoadMap {
 
 	public void deleteFindableGroup(FindableGroup findableGroup) {
 		findableGroup.delete();
-		this.groups.remove(findableGroup);
+		this.groups.remove(findableGroup.getDatabaseId());
 		DatabaseModel.getInstance().deleteFindableGroup(findableGroup);
 		for(Findable f : findableGroup.getFindables()) {
 			updateArmorStandDisplay(f, false);
@@ -411,19 +414,41 @@ public class RoadMap {
 			ArmorStand nodeArmorStand = getNodeArmorStand(findable);
 			editModeNodeArmorStands.put(findable, nodeArmorStand);
 		}
-		List<Integer> processedFindables = new ArrayList<>();
+		List<Pair<Findable, Findable>> processedFindables = new ArrayList<>();
 		for (Pair<Findable, Findable> edge : edges) {
-			if (processedFindables.contains(edge.second.getDatabaseId())) {
+			if (processedFindables.contains(edge)) {
 				continue;
 			}
 			ArmorStand edgeArmorStand = getEdgeArmorStand(edge);
 			editModeEdgeArmorStands.put(edge, edgeArmorStand);
-			processedFindables.add(edge.first.getDatabaseId());
+			processedFindables.add(edge);
 		}
 		updateEditModeParticles();
+
+		armorStandDistanceTask = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
+			for (UUID uuid : editingPlayers.keySet()) {
+				Player player = Bukkit.getPlayer(uuid);
+				if (player == null) {
+					continue;
+				}
+				List<ArmorStand> armorStands = new ArrayList<>(getEditModeNodeArmorStands().values());
+				armorStands.addAll(getEditModeEdgeArmorStands().values());
+				for (ArmorStand armorStand : armorStands) {
+					if (player.getLocation().distance(armorStand.getLocation()) > 30) {
+						entityHider.hideEntity(player, armorStand);
+					} else {
+						entityHider.showEntity(player, armorStand);
+					}
+				}
+			}
+		}, 10, 10);
 	}
 
 	public void stopEditModeVisualizer() {
+		if (armorStandDistanceTask != null) {
+			armorStandDistanceTask.cancel();
+		}
+
 		entityHider.destroy();
 		entityHider = null;
 

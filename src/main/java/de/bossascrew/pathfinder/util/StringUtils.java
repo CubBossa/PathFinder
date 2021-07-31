@@ -5,11 +5,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class StringUtils {
 
-	public String replaceSpaces(String string) {
+	public String replaceBlanks(String string) {
 		return string.replaceAll("_", " ");
 	}
 
-	public String replaceBlanks(String string) {
+	public String replaceSpaces(String string) {
 		return string.replaceAll(" ", "_");
 	}
 }

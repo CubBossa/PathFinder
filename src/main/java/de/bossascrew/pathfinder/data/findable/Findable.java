@@ -124,7 +124,7 @@ public abstract class Findable {
 
     public String getFriendlyName() {
         String name = getName();
-        return name == null ? "" : StringUtils.replaceSpaces(name);
+        return name == null ? "" : StringUtils.replaceBlanks(name);
     }
 
     public @Nullable String getNameCore() {

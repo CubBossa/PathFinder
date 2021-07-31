@@ -8,9 +8,11 @@ import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -32,13 +34,13 @@ public class WaypointCommand extends BaseCommand {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
         ComponentMenu menu = new ComponentMenu(Component.text("Wegpunkt ")
-                .append(Component.text(node.getName() + "(#" + node.getDatabaseId() + ")", PathPlugin.COLOR_DARK))
+                .append(Component.text(node.getName() + " (#" + node.getDatabaseId() + ")", PathPlugin.COLOR_DARK))
                 .hoverEvent(HoverEvent.showText(Component.text("Name ändern")))
                 .clickEvent(ClickEvent.suggestCommand("/waypoint set name " + node.getName() + " <Neuer Name>")));
 
         FindableGroup group = roadMap.getFindableGroup(node.getNodeGroupId());
         menu.addSub(getSub("Gruppe: ", group == null ? Component.text("-", NamedTextColor.GRAY) : Component.text(group.getName(), PathPlugin.COLOR_LIGHT), "Gruppe ändern",
-                "/waypoint set nodegroup " + node.getName() + " <NodeGroup>"));
+                "/waypoint set group " + node.getName() + " <NodeGroup>"));
 
         menu.addSub(getSub("Permission: ", node.getPermission(), "Perission ändern",
                 "/waypoint set permission " + node.getName() + " <Permission>"));
@@ -228,6 +230,8 @@ public class WaypointCommand extends BaseCommand {
             }
             findable.setGroup(group, true);
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Gruppe gesetzt: " + groupName);
+            PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(sender);
+            pathPlayer.setLastSetGroup(group);
         }
     }
 }

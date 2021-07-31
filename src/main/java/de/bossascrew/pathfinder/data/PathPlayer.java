@@ -32,6 +32,8 @@ public class PathPlayer {
     private final Map<Integer, FoundInfo> foundGroups;
 
     private final Map<Integer, ParticlePath> activePaths;
+    private final Map<Integer, FindableGroup> lastSetGroups;
+    private final Map<Integer, Findable> lastSetFindables;
 
     @Getter
     @Nullable
@@ -48,6 +50,8 @@ public class PathPlayer {
         this.globalPlayerId = globalPlayerId;
         this.uuid = uuid;
         this.activePaths = new HashMap<>();
+        this.lastSetGroups = new HashMap<>();
+        this.lastSetFindables = new HashMap<>();
 
         foundFindables = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, false);
         foundGroups = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, true);
@@ -120,7 +124,11 @@ public class PathPlayer {
      * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
      */
     public int getFoundAmount(RoadMap roadMap) {
-        Collection<Integer> ids = roadMap.getFindables().stream().map(Findable::getDatabaseId).collect(Collectors.toSet());
+        Collection<Integer> ids = roadMap.getFindables().stream()
+                .filter(f -> f.getGroup() == null)
+                .filter(this::hasFound)
+                .map(Findable::getDatabaseId)
+                .collect(Collectors.toSet());
         Collection<Integer> counts = foundGroups.values().stream()
                 .map(fi -> roadMap.getFindableGroup(fi.getFoundId()))
                 .filter(Objects::nonNull)
@@ -132,9 +140,7 @@ public class PathPlayer {
         for (int i : counts) {
             count += i;
         }
-        return (int) foundFindables.values().stream()
-                .filter(fi -> ids.contains(fi.getFoundId()))
-                .count() + count;
+        return ids.size() + count;
     }
 
     public void setPath(Node targetNode) {
@@ -250,5 +256,21 @@ public class PathPlayer {
         if (selectedRoadMapId != null && selectedRoadMapId == id) {
             deselectRoadMap();
         }
+    }
+
+    public void setLastSetGroup(FindableGroup findableGroup) {
+        this.lastSetGroups.put(findableGroup.getRoadMap().getDatabaseId(), findableGroup);
+    }
+
+    public @Nullable FindableGroup getLastSetGroup(RoadMap roadMap) {
+        return this.lastSetGroups.get(roadMap.getDatabaseId());
+    }
+
+    public void setLastSetFindable(Findable findable) {
+        this.lastSetFindables.put(findable.getRoadMapId(), findable);
+    }
+
+    public @Nullable Findable getLastSetFindable(RoadMap roadMap) {
+        return this.lastSetFindables.get(roadMap.getDatabaseId());
     }
 }

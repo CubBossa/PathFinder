@@ -7,11 +7,13 @@ import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.Shop;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.QuestFindable;
 import de.bossascrew.pathfinder.data.findable.TraderFindable;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
 import de.bossascrew.pathfinder.util.hooks.QuestsHook;
 import de.bossascrew.pathfinder.util.hooks.TradersHook;
@@ -35,14 +37,20 @@ public class FindItemCommand extends BaseCommand {
     public void onFindeItem(Player player, RoadMap roadMap, Material material) {
 
         ComponentMenu menu = new ComponentMenu(Component.text("Item ", NamedTextColor.GRAY)
-                .append(Component.translatable(material.getTranslationKey(), NamedTextColor.AQUA))
+                .append(Component.translatable(material.getTranslationKey(), PathPlugin.COLOR_LIGHT))
                 .append(Component.text(" gefunden:", NamedTextColor.GRAY)));
 
         if (TradersHook.getInstance() != null) {
+            PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
+            if(pp == null) {
+                return;
+            }
             Menu traderMenu = new Menu("Händler:");
             for (Findable f : roadMap.getFindables().stream().filter(findable -> findable instanceof TraderFindable).collect(Collectors.toList())) {
                 TraderFindable trader = (TraderFindable) f;
-
+                if(!pp.hasFound(trader)) {
+                    continue;
+                }
                 Shop.ShopItem buy = trader.getShop().getBuyItemMap().values().stream().filter(shopItem -> shopItem.getItemStack().getType() == material).findAny().orElse(null);
                 Shop.ShopItem sell = trader.getShop().getSellItemMap().values().stream().filter(shopItem -> shopItem.getItemStack().getType() == material).findAny().orElse(null);
                 if (buy == null && sell == null) {

@@ -61,6 +61,6 @@ public class FindableGroup {
     }
 
     public String getFriendlyName() {
-        return StringUtils.replaceSpaces(name);
+        return StringUtils.replaceBlanks(name);
     }
 }

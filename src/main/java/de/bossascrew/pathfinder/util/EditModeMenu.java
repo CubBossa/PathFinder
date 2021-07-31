@@ -8,9 +8,11 @@ import de.bossascrew.core.util.CommandUtils;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.NpcFindable;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.hooks.CitizensHook;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +28,24 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-@RequiredArgsConstructor
 public class EditModeMenu {
 
     private final Player player;
     private final RoadMap roadMap;
+    private final PathPlayer pathPlayer;
 
     @Getter
     @Setter
     private Findable firstFindableEdgeCreate = null;
+
+    public EditModeMenu(Player player, RoadMap roadMap) {
+        this.player = player;
+        this.roadMap = roadMap;
+        this.pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
+    }
 
     public HotbarMenu getHotbarMenu() {
         HotbarMenu menu = new HotbarMenu();
@@ -53,11 +63,27 @@ public class EditModeMenu {
                 p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
             }
         });
-        menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, context ->
-                openNodeNameMenu(context.getPlayer(), s -> {
-                    roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
-
-                }));
+        menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, context -> {
+            Findable last = pathPlayer.getLastSetFindable(roadMap);
+            String name;
+            if(last != null) {
+                final Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
+                Matcher matcher = lastIntPattern.matcher(last.getName());
+                if (matcher.find()) {
+                    String first = matcher.group(0).replace(matcher.group(1), "");
+                    name = first + (Integer.parseInt(matcher.group(1)) + 1);
+                } else {
+                    name = "node";
+                }
+            } else {
+                name = "node";
+            }
+            openNodeNameMenu(context.getPlayer(), name, s -> {
+                Findable f = roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
+                f.setGroup(pathPlayer.getLastSetGroup(roadMap), true);
+                pathPlayer.setLastSetFindable(f);
+            });
+        });
         menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
             Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID((Entity) context.getTarget());
             if(npcId != null) {
@@ -211,7 +237,7 @@ public class EditModeMenu {
     private ItemStack buildGroupItem(Findable clicked, FindableGroup group) {
         ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
         StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
-                + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
+                + "\n" + ChatColor.GRAY + "Größe:" + PathPlugin.CHAT_COLOR_LIGHT + group.getFindables().size() + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
 
         int counter = 0;
         for (Findable f : group.getFindables()) {
@@ -265,11 +291,15 @@ public class EditModeMenu {
     }
 
     private void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
+        openNodeNameMenu(player, "node", nodeFactory);
+    }
+
+    private void openNodeNameMenu(Player player, String nameInput, Consumer<String> nodeFactory) {
         AnvilMenu menu = new AnvilMenu(Component.text("Node erstellen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
         ItemStack info = result.clone();
-        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Wegpunkt erstellen",
+        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + nameInput,
                 CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen für diese Straßenkarte einzigartigen Namen oder 'null' an.", "\n" + ChatColor.GRAY, 30));
         ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Name vergeben.");
 
