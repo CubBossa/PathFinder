@@ -25,18 +25,29 @@ public class FindCommand extends BaseCommand {
     @HelpCommand
     public void onDefault(Player player) {
         Menu menu = new Menu("Finde Orte einer Stadtkarte mit folgenden Befehlen:");
-        menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Straßenkarte> <Ort>")));
-
-        if(PathPlugin.getInstance().isTraders() || PathPlugin.getInstance().isQuests() || (PathPlugin.getInstance().isBentobox()) && PathPlugin.getInstance().isChestShop()) {
-            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find item <Straßenkarte> <Item>")));
+        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)) {
+            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Straßenkarte> <Ort>")));
         }
-        if (PathPlugin.getInstance().isQuests()) {
-            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find quest <Straßenkarte> <Quest>")));
+        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)) {
+            if(PathPlugin.getInstance().isTraders() || PathPlugin.getInstance().isQuests() || (PathPlugin.getInstance().isBentobox()) && PathPlugin.getInstance().isChestShop()) {
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find item <Straßenkarte> <Item>")));
+            }
         }
-        if (PathPlugin.getInstance().isTraders()) {
-            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Straßenkarte> <Shop>")));
+        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_QUESTS)) {
+            if (PathPlugin.getInstance().isQuests()) {
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find quest <Straßenkarte> <Quest>")));
+            }
         }
-        PlayerUtils.sendComponents(player, menu.toComponents());
+        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_TRADERS)) {
+            if (PathPlugin.getInstance().isTraders()) {
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Straßenkarte> <Shop>")));
+            }
+        }
+        if(menu.hasSubs()) {
+            PlayerUtils.sendComponents(player, menu.toComponents());
+        } else {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Dir fehlen nötige Berechtigungen für diesen Befehl.");
+        }
     }
 
     @Subcommand("ort")
