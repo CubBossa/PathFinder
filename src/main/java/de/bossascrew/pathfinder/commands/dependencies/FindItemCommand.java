@@ -22,7 +22,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -91,9 +90,12 @@ public class FindItemCommand extends BaseCommand {
                 }
             }
         }
-        if (ChestShopHook.getInstance() != null) {
-            menu.addSub(new ComponentMenu(Component.text("Spielershops: ")
-					.append(Component.text("[Übersicht öffnen]", PathPlugin.COLOR_LIGHT))));
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_CHESTSHOPS)) {
+            if (ChestShopHook.getInstance() != null) {
+                menu.addSub(new ComponentMenu(Component.text("Spielershops: ")
+                        .append(Component.text("[Übersicht öffnen]", PathPlugin.COLOR_LIGHT))
+                        .clickEvent(ClickEvent.runCommand("/finde chestshop " + material))));
+            }
         }
 
         if (menu.hasSubs()) {

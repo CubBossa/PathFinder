@@ -48,6 +48,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_COMMAND_FIND_LOCATIONS = "bcrew.command.find.location";
 	public static final String PERM_COMMAND_FIND_QUESTS = "bcrew.command.find.quest";
 	public static final String PERM_COMMAND_FIND_TRADERS = "bcrew.command.find.trader";
+	public static final String PERM_COMMAND_FIND_CHESTSHOPS = "bcrew.command.find.chestshops";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
@@ -138,6 +139,9 @@ public class PathPlugin extends JavaPlugin {
 		if (quests) {
 			cm.registerCommand(new WaypointQuesterCommand());
 			cm.registerCommand(new FindQuesterCommand());
+		}
+		if (chestShop && bentobox) {
+			cm.registerCommand(new FindChestShopsCommand());
 		}
 		if (traders || quests || (chestShop && bentobox)) {
 			cm.registerCommand(new FindItemCommand());
