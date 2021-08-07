@@ -23,6 +23,11 @@ public class FindTraderCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_TRADERS)
     public void onFindeShop(Player player, RoadMap roadMap, String shopName) {
 
+        if(!roadMap.getWorld().equals(player.getWorld())) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Diese Straßenkarte liegt nicht in deiner aktuellen Welt.");
+            return;
+        }
+
         Findable target = roadMap.getFindables().stream()
                 .filter(findable -> findable instanceof TraderFindable)
                 .map(f -> (TraderFindable) f)

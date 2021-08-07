@@ -139,9 +139,6 @@ public class PathPlugin extends JavaPlugin {
 			cm.registerCommand(new WaypointQuesterCommand());
 			cm.registerCommand(new FindQuesterCommand());
 		}
-		if (chestShop && bentobox) {
-			cm.registerCommand(new FindChestShopsCommand());
-		}
 		if (traders || quests || (chestShop && bentobox)) {
 			cm.registerCommand(new FindItemCommand());
 		}

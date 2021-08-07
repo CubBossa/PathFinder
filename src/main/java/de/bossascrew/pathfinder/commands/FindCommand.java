@@ -16,6 +16,8 @@ import de.bossascrew.pathfinder.util.AStarUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import java.awt.*;
+
 @CommandAlias("finde|find")
 public class FindCommand extends BaseCommand {
 
@@ -42,6 +44,10 @@ public class FindCommand extends BaseCommand {
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)
     @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_LOCATIONS)
     public void onFindeOrt(Player player, RoadMap roadMap, String searched) {
+        if(!roadMap.getWorld().equals(player.getWorld())) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Diese Straßenkarte liegt nicht in deiner aktuellen Welt.");
+            return;
+        }
         PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
         if(pp == null) {
             return;
@@ -58,7 +64,7 @@ public class FindCommand extends BaseCommand {
                     .filter(g -> pp.hasFound(g.getDatabaseId(), true))
                     .findAny().orElse(null);
             if(group == null) {
-                PlayerUtils.sendMessage(player, ChatColor.RED + "Dieses Ziel gibt es nicht.");
+                PlayerUtils.sendMessage(player, ChatColor.RED + "Es gibt kein Ziel mit diesem Namen.");
                 return;
             }
             f = group.getFindables().stream().findAny().orElse(null);
