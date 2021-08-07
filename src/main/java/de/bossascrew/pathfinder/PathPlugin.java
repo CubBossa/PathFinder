@@ -175,16 +175,29 @@ public class PathPlugin extends JavaPlugin {
 				roadMap.getGroups().values().stream()
 						.map(FindableGroup::getName)
 						.collect(Collectors.toSet())));
-		bm.registerAsyncCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> context.getContextValue(RoadMap.class).getGroups().values().stream()
-				.map(FindableGroup::getName).collect(Collectors.toList()));
-		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> context.getContextValue(RoadMap.class).getGroups().values().stream()
-				.filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList()));
+		bm.registerAsyncCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> {
+			RoadMap rm = context.getContextValue(RoadMap.class);
+			if (rm == null) {
+				return null;
+			}
+			return rm.getGroups().values().stream().map(FindableGroup::getName).collect(Collectors.toList());
+		});
+		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> {
+			RoadMap rm = context.getContextValue(RoadMap.class);
+			if(rm == null) {
+				return null;
+			}
+			return rm.getGroups().values().stream().filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList());
+		});
 		bm.registerAsyncCompletion(COMPLETE_FINDABLE_LOCATIONS, context -> {
 			PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
 			if (pp == null) {
 				return null;
 			}
 			RoadMap roadMap = context.getContextValue(RoadMap.class);
+			if (roadMap == null) {
+				return null;
+			}
 			Collection<String> ret = roadMap.getGroups().values().stream()
 					.filter(FindableGroup::isFindable)
 					.filter(g -> pp.hasFound(g.getDatabaseId(), true))
@@ -222,6 +235,9 @@ public class PathPlugin extends JavaPlugin {
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {
 			RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
+			if (roadMap == null) {
+				return null;
+			}
 			PathPlayer player = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
 			return roadMap.getFindables().stream()
 					.filter(findable -> findable instanceof TraderFindable)
@@ -231,6 +247,9 @@ public class PathPlugin extends JavaPlugin {
 		});
 		bm.registerAsyncCompletion(COMPLETE_QUESTERS, context -> {
 			RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
+			if (roadMap == null) {
+				return null;
+			}
 			return roadMap.getFindables().stream()
 					.filter(findable -> findable instanceof QuestFindable)
 					.map(Findable::getName)
