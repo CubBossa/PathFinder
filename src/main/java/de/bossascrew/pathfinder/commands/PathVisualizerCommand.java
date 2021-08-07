@@ -46,7 +46,7 @@ public class PathVisualizerCommand extends BaseCommand {
 
     @Subcommand("create")
     @Syntax("<Name> <Partikel>")
-    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_PARTICLES + " " + PathPlugin.COMPLETE_PATH_VISUALIZER)
+    @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE + " " + PathPlugin.COMPLETE_PATH_VISUALIZER)
     @CommandPermission("bcrew.command.visualizer.path.create")
     public void onCreate(CommandSender sender, @Single String name, @Optional Particle particle, @Optional String parent) {
 
@@ -153,7 +153,7 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("set particle")
     @CommandPermission("bcrew.command.visualizer.path.set.particle")
     @Syntax("<Pfad-Visualizer> <Partikel>")
-    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + BukkitMain.COMPLETE_PARTICLES)
+    @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE)
     public void onSetParticle(CommandSender sender, PathVisualizer edit, String particleName) {
         Particle particle = null;
         if (!particleName.equalsIgnoreCase("null")) {

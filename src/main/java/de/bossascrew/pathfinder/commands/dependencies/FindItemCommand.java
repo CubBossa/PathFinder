@@ -33,7 +33,7 @@ public class FindItemCommand extends BaseCommand {
     @Subcommand("item")
     @Syntax("<Straßenkarte> <Item>")
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_MATERIALS)
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
     public void onFindeItem(Player player, RoadMap roadMap, Material material) {
 
         ComponentMenu menu = new ComponentMenu(Component.text("Item ", NamedTextColor.GRAY)
