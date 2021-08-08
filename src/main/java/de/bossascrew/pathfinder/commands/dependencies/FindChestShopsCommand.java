@@ -87,7 +87,7 @@ public class FindChestShopsCommand extends BaseCommand {
 			ItemStack icon = new ItemStack(Material.CHEST);
 			ItemMeta meta = icon.getItemMeta();
 			meta.displayName(Component.text(name, BossasCrewColors.SETTINGS_LIGHT_TEXT_COLOR).decoration(TextDecoration.ITALIC, false));
-			meta.lore(Lists.newArrayList(Component.text(sell ? "Verkauf" : "Ankauf", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
+			meta.lore(Lists.newArrayList(Component.text(sell ? "Spieler können verkaufen" : "Spieler können einkaufen", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
 			meta.setCustomModelData(sell ? sellData : buyData);
 			icon.setItemMeta(meta);
 
@@ -97,7 +97,8 @@ public class FindChestShopsCommand extends BaseCommand {
 					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Die Welt skyblock_inseln existriert nicht.");
 					return;
 				}
-				player.performCommand("/is visit " + PlayerHandler.getInstance().getGlobalPlayer(entry.getValue().getOwner()).getUsername());
+				player.closeInventory();
+				player.performCommand("is visit " + PlayerHandler.getInstance().getGlobalPlayer(entry.getValue().getOwner()).getUsername());
 			});
 		}
 		menu.openInventory(player);

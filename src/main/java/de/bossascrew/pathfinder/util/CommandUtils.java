@@ -12,7 +12,10 @@ import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+
+import javax.annotation.Nullable;
 
 @SuppressWarnings("ALL")
 @UtilityClass
@@ -24,6 +27,10 @@ public class CommandUtils {
 
     public static final TextColor NULL_COLOR = TextColor.color(ColorUtils.fromHex("99ff99").getRGB());
     public static final Component NULL_COMPONENT = Component.text("null", NULL_COLOR);
+
+    public @Nullable RoadMap getAnyRoadMap(World world) {
+        return RoadMapHandler.getInstance().getRoadMaps(world).stream().findFirst().orElse(null);
+    }
 
     public RoadMap getSelectedRoadMap(CommandSender sender) {
         return getSelectedRoadMap(sender, true);

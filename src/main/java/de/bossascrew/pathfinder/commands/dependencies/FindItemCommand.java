@@ -14,6 +14,7 @@ import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.QuestFindable;
 import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
 import de.bossascrew.pathfinder.util.hooks.QuestsHook;
 import de.bossascrew.pathfinder.util.hooks.TradersHook;
@@ -22,6 +23,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -31,10 +33,15 @@ import java.util.stream.Collectors;
 public class FindItemCommand extends BaseCommand {
 
     @Subcommand("item")
-    @Syntax("<Straßenkarte> <Item>")
+    @Syntax("<Item>")
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
-    public void onFindeItem(Player player, RoadMap roadMap, Material material) {
+    @CommandCompletion(BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
+    public void onFindeItem(Player player, Material material) {
+        RoadMap roadMap = CommandUtils.getAnyRoadMap(player.getWorld());
+        if(roadMap == null) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Keine Straßenkarte gefunden.");
+            return;
+        }
 
         ComponentMenu menu = new ComponentMenu(Component.text("Item ", NamedTextColor.GRAY)
                 .append(Component.translatable(material.getTranslationKey(), PathPlugin.COLOR_LIGHT))
@@ -61,14 +68,14 @@ public class FindItemCommand extends BaseCommand {
                     Key materialKey = Key.key(material.getKey().asString());
                     if (sell != null) {
                         c = c.append(Component
-                                .text(" | Verkauft für ", NamedTextColor.GRAY)
+                                .text(" | Kauft für ", NamedTextColor.GRAY)
                                 .append(Component.text(sell.getPrice() + "", NamedTextColor.YELLOW))
                                 .append(Component.text("D", NamedTextColor.GOLD))
                                 .hoverEvent(HoverEvent.showItem(materialKey, 1)));
                     }
                     if (buy != null) {
                         c = c.append(Component
-                                .text(" | Kauft für ", NamedTextColor.GRAY)
+                                .text(" | Verkauft für ", NamedTextColor.GRAY)
                                 .append(Component.text(buy.getPrice() + "", NamedTextColor.YELLOW))
                                 .append(Component.text("D", NamedTextColor.GOLD))
                                 .hoverEvent(HoverEvent.showItem(materialKey, 1)));

@@ -13,7 +13,9 @@ import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.awt.*;
@@ -26,21 +28,21 @@ public class FindCommand extends BaseCommand {
     public void onDefault(Player player) {
         Menu menu = new Menu("Finde Orte einer Stadtkarte mit folgenden Befehlen:");
         if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)) {
-            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Straßenkarte> <Ort>")));
+            menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Ort>")));
         }
         if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)) {
             if(PathPlugin.getInstance().isTraders() || PathPlugin.getInstance().isQuests() || (PathPlugin.getInstance().isBentobox()) && PathPlugin.getInstance().isChestShop()) {
-                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find item <Straßenkarte> <Item>")));
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find item <Item>")));
             }
         }
         if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_QUESTS)) {
             if (PathPlugin.getInstance().isQuests()) {
-                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find quest <Straßenkarte> <Quest>")));
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find quest <Quest>")));
             }
         }
         if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_TRADERS)) {
             if (PathPlugin.getInstance().isTraders()) {
-                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Straßenkarte> <Shop>")));
+                menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Shop>")));
             }
         }
         if(menu.hasSubs()) {
@@ -53,8 +55,13 @@ public class FindCommand extends BaseCommand {
     @Subcommand("ort")
     @Syntax("<Ort>")
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_FINDABLE_LOCATIONS)
-    public void onFindeOrt(Player player, RoadMap roadMap, String searched) {
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_LOCATIONS)
+    public void onFindeOrt(Player player, String searched) {
+        RoadMap roadMap = CommandUtils.getAnyRoadMap(player.getWorld());
+        if(roadMap == null) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Keine Straßenkarte gefunden.");
+            return;
+        }
         if(!roadMap.getWorld().equals(player.getWorld())) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Diese Straßenkarte liegt nicht in deiner aktuellen Welt.");
             return;

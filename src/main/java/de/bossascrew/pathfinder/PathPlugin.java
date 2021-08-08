@@ -19,6 +19,7 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.hooks.BSkyblockHook;
 import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
 import de.bossascrew.pathfinder.util.hooks.QuestsHook;
@@ -182,13 +183,19 @@ public class PathPlugin extends JavaPlugin {
 		bm.registerAsyncCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = context.getContextValue(RoadMap.class);
 			if (rm == null) {
+				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
+			}
+			if (rm == null) {
 				return null;
 			}
 			return rm.getGroups().values().stream().map(FindableGroup::getName).collect(Collectors.toList());
 		});
 		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = context.getContextValue(RoadMap.class);
-			if(rm == null) {
+			if (rm == null) {
+				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
+			}
+			if (rm == null) {
 				return null;
 			}
 			return rm.getGroups().values().stream().filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList());
@@ -198,16 +205,19 @@ public class PathPlugin extends JavaPlugin {
 			if (pp == null) {
 				return null;
 			}
-			RoadMap roadMap = context.getContextValue(RoadMap.class);
-			if (roadMap == null) {
+			RoadMap rm = context.getContextValue(RoadMap.class);
+			if (rm == null) {
+				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
+			}
+			if (rm == null) {
 				return null;
 			}
-			Collection<String> ret = roadMap.getGroups().values().stream()
+			Collection<String> ret = rm.getGroups().values().stream()
 					.filter(FindableGroup::isFindable)
 					.filter(g -> pp.hasFound(g.getDatabaseId(), true))
 					.map(FindableGroup::getName)
 					.collect(Collectors.toList());
-			ret.addAll(roadMap.getFindables().stream()
+			ret.addAll(rm.getFindables().stream()
 					.filter(f -> f.getGroup() == null)
 					.filter(f -> pp.hasFound(f.getDatabaseId(), false))
 					.filter(f -> f instanceof Node)
@@ -238,23 +248,29 @@ public class PathPlugin extends JavaPlugin {
 				.map(Findable::getName)
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {
-			RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
-			if (roadMap == null) {
+			RoadMap rm = context.getContextValue(RoadMap.class, 1);
+			if (rm == null) {
+				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
+			}
+			if (rm == null) {
 				return null;
 			}
 			PathPlayer player = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
-			return roadMap.getFindables().stream()
+			return rm.getFindables().stream()
 					.filter(findable -> findable instanceof TraderFindable)
 					.filter(player::hasFound)
 					.map(Findable::getName)
 					.collect(Collectors.toSet());
 		});
 		bm.registerAsyncCompletion(COMPLETE_QUESTERS, context -> {
-			RoadMap roadMap = context.getContextValue(RoadMap.class, 1);
-			if (roadMap == null) {
+			RoadMap rm = context.getContextValue(RoadMap.class, 1);
+			if (rm == null) {
+				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
+			}
+			if (rm == null) {
 				return null;
 			}
-			return roadMap.getFindables().stream()
+			return rm.getFindables().stream()
 					.filter(findable -> findable instanceof QuestFindable)
 					.map(Findable::getName)
 					.collect(Collectors.toSet());

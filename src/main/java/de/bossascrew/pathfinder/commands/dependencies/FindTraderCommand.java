@@ -9,6 +9,7 @@ import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.util.AStarUtils;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -18,10 +19,15 @@ import java.util.stream.Collectors;
 public class FindTraderCommand extends BaseCommand {
 
     @Subcommand("shop")
-    @Syntax("<Straßenkarte> <Shop>")
+    @Syntax("<Shop>")
     @CommandPermission(PathPlugin.PERM_COMMAND_FIND_TRADERS)
-    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + PathPlugin.COMPLETE_TRADERS)
-    public void onFindeShop(Player player, RoadMap roadMap, String shopName) {
+    @CommandCompletion(PathPlugin.COMPLETE_TRADERS)
+    public void onFindeShop(Player player, String shopName) {
+        RoadMap roadMap = CommandUtils.getAnyRoadMap(player.getWorld());
+        if(roadMap == null) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Keine Straßenkarte gefunden.");
+            return;
+        }
 
         if(!roadMap.getWorld().equals(player.getWorld())) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Diese Straßenkarte liegt nicht in deiner aktuellen Welt.");
