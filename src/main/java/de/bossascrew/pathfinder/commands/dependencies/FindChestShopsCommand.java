@@ -8,6 +8,7 @@ import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.inventory.ModelDataHandler;
 import de.bossascrew.core.bukkit.inventory.menu.PagedChestMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.cubelegends.chestshoplogger.ChestShopLogger;
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -75,14 +77,28 @@ public class FindChestShopsCommand extends BaseCommand {
 			PlayerUtils.sendMessage(player, ChatColor.RED + "Kein Shop auf einer öffentlichen Insel gefunden, die dieses Item anbietet.");
 			return;
 		}
+		AtomicBoolean sellOnly = new AtomicBoolean(false);
+		openMenu(player, filteredIslands, sellOnly);
+	}
 
+	private void openMenu(Player player, Map<ShopModel, Island> filteredIslands, AtomicBoolean sellOnly) {
 		int buyData = ModelDataHandler.getInstance().getModelData("chestshop-buy");
 		int sellData = ModelDataHandler.getInstance().getModelData("chestshop-sell");
 
 		PagedChestMenu menu = new PagedChestMenu(Component.text("Chestshops gefunden:"), 6);
+
+		menu.setNavigationEntry(8, buildTypeIcon(sellOnly.get()), context -> {
+			sellOnly.set(!sellOnly.get());
+			openMenu(player, filteredIslands, sellOnly);
+		});
+
 		for (Map.Entry<ShopModel, Island> entry : filteredIslands.entrySet()) {
 			ShopModel shop = entry.getKey();
 			boolean sell = shop.getBuyPrice() == -1;
+			if(sell != sellOnly.get()) {
+				continue;
+			}
+
 			String name = PlayerHandler.getInstance().getGlobalPlayer(shop.getOwnerUUID()).getUsername();
 			ItemStack icon = new ItemStack(Material.CHEST);
 			ItemMeta meta = icon.getItemMeta();
@@ -102,5 +118,12 @@ public class FindChestShopsCommand extends BaseCommand {
 			});
 		}
 		menu.openInventory(player);
+	}
+
+	private ItemStack buildTypeIcon(boolean sell) {
+		return ItemStackUtils.createItemStack(
+				!sell ? Material.HOPPER : Material.DROPPER,
+				!sell ? ChatColor.GREEN + "Einkaufen" : ChatColor.GOLD + "Verkaufen",
+				ChatColor.GRAY + "Klicke, um zwischen Shoptypen zu wechseln");
 	}
 }
