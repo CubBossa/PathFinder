@@ -137,7 +137,7 @@ public class PathVisualizerCommand extends BaseCommand {
         }
         edit.setParent(parent);
 		DatabaseModel.getInstance().updatePathVisualizer(edit);
-		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Parent aktuallisiert: " + parent.getName());
+		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Parent aktualisiert: " + parent.getName());
     }
 
     @Subcommand("set name")
@@ -147,7 +147,7 @@ public class PathVisualizerCommand extends BaseCommand {
     public void onSetName(CommandSender sender, PathVisualizer edit, String newName) {
         newName = StringUtils.replaceSpaces(newName);
         edit.setAndSaveName(newName);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Name aktuallisiert: " + newName);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Name aktualisiert: " + newName);
     }
 
     @Subcommand("set particle")
@@ -165,7 +165,7 @@ public class PathVisualizerCommand extends BaseCommand {
             }
         }
         edit.setAndSaveParticle(particle);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikeleffekt aktuallisiert: " + (particle != null ? particle.name() : "null"));
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikeleffekt aktualisiert: " + (particle != null ? particle.name() : "null"));
     }
 
     @Subcommand("set particle-limit")
@@ -183,7 +183,7 @@ public class PathVisualizerCommand extends BaseCommand {
             }
         }
         edit.setAndSaveParticleLimit(limit);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikellimit aktuallisiert: " + limitString);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikellimit aktualisiert: " + limitString);
     }
 
     @Subcommand("set particle-distance")
@@ -201,7 +201,7 @@ public class PathVisualizerCommand extends BaseCommand {
             }
         }
         edit.setAndSaveParticleDistance(distance);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikeldistanz aktuallisiert: " + distanceString);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikeldistanz aktualisiert: " + distanceString);
     }
 
     @Subcommand("set particle-steps")
@@ -219,7 +219,7 @@ public class PathVisualizerCommand extends BaseCommand {
             }
         }
         edit.setAndSaveParticleSteps(steps);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikelschritte aktuallisiert: " + stepString);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikelschritte aktualisiert: " + stepString);
     }
 
     @Subcommand("set scheduler-period")
@@ -237,6 +237,6 @@ public class PathVisualizerCommand extends BaseCommand {
             }
         }
         edit.setAndSaveSchedulerPeriod(schedulerPeriod);
-        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Scheduler-Wiederholdauer aktuallisiert: " + schedulerPeriodString);
+        PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Scheduler-Wiederholdauer aktualisiert: " + schedulerPeriodString);
     }
 }

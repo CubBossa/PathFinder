@@ -43,7 +43,7 @@ public class FindChestShopsCommand extends BaseCommand {
 	@Syntax("<Material>")
 	@CommandPermission(PathPlugin.PERM_COMMAND_FIND_CHESTSHOPS)
 	@CommandCompletion(BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
-	public void onChestShop(Player player, Material material) {
+	public void onChestShop(Player player, @Optional Material material) {
 
 		World world = Bukkit.getWorld("skyblock_inseln");
 		if (world == null) {
@@ -52,7 +52,7 @@ public class FindChestShopsCommand extends BaseCommand {
 
 		List<ShopModel> shops = ShopModel.getShops(ChestShopLogger.getInstance());
 		shops = shops.stream()
-				.filter(s -> s.getItemName().replaceAll(" ", "_").equalsIgnoreCase(material.toString()))
+				.filter(s -> material == null || s.getItemName().replaceAll(" ", "_").equalsIgnoreCase(material.toString()))
 				.collect(Collectors.toList());
 
 		//Alle Inseln filtern, zu denen man sich teleportieren kann.
@@ -85,7 +85,7 @@ public class FindChestShopsCommand extends BaseCommand {
 		int buyData = ModelDataHandler.getInstance().getModelData("chestshop-buy");
 		int sellData = ModelDataHandler.getInstance().getModelData("chestshop-sell");
 
-		PagedChestMenu menu = new PagedChestMenu(Component.text("Chestshops gefunden:"), 6);
+		PagedChestMenu menu = new PagedChestMenu(Component.text("Chestshops gefunden:"), 4);
 
 		menu.setNavigationEntry(8, buildTypeIcon(sellOnly.get()), context -> {
 			sellOnly.set(!sellOnly.get());
@@ -95,7 +95,7 @@ public class FindChestShopsCommand extends BaseCommand {
 		for (Map.Entry<ShopModel, Island> entry : filteredIslands.entrySet()) {
 			ShopModel shop = entry.getKey();
 			boolean sell = shop.getBuyPrice() == -1;
-			if(sell != sellOnly.get()) {
+			if (sell != sellOnly.get()) {
 				continue;
 			}
 
@@ -103,7 +103,12 @@ public class FindChestShopsCommand extends BaseCommand {
 			ItemStack icon = new ItemStack(Material.CHEST);
 			ItemMeta meta = icon.getItemMeta();
 			meta.displayName(Component.text(name, BossasCrewColors.SETTINGS_LIGHT_TEXT_COLOR).decoration(TextDecoration.ITALIC, false));
-			meta.lore(Lists.newArrayList(Component.text(sell ? "Spieler können verkaufen" : "Spieler können einkaufen", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
+			meta.lore(Lists.newArrayList(
+					Component.text(sell ? "Spieler können verkaufen" : "Spieler können einkaufen", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
+					Component.text("Preis: ", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
+							.append(Component.text(sell ? shop.getSellPrice() : shop.getBuyPrice(), NamedTextColor.YELLOW))
+							.append(Component.text(" Dublonen", NamedTextColor.GOLD))));
+
 			meta.setCustomModelData(sell ? sellData : buyData);
 			icon.setItemMeta(meta);
 

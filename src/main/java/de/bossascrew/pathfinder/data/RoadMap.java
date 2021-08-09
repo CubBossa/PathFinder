@@ -515,7 +515,7 @@ public class RoadMap {
 
 	/**
 	 * Erstellt eine Liste aus Partikel Packets, die mithilfe eines Schedulers immerwieder an die Spieler im Editmode geschickt werden.
-	 * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktuallisiert werden.
+	 * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktualisiert werden.
 	 * Wird asynchron ausgeführt
 	 */
 	public void updateEditModeParticles() {

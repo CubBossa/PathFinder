@@ -181,7 +181,10 @@ public class PathPlugin extends JavaPlugin {
 						.map(FindableGroup::getName)
 						.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> {
-			RoadMap rm = context.getContextValue(RoadMap.class);
+			RoadMap rm = null;
+			try {
+				rm = context.getContextValue(RoadMap.class);
+			} catch (IllegalStateException ignored) {}
 			if (rm == null) {
 				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
 			}
@@ -191,7 +194,10 @@ public class PathPlugin extends JavaPlugin {
 			return rm.getGroups().values().stream().map(FindableGroup::getName).collect(Collectors.toList());
 		});
 		bm.registerAsyncCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> {
-			RoadMap rm = context.getContextValue(RoadMap.class);
+			RoadMap rm = null;
+			try {
+				rm = context.getContextValue(RoadMap.class);
+			} catch (IllegalStateException ignored) {}
 			if (rm == null) {
 				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
 			}
@@ -205,7 +211,10 @@ public class PathPlugin extends JavaPlugin {
 			if (pp == null) {
 				return null;
 			}
-			RoadMap rm = context.getContextValue(RoadMap.class);
+			RoadMap rm = null;
+			try {
+				rm = context.getContextValue(RoadMap.class);
+			} catch (IllegalStateException ignored) {}
 			if (rm == null) {
 				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
 			}
@@ -248,7 +257,10 @@ public class PathPlugin extends JavaPlugin {
 				.map(Findable::getName)
 				.collect(Collectors.toSet())));
 		bm.registerAsyncCompletion(COMPLETE_TRADERS, context -> {
-			RoadMap rm = context.getContextValue(RoadMap.class, 1);
+			RoadMap rm = null;
+			try {
+				rm = context.getContextValue(RoadMap.class);
+			} catch (IllegalStateException ignored) {}
 			if (rm == null) {
 				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
 			}
@@ -263,7 +275,10 @@ public class PathPlugin extends JavaPlugin {
 					.collect(Collectors.toSet());
 		});
 		bm.registerAsyncCompletion(COMPLETE_QUESTERS, context -> {
-			RoadMap rm = context.getContextValue(RoadMap.class, 1);
+			RoadMap rm = null;
+			try {
+				rm = context.getContextValue(RoadMap.class);
+			} catch (IllegalStateException ignored) {}
 			if (rm == null) {
 				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
 			}
