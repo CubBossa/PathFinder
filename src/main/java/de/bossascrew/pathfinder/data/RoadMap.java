@@ -17,10 +17,7 @@ import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.EntityHider;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -362,6 +359,7 @@ public class RoadMap {
 			HotbarMenu menu = new EditModeMenu(player, this).getHotbarMenu();
 			editingPlayers.put(uuid, menu);
 			menu.openInventory(player);
+			player.setGameMode(GameMode.CREATIVE);
 			toggleArmorStandsVisible(player, true);
 		} else {
 			if (player != null) {

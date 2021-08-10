@@ -104,6 +104,7 @@ public class FindChestShopsCommand extends BaseCommand {
 			ItemMeta meta = icon.getItemMeta();
 			meta.displayName(Component.text(name, BossasCrewColors.SETTINGS_LIGHT_TEXT_COLOR).decoration(TextDecoration.ITALIC, false));
 			meta.lore(Lists.newArrayList(
+					Component.text("Item: " + shop.getItemName(), NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false),
 					Component.text(sell ? "Spieler können verkaufen" : "Spieler können einkaufen", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
 					Component.text("Preis: ", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
 							.append(Component.text(sell ? shop.getSellPrice() : shop.getBuyPrice(), NamedTextColor.YELLOW))

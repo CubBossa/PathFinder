@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.core.bukkit.inventory.menu.*;
-import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.HeadDBUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.CommandUtils;
@@ -15,7 +14,6 @@ import de.bossascrew.pathfinder.data.findable.NpcFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.hooks.CitizensHook;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
@@ -34,6 +32,7 @@ import java.util.regex.Pattern;
 public class EditModeMenu {
 
     private final Player player;
+    private final GameMode playerGameMode;
     private final RoadMap roadMap;
     private final PathPlayer pathPlayer;
 
@@ -43,12 +42,17 @@ public class EditModeMenu {
 
     public EditModeMenu(Player player, RoadMap roadMap) {
         this.player = player;
+        this.playerGameMode = player.getGameMode();
         this.roadMap = roadMap;
         this.pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
     }
 
     public HotbarMenu getHotbarMenu() {
         HotbarMenu menu = new HotbarMenu();
+
+        menu.setCloseHandler(closeContext -> {
+            player.setGameMode(playerGameMode);
+        });
 
         menu.setDefaultClickHandler(HotbarAction.DROP_ITEM, context -> {
             Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> roadMap.setEditMode(player.getUniqueId(), false), 1L);
@@ -100,16 +104,22 @@ public class EditModeMenu {
             }
             if (this.firstFindableEdgeCreate == null) {
                 firstFindableEdgeCreate = clicked;
-                PlayerUtils.sendMessage(p, PathPlugin.PREFIX + "Klicke einen weiteren Wegpunkt zum Verbinden.");
+                context.setItemStack(EditmodeUtils.EDGE_TOOL_GLOW);
             } else {
                 if (firstFindableEdgeCreate.equals(clicked)) {
                     p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                     return;
                 }
+                if (firstFindableEdgeCreate.getEdges().contains(clicked.getDatabaseId())
+                        || clicked.getEdges().contains(firstFindableEdgeCreate.getDatabaseId())) {
+                    p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                    return;
+                }
                 roadMap.connectNodes(firstFindableEdgeCreate, clicked);
                 firstFindableEdgeCreate = null;
-                p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
+                context.setItemStack(EditmodeUtils.EDGE_TOOL);
             }
+            p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
         });
         menu.setClickHandler(1, HotbarAction.LEFT_CLICK_ENTITY, context -> {
             Findable f = getClickedFindable((Entity) context.getTarget());
@@ -128,9 +138,18 @@ public class EditModeMenu {
             roadMap.disconnectNodes(edge);
             player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
         });
+        menu.setClickHandler(1, HotbarAction.LEFT_CLICK_AIR, context -> {
+            if (firstFindableEdgeCreate == null) {
+                return;
+            }
+            firstFindableEdgeCreate = null;
+            player.sendMessage(PathPlugin.PREFIX + "Verbinden abgebrochen");
+            player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
+            context.setItemStack(EditmodeUtils.EDGE_TOOL);
+        });
 
-        menu.setItem(2, EditmodeUtils.TP_TOOL);
-        menu.setClickHandler(2, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, context -> {
+        menu.setItem(7, EditmodeUtils.TP_TOOL);
+        menu.setClickHandler(7, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, context -> {
             double dist = -1;
             Findable nearest = null;
             for (Findable findable : roadMap.getFindables()) {
@@ -149,28 +168,49 @@ public class EditModeMenu {
             p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
         });
 
-        menu.setItemAndClickHandler(3, EditmodeUtils.TANGENT_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
+        menu.setItemAndClickHandler(5, EditmodeUtils.TANGENT_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
             Findable clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked != null) {
                 openTangentStrengthMenu(context.getPlayer(), clicked);
             }
         });
 
-        menu.setItemAndClickHandler(4, EditmodeUtils.PERMISSION_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
+        menu.setItemAndClickHandler(6, EditmodeUtils.PERMISSION_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
             Findable clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked != null) {
                 openNodePermissionMenu(context.getPlayer(), clicked);
             }
         });
 
-        menu.setItem(6, EditmodeUtils.GROUP_TOOl);
-        menu.setClickHandler(6, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
+        menu.setItem(2, EditmodeUtils.GROUP_TOOL);
+        menu.setClickHandler(2, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
             Findable clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked == null) {
                 return;
             }
             openGroupMenu(context.getPlayer(), clicked);
         });
+        menu.setClickHandler(2, HotbarAction.LEFT_CLICK_ENTITY, context -> {
+            Findable clicked = getClickedFindable((Entity) context.getTarget());
+            if (clicked == null) {
+                return;
+            }
+            clicked.setGroup(null, true, true);
+            player.playSound(player.getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+        });
+
+        menu.setItemAndClickHandler(3, EditmodeUtils.LAST_GROUP_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
+            Findable clicked = getClickedFindable((Entity) context.getTarget());
+            if (clicked == null) {
+                return;
+            }
+            FindableGroup last = pathPlayer.getLastSetGroup(clicked.getRoadMap());
+            if (last == null) {
+                return;
+            }
+            clicked.setGroup(last.getDatabaseId(), true, true);
+        });
+
         return menu;
     }
 
@@ -181,6 +221,7 @@ public class EditModeMenu {
 
             groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
                 clicked.setGroup(group, true);
+                pathPlayer.setLastSetGroup(group);
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                 c.getPlayer().closeInventory();
             });

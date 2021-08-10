@@ -126,8 +126,32 @@ public class RoadMapCommand extends BaseCommand {
 
 	@Subcommand("editmode")
 	@CommandPermission("bcrew.command.roadmap.editmode")
-	public void onEdit(Player player) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+	@Syntax("[<Straßenkarte>]")
+	public void onEdit(Player player, @Optional RoadMap roadMap) {
+		if (roadMap == null) {
+			PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
+			roadMap = RoadMapHandler.getInstance().getRoadMap(pp.getSelectedRoadMapId());
+		}
+		if (roadMap == null) {
+			if (RoadMapHandler.getInstance().getRoadMaps().size() == 1) {
+				roadMap = RoadMapHandler.getInstance().getRoadMaps().stream().findAny().orElse(null);
+				if (roadMap == null) {
+					if (RoadMapHandler.getInstance().getRoadMaps(player.getWorld()).size() == 1) {
+						roadMap = RoadMapHandler.getInstance().getRoadMaps(player.getWorld()).stream().findAny().orElse(null);
+					}
+				}
+			}
+			if (roadMap != null) {
+				PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
+				pp.setSelectedRoadMap(roadMap.getDatabaseId());
+				PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte ausgewählt.");
+			}
+		}
+		if (roadMap == null) {
+			PlayerUtils.sendMessage(player, ChatColor.RED + "Du musst eine Straßenkarte ausgewählt haben.");
+			return;
+		}
 
 		roadMap.toggleEditMode(player.getUniqueId());
 		PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Bearbeitungsmodus: " +
