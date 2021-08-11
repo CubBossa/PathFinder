@@ -7,6 +7,7 @@ import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -15,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class PathPlayer {
@@ -50,8 +53,8 @@ public class PathPlayer {
         this.globalPlayerId = globalPlayerId;
         this.uuid = uuid;
         this.activePaths = new HashMap<>();
-        this.lastSetGroups = new HashMap<>();
-        this.lastSetFindables = new HashMap<>();
+        this.lastSetGroups = new ConcurrentHashMap<>();
+        this.lastSetFindables = new ConcurrentHashMap<>();
 
         foundFindables = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, false);
         foundGroups = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, true);
@@ -167,6 +170,10 @@ public class PathPlayer {
         }
         path.run(uuid);
         activePaths.put(path.getRoadMap().getDatabaseId(), path);
+
+        Map<Integer, AtomicBoolean> lock = PlayerListener.getHasFoundTarget().getOrDefault(uuid, new ConcurrentHashMap<>());
+        lock.put(path.getRoadMap().getDatabaseId(), new AtomicBoolean(false));
+        PlayerListener.getHasFoundTarget().put(uuid, lock);
     }
 
     public Collection<ParticlePath> getActivePaths() {

@@ -83,8 +83,10 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(Player player, FindableGroup group, boolean findable) {
         group.setFindable(findable, true);
-        for (Findable f : group.getFindables()) {
-            group.getRoadMap().updateArmorStandDisplay(f, false);
+        if(group.getRoadMap().isEdited()) {
+            for (Findable f : group.getFindables()) {
+                group.getRoadMap().updateArmorStandDisplay(f, false);
+            }
         }
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findable ? "an" : "aus"));
     }

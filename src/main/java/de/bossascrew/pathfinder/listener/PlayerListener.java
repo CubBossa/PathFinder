@@ -28,8 +28,10 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
+import javax.annotation.Syntax;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
@@ -56,6 +58,9 @@ public class PlayerListener implements Listener {
         }
     }
 
+    @Getter
+    private static final Map<UUID, Map<Integer, AtomicBoolean>> hasFoundTarget = new ConcurrentHashMap<>();
+
     @EventHandler
     public void onMove(final PlayerMoveEvent event) {
 
@@ -63,71 +68,84 @@ public class PlayerListener implements Listener {
         final Player player = event.getPlayer();
 
         PluginUtils.getInstance().runAsync(() -> {
-            synchronized (player) {
-                PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-                for (ParticlePath path : pPlayer.getActivePaths()) {
-                    RoadMap rm = path.getRoadMap();
-                    Findable findable = path.get(path.size() - 1);
-                    if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance()) {
-                        pPlayer.cancelPath(rm);
-                        player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
-                                .append(Component.text(findable.getGroup() != null ? findable.getGroup().getFriendlyName() : findable.getFriendlyName(), NamedTextColor.WHITE)));
-                    }
-                }
-
-                GlobalPlayer globalPlayer = PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
-                if (globalPlayer == null) {
-                    return;
-                }
-                PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
-
-                Collection<RoadMap> roadMaps = RoadMapHandler.getInstance().getRoadMapsFindable(world);
-                if (roadMaps.isEmpty()) {
-                    return;
-                }
-                if (pathPlayer.isEditing()) {
-                    return;
-                }
-                if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
-                    return;
-                }
-                Findable found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
-                if (found == null) {
-                    return;
-                }
-
-                PluginUtils.getInstance().runSync(() -> {
-                    Date findDate = new Date();
-                    boolean group = found.getGroup() != null;
-
-                    int id;
-                    if (group) {
-                        NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found.getGroup(), found, findDate);
-                        Bukkit.getPluginManager().callEvent(findEvent);
-                        findDate = findEvent.getDate();
-                        id = findEvent.getGroup().getDatabaseId();
-                    } else {
-                        NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
-                        Bukkit.getPluginManager().callEvent(findEvent);
-                        findDate = findEvent.getDate();
-                        id = findEvent.getFindable().getDatabaseId();
-                    }
-                    if (event.isCancelled()) {
-                        return;
-                    }
-                    pathPlayer.find(id, group, findDate);
-
-                    RoadMap rm = found.getRoadMap();
-                    double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getMaxFoundSize();
-
-                    player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
-                            .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));
-                    player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
-                    player.sendActionBar(
-                            Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY)
-                                    .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
-                });
+            PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+            if (pPlayer != null) {
+                findPathTarget(event, player, pPlayer);
             }
+
+            discoverFindables(event, world, player);
+        });
+    }
+
+    private void findPathTarget(PlayerMoveEvent event, Player player, PathPlayer pPlayer) {
+        for (ParticlePath path : pPlayer.getActivePaths()) {
+            RoadMap rm = path.getRoadMap();
+            Findable findable = path.get(path.size() - 1);
+            AtomicBoolean foundGuard = hasFoundTarget.getOrDefault(player.getUniqueId(), new HashMap<>())
+                    .getOrDefault(rm.getDatabaseId(), new AtomicBoolean(true));
+            if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance() && !foundGuard.getAndSet(true)) {
+                pPlayer.cancelPath(rm);
+                player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
+                        .append(Component.text(findable.getGroup() != null ? findable.getGroup().getFriendlyName() : findable.getFriendlyName(), NamedTextColor.WHITE)));
+            }
+        }
+    }
+
+    private void discoverFindables(PlayerMoveEvent event, World world, Player player) {
+        GlobalPlayer globalPlayer = PlayerHandler.getInstance().getGlobalPlayer(player.getUniqueId());
+        if (globalPlayer == null) {
+            return;
+        }
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
+
+        Collection<RoadMap> roadMaps = RoadMapHandler.getInstance().getRoadMapsFindable(world);
+        if (roadMaps.isEmpty()) {
+            return;
+        }
+        if (pathPlayer.isEditing()) {
+            return;
+        }
+        if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
+            return;
+        }
+        Findable found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
+        if (found == null) {
+            return;
+        }
+
+        PluginUtils.getInstance().runSync(() -> {
+            Date findDate = new Date();
+            boolean group = found.getGroup() != null;
+
+            int id;
+            if (group) {
+                NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found.getGroup(), found, findDate);
+                Bukkit.getPluginManager().callEvent(findEvent);
+                findDate = findEvent.getDate();
+                id = findEvent.getGroup().getDatabaseId();
+            } else {
+                NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
+                Bukkit.getPluginManager().callEvent(findEvent);
+                findDate = findEvent.getDate();
+                id = findEvent.getFindable().getDatabaseId();
+            }
+            if (event.isCancelled()) {
+                return;
+            }
+            if ((group && pathPlayer.hasFound(found.getGroup())) || pathPlayer.hasFound(found)) {
+                return;
+            }
+            pathPlayer.find(id, group, findDate);
+
+            RoadMap rm = found.getRoadMap();
+            double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getMaxFoundSize();
+
+            player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
+                    .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));
+            player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
+            player.sendActionBar(
+                    Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY)
+                            .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
         });
     }
 
@@ -153,7 +171,7 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-            for (Findable findable : roadMap.getFindables().stream().filter(rm -> rm.getGroup() == null).collect(Collectors.toSet())) {
+            for (Findable findable : roadMap.getFindables().stream().filter(f -> f.getGroup() == null).collect(Collectors.toSet())) {
                 if (pathPlayer.hasFound(findable.getDatabaseId(), false)) {
                     continue;
                 }

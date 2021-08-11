@@ -406,6 +406,9 @@ public class RoadMap {
 		entityHider = new EntityHider(PathPlugin.getInstance(), EntityHider.Policy.BLACKLIST);
 
 		for (Findable findable : findables.values()) {
+			if(!findable.getLocation().isChunkLoaded()) {
+				continue;
+			}
 			if(findable instanceof NpcFindable) {
 				continue;
 			}
@@ -624,6 +627,27 @@ public class RoadMap {
 		}
 	}
 
+	public void updateChunkArmorStands(Chunk chunk, boolean unload) {
+		if (!isEdited()) {
+			return;
+		}
+		List<Findable> nodes = new ArrayList<>(getFindables());
+		nodes = nodes.stream().filter(node -> node.getLocation().getChunk().equals(chunk)).collect(Collectors.toList());
+		for (Findable findable : nodes) {
+			if(findable instanceof NpcFindable) {
+				continue;
+			}
+			//TODO edges
+			if (unload) {
+				getNodeArmorStand(findable).remove();
+				editModeNodeArmorStands.remove(findable);
+			} else {
+				ArmorStand nodeArmorStand = getNodeArmorStand(findable);
+				editModeNodeArmorStands.put(findable, nodeArmorStand);
+			}
+		}
+	}
+
 	public void setPathVisualizer(PathVisualizer pathVisualizer) {
 		if (this.pathVisualizer != null) {
 			this.pathVisualizer.getUpdateParticle().unsubscribe(this.getDatabaseId());
@@ -739,7 +763,7 @@ public class RoadMap {
 		return getNewArmorStand(location, name, headDbId, false);
 	}
 
-	private ArmorStand getNewArmorStand(Location location, String name, int headDbId, boolean small) {
+	private ArmorStand getNewArmorStand(Location location, @Nullable String name, int headDbId, boolean small) {
 		ArmorStand as = location.getWorld().spawn(location,
 				ArmorStand.class,
 				armorStand -> {
