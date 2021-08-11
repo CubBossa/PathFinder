@@ -125,8 +125,12 @@ public class ParticlePath extends ArrayList<Findable> {
                         .subtract(findable.getVector()).normalize().multiply(findable.getBezierTangentLengthOrDefault()))));
             } else if (count == this.size() - 1) {
                 //Gerade bis zum letzten Punkt
-                tangentPoints.add(new Tuple3<>(findable.getVector().clone().add(this.get(count - 1).getVector().clone().subtract(findable.getVector()).normalize()
-                        .multiply(findable.getBezierTangentLengthOrDefault())), findable.getVector(), null));
+                if (lastTangentSet != null) {
+                    tangentPoints.add(new Tuple3<>(lastTangentSet.getRight(), findable.getVector(), null));
+                } else {
+                    tangentPoints.add(new Tuple3<>(findable.getVector().clone().add(this.get(count - 1).getVector().clone().subtract(findable.getVector()).normalize()
+                            .multiply(findable.getBezierTangentLengthOrDefault())), findable.getVector(), null));
+                }
             } else {
                 //Alle Fälle mit 2 Nachbarpunkten. Benennung: a = linker nachbar, b = punkt, c = rechter nachbar
                 Vector a = get(count - 1).getVector();
@@ -136,19 +140,21 @@ public class ParticlePath extends ArrayList<Findable> {
                 Vector ba = a.clone().subtract(b).normalize();
                 Vector bc = c.clone().subtract(b).normalize();
 
+                double effectiveBezierLenght = findable.getBezierTangentLengthOrDefault();
+                double leftDist = a.distance(b);
+                if (effectiveBezierLenght > leftDist / 2) {
+                    effectiveBezierLenght = leftDist / 2;
+                }
+
                 //Vector, der genau in der Mitte zwischen ba und bc
                 Vector middle = ba.clone().add(bc).normalize();
                 //Senkrechtvektor:
                 Vector up = ba.clone().crossProduct(bc);
                 //Kontrollpunktrichtung:
-                Vector dir = middle.clone().crossProduct(up).normalize().multiply(findable.getBezierTangentLengthOrDefault());
+                Vector dir = middle.clone().crossProduct(up).normalize().multiply(effectiveBezierLenght);
 
                 Vector left = b.clone().add(dir);
                 Vector right = b.clone().add(dir.clone().multiply(-1));
-
-                if(lastTangentSet != null) {
-                    //if(lastTangentSet.getRight().length() + left.length() > )
-                }
 
                 Tuple3<Vector, Vector, Vector> last = new Tuple3<>(left, findable.getVector(), right);
                 tangentPoints.add(last);

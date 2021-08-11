@@ -426,13 +426,13 @@ public class RoadMap {
 		armorStandDistanceTask = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
 			for (UUID uuid : editingPlayers.keySet()) {
 				Player player = Bukkit.getPlayer(uuid);
-				if (player == null) {
+				if (player == null || player.getWorld() != world) {
 					continue;
 				}
 				List<ArmorStand> armorStands = new ArrayList<>(getEditModeNodeArmorStands().values());
 				armorStands.addAll(getEditModeEdgeArmorStands().values());
 				for (ArmorStand armorStand : armorStands) {
-					if (player.getLocation().distance(armorStand.getLocation()) > 30) {
+					if (player.getLocation().distance(armorStand.getLocation()) > 20) {
 						entityHider.hideEntity(player, armorStand);
 					} else {
 						entityHider.showEntity(player, armorStand);
@@ -524,7 +524,8 @@ public class RoadMap {
 
 			//Packet List erstellen, die dem Spieler dann wieder und wieder geschickt wird. (Muss refreshed werden, wenn es Änderungen gibt.)
 			List<Object> packets = new ArrayList<>();
-			ParticleBuilder particle = new ParticleBuilder(ParticleEffect.valueOf(editModeVisualizer.getParticle().toString()));
+			ParticleBuilder particle = new ParticleBuilder(ParticleEffect.valueOf(editModeVisualizer.getParticle().toString()))
+					.setColor(java.awt.Color.RED);
 
 			//Alle linearen Verbindungen der Waypoints errechnen und als Packet sammeln. Berücksichtigen, welche Node schon behandelt wurde, um doppelte Geraden zu vermeiden
 			List<Pair<Findable, Findable>> processedFindables = new ArrayList<>();
@@ -569,12 +570,12 @@ public class RoadMap {
 	}
 
 	private ArmorStand getEdgeArmorStand(Pair<Findable, Findable> edge, ArmorStand toEdit) {
-		String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") ↔ " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
+		//String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") ↔ " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
 
 		if (toEdit == null) {
-			toEdit = getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), name, editModeVisualizer.getEdgeHeadId(), true);
+			toEdit = getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), null, editModeVisualizer.getEdgeHeadId(), true);
 		} else {
-			toEdit.setCustomName(name);
+			toEdit.setCustomName(null);
 			toEdit.getEquipment().setHelmet(HeadDBUtils.getHeadById(editModeVisualizer.getEdgeHeadId()));
 		}
 		toEdit.setSmall(true);

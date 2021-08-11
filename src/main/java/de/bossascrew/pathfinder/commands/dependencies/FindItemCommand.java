@@ -53,7 +53,7 @@ public class FindItemCommand extends BaseCommand {
                 if (pp == null) {
                     return;
                 }
-                Menu traderMenu = new Menu("Händler:");
+                Menu traderMenu = new Menu("Händler (Klicke auf Namen, um zu navigieren):");
                 for (Findable f : roadMap.getFindables().stream().filter(findable -> findable instanceof TraderFindable).collect(Collectors.toList())) {
                     TraderFindable trader = (TraderFindable) f;
                     if (!pp.hasFound(trader)) {
@@ -64,7 +64,7 @@ public class FindItemCommand extends BaseCommand {
                     if (buy == null && sell == null) {
                         continue;
                     }
-                    Component c = getTargetComponent(Component.text(trader.getName(), NamedTextColor.BLUE), "/finde shop " + trader.getRoadMap().getName() + " " + trader.getName());
+                    Component c = getTargetComponent(Component.text(trader.getName(), NamedTextColor.BLUE), "/finde shop " + trader.getName());
                     Key materialKey = Key.key(material.getKey().asString());
                     if (sell != null) {
                         c = c.append(Component

@@ -129,9 +129,14 @@ public class RoadMapCommand extends BaseCommand {
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
 	@Syntax("[<Straßenkarte>]")
 	public void onEdit(Player player, @Optional RoadMap roadMap) {
+		PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
+		if (pp == null) {
+			return;
+		}
 		if (roadMap == null) {
-			PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
-			roadMap = RoadMapHandler.getInstance().getRoadMap(pp.getSelectedRoadMapId());
+			if (pp.getSelectedRoadMapId() != null) {
+				roadMap = RoadMapHandler.getInstance().getRoadMap(pp.getSelectedRoadMapId());
+			}
 		}
 		if (roadMap == null) {
 			if (RoadMapHandler.getInstance().getRoadMaps().size() == 1) {
@@ -143,7 +148,6 @@ public class RoadMapCommand extends BaseCommand {
 				}
 			}
 			if (roadMap != null) {
-				PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
 				pp.setSelectedRoadMap(roadMap.getDatabaseId());
 				PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte ausgewählt.");
 			}

@@ -9,6 +9,7 @@ import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -82,8 +83,9 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION + " " + BukkitMain.COMPLETE_BOOLEAN)
     public void onSetFindable(Player player, FindableGroup group, boolean findable) {
         group.setFindable(findable, true);
+        for (Findable f : group.getFindables()) {
+            group.getRoadMap().updateArmorStandDisplay(f, false);
+        }
         PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findable ? "an" : "aus"));
     }
-    //TODO
-    //info
 }

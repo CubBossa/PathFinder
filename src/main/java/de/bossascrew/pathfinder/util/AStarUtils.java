@@ -74,9 +74,6 @@ public class AStarUtils {
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
                 .collect(Collectors.toList());
 
-        System.out.println("Path:");
-        pathVar.forEach(v -> System.out.print(v.getName() + ", "));
-
         Findable foundLast = pathVar.get(0);
         if (foundLast == null) {
             return false;

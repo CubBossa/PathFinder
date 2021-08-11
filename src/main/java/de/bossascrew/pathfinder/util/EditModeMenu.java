@@ -25,6 +25,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -216,7 +217,7 @@ public class EditModeMenu {
 
     private void openGroupMenu(Player player, Findable clicked) {
 
-        PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 3);
+        PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 5);
         for (FindableGroup group : clicked.getRoadMap().getGroups().values()) {
 
             groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
@@ -226,6 +227,7 @@ public class EditModeMenu {
                 c.getPlayer().closeInventory();
             });
         }
+        groupMenu.setSortingComparator(Comparator.comparing(itemStack -> itemStack.getItemMeta().getDisplayName()));
         ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
         groupMenu.setNavigationEntry(8, create, c -> {
             openCreateGroupMenu(c.getPlayer(), clicked);
