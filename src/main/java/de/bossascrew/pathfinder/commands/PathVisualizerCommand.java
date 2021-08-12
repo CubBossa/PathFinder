@@ -5,6 +5,7 @@ import de.bossascrew.acf.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
@@ -17,6 +18,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 
@@ -238,5 +240,61 @@ public class PathVisualizerCommand extends BaseCommand {
         }
         edit.setAndSaveSchedulerPeriod(schedulerPeriod);
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Scheduler-Wiederholdauer aktualisiert: " + schedulerPeriodString);
+    }
+
+    @CommandAlias("style")
+    public class Style {
+
+        @Subcommand("name")
+        @Syntax("<Pfad-Visualizer> <Name>")
+        @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
+        public void onName(CommandSender sender, PathVisualizer visualizer, String name) {
+            if(!visualizer.isPickable()) {
+                //TODO message
+                return;
+            }
+            visualizer.setDisplayName(ComponentUtils.parseMiniMessage(name));
+            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+            //TODO message
+        }
+
+        @Subcommand("material")
+        @Syntax("<Pfad-Visualizer> <Material>")
+        @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
+        public void onMaterial(CommandSender sender, PathVisualizer visualizer, Material type) {
+            if(!visualizer.isPickable()) {
+                //TODO message
+                return;
+            }
+            visualizer.setIconType(type);
+            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+            //TODO message
+        }
+
+
+        @Subcommand("permission")
+        @Syntax("<Pfad-Visualizer> <Permission>")
+        @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
+        public void onPermission(CommandSender sender, PathVisualizer visualizer, @Single String permission) {
+            if(!visualizer.isPickable()) {
+                //TODO message
+                return;
+            }
+            visualizer.setPickPermission(permission);
+            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+            //TODO message
+        }
+
+        @Subcommand("delete")
+        @Syntax("<Pfad-Visualizer>")
+        @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
+        public void onDelete(CommandSender sender, PathVisualizer visualizer) {
+            if(!visualizer.isPickable()) {
+                //TODO message
+                return;
+            }
+            visualizer.removePickable();
+        }
+
     }
 }

@@ -11,6 +11,7 @@ import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
@@ -44,6 +45,8 @@ public class DatabaseModel {
         createEdgesTable();
         createFoundNodesTable();
         createFoundGroupsTable();
+        createStyleTable();
+        createPlayerVisualizerTable();
     }
 
     public void createPathVisualizerTable() {
@@ -182,6 +185,37 @@ public class DatabaseModel {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der found-groups Tabelle", e);
+        }
+    }
+
+    public void createStyleTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_styles` (" +
+                    "`visualizer_id` INT NOT NULL PRIMARY KEY , " +
+                    "`name` TEXT NULL , " +
+                    "`material` VARCHAR(36) NULL , " +
+                    "`permission` VARCHAR(64) NULL , " +
+                    "FOREIGN KEY (visualizer_id) REFERENCES pathfinder_path_visualizer(path_visualizer_id) ON DELETE CASCADE )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der path-styles Tabelle", e);
+        }
+    }
+
+    public void createPlayerVisualizerTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_player_visualizer` (" +
+                    "`player_id` INT NOT NULL , " +
+                    "`roadmap_id` INT NOT NULL , " +
+                    "`visualizer_id` INT NOT NULL , " +
+                    "PRIMARY KEY (`player_id`, `roadmap_id`) , " +
+                    "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE , " +
+                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der player-visualizer Tabelle", e);
         }
     }
 
@@ -834,6 +868,7 @@ public class DatabaseModel {
                         }
                         vis.setParent(result.get(vis.getParentId()));
                     }
+                    loadVisualizerStyles(result.values());
                     return result;
                 }
             }
@@ -917,5 +952,34 @@ public class DatabaseModel {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen des EditMode-Visualizers: " + visualizer.getName(), e);
         }
+    }
+
+    public Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers() {
+        return null;
+    }
+
+    public void createPlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer) {
+
+    }
+
+    public void updatePlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer) {
+
+    }
+
+    public void loadVisualizerStyles(Collection<PathVisualizer> visualizers) {
+
+    }
+
+    public void createVisualizerStyle(PathVisualizer visualizer, @Nullable String permission,
+                                         @Nullable Material iconType, @Nullable String miniDisplayName) {
+
+    }
+
+    public void updateVisualizerStyle(PathVisualizer visualizer) {
+
+    }
+
+    public void deleteStyleVisualizer(int visualizerId) {
+
     }
 }

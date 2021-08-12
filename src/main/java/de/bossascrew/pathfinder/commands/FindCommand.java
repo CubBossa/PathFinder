@@ -1,24 +1,38 @@
 package de.bossascrew.pathfinder.commands;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.acf.BaseCommand;
 import de.bossascrew.acf.annotation.*;
+import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
+import de.bossascrew.core.bukkit.inventory.menu.PagedChestMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.group.GroupManager;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
-import java.awt.*;
+import java.util.stream.Collectors;
 
 @CommandAlias("finde|find")
 public class FindCommand extends BaseCommand {
@@ -27,29 +41,124 @@ public class FindCommand extends BaseCommand {
     @HelpCommand
     public void onDefault(Player player) {
         Menu menu = new Menu("Finde Orte einer Stadtkarte mit folgenden Befehlen:");
-        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)) {
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)) {
             menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Ort>")));
         }
-        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)) {
-            if(PathPlugin.getInstance().isTraders() || PathPlugin.getInstance().isQuests() || (PathPlugin.getInstance().isBentobox()) && PathPlugin.getInstance().isChestShop()) {
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_ITEMS)) {
+            if (PathPlugin.getInstance().isTraders() || PathPlugin.getInstance().isQuests() || (PathPlugin.getInstance().isBentobox()) && PathPlugin.getInstance().isChestShop()) {
                 menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find item <Item>")));
             }
         }
-        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_QUESTS)) {
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_QUESTS)) {
             if (PathPlugin.getInstance().isQuests()) {
                 menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find quest <Quest>")));
             }
         }
-        if(player.hasPermission(PathPlugin.PERM_COMMAND_FIND_TRADERS)) {
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_TRADERS)) {
             if (PathPlugin.getInstance().isTraders()) {
                 menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Shop>")));
             }
         }
-        if(menu.hasSubs()) {
+        Menu menu1 = new Menu("Info über gefundene Orte mit: ");
+        if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_INFO) &&
+                RoadMapHandler.getInstance().getRoadMaps().stream().anyMatch(RoadMap::isFindableNodes)) {
+            menu1.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find info", ClickEvent.Action.RUN_COMMAND)));
+        }
+        if (menu.hasSubs()) {
+            PlayerUtils.sendComponents(player, menu.toComponents());
+        }
+        if (menu1.hasSubs()) {
+            PlayerUtils.sendComponents(player, menu1.toComponents());
+        }
+        if (!menu.hasSubs() && !menu1.hasSubs()) {
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Es wurden keine Befehle gefunden.");
+        }
+    }
+
+    @Subcommand("info")
+    @Syntax("[<Straßenkarte>]")
+    @CommandCompletion(PathPlugin.COMPLETE_ACTIVE_ROADMAPS)
+    @CommandPermission(PathPlugin.PERM_COMMAND_FIND_INFO)
+    public void onInfo(Player player, @Optional RoadMap roadMap) {
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
+        if (pathPlayer == null) {
+            return;
+        }
+        Menu menu = new Menu("Straßenkarten erkundet:");
+        for (RoadMap rm : roadMap == null ? RoadMapHandler.getInstance().getRoadMaps()
+                .stream().filter(RoadMap::isFindableNodes).collect(Collectors.toList()) : Lists.newArrayList(roadMap)) {
+            double percent = 100 * ((double) pathPlayer.getFoundAmount(rm)) / rm.getMaxFoundSize();
+            menu.addSub(new Menu(ChatColor.GRAY + rm.getName() + ": " + ChatColor.WHITE + String.format("%,.2f", percent) + "%"));
+        }
+        if (menu.hasSubs()) {
             PlayerUtils.sendComponents(player, menu.toComponents());
         } else {
-            PlayerUtils.sendMessage(player, ChatColor.RED + "Dir fehlen nötige Berechtigungen für diesen Befehl.");
+            PlayerUtils.sendMessage(player, ChatColor.RED + "Keine Straßenkarten gefunden.");
         }
+    }
+
+    @Subcommand("style")
+    @Syntax("<Straßenkarte>")
+    @CommandPermission(PathPlugin.PERM_COMMAND_FIND_STYLE)
+    @CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+    public void onStyle(Player player, RoadMap roadMap) {
+        PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
+        if (pathPlayer == null) {
+            return;
+        }
+        openStyleMenu(player, pathPlayer, roadMap);
+    }
+
+    private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
+        PagedChestMenu menu = new PagedChestMenu(Component.text("Wähle deinen Partikelstyle"), 3);
+        PathVisualizer actual = pathPlayer.getVisualizer(roadMap);
+        //TODO Roadmapspezifische Pathvisualiser definieren
+
+        for (PathVisualizer visualizer : VisualizerHandler.getInstance().getPathVisualizers()) {
+            String perm = visualizer.getPickPermission();
+
+            boolean hasPerm = player.hasPermission(perm);
+            boolean def, spender = false, spender2 = false;
+            if (!hasPerm) {
+                GroupManager groupManager = BukkitMain.getInstance().getLuckPerms().getGroupManager();
+                Group defaultGroup = groupManager.getGroup("default");
+                def = defaultGroup.getCachedData().getPermissionData().checkPermission(perm).asBoolean();
+                if (!def) {
+                    Group spenderGroup = groupManager.getGroup("spender");
+                    spender = spenderGroup.getCachedData().getPermissionData().checkPermission(perm).asBoolean();
+                    if (!spender) {
+                        Group spender2Group = groupManager.getGroup("spender2");
+                        spender2 = spender2Group.getCachedData().getPermissionData().checkPermission(perm).asBoolean();
+                    }
+                }
+            }
+
+            ItemStack stack = new ItemStack(visualizer.getIconType());
+            ItemMeta m = stack.getItemMeta();
+            m.displayName(visualizer.getDisplayName());
+            if (spender) {
+                m.lore(Lists.newArrayList(Component.text("Ab Matrose erhältlich.", NamedTextColor.RED)));
+            } else if (spender2) {
+                m.lore(Lists.newArrayList(Component.text("Ab Maat erhältlich.", NamedTextColor.RED)));
+            }
+            stack.setItemMeta(m);
+
+            if (actual.equals(visualizer)) {
+                ItemStackUtils.setGlowing(stack);
+            }
+            menu.addMenuEntry(stack, context -> {
+                if (!hasPerm) {
+                    pathPlayer.setVisualizer(roadMap, visualizer);
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                    return;
+                }
+                pathPlayer.setVisualizer(roadMap, visualizer);
+                player.playSound(player.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 1, 1);
+                PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikelstyle ausgewählt: " + visualizer.getName());
+                openStyleMenu(player, pathPlayer, roadMap);
+            });
+        }
+        menu.openInventory(player);
     }
 
     @Subcommand("ort")
@@ -58,11 +167,11 @@ public class FindCommand extends BaseCommand {
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_LOCATIONS)
     public void onFindeOrt(Player player, String searched) {
         RoadMap roadMap = CommandUtils.getAnyRoadMap(player.getWorld());
-        if(roadMap == null) {
+        if (roadMap == null) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Keine Straßenkarte gefunden.");
             return;
         }
-        if(!roadMap.getWorld().equals(player.getWorld())) {
+        if (!roadMap.getWorld().equals(player.getWorld())) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Diese Straßenkarte liegt nicht in deiner aktuellen Welt.");
             return;
         }

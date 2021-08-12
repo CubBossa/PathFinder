@@ -54,12 +54,12 @@ public class ParticlePath extends ArrayList<Findable> {
     private double cachedDistance = -1;
     private List<Vector> calculatedPoints;
 
-    public ParticlePath(RoadMap roadMap, UUID playerUuid) {
+    public ParticlePath(RoadMap roadMap, UUID playerUuid, PathVisualizer visualizer) {
         this.roadMap = roadMap;
         this.playerUuid = playerUuid;
         this.active = false;
         this.schedulerHandlers = new ArrayList<>();
-        this.visualizer = roadMap.getPathVisualizer();
+        this.visualizer = visualizer;
         this.calculatedPoints = new ArrayList<>();
     }
 

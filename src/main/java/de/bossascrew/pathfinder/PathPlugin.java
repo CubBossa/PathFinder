@@ -45,6 +45,8 @@ public class PathPlugin extends JavaPlugin {
 	public static final String NBT_ARMORSTAND_KEY = "pathfinder_armorstand";
 
 	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
+	public static final String PERM_COMMAND_FIND_INFO = "bcrew.command.find.info";
+	public static final String PERM_COMMAND_FIND_STYLE = "bcrew.command.find.style";
 	public static final String PERM_COMMAND_FIND_ITEMS = "bcrew.command.find.items";
 	public static final String PERM_COMMAND_FIND_LOCATIONS = "bcrew.command.find.location";
 	public static final String PERM_COMMAND_FIND_QUESTS = "bcrew.command.find.quest";
@@ -54,6 +56,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
 	public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
+	public static final String COMPLETE_PATH_VISUALIZER_STYLES = "@path_visualizer_styles";
 	public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
 	public static final String COMPLETE_FINDABLES = "@nodes";
 	public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
@@ -170,6 +173,11 @@ public class PathPlugin extends JavaPlugin {
 				.collect(Collectors.toSet()));
 		bm.registerAsyncCompletion(COMPLETE_PATH_VISUALIZER, context -> VisualizerHandler
 				.getInstance().getPathVisualizerStream()
+				.map(PathVisualizer::getName)
+				.collect(Collectors.toSet()));
+		bm.registerAsyncCompletion(COMPLETE_PATH_VISUALIZER_STYLES, context -> VisualizerHandler
+				.getInstance().getPathVisualizerStream()
+				.filter(PathVisualizer::isPickable)
 				.map(PathVisualizer::getName)
 				.collect(Collectors.toSet()));
 		bm.registerAsyncCompletion(COMPLETE_EDITMODE_VISUALIZER, context -> VisualizerHandler

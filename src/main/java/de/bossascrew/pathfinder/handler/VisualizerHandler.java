@@ -34,15 +34,22 @@ public class VisualizerHandler implements PacketListener {
 
 
 	private Map<Integer, PathVisualizer> pathVisualizerMap;
-    private Map<Integer, EditModeVisualizer> editVisualizerMap;
+	private Map<Integer, EditModeVisualizer> editVisualizerMap;
 
-    public VisualizerHandler() {
+	/**
+	 * PlayerID, RoadMapID, VisualizerID
+	 */
+	@Getter
+	private Map<Integer, Map<Integer, Integer>> playerVisualizers;
 
-        instance = this;
+	public VisualizerHandler() {
 
-        //Lade Maps aus Datenbank
-        this.pathVisualizerMap = DatabaseModel.getInstance().loadPathVisualizer();
-        this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
+		instance = this;
+
+		//Lade Maps aus Datenbank
+		this.pathVisualizerMap = DatabaseModel.getInstance().loadPathVisualizer();
+		this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
+		this.playerVisualizers = DatabaseModel.getInstance().loadPlayerVisualizers();
 
         //Fehlerbehandlung
         if (pathVisualizerMap == null) {

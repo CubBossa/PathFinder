@@ -5,8 +5,10 @@ import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
+import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
@@ -269,7 +271,8 @@ public class PathPlayer {
         this.lastSetGroups.put(findableGroup.getRoadMap().getDatabaseId(), findableGroup);
     }
 
-    public @Nullable FindableGroup getLastSetGroup(RoadMap roadMap) {
+    public @Nullable
+    FindableGroup getLastSetGroup(RoadMap roadMap) {
         return this.lastSetGroups.get(roadMap.getDatabaseId());
     }
 
@@ -277,7 +280,31 @@ public class PathPlayer {
         this.lastSetFindables.put(findable.getRoadMapId(), findable);
     }
 
-    public @Nullable Findable getLastSetFindable(RoadMap roadMap) {
+    public @Nullable
+    Findable getLastSetFindable(RoadMap roadMap) {
         return this.lastSetFindables.get(roadMap.getDatabaseId());
+    }
+
+    public void setVisualizer(RoadMap roadMap, PathVisualizer pathVisualizer) {
+        Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().getOrDefault(globalPlayerId, new HashMap<>());
+        if (map.containsKey(roadMap.getDatabaseId())) {
+            DatabaseModel.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
+        } else {
+            DatabaseModel.getInstance().createPlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
+        }
+        map.put(roadMap.getDatabaseId(), pathVisualizer.getDatabaseId());
+        VisualizerHandler.getInstance().getPlayerVisualizers().put(globalPlayerId, map);
+    }
+
+    public PathVisualizer getVisualizer(RoadMap roadMap) {
+        Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().get(globalPlayerId);
+        if (map == null) {
+            return roadMap.getPathVisualizer();
+        }
+        Integer id = map.get(roadMap.getDatabaseId());
+        if (id == null) {
+            return roadMap.getPathVisualizer();
+        }
+        return VisualizerHandler.getInstance().getPathVisualizer(id);
     }
 }

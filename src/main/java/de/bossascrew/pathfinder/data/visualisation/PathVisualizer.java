@@ -1,9 +1,14 @@
 package de.bossascrew.pathfinder.data.visualisation;
 
+import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.DatabaseModel;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Material;
 
 import javax.annotation.Nullable;
 
@@ -16,8 +21,39 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
 
     private Integer particleSteps = null;
 
+    /**
+     * Ob der Visualizer als Style für eine Roadmap eingesetzt werden kann
+     */
+    private boolean pickable = true;
+    private @Nullable
+    String pickPermission = null;
+    private @Nullable
+    Component displayName = Component.text(getName(), NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
+    private @Nullable
+    Material iconType = Material.NAME_TAG;
+
     public PathVisualizer(int databaseId, String name, @Nullable Integer parentId) {
         super(databaseId, name, parentId);
+    }
+
+    public void createPickable(@Nullable String permission, @Nullable String miniDisplayName, @Nullable Material iconType) {
+        DatabaseModel.getInstance().createPickableVisualizer(this, permission, iconType, miniDisplayName);
+        setupPickable(permission, ComponentUtils.parseMiniMessage(miniDisplayName), iconType, false);
+    }
+
+    public void setupPickable(@Nullable String permission, @Nullable Component displayName, @Nullable Material iconType, boolean updateDatabase) {
+        this.pickable = true;
+        this.pickPermission = permission;
+        this.displayName = displayName;
+        this.iconType = iconType;
+        if (updateDatabase) {
+            DatabaseModel.getInstance().updateVisualizerStyle(this);
+        }
+    }
+
+    public void removePickable() {
+        this.pickable = false;
+        DatabaseModel.getInstance().deleteStyleVisualizer(this.getDatabaseId());
     }
 
     public Integer getParticleSteps() {

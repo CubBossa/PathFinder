@@ -83,7 +83,7 @@ public class AStarUtils {
             return false;
         }
 
-        ParticlePath path = new ParticlePath(start.getRoadMap(), player.getUuid());
+        ParticlePath path = new ParticlePath(start.getRoadMap(), player.getUuid(), player.getVisualizer(start.getRoadMap()));
         path.addAll(pathVar);
         player.setPath(path);
         return true;
