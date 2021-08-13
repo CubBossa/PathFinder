@@ -294,6 +294,10 @@ public class PathPlayer {
         }
         map.put(roadMap.getDatabaseId(), pathVisualizer.getDatabaseId());
         VisualizerHandler.getInstance().getPlayerVisualizers().put(globalPlayerId, map);
+
+        if (activePaths.containsKey(roadMap.getDatabaseId())) {
+            activePaths.get(roadMap.getDatabaseId()).run();
+        }
     }
 
     public PathVisualizer getVisualizer(RoadMap roadMap) {

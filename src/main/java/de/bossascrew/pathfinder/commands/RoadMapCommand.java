@@ -8,6 +8,7 @@ import de.bossascrew.core.base.Menu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.DatabaseModel;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.findable.Findable;
@@ -16,6 +17,7 @@ import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
@@ -28,7 +30,10 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @CommandAlias("roadmap")
 public class RoadMapCommand extends BaseCommand {
@@ -79,6 +84,25 @@ public class RoadMapCommand extends BaseCommand {
 		return new ComponentMenu(text
 				.hoverEvent(HoverEvent.showText(hover))
 				.clickEvent(ClickEvent.suggestCommand(command)));
+	}
+
+	@Subcommand("info ungrouped")
+	@Syntax("<Straßenkarte>")
+	@CommandPermission("bcrew.command.roadmap.info")
+	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
+	public void onUngrouped(CommandSender sender, @Optional RoadMap roadMap) {
+		if (roadMap == null) {
+			roadMap = CommandUtils.getSelectedRoadMap(sender);
+		}
+		Menu menu = new Menu("Ungruppierte Wegpunkte in " + roadMap.getName() + ":");
+		String list = "";
+		for (Findable findable : roadMap.getFindables().stream()
+				.filter(findable -> findable.getGroup() == null)
+				.collect(Collectors.toList())) {
+			list += ChatColor.WHITE + findable.getName() + ChatColor.GRAY + ", ";
+		}
+		menu.addSub(new Menu(list));
+		PlayerUtils.sendComponents(sender, menu.toComponents());
 	}
 
 	@Subcommand("create")
@@ -358,6 +382,59 @@ public class RoadMapCommand extends BaseCommand {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 			roadMap.setFindableNodes(findbar);
 			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node-Findbarkeit umgestellt auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findbar ? "an" : "aus"));
+		}
+	}
+
+	@Subcommand("style")
+	@CommandPermission("bcrew.command.roadmap.style")
+	public class RoadmapStyleCommand extends BaseCommand {
+
+		@Subcommand("add")
+		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
+		@Syntax("<Style>")
+		public void onAdd(CommandSender sender, PathVisualizer pathVisualizer) {
+			if (!pathVisualizer.isPickable()) {
+				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
+				return;
+			}
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			Collection<PathVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getDatabaseId(), new ArrayList<>());
+			list.add(pathVisualizer);
+			VisualizerHandler.getInstance().getRoadmapVisualizers().put(roadMap.getDatabaseId(), list);
+			DatabaseModel.getInstance().addStyleToRoadMap(roadMap, pathVisualizer);
+			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style hinzugefügt: " + PathPlugin.COLOR_LIGHT + pathVisualizer.getName());
+		}
+
+
+		@Subcommand("remove")
+		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
+		@Syntax("<Style>")
+		public void onRemove(CommandSender sender, PathVisualizer visualizer) {
+			if (!visualizer.isPickable()) {
+				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
+				return;
+			}
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			DatabaseModel.getInstance().removeStyleFromRoadMap(roadMap, visualizer);
+			Collection<PathVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().get(roadMap.getDatabaseId());
+			if (list != null) {
+				list.remove(visualizer);
+			}
+			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style entfernt: " + PathPlugin.COLOR_LIGHT + visualizer.getName());
+		}
+
+		@Subcommand("list")
+		public void onList(CommandSender sender) {
+			Menu menu = new Menu("Alle Styles dieser Roadmap:");
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			for (PathVisualizer visualizer : VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getDatabaseId(), new ArrayList<>())) {
+				menu.addSub(new ComponentMenu(Component.empty()
+						.append(visualizer.getDisplayName())
+						.append(Component.text(" [X]", NamedTextColor.RED)
+								.clickEvent(ClickEvent.runCommand("/roadmap style remove " + visualizer.getName()))
+								.hoverEvent(HoverEvent.showText(Component.text("Klicke zum Entfernen."))))));
+			}
+			PlayerUtils.sendComponents(sender, menu.toComponents());
 		}
 	}
 

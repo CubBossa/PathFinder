@@ -10,6 +10,7 @@ import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import lombok.Getter;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -47,6 +48,7 @@ public class DatabaseModel {
         createFoundGroupsTable();
         createStyleTable();
         createPlayerVisualizerTable();
+        createRoadMapStylesTable();
     }
 
     public void createPathVisualizerTable() {
@@ -205,7 +207,7 @@ public class DatabaseModel {
 
     public void createPlayerVisualizerTable() {
         try (Connection connection = MySQL.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_player_visualizer` (" +
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_player_visualizers` (" +
                     "`player_id` INT NOT NULL , " +
                     "`roadmap_id` INT NOT NULL , " +
                     "`visualizer_id` INT NOT NULL , " +
@@ -216,6 +218,21 @@ public class DatabaseModel {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der player-visualizer Tabelle", e);
+        }
+    }
+
+    public void createRoadMapStylesTable() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_roadmap_visualizers` (" +
+                    "`roadmap_id` INT NOT NULL , " +
+                    "`visualizer_id` INT NOT NULL , " +
+                    "PRIMARY KEY (`roadmap_id`, `visualizer_id`) , " +
+                    "FOREIGN KEY (visualizer_id) REFERENCES pathfinder_path_visualizer(path_visualizer_id) ON DELETE CASCADE , " +
+                    "FOREIGN KEY (roadmap_id) REFERENCES pathfinder_roadmaps(roadmap_id) ON DELETE CASCADE )")) {
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Erstellen der roadmap-visualizer Tabelle", e);
         }
     }
 
@@ -955,31 +972,185 @@ public class DatabaseModel {
     }
 
     public Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers() {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_player_visualizers`")) {
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, Map<Integer, Integer>> result = Maps.newHashMap();
+                    while (resultSet.next()) {
+                        int playerId = SQLUtils.getInt(resultSet, "player_id");
+                        int roadmapId = SQLUtils.getInt(resultSet, "roadmap_id");
+                        int visualizerId = SQLUtils.getInt(resultSet, "visualizer_id");
+
+                        Map<Integer, Integer> map = result.getOrDefault(playerId, new HashMap<Integer, Integer>());
+                        map.put(roadmapId, visualizerId);
+                        result.putIfAbsent(playerId, map);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der PathVisualizer", e);
+        }
         return null;
     }
 
     public void createPlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer) {
-
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_player_visualizers` " +
+                    "(player_id, roadmap_id, visualizer_id) VALUES (?, ?, ?)")) {
+                SQLUtils.setInt(stmt, 1, playerId);
+                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 3, visualizer.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Eintragen eines Playerstyles in die Datenbank", e);
+        }
     }
 
     public void updatePlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer) {
-
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_player_visualizers` SET " +
+                    "`visualizer_id` = ? " +
+                    "WHERE `player_id` = ? AND `roadmap_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, playerId);
+                SQLUtils.setInt(stmt, 3, roadMap.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Eintragen eines Playerstyles in die Datenbank", e);
+        }
     }
 
     public void loadVisualizerStyles(Collection<PathVisualizer> visualizers) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_path_styles`")) {
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        Integer databaseId = SQLUtils.getInt(resultSet, "visualizer_id");
+                        String name = SQLUtils.getString(resultSet, "name");
+                        String type = SQLUtils.getString(resultSet, "material");
+                        String perm = SQLUtils.getString(resultSet, "permission");
 
+                        Material m;
+                        try {
+                            m = Material.valueOf(type);
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().log(Level.SEVERE, "Typ nicht gefunden: " + type, e);
+                            continue;
+                        }
+                        PathVisualizer visualizer = visualizers.stream().filter(v -> v.getDatabaseId() == databaseId)
+                                .findFirst().orElse(null);
+                        if (visualizer == null) {
+                            plugin.getLogger().log(Level.SEVERE, "Visualizer nicht gefunden: " + databaseId);
+                            continue;
+                        }
+                        visualizer.setupPickable(perm, name, m, false);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Styles", e);
+        }
     }
 
-    public void createVisualizerStyle(PathVisualizer visualizer, @Nullable String permission,
-                                         @Nullable Material iconType, @Nullable String miniDisplayName) {
-
+    public void newVisualizerStyle(PathVisualizer visualizer, @Nullable String permission,
+                                   @Nullable Material iconType, @Nullable String miniDisplayName) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_path_styles` " +
+                    "(visualizer_id, name, material, permission) VALUES (?, ?, ?, ?)")) {
+                SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
+                SQLUtils.setString(stmt, 2, miniDisplayName);
+                SQLUtils.setString(stmt, 3, iconType == null ? null : iconType.toString());
+                SQLUtils.setString(stmt, 4, permission);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Eintragen eines Styles in die Datenbank", e);
+        }
     }
 
     public void updateVisualizerStyle(PathVisualizer visualizer) {
-
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_path_styles` SET " +
+                    "`name` = ?, " +
+                    "`material` = ?, " +
+                    "`permission` = ? " +
+                    "WHERE `visualizer_id` = ?")) {
+                SQLUtils.setString(stmt, 1, MiniMessage.get().serialize(visualizer.getDisplayName()));
+                SQLUtils.setString(stmt, 2, visualizer.getIconType() == null ? null : visualizer.getIconType().toString());
+                SQLUtils.setString(stmt, 3, visualizer.getPickPermission());
+                SQLUtils.setInt(stmt, 4, visualizer.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren des Path-Styles: " + visualizer.getName(), e);
+        }
     }
 
     public void deleteStyleVisualizer(int visualizerId) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_path_styles` WHERE `visualizer_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, visualizerId);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen des Styles mit ID: " + visualizerId, e);
+        }
+    }
 
+    public Map<Integer, Collection<PathVisualizer>> loadStyleRoadmapMap(Collection<PathVisualizer> visualizers) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_roadmap_visualizers`")) {
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    Map<Integer, Collection<PathVisualizer>> result = new HashMap<>();
+                    while (resultSet.next()) {
+                        int visualizerId = SQLUtils.getInt(resultSet, "visualizer_id");
+                        int roadmapId = SQLUtils.getInt(resultSet, "roadmap_id");
+
+                        PathVisualizer visualizer = visualizers.stream().filter(v -> v.getDatabaseId() == visualizerId)
+                                .findFirst().orElse(null);
+                        if (visualizer == null) {
+                            plugin.getLogger().log(Level.SEVERE, "Visualizer für Style nicht gefunden: " + visualizerId);
+                            continue;
+                        }
+                        Collection<PathVisualizer> list = result.getOrDefault(roadmapId, new ArrayList<>());
+                        list.add(visualizer);
+                        result.putIfAbsent(roadmapId, list);
+                    }
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Roadmapstyles", e);
+        }
+        return null;
+    }
+
+    public void addStyleToRoadMap(RoadMap roadMap, PathVisualizer pathVisualizer) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmap_visualizers` " +
+                    "(visualizer_id, roadmap_id) VALUES (?, ?)")) {
+                SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Mappen eines Styles in die Datenbank", e);
+        }
+    }
+
+    public void removeStyleFromRoadMap(RoadMap roadMap, PathVisualizer pathVisualizer) {
+        try (Connection connection = MySQL.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_roadmap_visualizers` " +
+                    "WHERE `visualizer_id` = ? AND `roadmap_id` = ?")) {
+                SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Löschen der Styleverknüpfung mit ID: " + pathVisualizer, e);
+        }
     }
 }

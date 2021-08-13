@@ -17,6 +17,7 @@ import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
 import xyz.xenondevs.particle.task.TaskManager;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -186,18 +187,19 @@ public class ParticlePath extends ArrayList<Findable> {
             final SchedulerHandler schedulerHandler = new SchedulerHandler(new Date().getTime());
             schedulerHandlers.add(schedulerHandler);
             for (int i = 0; i < steps; i++) {
-                final List<Object> packets = new ArrayList<>();
-                ParticleBuilder particle = new ParticleBuilder(effect);
+				final List<Object> packets = new ArrayList<>();
+				ParticleBuilder particle = new ParticleBuilder(effect)
+						.setColor(Color.RED);
 
-                int moduloCount = 0;
-                for (Vector vector : calculatedPoints) {
-                    if (moduloCount % steps == i) {
-                        packets.add(particle.setLocation(vector.toLocation(world)).toPacket());
-                    }
-                    moduloCount++;
-                }
-                Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
-                    if(schedulerHandler.isCancelled()) {
+				int moduloCount = 0;
+				for (Vector vector : calculatedPoints) {
+					if (moduloCount % steps == i) {
+						packets.add(particle.setLocation(vector.toLocation(world)).toPacket());
+					}
+					moduloCount++;
+				}
+				Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
+					if (schedulerHandler.isCancelled()) {
                         return;
                     }
                     int id = TaskManager.startSingularTask(packets, period * steps, uuid);

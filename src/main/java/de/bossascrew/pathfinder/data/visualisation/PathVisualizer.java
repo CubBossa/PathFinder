@@ -21,45 +21,54 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
 
     private Integer particleSteps = null;
 
-    /**
-     * Ob der Visualizer als Style für eine Roadmap eingesetzt werden kann
-     */
-    private boolean pickable = true;
-    private @Nullable
-    String pickPermission = null;
-    private @Nullable
-    Component displayName = Component.text(getName(), NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
-    private @Nullable
-    Material iconType = Material.NAME_TAG;
+	/**
+	 * Ob der Visualizer als Style für eine Roadmap eingesetzt werden kann
+	 */
+	private boolean pickable = false;
+	private @Nullable
+	String pickPermission = null;
+	private @Nullable
+	String displayName = null;
+	private @Nullable
+	Material iconType = Material.NAME_TAG;
 
     public PathVisualizer(int databaseId, String name, @Nullable Integer parentId) {
         super(databaseId, name, parentId);
     }
 
     public void createPickable(@Nullable String permission, @Nullable String miniDisplayName, @Nullable Material iconType) {
-        DatabaseModel.getInstance().createPickableVisualizer(this, permission, iconType, miniDisplayName);
-        setupPickable(permission, ComponentUtils.parseMiniMessage(miniDisplayName), iconType, false);
-    }
+		DatabaseModel.getInstance().newVisualizerStyle(this, permission, iconType, miniDisplayName);
+		setupPickable(permission, miniDisplayName, iconType, false);
+	}
 
-    public void setupPickable(@Nullable String permission, @Nullable Component displayName, @Nullable Material iconType, boolean updateDatabase) {
-        this.pickable = true;
-        this.pickPermission = permission;
-        this.displayName = displayName;
-        this.iconType = iconType;
-        if (updateDatabase) {
-            DatabaseModel.getInstance().updateVisualizerStyle(this);
-        }
-    }
+	public void setupPickable(@Nullable String permission, @Nullable String displayName, @Nullable Material iconType, boolean updateDatabase) {
+		this.pickable = true;
+		this.pickPermission = permission;
+		this.displayName = displayName;
+		this.iconType = iconType;
+		if (updateDatabase) {
+			DatabaseModel.getInstance().updateVisualizerStyle(this);
+		}
+	}
 
-    public void removePickable() {
-        this.pickable = false;
-        DatabaseModel.getInstance().deleteStyleVisualizer(this.getDatabaseId());
-    }
+	public @Nullable
+	String getStringDisplayName() {
+		return displayName;
+	}
 
-    public Integer getParticleSteps() {
-        if (particleSteps == null) {
-            if (parent == null) {
-                try {
+	public Component getDisplayName() {
+		return displayName != null ? ComponentUtils.parseMiniMessage(displayName) : Component.text(getName(), NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
+	}
+
+	public void removePickable() {
+		this.pickable = false;
+		DatabaseModel.getInstance().deleteStyleVisualizer(this.getDatabaseId());
+	}
+
+	public Integer getParticleSteps() {
+		if (particleSteps == null) {
+			if (parent == null) {
+				try {
                     throw new VisualizerParentException();
                 } catch (VisualizerParentException e) {
                     e.printStackTrace();

@@ -32,6 +32,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @CommandAlias("finde|find")
@@ -112,13 +114,13 @@ public class FindCommand extends BaseCommand {
     private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
         PagedChestMenu menu = new PagedChestMenu(Component.text("Wähle deinen Partikelstyle"), 3);
         PathVisualizer actual = pathPlayer.getVisualizer(roadMap);
-        //TODO Roadmapspezifische Pathvisualiser definieren
 
-        for (PathVisualizer visualizer : VisualizerHandler.getInstance().getPathVisualizers()) {
+        Collection<PathVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getDatabaseId(), new ArrayList<>());
+        for (PathVisualizer visualizer : visualizers) {
             String perm = visualizer.getPickPermission();
 
-            boolean hasPerm = player.hasPermission(perm);
-            boolean def, spender = false, spender2 = false;
+            boolean hasPerm = perm == null || player.hasPermission(perm);
+            boolean def = false, spender = false, spender2 = false;
             if (!hasPerm) {
                 GroupManager groupManager = BukkitMain.getInstance().getLuckPerms().getGroupManager();
                 Group defaultGroup = groupManager.getGroup("default");
@@ -146,9 +148,8 @@ public class FindCommand extends BaseCommand {
             if (actual.equals(visualizer)) {
                 ItemStackUtils.setGlowing(stack);
             }
-            menu.addMenuEntry(stack, context -> {
+            menu.addMenuEntry(stack, /*hasPerm ? 0 : spender ? 1 : spender2 ? 2 : 3, */context -> {
                 if (!hasPerm) {
-                    pathPlayer.setVisualizer(roadMap, visualizer);
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                     return;
                 }

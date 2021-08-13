@@ -242,47 +242,49 @@ public class PathVisualizerCommand extends BaseCommand {
         PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Scheduler-Wiederholdauer aktualisiert: " + schedulerPeriodString);
     }
 
-    @CommandAlias("style")
-    public class Style {
+    @Subcommand("style")
+    public class Style extends BaseCommand {
 
         @Subcommand("name")
         @Syntax("<Pfad-Visualizer> <Name>")
         @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
         public void onName(CommandSender sender, PathVisualizer visualizer, String name) {
-            if(!visualizer.isPickable()) {
-                //TODO message
-                return;
+            if (!visualizer.isPickable()) {
+                visualizer.createPickable(null, name, null);
+            } else {
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                visualizer.setDisplayName(name);
             }
-            visualizer.setDisplayName(ComponentUtils.parseMiniMessage(name));
-            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
-            //TODO message
+            sender.sendMessage(Component.empty()
+                    .append(PathPlugin.PREFIX_COMP)
+                    .append(Component.text("Name gesetzt: ", NamedTextColor.GRAY))
+                    .append(ComponentUtils.parseMiniMessage(name)));
         }
 
         @Subcommand("material")
         @Syntax("<Pfad-Visualizer> <Material>")
         @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + BukkitMain.COMPLETE_MATERIALS_LOWERCASE)
         public void onMaterial(CommandSender sender, PathVisualizer visualizer, Material type) {
-            if(!visualizer.isPickable()) {
-                //TODO message
-                return;
+            if (!visualizer.isPickable()) {
+                visualizer.createPickable(null, null, type);
+            } else {
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                visualizer.setIconType(type);
             }
-            visualizer.setIconType(type);
-            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
-            //TODO message
+            PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Typ gesetzt: " + PathPlugin.COLOR_LIGHT + type);
         }
-
 
         @Subcommand("permission")
         @Syntax("<Pfad-Visualizer> <Permission>")
         @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
         public void onPermission(CommandSender sender, PathVisualizer visualizer, @Single String permission) {
-            if(!visualizer.isPickable()) {
-                //TODO message
-                return;
+            if (!visualizer.isPickable()) {
+                visualizer.createPickable(permission, null, null);
+            } else {
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                visualizer.setPickPermission(permission);
             }
-            visualizer.setPickPermission(permission);
-            DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
-            //TODO message
+            PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Permission gesetzt: " + PathPlugin.COLOR_LIGHT + permission);
         }
 
         @Subcommand("delete")
@@ -290,11 +292,11 @@ public class PathVisualizerCommand extends BaseCommand {
         @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
         public void onDelete(CommandSender sender, PathVisualizer visualizer) {
             if(!visualizer.isPickable()) {
-                //TODO message
+                PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Der Visualizer muss ein Style sein.");
                 return;
             }
             visualizer.removePickable();
+            PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style erfolgreich gelöscht: " + visualizer.getName());
         }
-
     }
 }

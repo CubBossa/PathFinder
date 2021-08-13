@@ -40,7 +40,10 @@ public class VisualizerHandler implements PacketListener {
 	 * PlayerID, RoadMapID, VisualizerID
 	 */
 	@Getter
-	private Map<Integer, Map<Integer, Integer>> playerVisualizers;
+	private final Map<Integer, Map<Integer, Integer>> playerVisualizers;
+	@Getter
+	private final Map<Integer, Collection<PathVisualizer>> roadmapVisualizers;
+
 
 	public VisualizerHandler() {
 
@@ -50,6 +53,7 @@ public class VisualizerHandler implements PacketListener {
 		this.pathVisualizerMap = DatabaseModel.getInstance().loadPathVisualizer();
 		this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
 		this.playerVisualizers = DatabaseModel.getInstance().loadPlayerVisualizers();
+		this.roadmapVisualizers = DatabaseModel.getInstance().loadStyleRoadmapMap(pathVisualizerMap.values());
 
         //Fehlerbehandlung
         if (pathVisualizerMap == null) {
