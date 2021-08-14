@@ -88,6 +88,8 @@ public class PlayerListener implements Listener {
                 pPlayer.cancelPath(rm);
                 player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
                         .append(Component.text(findable.getGroup() != null ? findable.getGroup().getFriendlyName() : findable.getFriendlyName(), NamedTextColor.WHITE)));
+
+                player.playSound(player.getLocation(), Sound.ITEM_TRIDENT_RETURN, 1, 1);
             }
         }
     }

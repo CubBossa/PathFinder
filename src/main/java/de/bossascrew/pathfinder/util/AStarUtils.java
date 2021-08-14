@@ -100,6 +100,8 @@ public class AStarUtils {
     public @Nullable
     static Pair<AStarNode, AStarNode> createAStarRelations(RoadMap roadMap, PathPlayer player, PlayerFindable playerFindable, Location start, Findable target, boolean ignoreUnfound, boolean findGrouped) {
 
+        //TODO nicht nur nearest dist, sondern nearest edge center und endpunkte berücksichtigen
+
         Collection<Findable> findables = ignoreUnfound ? roadMap.getFindables() : roadMap.getFindables(player);
         Map<Integer, AStarNode> aStarNodes = new HashMap<>();
 

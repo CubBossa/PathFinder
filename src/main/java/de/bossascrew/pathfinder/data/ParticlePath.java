@@ -7,6 +7,7 @@ import de.bossascrew.core.util.Tuple3;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -90,12 +91,16 @@ public class ParticlePath extends ArrayList<Findable> {
     private void calculateSmooth() {
         List<Tuple3<Vector, Vector, Vector>> tangentPoints = getTangentPoints();
         for (int i = 0; i < tangentPoints.size() - 1; i++) {
-            final int fi = i;
-            final Vector fv = tangentPoints.get(i + 1).getMiddle();
-            calculatedPoints.addAll(BezierUtils.getBezierCurveDistanced(visualizer.getParticleDistance(), tangentPoints.get(i).getMiddle(), tangentPoints.get(i + 1).getMiddle(),
-                    tangentPoints.get(i).getRight(), tangentPoints.get(i + 1).getLeft())
-                    .stream()
-                    .filter(vector -> (fi != tangentPoints.size() - 2) || vector.distance(fv) > roadMap.getNodeFindDistance())
+            final int finalIndex = i;
+            final Vector actualCenter = tangentPoints.get(i).getMiddle();
+            final Vector actualRight = tangentPoints.get(i).getRight();
+            final Vector nextLeft = tangentPoints.get(i + 1).getLeft();
+            final Vector nextCenter = tangentPoints.get(i + 1).getMiddle();
+            List<Vector> bezier = BezierUtils.getBezierCurveDistanced(visualizer.getParticleDistance(),
+                    actualCenter, nextCenter, actualRight, nextLeft);
+
+            calculatedPoints.addAll(bezier.stream()
+                    .filter(vector -> (finalIndex != tangentPoints.size() - 2) || vector.distance(nextCenter) > roadMap.getNodeFindDistance())
                     .collect(Collectors.toList()));
         }
         List<Vector> evenSpacing = BezierUtils.getEvenlySpacedPoints(calculatedPoints, visualizer.getParticleDistance());
@@ -107,7 +112,6 @@ public class ParticlePath extends ArrayList<Findable> {
      * der rechte Kontrollpunkt. Ist ein Wert null, gibt es keinen Kontrollpunkt weil es kein benachbartes Node gab.
      */
     private List<Tuple3<Vector, Vector, Vector>> getTangentPoints() {
-        //TODO wenn zu nahe aneinander überschneidung: automatisch Tangenten kürzen
 
         if (size() < 1) {
             return new ArrayList<>();
@@ -147,10 +151,19 @@ public class ParticlePath extends ArrayList<Findable> {
                     effectiveBezierLenght = leftDist / 2;
                 }
 
-                //Vector, der genau in der Mitte zwischen ba und bc
-                Vector middle = ba.clone().add(bc).normalize();
                 //Senkrechtvektor:
                 Vector up = ba.clone().crossProduct(bc);
+                if (up.getX() == 0 && up.getY() == 0 && up.getZ() == 0) {
+                    up = new Vector(0, 1, 0);
+                }
+
+                //Vector, der genau in der Mitte zwischen ba und bc
+                Vector middle = ba.clone().add(bc).normalize();
+                fixVectorNaN(middle);
+                if (middle.getX() == 0 && middle.getY() == 0 && middle.getZ() == 0) {
+                    middle = ba.clone().crossProduct(up);
+                }
+
                 //Kontrollpunktrichtung:
                 Vector dir = middle.clone().crossProduct(up).normalize().multiply(effectiveBezierLenght);
 
@@ -166,6 +179,18 @@ public class ParticlePath extends ArrayList<Findable> {
         return tangentPoints;
     }
 
+    public void fixVectorNaN(Vector vector) {
+        if (Double.isNaN(vector.getX())) {
+            vector.setX(0);
+        }
+        if (Double.isNaN(vector.getY())) {
+            vector.setY(0);
+        }
+        if (Double.isNaN(vector.getZ())) {
+            vector.setZ(0);
+        }
+    }
+
     public void run() {
         run(playerUuid);
     }
@@ -173,6 +198,12 @@ public class ParticlePath extends ArrayList<Findable> {
     public void run(UUID uuid) {
         PluginUtils.getInstance().runSync(() -> {
             cancelSync();
+            PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(uuid);
+            if (pathPlayer == null) {
+                return;
+            }
+            this.visualizer = pathPlayer.getVisualizer(roadMap);
+
             this.active = true;
 
             int steps = visualizer.getParticleSteps();

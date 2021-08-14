@@ -24,6 +24,7 @@ import de.bossascrew.pathfinder.util.CommandUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.group.GroupManager;
 import org.bukkit.ChatColor;
@@ -34,6 +35,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @CommandAlias("finde|find")
@@ -111,6 +115,8 @@ public class FindCommand extends BaseCommand {
         openStyleMenu(player, pathPlayer, roadMap);
     }
 
+    Map<Player, Long> styleMenuCooldown = new ConcurrentHashMap<>();
+
     private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
         PagedChestMenu menu = new PagedChestMenu(Component.text("Wähle deinen Partikelstyle"), 3);
         PathVisualizer actual = pathPlayer.getVisualizer(roadMap);
@@ -139,9 +145,11 @@ public class FindCommand extends BaseCommand {
             ItemMeta m = stack.getItemMeta();
             m.displayName(visualizer.getDisplayName());
             if (spender) {
-                m.lore(Lists.newArrayList(Component.text("Ab Matrose erhältlich.", NamedTextColor.RED)));
+                m.lore(Lists.newArrayList(Component.text("Ab Matrose erhältlich.", NamedTextColor.RED)
+                        .decoration(TextDecoration.ITALIC, false)));
             } else if (spender2) {
-                m.lore(Lists.newArrayList(Component.text("Ab Maat erhältlich.", NamedTextColor.RED)));
+                m.lore(Lists.newArrayList(Component.text("Ab Maat erhältlich.", NamedTextColor.RED)
+                        .decoration(TextDecoration.ITALIC, false)));
             }
             stack.setItemMeta(m);
 
@@ -153,6 +161,13 @@ public class FindCommand extends BaseCommand {
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                     return;
                 }
+                if(styleMenuCooldown.containsKey(player)) {
+                    if(System.currentTimeMillis() - styleMenuCooldown.get(player) < 1000) {
+                        PlayerUtils.sendMessage(player, ChatColor.RED + "Bitte warte eine Sekunde, bevor du deinen Pfad neu setzt.");
+                        return;
+                    }
+                }
+                styleMenuCooldown.put(player, System.currentTimeMillis());
                 pathPlayer.setVisualizer(roadMap, visualizer);
                 player.playSound(player.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 1, 1);
                 PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikelstyle ausgewählt: " + visualizer.getName());

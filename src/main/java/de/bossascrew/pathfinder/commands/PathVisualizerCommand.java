@@ -252,8 +252,8 @@ public class PathVisualizerCommand extends BaseCommand {
             if (!visualizer.isPickable()) {
                 visualizer.createPickable(null, name, null);
             } else {
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
                 visualizer.setDisplayName(name);
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
             }
             sender.sendMessage(Component.empty()
                     .append(PathPlugin.PREFIX_COMP)
@@ -268,8 +268,8 @@ public class PathVisualizerCommand extends BaseCommand {
             if (!visualizer.isPickable()) {
                 visualizer.createPickable(null, null, type);
             } else {
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
                 visualizer.setIconType(type);
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
             }
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Typ gesetzt: " + PathPlugin.COLOR_LIGHT + type);
         }
@@ -281,8 +281,8 @@ public class PathVisualizerCommand extends BaseCommand {
             if (!visualizer.isPickable()) {
                 visualizer.createPickable(permission, null, null);
             } else {
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
                 visualizer.setPickPermission(permission);
+                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
             }
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Permission gesetzt: " + PathPlugin.COLOR_LIGHT + permission);
         }

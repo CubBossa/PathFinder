@@ -57,7 +57,10 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
 	}
 
 	public Component getDisplayName() {
-		return displayName != null ? ComponentUtils.parseMiniMessage(displayName) : Component.text(getName(), NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
+		return displayName != null ?
+				Component.empty().decoration(TextDecoration.ITALIC, false)
+						.append(ComponentUtils.parseMiniMessage(displayName)) :
+				Component.text(getName(), NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
 	}
 
 	public void removePickable() {
