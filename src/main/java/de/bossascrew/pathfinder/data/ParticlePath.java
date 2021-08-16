@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.core.bukkit.util.BezierUtils;
 import de.bossascrew.core.bukkit.util.VectorUtils;
 import de.bossascrew.core.util.PluginUtils;
@@ -13,16 +14,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
 import xyz.xenondevs.particle.task.TaskManager;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -233,7 +233,13 @@ public class ParticlePath extends ArrayList<Findable> {
 					if (schedulerHandler.isCancelled()) {
                         return;
                     }
-                    int id = TaskManager.startSingularTask(packets, period * steps, uuid);
+                    int id = TaskManager.startSuppliedTask(packets, period * steps, () -> {
+                        Player searching = Bukkit.getPlayer(uuid);
+                        if(searching != null && searching.getWorld().equals(world)) {
+                            return Lists.newArrayList(searching);
+                        }
+                        return new ArrayList<>();
+                    });
                     schedulerHandler.getSchedulerIds().add(id);
                 }, (long) i * period);
             }

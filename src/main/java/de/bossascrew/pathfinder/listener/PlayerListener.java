@@ -80,6 +80,9 @@ public class PlayerListener implements Listener {
 
     private void findPathTarget(PlayerMoveEvent event, Player player, PathPlayer pPlayer) {
         for (ParticlePath path : pPlayer.getActivePaths()) {
+            if(!player.getWorld().equals(path.getRoadMap().getWorld())) {
+                continue;
+            }
             RoadMap rm = path.getRoadMap();
             Findable findable = path.get(path.size() - 1);
             AtomicBoolean foundGuard = hasFoundTarget.getOrDefault(player.getUniqueId(), new HashMap<>())
