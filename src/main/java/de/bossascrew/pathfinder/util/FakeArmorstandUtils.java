@@ -3,7 +3,7 @@ package de.bossascrew.pathfinder.util;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 public class FakeArmorstandUtils {
 
-	private Map<Integer, Node> nodeArmorstands;
+	private Map<Integer, Waypoint> nodeArmorstands;
 	private ProtocolManager protocolManager;
 
 	public void spawnArmorstand(Player player, Location location) {

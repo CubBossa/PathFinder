@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import org.bukkit.ChatColor;
@@ -30,7 +30,7 @@ public class FindTraderCommand extends BaseCommand {
             return;
         }
 
-        Node target = roadMap.getFindables().stream()
+        Waypoint target = roadMap.getNodes().stream()
                 .filter(findable -> findable instanceof TraderFindable)
                 .map(f -> (TraderFindable) f)
                 .filter(f -> f.getName().equalsIgnoreCase(shopName))

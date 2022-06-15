@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.data.findable;
+package de.bossascrew.pathfinder.node;
 
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.data.SqlStorage;

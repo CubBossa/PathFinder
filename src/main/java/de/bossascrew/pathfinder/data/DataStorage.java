@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.QuestFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.cubbossa.menuframework.util.Pair;
@@ -32,31 +31,31 @@ public interface DataStorage {
 
 	boolean deleteRoadMap(int roadMapId);
 
-	void newEdge(Node nodeA, Node nodeB);
+	void newEdge(Waypoint nodeA, Waypoint nodeB);
 
 	Collection<Pair<Integer, Integer>> loadEdges(RoadMap roadMap);
 
-	void deleteEdge(Pair<Node, Node> edge);
+	void deleteEdge(Pair<Waypoint, Waypoint> edge);
 
-	void deleteEdge(Node a, Node b);
+	void deleteEdge(Waypoint a, Waypoint b);
 
-	Node newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission);
+	Waypoint newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission);
 
 	void deleteFindable(int nodeId);
 
-	void updateFindable(@NotNull Node findable);
+	void updateFindable(@NotNull Waypoint findable);
 
-	Map<Integer, Node> loadFindables(RoadMap roadMap);
+	Map<Integer, Waypoint> loadFindables(RoadMap roadMap);
 
-	FindableGroup newFindableGroup(RoadMap roadMap, String name, boolean findable);
+	NodeGroup newFindableGroup(RoadMap roadMap, String name, boolean findable);
 
-	void deleteFindableGroup(FindableGroup group);
+	void deleteFindableGroup(NodeGroup group);
 
 	void deleteFindableGroup(int groupId);
 
-	Map<Integer, FindableGroup> loadFindableGroups(RoadMap roadMap);
+	Map<Integer, NodeGroup> loadFindableGroups(RoadMap roadMap);
 
-	void updateFindableGroup(FindableGroup group);
+	void updateFindableGroup(NodeGroup group);
 
 	FoundInfo newFoundInfo(int globalPlayerId, int foundId, boolean group, Date foundDate);
 

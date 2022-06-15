@@ -1,7 +1,8 @@
-package de.bossascrew.pathfinder.data.findable;
+package de.bossascrew.pathfinder.node;
 
 import de.bossascrew.pathfinder.data.RoadMap;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class Node implements NavigationTarget {
+public class Waypoint implements Node {
 
 	protected final int nodeId;
 	protected final int roadMapId;
@@ -18,13 +19,14 @@ public class Node implements NavigationTarget {
 
 	protected Vector position;
 	protected String nameFormat;
+	protected Component displayName;
 	protected int groupId = -1;
 	protected @Nullable
 	String permission = null;
 	protected @Nullable
 	Double bezierTangentLength = null;
 
-	public Node(int databaseId, RoadMap roadMap, @Nullable String nameFormat) {
+	public Waypoint(int databaseId, RoadMap roadMap, @Nullable String nameFormat) {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapId = roadMap.getRoadmapId();

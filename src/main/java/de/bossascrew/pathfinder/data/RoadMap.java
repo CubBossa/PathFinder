@@ -1,37 +1,31 @@
 package de.bossascrew.pathfinder.data;
 
-import com.google.common.collect.Maps;
-import de.bossascrew.core.bukkit.inventory.menu.HotbarMenu;
-import de.bossascrew.core.bukkit.nbt.NBTEntity;
-import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.core.bukkit.util.BezierUtils;
-import de.bossascrew.core.bukkit.util.HeadDBUtils;
-import de.bossascrew.core.util.Pair;
-import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.findable.*;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
-import de.bossascrew.pathfinder.util.EditModeMenu;
+import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import de.cubbossa.menuframework.util.Pair;
 import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
-import xyz.xenondevs.particle.task.TaskManager;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultDirectedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
+@Setter
 public class RoadMap {
 
 	private final int roadmapId;
@@ -43,9 +37,9 @@ public class RoadMap {
 	private double nodeFindDistance;
 	private double defaultBezierTangentLength;
 
-	private final Map<Integer, Node> findables = Maps.newHashMap();
-	private final Collection<Pair<Node, Node>> edges;
-	private final Map<Integer, FindableGroup> groups;
+	private final Map<Integer, Node> nodes;
+	private final Collection<Edge> edges;
+	private final Map<Integer, NodeGroup> groups;
 
 	private PathVisualizer pathVisualizer;
 	private EditModeVisualizer editModeVisualizer;
@@ -62,45 +56,55 @@ public class RoadMap {
 		this.defaultBezierTangentLength = defaultBezierTangentLength;
 
 		this.groups = SqlStorage.getInstance().loadFindableGroups(this);
-		this.findables.putAll(SqlStorage.getInstance().loadFindables(this));
+		this.nodes = new TreeMap<>();
+		this.nodes.putAll(SqlStorage.getInstance().loadFindables(this));
 		this.edges = loadEdgesFromIds(PathPlugin.getInstance().getDatabase().loadEdges(this));
 
 		setPathVisualizer(pathVisualizer);
 		setEditModeVisualizer(editModeVisualizer);
 	}
 
-	public void setNameFormat(String nameFormat) {
-		if (RoadMapHandler.getInstance().isNameUnique(nameFormat)) {
-			this.nameFormat = nameFormat;
+	public Graph<Node, Edge> toGraph() {
+		return new DefaultDirectedGraph<>(Edge.class);
+	}
+
+	//TODO auslagern
+	public Waypoint createNode(Vector vector, String name) {
+		return createNode(vector, name, null, null);
+	}
+
+	public Waypoint createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
+		Waypoint node = (Waypoint) SqlStorage.getInstance().newFindable(this, Waypoint.SCOPE, null,
+				vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
+		if (node != null) {
+			addNode(node);
 		}
-		updateData();
+		return node;
 	}
 
-	public boolean isNodeNameUnique(String name) {
-		return findables.values().stream().map(Node::getNameFormat).noneMatch(context -> context.equalsIgnoreCase(name));
+	public void removeNodes(NodeSelection selection) {
+		for (Node node : selection) {
+			removeNode(node);
+		}
 	}
 
-	public boolean isNodeNPC(int id) {
-		return findables.values().stream()
-				.filter(findable -> findable instanceof NpcFindable)
-				.map(findable -> (NpcFindable) findable)
-				.anyMatch(npcFindable -> npcFindable.getNpcId() == id);
+	public void removeNode(int id) {
+		Node node = getNode(id);
+		if (node != null) {
+			removeNode(node);
+		}
 	}
 
-	public void deleteFindable(int findableId) {
-		deleteFindable(Objects.requireNonNull(getFindable(findableId)));
-	}
-
-	public void deleteFindable(Node findable) {
+	public void removeNode(Node node) {
 		for (int edge : new ArrayList<>(findable.getEdges())) {
-			Node target = getFindable(edge);
+			Waypoint target = getNode(edge);
 			if (target == null) {
 				continue;
 			}
 			disconnectNodes(findable, target);
 		}
 		SqlStorage.getInstance().deleteFindable(findable.getNodeId());
-		findables.remove(findable.getNodeId());
+		nodes.remove(findable.getNodeId());
 
 		if (isEdited()) {
 			updateEditModeParticles();
@@ -109,105 +113,62 @@ public class RoadMap {
 		}
 	}
 
-	public QuestFindable createQuestFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
-		QuestFindable findable =  SqlStorage.getInstance().newQuestFindable(this, null, npcId, name, bezierTangentLength, permission);
-		addFindable(findable);
-		return findable;
+	public void addNode(Node node) {
+		nodes.put(node.getNodeId(), node);
 	}
 
-	public TraderFindable createTraderFindable(int npcId, @Nullable String name, @Nullable Double bezierTangentLength, String permission) {
-		TraderFindable findable =  SqlStorage.getInstance().newTraderFindable(this, null, npcId, name, bezierTangentLength, permission);
-		addFindable(findable);
-		return findable;
+	public void setNodes(Map<Integer, Waypoint> nodes) {
+		this.nodes.clear();
+		this.nodes.putAll(nodes);
 	}
 
-	public Node createNode(Vector vector, String name) {
-		return createNode(vector, name, null, null);
+	public void addFindables(Map<Integer, Waypoint> findables) {
+		this.nodes.putAll(findables);
 	}
 
-	public Node createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
-		Node node = (Node) SqlStorage.getInstance().newFindable(this, Node.SCOPE, null,
-				vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
-		if (node != null) {
-			addFindable(node);
+	public @Nullable
+	Node getNode(int nodeId) {
+		for (Node node : nodes.values()) {
+			if (node.getNodeId() == nodeId) {
+				return node;
+			}
 		}
-		if (isEdited()) {
-			this.editModeNodeArmorStands.put(node, getNodeArmorStand(node));
-		}
-		return node;
-	}
-
-	public void addFindable(Node findable) {
-		findables.put(findable.getNodeId(), findable);
-	}
-
-	public void setFindables(Map<Integer, Node> findables) {
-		this.findables.clear();
-		this.findables.putAll(findables);
-	}
-
-	public void addFindables(Map<Integer, Node> findables) {
-		this.findables.putAll(findables);
+		return null;
 	}
 
 	public @Nullable
-	Node getFindable(String name) {
-		return findables.values().stream().filter(f -> f.getNameFormat().equalsIgnoreCase(name)).findAny().orElse(null);
+	NodeGroup getNodeGroup(Node node) {
+		return getNodeGroup(node.getGroupId());
 	}
 
 	public @Nullable
-	Node getFindable(int findableId) {
-		return findables.values().stream().filter(f -> f.getNodeId() == findableId).findAny().orElse(null);
-	}
-
-	public @Nullable
-	FindableGroup getFindableGroup(String name) {
-		return groups.values().stream().filter(g -> g.getName().equalsIgnoreCase(name)).findAny().orElse(null);
-	}
-
-	public @Nullable
-	FindableGroup getFindableGroup(Node findable) {
-		return getFindableGroup(findable.getNodeGroupId());
-	}
-
-	public @Nullable
-	FindableGroup getFindableGroup(Integer groupId) {
+	NodeGroup getNodeGroup(Integer groupId) {
 		if (groupId == null) {
 			return null;
 		}
-		return groups.values().stream().filter(group -> group.getDatabaseId() == groupId).findAny().orElse(null);
+		for (NodeGroup group : groups.values()) {
+			if (group.getGroupId() == groupId) {
+				return group;
+			}
+		}
+		return null;
 	}
 
-	public void deleteFindableGroup(FindableGroup findableGroup) {
-		findableGroup.delete();
-		this.groups.remove(findableGroup.getDatabaseId());
-		SqlStorage.getInstance().deleteFindableGroup(findableGroup);
-		for(Node f : findableGroup.getFindables()) {
-			updateArmorStandDisplay(f, false);
-		}
+	public void removeNodeGroup(NodeGroup nodeGroup) {
+		this.groups.remove(nodeGroup.getGroupId());
 	}
 
 	public @Nullable
-	FindableGroup addFindableGroup(String name) {
-		return addFindableGroup(name, true);
-	}
+	NodeGroup createNodeGroup(String name, boolean findable) {
 
-	public @Nullable
-	FindableGroup addFindableGroup(String name, boolean findable) {
-		if (!isGroupNameUnique(name)) {
-			return null;
-		}
-		FindableGroup group = SqlStorage.getInstance().newFindableGroup(this, name, findable);
+		NodeGroup group = SqlStorage.getInstance().newFindableGroup(this, name, findable);
 		if (group == null) {
 			return null;
 		}
-		groups.put(group.getDatabaseId(), group);
+		groups.put(group.getGroupId(), group);
 		return group;
 	}
 
-	public boolean isGroupNameUnique(String name) {
-		return groups.values().stream().map(FindableGroup::getName).noneMatch(g -> g.equalsIgnoreCase(name));
-	}
 
 	/**
 	 * erstellt neue Edge in der Datenbank
@@ -219,7 +180,7 @@ public class RoadMap {
 		SqlStorage.getInstance().newEdge(a, b);
 		a.getEdges().add(b.getNodeId());
 		b.getEdges().add(a.getNodeId());
-		Pair<Node, Node> edge = new Pair<>(a, b);
+		Pair<Waypoint, Waypoint> edge = new Pair<>(a, b);
 		edges.add(edge);
 
 		if (isEdited()) {
@@ -228,34 +189,30 @@ public class RoadMap {
 		}
 	}
 
-	public void disconnectNodes(Pair<Node, Node> edge) {
-		if(edge.first == null) {
-			return;
-		}
-		disconnectNodes(edge.first, edge.second);
-	}
-
-	public void disconnectNode(Node f) {
-		for(int edge : new HashSet<>(f.getEdges())) {
-			disconnectNodes(f, getFindable(edge));
-		}
+	public Edge getEdge(Node start, Node end) {
+		return edges.stream().filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end)).findFirst().orElse(null);
 	}
 
 	public void disconnectNodes(Node a, Node b) {
+		disconnectNodes(getEdge(a, b));
+	}
+
+	public void disconnectNode(Waypoint f) {
+		for (int edge : new HashSet<>(f.getEdges())) {
+			disconnectNodes(f, getNode(edge));
+		}
+	}
+
+	public void disconnectNodes(Edge edge) {
+		Node a = edge.getStart();
+		Node b = edge.getEnd();
+
 		if (a.equals(b)) {
 			return;
 		}
-		SqlStorage.getInstance().deleteEdge(a, b);
 		a.getEdges().remove((Integer) b.getNodeId());
 		b.getEdges().remove((Integer) a.getNodeId());
 
-		Pair<Node, Node> edge = edges.stream()
-				.filter(pair -> (pair.first.equals(a) && pair.second.equals(b)) || pair.second.equals(a) && pair.first.equals(b))
-				.findAny().orElse(null);
-
-		if (edge == null) {
-			return;
-		}
 		edges.remove(edge);
 		if (isEdited()) {
 			updateEditModeParticles();
@@ -267,11 +224,11 @@ public class RoadMap {
 		}
 	}
 
-	private Collection<Pair<Node, Node>> loadEdgesFromIds(Collection<Pair<Integer, Integer>> edgesById) {
-		Collection<Pair<Node, Node>> result = new ArrayList<>();
+	private Collection<Pair<Waypoint, Waypoint>> loadEdgesFromIds(Collection<Pair<Integer, Integer>> edgesById) {
+		Collection<Pair<Waypoint, Waypoint>> result = new ArrayList<>();
 		for (Pair<Integer, Integer> pair : edgesById) {
-			Node a = getFindable(pair.first);
-			Node b = getFindable(pair.second);
+			Waypoint a = getFindable(pair.first);
+			Waypoint b = getFindable(pair.second);
 
 			if (a == null || b == null) {
 				continue;
@@ -284,6 +241,7 @@ public class RoadMap {
 		return result;
 	}
 
+/*TODO weg hier
 	public void delete() {
 		cancelEditModes();
 		for (UUID uuid : editingPlayers.keySet()) {
@@ -300,336 +258,12 @@ public class RoadMap {
 		}
 		SqlStorage.getInstance().deleteRoadMap(this);
 	}
+*/
 
-	/**
-	 * @return true sobald mindestens ein Spieler den Editmode aktiv hat
-	 */
-	public boolean isEdited() {
-		return !editingPlayers.isEmpty();
-	}
 
-	public void toggleEditMode(UUID uuid) {
-		setEditMode(uuid, !isEditing(uuid));
-	}
 
-	public void cancelEditModes() {
-		for (UUID uuid : editingPlayers.keySet()) {
-			setEditMode(uuid, false);
-		}
-	}
 
-	/**
-	 * Setzt den Bearbeitungsmodus für einen Spieler, wobei auch Hotbarmenü etc gesetzt werden => nicht threadsafe
-	 *
-	 * @param uuid    des Spielers, dessen Modus gesetzt wird
-	 * @param editing ob der Modus aktiviert oder deaktiviert wird
-	 */
-	public void setEditMode(UUID uuid, boolean editing) {
-		Player player = Bukkit.getPlayer(uuid);
-		PathPlayer editor = PathPlayerHandler.getInstance().getPlayer(uuid);
-		if (editor == null) {
-			return;
-		}
 
-		if (editing) {
-			if (player == null) {
-				return;
-			}
-			if (!isEdited()) {
-				startEditModeVisualizer();
-			}
-			editor.setEditMode(roadmapId);
-			HotbarMenu menu = new EditModeMenu(player, this).getHotbarMenu();
-			editingPlayers.put(uuid, menu);
-			menu.openInventory(player);
-			player.setGameMode(GameMode.CREATIVE);
-			toggleArmorStandsVisible(player, true);
-		} else {
-			if (player != null) {
-				editingPlayers.get(uuid).closeInventory(player);
-				toggleArmorStandsVisible(player, false);
-			}
-
-			editingPlayers.remove(uuid);
-			editor.clearEditedRoadmap();
-
-			if (!isEdited()) {
-				stopEditModeVisualizer();
-			}
-		}
-	}
-
-	public void toggleArmorStandsVisible(Player player, boolean show) {
-		if(show) {
-			for(ArmorStand as : getEditModeEdgeArmorStands().values()) {
-				entityHider.showEntity(player, as);
-			}
-			for(ArmorStand as : getEditModeNodeArmorStands().values()) {
-				entityHider.showEntity(player, as);
-			}
-		} else {
-			for(ArmorStand as : getEditModeEdgeArmorStands().values()) {
-				entityHider.hideEntity(player, as);
-			}
-			for(ArmorStand as : getEditModeNodeArmorStands().values()) {
-				entityHider.hideEntity(player, as);
-			}
-		}
-	}
-
-	public boolean isEditing(UUID uuid) {
-		return editingPlayers.containsKey(uuid);
-	}
-
-	public boolean isEditing(Player player) {
-		return isEditing(player.getUniqueId());
-	}
-
-	public void startEditModeVisualizer() {
-		entityHider = new EntityHider(PathPlugin.getInstance(), EntityHider.Policy.BLACKLIST);
-
-		for (Node findable : findables.values()) {
-			if(!findable.getLocation().isChunkLoaded()) {
-				continue;
-			}
-			if(findable instanceof NpcFindable) {
-				continue;
-			}
-			ArmorStand nodeArmorStand = getNodeArmorStand(findable);
-			editModeNodeArmorStands.put(findable, nodeArmorStand);
-		}
-		List<Pair<Node, Node>> processedFindables = new ArrayList<>();
-		for (Pair<Node, Node> edge : edges) {
-			if (processedFindables.contains(edge)) {
-				continue;
-			}
-			ArmorStand edgeArmorStand = getEdgeArmorStand(edge);
-			editModeEdgeArmorStands.put(edge, edgeArmorStand);
-			processedFindables.add(edge);
-		}
-		updateEditModeParticles();
-
-		armorStandDistanceTask = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
-			for (UUID uuid : editingPlayers.keySet()) {
-				Player player = Bukkit.getPlayer(uuid);
-				if (player == null || player.getWorld() != world) {
-					continue;
-				}
-				List<ArmorStand> armorStands = new ArrayList<>(getEditModeNodeArmorStands().values());
-				armorStands.addAll(getEditModeEdgeArmorStands().values());
-				for (ArmorStand armorStand : armorStands) {
-					if (player.getLocation().distance(armorStand.getLocation()) > 20) {
-						entityHider.hideEntity(player, armorStand);
-					} else {
-						entityHider.showEntity(player, armorStand);
-					}
-				}
-			}
-		}, 10, 10);
-	}
-
-	public void stopEditModeVisualizer() {
-		if (armorStandDistanceTask != null) {
-			armorStandDistanceTask.cancel();
-		}
-
-		entityHider.destroy();
-		entityHider = null;
-
-		for (ArmorStand armorStand : editModeNodeArmorStands.values()) {
-			armorStand.remove();
-		}
-		for (ArmorStand armorStand : editModeEdgeArmorStands.values()) {
-			armorStand.remove();
-		}
-		editModeNodeArmorStands.clear();
-		editModeEdgeArmorStands.clear();
-		Bukkit.getScheduler().cancelTask(editModeTask);
-	}
-
-	public void updateArmorStandPosition(Node findable) {
-		ArmorStand as = editModeNodeArmorStands.get(findable);
-		if (as == null) {
-			return;
-		}
-		as.teleport(findable.getVector().toLocation(world).add(ARMORSTAND_OFFSET));
-
-		for (Pair<Node, Node> edge : getEdges(findable)) {
-			ArmorStand asEdge = editModeEdgeArmorStands.get(edge);
-			if (asEdge == null) {
-				return;
-			}
-			asEdge.teleport(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET));
-		}
-	}
-
-	public void updateArmorStandNodeHeads() {
-		ItemStack head = HeadDBUtils.getHeadById(editModeVisualizer.getNodeHeadId());
-		for (ArmorStand armorStand : editModeNodeArmorStands.values()) {
-			armorStand.getEquipment().setHelmet(head);
-		}
-	}
-
-	public void updateArmorStandEdgeHeads() {
-		ItemStack head = HeadDBUtils.getHeadById(editModeVisualizer.getEdgeHeadId());
-		for (ArmorStand armorStand : editModeEdgeArmorStands.values()) {
-			armorStand.getEquipment().setHelmet(head);
-		}
-	}
-
-	public void updateArmorStandDisplay(Node findable) {
-		updateArmorStandDisplay(findable, true);
-	}
-
-	public void updateArmorStandDisplay(Node findable, boolean considerEdges) {
-		ArmorStand as = editModeNodeArmorStands.get(findable);
-		getNodeArmorStand(findable, as);
-
-		if (!considerEdges) {
-			return;
-		}
-		for (int edge : findable.getEdges()) {
-			Pair<Node, Node> edgePair = getEdge(findable.getNodeId(), edge);
-			if (edgePair == null) {
-				continue;
-			}
-			getEdgeArmorStand(edgePair, editModeEdgeArmorStands.get(edgePair));
-		}
-	}
-
-	/**
-	 * Erstellt eine Liste aus Partikel Packets, die mithilfe eines Schedulers immerwieder an die Spieler im Editmode geschickt werden.
-	 * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktualisiert werden.
-	 * Wird asynchron ausgeführt
-	 */
-	public void updateEditModeParticles() {
-		PluginUtils.getInstance().runSync(() -> {
-
-			//Bestehenden Task cancellen
-			Bukkit.getScheduler().cancelTask(editModeTask);
-
-			//Packet List erstellen, die dem Spieler dann wieder und wieder geschickt wird. (Muss refreshed werden, wenn es Änderungen gibt.)
-			List<Object> packets = new ArrayList<>();
-			ParticleBuilder particle = new ParticleBuilder(ParticleEffect.valueOf(editModeVisualizer.getParticle().toString()))
-					.setColor(java.awt.Color.RED);
-
-			//Alle linearen Verbindungen der Waypoints errechnen und als Packet sammeln. Berücksichtigen, welche Node schon behandelt wurde, um doppelte Geraden zu vermeiden
-			List<Pair<Node, Node>> processedFindables = new ArrayList<>();
-			for (Pair<Node, Node> edge : edges) {
-				if (processedFindables.contains(edge)) {
-					continue;
-				}
-				List<Vector> points = BezierUtils.getBezierCurveDistanced(editModeVisualizer.getParticleDistance(), edge.first.getVector(), edge.second.getVector());
-				packets.addAll(points.stream()
-						.map(vector -> vector.toLocation(world))
-						.map(location -> particle.setLocation(location).toPacket())
-						.collect(Collectors.toSet()));
-				processedFindables.add(edge);
-			}
-			if (packets.size() > editModeVisualizer.getParticleLimit()) {
-				packets = packets.subList(0, editModeVisualizer.getParticleLimit());
-			}
-			final List<Object> fPackets = packets;
-			editModeTask = TaskManager.startSuppliedTask(fPackets, editModeVisualizer.getSchedulerPeriod(), () -> editingPlayers.keySet().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).filter(Player::isOnline).collect(Collectors.toSet()));
-		});
-	}
-
-	private ArmorStand getNodeArmorStand(Node findable) {
-		return getNodeArmorStand(findable, null);
-	}
-
-	private ArmorStand getNodeArmorStand(Node findable, ArmorStand toEdit) {
-		String name = findable.getNameFormat() + " #" + findable.getNodeId() +
-				(findable.getGroup() == null ? "" : (findable.getGroup().isFindable() ? ChatColor.GRAY : ChatColor.DARK_GRAY) + " (" + findable.getGroup().getName() + ")");
-
-		if (toEdit == null) {
-			toEdit = getNewArmorStand(findable.getLocation().clone().add(ARMORSTAND_OFFSET), name, editModeVisualizer.getNodeHeadId());
-		} else {
-			toEdit.setCustomName(name);
-			toEdit.getEquipment().setHelmet(HeadDBUtils.getHeadById(editModeVisualizer.getNodeHeadId()));
-		}
-		return toEdit;
-	}
-
-	private ArmorStand getEdgeArmorStand(Pair<Node, Node> edge) {
-		return getEdgeArmorStand(edge, null);
-	}
-
-	private ArmorStand getEdgeArmorStand(Pair<Node, Node> edge, ArmorStand toEdit) {
-		//String name = edge.first.getName() + " (#" + edge.first.getDatabaseId() + ") ↔ " + edge.second.getName() + " (#" + edge.second.getDatabaseId() + ")";
-
-		if (toEdit == null) {
-			toEdit = getNewArmorStand(getEdgeCenter(edge).add(ARMORSTAND_CHILD_OFFSET), null, editModeVisualizer.getEdgeHeadId(), true);
-		} else {
-			toEdit.setCustomName(null);
-			toEdit.getEquipment().setHelmet(HeadDBUtils.getHeadById(editModeVisualizer.getEdgeHeadId()));
-		}
-		toEdit.setSmall(true);
-		return toEdit;
-	}
-
-	public void setNodeFindDistance(double nodeFindDistance) {
-		this.nodeFindDistance = nodeFindDistance;
-		updateData();
-	}
-
-	public void setFindableNodes(boolean findableNodes) {
-		this.findableNodes = findableNodes;
-		updateData();
-	}
-
-	public void setEditModeVisualizer(EditModeVisualizer editModeVisualizer) {
-		if (this.editModeVisualizer != null) {
-			this.editModeVisualizer.getNodeHeadSubscribers().unsubscribe(this.getRoadmapId());
-			this.editModeVisualizer.getEdgeHeadSubscribers().unsubscribe(this.getRoadmapId());
-			this.editModeVisualizer.getUpdateParticle().unsubscribe(this.getRoadmapId());
-		}
-		this.editModeVisualizer = editModeVisualizer;
-		updateData();
-
-		this.editModeVisualizer.getNodeHeadSubscribers().subscribe(this.getRoadmapId(), integer -> PluginUtils.getInstance().runSync(() -> {
-			if (isEdited()) {
-				this.updateArmorStandNodeHeads();
-			}
-		}));
-		this.editModeVisualizer.getEdgeHeadSubscribers().subscribe(this.getRoadmapId(), integer -> PluginUtils.getInstance().runSync(() -> {
-			if (isEdited()) {
-				this.updateArmorStandEdgeHeads();
-			}
-		}));
-		this.editModeVisualizer.getUpdateParticle().subscribe(this.getRoadmapId(), obj -> {
-			if (isEdited()) {
-				updateEditModeParticles();
-			}
-		});
-
-		if (isEdited()) {
-			updateArmorStandEdgeHeads();
-			updateArmorStandNodeHeads();
-			updateEditModeParticles();
-		}
-	}
-
-	public void updateChunkArmorStands(Chunk chunk, boolean unload) {
-		if (!isEdited()) {
-			return;
-		}
-		List<Node> nodes = new ArrayList<>(getFindables());
-		nodes = nodes.stream().filter(node -> node.getLocation().getChunk().equals(chunk)).collect(Collectors.toList());
-		for (Node findable : nodes) {
-			if(findable instanceof NpcFindable) {
-				continue;
-			}
-			//TODO edges
-			if (unload) {
-				getNodeArmorStand(findable).remove();
-				editModeNodeArmorStands.remove(findable);
-			} else {
-				ArmorStand nodeArmorStand = getNodeArmorStand(findable);
-				editModeNodeArmorStands.put(findable, nodeArmorStand);
-			}
-		}
-	}
 
 	public void setPathVisualizer(PathVisualizer pathVisualizer) {
 		if (this.pathVisualizer != null) {
@@ -655,121 +289,60 @@ public class RoadMap {
 				.forEach(ParticlePath::run);
 	}
 
-	public void setDefaultBezierTangentLength(double length) {
-		this.defaultBezierTangentLength = length;
-		updateData();
-	}
-
-	public void setWorld(World world) {
-		if (world == null) {
-			return;
-		}
-		this.world = world;
-		updateData();
-	}
-
-	private void updateData() {
-		PluginUtils.getInstance().runAsync(() -> {
-			SqlStorage.getInstance().updateRoadMap(this);
-		});
-	}
-
-	private Location getEdgeCenter(Pair<Node, Node> edge) {
-		Node a = edge.first;
-		Node b = edge.second;
-
-		if (edge.first != null && edge.second != null) {
-			Vector va = a.getVector().clone();
-			Vector vb = b.getVector().clone();
-			return va.add(vb.subtract(va).multiply(0.5)).toLocation(world);
-		}
-		return null;
-	}
-
-	private Collection<Pair<Node, Node>> getEdges(Node findable) {
-		Collection<Pair<Node, Node>> ret = new ArrayList<>();
-		for (Pair<Node, Node> edge : edges) {
-			if (edge.first != null && edge.second != null) {
-				if (edge.first.equals(findable) || edge.second.equals(findable)) {
-					ret.add(edge);
-				}
+	private Collection<Edge> getEdgesFrom(Node node) {
+		Collection<Edge> ret = new ArrayList<>();
+		for (Edge edge : edges) {
+			if (edge.getStart().equals(node)) {
+				ret.add(edge);
 			}
 		}
 		return ret;
 	}
 
-	public int getFindablesSize() {
-		return getFindables().size();
+	private Collection<Edge> getEdgesTo(Node node) {
+		Collection<Edge> ret = new ArrayList<>();
+		for (Edge edge : edges) {
+			if (edge.getEnd().equals(node)) {
+				ret.add(edge);
+			}
+		}
+		return ret;
 	}
 
-	public Collection<NavigationTarget> getFindables() {
-		return findables.values();
+	public Collection<Node> getNodes() {
+		return nodes.values();
 	}
 
-	public Collection<Node> getFindables(PathPlayer player) {
+	public Collection<Node> getNodes(PathPlayer player) {
+		if (!findableNodes) {
+			return getNodes();
+		}
 		Player bukkitPlayer = Bukkit.getPlayer(player.getUuid());
 		if (bukkitPlayer == null) {
 			return new ArrayList<>();
 		}
-		if(!findableNodes) {
-			return getFindables();
-		}
-		return getFindables().stream()
-				.filter(node -> node.getGroup() != null && !node.getGroup().isFindable() || player.hasFound(node))
+		return getNodes().stream()
+				.filter(node -> node.getGroupId() != NodeGroup.NO_GROUP && !getNodeGroup(node.getGroupId()).isFindable() || player.hasFound(node))
 				.filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
 				.collect(Collectors.toSet());
 	}
 
 	public @Nullable
-	Pair<Node, Node> getEdge(int aId, int bId) {
+	Edge getEdge(int aId, int bId) {
 		return edges.stream()
-				.filter(pair -> pair.first != null && pair.second != null)
-				.filter(pair -> (pair.first.getDatabaseId() == aId && pair.second.getDatabaseId() == bId) ||
-						(pair.second.getDatabaseId() == aId && pair.first.getDatabaseId() == bId))
+				.filter(edge -> edge.getStart().getNodeId() == aId && edge.getEnd().getNodeId() == bId)
 				.findAny()
 				.orElse(null);
 	}
 
 	public int getMaxFoundSize() {
-		List<Integer> sizes = groups.values().stream().filter(FindableGroup::isFindable).map(g -> g.getFindables().size()).collect(Collectors.toList());
-		sizes.add((int) findables.values().stream().filter(f -> f.getGroup() == null).count());
+		List<Integer> sizes = groups.values().stream().filter(NodeGroup::isFindable).map(g -> g.getNodes().size()).collect(Collectors.toList());
+		sizes.add((int) nodes.values().stream().filter(f -> f.getGroupId() == NodeGroup.NO_GROUP).count());
 
 		int size = 0;
 		for (int i : sizes) {
 			size += i;
 		}
 		return size;
-	}
-
-
-	private ArmorStand getNewArmorStand(Location location, String name, int headDbId) {
-		return getNewArmorStand(location, name, headDbId, false);
-	}
-
-	private ArmorStand getNewArmorStand(Location location, @Nullable String name, int headDbId, boolean small) {
-		ArmorStand as = location.getWorld().spawn(location,
-				ArmorStand.class,
-				armorStand -> {
-					entityHider.hideEntity(armorStand);
-					for (UUID uuid : editingPlayers.keySet()) {
-						entityHider.showEntity(Bukkit.getPlayer(uuid), armorStand);
-					}
-					armorStand.setVisible(false);
-					if (name != null) {
-						armorStand.setCustomNameVisible(true);
-						armorStand.setCustomName(name);
-					}
-					armorStand.setGravity(false);
-					armorStand.setInvulnerable(true);
-					armorStand.setSmall(small);
-					ItemStack helmet = HeadDBUtils.getHeadById(headDbId);
-					if (armorStand.getEquipment() != null && helmet != null) {
-						armorStand.getEquipment().setHelmet(helmet);
-					}
-				});
-
-		NBTEntity e = new NBTEntity(as);
-		e.getPersistentDataContainer().addCompound(PathPlugin.NBT_ARMORSTAND_KEY);
-		return as;
 	}
 }

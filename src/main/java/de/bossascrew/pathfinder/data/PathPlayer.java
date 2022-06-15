@@ -1,12 +1,13 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.PlayerFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -32,8 +33,8 @@ public class PathPlayer {
     private final Map<Integer, FoundInfo> foundGroups;
 
     private final Map<Integer, ParticlePath> activePaths;
-    private final Map<Integer, FindableGroup> lastSetGroups;
-    private final Map<Integer, Node> lastSetFindables;
+    private final Map<Integer, NodeGroup> lastSetGroups;
+    private final Map<Integer, Waypoint> lastSetFindables;
 
     @Getter
     @Nullable
@@ -79,21 +80,21 @@ public class PathPlayer {
         }
     }
 
-    public void unfind(Node findable, boolean group) {
+    public void unfind(Waypoint findable, boolean group) {
         unfind(group ? findable.getNodeGroupId() : findable.getNodeId(), group);
     }
 
     public void unfind(RoadMap roadMap) {
-        for (FindableGroup group : roadMap.getGroups().values()) {
-            unfind(group.getDatabaseId(), true);
+        for (NodeGroup group : roadMap.getGroups().values()) {
+            unfind(group.getGroupId(), true);
         }
-        for (Node findable : roadMap.getFindables()) {
+        for (Waypoint findable : roadMap.getNodes()) {
             unfind(findable.getNodeId(), false);
         }
     }
 
     public void unfind(int id, boolean group) {
-        if(group) {
+        if (group) {
             foundGroups.remove(id);
         } else {
             foundFindables.remove(id);
@@ -101,8 +102,8 @@ public class PathPlayer {
         SqlStorage.getInstance().deleteFoundNode(globalPlayerId, id, group);
     }
 
-    public boolean hasFound(FindableGroup group) {
-        return hasFound(group.getDatabaseId(), true);
+    public boolean hasFound(NodeGroup group) {
+        return hasFound(group.getGroupId(), true);
     }
 
     public boolean hasFound(int id, boolean group) {
@@ -113,26 +114,26 @@ public class PathPlayer {
         }
     }
 
-    public boolean hasFound(Node findable) {
-        if (findable.getGroup() != null) {
-            return foundGroups.containsKey(findable.getGroup().getDatabaseId());
+    public boolean hasFound(Node node) {
+        if (node.getGroupId() != NodeGroup.NO_GROUP) {
+            return foundGroups.containsKey(node.getGroupId());
         }
-        return foundFindables.containsKey(findable.getNodeId());
+        return foundFindables.containsKey(node.getNodeId());
     }
 
     /**
      * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
      */
     public int getFoundAmount(RoadMap roadMap) {
-        Collection<Integer> ids = roadMap.getFindables().stream()
+        Collection<Integer> ids = roadMap.getNodes().stream()
                 .filter(f -> f.getGroup() == null)
                 .filter(this::hasFound)
-                .map(Node::getNodeId)
+                .map(Waypoint::getNodeId)
                 .collect(Collectors.toSet());
         Collection<Integer> counts = foundGroups.values().stream()
-                .map(fi -> roadMap.getFindableGroup(fi.getFoundId()))
+                .map(fi -> roadMap.getNodeGroup(fi.getFoundId()))
                 .filter(Objects::nonNull)
-                .filter(FindableGroup::isFindable)
+                .filter(NodeGroup::isFindable)
                 .map(g -> g.getFindables().size())
                 .collect(Collectors.toList());
 
@@ -143,7 +144,7 @@ public class PathPlayer {
         return ids.size() + count;
     }
 
-    public void setPath(Node targetNode) {
+    public void setPath(Waypoint targetNode) {
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
             return;
@@ -151,7 +152,7 @@ public class PathPlayer {
         setPath(player, targetNode);
     }
 
-    public void setPath(final Player player, final Node target) {
+    public void setPath(final Player player, final Waypoint target) {
         final PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         if (pathPlayer == null) {
             return;
@@ -262,21 +263,21 @@ public class PathPlayer {
         }
     }
 
-    public void setLastSetGroup(FindableGroup findableGroup) {
+    public void setLastSetGroup(NodeGroup findableGroup) {
         this.lastSetGroups.put(findableGroup.getRoadMap().getRoadmapId(), findableGroup);
     }
 
     public @Nullable
-    FindableGroup getLastSetGroup(RoadMap roadMap) {
+    NodeGroup getLastSetGroup(RoadMap roadMap) {
         return this.lastSetGroups.get(roadMap.getRoadmapId());
     }
 
-    public void setLastSetFindable(Node findable) {
+    public void setLastSetFindable(Waypoint findable) {
         this.lastSetFindables.put(findable.getRoadMapId(), findable);
     }
 
     public @Nullable
-    Node getLastSetFindable(RoadMap roadMap) {
+    Waypoint getLastSetFindable(RoadMap roadMap) {
         return this.lastSetFindables.get(roadMap.getRoadmapId());
     }
 

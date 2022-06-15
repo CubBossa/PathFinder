@@ -7,19 +7,23 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.PlayerFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import de.bossascrew.pathfinder.util.NodeSelection;
+import de.bossascrew.pathfinder.util.SelectionUtils;
 import de.cubbossa.menuframework.chat.ComponentMenu;
 import de.cubbossa.menuframework.chat.TextMenu;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -65,7 +69,7 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("info ungrouped")
-	@Syntax("<Straßenkarte>")
+	@Syntax("<roadmap>")
 	@CommandPermission("pathfinder.command.roadmap.info")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
 	public void onUngrouped(CommandSender sender, @Optional RoadMap roadMap) {
@@ -74,7 +78,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 		TextMenu menu = new TextMenu("Ungruppierte Wegpunkte in " + roadMap.getNameFormat() + ":");
 		String list = "";
-		for (Node findable : roadMap.getFindables().stream()
+		for (Waypoint findable : roadMap.getNodes().stream()
 				.filter(findable -> findable.getGroup() == null)
 				.collect(Collectors.toList())) {
 			list += ChatColor.WHITE + findable.getNameFormat() + ChatColor.GRAY + ", ";
@@ -84,9 +88,9 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("create")
-	@Syntax("<Name> [<Welt>] [findbar]")
+	@Syntax("<name> [<world>] [findable]")
 	@CommandPermission("pathfinder.command.roadmap.create")
-	@CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " findbar")
+	@CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " findable")
 	public void onCreate(Player player, String name,
 	                     @Optional @Values("@worlds") World world,
 	                     @Optional @Single @Values("findbar") String findable) {
@@ -109,7 +113,7 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("delete")
-	@Syntax("<Straßenkarte>")
+	@Syntax("<roadmap>")
 	@CommandPermission("pathfinder.command.roadmap.delete")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
 	public void onDelete(CommandSender sender, @Optional RoadMap roadMap) {
@@ -195,11 +199,11 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("forcefind")
-	@Syntax("<Straßenkarte> <Spieler> <Wegpunkte> [ungruppiert]")
+	@Syntax("<roadmap> <player> <nodes> [ungrouped]")
 	@CommandPermission("pathfinder.command.roadmap.forcefind")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS + " " + PathPlugin.COMPLETE_FINDABLES)
-	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, @Single String nodename,
-	                        @Optional @Single @Values("ungruppiert") String ungrouped) {
+	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, @Single NodeSelection selection,
+							@Optional @Single @Values("ungrouped") String ungrouped) {
 
 		boolean findSingle = ungrouped != null;
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
@@ -207,17 +211,13 @@ public class RoadMapCommand extends BaseCommand {
 			return;
 		}
 
-		boolean all = nodename.equals("*");
-		for (Node findable : roadMap.getFindables()) {
-			if (findable.getNameFormat().equalsIgnoreCase(nodename) || all) {
-				pathPlayer.find(findable, !findSingle, new Date());
-				if (!all) {
-					break;
-				}
-			}
+		for (Node node : selection) {
+			pathPlayer.find(node, !findSingle, new Date());
 		}
-		PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Spieler " + PathPlugin.CHAT_COLOR_LIGHT + target.getName() +
-				ChatColor.GRAY + " hat " + PathPlugin.CHAT_COLOR_LIGHT + nodename + ChatColor.GRAY + " gefunden.");
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
+				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+				.build()), sender);
 	}
 
 	@Subcommand("forceforget")
@@ -235,7 +235,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 
 		boolean all = nodename.equals("*");
-		for (Node findable : roadMap.getFindables()) {
+		for (Waypoint findable : roadMap.getNodes()) {
 			if (all || findable.getNameFormat().equalsIgnoreCase(nodename)) {
 				pathPlayer.unfind(findable, !findSingle);
 				if (!all) {
@@ -293,13 +293,10 @@ public class RoadMapCommand extends BaseCommand {
 		}
 
 		@Subcommand("name")
-		@Syntax("<Neuer Name>")
+		@Syntax("<new name>")
 		@CommandPermission("pathfinder.command.roadmap.set.name")
 		public void onRename(CommandSender sender, @Single String nameNew) {
-			if (RoadMapHandler.getInstance().getRoadMap(nameNew) != null) {
-				PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben.");
-				return;
-			}
+
 			CommandUtils.getSelectedRoadMap(sender).setNameFormat(nameNew);
 			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte erfolgreich umbenannt: " + nameNew);
 		}
@@ -419,7 +416,7 @@ public class RoadMapCommand extends BaseCommand {
 		@Subcommand("navigate")
 		@Syntax("<Findable>")
 		@CommandCompletion(PathPlugin.COMPLETE_FINDABLES)
-		public void onTestNavigate(Player player, Node findable) {
+		public void onTestNavigate(Player player, Waypoint findable) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -437,7 +434,7 @@ public class RoadMapCommand extends BaseCommand {
 		@Subcommand("find")
 		@Syntax("<Findable>")
 		@CommandCompletion(PathPlugin.COMPLETE_FINDABLES_FINDABLE)
-		public void onTestFind(Player player, Node findable) {
+		public void onTestFind(Player player, Waypoint findable) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());

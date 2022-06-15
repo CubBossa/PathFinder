@@ -5,7 +5,7 @@ import de.bossascrew.core.sql.MySQL;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.SQLUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.findable.*;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
@@ -362,7 +362,7 @@ public class SqlStorage implements DataStorage {
         return false;
     }
 
-    public void newEdge(Node nodeA, Node nodeB) {
+    public void newEdge(Waypoint nodeA, Waypoint nodeB) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_edges` " +
                     "(node_a_id, node_b_id) VALUES (?, ?)")) {
@@ -400,11 +400,11 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void deleteEdge(Pair<Node, Node> edge) {
+    public void deleteEdge(Pair<Waypoint, Waypoint> edge) {
         deleteEdge(edge.first, edge.second);
     }
 
-    public void deleteEdge(Node a, Node b) {
+    public void deleteEdge(Waypoint a, Waypoint b) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_edges` WHERE ( `node_a_id` = ? AND `node_b_id` = ? ) OR ( `node_a_id` = ? AND `node_b_id` = ? )")) {
                 SQLUtils.setInt(stmt, 1, a.getNodeId());
@@ -429,7 +429,7 @@ public class SqlStorage implements DataStorage {
     }
 
     public @Nullable
-    Node newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
+	Waypoint newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, scope, group_id, x, y, z, name, tangent_length, permission) VALUES " +
@@ -449,10 +449,10 @@ public class SqlStorage implements DataStorage {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
 
-                    Node ret = null;
+                    Waypoint ret = null;
                     switch (scope) {
-                        case Node.SCOPE:
-                            ret = new Node(databaseId, roadMap, name, new Vector(x, y, z));
+                        case Waypoint.SCOPE:
+                            ret = new Waypoint(databaseId, roadMap, name, new Vector(x, y, z));
                             break;
                         case TraderFindable.SCOPE:
                             ret = new TraderFindable(databaseId, roadMap, (int) (x.doubleValue()), name);
@@ -484,7 +484,7 @@ public class SqlStorage implements DataStorage {
         }
     }
 
-    public void updateFindable(@NotNull Node findable) {
+    public void updateFindable(@NotNull Waypoint findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
                     "`roadmap_id` = ?, " +
@@ -518,13 +518,13 @@ public class SqlStorage implements DataStorage {
         }
     }
 
-    public Map<Integer, Node> loadFindables(RoadMap roadMap) {
+    public Map<Integer, Waypoint> loadFindables(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, Node> result = new ConcurrentHashMap<>();
+                    Map<Integer, Waypoint> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
                         int id = SQLUtils.getInt(resultSet, "node_id");
                         String scope = SQLUtils.getString(resultSet, "scope");
@@ -540,10 +540,10 @@ public class SqlStorage implements DataStorage {
                             continue;
                         }
 
-                        Node ret = null;
+                        Waypoint ret = null;
                         switch (scope) {
-                            case Node.SCOPE:
-                                ret = new Node(id, roadMap, name, new Vector(x, y, z));
+                            case Waypoint.SCOPE:
+                                ret = new Waypoint(id, roadMap, name, new Vector(x, y, z));
                                 break;
                             case TraderFindable.SCOPE:
                                 ret = new TraderFindable(id, roadMap, (int) (x.doubleValue()), name);
@@ -567,7 +567,7 @@ public class SqlStorage implements DataStorage {
     }
 
     public @Nullable
-    FindableGroup newFindableGroup(RoadMap roadMap, String name, boolean findable) {
+    NodeGroup newFindableGroup(RoadMap roadMap, String name, boolean findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_node_groups` " +
                     "(roadmap_id, name, findable) VALUES " +
@@ -580,7 +580,7 @@ public class SqlStorage implements DataStorage {
                 try (ResultSet resultSet = stmt.getGeneratedKeys()) {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
-                    FindableGroup group = new FindableGroup(databaseId, roadMap, name);
+                    NodeGroup group = new NodeGroup(databaseId, roadMap, name);
                     group.setFindable(findable);
                     return group;
                 }
@@ -591,8 +591,8 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void deleteFindableGroup(FindableGroup group) {
-        deleteFindableGroup(group.getDatabaseId());
+    public void deleteFindableGroup(NodeGroup group) {
+        deleteFindableGroup(group.getGroupId());
     }
 
     public void deleteFindableGroup(int groupId) {
@@ -606,19 +606,19 @@ public class SqlStorage implements DataStorage {
         }
     }
 
-    public Map<Integer, FindableGroup> loadFindableGroups(RoadMap roadMap) {
+    public Map<Integer, NodeGroup> loadFindableGroups(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_node_groups` WHERE `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, FindableGroup> result = new HashMap<>();
+                    Map<Integer, NodeGroup> result = new HashMap<>();
                     while (resultSet.next()) {
                         int id = SQLUtils.getInt(resultSet, "group_id");
                         String name = SQLUtils.getString(resultSet, "name");
                         boolean findable = SQLUtils.getBoolean(resultSet, "findable");
 
-                        FindableGroup group = new FindableGroup(id, roadMap, name);
+                        NodeGroup group = new NodeGroup(id, roadMap, name);
                         group.setFindable(findable);
                         result.put(id, group);
                     }
@@ -631,19 +631,19 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void updateFindableGroup(FindableGroup group) {
+    public void updateFindableGroup(NodeGroup group) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_node_groups` SET " +
                     "`name` = ?, " +
                     "`findable` = ? " +
                     "WHERE `group_id` = ?")) {
-                SQLUtils.setString(stmt, 1, group.getName());
+                SQLUtils.setString(stmt, 1, group.getNameFormat());
                 SQLUtils.setBoolean(stmt, 2, group.isFindable());
-                SQLUtils.setInt(stmt, 3, group.getDatabaseId());
+                SQLUtils.setInt(stmt, 3, group.getGroupId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Nodegroup: " + group.getDatabaseId(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Nodegroup: " + group.getGroupId(), e);
         }
     }
 

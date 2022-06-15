@@ -59,9 +59,21 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+
+        <repository>
+            <id>maven-snapshots</id>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <layout>default</layout>
+        </repository>
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>1.5.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>

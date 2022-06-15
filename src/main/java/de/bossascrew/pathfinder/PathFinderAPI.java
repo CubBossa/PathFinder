@@ -2,8 +2,8 @@ package de.bossascrew.pathfinder;
 
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.PlayerFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.node.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class PathFinderAPI {
 
-    public void findFindable(Player player, Node findable) {
+    public void findFindable(Player player, Waypoint findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -29,7 +29,7 @@ public class PathFinderAPI {
         pathPlayer.find(findable, false, new Date());
     }
 
-    public void forgetFindable(Player player, Node findable) {
+    public void forgetFindable(Player player, Waypoint findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -37,7 +37,7 @@ public class PathFinderAPI {
         pathPlayer.unfind(findable, false);
     }
 
-    public void findFindableGroup(Player player, Node findable) {
+    public void findFindableGroup(Player player, Waypoint findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -45,7 +45,7 @@ public class PathFinderAPI {
         pathPlayer.find(findable, true, new Date());
     }
 
-    public void forgetFindableGroup(Player player, Node findable) {
+    public void forgetFindableGroup(Player player, Waypoint findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -53,7 +53,7 @@ public class PathFinderAPI {
         pathPlayer.unfind(findable, true);
     }
 
-    public void showPath(Player player, Node findable) {
+    public void showPath(Player player, Waypoint findable) {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         AStarUtils.startPath(pPlayer, new PlayerFindable(player, findable.getRoadMap()), findable, true);
     }
@@ -109,14 +109,14 @@ public class PathFinderAPI {
     }
 
     public @Nullable
-    Node getFindable(RoadMap roadMap, String name) {
-        return roadMap.getFindable(name);
+	Waypoint getFindable(RoadMap roadMap, String name) {
+        return roadMap.getNode(name);
     }
 
     public @Nullable
-    Node getFindable(int databaseId) {
+	Waypoint getFindable(int databaseId) {
         for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
-            Node f = roadMap.getFindable(databaseId);
+            Waypoint f = roadMap.getNode(databaseId);
             if (f != null) {
                 return f;
             }
@@ -124,16 +124,16 @@ public class PathFinderAPI {
         return null;
     }
 
-    public Node createNode(String name, RoadMap roadMap, Vector position) {
+    public Waypoint createNode(String name, RoadMap roadMap, Vector position) {
         return roadMap.createNode(position, name);
     }
 
     public void deleteFindable(int databaseId) {
-        RoadMapHandler.getInstance().getRoadMaps().forEach(rm -> rm.deleteFindable(databaseId));
+        RoadMapHandler.getInstance().getRoadMaps().forEach(rm -> rm.deleteNode(databaseId));
     }
 
-    public void deleteFindable(Node findable) {
-        findable.getRoadMap().deleteFindable(findable.getNodeId());
+    public void deleteFindable(Waypoint findable) {
+        findable.getRoadMap().deleteNode(findable.getNodeId());
     }
 
     public @Nullable

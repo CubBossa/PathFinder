@@ -1,7 +1,11 @@
 package de.bossascrew.pathfinder.util;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.data.findable.NavigationTarget;
+import de.bossascrew.pathfinder.node.Node;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -22,8 +26,8 @@ public class SelectionUtils {
 	}
 
 	public record Selector(String key, Pattern value,
-	                       BiFunction<List<NavigationTarget>, Context, List<NavigationTarget>> filter,
-	                       String... completions) {
+						   BiFunction<List<Node>, Context, List<Node>> filter,
+						   String... completions) {
 	}
 
 	public static final Selector SELECT_KEY_NAME = new Selector("name", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2.)*?\\1"), (nodes, context) -> {
@@ -94,7 +98,8 @@ public class SelectionUtils {
 				Collections.shuffle(n);
 				return n;
 			}));
-			case "arbitrary" -> nodes.stream().sorted(Comparator.comparingInt(NavigationTarget::getNodeId)).collect(Collectors.toList());
+			case "arbitrary" -> nodes.stream().sorted(Comparator.comparingInt(Node::getNodeId)).collect(Collectors.toList());
+			default -> nodes;
 		};
 	}, "nearest", "furthest", "random", "arbitrary");
 
@@ -107,7 +112,7 @@ public class SelectionUtils {
 			SELECT_KEY_SORT
 	};
 
-	public static NodeSelection getTargetSelection(Player player, Collection<NavigationTarget> input, String selectString) {
+	public static NodeSelection getNodeSelection(Player player, Collection<Node> input, String selectString) {
 		Matcher matcher = SELECT_PATTERN.matcher(selectString);
 		if (!matcher.matches()) {
 			throw new IllegalArgumentException("Select String must be of format @n[<key>=<value>,...]");
@@ -138,14 +143,14 @@ public class SelectionUtils {
 			}
 		}
 
-		List<NavigationTarget> nodes = new ArrayList<>(input);
+		List<Node> nodes = new ArrayList<>(input);
 		for (Map.Entry<Selector, String> entry : arguments.entrySet()) {
 			nodes = entry.getKey().filter().apply(nodes, new Context(player, entry.getValue()));
 		}
 		return new NodeSelection(nodes);
 	}
 
-	public static List<String> complete(Collection<? extends NavigationTarget> input, String selectString) {
+	public static List<String> completeNodeSelection(Collection<? extends Node> input, String selectString) {
 		if (!selectString.startsWith("@n[")) {
 			return Lists.newArrayList("@n[");
 		}
@@ -154,13 +159,32 @@ public class SelectionUtils {
 		selectString = args[args.length - 1];
 
 		String sel = selectString;
-		if (selectString.endsWith("=")) return Arrays.stream(SELECTORS)
-				.flatMap(s -> sel.substring(0, sel.length() - 1).equalsIgnoreCase(s.key) ? Arrays.stream(s.completions()) : Stream.empty())
-				.collect(Collectors.toList());
+		if (selectString.endsWith("=")) {
+			return Arrays.stream(SELECTORS)
+					.flatMap(s -> sel.substring(0, sel.length() - 1).equalsIgnoreCase(s.key) ? Arrays.stream(s.completions()) : Stream.empty())
+					.collect(Collectors.toList());
+		}
 
 		return Arrays.stream(SELECTORS)
 				.map(s -> s.key() + "=")
 				.filter(sel::startsWith)
 				.collect(Collectors.toList());
+	}
+
+	public static Component formatSelection(NodeSelection selection) {
+
+		Component hover = Component.empty();
+		int i = 0;
+		for (Node node : selection) {
+			hover = hover.append(node.getDisplayName());
+			if (i < selection.size() - 1) {
+				hover = hover.append(Component.text(", ", NamedTextColor.GRAY));
+			}
+		}
+
+		return Component.text(selection.size() + " Nodes")
+				.color(NamedTextColor.WHITE)
+				.decorate(TextDecoration.UNDERLINED)
+				.hoverEvent(HoverEvent.showText(hover));
 	}
 }

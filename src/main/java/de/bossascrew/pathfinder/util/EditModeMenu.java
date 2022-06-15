@@ -6,11 +6,11 @@ import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.CommandUtils;
 import de.bossascrew.core.util.Pair;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.NpcFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.node.NpcFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.hooks.CitizensHook;
 import lombok.Getter;
@@ -39,7 +39,7 @@ public class EditModeMenu {
 
     @Getter
     @Setter
-    private Node firstFindableEdgeCreate = null;
+    private Waypoint firstFindableEdgeCreate = null;
 
     public EditModeMenu(Player player, RoadMap roadMap) {
         this.player = player;
@@ -61,15 +61,15 @@ public class EditModeMenu {
 
         menu.setItem(0, EditmodeUtils.NODE_TOOl);
         menu.setClickHandler(0, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Node clickedFindable = getClickedFindable((Entity) context.getTarget());
+            Waypoint clickedFindable = getClickedFindable((Entity) context.getTarget());
             if (clickedFindable != null) {
                 Player p = context.getPlayer();
-                roadMap.deleteFindable(clickedFindable);
+                roadMap.deleteNode(clickedFindable);
                 p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
             }
         });
         menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, context -> {
-            Node last = pathPlayer.getLastSetFindable(roadMap);
+            Waypoint last = pathPlayer.getLastSetFindable(roadMap);
             String name;
             if(last != null) {
                 final Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
@@ -84,7 +84,7 @@ public class EditModeMenu {
                 name = "node";
             }
             openNodeNameMenu(context.getPlayer(), name, s -> {
-                Node f = roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
+                Waypoint f = roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
                 f.setGroup(pathPlayer.getLastSetGroup(roadMap), true);
                 pathPlayer.setLastSetFindable(f);
             });
@@ -99,7 +99,7 @@ public class EditModeMenu {
         menu.setItem(1, EditmodeUtils.EDGE_TOOL);
         menu.setClickHandler(1, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
             Player p = context.getPlayer();
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked == null) {
                 return;
             }
@@ -123,14 +123,14 @@ public class EditModeMenu {
             p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
         });
         menu.setClickHandler(1, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Node f = getClickedFindable((Entity) context.getTarget());
+            Waypoint f = getClickedFindable((Entity) context.getTarget());
             if(f != null) {
                 roadMap.disconnectNode(f);
                 return;
             }
             Player player = context.getPlayer();
             int clickedId = ((Entity) context.getTarget()).getEntityId();
-            Pair<Node, Node> edge = roadMap.getEditModeEdgeArmorStands().keySet().stream()
+            Pair<Waypoint, Waypoint> edge = roadMap.getEditModeEdgeArmorStands().keySet().stream()
                     .filter(key -> roadMap.getEditModeEdgeArmorStands().get(key).getEntityId() == clickedId)
                     .findAny().orElse(null);
             if (edge == null) {
@@ -152,8 +152,8 @@ public class EditModeMenu {
         menu.setItem(7, EditmodeUtils.TP_TOOL);
         menu.setClickHandler(7, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, context -> {
             double dist = -1;
-            Node nearest = null;
-            for (Node findable : roadMap.getFindables()) {
+            Waypoint nearest = null;
+            for (Waypoint findable : roadMap.getNodes()) {
                 double _dist = findable.getVector().distance(player.getLocation().toVector());
                 if (dist == -1 || _dist < dist) {
                     nearest = findable;
@@ -170,14 +170,14 @@ public class EditModeMenu {
         });
 
         menu.setItemAndClickHandler(5, EditmodeUtils.TANGENT_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked != null) {
                 openTangentStrengthMenu(context.getPlayer(), clicked);
             }
         });
 
         menu.setItemAndClickHandler(6, EditmodeUtils.PERMISSION_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked != null) {
                 openNodePermissionMenu(context.getPlayer(), clicked);
             }
@@ -185,14 +185,14 @@ public class EditModeMenu {
 
         menu.setItem(2, EditmodeUtils.GROUP_TOOL);
         menu.setClickHandler(2, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked == null) {
                 return;
             }
             openGroupMenu(context.getPlayer(), clicked);
         });
         menu.setClickHandler(2, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked == null) {
                 return;
             }
@@ -201,24 +201,24 @@ public class EditModeMenu {
         });
 
         menu.setItemAndClickHandler(3, EditmodeUtils.LAST_GROUP_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Node clicked = getClickedFindable((Entity) context.getTarget());
+            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
             if (clicked == null) {
                 return;
             }
-            FindableGroup last = pathPlayer.getLastSetGroup(clicked.getRoadMap());
+            NodeGroup last = pathPlayer.getLastSetGroup(clicked.getRoadMap());
             if (last == null) {
                 return;
             }
-            clicked.setGroup(last.getDatabaseId(), true, true);
+            clicked.setGroup(last.getGroupId(), true, true);
         });
 
         return menu;
     }
 
-    private void openGroupMenu(Player player, Node clicked) {
+    private void openGroupMenu(Player player, Waypoint clicked) {
 
         PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 5);
-        for (FindableGroup group : clicked.getRoadMap().getGroups().values()) {
+        for (NodeGroup group : clicked.getRoadMap().getGroups().values()) {
 
             groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
                 clicked.setGroup(group, true);
@@ -233,14 +233,14 @@ public class EditModeMenu {
             openCreateGroupMenu(c.getPlayer(), clicked);
         });
         groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
-            clicked.setGroup((FindableGroup) null, true);
+            clicked.setGroup((NodeGroup) null, true);
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
             openGroupMenu(c.getPlayer(), clicked);
         });
         groupMenu.openInventory(player);
     }
 
-    private void openCreateGroupMenu(Player player, Node findable) {
+    private void openCreateGroupMenu(Player player, Waypoint findable) {
         AnvilMenu menu = new AnvilMenu(Component.text("Nodegruppe erstellen:"));
 
         ItemStack result = new ItemStack(Material.CHEST);
@@ -269,7 +269,7 @@ public class EditModeMenu {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return;
             }
-            FindableGroup group = roadMap.addFindableGroup(s, true);
+            NodeGroup group = roadMap.addFindableGroup(s, true);
             findable.setGroup(group, true);
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
             menu.closeInventory();
@@ -277,13 +277,13 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private ItemStack buildGroupItem(Node clicked, FindableGroup group) {
+    private ItemStack buildGroupItem(Waypoint clicked, NodeGroup group) {
         ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
         StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
                 + "\n" + ChatColor.GRAY + "Größe: " + PathPlugin.CHAT_COLOR_LIGHT + group.getFindables().size() + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
 
         int counter = 0;
-        for (Node f : group.getFindables()) {
+        for (Waypoint f : group.getFindables()) {
             if (counter > 10) {
                 lore.append("\n" + ChatColor.DARK_GRAY + "...");
                 break;
@@ -292,7 +292,7 @@ public class EditModeMenu {
             }
             counter++;
         }
-        ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getName() + " (#" + group.getDatabaseId() + ")", lore.toString());
+        ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getNameFormat() + " (#" + group.getGroupId() + ")", lore.toString());
         if (clicked.getGroup() != null && clicked.getGroup().equals(group)) {
             ItemStackUtils.setGlowing(stack);
         }
@@ -300,16 +300,16 @@ public class EditModeMenu {
     }
 
     private @Nullable
-    Node getClickedFindable(Entity entity) {
+	Waypoint getClickedFindable(Entity entity) {
         Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID(entity);
         if(npcId != null) {
-            return roadMap.getFindables().stream()
+            return roadMap.getNodes().stream()
                     .filter(f -> f instanceof NpcFindable)
                     .filter(f -> ((NpcFindable) f).getNpcId() == npcId)
                     .findAny().orElse(null);
         }
-        Node clickedFindable = null;
-        for (Node f : roadMap.getEditModeNodeArmorStands().keySet()) {
+        Waypoint clickedFindable = null;
+        for (Waypoint f : roadMap.getEditModeNodeArmorStands().keySet()) {
             Entity e = roadMap.getEditModeNodeArmorStands().get(f);
             if (e.equals(entity)) {
                 clickedFindable = f;
@@ -373,7 +373,7 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private void openTangentStrengthMenu(Player player, Node findable) {
+    private void openTangentStrengthMenu(Player player, Waypoint findable) {
         AnvilMenu menu = new AnvilMenu(Component.text("Rundung einstellen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
@@ -431,7 +431,7 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private void openNodePermissionMenu(Player player, Node findable) {
+    private void openNodePermissionMenu(Player player, Waypoint findable) {
         AnvilMenu menu = new AnvilMenu(Component.text("Permission setzen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());

@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.data.findable;
+package de.bossascrew.pathfinder.node;
 
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.util.StringUtils;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public abstract class NpcFindable extends Node {
+public abstract class NpcFindable extends Waypoint {
 
     protected final int id;
     protected NPC npc = null;

@@ -1,11 +1,12 @@
-package de.bossascrew.pathfinder.data.findable;
+package de.bossascrew.pathfinder.node;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public interface NavigationTarget {
+public interface Node {
 
 	int getNodeId();
 
@@ -14,6 +15,8 @@ public interface NavigationTarget {
 	int getGroupId();
 
 	String getNameFormat();
+
+	Component getDisplayName();
 
 	@Nullable String getPermission();
 

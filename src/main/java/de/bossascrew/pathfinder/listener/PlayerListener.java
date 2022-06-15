@@ -4,11 +4,11 @@ import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.events.NodeFindEvent;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -83,7 +83,7 @@ public class PlayerListener implements Listener {
                 continue;
             }
             RoadMap rm = path.getRoadMap();
-            Node findable = path.get(path.size() - 1);
+            Waypoint findable = path.get(path.size() - 1);
             AtomicBoolean foundGuard = hasFoundTarget.getOrDefault(player.getUniqueId(), new HashMap<>())
                     .getOrDefault(rm.getRoadmapId(), new AtomicBoolean(true));
             if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance() && !foundGuard.getAndSet(true)) {
@@ -113,7 +113,7 @@ public class PlayerListener implements Listener {
         if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
             return;
         }
-        Node found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
+        Waypoint found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
         if (found == null) {
             return;
         }
@@ -127,7 +127,7 @@ public class PlayerListener implements Listener {
                 NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found.getGroup(), found, findDate);
                 Bukkit.getPluginManager().callEvent(findEvent);
                 findDate = findEvent.getDate();
-                id = findEvent.getGroup().getDatabaseId();
+                id = findEvent.getGroup().getGroupId();
             } else {
                 NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
                 Bukkit.getPluginManager().callEvent(findEvent);
@@ -155,19 +155,19 @@ public class PlayerListener implements Listener {
     }
 
     private @Nullable
-    Node getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
+	Waypoint getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
             if(roadMap.isEdited()) {
                 continue;
             }
-            for (FindableGroup group : roadMap.getGroups().values()) {
+            for (NodeGroup group : roadMap.getGroups().values()) {
                 if (!group.isFindable()) {
                     continue;
                 }
-                if(pathPlayer.hasFound(group.getDatabaseId(), true)) {
+                if(pathPlayer.hasFound(group.getGroupId(), true)) {
                     continue;
                 }
-                for (Node findable : group.getFindables()) {
+                for (Waypoint findable : group.getFindables()) {
                     if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
                         continue;
                     }
@@ -176,7 +176,7 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-            for (Node findable : roadMap.getFindables().stream().filter(f -> f.getGroup() == null).collect(Collectors.toSet())) {
+            for (Waypoint findable : roadMap.getNodes().stream().filter(f -> f.getGroup() == null).collect(Collectors.toSet())) {
                 if (pathPlayer.hasFound(findable.getNodeId(), false)) {
                     continue;
                 }

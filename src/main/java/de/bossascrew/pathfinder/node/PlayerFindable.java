@@ -1,6 +1,6 @@
-package de.bossascrew.pathfinder.data.findable;
+package de.bossascrew.pathfinder.node;
 
-import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Getter
-public class PlayerFindable extends Node {
+public class PlayerFindable extends Waypoint {
 
     private final String name;
     private final Location location;
@@ -51,7 +51,7 @@ public class PlayerFindable extends Node {
     }
 
     @Override
-    public FindableGroup getGroup() {
+    public NodeGroup getGroup() {
         return null;
     }
 

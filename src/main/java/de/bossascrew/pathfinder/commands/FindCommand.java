@@ -11,10 +11,10 @@ import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.bukkit.util.ItemStackUtils;
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.FindableGroup;
+import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
@@ -198,15 +198,15 @@ public class FindCommand extends BaseCommand {
             return;
         }
 
-        Node f = roadMap.getFindables().stream()
+        Waypoint f = roadMap.getNodes().stream()
                 .filter(findable -> findable.getGroup() == null)
                 .filter(findable -> findable.getNameFormat().equalsIgnoreCase(searched))
                 .findFirst().orElse(null);
         if(f == null) {
-            FindableGroup group = roadMap.getGroups().values().stream()
-                    .filter(FindableGroup::isFindable)
-                    .filter(g -> g.getName().equalsIgnoreCase(searched))
-                    .filter(g -> pp.hasFound(g.getDatabaseId(), true))
+            NodeGroup group = roadMap.getGroups().values().stream()
+                    .filter(NodeGroup::isFindable)
+                    .filter(g -> g.getNameFormat().equalsIgnoreCase(searched))
+                    .filter(g -> pp.hasFound(g.getGroupId(), true))
                     .findAny().orElse(null);
             if(group == null) {
                 PlayerUtils.sendMessage(player, ChatColor.RED + "Es gibt kein Ziel mit diesem Namen.");

@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.events;
 
-import de.bossascrew.pathfinder.data.findable.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
@@ -17,13 +17,13 @@ public class NodeFindEvent extends Event implements Cancellable {
 	@Getter
 	private final UUID playerId;
 	@Getter @Setter
-	private Node findable;
+	private Waypoint findable;
 	@Getter @Setter
 	private Date date;
 	@Getter @Setter
 	private boolean cancelled;
 
-	public NodeFindEvent(UUID playerId, Node findable, Date date) {
+	public NodeFindEvent(UUID playerId, Waypoint findable, Date date) {
 		this.playerId = playerId;
 		this.findable = findable;
 		this.date = date;

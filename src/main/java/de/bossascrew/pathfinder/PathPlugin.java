@@ -2,12 +2,11 @@ package de.bossascrew.pathfinder;
 
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
-import de.bossascrew.core.BukkitMain;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.commands.dependencies.*;
 import de.bossascrew.pathfinder.data.*;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.QuestFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.node.QuestFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -22,6 +21,7 @@ import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
 import de.bossascrew.pathfinder.util.hooks.QuestsHook;
 import de.bossascrew.pathfinder.util.hooks.TradersHook;
 import lombok.Getter;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -35,6 +35,7 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PathPlugin extends JavaPlugin {
@@ -88,6 +89,9 @@ public class PathPlugin extends JavaPlugin {
 	private VisualizerHandler visualizerHandler;
 	@Getter
 	private DataStorage database;
+
+	@Getter
+	private BukkitAudiences audiences;
 
 	@Getter
 	private boolean chestShop = false;
@@ -186,7 +190,7 @@ public class PathPlugin extends JavaPlugin {
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
 				roadMap.getGroups().values().stream()
-						.map(FindableGroup::getName)
+						.map(NodeGroup::getNameFormat)
 						.collect(Collectors.toSet())));
 		commandCompletions.registerCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = null;
@@ -200,7 +204,7 @@ public class PathPlugin extends JavaPlugin {
 			if (rm == null) {
 				return null;
 			}
-			return rm.getGroups().values().stream().map(FindableGroup::getName).collect(Collectors.toList());
+			return rm.getGroups().values().stream().map(NodeGroup::getNameFormat).collect(Collectors.toList());
 		});
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = null;
@@ -214,7 +218,7 @@ public class PathPlugin extends JavaPlugin {
 			if (rm == null) {
 				return null;
 			}
-			return rm.getGroups().values().stream().filter(FindableGroup::isFindable).map(FindableGroup::getName).collect(Collectors.toList());
+			return rm.getGroups().values().stream().filter(NodeGroup::isFindable).map(NodeGroup::getNameFormat).collect(Collectors.toList());
 		});
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_LOCATIONS, context -> {
 			PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
@@ -233,22 +237,22 @@ public class PathPlugin extends JavaPlugin {
 				return null;
 			}
 			Collection<String> ret = rm.getGroups().values().stream()
-					.filter(FindableGroup::isFindable)
-					.filter(g -> pp.hasFound(g.getDatabaseId(), true))
-					.map(FindableGroup::getName)
+					.filter(NodeGroup::isFindable)
+					.filter(g -> pp.hasFound(g.getGroupId(), true))
+					.map(NodeGroup::getNameFormat)
 					.collect(Collectors.toList());
-			ret.addAll(rm.getFindables().stream()
-					.filter(f -> f.getGroup() == null)
-					.filter(f -> pp.hasFound(f.getNodeId(), false))
-					.filter(f -> f instanceof Node)
-					.map(Node::getNameFormat)
+			ret.addAll(rm.getNodes().stream()
+					.filter(n -> n.getGroupId() == -1)
+					.filter(n -> pp.hasFound(n.getNodeId(), false))
+					.filter(n -> n instanceof Waypoint)
+					.map(Waypoint::getNameFormat)
 					.collect(Collectors.toList()));
 			return ret;
 		});
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
-				SelectionUtils.complete(roadMap.getFindables(), context.getInput())));
+				SelectionUtils.completeNodeSelection(roadMap.getNodes(), context.getInput())));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES_CONNECTED, context -> resolveFromRoadMap(context, rm -> {
-			Node prev = context.getContextValue(Node.class, 1);
+			Waypoint prev = context.getContextValue(Waypoint.class, 1);
 			if (prev == null) {
 				return null;
 			}
@@ -259,11 +263,11 @@ public class PathPlugin extends JavaPlugin {
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
 				.filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.filter(findable -> findable.getPermission() == null || context.getPlayer().hasPermission(findable.getPermission()))
-				.map(Node::getNameFormat)
+				.map(Waypoint::getNameFormat)
 				.collect(Collectors.toSet())));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
 				.filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
-				.map(Node::getNameFormat)
+				.map(Waypoint::getNameFormat)
 				.collect(Collectors.toSet())));
 		commandCompletions.registerCompletion(COMPLETE_TRADERS, context -> {
 			RoadMap rm = null;
@@ -278,10 +282,10 @@ public class PathPlugin extends JavaPlugin {
 				return null;
 			}
 			PathPlayer player = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
-			return rm.getFindables().stream()
+			return rm.getNodes().stream()
 					.filter(findable -> findable instanceof TraderFindable)
 					.filter(player::hasFound)
-					.map(Node::getNameFormat)
+					.map(Waypoint::getNameFormat)
 					.collect(Collectors.toSet());
 		});
 		commandCompletions.registerCompletion(COMPLETE_QUESTERS, context -> {
@@ -296,14 +300,14 @@ public class PathPlugin extends JavaPlugin {
 			if (rm == null) {
 				return null;
 			}
-			return rm.getFindables().stream()
+			return rm.getNodes().stream()
 					.filter(findable -> findable instanceof QuestFindable)
-					.map(Node::getNameFormat)
+					.map(Waypoint::getNameFormat)
 					.collect(Collectors.toSet());
 		});
 	}
 
-	private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Converter<RoadMap, Collection<String>> fromRoadmap) {
+	private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Function<RoadMap, Collection<String>> fromRoadmap) {
 		Player player = context.getPlayer();
 		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
 		if (pPlayer == null) {
@@ -316,7 +320,7 @@ public class PathPlugin extends JavaPlugin {
 		if (rm == null) {
 			return null;
 		}
-		return fromRoadmap.convert(rm);
+		return fromRoadmap.apply(rm);
 	}
 
 	private void registerContexts() {
@@ -338,7 +342,7 @@ public class PathPlugin extends JavaPlugin {
 			Player player = context.getPlayer();
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
-			return SelectionUtils.getTargetSelection(context.getPlayer(), roadMap.getFindables(), search);
+			return SelectionUtils.getNodeSelection(context.getPlayer(), roadMap.getNodes(), search);
 			//TODO exception handling
 		});
 		commandManager.registerContext(PathVisualizer.class, context -> {
@@ -365,9 +369,9 @@ public class PathPlugin extends JavaPlugin {
 			}
 			return visualizer;
 		});
-		commandManager.registerContext(Node.class, this::resolveFindable);
-		commandManager.registerContext(Node.class, context -> (Node) resolveFindable(context));
-		commandManager.registerContext(FindableGroup.class, context -> {
+		commandManager.registerContext(Waypoint.class, this::resolveFindable);
+		commandManager.registerContext(Waypoint.class, context -> (Waypoint) resolveFindable(context));
+		commandManager.registerContext(NodeGroup.class, context -> {
 			String search = context.popFirstArg();
 			Player player = context.getPlayer();
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -376,11 +380,11 @@ public class PathPlugin extends JavaPlugin {
 			}
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
 
-			List<FindableGroup> possibleResults = roadMapHandler.getRoadMapsStream()
+			List<NodeGroup> possibleResults = roadMapHandler.getRoadMapsStream()
 					.map(rm -> rm.getFindableGroup(search))
 					.collect(Collectors.toList());
 
-			FindableGroup ret;
+			NodeGroup ret;
 			if (roadMap != null) {
 				//Ausgewählte Roadmap bevorzugen
 				ret = possibleResults.stream()
@@ -419,7 +423,7 @@ public class PathPlugin extends JavaPlugin {
 		});
 	}
 
-	private Node resolveFindable(BukkitCommandExecutionContext context) {
+	private Waypoint resolveFindable(BukkitCommandExecutionContext context) {
 		String search = context.popFirstArg();
 		Player player = context.getPlayer();
 		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -430,7 +434,7 @@ public class PathPlugin extends JavaPlugin {
 		if (roadMap == null) {
 			throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
 		}
-		Node findable = roadMap.getFindable(search);
+		Waypoint findable = roadMap.getNode(search);
 		if (findable == null) {
 			if (context.isOptional()) {
 				return null;

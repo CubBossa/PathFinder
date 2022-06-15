@@ -18,6 +18,8 @@ public class Messages {
 	public static final Message GEN_TRUE = new Message("general.true");
 	public static final Message GEN_FALSE = new Message("general.false");
 
+
+
 	@MessageMeta(value = """
 			Roadmap: <name> (#<id>)
 			<col:colors.background>» <col:colors.default>Name: <hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename #<id> <new name>><name></click></hover>
@@ -38,4 +40,10 @@ public class Messages {
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
 	@MessageMeta(value = "<col:prefix>Successfully created Roadmap <name>.", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
+
+	@MessageMeta(value = "<col:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
+	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
+
+	@MessageMeta(value = "<col:prefix>Successfully created Node <name>.", placeholders = "name")
+	public static final Message CMD_N_CREATE = new Message("commands.node.create");
 }

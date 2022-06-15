@@ -9,8 +9,8 @@ import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Node;
-import de.bossascrew.pathfinder.data.findable.QuestFindable;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.node.QuestFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
@@ -52,7 +52,7 @@ public class FindItemCommand extends BaseCommand {
                     return;
                 }
                 Menu traderMenu = new Menu("Händler (Klicke auf Namen, um zu navigieren):");
-                for (Node f : roadMap.getFindables().stream().filter(findable -> findable instanceof TraderFindable).collect(Collectors.toList())) {
+                for (Waypoint f : roadMap.getNodes().stream().filter(findable -> findable instanceof TraderFindable).collect(Collectors.toList())) {
                     TraderFindable trader = (TraderFindable) f;
                     if (!pp.hasFound(trader)) {
                         continue;
@@ -87,7 +87,7 @@ public class FindItemCommand extends BaseCommand {
             }
             if (QuestsHook.getInstance() != null) {
                 Menu questsMenu = new Menu("Quests:");
-                for (Node f : roadMap.getFindables().stream().filter(findable -> findable instanceof QuestFindable).collect(Collectors.toList())) {
+                for (Waypoint f : roadMap.getNodes().stream().filter(findable -> findable instanceof QuestFindable).collect(Collectors.toList())) {
                     //TODO
                 }
                 if (questsMenu.hasSubs()) {
