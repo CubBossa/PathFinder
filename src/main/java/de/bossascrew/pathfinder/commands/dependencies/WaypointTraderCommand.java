@@ -1,11 +1,10 @@
 package de.bossascrew.pathfinder.commands.dependencies;
 
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.*;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.TraderFindable;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -18,7 +17,7 @@ public class WaypointTraderCommand extends BaseCommand {
 
     @Subcommand("trader")
     @Syntax("<NPC-ID> [<Name>]")
-    @CommandPermission("bcrew.command.waypoint.create")
+    @CommandPermission("pathfinder.command.waypoint.create")
     public void onTrader(CommandSender sender, int id, @Optional @Single String name) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
         NPC npc = CitizensAPI.getNPCRegistry().getById(id);

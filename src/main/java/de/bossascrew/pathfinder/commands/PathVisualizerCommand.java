@@ -1,13 +1,13 @@
 package de.bossascrew.pathfinder.commands;
 
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.*;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -29,7 +29,7 @@ import org.bukkit.command.CommandSender;
 public class PathVisualizerCommand extends BaseCommand {
 
     @Subcommand("list")
-    @CommandPermission("bcrew.command.visualizer.path.list")
+    @CommandPermission("pathfinder.command.visualizer.path.list")
     public void onList(CommandSender sender) {
 
         ComponentMenu menu = new ComponentMenu(Component.text("Pfad-Visualizer").color(NamedTextColor.WHITE).decoration(TextDecoration.UNDERLINED, true));
@@ -49,7 +49,7 @@ public class PathVisualizerCommand extends BaseCommand {
     @Subcommand("create")
     @Syntax("<Name> <Partikel>")
     @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE + " " + PathPlugin.COMPLETE_PATH_VISUALIZER)
-    @CommandPermission("bcrew.command.visualizer.path.create")
+    @CommandPermission("pathfinder.command.visualizer.path.create")
     public void onCreate(CommandSender sender, @Single String name, @Optional Particle particle, @Optional String parent) {
 
         if (!VisualizerHandler.getInstance().isNameUniquePath(name)) {
@@ -67,7 +67,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("delete")
-    @CommandPermission("bcrew.command.visualizer.path.delete")
+    @CommandPermission("pathfinder.command.visualizer.path.delete")
     @Syntax("<Pfad-Visualizer>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
     public void onDelete(CommandSender sender, PathVisualizer visualizer) {
@@ -79,7 +79,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("info")
-    @CommandPermission("bcrew.command.visualizer.path.info")
+    @CommandPermission("pathfinder.command.visualizer.path.info")
     @Syntax("<Pfad-Visualizer>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
     public void onInfo(CommandSender sender, PathVisualizer visualizer) {
@@ -129,7 +129,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set parent")
-    @CommandPermission("bcrew.command.visualizer.path.set.parent")
+    @CommandPermission("pathfinder.command.visualizer.path.set.parent")
     @Syntax("<Pfad-Visualizer> <Parent>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + PathPlugin.COMPLETE_PATH_VISUALIZER)
     public void onSetParent(CommandSender sender, PathVisualizer edit, PathVisualizer parent) {
@@ -138,12 +138,12 @@ public class PathVisualizerCommand extends BaseCommand {
             return;
         }
         edit.setParent(parent);
-		DatabaseModel.getInstance().updatePathVisualizer(edit);
+		SqlStorage.getInstance().updatePathVisualizer(edit);
 		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Parent aktualisiert: " + parent.getName());
     }
 
     @Subcommand("set name")
-    @CommandPermission("bcrew.command.visualizer.path.set.name")
+    @CommandPermission("pathfinder.command.visualizer.path.set.name")
     @Syntax("<Pfad-Visualizer> <Neuer Name>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
     public void onSetName(CommandSender sender, PathVisualizer edit, String newName) {
@@ -153,7 +153,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle")
-    @CommandPermission("bcrew.command.visualizer.path.set.particle")
+    @CommandPermission("pathfinder.command.visualizer.path.set.particle")
     @Syntax("<Pfad-Visualizer> <Partikel>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE)
     public void onSetParticle(CommandSender sender, PathVisualizer edit, String particleName) {
@@ -171,7 +171,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle-limit")
-    @CommandPermission("bcrew.command.visualizer.path.set.particle-limit")
+    @CommandPermission("pathfinder.command.visualizer.path.set.particle-limit")
     @Syntax("<Pfad-Visualizer> <Limit>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER  + " null")
     public void onSetParticleLimit(CommandSender sender, PathVisualizer edit, @Single String limitString) {
@@ -189,7 +189,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle-distance")
-    @CommandPermission("bcrew.command.visualizer.path.set.particle-distance")
+    @CommandPermission("pathfinder.command.visualizer.path.set.particle-distance")
     @Syntax("<Pfad-Visualizer> <Distanz>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER  + " null")
     public void onSetParticleDistance(CommandSender sender, PathVisualizer edit, @Single String distanceString) {
@@ -207,7 +207,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle-steps")
-    @CommandPermission("bcrew.command.visualizer.path.set.particle-steps")
+    @CommandPermission("pathfinder.command.visualizer.path.set.particle-steps")
     @Syntax("<Pfad-Visualizer> <Schritte>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
     public void onSetParticleSteps(CommandSender sender, PathVisualizer edit, @Single String stepString) {
@@ -225,7 +225,7 @@ public class PathVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set scheduler-period")
-    @CommandPermission("bcrew.command.visualizer.path.set.scheduler-period")
+    @CommandPermission("pathfinder.command.visualizer.path.set.scheduler-period")
     @Syntax("<Pfad-Visualizer> <Scheduler-Wiederholabstand>")
     @CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER + " null")
     public void onSetSchedulerPeriod(CommandSender sender, PathVisualizer edit, @Single String schedulerPeriodString) {
@@ -253,7 +253,7 @@ public class PathVisualizerCommand extends BaseCommand {
                 visualizer.createPickable(null, name, null);
             } else {
                 visualizer.setDisplayName(name);
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                SqlStorage.getInstance().updateVisualizerStyle(visualizer);
             }
             sender.sendMessage(Component.empty()
                     .append(PathPlugin.PREFIX_COMP)
@@ -269,7 +269,7 @@ public class PathVisualizerCommand extends BaseCommand {
                 visualizer.createPickable(null, null, type);
             } else {
                 visualizer.setIconType(type);
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                SqlStorage.getInstance().updateVisualizerStyle(visualizer);
             }
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Typ gesetzt: " + PathPlugin.COLOR_LIGHT + type);
         }
@@ -282,7 +282,7 @@ public class PathVisualizerCommand extends BaseCommand {
                 visualizer.createPickable(permission, null, null);
             } else {
                 visualizer.setPickPermission(permission);
-                DatabaseModel.getInstance().updateVisualizerStyle(visualizer);
+                SqlStorage.getInstance().updateVisualizerStyle(visualizer);
             }
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Permission gesetzt: " + PathPlugin.COLOR_LIGHT + permission);
         }

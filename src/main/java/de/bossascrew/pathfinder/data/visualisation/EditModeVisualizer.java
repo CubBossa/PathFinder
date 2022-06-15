@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.data.visualisation;
 
 import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import de.bossascrew.pathfinder.util.SubscribtionHandler;
 import lombok.Getter;
 import lombok.Setter;
@@ -99,6 +99,6 @@ public class EditModeVisualizer extends Visualizer<EditModeVisualizer> {
     }
 
     public void saveData() {
-        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateEditModeVisualizer(this));
+        PluginUtils.getInstance().runAsync(() -> SqlStorage.getInstance().updateEditModeVisualizer(this));
     }
 }

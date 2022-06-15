@@ -6,15 +6,13 @@ import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
-import org.bukkit.util.StringUtil;
 import org.bukkit.util.Vector;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public abstract class NpcFindable extends Findable {
+public abstract class NpcFindable extends Node {
 
     protected final int id;
     protected NPC npc = null;
@@ -41,8 +39,8 @@ public abstract class NpcFindable extends Findable {
     }
 
     @Override
-    public String getName() {
-        return name == null ? formatName(getNpc().getFullName()) : name;
+    public String getNameFormat() {
+        return nameFormat == null ? formatName(getNpc().getFullName()) : nameFormat;
     }
 
     public static String formatName(String name) {

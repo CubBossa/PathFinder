@@ -1,12 +1,12 @@
 package de.bossascrew.pathfinder.commands;
 
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.*;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -26,7 +26,7 @@ import org.bukkit.command.CommandSender;
 public class EditModeVisualizerCommand extends BaseCommand {
 
     @Subcommand("list")
-    @CommandPermission("bcrew.command.visualizer.editmode.list")
+    @CommandPermission("pathfinder.command.visualizer.editmode.list")
     public void onList(CommandSender sender) {
 
         ComponentMenu menu = new ComponentMenu(Component.text("Editmode-Visualizer").color(NamedTextColor.WHITE).decoration(TextDecoration.UNDERLINED, true));
@@ -46,7 +46,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     @Subcommand("create")
     @Syntax("<Name> <Partikel>")
     @CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE + " " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
-    @CommandPermission("bcrew.command.visualizer.editmode.create")
+    @CommandPermission("pathfinder.command.visualizer.editmode.create")
     public void onCreate(CommandSender sender, @Single String name, @Optional Particle particle, @Optional String parent) {
 
         if (!VisualizerHandler.getInstance().isNameUniqueEditMode(name)) {
@@ -64,7 +64,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("delete")
-    @CommandPermission("bcrew.command.visualizer.editmode.delete")
+    @CommandPermission("pathfinder.command.visualizer.editmode.delete")
     @Syntax("<Editmode-Visualizer>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onDelete(CommandSender sender, EditModeVisualizer visualizer) {
@@ -76,7 +76,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("info")
-    @CommandPermission("bcrew.command.visualizer.editmode.info")
+    @CommandPermission("pathfinder.command.visualizer.editmode.info")
     @Syntax("<Editmode-Visualizer>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onInfo(CommandSender sender, EditModeVisualizer visualizer) {
@@ -132,7 +132,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set parent")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.parent")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.parent")
     @Syntax("<Editmode-Visualizer> <Parent>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " " + PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetParent(CommandSender sender, EditModeVisualizer edit, EditModeVisualizer parent) {
@@ -141,12 +141,12 @@ public class EditModeVisualizerCommand extends BaseCommand {
             return;
         }
         edit.setParent(parent);
-		DatabaseModel.getInstance().updateEditModeVisualizer(edit);
+		SqlStorage.getInstance().updateEditModeVisualizer(edit);
 		PlayerUtils.sendMessage(sender, PathPlugin.CHAT_COLOR_LIGHT + "Parent aktualisiert: " + parent.getName());
     }
 
     @Subcommand("set name")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.name")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.name")
     @Syntax("<Editmode-Visualizer> <Neuer Name>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
     public void onSetName(CommandSender sender, EditModeVisualizer edit, @Single String newName) {
@@ -155,7 +155,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.particle")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.particle")
     @Syntax("<Editmode-Visualizer> <Partikel>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " " + BukkitMain.COMPLETE_PARTICLES_LOWERCASE)
     public void onSetParticle(CommandSender sender, EditModeVisualizer edit, String particleName) {
@@ -173,7 +173,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle-limit")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.particle-limit")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.particle-limit")
     @Syntax("<Editmode-Visualizer> <Limit>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetParticleLimit(CommandSender sender, EditModeVisualizer edit, String limitString) {
@@ -191,7 +191,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set particle-distance")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.particle-distance")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.particle-distance")
     @Syntax("<Editmode-Visualizer> <Distanz>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetParticleDistance(CommandSender sender, EditModeVisualizer edit, String distanceString) {
@@ -209,7 +209,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set scheduler-period")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.scheduler-period")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.scheduler-period")
     @Syntax("<Editmode-Visualizer> <Scheduler-Wiederholabstand>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetSchedulerPeriod(CommandSender sender, EditModeVisualizer edit, String schedulerPeriodString) {
@@ -227,7 +227,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set node-head-id")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.node-head-id")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.node-head-id")
     @Syntax("<Editmode-Visualizer> <Kopf-ID>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetNodeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {
@@ -245,7 +245,7 @@ public class EditModeVisualizerCommand extends BaseCommand {
     }
 
     @Subcommand("set edge-head-id")
-    @CommandPermission("bcrew.command.visualizer.editmode.set.edge-head-id")
+    @CommandPermission("pathfinder.command.visualizer.editmode.set.edge-head-id")
     @Syntax("<Editmode-Visualizer> <Kopf-ID>")
     @CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER + " null")
     public void onSetEdgeHeadId(CommandSender sender, EditModeVisualizer edit, String idString) {

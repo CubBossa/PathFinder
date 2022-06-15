@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.events;
 
 import de.bossascrew.pathfinder.data.FindableGroup;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
@@ -19,7 +19,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
     @Getter
     private final UUID playerId;
     @Getter
-    private final Findable triggeringFindable;
+    private final Node triggeringFindable;
     @Getter
     @Setter
     private @Nullable FindableGroup group;
@@ -30,7 +30,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
     @Setter
     private boolean cancelled;
 
-    public NodeGroupFindEvent(UUID playerId, FindableGroup group, Findable triggeringFindable, Date date) {
+    public NodeGroupFindEvent(UUID playerId, FindableGroup group, Node triggeringFindable, Date date) {
         this.playerId = playerId;
         this.group = group;
         this.triggeringFindable = triggeringFindable;

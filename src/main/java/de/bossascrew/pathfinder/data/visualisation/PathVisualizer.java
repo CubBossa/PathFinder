@@ -2,7 +2,7 @@ package de.bossascrew.pathfinder.data.visualisation;
 
 import de.bossascrew.core.util.ComponentUtils;
 import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -37,7 +37,7 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
     }
 
     public void createPickable(@Nullable String permission, @Nullable String miniDisplayName, @Nullable Material iconType) {
-		DatabaseModel.getInstance().newVisualizerStyle(this, permission, iconType, miniDisplayName);
+		SqlStorage.getInstance().newVisualizerStyle(this, permission, iconType, miniDisplayName);
 		setupPickable(permission, miniDisplayName, iconType, false);
 	}
 
@@ -47,7 +47,7 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
 		this.displayName = displayName;
 		this.iconType = iconType;
 		if (updateDatabase) {
-			DatabaseModel.getInstance().updateVisualizerStyle(this);
+			SqlStorage.getInstance().updateVisualizerStyle(this);
 		}
 	}
 
@@ -65,7 +65,7 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
 
 	public void removePickable() {
 		this.pickable = false;
-		DatabaseModel.getInstance().deleteStyleVisualizer(this.getDatabaseId());
+		SqlStorage.getInstance().deleteStyleVisualizer(this.getDatabaseId());
 	}
 
 	public Integer getParticleSteps() {
@@ -111,6 +111,6 @@ public class PathVisualizer extends Visualizer<PathVisualizer> {
     }
 
     public void saveData() {
-        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updatePathVisualizer(this));
+        PluginUtils.getInstance().runAsync(() -> SqlStorage.getInstance().updatePathVisualizer(this));
     }
 }

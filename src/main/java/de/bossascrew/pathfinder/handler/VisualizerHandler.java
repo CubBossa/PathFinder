@@ -3,7 +3,7 @@ package de.bossascrew.pathfinder.handler;
 import de.bossascrew.core.networking.handling.PacketHandler;
 import de.bossascrew.core.networking.handling.PacketListener;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.DatabaseModel;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.networking.EditModeVisualizerUpdatePacket;
@@ -50,10 +50,10 @@ public class VisualizerHandler implements PacketListener {
 		instance = this;
 
 		//Lade Maps aus Datenbank
-		this.pathVisualizerMap = DatabaseModel.getInstance().loadPathVisualizer();
-		this.editVisualizerMap = DatabaseModel.getInstance().loadEditModeVisualizer();
-		this.playerVisualizers = DatabaseModel.getInstance().loadPlayerVisualizers();
-		this.roadmapVisualizers = DatabaseModel.getInstance().loadStyleRoadmapMap(pathVisualizerMap.values());
+		this.pathVisualizerMap = SqlStorage.getInstance().loadPathVisualizer();
+		this.editVisualizerMap = SqlStorage.getInstance().loadEditModeVisualizer();
+		this.playerVisualizers = SqlStorage.getInstance().loadPlayerVisualizers();
+		this.roadmapVisualizers = SqlStorage.getInstance().loadStyleRoadmapMap(pathVisualizerMap.values());
 
         //Fehlerbehandlung
         if (pathVisualizerMap == null) {
@@ -96,7 +96,7 @@ public class VisualizerHandler implements PacketListener {
         if(parent == null) {
             parent = defaultPathVisualizer;
         }
-        PathVisualizer vis = DatabaseModel.getInstance().newPathVisualizer(name, parent, particle, particleDistance, particleLimit, particleSteps, schedulerPeriod);
+        PathVisualizer vis = SqlStorage.getInstance().newPathVisualizer(name, parent, particle, particleDistance, particleLimit, particleSteps, schedulerPeriod);
         if (vis == null) {
             return null;
         }
@@ -126,7 +126,7 @@ public class VisualizerHandler implements PacketListener {
             parent = defaultEditModeVisualizer;
         }
 
-        EditModeVisualizer vis = DatabaseModel.getInstance().newEditModeVisualizer(name, parent, particle, particleDistance, particleLimit,
+        EditModeVisualizer vis = SqlStorage.getInstance().newEditModeVisualizer(name, parent, particle, particleDistance, particleLimit,
                 schedulerPeriod, nodeHeadId, edgeHeadId);
         if (vis == null) {
             return null;
@@ -146,7 +146,7 @@ public class VisualizerHandler implements PacketListener {
             }
         }
         if(this.pathVisualizerMap.remove(visualizer.getDatabaseId()) != null) {
-            DatabaseModel.getInstance().deletePathVisualizer(visualizer);
+            SqlStorage.getInstance().deletePathVisualizer(visualizer);
             return true;
         }
         return false;
@@ -163,7 +163,7 @@ public class VisualizerHandler implements PacketListener {
             }
         }
         if(this.editVisualizerMap.remove(visualizer.getDatabaseId()) != null) {
-            DatabaseModel.getInstance().deleteEditModeVisualizer(visualizer);
+            SqlStorage.getInstance().deleteEditModeVisualizer(visualizer);
             return true;
         }
         return false;

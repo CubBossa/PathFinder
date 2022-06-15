@@ -11,73 +11,70 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class PathPlayerHandler {
 
-    @Getter
-    private static PathPlayerHandler instance;
+	@Getter
+	private static PathPlayerHandler instance;
 
-    @Getter
-    private final PathPlayer consolePathPlayer;
-    private final Map<Integer, PathPlayer> pathPlayer;
+	@Getter
+	private final PathPlayer consolePathPlayer;
+	private final Map<Integer, PathPlayer> pathPlayer;
 
-    public PathPlayerHandler() {
-        instance = this;
-        consolePathPlayer = new PathPlayer(-1, SettingsHandler.GLOBAL_UUID);
-        pathPlayer = Maps.newHashMap();
-    }
+	public PathPlayerHandler() {
+		instance = this;
+		consolePathPlayer = new PathPlayer(-1, SettingsHandler.GLOBAL_UUID);
+		pathPlayer = Maps.newHashMap();
+	}
 
-    public Collection<PathPlayer> getPlayers() {
-        return pathPlayer.values();
-    }
+	public Collection<PathPlayer> getPlayers() {
+		return pathPlayer.values();
+	}
 
-    public @Nullable
-    PathPlayer getPlayer(CommandSender sender) {
-        if(sender instanceof Player) {
-            Player player = (Player) sender;
-            return getPlayer(player.getUniqueId());
-        }
-        return consolePathPlayer;
-    }
+	public PathPlayer getPlayer(CommandSender sender) {
+		if (sender instanceof Player) {
+			Player player = (Player) sender;
+			return getPlayer(player.getUniqueId());
+		}
+		return consolePathPlayer;
+	}
 
-    public @Nullable
-    PathPlayer getPlayer(UUID uuid) {
-        PathPlayer pathPlayer = getLoadedPlayer(uuid);
-        if (pathPlayer == null) {
-            GlobalPlayer player = PlayerHandler.getInstance().getGlobalPlayer(uuid);
-            if (player == null) {
-                return null;
-            }
-            pathPlayer = createPlayer(player.getDatabaseId());
-        }
-        return pathPlayer;
-    }
+	public PathPlayer getPlayer(UUID uuid) {
+		PathPlayer pathPlayer = getLoadedPlayer(uuid);
+		if (pathPlayer == null) {
+			GlobalPlayer player = PlayerHandler.getInstance().getGlobalPlayer(uuid);
+			if (player == null) {
+				return null;
+			}
+			pathPlayer = createPlayer(player.getDatabaseId());
+		}
+		return pathPlayer;
+	}
 
-    public PathPlayer getPlayer(int globalPlayerId) {
-        PathPlayer pathPlayer = getLoadedPlayer(globalPlayerId);
-        if (pathPlayer == null) {
-            //player wurde nicht aus der Datenbank geladen, also neuen anlegen
-            pathPlayer = createPlayer(globalPlayerId);
-        }
-        return pathPlayer;
-    }
+	public PathPlayer getPlayer(int globalPlayerId) {
+		PathPlayer pathPlayer = getLoadedPlayer(globalPlayerId);
+		if (pathPlayer == null) {
+			//player wurde nicht aus der Datenbank geladen, also neuen anlegen
+			pathPlayer = createPlayer(globalPlayerId);
+		}
+		return pathPlayer;
+	}
 
-    private @Nullable
-    PathPlayer getLoadedPlayer(UUID uuid) {
-        return pathPlayer.values().stream().filter(player -> player.getUuid().equals(uuid)).findAny().orElse(null);
-    }
+	private @Nullable
+	PathPlayer getLoadedPlayer(UUID uuid) {
+		return pathPlayer.values().stream().filter(player -> player.getUuid().equals(uuid)).findAny().orElse(null);
+	}
 
-    private @Nullable
-    PathPlayer getLoadedPlayer(int globalPlayerId) {
-        return pathPlayer.get(globalPlayerId);
-    }
+	private @Nullable
+	PathPlayer getLoadedPlayer(int globalPlayerId) {
+		return pathPlayer.get(globalPlayerId);
+	}
 
-    private PathPlayer createPlayer(int globalPlayerId) {
-        PathPlayer newPlayer = new PathPlayer(globalPlayerId);
-        pathPlayer.put(globalPlayerId, newPlayer);
-        return newPlayer;
-    }
+	private PathPlayer createPlayer(int globalPlayerId) {
+		PathPlayer newPlayer = new PathPlayer(globalPlayerId);
+		pathPlayer.put(globalPlayerId, newPlayer);
+		return newPlayer;
+	}
 }

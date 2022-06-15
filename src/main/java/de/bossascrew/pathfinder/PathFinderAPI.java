@@ -2,7 +2,7 @@ package de.bossascrew.pathfinder;
 
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class PathFinderAPI {
 
-    public void findFindable(Player player, Findable findable) {
+    public void findFindable(Player player, Node findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -29,7 +29,7 @@ public class PathFinderAPI {
         pathPlayer.find(findable, false, new Date());
     }
 
-    public void forgetFindable(Player player, Findable findable) {
+    public void forgetFindable(Player player, Node findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -37,7 +37,7 @@ public class PathFinderAPI {
         pathPlayer.unfind(findable, false);
     }
 
-    public void findFindableGroup(Player player, Findable findable) {
+    public void findFindableGroup(Player player, Node findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -45,7 +45,7 @@ public class PathFinderAPI {
         pathPlayer.find(findable, true, new Date());
     }
 
-    public void forgetFindableGroup(Player player, Findable findable) {
+    public void forgetFindableGroup(Player player, Node findable) {
         PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
         if (pathPlayer == null) {
             return;
@@ -53,7 +53,7 @@ public class PathFinderAPI {
         pathPlayer.unfind(findable, true);
     }
 
-    public void showPath(Player player, Findable findable) {
+    public void showPath(Player player, Node findable) {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         AStarUtils.startPath(pPlayer, new PlayerFindable(player, findable.getRoadMap()), findable, true);
     }
@@ -89,7 +89,7 @@ public class PathFinderAPI {
         if (pathPlayer == null) {
             return;
         }
-        pathPlayer.setSelectedRoadMap(roadMap.getDatabaseId());
+        pathPlayer.setSelectedRoadMap(roadMap.getRoadmapId());
     }
 
     public void unselectRoadMap(CommandSender sender) {
@@ -105,18 +105,18 @@ public class PathFinderAPI {
         if (pathPlayer == null) {
             return;
         }
-        pathPlayer.deselectRoadMap(roadMap.getDatabaseId());
+        pathPlayer.deselectRoadMap(roadMap.getRoadmapId());
     }
 
     public @Nullable
-    Findable getFindable(RoadMap roadMap, String name) {
+    Node getFindable(RoadMap roadMap, String name) {
         return roadMap.getFindable(name);
     }
 
     public @Nullable
-    Findable getFindable(int databaseId) {
+    Node getFindable(int databaseId) {
         for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
-            Findable f = roadMap.getFindable(databaseId);
+            Node f = roadMap.getFindable(databaseId);
             if (f != null) {
                 return f;
             }
@@ -124,7 +124,7 @@ public class PathFinderAPI {
         return null;
     }
 
-    public Findable createNode(String name, RoadMap roadMap, Vector position) {
+    public Node createNode(String name, RoadMap roadMap, Vector position) {
         return roadMap.createNode(position, name);
     }
 
@@ -132,8 +132,8 @@ public class PathFinderAPI {
         RoadMapHandler.getInstance().getRoadMaps().forEach(rm -> rm.deleteFindable(databaseId));
     }
 
-    public void deleteFindable(Findable findable) {
-        findable.getRoadMap().deleteFindable(findable.getDatabaseId());
+    public void deleteFindable(Node findable) {
+        findable.getRoadMap().deleteFindable(findable.getNodeId());
     }
 
     public @Nullable

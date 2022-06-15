@@ -1,8 +1,8 @@
 package de.bossascrew.pathfinder.commands;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.*;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.base.ComponentMenu;
 import de.bossascrew.core.base.Menu;
@@ -14,13 +14,16 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import de.cubbossa.menuframework.chat.ComponentMenu;
+import de.cubbossa.menuframework.chat.TextMenu;
+import de.cubbossa.menuframework.inventory.implementations.RectInventoryMenu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -35,7 +38,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -46,7 +48,7 @@ public class FindCommand extends BaseCommand {
     @CatchUnknown
     @HelpCommand
     public void onDefault(Player player) {
-        Menu menu = new Menu("Finde Orte einer Stadtkarte mit folgenden Befehlen:");
+        TextMenu menu = new TextMenu("Finde Orte einer Stadtkarte mit folgenden Befehlen:");
         if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_LOCATIONS)) {
             menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find ort <Ort>")));
         }
@@ -65,7 +67,7 @@ public class FindCommand extends BaseCommand {
                 menu.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find shop <Shop>")));
             }
         }
-        Menu menu1 = new Menu("Info über gefundene Orte mit: ");
+        TextMenu menu1 = new TextMenu("Info über gefundene Orte mit: ");
         if (player.hasPermission(PathPlugin.PERM_COMMAND_FIND_INFO) &&
                 RoadMapHandler.getInstance().getRoadMaps().stream().anyMatch(RoadMap::isFindableNodes)) {
             menu1.addSub(new ComponentMenu(ComponentUtils.getCommandComponent("/find info", ClickEvent.Action.RUN_COMMAND)));
@@ -90,11 +92,11 @@ public class FindCommand extends BaseCommand {
         if (pathPlayer == null) {
             return;
         }
-        Menu menu = new Menu("Straßenkarten erkundet:");
+        TextMenu menu = new TextMenu("Straßenkarten erkundet:");
         for (RoadMap rm : roadMap == null ? RoadMapHandler.getInstance().getRoadMaps()
                 .stream().filter(RoadMap::isFindableNodes).collect(Collectors.toList()) : Lists.newArrayList(roadMap)) {
             double percent = 100 * ((double) pathPlayer.getFoundAmount(rm)) / rm.getMaxFoundSize();
-            menu.addSub(new Menu(ChatColor.GRAY + rm.getName() + ": " + ChatColor.WHITE + String.format("%,.2f", percent) + "%"));
+            menu.addSub(new TextMenu(ChatColor.GRAY + rm.getNameFormat() + ": " + ChatColor.WHITE + String.format("%,.2f", percent) + "%"));
         }
         if (menu.hasSubs()) {
             PlayerUtils.sendComponents(player, menu.toComponents());
@@ -118,10 +120,10 @@ public class FindCommand extends BaseCommand {
     Map<Player, Long> styleMenuCooldown = new ConcurrentHashMap<>();
 
     private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
-        PagedChestMenu menu = new PagedChestMenu(Component.text("Wähle deinen Partikelstyle"), 3);
+        RectInventoryMenu menu = new RectInventoryMenu(Component.text("Wähle deinen Partikelstyle"), 3);
         PathVisualizer actual = pathPlayer.getVisualizer(roadMap);
 
-        Collection<PathVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getDatabaseId(), new ArrayList<>());
+        Collection<PathVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getRoadmapId(), new ArrayList<>());
         for (PathVisualizer visualizer : visualizers) {
             String perm = visualizer.getPickPermission();
 
@@ -174,7 +176,7 @@ public class FindCommand extends BaseCommand {
                 openStyleMenu(player, pathPlayer, roadMap);
             });
         }
-        menu.openInventory(player);
+        menu.open(player);
     }
 
     @Subcommand("ort")
@@ -196,9 +198,9 @@ public class FindCommand extends BaseCommand {
             return;
         }
 
-        Findable f = roadMap.getFindables().stream()
+        Node f = roadMap.getFindables().stream()
                 .filter(findable -> findable.getGroup() == null)
-                .filter(findable -> findable.getName().equalsIgnoreCase(searched))
+                .filter(findable -> findable.getNameFormat().equalsIgnoreCase(searched))
                 .findFirst().orElse(null);
         if(f == null) {
             FindableGroup group = roadMap.getGroups().values().stream()

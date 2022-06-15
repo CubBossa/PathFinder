@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
-import de.bossascrew.acf.ConditionFailedException;
+import co.aikar.commands.ConditionFailedException;
 import de.bossascrew.core.graphics.ColorUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;

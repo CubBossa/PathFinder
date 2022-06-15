@@ -1,8 +1,5 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.core.player.PlayerHandler;
-import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.data.findable.Findable;
 import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
@@ -25,8 +22,6 @@ import java.util.stream.Collectors;
 public class PathPlayer {
 
     @Getter
-    private final int globalPlayerId;
-    @Getter
     private final UUID uuid;
 
     /**
@@ -38,7 +33,7 @@ public class PathPlayer {
 
     private final Map<Integer, ParticlePath> activePaths;
     private final Map<Integer, FindableGroup> lastSetGroups;
-    private final Map<Integer, Findable> lastSetFindables;
+    private final Map<Integer, Node> lastSetFindables;
 
     @Getter
     @Nullable
@@ -58,17 +53,17 @@ public class PathPlayer {
         this.lastSetGroups = new ConcurrentHashMap<>();
         this.lastSetFindables = new ConcurrentHashMap<>();
 
-        foundFindables = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, false);
-        foundGroups = DatabaseModel.getInstance().loadFoundNodes(globalPlayerId, true);
+        foundFindables = SqlStorage.getInstance().loadFoundNodes(globalPlayerId, false);
+        foundGroups = SqlStorage.getInstance().loadFoundNodes(globalPlayerId, true);
     }
 
-    public void find(Findable findable, boolean group, Date date) {
+    public void find(Node findable, boolean group, Date date) {
         if (group) {
             if (findable.getGroup() != null) {
                 find(findable.getGroup().getDatabaseId(), true, date);
             }
         } else {
-            find(findable.getDatabaseId(), false, date);
+            find(findable.getNodeId(), false, date);
         }
     }
 
@@ -76,7 +71,7 @@ public class PathPlayer {
         if (hasFound(id, group)) {
             return;
         }
-        FoundInfo info = DatabaseModel.getInstance().newFoundInfo(globalPlayerId, id, group, date);
+        FoundInfo info = SqlStorage.getInstance().newFoundInfo(globalPlayerId, id, group, date);
         if (group) {
             foundGroups.put(id, info);
         } else {
@@ -84,16 +79,16 @@ public class PathPlayer {
         }
     }
 
-    public void unfind(Findable findable, boolean group) {
-        unfind(group ? findable.getNodeGroupId() : findable.getDatabaseId(), group);
+    public void unfind(Node findable, boolean group) {
+        unfind(group ? findable.getNodeGroupId() : findable.getNodeId(), group);
     }
 
     public void unfind(RoadMap roadMap) {
         for (FindableGroup group : roadMap.getGroups().values()) {
             unfind(group.getDatabaseId(), true);
         }
-        for (Findable findable : roadMap.getFindables()) {
-            unfind(findable.getDatabaseId(), false);
+        for (Node findable : roadMap.getFindables()) {
+            unfind(findable.getNodeId(), false);
         }
     }
 
@@ -103,7 +98,7 @@ public class PathPlayer {
         } else {
             foundFindables.remove(id);
         }
-        DatabaseModel.getInstance().deleteFoundNode(globalPlayerId, id, group);
+        SqlStorage.getInstance().deleteFoundNode(globalPlayerId, id, group);
     }
 
     public boolean hasFound(FindableGroup group) {
@@ -118,11 +113,11 @@ public class PathPlayer {
         }
     }
 
-    public boolean hasFound(Findable findable) {
+    public boolean hasFound(Node findable) {
         if (findable.getGroup() != null) {
             return foundGroups.containsKey(findable.getGroup().getDatabaseId());
         }
-        return foundFindables.containsKey(findable.getDatabaseId());
+        return foundFindables.containsKey(findable.getNodeId());
     }
 
     /**
@@ -132,7 +127,7 @@ public class PathPlayer {
         Collection<Integer> ids = roadMap.getFindables().stream()
                 .filter(f -> f.getGroup() == null)
                 .filter(this::hasFound)
-                .map(Findable::getDatabaseId)
+                .map(Node::getNodeId)
                 .collect(Collectors.toSet());
         Collection<Integer> counts = foundGroups.values().stream()
                 .map(fi -> roadMap.getFindableGroup(fi.getFoundId()))
@@ -156,7 +151,7 @@ public class PathPlayer {
         setPath(player, targetNode);
     }
 
-    public void setPath(final Player player, final Findable target) {
+    public void setPath(final Player player, final Node target) {
         final PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         if (pathPlayer == null) {
             return;
@@ -166,15 +161,15 @@ public class PathPlayer {
     }
 
     public void setPath(@NotNull ParticlePath path) {
-        ParticlePath active = activePaths.get(path.getRoadMap().getDatabaseId());
+        ParticlePath active = activePaths.get(path.getRoadMap().getRoadmapId());
         if (active != null) {
             active.cancel();
         }
         path.run(uuid);
-        activePaths.put(path.getRoadMap().getDatabaseId(), path);
+        activePaths.put(path.getRoadMap().getRoadmapId(), path);
 
         Map<Integer, AtomicBoolean> lock = PlayerListener.getHasFoundTarget().getOrDefault(uuid, new ConcurrentHashMap<>());
-        lock.put(path.getRoadMap().getDatabaseId(), new AtomicBoolean(false));
+        lock.put(path.getRoadMap().getRoadmapId(), new AtomicBoolean(false));
         PlayerListener.getHasFoundTarget().put(uuid, lock);
     }
 
@@ -190,17 +185,17 @@ public class PathPlayer {
     }
 
     public void cancelPath(RoadMap roadMap) {
-        ParticlePath toBeCancelled = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath toBeCancelled = activePaths.get(roadMap.getRoadmapId());
         if (toBeCancelled == null) {
             return;
         }
 
         toBeCancelled.cancel();
-        activePaths.remove(roadMap.getDatabaseId());
+        activePaths.remove(roadMap.getRoadmapId());
     }
 
     public void pauseActivePath(RoadMap roadMap) {
-        ParticlePath active = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath active = activePaths.get(roadMap.getRoadmapId());
         if (active == null) {
             return;
         }
@@ -214,7 +209,7 @@ public class PathPlayer {
     }
 
     public void resumePausedPath(RoadMap roadMap) {
-        ParticlePath paused = activePaths.get(roadMap.getDatabaseId());
+        ParticlePath paused = activePaths.get(roadMap.getRoadmapId());
         if (paused == null) {
             return;
         }
@@ -268,35 +263,35 @@ public class PathPlayer {
     }
 
     public void setLastSetGroup(FindableGroup findableGroup) {
-        this.lastSetGroups.put(findableGroup.getRoadMap().getDatabaseId(), findableGroup);
+        this.lastSetGroups.put(findableGroup.getRoadMap().getRoadmapId(), findableGroup);
     }
 
     public @Nullable
     FindableGroup getLastSetGroup(RoadMap roadMap) {
-        return this.lastSetGroups.get(roadMap.getDatabaseId());
+        return this.lastSetGroups.get(roadMap.getRoadmapId());
     }
 
-    public void setLastSetFindable(Findable findable) {
+    public void setLastSetFindable(Node findable) {
         this.lastSetFindables.put(findable.getRoadMapId(), findable);
     }
 
     public @Nullable
-    Findable getLastSetFindable(RoadMap roadMap) {
-        return this.lastSetFindables.get(roadMap.getDatabaseId());
+    Node getLastSetFindable(RoadMap roadMap) {
+        return this.lastSetFindables.get(roadMap.getRoadmapId());
     }
 
     public void setVisualizer(RoadMap roadMap, PathVisualizer pathVisualizer) {
         Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().getOrDefault(globalPlayerId, new HashMap<>());
-        if (map.containsKey(roadMap.getDatabaseId())) {
-            DatabaseModel.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
+        if (map.containsKey(roadMap.getRoadmapId())) {
+            SqlStorage.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
         } else {
-            DatabaseModel.getInstance().createPlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
+            SqlStorage.getInstance().createPlayerVisualizer(globalPlayerId, roadMap, pathVisualizer);
         }
-        map.put(roadMap.getDatabaseId(), pathVisualizer.getDatabaseId());
+        map.put(roadMap.getRoadmapId(), pathVisualizer.getDatabaseId());
         VisualizerHandler.getInstance().getPlayerVisualizers().put(globalPlayerId, map);
 
-        if (activePaths.containsKey(roadMap.getDatabaseId())) {
-            activePaths.get(roadMap.getDatabaseId()).run();
+        if (activePaths.containsKey(roadMap.getRoadmapId())) {
+            activePaths.get(roadMap.getRoadmapId()).run();
         }
     }
 
@@ -305,7 +300,7 @@ public class PathPlayer {
         if (map == null) {
             return roadMap.getPathVisualizer();
         }
-        Integer id = map.get(roadMap.getDatabaseId());
+        Integer id = map.get(roadMap.getRoadmapId());
         if (id == null) {
             return roadMap.getPathVisualizer();
         }

@@ -1,10 +1,10 @@
 package de.bossascrew.pathfinder.commands;
 
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.CommandAlias;
-import de.bossascrew.acf.annotation.CommandCompletion;
-import de.bossascrew.acf.annotation.Default;
-import de.bossascrew.acf.annotation.Optional;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Optional;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.pathfinder.PathPlugin;

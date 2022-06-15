@@ -1,10 +1,13 @@
 package de.bossascrew.pathfinder.commands;
 
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.CommandAlias;
-import de.bossascrew.acf.annotation.CommandPermission;
-import de.bossascrew.acf.annotation.Optional;
-import de.bossascrew.acf.annotation.Subcommand;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Subcommand;
 import de.bossascrew.core.bukkit.nbt.NBTEntity;
 import de.bossascrew.core.bukkit.player.PlayerUtils;
 import de.bossascrew.pathfinder.PathPlugin;
@@ -22,19 +25,19 @@ import java.util.stream.Collectors;
 public class PathFinderCommand extends BaseCommand {
 
 	@Subcommand("cleanup armorstands")
-	@CommandPermission("bcrew.command.pathfinder.cleanup.armorstands")
+	@CommandPermission("pathfinder.command.pathfinder.cleanup.armorstands")
 	public void onCleanUp(CommandSender sender, @Optional World world) {
 
 		List<ArmorStand> armorStands = new ArrayList<>();
-		if(world != null) {
+		if (world != null) {
 			armorStands.addAll(getArmorStands(world));
 		}
-		for(World w : Bukkit.getWorlds()) {
+		for (World w : Bukkit.getWorlds()) {
 			armorStands.addAll(getArmorStands(w));
 		}
 		int count = 0;
-		for(ArmorStand as : armorStands) {
-			if(new NBTEntity(as).getPersistentDataContainer().hasKey(PathPlugin.NBT_ARMORSTAND_KEY)) {
+		for (ArmorStand as : armorStands) {
+			if (new NBTEntity(as).getPersistentDataContainer().hasKey(PathPlugin.NBT_ARMORSTAND_KEY)) {
 				as.remove();
 				count++;
 			}

@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.util.hooks;
 
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.Shop;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -11,10 +10,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class TradersHook extends Hook {
 

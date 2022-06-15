@@ -8,7 +8,7 @@ import de.bossascrew.pathfinder.data.FindableGroup;
 import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.events.NodeFindEvent;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -29,7 +29,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import javax.annotation.Nullable;
-import javax.annotation.Syntax;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -84,9 +83,9 @@ public class PlayerListener implements Listener {
                 continue;
             }
             RoadMap rm = path.getRoadMap();
-            Findable findable = path.get(path.size() - 1);
+            Node findable = path.get(path.size() - 1);
             AtomicBoolean foundGuard = hasFoundTarget.getOrDefault(player.getUniqueId(), new HashMap<>())
-                    .getOrDefault(rm.getDatabaseId(), new AtomicBoolean(true));
+                    .getOrDefault(rm.getRoadmapId(), new AtomicBoolean(true));
             if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance() && !foundGuard.getAndSet(true)) {
                 pPlayer.cancelPath(rm);
                 player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))
@@ -114,7 +113,7 @@ public class PlayerListener implements Listener {
         if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
             return;
         }
-        Findable found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
+        Node found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
         if (found == null) {
             return;
         }
@@ -133,7 +132,7 @@ public class PlayerListener implements Listener {
                 NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
                 Bukkit.getPluginManager().callEvent(findEvent);
                 findDate = findEvent.getDate();
-                id = findEvent.getFindable().getDatabaseId();
+                id = findEvent.getFindable().getNodeId();
             }
             if (event.isCancelled()) {
                 return;
@@ -150,13 +149,13 @@ public class PlayerListener implements Listener {
                     .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));
             player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
             player.sendActionBar(
-                    Component.text(rm.getName() + " erkundet: ", NamedTextColor.GRAY)
+                    Component.text(rm.getNameFormat() + " erkundet: ", NamedTextColor.GRAY)
                             .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
         });
     }
 
     private @Nullable
-    Findable getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
+    Node getFirstNodeInDistance(Player player, PathPlayer pathPlayer, Location location, Collection<RoadMap> roadMaps) {
         for (RoadMap roadMap : roadMaps) {
             if(roadMap.isEdited()) {
                 continue;
@@ -168,7 +167,7 @@ public class PlayerListener implements Listener {
                 if(pathPlayer.hasFound(group.getDatabaseId(), true)) {
                     continue;
                 }
-                for (Findable findable : group.getFindables()) {
+                for (Node findable : group.getFindables()) {
                     if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {
                         continue;
                     }
@@ -177,8 +176,8 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-            for (Findable findable : roadMap.getFindables().stream().filter(f -> f.getGroup() == null).collect(Collectors.toSet())) {
-                if (pathPlayer.hasFound(findable.getDatabaseId(), false)) {
+            for (Node findable : roadMap.getFindables().stream().filter(f -> f.getGroup() == null).collect(Collectors.toSet())) {
+                if (pathPlayer.hasFound(findable.getNodeId(), false)) {
                     continue;
                 }
                 if (findable.getPermission() != null && !player.hasPermission(findable.getPermission())) {

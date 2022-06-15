@@ -6,7 +6,7 @@ import de.bossascrew.core.bukkit.util.VectorUtils;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.core.util.Tuple3;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import lombok.Getter;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * Enthält alle wichtigen Informationen zum Anzeigen des Pfades gecached und läuft die Repeating Tasks
  */
 @Getter
-public class ParticlePath extends ArrayList<Findable> {
+public class ParticlePath extends ArrayList<Node> {
 
     @RequiredArgsConstructor
     @Getter @Setter
@@ -75,7 +75,7 @@ public class ParticlePath extends ArrayList<Findable> {
         }
         cachedDistance = visualizer.getParticleDistance();
 
-        Findable target = this.get(this.size() - 1);
+        Node target = this.get(this.size() - 1);
         calculatedPoints.addAll(VectorUtils.getCircle(target.getVector(), visualizer.getParticleDistance(), roadMap.getNodeFindDistance()));
     }
 
@@ -123,7 +123,7 @@ public class ParticlePath extends ArrayList<Findable> {
             return tangentPoints;
         }
         Tuple3<Vector, Vector, Vector> lastTangentSet = null;
-        for (Findable findable : this) {
+        for (Node findable : this) {
             if (count == 0) {
                 //Gerade in Richtung nächsten Punktes
                 tangentPoints.add(new Tuple3<>(null, findable.getVector(), findable.getVector().clone().add(this.get(1).getVector().clone()

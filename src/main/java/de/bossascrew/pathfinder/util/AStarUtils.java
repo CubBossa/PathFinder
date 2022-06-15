@@ -10,7 +10,7 @@ import de.bossascrew.pathfinder.astar.AStarNode;
 import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.data.findable.PlayerFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import net.kyori.adventure.text.Component;
@@ -30,11 +30,11 @@ import java.util.stream.Collectors;
 
 public class AStarUtils {
 
-    public static void startPath(Player player, Findable target) {
+    public static void startPath(Player player, Node target) {
         startPath(player, target, false);
     }
 
-    public static void startPath(Player player, Findable target, boolean findGroup) {
+    public static void startPath(Player player, Node target, boolean findGroup) {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
         if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, target.getRoadMap()), target, false, findGroup)) {
             PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
@@ -56,11 +56,11 @@ public class AStarUtils {
      * @param target Das Findable, das der Spieler sucht.
      * @return false, wenn das Ziel nicht erreicht werden konnte.
      */
-    public static boolean startPath(PathPlayer player, PlayerFindable start, Findable target, boolean ignoreUnfound) {
+    public static boolean startPath(PathPlayer player, PlayerFindable start, Node target, boolean ignoreUnfound) {
         return startPath(player, start, target, ignoreUnfound, false);
     }
 
-    public static boolean startPath(PathPlayer player, PlayerFindable start, Findable target, boolean ignoreUnfound, boolean findGroup) {
+    public static boolean startPath(PathPlayer player, PlayerFindable start, Node target, boolean ignoreUnfound, boolean findGroup) {
         Pair<AStarNode, AStarNode> pair = createAStarRelations(target.getRoadMap(), player, start, start.getLocation(), target, ignoreUnfound, findGroup);
         if (pair == null || pair.first == null || pair.second == null) {
             return false;
@@ -70,15 +70,15 @@ public class AStarUtils {
         aStar.aStarSearch(pair.first, pair.second);
 
         List<AStarNode> pathNodes = aStar.printPath(pair.second, findGroup);
-        List<Findable> pathVar = pathNodes.stream()
+        List<Node> pathVar = pathNodes.stream()
                 .map(aStarNode -> aStarNode.findable == null ? start : aStarNode.findable)
                 .collect(Collectors.toList());
 
-        Findable foundLast = pathVar.get(0);
+        Node foundLast = pathVar.get(0);
         if (foundLast == null) {
             return false;
         }
-        if (foundLast.getDatabaseId() != start.getDatabaseId()) {
+        if (foundLast.getNodeId() != start.getNodeId()) {
             //Es konnte kein Pfad ermittelt werden, wenn das letzte Node des Abbruchpfades nicht der Startpunkt ist
             return false;
         }
@@ -98,11 +98,11 @@ public class AStarUtils {
      * @return Die aus der Spielerinformation erzeugte StartNode und Zielnode des AStar Algorithmus. Sie wird benötigt, um den Algorithmus zu starten. Der Return-Wert nimmt null an, wenn keine passenden Nodes gefunden wurden.
      */
     public @Nullable
-    static Pair<AStarNode, AStarNode> createAStarRelations(RoadMap roadMap, PathPlayer player, PlayerFindable playerFindable, Location start, Findable target, boolean ignoreUnfound, boolean findGrouped) {
+    static Pair<AStarNode, AStarNode> createAStarRelations(RoadMap roadMap, PathPlayer player, PlayerFindable playerFindable, Location start, Node target, boolean ignoreUnfound, boolean findGrouped) {
 
         //TODO nicht nur nearest dist, sondern nearest edge center und endpunkte berücksichtigen
 
-        Collection<Findable> findables = ignoreUnfound ? roadMap.getFindables() : roadMap.getFindables(player);
+        Collection<Node> findables = ignoreUnfound ? roadMap.getFindables() : roadMap.getFindables(player);
         Map<Integer, AStarNode> aStarNodes = new HashMap<>();
 
         AStarNode playerNode = new AStarNode(playerFindable, 0);
@@ -111,16 +111,16 @@ public class AStarUtils {
         Double nearestDist = null;
         AStarNode nearest = null;
 
-        for (Findable findable : findables) {
+        for (Node findable : findables) {
             double dist = start.distance(findable.getLocation());
             AStarNode aStarNode = new AStarNode(findable, dist);
             aStarNode.groupId = findable.getGroup() != null ? findable.getGroup().getDatabaseId() : null;
-            aStarNodes.put(findable.getDatabaseId(), aStarNode);
+            aStarNodes.put(findable.getNodeId(), aStarNode);
             if (nearestDist == null || dist < nearestDist) {
                 nearest = aStarNode;
                 nearestDist = dist;
             }
-            if (findable.getDatabaseId() == target.getDatabaseId()) {
+            if (findable.getNodeId() == target.getNodeId()) {
                 targetNode = aStarNode;
             }
         }
@@ -131,15 +131,15 @@ public class AStarUtils {
         playerNode.adjacencies = new AStarEdge[]{new AStarEdge(nearest, nearestDist)};
         nearest.adjacencies = new AStarEdge[]{new AStarEdge(playerNode, nearestDist)};
 
-        for (Findable findable : findables) {
+        for (Node findable : findables) {
             AStarEdge[] adjacencies = new AStarEdge[(int) findable.getEdges().stream()
-                    .filter(integer -> findables.stream().anyMatch(f -> f.getDatabaseId() == integer))
+                    .filter(integer -> findables.stream().anyMatch(f -> f.getNodeId() == integer))
                     .count()];
-            AStarNode aStarNode = aStarNodes.get(findable.getDatabaseId());
+            AStarNode aStarNode = aStarNodes.get(findable.getNodeId());
 
             int i = 0;
             for (Integer edgeId : findable.getEdges()) {
-                if (findables.stream().noneMatch(f -> f.getDatabaseId() == edgeId)) {
+                if (findables.stream().noneMatch(f -> f.getNodeId() == edgeId)) {
                     continue;
                 }
                 AStarEdge edgeTarget = new AStarEdge(aStarNodes.get(edgeId), start.distance(findable.getLocation()));

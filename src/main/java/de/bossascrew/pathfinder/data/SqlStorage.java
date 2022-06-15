@@ -27,14 +27,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-public class DatabaseModel {
+public class SqlStorage implements DataStorage {
 
     @Getter
-    private static DatabaseModel instance;
+    private static SqlStorage instance;
 
     private final PathPlugin plugin;
 
-    public DatabaseModel(PathPlugin plugin) {
+    public SqlStorage(PathPlugin plugin) {
         instance = this;
         this.plugin = plugin;
 
@@ -330,23 +330,23 @@ public class DatabaseModel {
                     "`node_find_distance` = ?, " +
                     "`default_tangent_length` = ? " +
                     "WHERE `roadmap_id` = ?")) {
-                SQLUtils.setString(stmt, 1, roadMap.getName());
+                SQLUtils.setString(stmt, 1, roadMap.getNameFormat());
                 SQLUtils.setString(stmt, 2, roadMap.getWorld().getName());
                 SQLUtils.setBoolean(stmt, 3, roadMap.isFindableNodes());
                 SQLUtils.setInt(stmt, 4, roadMap.getPathVisualizer() == null ? null : roadMap.getPathVisualizer().getDatabaseId());
                 SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer() == null ? null : roadMap.getEditModeVisualizer().getDatabaseId());
                 SQLUtils.setDouble(stmt, 6, roadMap.getNodeFindDistance());
                 SQLUtils.setDouble(stmt, 7, roadMap.getDefaultBezierTangentLength());
-                SQLUtils.setInt(stmt, 8, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 8, roadMap.getRoadmapId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der RoadMap: " + roadMap.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der RoadMap: " + roadMap.getNameFormat(), e);
         }
     }
 
     public boolean deleteRoadMap(RoadMap roadMap) {
-        return deleteRoadMap(roadMap.getDatabaseId());
+        return deleteRoadMap(roadMap.getRoadmapId());
     }
 
     public boolean deleteRoadMap(int roadMapId) {
@@ -362,12 +362,12 @@ public class DatabaseModel {
         return false;
     }
 
-    public void newEdge(Findable nodeA, Findable nodeB) {
+    public void newEdge(Node nodeA, Node nodeB) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_edges` " +
                     "(node_a_id, node_b_id) VALUES (?, ?)")) {
-                SQLUtils.setInt(stmt, 1, nodeA.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, nodeB.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, nodeA.getNodeId());
+                SQLUtils.setInt(stmt, 2, nodeB.getNodeId());
 
                 stmt.executeUpdate();
             }
@@ -381,7 +381,7 @@ public class DatabaseModel {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_edges` LEFT JOIN "
                     + "`pathfinder_nodes` ON `pathfinder_edges`.`node_a_id` = `pathfinder_nodes`.`node_id` WHERE `pathfinder_nodes`.`roadmap_id` = ? ")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Collection<Pair<Integer, Integer>> result = new ArrayList<>();
@@ -395,22 +395,22 @@ public class DatabaseModel {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Edges zur Roadmap: " + roadMap.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Edges zur Roadmap: " + roadMap.getNameFormat(), e);
         }
         return null;
     }
 
-    public void deleteEdge(Pair<Findable, Findable> edge) {
+    public void deleteEdge(Pair<Node, Node> edge) {
         deleteEdge(edge.first, edge.second);
     }
 
-    public void deleteEdge(Findable a, Findable b) {
+    public void deleteEdge(Node a, Node b) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_edges` WHERE ( `node_a_id` = ? AND `node_b_id` = ? ) OR ( `node_a_id` = ? AND `node_b_id` = ? )")) {
-                SQLUtils.setInt(stmt, 1, a.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, b.getDatabaseId());
-                SQLUtils.setInt(stmt, 3, b.getDatabaseId());
-                SQLUtils.setInt(stmt, 4, a.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, a.getNodeId());
+                SQLUtils.setInt(stmt, 2, b.getNodeId());
+                SQLUtils.setInt(stmt, 3, b.getNodeId());
+                SQLUtils.setInt(stmt, 4, a.getNodeId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -429,12 +429,12 @@ public class DatabaseModel {
     }
 
     public @Nullable
-    Findable newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
+    Node newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, scope, group_id, x, y, z, name, tangent_length, permission) VALUES " +
                     "(?, ?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
                 SQLUtils.setString(stmt, 2, scope);
                 SQLUtils.setInt(stmt, 3, groupId);
                 SQLUtils.setDouble(stmt, 4, x);
@@ -449,7 +449,7 @@ public class DatabaseModel {
                     resultSet.next();
                     int databaseId = resultSet.getInt(1);
 
-                    Findable ret = null;
+                    Node ret = null;
                     switch (scope) {
                         case Node.SCOPE:
                             ret = new Node(databaseId, roadMap, name, new Vector(x, y, z));
@@ -484,7 +484,7 @@ public class DatabaseModel {
         }
     }
 
-    public void updateFindable(@NotNull Findable findable) {
+    public void updateFindable(@NotNull Node findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_nodes` SET " +
                     "`roadmap_id` = ?, " +
@@ -510,21 +510,21 @@ public class DatabaseModel {
                 SQLUtils.setString(stmt, 6, findable.getNameCore());
                 SQLUtils.setDouble(stmt, 7, findable.getBezierTangentLength());
                 SQLUtils.setString(stmt, 8, findable.getPermission());
-                SQLUtils.setInt(stmt, 9, findable.getDatabaseId());
+                SQLUtils.setInt(stmt, 9, findable.getNodeId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Node: " + findable.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Aktualisieren der Node: " + findable.getNameFormat(), e);
         }
     }
 
-    public Map<Integer, Findable> loadFindables(RoadMap roadMap) {
+    public Map<Integer, Node> loadFindables(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ?")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
-                    Map<Integer, Findable> result = new ConcurrentHashMap<>();
+                    Map<Integer, Node> result = new ConcurrentHashMap<>();
                     while (resultSet.next()) {
                         int id = SQLUtils.getInt(resultSet, "node_id");
                         String scope = SQLUtils.getString(resultSet, "scope");
@@ -540,7 +540,7 @@ public class DatabaseModel {
                             continue;
                         }
 
-                        Findable ret = null;
+                        Node ret = null;
                         switch (scope) {
                             case Node.SCOPE:
                                 ret = new Node(id, roadMap, name, new Vector(x, y, z));
@@ -561,7 +561,7 @@ public class DatabaseModel {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodes zur Roadmap: " + roadMap.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodes zur Roadmap: " + roadMap.getNameFormat(), e);
         }
         return null;
     }
@@ -572,7 +572,7 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_node_groups` " +
                     "(roadmap_id, name, findable) VALUES " +
                     "(?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
                 SQLUtils.setString(stmt, 2, name);
                 SQLUtils.setBoolean(stmt, 3, findable);
 
@@ -609,7 +609,7 @@ public class DatabaseModel {
     public Map<Integer, FindableGroup> loadFindableGroups(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_node_groups` WHERE `roadmap_id` = ?")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, FindableGroup> result = new HashMap<>();
@@ -626,7 +626,7 @@ public class DatabaseModel {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodegroups zur Roadmap: " + roadMap.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Fehler beim Laden der Nodegroups zur Roadmap: " + roadMap.getNameFormat(), e);
         }
         return null;
     }
@@ -999,7 +999,7 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_player_visualizers` " +
                     "(player_id, roadmap_id, visualizer_id) VALUES (?, ?, ?)")) {
                 SQLUtils.setInt(stmt, 1, playerId);
-                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
                 SQLUtils.setInt(stmt, 3, visualizer.getDatabaseId());
                 stmt.executeUpdate();
             }
@@ -1015,7 +1015,7 @@ public class DatabaseModel {
                     "WHERE `player_id` = ? AND `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
                 SQLUtils.setInt(stmt, 2, playerId);
-                SQLUtils.setInt(stmt, 3, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 3, roadMap.getRoadmapId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -1133,7 +1133,7 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmap_visualizers` " +
                     "(visualizer_id, roadmap_id) VALUES (?, ?)")) {
                 SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -1146,7 +1146,7 @@ public class DatabaseModel {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_roadmap_visualizers` " +
                     "WHERE `visualizer_id` = ? AND `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, roadMap.getDatabaseId());
+                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {

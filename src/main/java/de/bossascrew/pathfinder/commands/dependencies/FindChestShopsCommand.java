@@ -1,8 +1,8 @@
 package de.bossascrew.pathfinder.commands.dependencies;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.acf.BaseCommand;
-import de.bossascrew.acf.annotation.*;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import de.bossascrew.core.BossasCrewColors;
 import de.bossascrew.core.BukkitMain;
 import de.bossascrew.core.bukkit.inventory.ModelDataHandler;

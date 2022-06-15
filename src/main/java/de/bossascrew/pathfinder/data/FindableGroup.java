@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.core.util.PluginUtils;
-import de.bossascrew.pathfinder.data.findable.Findable;
+import de.bossascrew.pathfinder.data.findable.Node;
 import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,13 +18,13 @@ public class FindableGroup {
     private String name;
     @Setter
     private boolean findable;
-    private Collection<Findable> findables;
+    private Collection<Node> findables;
 
     public FindableGroup(int databaseId, RoadMap roadMap, String name) {
         this(databaseId, roadMap, name, null);
     }
 
-    public FindableGroup(int databaseId, RoadMap roadMap, String name, Collection<Findable> nodes) {
+    public FindableGroup(int databaseId, RoadMap roadMap, String name, Collection<Node> nodes) {
         this.databaseId = databaseId;
         this.roadMap = roadMap;
         this.name = name;
@@ -51,11 +50,11 @@ public class FindableGroup {
     }
 
     public void update() {
-        PluginUtils.getInstance().runAsync(() -> DatabaseModel.getInstance().updateFindableGroup(this));
+        PluginUtils.getInstance().runAsync(() -> SqlStorage.getInstance().updateFindableGroup(this));
     }
 
     public void delete() {
-        for (Findable findable : findables) {
+        for (Node findable : findables) {
             findable.removeFindableGroup(true);
         }
     }

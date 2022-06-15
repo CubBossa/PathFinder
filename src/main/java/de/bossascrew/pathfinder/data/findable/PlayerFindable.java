@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Getter
-public class PlayerFindable extends Findable {
+public class PlayerFindable extends Node {
 
     private final String name;
     private final Location location;
@@ -24,7 +24,7 @@ public class PlayerFindable extends Findable {
         this.roadMap = roadMap;
     }
 
-    public int getDatabaseId() {
+    public int getNodeId() {
         return -1;
     }
 
