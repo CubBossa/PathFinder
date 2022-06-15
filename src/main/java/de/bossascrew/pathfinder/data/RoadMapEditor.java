@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.node.NpcFindable;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;

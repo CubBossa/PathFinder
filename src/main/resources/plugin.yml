@@ -2,14 +2,8 @@ name: ${project.name}
 version: ${project.version}
 author: CubBossa
 main: de.bossascrew.pathfinder.PathPlugin
-api-version: 1.16
+api-version: 1.17
 
 depend:
   - bossascrew-core-bukkit
   - ProtocolLib
-
-softdepend:
-  - dtlTradersPlus
-  - Citizens
-  - BentoBox
-  - ChestShopLogger

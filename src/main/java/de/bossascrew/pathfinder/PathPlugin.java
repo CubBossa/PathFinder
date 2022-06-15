@@ -3,44 +3,37 @@ package de.bossascrew.pathfinder;
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
-import de.bossascrew.pathfinder.commands.dependencies.*;
 import de.bossascrew.pathfinder.data.*;
-import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.node.QuestFindable;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
-import de.bossascrew.pathfinder.util.hooks.BSkyblockHook;
-import de.bossascrew.pathfinder.util.hooks.ChestShopHook;
-import de.bossascrew.pathfinder.util.hooks.QuestsHook;
-import de.bossascrew.pathfinder.util.hooks.TradersHook;
+import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.awt.*;
+import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PathPlugin extends JavaPlugin {
-
-	public static final String NBT_ARMORSTAND_KEY = "pathfinder_armorstand";
 
 	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
 	public static final String PERM_COMMAND_FIND_INFO = "pathfinder.command.find.info";
@@ -75,59 +68,33 @@ public class PathPlugin extends JavaPlugin {
 	public static final ChatColor CHAT_COLOR_LIGHT = ChatColor.of(new Color(COLOR_LIGHT_INT));
 	public static final ChatColor CHAT_COLOR_DARK = ChatColor.of(new Color(COLOR_DARK_INT));
 
-	public static final String PREFIX = CHAT_COLOR_DARK + "" + ChatColor.BOLD + "|" + ChatColor.GRAY + " ";
-	public static final Component PREFIX_COMP = Component.empty().append(Component.text("|", COLOR_DARK, TextDecoration.BOLD)
-			.append(Component.text(" ", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE)));
-
 	@Getter
 	private static PathPlugin instance;
-	@Getter
-	private RoadMapHandler roadMapHandler;
-	@Getter
-	private PathPlayerHandler playerHandler;
-	@Getter
-	private VisualizerHandler visualizerHandler;
-	@Getter
-	private DataStorage database;
 
 	@Getter
 	private BukkitAudiences audiences;
-
 	@Getter
-	private boolean chestShop = false;
-	@Getter
-	private boolean quests = false;
-	@Getter
-	private boolean traders = false;
-	@Getter
-	private boolean bentobox = false;
+	private MiniMessage miniMessage;
 
 	private BukkitCommandManager commandManager;
+	@Getter
+	private DataStorage database;
 
+
+	@SneakyThrows
 	@Override
 	public void onEnable() {
 		instance = this;
-		if (Bukkit.getPluginManager().isPluginEnabled("ChestShopLogger")) {
-			new ChestShopHook(this);
-			chestShop = true;
-		}
-		if (Bukkit.getPluginManager().isPluginEnabled("Quests")) {
-			new QuestsHook(this);
-			quests = true;
-		}
-		if (Bukkit.getPluginManager().isPluginEnabled("dtlTraders") || Bukkit.getPluginManager().isPluginEnabled("dtlTradersPlus")) {
-			new TradersHook(this).loadShopsFromDir();
-			traders = true;
-		}
-		if (Bukkit.getPluginManager().isPluginEnabled("BentoBox")) {
-			new BSkyblockHook(this);
-			bentobox = true;
-		}
 
-		new SqlStorage(this);
-		this.visualizerHandler = new VisualizerHandler();
-		this.roadMapHandler = new RoadMapHandler();
-		this.playerHandler = new PathPlayerHandler();
+		// Data
+
+		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
+		translationHandler.registerAnnotatedLanguageClass(Messages.class);
+		translationHandler.loadLanguages();
+
+		database = new SqlStorage(this);
+
+		// Commands
 
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
@@ -140,22 +107,10 @@ public class PathPlugin extends JavaPlugin {
 		commandManager.registerCommand(new PathVisualizerCommand());
 		commandManager.registerCommand(new RoadMapCommand());
 		commandManager.registerCommand(new WaypointCommand());
-		if (traders) {
-			commandManager.registerCommand(new WaypointTraderCommand());
-			commandManager.registerCommand(new FindTraderCommand());
-		}
-		if (quests) {
-			commandManager.registerCommand(new WaypointQuesterCommand());
-			commandManager.registerCommand(new FindQuesterCommand());
-		}
-		if (chestShop && bentobox) {
-			commandManager.registerCommand(new FindChestShopsCommand());
-		}
-		if (traders || quests || (chestShop && bentobox)) {
-			commandManager.registerCommand(new FindItemCommand());
-		}
 
 		registerCompletions();
+
+		// Listeners
 
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 	}
@@ -245,7 +200,7 @@ public class PathPlugin extends JavaPlugin {
 					.filter(n -> n.getGroupId() == -1)
 					.filter(n -> pp.hasFound(n.getNodeId(), false))
 					.filter(n -> n instanceof Waypoint)
-					.map(Waypoint::getNameFormat)
+					.map(Node::getNameFormat)
 					.collect(Collectors.toList()));
 			return ret;
 		});
@@ -257,54 +212,18 @@ public class PathPlugin extends JavaPlugin {
 				return null;
 			}
 			return prev.getEdges().stream()
-					.map(edge -> rm.getFindable(edge).getNameFormat())
+					.map(edge -> rm.getNode(edge).getNameFormat())
 					.collect(Collectors.toSet());
 		}));
-		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getFindables().stream()
+		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FINDABLE, context -> resolveFromRoadMap(context, rm -> rm.getNodes().stream()
 				.filter(findable -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.filter(findable -> findable.getPermission() == null || context.getPlayer().hasPermission(findable.getPermission()))
-				.map(Waypoint::getNameFormat)
+				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));
-		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getFindables().stream()
-				.filter(findable -> (findable.getGroup() != null && !findable.getGroup().isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
-				.map(Waypoint::getNameFormat)
+		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getNodes().stream()
+				.filter(findable -> (findable.getGroupId() != NodeGroup.NO_GROUP && !roadMap.getNodeGroup(findable).isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
+				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));
-		commandCompletions.registerCompletion(COMPLETE_TRADERS, context -> {
-			RoadMap rm = null;
-			try {
-				rm = context.getContextValue(RoadMap.class);
-			} catch (IllegalStateException ignored) {
-			}
-			if (rm == null) {
-				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
-			}
-			if (rm == null) {
-				return null;
-			}
-			PathPlayer player = PathPlayerHandler.getInstance().getPlayer(context.getPlayer());
-			return rm.getNodes().stream()
-					.filter(findable -> findable instanceof TraderFindable)
-					.filter(player::hasFound)
-					.map(Waypoint::getNameFormat)
-					.collect(Collectors.toSet());
-		});
-		commandCompletions.registerCompletion(COMPLETE_QUESTERS, context -> {
-			RoadMap rm = null;
-			try {
-				rm = context.getContextValue(RoadMap.class);
-			} catch (IllegalStateException ignored) {
-			}
-			if (rm == null) {
-				rm = CommandUtils.getAnyRoadMap(context.getPlayer().getWorld());
-			}
-			if (rm == null) {
-				return null;
-			}
-			return rm.getNodes().stream()
-					.filter(findable -> findable instanceof QuestFindable)
-					.map(Waypoint::getNameFormat)
-					.collect(Collectors.toSet());
-		});
 	}
 
 	private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Function<RoadMap, Collection<String>> fromRoadmap) {
@@ -324,11 +243,11 @@ public class PathPlugin extends JavaPlugin {
 	}
 
 	private void registerContexts() {
-		CommandContexts<BukkitCommandExecutionContext> commandManager = BukkitMain.getInstance().getCommandManager().getCommandContexts();
-		commandManager.registerContext(RoadMap.class, context -> {
+		CommandContexts<BukkitCommandExecutionContext> contexts = commandManager.getCommandContexts();
+		contexts.registerContext(RoadMap.class, context -> {
 			String search = context.popFirstArg();
 
-			RoadMap roadMap = roadMapHandler.getRoadMap(search);
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(search);
 			if (roadMap == null) {
 				if (context.isOptional()) {
 					return null;
@@ -337,18 +256,26 @@ public class PathPlugin extends JavaPlugin {
 			}
 			return roadMap;
 		});
-		commandManager.registerContext(NodeSelection.class, context -> {
+		contexts.registerContext(NodeSelection.class, context -> {
 			String search = context.popFirstArg();
 			Player player = context.getPlayer();
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+			if (pPlayer == null) {
+				throw new InvalidCommandArgument("Unknown player '" + player.getName() + "', please contact an administrator.");
+			}
+			if (pPlayer.getSelectedRoadMapId() == null) {
+				throw new InvalidCommandArgument("You need to have a roadmap selected to parse nodes.");
+			}
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+			if (roadMap == null) {
+				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
+			}
 			return SelectionUtils.getNodeSelection(context.getPlayer(), roadMap.getNodes(), search);
-			//TODO exception handling
 		});
-		commandManager.registerContext(PathVisualizer.class, context -> {
+		contexts.registerContext(PathVisualizer.class, context -> {
 			String search = context.popFirstArg();
 
-			PathVisualizer visualizer = visualizerHandler.getPathVisualizer(search);
+			PathVisualizer visualizer = VisualizerHandler.getInstance().getPathVisualizer(search);
 			if (visualizer == null) {
 				if (context.isOptional()) {
 					return null;
@@ -357,10 +284,10 @@ public class PathPlugin extends JavaPlugin {
 			}
 			return visualizer;
 		});
-		commandManager.registerContext(EditModeVisualizer.class, context -> {
+		contexts.registerContext(EditModeVisualizer.class, context -> {
 			String search = context.popFirstArg();
 
-			EditModeVisualizer visualizer = visualizerHandler.getEditModeVisualizer(search);
+			EditModeVisualizer visualizer = VisualizerHandler.getInstance().getEditModeVisualizer(search);
 			if (visualizer == null) {
 				if (context.isOptional()) {
 					return null;
@@ -369,41 +296,8 @@ public class PathPlugin extends JavaPlugin {
 			}
 			return visualizer;
 		});
-		commandManager.registerContext(Waypoint.class, this::resolveFindable);
-		commandManager.registerContext(Waypoint.class, context -> (Waypoint) resolveFindable(context));
-		commandManager.registerContext(NodeGroup.class, context -> {
-			String search = context.popFirstArg();
-			Player player = context.getPlayer();
-			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-			if (pPlayer == null) {
-				return null;
-			}
-			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
 
-			List<NodeGroup> possibleResults = roadMapHandler.getRoadMapsStream()
-					.map(rm -> rm.getFindableGroup(search))
-					.collect(Collectors.toList());
-
-			NodeGroup ret;
-			if (roadMap != null) {
-				//Ausgewählte Roadmap bevorzugen
-				ret = possibleResults.stream()
-						.filter(Objects::nonNull)
-						.filter(g -> g.getRoadMap().getRoadmapId() == roadMap.getRoadmapId())
-						.findFirst().orElse(null);
-			} else {
-				ret = possibleResults.stream().findAny().orElse(null);
-			}
-
-			if (ret == null) {
-				if (context.isOptional()) {
-					return null;
-				}
-				throw new InvalidCommandArgument("Diese Gruppe existiert nicht.");
-			}
-			return ret;
-		});
-		commandManager.registerContext(Double.class, context -> {
+		contexts.registerContext(Double.class, context -> {
 			String number = context.popFirstArg();
 			if (number.equalsIgnoreCase("null")) {
 				return null;
@@ -421,26 +315,5 @@ public class PathPlugin extends JavaPlugin {
 				throw new InvalidCommandArgument(MessageKeys.MUST_BE_A_NUMBER, "{num}", number);
 			}
 		});
-	}
-
-	private Waypoint resolveFindable(BukkitCommandExecutionContext context) {
-		String search = context.popFirstArg();
-		Player player = context.getPlayer();
-		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-		if (pPlayer == null) {
-			return null;
-		}
-		RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
-		if (roadMap == null) {
-			throw new InvalidCommandArgument("Du musst eine RoadMap auswählen. (/roadmap select)");
-		}
-		Waypoint findable = roadMap.getNode(search);
-		if (findable == null) {
-			if (context.isOptional()) {
-				return null;
-			}
-			throw new InvalidCommandArgument("Diese Node existiert nicht.");
-		}
-		return findable;
 	}
 }

@@ -11,13 +11,13 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Getter
-public class PlayerFindable extends Waypoint {
+public class PlayerNode extends Waypoint {
 
     private final String name;
     private final Location location;
     private final RoadMap roadMap;
 
-    public PlayerFindable(Player player, RoadMap roadMap) {
+    public PlayerNode(Player player, RoadMap roadMap) {
         super(-1, roadMap, player.getName());
         this.name = player.getName();
         this.location = player.getLocation();

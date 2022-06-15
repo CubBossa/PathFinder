@@ -3,7 +3,7 @@ package de.bossascrew.pathfinder;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.node.PlayerFindable;
+import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
@@ -55,7 +55,7 @@ public class PathFinderAPI {
 
     public void showPath(Player player, Waypoint findable) {
         PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-        AStarUtils.startPath(pPlayer, new PlayerFindable(player, findable.getRoadMap()), findable, true);
+        AStarUtils.startPath(pPlayer, new PlayerNode(player, findable.getRoadMap()), findable, true);
     }
 
     public void cancelAllPaths(Player player) {

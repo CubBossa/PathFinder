@@ -6,7 +6,7 @@ import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.PlayerFindable;
+import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import lombok.Getter;
@@ -157,8 +157,8 @@ public class PathPlayer {
         if (pathPlayer == null) {
             return;
         }
-        final PlayerFindable playerFindable = new PlayerFindable(player, target.getRoadMap());
-        PluginUtils.getInstance().runAsync(() -> AStarUtils.startPath(pathPlayer, playerFindable, target, false));
+        final PlayerNode playerNode = new PlayerNode(player, target.getRoadMap());
+        PluginUtils.getInstance().runAsync(() -> AStarUtils.startPath(pathPlayer, playerNode, target, false));
     }
 
     public void setPath(@NotNull ParticlePath path) {

@@ -13,7 +13,7 @@ import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.PlayerFindable;
+import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -420,7 +420,7 @@ public class RoadMapCommand extends BaseCommand {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-			if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), findable, true)) {
+			if (!AStarUtils.startPath(pPlayer, new PlayerNode(player, roadMap), findable, true)) {
 				PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
 				return;
 			}
@@ -438,7 +438,7 @@ public class RoadMapCommand extends BaseCommand {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-			if (!AStarUtils.startPath(pPlayer, new PlayerFindable(player, roadMap), findable, false)) {
+			if (!AStarUtils.startPath(pPlayer, new PlayerNode(player, roadMap), findable, false)) {
 				PlayerUtils.sendMessage(player, ChatColor.RED + "Es konnte kein kürzester Pfad ermittelt werden.");
 				return;
 			}

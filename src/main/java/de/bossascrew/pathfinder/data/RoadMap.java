@@ -158,8 +158,7 @@ public class RoadMap {
 		this.groups.remove(nodeGroup.getGroupId());
 	}
 
-	public @Nullable
-	NodeGroup createNodeGroup(String name, boolean findable) {
+	public NodeGroup createNodeGroup(String name, boolean findable) {
 
 		NodeGroup group = SqlStorage.getInstance().newFindableGroup(this, name, findable);
 		if (group == null) {

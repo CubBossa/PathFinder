@@ -10,7 +10,6 @@ import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.node.NpcFindable;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.hooks.CitizensHook;
 import lombok.Getter;

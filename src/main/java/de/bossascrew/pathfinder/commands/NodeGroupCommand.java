@@ -2,92 +2,92 @@ package de.bossascrew.pathfinder.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
-import de.bossascrew.core.BukkitMain;
-import de.bossascrew.core.base.ComponentMenu;
-import de.bossascrew.core.base.Menu;
-import de.bossascrew.core.bukkit.player.PlayerUtils;
+import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.NodeGroup;
 import de.bossascrew.pathfinder.data.RoadMap;
-import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
 
 @CommandAlias("nodegroup|ng|findablegroup")
 public class NodeGroupCommand extends BaseCommand {
 
     @Subcommand("list")
-    @Syntax("[<Seite>]")
+    @Syntax("[<page>]")
     @CommandPermission("pathfinder.command.nodegroup.list")
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        Menu menu = new Menu(PathPlugin.CHAT_COLOR_DARK + "Gruppen für " + roadMap.getNameFormat());
+        TagResolver resolver = TagResolver.builder()
+                .tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+                .tag("page", Tag.inserting(Component.text(pageInput)))
+                .build();
 
-        for (NodeGroup group : roadMap.getGroups().values()) {
-            Component entry = Component.text(group.getNameFormat() + " (#" + group.getGroupId() + ")", PathPlugin.COLOR_LIGHT)
-                    .append(Component.text(", Größe: ", NamedTextColor.GRAY))
-                    .append(Component.text(group.getFindables().size(), PathPlugin.COLOR_LIGHT));
-            menu.addSub(new ComponentMenu(entry));
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
+
+        for (NodeGroup group : new ArrayList<>(roadMap.getGroups().values()).subList(pageInput * 10, (pageInput + 1) * 10)) {
+
+            TagResolver r = TagResolver.builder()
+                    .tag("id", Tag.inserting(Component.text(group.getGroupId())))
+                    .tag("name", Tag.inserting(group.getDisplayName()))
+                    .tag("size", Tag.inserting(Component.text(group.size())))
+                    .tag("findable", Tag.inserting(Component.text(group.isFindable())))
+                    .build();
+            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
         }
-        PlayerUtils.sendComponents(player, menu.toComponents());
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_FOOTER.format(resolver), player);
     }
 
     @Subcommand("create")
-    @Syntax("<Name>")
+    @Syntax("<name>")
     @CommandPermission("pathfinder.command.nodegroup.create")
     public void onCreate(Player player, String name) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        if (!roadMap.isGroupNameUnique(name)) {
-            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
-            return;
-        }
-        //TODO wirft exception
-        roadMap.addFindableGroup(name);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich erstellt: " + PathPlugin.CHAT_COLOR_LIGHT + name);
+        NodeGroup group = roadMap.createNodeGroup(name, true);
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
     }
 
     @Subcommand("delete")
-    @Syntax("<Gruppe>")
+    @Syntax("<group>")
     @CommandPermission("pathfinder.command.nodegroup.delete")
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
     public void onDelete(Player player, NodeGroup group) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-        roadMap.deleteFindableGroup(group);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich gelöscht: " + PathPlugin.CHAT_COLOR_LIGHT + group.getNameFormat());
+        roadMap.removeNodeGroup(group);
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
     }
 
     @Subcommand("set name")
-    @Syntax("<Gruppe> <neuer Name>")
+    @Syntax("<group> <new name>")
     @CommandPermission("pathfinder.command.nodegroup.rename")
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
     public void onRename(Player player, NodeGroup group, @Single String newName) {
-        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+        group.setNameFormat(newName);
 
-        if (!roadMap.isGroupNameUnique(newName)) {
-            PlayerUtils.sendMessage(player, PathPlugin.PREFIX + ChatColor.RED + "Dieser Name ist bereits vergeben");
-            return;
-        }
-        group.setNameFormat(newName, true);
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Gruppe erfolgreich umbenannt: " + PathPlugin.CHAT_COLOR_LIGHT + newName);
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
+                .tag("name", Tag.inserting(group.getDisplayName()))
+                .tag("value", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(newName)))
+                .build()), player);
     }
 
     @Subcommand("set findable")
-    @Syntax("<Gruppe> <findbar>")
+    @Syntax("<group> <findable>")
     @CommandPermission("pathfinder.command.nodegroup.setfindable")
-    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION + " " + BukkitMain.COMPLETE_BOOLEAN)
+    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION + " true|false")
     public void onSetFindable(Player player, NodeGroup group, boolean findable) {
-        group.setFindable(findable, true);
-        if(group.getRoadMap().isEdited()) {
-            for (Waypoint f : group.getFindables()) {
-                group.getRoadMap().updateArmorStandDisplay(f, false);
-            }
-        }
-        PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Die Findbarkeit geändert auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findable ? "an" : "aus"));
+        group.setFindable(findable);
+
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
+                .tag("name", Tag.inserting(group.getDisplayName()))
+                .tag("value", Tag.inserting(Component.text(findable)))
+                .build()), player);
     }
 }
