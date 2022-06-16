@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.node;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +23,8 @@ public interface Node extends Navigable, Comparable<Node> {
 	Vector getPosition();
 
 	void setPosition(Vector position);
+
+	Location getLocation();
 
 	Collection<Edge> getEdges();
 
