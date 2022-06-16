@@ -8,7 +8,7 @@ import co.aikar.commands.annotation.Optional;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.cubbossa.translations.TranslationHandler;
 import org.bukkit.entity.Player;

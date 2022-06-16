@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.events;
 
-import de.bossascrew.pathfinder.data.NodeGroup;
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.node.Waypoint;
 import lombok.Getter;
 import lombok.Setter;

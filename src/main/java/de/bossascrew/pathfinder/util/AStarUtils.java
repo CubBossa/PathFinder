@@ -9,7 +9,7 @@ import de.bossascrew.pathfinder.astar.AStarEdge;
 import de.bossascrew.pathfinder.astar.AStarNode;
 import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;

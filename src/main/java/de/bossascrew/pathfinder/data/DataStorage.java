@@ -1,10 +1,14 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
-import de.cubbossa.menuframework.util.Pair;
+import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -17,45 +21,47 @@ import java.util.Map;
 public interface DataStorage {
 
 
-	RoadMap createRoadMap(String name, World world, boolean findableNodes);
+	RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes);
 
+	RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes, int pathVis, int editModeVis, double findDist, double tangentLength);
 
-	RoadMap createRoadMap(String name, World world, boolean findableNodes, int pathVis, int editModeVis, double findDist, double tangentLength);
-
-
-	Map<Integer, RoadMap> loadRoadMaps();
+	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
 	void updateRoadMap(RoadMap roadMap);
 
 	boolean deleteRoadMap(RoadMap roadMap);
 
-	boolean deleteRoadMap(int roadMapId);
+	boolean deleteRoadMap(NamespacedKey key);
 
-	void newEdge(Waypoint nodeA, Waypoint nodeB);
 
-	Collection<Pair<Integer, Integer>> loadEdges(RoadMap roadMap);
+	Edge createEdge(Node start, Node end, float weight);
 
-	void deleteEdge(Pair<Waypoint, Waypoint> edge);
+	Collection<Edge> loadEdges(RoadMap roadMap);
 
-	void deleteEdge(Waypoint a, Waypoint b);
+	void deleteEdge(Edge edge);
 
-	Waypoint newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, String name, Double tangentLength, String permission);
+	void deleteEdge(Node start, Node end);
 
-	void deleteFindable(int nodeId);
+
+	<T extends Node> T createNode(RoadMap roadMap, Class<T> type, NamespacedKey group, Double x, Double y, Double z, String name, Double tangentLength, String permission);
+
+	Map<Integer, Waypoint> loadNodes(RoadMap roadMap);
 
 	void updateFindable(@NotNull Waypoint findable);
 
-	Map<Integer, Waypoint> loadFindables(RoadMap roadMap);
+	void deleteNode(int nodeId);
 
-	NodeGroup newFindableGroup(RoadMap roadMap, String name, boolean findable);
 
-	void deleteFindableGroup(NodeGroup group);
+	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, boolean findable);
 
-	void deleteFindableGroup(int groupId);
+	Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap);
 
-	Map<Integer, NodeGroup> loadFindableGroups(RoadMap roadMap);
+	void updateNodeGroup(NodeGroup group);
 
-	void updateFindableGroup(NodeGroup group);
+	void deleteNodeGroup(NodeGroup group);
+
+	void deleteNodeGroup(NamespacedKey key);
+
 
 	FoundInfo newFoundInfo(int globalPlayerId, int foundId, boolean group, Date foundDate);
 

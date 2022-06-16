@@ -1,7 +1,13 @@
 package de.bossascrew.pathfinder;
 
+import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageMeta;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.NamespacedKey;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 public class Messages {
 
@@ -17,7 +23,11 @@ public class Messages {
 
 	public static final Message GEN_TRUE = new Message("general.true");
 	public static final Message GEN_FALSE = new Message("general.false");
-
+	@MessageMeta(placeholders = {"x", "y", "z"})
+	public static final Message GEN_VECTOR = new Message("general.vector");
+	public static final Message GEN_KEY = new Message("general.key");
+	public static final Message GEN_PERMISSION = new Message("general.permission");
+	public static final Message GEN_NULL = new Message("general.null");
 
 
 	@MessageMeta(value = """
@@ -46,7 +56,36 @@ public class Messages {
 
 	@MessageMeta(value = "<col:prefix>Successfully created Node <name>.", placeholders = "name")
 	public static final Message CMD_N_CREATE = new Message("commands.node.create");
+	@MessageMeta(placeholders = "selection")
+	public static final Message CMD_N_DELETE = new Message("commands.node.delete");
+	@MessageMeta(placeholders = {"selection", "location"})
+	public static final Message CMD_N_MOVED = new Message("commands.node.moved");
+	@MessageMeta(placeholders = {"selection", "name"})
+	public static final Message CMD_N_RENAMED = new Message("commands.node.renamed");
+	public static final Message CMD_N_INFO = new Message("commands.node.info");
+	@MessageMeta(placeholders = {"selection", "permission"})
+	public static final Message CMD_N_SET_PERMISSION = new Message("commands.node.set_permission");
+	@MessageMeta(placeholders = {"selection", "length"})
+	public static final Message CMD_N_SET_TANGENT = new Message("commands.node.set_curve_length");
+	public static final Message CMD_N_SET_GROUP = new Message("commands.node.set_group.success");
+	public static final Message CMD_N_SET_GROUP_UNKNOWN = new Message("commands.node.set_group.unknown_group");
+	@MessageMeta(placeholders = {"roadmap", "page"})
+	public static final Message CMD_N_LIST_HEADER = new Message("commands.node.list.header");
+	@MessageMeta(placeholders = {"roadmap", "page", "name", "permission", "position", "group-key"})
+	public static final Message CMD_N_LIST_ELEMENT = new Message("commands.node.list.element");
+	@MessageMeta(placeholders = {"roadmap", "page"})
+	public static final Message CMD_N_LIST_FOOTER = new Message("commands.node.list.footer");
+	@MessageMeta(placeholders = {"start", "end"})
+	public static final Message CMD_N_CONNECT = new Message("commands.node.connect.success");
+	@MessageMeta(placeholders = {"start", "end"})
+	public static final Message CMD_N_CONNECT_IDENTICAL = new Message("commands.node.connect.identical");
+	@MessageMeta(placeholders = {"start", "end"})
+	public static final Message CMD_N_CONNECT_ALREADY_CONNECTED = new Message("commands.node.connect.already_connected");
+	@MessageMeta(placeholders = {"start", "end"})
+	public static final Message CMD_N_DISCONNECT = new Message("commands.node.disconnect.success");
 
+	@MessageMeta(placeholders = "name")
+	public static final Message CMD_NG_ALREADY_EXISTS = new Message("commands.node_group.already_exists");
 	@MessageMeta(placeholders = "name")
 	public static final Message CMD_NG_CREATE = new Message("commands.node_group.create");
 	@MessageMeta(placeholders = "name")
@@ -61,6 +100,40 @@ public class Messages {
 	public static final Message CMD_NG_SET_NAME = new Message("commands.node_group.set_name");
 	@MessageMeta(placeholders = {"name", "value"})
 	public static final Message CMD_NG_SET_FINDABLE = new Message("commands.node_group.set_findable");
+	@MessageMeta(value = "<col:prefix>Search terms for <name>:\n<col:colors.background>»<values>", placeholders = {"name", "values"})
+	public static final Message CMD_NG_TERMS_LIST = new Message("commands.node_group.terms.list");
+	@MessageMeta(value = "<col:prefix>Successfully added search terms to <name>: <values>", placeholders = {"name", "values"})
+	public static final Message CMD_NG_TERMS_ADD = new Message("commands.node_group.terms.add");
+	@MessageMeta(value = "<col:prefix>Successfully removed search terms from <name>: <values>", placeholders = {"name", "values"})
+	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
+
+	public static FormattedMessage formatBoolean(boolean val) {
+
+	}
+
+	public static FormattedMessage formatVector(Vector vector) {
+		return GEN_VECTOR.format(TagResolver.builder()
+				.tag("x", Tag.preProcessParsed(String.format("%,.2f", vector.getX())))
+				.tag("y", Tag.preProcessParsed(String.format("%,.2f", vector.getY())))
+				.tag("z", Tag.preProcessParsed(String.format("%,.2f", vector.getZ())))
+				.build());
+	}
+
+	public static FormattedMessage formatVector(String x, String y, String z) {
+		return GEN_VECTOR.format(TagResolver.builder()
+				.tag("x", Tag.preProcessParsed(x))
+				.tag("y", Tag.preProcessParsed(y))
+				.tag("z", Tag.preProcessParsed(z))
+				.build());
+	}
+
+	public static FormattedMessage formatPermission(@Nullable String permission) {
+
+	}
+
+	public static FormattedMessage formatKey(@Nullable NamespacedKey key) {
+
+	}
 }

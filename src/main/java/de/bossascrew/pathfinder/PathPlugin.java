@@ -3,15 +3,19 @@ package de.bossascrew.pathfinder;
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
-import de.bossascrew.pathfinder.data.*;
+import de.bossascrew.pathfinder.data.DataStorage;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.SqlStorage;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
@@ -23,15 +27,18 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.awt.*;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PathPlugin extends JavaPlugin {
 
@@ -42,14 +49,13 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_COMMAND_FIND_LOCATIONS = "pathfinder.command.find.location";
 	public static final String PERM_COMMAND_FIND_QUESTS = "pathfinder.command.find.quest";
 	public static final String PERM_COMMAND_FIND_TRADERS = "pathfinder.command.find.trader";
-	public static final String PERM_COMMAND_FIND_CHESTSHOPS = "pathfinder.command.find.chestshops";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
 	public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
 	public static final String COMPLETE_PATH_VISUALIZER_STYLES = "@path_visualizer_styles";
 	public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
-	public static final String COMPLETE_FINDABLES = "@nodes";
+	public static final String COMPLETE_NODE_SELECTION = "@nodes";
 	public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
 	public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
 	public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
@@ -57,8 +63,6 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_PARAMETER = "@nodegroups_findable_parametered";
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_SELECTION = "@nodegroups_findable_selection";
 	public static final String COMPLETE_FINDABLE_LOCATIONS = "@findable_locations";
-	public static final String COMPLETE_TRADERS = "@nodes_traders";
-	public static final String COMPLETE_QUESTERS = "@nodes_questers";
 
 	public static final int COLOR_LIGHT_INT = 0x7F7FFF;
 	public static final int COLOR_DARK_INT = 0x5555FF;
@@ -117,16 +121,14 @@ public class PathPlugin extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		RoadMapHandler.getInstance().cancelAllEditModes();
+
 	}
 
 	private void registerCompletions() {
 		CommandCompletions<BukkitCommandCompletionContext> commandCompletions = commandManager.getCommandCompletions();
-		commandCompletions.registerCompletion(COMPLETE_ROADMAPS, context -> RoadMapHandler.getInstance().getRoadMapsStream()
-				.map(RoadMap::getNameFormat)
-				.collect(Collectors.toSet()));
+		commandCompletions.registerCompletion(COMPLETE_ROADMAPS, context -> completeNamespacedKey(context.getInput(), RoadMapHandler.getInstance().getRoadMaps().keySet().stream()));
 		commandCompletions.registerCompletion(COMPLETE_ACTIVE_ROADMAPS, context -> PathPlayerHandler.getInstance().getPlayer(context.getPlayer().getUniqueId()).getActivePaths().stream()
-				.map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMap().getRoadmapId()))
+				.map(path -> RoadMapHandler.getInstance().getRoadMap(path.getRoadMap().getKey()))
 				.filter(Objects::nonNull)
 				.map(RoadMap::getNameFormat)
 				.collect(Collectors.toSet()));
@@ -144,9 +146,7 @@ public class PathPlugin extends JavaPlugin {
 				.map(EditModeVisualizer::getName)
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
-				roadMap.getGroups().values().stream()
-						.map(NodeGroup::getNameFormat)
-						.collect(Collectors.toSet())));
+				completeNamespacedKey(context.getInput(), roadMap.getGroups().keySet().stream())));
 		commandCompletions.registerCompletion(COMPLETE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = null;
 			try {
@@ -159,7 +159,7 @@ public class PathPlugin extends JavaPlugin {
 			if (rm == null) {
 				return null;
 			}
-			return rm.getGroups().values().stream().map(NodeGroup::getNameFormat).collect(Collectors.toList());
+			return completeNamespacedKey(context.getInput(), rm.getGroups().keySet().stream());
 		});
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_PARAMETER, context -> {
 			RoadMap rm = null;
@@ -193,18 +193,18 @@ public class PathPlugin extends JavaPlugin {
 			}
 			Collection<String> ret = rm.getGroups().values().stream()
 					.filter(NodeGroup::isFindable)
-					.filter(g -> pp.hasFound(g.getGroupId(), true))
+					.filter(pp::hasFound)
 					.map(NodeGroup::getNameFormat)
 					.collect(Collectors.toList());
 			ret.addAll(rm.getNodes().stream()
-					.filter(n -> n.getGroupId() == -1)
-					.filter(n -> pp.hasFound(n.getNodeId(), false))
+					.filter(n -> n.getGroupKey() != null)
+					.filter(pp::hasFound)
 					.filter(n -> n instanceof Waypoint)
 					.map(Node::getNameFormat)
 					.collect(Collectors.toList()));
 			return ret;
 		});
-		commandCompletions.registerCompletion(COMPLETE_FINDABLES, context -> resolveFromRoadMap(context, roadMap ->
+		commandCompletions.registerCompletion(COMPLETE_NODE_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
 				SelectionUtils.completeNodeSelection(roadMap.getNodes(), context.getInput())));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES_CONNECTED, context -> resolveFromRoadMap(context, rm -> {
 			Waypoint prev = context.getContextValue(Waypoint.class, 1);
@@ -221,7 +221,7 @@ public class PathPlugin extends JavaPlugin {
 				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLES_FOUND, context -> resolveFromRoadMap(context, roadMap -> roadMap.getNodes().stream()
-				.filter(findable -> (findable.getGroupId() != NodeGroup.NO_GROUP && !roadMap.getNodeGroup(findable).isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
+				.filter(findable -> (findable.getGroupKey() != null && !roadMap.getNodeGroup(findable).isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));
 	}
@@ -232,27 +232,49 @@ public class PathPlugin extends JavaPlugin {
 		if (pPlayer == null) {
 			return null;
 		}
-		if (pPlayer.getSelectedRoadMapId() == null) {
+		if (pPlayer.getSelectedRoadMap() == null) {
 			return Lists.newArrayList("keine Roadmap ausgewählt.");
 		}
-		RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+		RoadMap rm = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
 		if (rm == null) {
 			return null;
 		}
 		return fromRoadmap.apply(rm);
 	}
 
+	private List<String> completeNamespacedKey(String input, Stream<NamespacedKey> keys) {
+		String[] split = input.split(":");
+		String namespace = split[0];
+		String key = split.length == 2 ? split[1] : "";
+		return keys.
+				filter(k -> k.getNamespace().startsWith(namespace) || k.getKey().startsWith(key))
+				.map(NamespacedKey::toString)
+				.collect(Collectors.toList());
+	}
+
+
 	private void registerContexts() {
 		CommandContexts<BukkitCommandExecutionContext> contexts = commandManager.getCommandContexts();
+		contexts.registerContext(NamespacedKey.class, context -> {
+			String search = context.popFirstArg();
+			NamespacedKey key = NamespacedKey.fromString(search);
+			if (key == null) {
+				throw new InvalidCommandArgument("Keys must be of format '<namespace>:<key>', like 'minecraft:diamond' or 'pathfinder:roadmap1'");
+			}
+			return key;
+		});
 		contexts.registerContext(RoadMap.class, context -> {
 			String search = context.popFirstArg();
-
-			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(search);
+			NamespacedKey key = NamespacedKey.fromString(search);
+			if(key == null) {
+				throw new InvalidCommandArgument("Roadmap keys must be formatted '<namespace>:<key>', e.g. 'pathfinder:newyork'.");
+			}
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(key);
 			if (roadMap == null) {
 				if (context.isOptional()) {
 					return null;
 				}
-				throw new InvalidCommandArgument("Ungültige Roadmap: " + search);
+				throw new InvalidCommandArgument("Invalid roadmap: " + search);
 			}
 			return roadMap;
 		});
@@ -263,10 +285,10 @@ public class PathPlugin extends JavaPlugin {
 			if (pPlayer == null) {
 				throw new InvalidCommandArgument("Unknown player '" + player.getName() + "', please contact an administrator.");
 			}
-			if (pPlayer.getSelectedRoadMapId() == null) {
+			if (pPlayer.getSelectedRoadMap() == null) {
 				throw new InvalidCommandArgument("You need to have a roadmap selected to parse nodes.");
 			}
-			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMapId());
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
 			if (roadMap == null) {
 				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
 			}

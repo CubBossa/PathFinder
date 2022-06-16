@@ -4,15 +4,15 @@ import de.bossascrew.core.player.GlobalPlayer;
 import de.bossascrew.core.player.PlayerHandler;
 import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.NodeGroup;
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.data.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.events.NodeFindEvent;
 import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -85,7 +85,7 @@ public class PlayerListener implements Listener {
             RoadMap rm = path.getRoadMap();
             Waypoint findable = path.get(path.size() - 1);
             AtomicBoolean foundGuard = hasFoundTarget.getOrDefault(player.getUniqueId(), new HashMap<>())
-                    .getOrDefault(rm.getRoadmapId(), new AtomicBoolean(true));
+                    .getOrDefault(rm.getKey(), new AtomicBoolean(true));
             if (event.getTo().toVector().distance(findable.getVector()) < rm.getNodeFindDistance() && !foundGuard.getAndSet(true)) {
                 pPlayer.cancelPath(rm);
                 player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Ziel erreicht: ", NamedTextColor.GRAY))

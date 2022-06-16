@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.util;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.node.Node;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -173,14 +174,8 @@ public class SelectionUtils {
 
 	public static Component formatSelection(NodeSelection selection) {
 
-		Component hover = Component.empty();
-		int i = 0;
-		for (Node node : selection) {
-			hover = hover.append(node.getDisplayName());
-			if (i < selection.size() - 1) {
-				hover = hover.append(Component.text(", ", NamedTextColor.GRAY));
-			}
-		}
+		Component hover = Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)), selection.stream()
+				.map(Node::getDisplayName).collect(Collectors.toList()));
 
 		return Component.text(selection.size() + " Nodes")
 				.color(NamedTextColor.WHITE)

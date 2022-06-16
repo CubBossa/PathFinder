@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.pathfinder.node.Navigable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -11,6 +12,6 @@ import java.util.UUID;
 public class FoundInfo {
 
     private final UUID playerId;
-    private final int foundId;
+    private final Navigable found;
     private final Date foundDate;
 }

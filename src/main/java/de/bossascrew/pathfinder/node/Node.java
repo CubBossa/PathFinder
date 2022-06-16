@@ -1,28 +1,43 @@
 package de.bossascrew.pathfinder.node;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.Collection;
 
-public interface Node {
+public interface Node extends Navigable, Comparable<Node> {
 
 	int getNodeId();
 
-	int getRoadMapId();
-
-	int getGroupId();
+	NamespacedKey getRoadMapKey();
 
 	String getNameFormat();
 
-	Component getDisplayName();
+	void setNameFormat(String format);
 
-	@Nullable String getPermission();
+	Component getDisplayName();
 
 	Vector getPosition();
 
-	List<Integer> getEdges();
+	void setPosition(Vector position);
 
-	float getBezierTangentLength();
+	Collection<Edge> getEdges();
+
+	@Nullable NamespacedKey getGroupKey();
+
+	void setGroupKey(@Nullable NamespacedKey key);
+
+	@Nullable String getPermission();
+
+	void setPermission(@Nullable String permission);
+
+	@Nullable Double getBezierTangentLength();
+
+	void setBezierTangentLength(Double value);
+
+	Edge connect(Node target);
+
+	void disconnect(Node target);
 }

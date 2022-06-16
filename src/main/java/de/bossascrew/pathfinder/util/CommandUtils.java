@@ -4,10 +4,10 @@ import co.aikar.commands.ConditionFailedException;
 import de.bossascrew.core.graphics.ColorUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.data.visualisation.Visualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.RoadMapHandler;
+import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -38,13 +38,13 @@ public class CommandUtils {
 
     public RoadMap getSelectedRoadMap(CommandSender sender, boolean cancelIfUnselected) {
         PathPlayer pplayer = PathPlayerHandler.getInstance().getPlayer(sender);
-        if (pplayer.getSelectedRoadMapId() == null) {
+        if (pplayer.getSelectedRoadMap() == null) {
             if (!cancelIfUnselected) {
                 return null;
             }
             throw new ConditionFailedException("Du musst eine Straßenkarte ausgewählt haben. (/roadmap select <Straßenkarte>)");
         }
-        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMapId());
+        RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMap());
         return roadMap;
     }
 

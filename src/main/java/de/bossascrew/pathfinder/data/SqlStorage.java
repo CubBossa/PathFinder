@@ -9,12 +9,9 @@ import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import lombok.Getter;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,9 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class SqlStorage implements DataStorage {
-
-    @Getter
-    private static SqlStorage instance;
 
     private final PathPlugin plugin;
 
@@ -237,7 +231,7 @@ public class SqlStorage implements DataStorage {
     }
 
     public @Nullable
-    RoadMap createRoadMap(String name, World world, boolean findableNodes) {
+	RoadMap createRoadMap(String name, World world, boolean findableNodes) {
         return createRoadMap(name, world, findableNodes, VisualizerHandler.getInstance().getDefaultPathVisualizer().getDatabaseId(),
                 VisualizerHandler.getInstance().getDefaultEditModeVisualizer().getDatabaseId(), 3, 3);
     }
@@ -275,7 +269,7 @@ public class SqlStorage implements DataStorage {
     }
 
     public @Nullable
-    Map<Integer, RoadMap> loadRoadMaps() {
+    Map<NamespacedKey, RoadMap> loadRoadMaps() {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_roadmaps`")) {
                 try (ResultSet resultSet = stmt.executeQuery()) {
@@ -337,7 +331,7 @@ public class SqlStorage implements DataStorage {
                 SQLUtils.setInt(stmt, 5, roadMap.getEditModeVisualizer() == null ? null : roadMap.getEditModeVisualizer().getDatabaseId());
                 SQLUtils.setDouble(stmt, 6, roadMap.getNodeFindDistance());
                 SQLUtils.setDouble(stmt, 7, roadMap.getDefaultBezierTangentLength());
-                SQLUtils.setInt(stmt, 8, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 8, roadMap.getKey());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -346,7 +340,7 @@ public class SqlStorage implements DataStorage {
     }
 
     public boolean deleteRoadMap(RoadMap roadMap) {
-        return deleteRoadMap(roadMap.getRoadmapId());
+        return deleteRoadMap(roadMap.getKey());
     }
 
     public boolean deleteRoadMap(int roadMapId) {
@@ -381,7 +375,7 @@ public class SqlStorage implements DataStorage {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_edges` LEFT JOIN "
                     + "`pathfinder_nodes` ON `pathfinder_edges`.`node_a_id` = `pathfinder_nodes`.`node_id` WHERE `pathfinder_nodes`.`roadmap_id` = ? ")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 1, roadMap.getKey());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Collection<Pair<Integer, Integer>> result = new ArrayList<>();
@@ -420,21 +414,21 @@ public class SqlStorage implements DataStorage {
 
     public @Nullable
     QuestFindable newQuestFindable(RoadMap roadMap, Integer groupId, int npcId, @Nullable String name, Double tangentLength, String permission) {
-        return (QuestFindable) newFindable(roadMap, QuestFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
+        return (QuestFindable) createNode(roadMap, QuestFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
     }
 
     public @Nullable
     TraderFindable newTraderFindable(RoadMap roadMap, Integer groupId, int npcId, @Nullable String name, Double tangentLength, String permission) {
-        return (TraderFindable) newFindable(roadMap, TraderFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
+        return (TraderFindable) createNode(roadMap, TraderFindable.SCOPE, groupId, (double) npcId, null, null, name, tangentLength, permission);
     }
 
     public @Nullable
-	Waypoint newFindable(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
+	Waypoint createNode(RoadMap roadMap, String scope, Integer groupId, Double x, Double y, Double z, @Nullable String name, Double tangentLength, String permission) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_nodes` " +
                     "(roadmap_id, scope, group_id, x, y, z, name, tangent_length, permission) VALUES " +
                     "(?, ?, ?, ?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 1, roadMap.getKey());
                 SQLUtils.setString(stmt, 2, scope);
                 SQLUtils.setInt(stmt, 3, groupId);
                 SQLUtils.setDouble(stmt, 4, x);
@@ -473,7 +467,7 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void deleteFindable(int nodeId) {
+    public void deleteNode(int nodeId) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_nodes` WHERE `node_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, nodeId);
@@ -518,10 +512,10 @@ public class SqlStorage implements DataStorage {
         }
     }
 
-    public Map<Integer, Waypoint> loadFindables(RoadMap roadMap) {
+    public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_id` = ?")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 1, roadMap.getKey());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, Waypoint> result = new ConcurrentHashMap<>();
@@ -567,12 +561,12 @@ public class SqlStorage implements DataStorage {
     }
 
     public @Nullable
-    NodeGroup newFindableGroup(RoadMap roadMap, String name, boolean findable) {
+    NodeGroup createNodeGroup(RoadMap roadMap, String name, boolean findable) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_node_groups` " +
                     "(roadmap_id, name, findable) VALUES " +
                     "(?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 1, roadMap.getKey());
                 SQLUtils.setString(stmt, 2, name);
                 SQLUtils.setBoolean(stmt, 3, findable);
 
@@ -591,11 +585,11 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void deleteFindableGroup(NodeGroup group) {
+    public void deleteNodeGroup(NodeGroup group) {
         deleteFindableGroup(group.getGroupId());
     }
 
-    public void deleteFindableGroup(int groupId) {
+    public void deleteNodeGroup(int groupId) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_node_groups` WHERE `group_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, groupId);
@@ -606,10 +600,10 @@ public class SqlStorage implements DataStorage {
         }
     }
 
-    public Map<Integer, NodeGroup> loadFindableGroups(RoadMap roadMap) {
+    public Map<Integer, NodeGroup> loadNodeGroups(RoadMap roadMap) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM `pathfinder_node_groups` WHERE `roadmap_id` = ?")) {
-                SQLUtils.setInt(stmt, 1, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 1, roadMap.getKey());
 
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     Map<Integer, NodeGroup> result = new HashMap<>();
@@ -631,7 +625,7 @@ public class SqlStorage implements DataStorage {
         return null;
     }
 
-    public void updateFindableGroup(NodeGroup group) {
+    public void updateNodeGroup(NodeGroup group) {
         try (Connection connection = MySQL.getConnection()) {
             try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_node_groups` SET " +
                     "`name` = ?, " +
@@ -999,7 +993,7 @@ public class SqlStorage implements DataStorage {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_player_visualizers` " +
                     "(player_id, roadmap_id, visualizer_id) VALUES (?, ?, ?)")) {
                 SQLUtils.setInt(stmt, 1, playerId);
-                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 2, roadMap.getKey());
                 SQLUtils.setInt(stmt, 3, visualizer.getDatabaseId());
                 stmt.executeUpdate();
             }
@@ -1015,7 +1009,7 @@ public class SqlStorage implements DataStorage {
                     "WHERE `player_id` = ? AND `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, visualizer.getDatabaseId());
                 SQLUtils.setInt(stmt, 2, playerId);
-                SQLUtils.setInt(stmt, 3, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 3, roadMap.getKey());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -1133,7 +1127,7 @@ public class SqlStorage implements DataStorage {
             try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmap_visualizers` " +
                     "(visualizer_id, roadmap_id) VALUES (?, ?)")) {
                 SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 2, roadMap.getKey());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -1146,7 +1140,7 @@ public class SqlStorage implements DataStorage {
             try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM `pathfinder_roadmap_visualizers` " +
                     "WHERE `visualizer_id` = ? AND `roadmap_id` = ?")) {
                 SQLUtils.setInt(stmt, 1, pathVisualizer.getDatabaseId());
-                SQLUtils.setInt(stmt, 2, roadMap.getRoadmapId());
+                SQLUtils.setInt(stmt, 2, roadMap.getKey());
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {

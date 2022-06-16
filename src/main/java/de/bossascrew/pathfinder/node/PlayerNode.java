@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.node;
 
-import de.bossascrew.pathfinder.data.NodeGroup;
-import de.bossascrew.pathfinder.data.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
