@@ -1,11 +1,8 @@
 package de.bossascrew.pathfinder.listener;
 
-import de.bossascrew.core.player.GlobalPlayer;
-import de.bossascrew.core.player.PlayerHandler;
-import de.bossascrew.core.util.PluginUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.data.ParticlePath;
+import de.bossascrew.pathfinder.visualizer.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;

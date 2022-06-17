@@ -9,10 +9,11 @@ import org.bukkit.NamespacedKey;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Node> implements Keyed, Navigable {
+public class NodeGroup extends HashSet<Node> implements Keyed, Findable {
 
     private final NamespacedKey key;
     private final RoadMap roadMap;
@@ -31,5 +32,15 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Navigable {
         this.roadMap = roadMap;
         this.nameFormat = nameFormat;
         this.findable = false;
+    }
+
+    @Override
+    public NamespacedKey getIdentifier() {
+        return key;
+    }
+
+    @Override
+    public Collection<Findable> getGrouped() {
+        return this.stream().filter(n -> n instanceof Findable).map(n -> (Findable) n).collect(Collectors.toList());
     }
 }

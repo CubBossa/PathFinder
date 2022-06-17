@@ -1,28 +1,24 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 public interface DataStorage {
 
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes);
 
-	RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes);
-
-	RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes, int pathVis, int editModeVis, double findDist, double tangentLength);
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -44,14 +40,14 @@ public interface DataStorage {
 
 	<T extends Node> T createNode(RoadMap roadMap, Class<T> type, NamespacedKey group, Double x, Double y, Double z, String name, Double tangentLength, String permission);
 
-	Map<Integer, Waypoint> loadNodes(RoadMap roadMap);
+	Map<Integer, Node> loadNodes(RoadMap roadMap);
 
-	void updateFindable(@NotNull Waypoint findable);
+	void updateNode(Node node);
 
 	void deleteNode(int nodeId);
 
 
-	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, boolean findable);
+	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable);
 
 	Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap);
 
@@ -62,45 +58,37 @@ public interface DataStorage {
 	void deleteNodeGroup(NamespacedKey key);
 
 
-	FoundInfo newFoundInfo(int globalPlayerId, int foundId, boolean group, Date foundDate);
+	FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate);
 
-	Map<Integer, FoundInfo> loadFoundNodes(int globalPlayerId, boolean group);
+	Map<Integer, FoundInfo> loadFoundInfo(int globalPlayerId, boolean group);
 
-	void deleteFoundNode(int globalPlayerId, int nodeId, boolean group);
+	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	EditModeVisualizer newEditModeVisualizer(String name, @Nullable EditModeVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit, @Nullable Integer schedulerPeriod, @Nullable Integer nodeHeadId, @Nullable Integer edgeHeadId);
+	SimpleCurveVisualizer newPathVisualizer(String name, @Nullable SimpleCurveVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod);
 
-	Map<Integer, EditModeVisualizer> loadEditModeVisualizer();
+	Map<Integer, SimpleCurveVisualizer> loadPathVisualizer();
 
-	PathVisualizer newPathVisualizer(String name, @Nullable PathVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod);
+	void updatePathVisualizer(SimpleCurveVisualizer visualizer);
 
-	Map<Integer, PathVisualizer> loadPathVisualizer();
-
-	void updateEditModeVisualizer(EditModeVisualizer visualizer);
-
-	void updatePathVisualizer(PathVisualizer visualizer);
-
-	void deletePathVisualizer(PathVisualizer visualizer);
-
-	void deleteEditModeVisualizer(EditModeVisualizer visualizer);
+	void deletePathVisualizer(SimpleCurveVisualizer visualizer);
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 
-	void createPlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer);
+	void createPlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer);
 
-	void updatePlayerVisualizer(int playerId, RoadMap roadMap, PathVisualizer visualizer);
+	void updatePlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer);
 
-	void loadVisualizerStyles(Collection<PathVisualizer> visualizers);
+	void loadVisualizerStyles(Collection<SimpleCurveVisualizer> visualizers);
 
-	void newVisualizerStyle(PathVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName);
+	void newVisualizerStyle(SimpleCurveVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName);
 
-	void updateVisualizerStyle(PathVisualizer visualizer);
+	void updateVisualizerStyle(SimpleCurveVisualizer visualizer);
 
 	void deleteStyleVisualizer(int visualizerId);
 
-	Map<Integer, Collection<PathVisualizer>> loadStyleRoadmapMap(Collection<PathVisualizer> visualizers);
+	Map<Integer, Collection<SimpleCurveVisualizer>> loadStyleRoadmapMap(Collection<SimpleCurveVisualizer> visualizers);
 
-	void addStyleToRoadMap(RoadMap roadMap, PathVisualizer pathVisualizer);
+	void addStyleToRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer);
 
-	void removeStyleFromRoadMap(RoadMap roadMap, PathVisualizer pathVisualizer);
+	void removeStyleFromRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer);
 }

@@ -89,7 +89,7 @@ public class RoadMapEditor implements Keyed {
 			}
 			editor.setEditMode(key);
 
-			BottomInventoryMenu menu = new EditModeMenu(player, this).getHotbarMenu();
+			BottomInventoryMenu menu = new EditModeMenu().createHotbarMenu(roadMap, this);
 			editingPlayers.put(uuid, menu);
 			menu.openSync(player);
 
@@ -136,11 +136,12 @@ public class RoadMapEditor implements Keyed {
 	}
 
 	private void startParticleTask() {
-
+		updateEditModeParticles();
 	}
 
 	private void stopParticleTask() {
-
+		var sched = Bukkit.getScheduler();
+		editModeTasks.forEach(sched::cancelTask);
 	}
 
 	/**

@@ -3,8 +3,7 @@ package de.bossascrew.pathfinder.handler;
 import de.bossascrew.core.networking.handling.PacketHandler;
 import de.bossascrew.core.networking.handling.PacketListener;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.networking.EditModeVisualizerUpdatePacket;
 import lombok.Getter;
 import org.bukkit.Particle;
@@ -27,12 +26,12 @@ public class VisualizerHandler implements PacketListener {
 	private static VisualizerHandler instance;
 
 	@Getter
-	private final PathVisualizer defaultPathVisualizer;
+	private final SimpleCurveVisualizer defaultSimpleCurveVisualizer;
 	@Getter
 	private final EditModeVisualizer defaultEditModeVisualizer;
 
 
-	private Map<Integer, PathVisualizer> pathVisualizerMap;
+	private Map<Integer, SimpleCurveVisualizer> pathVisualizerMap;
 	private Map<Integer, EditModeVisualizer> editVisualizerMap;
 
 	/**
@@ -41,7 +40,7 @@ public class VisualizerHandler implements PacketListener {
 	@Getter
 	private final Map<Integer, Map<Integer, Integer>> playerVisualizers;
 	@Getter
-	private final Map<Integer, Collection<PathVisualizer>> roadmapVisualizers;
+	private final Map<Integer, Collection<SimpleCurveVisualizer>> roadmapVisualizers;
 
 
 	public VisualizerHandler() {
@@ -65,7 +64,7 @@ public class VisualizerHandler implements PacketListener {
         }
 
         //Lade default Visualizer, um null-Parameter zu ergänzen und dynamisch ändern zu können.
-        defaultPathVisualizer = pathVisualizerMap.getOrDefault(1, createPathVisualizer("default", null, Particle.SPELL_WITCH,
+        defaultSimpleCurveVisualizer = pathVisualizerMap.getOrDefault(1, createPathVisualizer("default", null, Particle.SPELL_WITCH,
                 20d, 10, 3, 10));
 
         defaultEditModeVisualizer = editVisualizerMap.getOrDefault(1, createEditModeVisualizer(
@@ -86,16 +85,16 @@ public class VisualizerHandler implements PacketListener {
      * @param schedulerPeriod  Wie viele Ticks der Scheduler warten soll, bevor er neue Partikel generiert.
      * @return den Visualisierer mit allen gesetzten Parametern.
      */
-    public PathVisualizer createPathVisualizer(String name, @Nullable PathVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance,
-                                               @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod) {
+    public SimpleCurveVisualizer createPathVisualizer(String name, @Nullable SimpleCurveVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance,
+													  @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod) {
 
         if (!isNameUniquePath(name)) {
             return null;
         }
         if(parent == null) {
-            parent = defaultPathVisualizer;
+            parent = defaultSimpleCurveVisualizer;
         }
-        PathVisualizer vis = SqlStorage.getInstance().newPathVisualizer(name, parent, particle, particleDistance, particleLimit, particleSteps, schedulerPeriod);
+        SimpleCurveVisualizer vis = SqlStorage.getInstance().newPathVisualizer(name, parent, particle, particleDistance, particleLimit, particleSteps, schedulerPeriod);
         if (vis == null) {
             return null;
         }
@@ -138,8 +137,8 @@ public class VisualizerHandler implements PacketListener {
         return deletePathVisualizer(getPathVisualizer(databaseId));
     }
 
-    public boolean deletePathVisualizer(PathVisualizer visualizer) {
-        for(PathVisualizer vis : pathVisualizerMap.values()) {
+    public boolean deletePathVisualizer(SimpleCurveVisualizer visualizer) {
+        for(SimpleCurveVisualizer vis : pathVisualizerMap.values()) {
             if(vis.getParent() != null && vis.getParent().getDatabaseId() == visualizer.getDatabaseId()) {
                 vis.setParent(visualizer.getParent());
             }
@@ -170,7 +169,7 @@ public class VisualizerHandler implements PacketListener {
 
     public boolean isNameUniquePath(String name) {
         return pathVisualizerMap.values().stream()
-				.map(PathVisualizer::getName)
+				.map(SimpleCurveVisualizer::getNameFormat)
 				.noneMatch(element -> element.equalsIgnoreCase(name));
 	}
 
@@ -203,14 +202,14 @@ public class VisualizerHandler implements PacketListener {
 	}
 
 	public @Nullable
-	PathVisualizer getPathVisualizer(String name) {
+	SimpleCurveVisualizer getPathVisualizer(String name) {
 		return getPathVisualizerStream()
-				.filter(pathVisualizer -> pathVisualizer.getName().equals(name))
+				.filter(pathVisualizer -> pathVisualizer.getNameFormat().equals(name))
 				.findAny().orElse(null);
 	}
 
 	public @Nullable
-	PathVisualizer getPathVisualizer(int databaseId) {
+	SimpleCurveVisualizer getPathVisualizer(int databaseId) {
         return getPathVisualizerStream()
                 .filter(pathVisualizer -> pathVisualizer.getDatabaseId() == databaseId)
                 .findAny().orElse(null);
@@ -230,7 +229,7 @@ public class VisualizerHandler implements PacketListener {
                 .findAny().orElse(null);
     }
 
-    public Stream<PathVisualizer> getPathVisualizerStream() {
+    public Stream<SimpleCurveVisualizer> getPathVisualizerStream() {
         return pathVisualizerMap.values().stream();
     }
 
@@ -238,7 +237,7 @@ public class VisualizerHandler implements PacketListener {
         return editVisualizerMap.values().stream();
     }
 
-    public Collection<PathVisualizer> getPathVisualizers() {
+    public Collection<SimpleCurveVisualizer> getPathVisualizers() {
         return pathVisualizerMap.values();
     }
 

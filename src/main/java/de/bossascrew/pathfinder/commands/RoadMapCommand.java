@@ -5,21 +5,19 @@ import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.node.Findable;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
-import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
 import de.cubbossa.menuframework.chat.ComponentMenu;
-import de.cubbossa.menuframework.chat.TextMenu;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.identity.Identity;
@@ -39,7 +37,6 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @CommandAlias("roadmap")
 public class RoadMapCommand extends BaseCommand {
@@ -61,29 +58,10 @@ public class RoadMapCommand extends BaseCommand {
 						Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
 				.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 				.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-				.tag("path-visualizer", Tag.inserting(roadMap.getPathVisualizer().getDisplayName()))
+				.tag("path-visualizer", Tag.inserting(roadMap.getSimpleCurveVisualizer().getDisplayName()))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
-	}
-
-	@Subcommand("info ungrouped")
-	@Syntax("<roadmap>")
-	@CommandPermission("pathfinder.command.roadmap.info")
-	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
-	public void onUngrouped(CommandSender sender, @Optional RoadMap roadMap) {
-		if (roadMap == null) {
-			roadMap = CommandUtils.getSelectedRoadMap(sender);
-		}
-		TextMenu menu = new TextMenu("Ungruppierte Wegpunkte in " + roadMap.getNameFormat() + ":");
-		String list = "";
-		for (Waypoint findable : roadMap.getNodes().stream()
-				.filter(findable -> findable.getGroup() == null)
-				.collect(Collectors.toList())) {
-			list += ChatColor.WHITE + findable.getNameFormat() + ChatColor.GRAY + ", ";
-		}
-		menu.addSub(new TextMenu(list));
-		PlayerUtils.sendComponents(sender, menu.toComponents());
 	}
 
 	@Subcommand("create")
@@ -100,7 +78,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 
 		try {
-			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(name, world, findableNodes);
+			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(key, world, findableNodes);
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), player);
 
 			PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
@@ -121,8 +99,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 
 		RoadMapHandler.getInstance().deleteRoadMap(roadMap);
-		PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte " + PathPlugin.CHAT_COLOR_LIGHT + roadMap.getNameFormat() +
-				ChatColor.GRAY + " erfolgreich gelöscht.");
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DELETE.format(TagResolver.resolver("roadmap", Tag.inserting(roadMap.getDisplayName()))), sender);
 	}
 
 	@Subcommand("editmode")
@@ -136,7 +113,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 		if (roadMap == null) {
 			if (RoadMapHandler.getInstance().getRoadMaps().size() == 0) {
-				//TODO create roadmap first
+				TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_CREATE, player);
 				return;
 			}
 			if (pp.getSelectedRoadMap() != null) {
@@ -154,15 +131,17 @@ public class RoadMapCommand extends BaseCommand {
 			}
 			if (roadMap != null) {
 				pp.setSelectedRoadMap(roadMap.getKey());
-				//TODO message selected
+				TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_SELECTED.format(TagResolver.resolver("roadmap",
+						Tag.inserting(roadMap.getDisplayName()))), player);
 			}
 		}
 		if (roadMap == null) {
-			//TODO message select roadmap
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_SELECT, player);
 			return;
 		}
 		RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey()).toggleEditMode(player.getUniqueId());
-		//TODO feedback
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_SELECT.format(TagResolver.resolver("roadmap",
+				Tag.inserting(roadMap.getDisplayName()))), player);
 	}
 
 	@Subcommand("list")
@@ -192,11 +171,11 @@ public class RoadMapCommand extends BaseCommand {
 							Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
 					.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 					.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-					.tag("path-visualizer", Tag.inserting(roadMap.getPathVisualizer().getDisplayName()))
+					.tag("path-visualizer", Tag.inserting(roadMap.getSimpleCurveVisualizer().getDisplayName()))
 					.build();
 
 			TranslationHandler.getInstance().sendMessage(
-					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_HEADER : Messages.CMD_RM_LIST_SELECTED)
+					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_ENTRY : Messages.CMD_RM_LIST_SELECTED)
 							.format(resolver, r),
 					sender);
 		}
@@ -204,20 +183,22 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("forcefind")
-	@Syntax("<roadmap> <player> <nodes> [ungrouped]")
+	@Syntax("<roadmap> <player> <nodes> [group]")
 	@CommandPermission("pathfinder.command.roadmap.forcefind")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " @players " + PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, @Single NodeSelection selection,
-							@Optional @Single @Values("ungrouped") String ungrouped) {
+							@Optional @Single @Values("group") String group) {
 
-		boolean findSingle = ungrouped != null;
+		boolean findSingle = group != null;
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
 		if (pathPlayer == null) {
 			return;
 		}
 
 		for (Node node : selection) {
-			pathPlayer.find(node, !findSingle, new Date());
+			if(node instanceof Findable findable) {
+				pathPlayer.find(findable, !findSingle, new Date());
+			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
 				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
@@ -226,29 +207,26 @@ public class RoadMapCommand extends BaseCommand {
 	}
 
 	@Subcommand("forceforget")
-	@Syntax("<Straßenkarte> <Spieler> <Wegpunkte> [ungruppiert]")
+	@Syntax("<roadmap> <player> <nodes> [grouped]")
 	@CommandPermission("pathfinder.command.roadmap.forceforget")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " @players " + PathPlugin.COMPLETE_FINDABLES_FOUND + " ungruppiert")
-	public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, @Single String nodename,
-	                          @Optional @Single String ungrouped) {
+	public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, @Single NodeSelection selection,
+							  @Optional @Single String grouped) {
 
-		boolean findSingle = ungrouped != null && ungrouped.equalsIgnoreCase("ungruppiert");
+		boolean group = grouped != null && grouped.equalsIgnoreCase("grouped");
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
 		if (pathPlayer == null) {
 			return;
 		}
 
-		boolean all = nodename.equals("*");
-		for (Waypoint findable : roadMap.getNodes()) {
-			if (all || findable.getNameFormat().equalsIgnoreCase(nodename)) {
-				pathPlayer.unfind(findable, !findSingle);
-				if (!all) {
-					break;
-				}
+		for (Node node : selection) {
+			if (node instanceof Findable findable) {
+				pathPlayer.forget(findable, group);
 			}
 		}
-		PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Spieler " + PathPlugin.CHAT_COLOR_LIGHT + target.getName() +
-				ChatColor.GRAY + " hat " + PathPlugin.CHAT_COLOR_LIGHT + nodename + ChatColor.GRAY + " vergessen.");
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
+				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection))).build()), sender);
 	}
 
 	@Subcommand("select")
@@ -278,21 +256,10 @@ public class RoadMapCommand extends BaseCommand {
 		@Syntax("<Style>")
 		@CommandPermission("pathfinder.command.roadmap.set.path-visualizer")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-		public void onStyle(CommandSender sender, PathVisualizer visualizer) {
+		public void onStyle(CommandSender sender, SimpleCurveVisualizer visualizer) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 
-			roadMap.setPathVisualizer(visualizer);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
-		}
-
-		@Subcommand("editmode-visualizer")
-		@Syntax("<Style>")
-		@CommandPermission("pathfinder.command.roadmap.set.editmode-visualizer")
-		@CommandCompletion(PathPlugin.COMPLETE_EDITMODE_VISUALIZER)
-		public void onStyleEditMode(CommandSender sender, EditModeVisualizer visualizer) {
-			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
-
-			roadMap.setEditModeVisualizer(visualizer);
+			roadMap.setSimpleCurveVisualizer(visualizer);
 			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
 		}
 
@@ -367,46 +334,46 @@ public class RoadMapCommand extends BaseCommand {
 		@Subcommand("add")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
 		@Syntax("<Style>")
-		public void onAdd(CommandSender sender, PathVisualizer pathVisualizer) {
-			if (!pathVisualizer.isPickable()) {
+		public void onAdd(CommandSender sender, SimpleCurveVisualizer simpleCurveVisualizer) {
+			if (!simpleCurveVisualizer.isPickable()) {
 				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
 				return;
 			}
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
-			Collection<PathVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
-			list.add(pathVisualizer);
+			Collection<SimpleCurveVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
+			list.add(simpleCurveVisualizer);
 			VisualizerHandler.getInstance().getRoadmapVisualizers().put(roadMap.getKey(), list);
-			SqlStorage.getInstance().addStyleToRoadMap(roadMap, pathVisualizer);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style hinzugefügt: " + PathPlugin.COLOR_LIGHT + pathVisualizer.getName());
+			SqlStorage.getInstance().addStyleToRoadMap(roadMap, simpleCurveVisualizer);
+			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style hinzugefügt: " + PathPlugin.COLOR_LIGHT + simpleCurveVisualizer.getNameFormat());
 		}
 
 
 		@Subcommand("remove")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
 		@Syntax("<Style>")
-		public void onRemove(CommandSender sender, PathVisualizer visualizer) {
+		public void onRemove(CommandSender sender, SimpleCurveVisualizer visualizer) {
 			if (!visualizer.isPickable()) {
 				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
 				return;
 			}
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 			SqlStorage.getInstance().removeStyleFromRoadMap(roadMap, visualizer);
-			Collection<PathVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().get(roadMap.getKey());
+			Collection<SimpleCurveVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().get(roadMap.getKey());
 			if (list != null) {
 				list.remove(visualizer);
 			}
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style entfernt: " + PathPlugin.COLOR_LIGHT + visualizer.getName());
+			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style entfernt: " + PathPlugin.COLOR_LIGHT + visualizer.getNameFormat());
 		}
 
 		@Subcommand("list")
 		public void onList(CommandSender sender) {
 			Menu menu = new Menu("Alle Styles dieser Roadmap:");
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
-			for (PathVisualizer visualizer : VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>())) {
+			for (SimpleCurveVisualizer visualizer : VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>())) {
 				menu.addSub(new ComponentMenu(Component.empty()
 						.append(visualizer.getDisplayName())
 						.append(Component.text(" [X]", NamedTextColor.RED)
-								.clickEvent(ClickEvent.runCommand("/roadmap style remove " + visualizer.getName()))
+								.clickEvent(ClickEvent.runCommand("/roadmap style remove " + visualizer.getNameFormat()))
 								.hoverEvent(HoverEvent.showText(Component.text("Klicke zum Entfernen."))))));
 			}
 			PlayerUtils.sendComponents(sender, menu.toComponents());
@@ -451,15 +418,6 @@ public class RoadMapCommand extends BaseCommand {
 					.append(Component.text("Testpfad gestartet. (", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, TextDecoration.State.FALSE))
 					.append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
 					.append(Component.text(")", NamedTextColor.GRAY)));
-		}
-
-		@Subcommand("visible")
-		@Syntax("true|false")
-		@CommandCompletion("true|false")
-		public void onTestVisible(Player player, boolean visible) {
-			RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
-			roadMap.toggleArmorStandsVisible(player, visible);
-			player.sendMessage(PathPlugin.PREFIX_COMP.append(Component.text("Visibility gesetzt: " + visible)));
 		}
 	}
 }

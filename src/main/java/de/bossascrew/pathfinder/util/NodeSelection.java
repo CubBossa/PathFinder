@@ -10,5 +10,4 @@ public class NodeSelection extends ArrayList<Node> {
 	public NodeSelection(Collection<Node> other) {
 		super(other);
 	}
-
 }

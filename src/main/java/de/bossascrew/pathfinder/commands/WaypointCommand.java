@@ -243,7 +243,6 @@ public class WaypointCommand extends BaseCommand {
             selection.forEach(node -> node.setGroupKey(key));
             TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_GROUP.format(resolver), sender);
             PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(sender);
-            pathPlayer.setLastSetGroup(group);
         }
     }
 }

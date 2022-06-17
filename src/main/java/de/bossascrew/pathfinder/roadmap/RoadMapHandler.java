@@ -2,12 +2,15 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.util.HashedRegistry;
+import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.Collection;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +47,7 @@ public class RoadMapHandler {
 	}
 
 	public RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes) {
-		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, world, findableNodes);
+		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, StringUtils.getRandHexString() + "A Roadmap", world, findableNodes);
 		roadMaps.put(rm);
 		return rm;
 	}

@@ -4,9 +4,8 @@ import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.data.DataStorage;
+import de.bossascrew.pathfinder.data.InMemoryDatabase;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
@@ -18,6 +17,9 @@ import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.splinelib.SplineLib;
+import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -29,6 +31,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.awt.*;
 import java.io.File;
@@ -71,6 +74,28 @@ public class PathPlugin extends JavaPlugin {
 	public static final ChatColor CHAT_COLOR_LIGHT = ChatColor.of(new Color(COLOR_LIGHT_INT));
 	public static final ChatColor CHAT_COLOR_DARK = ChatColor.of(new Color(COLOR_DARK_INT));
 
+	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
+		@Override
+		public de.bossascrew.splinelib.util.Vector convertToVector(org.bukkit.util.Vector vector) {
+			return new de.bossascrew.splinelib.util.Vector(vector.getX(), vector.getY(), vector.getZ());
+		}
+
+		@Override
+		public org.bukkit.util.Vector convertFromVector(de.bossascrew.splinelib.util.Vector vector) {
+			return new Vector(vector.getX(), vector.getY(), vector.getZ());
+		}
+
+		@Override
+		public BezierVector convertToBezierVector(org.bukkit.util.Vector vector) {
+			return new BezierVector(vector.getX(), vector.getY(), vector.getZ(), null, null);
+		}
+
+		@Override
+		public org.bukkit.util.Vector convertFromBezierVector(BezierVector bezierVector) {
+			return new Vector(bezierVector.getX(), bezierVector.getY(), bezierVector.getZ());
+		}
+	};
+
 	@Getter
 	private static PathPlugin instance;
 
@@ -95,7 +120,7 @@ public class PathPlugin extends JavaPlugin {
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.loadLanguages();
 
-		database = new SqlStorage(this);
+		database = new InMemoryDatabase(this.getLogger());
 
 		// Commands
 
@@ -132,12 +157,12 @@ public class PathPlugin extends JavaPlugin {
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_PATH_VISUALIZER, context -> VisualizerHandler
 				.getInstance().getPathVisualizerStream()
-				.map(PathVisualizer::getName)
+				.map(SimpleCurveVisualizer::getNameFormat)
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_PATH_VISUALIZER_STYLES, context -> VisualizerHandler
 				.getInstance().getPathVisualizerStream()
-				.filter(PathVisualizer::isPickable)
-				.map(PathVisualizer::getName)
+				.filter(vs -> vs.getPermission() == null || context.getPlayer().hasPermission(vs.getPermission()))
+				.map(SimpleCurveVisualizer::getNameFormat)
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
 				completeNamespacedKey(context.getInput(), roadMap.getGroups().keySet().stream())));
@@ -288,10 +313,10 @@ public class PathPlugin extends JavaPlugin {
 			}
 			return SelectionUtils.getNodeSelection(context.getPlayer(), roadMap.getNodes(), search);
 		});
-		contexts.registerContext(PathVisualizer.class, context -> {
+		contexts.registerContext(SimpleCurveVisualizer.class, context -> {
 			String search = context.popFirstArg();
 
-			PathVisualizer visualizer = VisualizerHandler.getInstance().getPathVisualizer(search);
+			SimpleCurveVisualizer visualizer = VisualizerHandler.getInstance().getPathVisualizer(search);
 			if (visualizer == null) {
 				if (context.isOptional()) {
 					return null;

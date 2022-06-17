@@ -161,5 +161,11 @@
             <artifactId>MenuFramework-Protocol-Extension</artifactId>
             <version>v1.1.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>de.cubbossa</groupId>
+            <artifactId>SplineLib</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 </project>

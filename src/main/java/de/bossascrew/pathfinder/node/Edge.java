@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.node;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.util.Vector;
@@ -10,7 +9,6 @@ import java.util.Objects;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class Edge implements Comparable<Edge> {
 
 	private Node start;
@@ -18,6 +16,12 @@ public class Edge implements Comparable<Edge> {
 	private float weightModifier;
 
 	private Vector center;
+
+	public Edge(Node start, Node end, float weightModifier) {
+		this.start = start;
+		this.end = end;
+		this.weightModifier = weightModifier;
+	}
 
 	public void setStart(Node start) {
 		this.start = start;

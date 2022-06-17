@@ -20,7 +20,9 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -64,6 +66,7 @@ public class ClientNodeHandler {
 	private final Map<Edge, Integer> edgeEntityMap;
 
 	public ClientNodeHandler(JavaPlugin plugin) {
+		entityId = Bukkit.getWorlds().stream().mapToInt(w -> w.getEntities().stream().mapToInt(Entity::getEntityId).max().orElse(0)).max().orElse(0) + 10_000;
 		protocolManager = ProtocolLibrary.getProtocolManager();
 
 		chunkNodeMap = new HashMap<>();

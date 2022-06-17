@@ -15,11 +15,10 @@ import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.cubbossa.menuframework.chat.ComponentMenu;
 import de.cubbossa.menuframework.chat.TextMenu;
@@ -121,11 +120,11 @@ public class FindCommand extends BaseCommand {
 
     private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
         RectInventoryMenu menu = new RectInventoryMenu(Component.text("Wähle deinen Partikelstyle"), 3);
-        PathVisualizer actual = pathPlayer.getVisualizer(roadMap);
+        SimpleCurveVisualizer actual = pathPlayer.getVisualizer(roadMap);
 
-        Collection<PathVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
-        for (PathVisualizer visualizer : visualizers) {
-            String perm = visualizer.getPickPermission();
+        Collection<SimpleCurveVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
+        for (SimpleCurveVisualizer visualizer : visualizers) {
+            String perm = visualizer.getPermission();
 
             boolean hasPerm = perm == null || player.hasPermission(perm);
             boolean def = false, spender = false, spender2 = false;
@@ -172,7 +171,7 @@ public class FindCommand extends BaseCommand {
                 styleMenuCooldown.put(player, System.currentTimeMillis());
                 pathPlayer.setVisualizer(roadMap, visualizer);
                 player.playSound(player.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 1, 1);
-                PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikelstyle ausgewählt: " + visualizer.getName());
+                PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Partikelstyle ausgewählt: " + visualizer.getNameFormat());
                 openStyleMenu(player, pathPlayer, roadMap);
             });
         }

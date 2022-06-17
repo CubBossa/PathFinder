@@ -2,13 +2,11 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
+import de.bossascrew.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -42,12 +40,10 @@ public class RoadMap implements Keyed {
 	private final Collection<Edge> edges;
 	private final HashedRegistry<NodeGroup> groups;
 
-	private PathVisualizer pathVisualizer;
-	private EditModeVisualizer editModeVisualizer;
+	private SimpleCurveVisualizer simpleCurveVisualizer;
 
-
-	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer pathVisualizer,
-				   EditModeVisualizer editModeVisualizer, double nodeFindDistance, double defaultBezierTangentLength) {
+	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, SimpleCurveVisualizer simpleCurveVisualizer,
+				   double nodeFindDistance, double defaultBezierTangentLength) {
 
 		this.key = key;
 		this.nameFormat = name;
@@ -60,8 +56,7 @@ public class RoadMap implements Keyed {
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();
 
-		setPathVisualizer(pathVisualizer);
-		setEditModeVisualizer(editModeVisualizer);
+		setSimpleCurveVisualizer(simpleCurveVisualizer);
 	}
 
 	public void loadGroups() {
@@ -164,7 +159,7 @@ public class RoadMap implements Keyed {
 
 	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable) {
 
-		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, findable);
+		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, StringUtils.getRandHexString() + "A Group", findable);
 		groups.put(group);
 		return group;
 	}
@@ -197,10 +192,8 @@ public class RoadMap implements Keyed {
 		disconnectNodes(getEdge(start, end));
 	}
 
-	public void disconnectNode(Node f) {
-		for (int edge : new HashSet<>(f.getEdges())) {
-			disconnectNodes(f, getNode(edge));
-		}
+	public void disconnectNode(Node node) {
+
 	}
 
 	public void disconnectNodes(Edge edge) {
@@ -249,9 +242,10 @@ public class RoadMap implements Keyed {
 			return new ArrayList<>();
 		}
 		return getNodes().stream()
+				.filter(node -> node instanceof Findable)
 				.filter(node -> {
 					NodeGroup g = node.getGroupKey() == null ? null : getNodeGroup(node);
-					return g != null && g.isFindable() || player.hasFound(node);
+					return g != null && g.isFindable() || player.hasFound((Findable) node);
 				})
 				.filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
 				.collect(Collectors.toSet());

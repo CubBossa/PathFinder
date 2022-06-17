@@ -9,17 +9,16 @@ import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.InventoryRow;
-import de.cubbossa.menuframework.inventory.Menu;
+import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
+import de.cubbossa.menuframework.util.ItemStackUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,12 +27,13 @@ public class EditModeMenu {
 
     private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+([0-9]+)$");
 
-    public static BottomInventoryMenu createHotbarMenu(RoadMap roadMap, RoadMapEditor editor) {
+    String lastNamed = "node_1";
+    Node edgeStart = null;
+    Node lastNode = null;
+    NamespacedKey lastGroup = null;
+
+    public BottomInventoryMenu createHotbarMenu(RoadMap roadMap, RoadMapEditor editor) {
         BottomInventoryMenu menu = new BottomInventoryMenu(InventoryRow.HOTBAR);
-        AtomicReference<String> lastNamed = new AtomicReference<>("node_1");
-        AtomicReference<Node> edgeStart = new AtomicReference<>();
-        AtomicReference<Node> lastNode = new AtomicReference<>();
-        AtomicReference<NamespacedKey> lastGroup = new AtomicReference<>();
 
         menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
             Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> editor.setEditMode(c.getPlayer().getUniqueId(), false), 1L);
@@ -46,7 +46,7 @@ public class EditModeMenu {
                     roadMap.removeNode(context.getTarget());
                     p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
                 }).withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
-                    String name = lastNamed.get();
+                    String name = lastNamed;
                     Matcher matcher = LAST_INT_PATTERN.matcher(name);
                     if (matcher.find()) {
                         String first = matcher.group(0).replace(matcher.group(1), "");
@@ -55,8 +55,8 @@ public class EditModeMenu {
 
                     openNodeNameMenu(context.getPlayer(), name, s -> {
                         Node node = roadMap.createNode((context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
-                        node.setGroupKey(lastGroup.get());
-                        lastNode.set(node);
+                        node.setGroupKey(lastGroup);
+                        lastNode = node;
                     });
                 }));
 
@@ -66,29 +66,29 @@ public class EditModeMenu {
                 .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
                     Player p = c.getPlayer();
 
-                    if (edgeStart.get() == null) {
-                        edgeStart.set(c.getTarget());
+                    if (edgeStart == null) {
+                        edgeStart = c.getTarget();
                         c.setItemStack(EditmodeUtils.EDGE_TOOL_GLOW);
                     } else {
-                        if (edgeStart.get().equals(c.getTarget())) {
+                        if (edgeStart.equals(c.getTarget())) {
                             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                             return;
                         }
-                        if (edgeStart.get().getEdges().stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
+                        if (edgeStart.getEdges().stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
                             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                             return;
                         }
-                        roadMap.connectNodes(edgeStart.get(), c.getTarget());
-                        edgeStart.set(null);
+                        roadMap.connectNodes(edgeStart, c.getTarget());
+                        edgeStart = null;
                         c.setItemStack(EditmodeUtils.EDGE_TOOL);
                     }
                     p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
                 }).withClickHandler(Action.RIGHT_CLICK_AIR, context -> {
-                    if (edgeStart.get() == null) {
+                    if (edgeStart == null) {
                         return;
                     }
                     Player player = context.getPlayer();
-                    edgeStart.set(null);
+                    edgeStart = null;
                     player.sendMessage(PathPlugin.PREFIX + "Verbinden abgebrochen");
                     player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
                     context.setItemStack(EditmodeUtils.EDGE_TOOL);
@@ -147,31 +147,33 @@ public class EditModeMenu {
 
         menu.setButton(3, Button.builder()
                 .withItemStack(EditmodeUtils.LAST_GROUP_TOOL)
-                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> context.getTarget().setGroupKey(lastGroup.get())));
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> context.getTarget().setGroupKey(lastGroup)));
 
         return menu;
     }
 
-    private static void openGroupMenu(Player player, RoadMap roadMap, Node clicked) {
+    private void openGroupMenu(Player player, RoadMap roadMap, Node node) {
 
-        Menu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
+        ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
         for (NodeGroup group : roadMap.getGroups().values()) {
 
-            menu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
-                clicked.setGroup(group, true);
-                pathPlayer.setLastSetGroup(group);
-                c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                c.getPlayer().closeInventory();
-            });
+            menu.addListEntry(Button.builder()
+                    .withItemStack(buildGroupItem(node, group))
+                    .withClickHandler(Action.LEFT, c -> {
+                        node.setGroupKey(group.getKey());
+                        lastGroup = group.getKey();
+                        c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                        menu.close(player);
+                    }));
         }
         ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
         menu.setNavigationEntry(8, create, c -> {
-            openCreateGroupMenu(c.getPlayer(), clicked);
+            openCreateGroupMenu(c.getPlayer(), node);
         });
         menu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
-            clicked.setGroup((NodeGroup) null, true);
+            node.setGroup((NodeGroup) null, true);
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
-            openGroupMenu(c.getPlayer(), clicked);
+            openGroupMenu(c.getPlayer(), node);
         });
         menu.open(player);
     }
@@ -213,7 +215,7 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private ItemStack buildGroupItem(Waypoint clicked, NodeGroup group) {
+    private static ItemStack buildGroupItem(Node clicked, NodeGroup group) {
         ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
         StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
                 + "\n" + ChatColor.GRAY + "Größe: " + PathPlugin.CHAT_COLOR_LIGHT + group.getFindables().size() + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
@@ -233,20 +235,6 @@ public class EditModeMenu {
             ItemStackUtils.setGlowing(stack);
         }
         return stack;
-    }
-
-    private void openNodeTypeMenu(Player player, int npcId) {
-        ChestMenu menu = new ChestMenu(Component.text("Wähle einen Wegpunkt-Typ:"), 1);
-        menu.setItemAndClickHandler(0, ItemStackUtils.createItemStack(Material.GOLD_INGOT, "Händler", ""), context -> {
-            openNodeNameMenu(context.getPlayer(), s -> {
-                roadMap.createTraderFindable(npcId, s.equalsIgnoreCase("null") ? null : s, null, null);
-            });
-        });
-        menu.setItemAndClickHandler(1, ItemStackUtils.createItemStack(Material.WRITABLE_BOOK, "Quest-NPC", ""), context -> {
-            openNodeNameMenu(context.getPlayer(), s -> {
-                roadMap.createQuestFindable(npcId, s.equalsIgnoreCase("null") ? null : s, null, null);
-            });
-        });
     }
 
     private static void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
@@ -347,29 +335,14 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private static void openNodePermissionMenu(Player player, Node findable) {
-        AnvilMenu menu = new AnvilMenu(Component.text("Permission setzen:"));
-
-        ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
-        ItemStack info = result.clone();
-        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Permission setzen", CommandUtils.wordWrap(ChatColor.GRAY +
-                        "Hier kann bestimmt werden, welche Nodes ein Spieler finden darf und welche nicht. Die Eingaben null und none deaktivieren die Permissionabfrage",
-                "\n" + ChatColor.GRAY, 35));
-        ItemStackUtils.setNameAndLore(result, PathPlugin.CHAT_COLOR_LIGHT + "Bestätigen", "");
-
-        menu.setItem(0, info);
-        menu.setTextInputHandler((player1, s) -> {
-            menu.setItem(2, result);
-        });
-        menu.setItemAndClickHandler(2, result, context -> {
-            String in = menu.getTextBoxText();
-            if (in == null) {
-                return;
-            }
-            Player p = context.getPlayer();
-            findable.setPermission(in.equalsIgnoreCase("null") || in.equalsIgnoreCase("none") ? null : in);
+    private static void openNodePermissionMenu(Player player, Node node) {
+        AnvilMenu menu = new AnvilMenu(Component.text("Permission setzen:"), "null");
+        menu.setItem(0, new ItemStack(Material.PAPER));
+        menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
+            Player p = s.getPlayer();
+            node.setPermission(s.getTarget().equalsIgnoreCase("null") ? null : s.getTarget());
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-            menu.closeInventory();
+            menu.close(p);
         });
         menu.open(player);
     }

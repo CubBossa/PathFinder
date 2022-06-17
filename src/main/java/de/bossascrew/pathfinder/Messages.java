@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageMeta;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
@@ -50,13 +51,22 @@ public class Messages {
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
 	@MessageMeta(value = "<col:prefix>Successfully created Roadmap <name>.", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
+	@MessageMeta(placeholders = "roadmap")
+	public static final Message CMD_RM_DELETE = new Message("commands.roadmap.delete");
 	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
 	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
 	public static final Message CMD_RM_LIST_SELECTED = new Message("commands.roadmap.list.entry_selected");
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
-
+	public static final Message CMD_RM_EM_CREATE = new Message("commands.roadmap.editmode.create_new");
+	@MessageMeta(placeholders = "roadmap")
+	public static final Message CMD_RM_EM_SELECTED = new Message("commands.roadmap.editmode.selected");
+	public static final Message CMD_RM_EM_SELECT = new Message("commands.roadmap.editmode.select");
+	@MessageMeta(placeholders = {"roadmap", "value"})
+	public static final Message CMD_RM_EM_TOGGLED = new Message("commands.roadmap.editmode.toggled");
 	@MessageMeta(value = "<col:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
+	@MessageMeta(placeholders = {"name", "selection"})
+	public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
 
 	@MessageMeta(value = "<col:prefix>Successfully created Node <name>.", placeholders = "name")
 	public static final Message CMD_N_CREATE = new Message("commands.node.create");
@@ -113,8 +123,8 @@ public class Messages {
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
-	public static FormattedMessage formatBoolean(boolean val) {
-
+	public static Message formatBool(boolean val) {
+		return val ? GEN_TRUE : GEN_FALSE;
 	}
 
 	public static FormattedMessage formatVector(Vector vector) {
@@ -134,10 +144,16 @@ public class Messages {
 	}
 
 	public static FormattedMessage formatPermission(@Nullable String permission) {
-
+		return permission == null ?
+				GEN_NULL.format() :
+				GEN_PERMISSION.format(TagResolver.resolver("permission", Tag.inserting(Component.text(permission))));
 	}
 
 	public static FormattedMessage formatKey(@Nullable NamespacedKey key) {
-
+		return key == null ?
+				GEN_NULL.format() :
+				GEN_KEY.format(TagResolver.builder()
+						.tag("namespace", Tag.preProcessParsed(key.getNamespace()))
+						.tag("key", Tag.preProcessParsed(key.getKey())).build());
 	}
 }
