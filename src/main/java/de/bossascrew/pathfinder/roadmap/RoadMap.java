@@ -197,7 +197,7 @@ public class RoadMap implements Keyed {
 		disconnectNodes(getEdge(start, end));
 	}
 
-	public void disconnectNode(Waypoint f) {
+	public void disconnectNode(Node f) {
 		for (int edge : new HashSet<>(f.getEdges())) {
 			disconnectNodes(f, getNode(edge));
 		}

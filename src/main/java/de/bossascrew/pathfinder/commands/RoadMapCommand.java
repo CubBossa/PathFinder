@@ -31,6 +31,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -61,7 +62,6 @@ public class RoadMapCommand extends BaseCommand {
 				.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 				.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
 				.tag("path-visualizer", Tag.inserting(roadMap.getPathVisualizer().getDisplayName()))
-				.tag("path-visualizer", Tag.inserting(roadMap.getEditModeVisualizer().getName()))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
@@ -90,9 +90,9 @@ public class RoadMapCommand extends BaseCommand {
 	@Syntax("<name> [<world>] [findable]")
 	@CommandPermission("pathfinder.command.roadmap.create")
 	@CommandCompletion("@nothing @worlds findable")
-	public void onCreate(Player player, String name,
-	                     @Optional @Values("@worlds") World world,
-	                     @Optional @Single @Values("findable") String findable) {
+	public void onCreate(Player player, NamespacedKey key,
+						 @Optional @Values("@worlds") World world,
+						 @Optional @Single @Values("findable") String findable) {
 
 		boolean findableNodes = findable != null;
 		if (world == null) {
@@ -167,42 +167,46 @@ public class RoadMapCommand extends BaseCommand {
 
 	@Subcommand("list")
 	@CommandPermission("pathfinder.command.roadmap.list")
-	public void onList(CommandSender sender) {
+	@Syntax("[<page>]")
+	public void onList(CommandSender sender, @Optional Integer page) {
 
-		TextMenu list = new TextMenu("Straßenkarten");
-		RoadMap selected = null;
-		if (sender instanceof Player) {
-			selected = CommandUtils.getSelectedRoadMap(sender, false);
+		page = page == null ? 0 : page;
+
+		PathPlayer player = PathPlayerHandler.getInstance().getPlayer(sender);
+		NamespacedKey selection = player.getSelectedRoadMap();
+
+		TagResolver resolver = TagResolver.builder()
+				.tag("page", Tag.preProcessParsed(page + ""))
+				.tag("prev-page", Tag.preProcessParsed(Integer.max(0, page - 1) + ""))
+				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 1) + ""))
+				.build();
+
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_HEADER.format(resolver), sender);
+
+		for (RoadMap roadMap : new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()).subList(page * 10, (page + 1) * 10)) {
+			TagResolver r = TagResolver.builder()
+					.tag("id", Tag.preProcessParsed(roadMap.getKey() + ""))
+					.tag("name", Tag.inserting(roadMap.getDisplayName()))
+					.tag("world", Tag.preProcessParsed(roadMap.getWorld().getName()))
+					.tag("findable", Tag.inserting(roadMap.isFindableNodes() ?
+							Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
+					.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
+					.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
+					.tag("path-visualizer", Tag.inserting(roadMap.getPathVisualizer().getDisplayName()))
+					.build();
+
+			TranslationHandler.getInstance().sendMessage(
+					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_HEADER : Messages.CMD_RM_LIST_SELECTED)
+							.format(resolver, r),
+					sender);
 		}
-
-		for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
-
-			String isEditing = "";
-			if (sender instanceof Player) {
-				if (roadMap.isEditing((Player) sender)) {
-					isEditing = PathPlugin.CHAT_COLOR_LIGHT + " BEARBEITUNGSMODUS";
-				}
-			}
-
-			list.addSub(new ComponentMenu(Component.empty()
-					.append(Component.text(roadMap.getNameFormat() + "(#" + roadMap.getKey() + ")",
-									selected != null && roadMap.getNameFormat().equalsIgnoreCase(selected.getNameFormat()) ? PathPlugin.COLOR_LIGHT : PathPlugin.COLOR_DARK)
-							.hoverEvent(HoverEvent.showText(Component.text("Klicken zum Auswählen.")))
-							.clickEvent(ClickEvent.runCommand("/roadmap select " + roadMap.getNameFormat())))
-					.append(Component.text(", Welt: ", NamedTextColor.GRAY))
-					.append(Component.text(roadMap.getWorld().getName(), PathPlugin.COLOR_LIGHT)
-							.hoverEvent(HoverEvent.showText(Component.text("Klicke zum Teleportieren")))
-							.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/world " + roadMap.getWorld().getName()))) //TODO zu erster node teleportieren
-					.append(Component.text(isEditing, NamedTextColor.RED))));
-		}
-
-		PlayerUtils.sendComponents(sender, list.toComponents());
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_FOOTER.format(resolver), sender);
 	}
 
 	@Subcommand("forcefind")
 	@Syntax("<roadmap> <player> <nodes> [ungrouped]")
 	@CommandPermission("pathfinder.command.roadmap.forcefind")
-	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS + " " + PathPlugin.COMPLETE_NODE_SELECTION)
+	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " @players " + PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, @Single NodeSelection selection,
 							@Optional @Single @Values("ungrouped") String ungrouped) {
 
@@ -224,8 +228,7 @@ public class RoadMapCommand extends BaseCommand {
 	@Subcommand("forceforget")
 	@Syntax("<Straßenkarte> <Spieler> <Wegpunkte> [ungruppiert]")
 	@CommandPermission("pathfinder.command.roadmap.forceforget")
-	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " " + BukkitMain.COMPLETE_VISIBLE_BUKKIT_PLAYERS +
-			" " + PathPlugin.COMPLETE_FINDABLES_FOUND + "|* ungruppiert")
+	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS + " @players " + PathPlugin.COMPLETE_FINDABLES_FOUND + " ungruppiert")
 	public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, @Single String nodename,
 	                          @Optional @Single String ungrouped) {
 

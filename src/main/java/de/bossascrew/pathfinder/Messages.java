@@ -50,6 +50,10 @@ public class Messages {
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
 	@MessageMeta(value = "<col:prefix>Successfully created Roadmap <name>.", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
+	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
+	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
+	public static final Message CMD_RM_LIST_SELECTED = new Message("commands.roadmap.list.entry_selected");
+	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
 
 	@MessageMeta(value = "<col:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");

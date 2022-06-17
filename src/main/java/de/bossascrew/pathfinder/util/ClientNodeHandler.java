@@ -14,6 +14,8 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
+import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.context.TargetContext;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -30,7 +32,12 @@ import java.util.*;
 
 @Getter
 @Setter
-public class FakeArmorstandHandler {
+public class ClientNodeHandler {
+
+	public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
+	public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
+	public static final Action<TargetContext<Node>> RIGHT_CLICK_EDGE = new Action<>();
+	public static final Action<TargetContext<Node>> LEFT_CLICK_EDGE = new Action<>();
 
 	private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
@@ -56,7 +63,7 @@ public class FakeArmorstandHandler {
 	private final Map<Node, Integer> nodeEntityMap;
 	private final Map<Edge, Integer> edgeEntityMap;
 
-	public FakeArmorstandHandler(JavaPlugin plugin) {
+	public ClientNodeHandler(JavaPlugin plugin) {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 
 		chunkNodeMap = new HashMap<>();
@@ -173,7 +180,7 @@ public class FakeArmorstandHandler {
 
 	public int spawnArmorstand(Player player, Location location) {
 
-		int entityId = FakeArmorstandHandler.entityId++;
+		int entityId = ClientNodeHandler.entityId++;
 
 		PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.SPAWN_ENTITY);
 		packet.getModifier().writeDefaults();

@@ -1,242 +1,179 @@
 package de.bossascrew.pathfinder.util;
 
-import de.bossascrew.core.bukkit.inventory.menu.*;
-import de.bossascrew.core.bukkit.util.HeadDBUtils;
-import de.bossascrew.core.bukkit.util.ItemStackUtils;
-import de.bossascrew.core.util.CommandUtils;
-import de.bossascrew.core.util.Pair;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.util.hooks.CitizensHook;
-import lombok.Getter;
-import lombok.Setter;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
+import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.Button;
+import de.cubbossa.menuframework.inventory.InventoryRow;
+import de.cubbossa.menuframework.inventory.Menu;
+import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
+import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import javax.annotation.Nullable;
-import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EditModeMenu {
 
-    private final Player player;
-    private final GameMode playerGameMode;
-    private final RoadMap roadMap;
-    private final PathPlayer pathPlayer;
+    private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+([0-9]+)$");
 
-    @Getter
-    @Setter
-    private Waypoint firstFindableEdgeCreate = null;
+    public static BottomInventoryMenu createHotbarMenu(RoadMap roadMap, RoadMapEditor editor) {
+        BottomInventoryMenu menu = new BottomInventoryMenu(InventoryRow.HOTBAR);
+        AtomicReference<String> lastNamed = new AtomicReference<>("node_1");
+        AtomicReference<Node> edgeStart = new AtomicReference<>();
+        AtomicReference<Node> lastNode = new AtomicReference<>();
+        AtomicReference<NamespacedKey> lastGroup = new AtomicReference<>();
 
-    public EditModeMenu(Player player, RoadMap roadMap) {
-        this.player = player;
-        this.playerGameMode = player.getGameMode();
-        this.roadMap = roadMap;
-        this.pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
-    }
-
-    public HotbarMenu getHotbarMenu() {
-        HotbarMenu menu = new HotbarMenu();
-
-        menu.setCloseHandler(closeContext -> {
-            player.setGameMode(playerGameMode);
+        menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
+            Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> editor.setEditMode(c.getPlayer().getUniqueId(), false), 1L);
         });
 
-        menu.setDefaultClickHandler(HotbarAction.DROP_ITEM, context -> {
-            Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> roadMap.setEditMode(player.getUniqueId(), false), 1L);
-        });
+        menu.setButton(0, Button.builder()
+                .withItemStack(EditmodeUtils.NODE_TOOl)
+                .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+                    Player p = context.getPlayer();
+                    roadMap.removeNode(context.getTarget());
+                    p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
+                }).withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
+                    String name = lastNamed.get();
+                    Matcher matcher = LAST_INT_PATTERN.matcher(name);
+                    if (matcher.find()) {
+                        String first = matcher.group(0).replace(matcher.group(1), "");
+                        name = first + (Integer.parseInt(matcher.group(1)) + 1);
+                    }
 
-        menu.setItem(0, EditmodeUtils.NODE_TOOl);
-        menu.setClickHandler(0, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Waypoint clickedFindable = getClickedFindable((Entity) context.getTarget());
-            if (clickedFindable != null) {
-                Player p = context.getPlayer();
-                roadMap.deleteNode(clickedFindable);
-                p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
-            }
-        });
-        menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_BLOCK, context -> {
-            Waypoint last = pathPlayer.getLastSetFindable(roadMap);
-            String name;
-            if(last != null) {
-                final Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
-                Matcher matcher = lastIntPattern.matcher(last.getNameFormat());
-                if (matcher.find()) {
-                    String first = matcher.group(0).replace(matcher.group(1), "");
-                    name = first + (Integer.parseInt(matcher.group(1)) + 1);
-                } else {
-                    name = "node";
-                }
-            } else {
-                name = "node";
-            }
-            openNodeNameMenu(context.getPlayer(), name, s -> {
-                Waypoint f = roadMap.createNode(((Block) context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
-                f.setGroup(pathPlayer.getLastSetGroup(roadMap), true);
-                pathPlayer.setLastSetFindable(f);
-            });
-        });
-        menu.setClickHandler(0, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID((Entity) context.getTarget());
-            if(npcId != null) {
-                openNodeTypeMenu(player, npcId);
-            }
-        });
+                    openNodeNameMenu(context.getPlayer(), name, s -> {
+                        Node node = roadMap.createNode((context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
+                        node.setGroupKey(lastGroup.get());
+                        lastNode.set(node);
+                    });
+                }));
 
-        menu.setItem(1, EditmodeUtils.EDGE_TOOL);
-        menu.setClickHandler(1, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Player p = context.getPlayer();
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked == null) {
-                return;
-            }
-            if (this.firstFindableEdgeCreate == null) {
-                firstFindableEdgeCreate = clicked;
-                context.setItemStack(EditmodeUtils.EDGE_TOOL_GLOW);
-            } else {
-                if (firstFindableEdgeCreate.equals(clicked)) {
-                    p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-                    return;
-                }
-                if (firstFindableEdgeCreate.getEdges().contains(clicked.getNodeId())
-                        || clicked.getEdges().contains(firstFindableEdgeCreate.getNodeId())) {
-                    p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-                    return;
-                }
-                roadMap.connectNodes(firstFindableEdgeCreate, clicked);
-                firstFindableEdgeCreate = null;
-                context.setItemStack(EditmodeUtils.EDGE_TOOL);
-            }
-            p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
-        });
-        menu.setClickHandler(1, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Waypoint f = getClickedFindable((Entity) context.getTarget());
-            if(f != null) {
-                roadMap.disconnectNode(f);
-                return;
-            }
-            Player player = context.getPlayer();
-            int clickedId = ((Entity) context.getTarget()).getEntityId();
-            Pair<Waypoint, Waypoint> edge = roadMap.getEditModeEdgeArmorStands().keySet().stream()
-                    .filter(key -> roadMap.getEditModeEdgeArmorStands().get(key).getEntityId() == clickedId)
-                    .findAny().orElse(null);
-            if (edge == null) {
-                return;
-            }
-            roadMap.disconnectNodes(edge);
-            player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
-        });
-        menu.setClickHandler(1, HotbarAction.LEFT_CLICK_AIR, context -> {
-            if (firstFindableEdgeCreate == null) {
-                return;
-            }
-            firstFindableEdgeCreate = null;
-            player.sendMessage(PathPlugin.PREFIX + "Verbinden abgebrochen");
-            player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
-            context.setItemStack(EditmodeUtils.EDGE_TOOL);
-        });
 
-        menu.setItem(7, EditmodeUtils.TP_TOOL);
-        menu.setClickHandler(7, new HotbarAction[]{HotbarAction.RIGHT_CLICK_ENTITY, HotbarAction.RIGHT_CLICK_BLOCK, HotbarAction.RIGHT_CLICK_AIR}, context -> {
-            double dist = -1;
-            Waypoint nearest = null;
-            for (Waypoint findable : roadMap.getNodes()) {
-                double _dist = findable.getVector().distance(player.getLocation().toVector());
-                if (dist == -1 || _dist < dist) {
-                    nearest = findable;
-                    dist = _dist;
-                }
-            }
-            if (nearest == null) {
-                return;
-            }
-            Player p = context.getPlayer();
-            Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
-            p.teleport(newLoc);
-            p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
-        });
+        menu.setButton(1, Button.builder()
+                .withItemStack(EditmodeUtils.EDGE_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
+                    Player p = c.getPlayer();
 
-        menu.setItemAndClickHandler(5, EditmodeUtils.TANGENT_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked != null) {
-                openTangentStrengthMenu(context.getPlayer(), clicked);
-            }
-        });
+                    if (edgeStart.get() == null) {
+                        edgeStart.set(c.getTarget());
+                        c.setItemStack(EditmodeUtils.EDGE_TOOL_GLOW);
+                    } else {
+                        if (edgeStart.get().equals(c.getTarget())) {
+                            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                            return;
+                        }
+                        if (edgeStart.get().getEdges().stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
+                            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                            return;
+                        }
+                        roadMap.connectNodes(edgeStart.get(), c.getTarget());
+                        edgeStart.set(null);
+                        c.setItemStack(EditmodeUtils.EDGE_TOOL);
+                    }
+                    p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
+                }).withClickHandler(Action.RIGHT_CLICK_AIR, context -> {
+                    if (edgeStart.get() == null) {
+                        return;
+                    }
+                    Player player = context.getPlayer();
+                    edgeStart.set(null);
+                    player.sendMessage(PathPlugin.PREFIX + "Verbinden abgebrochen");
+                    player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
+                    context.setItemStack(EditmodeUtils.EDGE_TOOL);
 
-        menu.setItemAndClickHandler(6, EditmodeUtils.PERMISSION_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked != null) {
-                openNodePermissionMenu(context.getPlayer(), clicked);
-            }
-        });
+                }).withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
+                    Player player = context.getPlayer();
 
-        menu.setItem(2, EditmodeUtils.GROUP_TOOL);
-        menu.setClickHandler(2, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked == null) {
-                return;
-            }
-            openGroupMenu(context.getPlayer(), clicked);
-        });
-        menu.setClickHandler(2, HotbarAction.LEFT_CLICK_ENTITY, context -> {
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked == null) {
-                return;
-            }
-            clicked.setGroup(null, true, true);
-            player.playSound(player.getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
-        });
+                    player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
+                }).withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+                    Player player = context.getPlayer();
+                    roadMap.disconnectNode(context.getTarget());
+                    player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
+                }));
 
-        menu.setItemAndClickHandler(3, EditmodeUtils.LAST_GROUP_TOOL, HotbarAction.RIGHT_CLICK_ENTITY, context -> {
-            Waypoint clicked = getClickedFindable((Entity) context.getTarget());
-            if (clicked == null) {
-                return;
-            }
-            NodeGroup last = pathPlayer.getLastSetGroup(clicked.getRoadMap());
-            if (last == null) {
-                return;
-            }
-            clicked.setGroup(last.getGroupId(), true, true);
-        });
+
+        menu.setButton(7, Button.builder()
+                .withItemStack(EditmodeUtils.TP_TOOL)
+                .withClickHandler(context -> {
+                    double dist = -1;
+                    Node nearest = null;
+                    Vector vecP = context.getPlayer().getLocation().toVector();
+                    for (Node node : roadMap.getNodes()) {
+                        double d = node.getPosition().distance(vecP);
+                        if (dist == -1 || d < dist) {
+                            nearest = node;
+                            dist = d;
+                        }
+                    }
+                    if (nearest == null) {
+                        return;
+                    }
+                    Player p = context.getPlayer();
+                    Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
+                    p.teleport(newLoc);
+                    p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+                }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
+
+        menu.setButton(5, Button.builder()
+                .withItemStack(EditmodeUtils.TANGENT_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
+                        openTangentStrengthMenu(context.getPlayer(), context.getTarget())));
+
+        menu.setButton(6, Button.builder()
+                .withItemStack(EditmodeUtils.PERMISSION_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
+                        openNodePermissionMenu(context.getPlayer(), context.getTarget())));
+
+        menu.setButton(2, Button.builder()
+                .withItemStack(EditmodeUtils.GROUP_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
+                        openGroupMenu(context.getPlayer(), context.getTarget()))
+                .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+                    context.getTarget().setGroupKey(null);
+                    context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+                }));
+
+        menu.setButton(3, Button.builder()
+                .withItemStack(EditmodeUtils.LAST_GROUP_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> context.getTarget().setGroupKey(lastGroup.get())));
 
         return menu;
     }
 
-    private void openGroupMenu(Player player, Waypoint clicked) {
+    private static void openGroupMenu(Player player, RoadMap roadMap, Node clicked) {
 
-        PagedChestMenu groupMenu = new PagedChestMenu(Component.text("Node-Gruppen verwalten:"), 5);
-        for (NodeGroup group : clicked.getRoadMap().getGroups().values()) {
+        Menu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
+        for (NodeGroup group : roadMap.getGroups().values()) {
 
-            groupMenu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
+            menu.addMenuEntry(buildGroupItem(clicked, group), ClickType.LEFT, c -> {
                 clicked.setGroup(group, true);
                 pathPlayer.setLastSetGroup(group);
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                 c.getPlayer().closeInventory();
             });
         }
-        groupMenu.setSortingComparator(Comparator.comparing(itemStack -> itemStack.getItemMeta().getDisplayName()));
         ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
-        groupMenu.setNavigationEntry(8, create, c -> {
+        menu.setNavigationEntry(8, create, c -> {
             openCreateGroupMenu(c.getPlayer(), clicked);
         });
-        groupMenu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
+        menu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
             clicked.setGroup((NodeGroup) null, true);
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
             openGroupMenu(c.getPlayer(), clicked);
         });
-        groupMenu.openInventory(player);
+        menu.open(player);
     }
 
     private void openCreateGroupMenu(Player player, Waypoint findable) {
@@ -298,26 +235,6 @@ public class EditModeMenu {
         return stack;
     }
 
-    private @Nullable
-	Waypoint getClickedFindable(Entity entity) {
-        Integer npcId = CitizensHook.getInstance() == null ? null : CitizensHook.getInstance().getNpcID(entity);
-        if(npcId != null) {
-            return roadMap.getNodes().stream()
-                    .filter(f -> f instanceof NpcFindable)
-                    .filter(f -> ((NpcFindable) f).getNpcId() == npcId)
-                    .findAny().orElse(null);
-        }
-        Waypoint clickedFindable = null;
-        for (Waypoint f : roadMap.getEditModeNodeArmorStands().keySet()) {
-            Entity e = roadMap.getEditModeNodeArmorStands().get(f);
-            if (e.equals(entity)) {
-                clickedFindable = f;
-                break;
-            }
-        }
-        return clickedFindable;
-    }
-
     private void openNodeTypeMenu(Player player, int npcId) {
         ChestMenu menu = new ChestMenu(Component.text("Wähle einen Wegpunkt-Typ:"), 1);
         menu.setItemAndClickHandler(0, ItemStackUtils.createItemStack(Material.GOLD_INGOT, "Händler", ""), context -> {
@@ -332,11 +249,11 @@ public class EditModeMenu {
         });
     }
 
-    private void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
+    private static void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
         openNodeNameMenu(player, "node", nodeFactory);
     }
 
-    private void openNodeNameMenu(Player player, String nameInput, Consumer<String> nodeFactory) {
+    private static void openNodeNameMenu(Player player, String nameInput, Consumer<String> nodeFactory) {
         AnvilMenu menu = new AnvilMenu(Component.text("Node erstellen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
@@ -372,7 +289,7 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private void openTangentStrengthMenu(Player player, Waypoint findable) {
+    private static void openTangentStrengthMenu(Player player, Node findable) {
         AnvilMenu menu = new AnvilMenu(Component.text("Rundung einstellen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
@@ -430,7 +347,7 @@ public class EditModeMenu {
         menu.open(player);
     }
 
-    private void openNodePermissionMenu(Player player, Waypoint findable) {
+    private static void openNodePermissionMenu(Player player, Node findable) {
         AnvilMenu menu = new AnvilMenu(Component.text("Permission setzen:"));
 
         ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());

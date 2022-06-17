@@ -3,24 +3,25 @@ package de.bossascrew.pathfinder.roadmap;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.util.EditModeMenu;
-import de.bossascrew.pathfinder.util.FakeArmorstandHandler;
+import de.bossascrew.pathfinder.util.ClientNodeHandler;
+import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
-import de.cubbossa.menuframework.util.Pair;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
+import xyz.xenondevs.particle.task.TaskManager;
 
+import java.awt.Color;
+import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Getter
@@ -30,18 +31,24 @@ public class RoadMapEditor implements Keyed {
 
 	private final NamespacedKey key;
 	private final RoadMap roadMap;
-	private final FakeArmorstandHandler armorstandHandler;
+	private final ClientNodeHandler armorstandHandler;
 
 	private final Map<UUID, BottomInventoryMenu> editingPlayers;
 	private final Map<UUID, GameMode> preservedGameModes;
 
-	private int editModeTask = -1;
+	private final Collection<Integer> editModeTasks;
+
+	private float particleDistance = .3f;
+	private int tickDelay = 5;
+	private Color colorFrom = new Color(255, 0, 0);
+	private Color colorTo = new Color(0, 127, 255);
 
 	public RoadMapEditor(RoadMap roadMap) {
 		this.key = roadMap.getKey();
 		this.roadMap = roadMap;
 
-		this.armorstandHandler = new FakeArmorstandHandler(PathPlugin.getInstance());
+		this.editModeTasks = new HashSet<>();
+		this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
 		this.editingPlayers = new HashMap<>();
 		this.preservedGameModes = new HashMap<>();
 	}
@@ -142,34 +149,46 @@ public class RoadMapEditor implements Keyed {
 	 * Wird asynchron ausgeführt
 	 */
 	public void updateEditModeParticles() {
-		PluginUtils.getInstance().runSync(() -> {
+		CompletableFuture.runAsync(() -> {
 
-			//Bestehenden Task cancellen
-			Bukkit.getScheduler().cancelTask(editModeTask);
+			var sched = Bukkit.getScheduler();
+			editModeTasks.forEach(sched::cancelTask);
 
-			//Packet List erstellen, die dem Spieler dann wieder und wieder geschickt wird. (Muss refreshed werden, wenn es Änderungen gibt.)
-			List<Object> packets = new ArrayList<>();
-			ParticleBuilder particle = new ParticleBuilder(ParticleEffect.valueOf(editModeVisualizer.getParticle().toString()))
-					.setColor(java.awt.Color.RED);
-
-			//Alle linearen Verbindungen der Waypoints errechnen und als Packet sammeln. Berücksichtigen, welche Node schon behandelt wurde, um doppelte Geraden zu vermeiden
-			List<Pair<Waypoint, Waypoint>> processedFindables = new ArrayList<>();
-			for (Pair<Waypoint, Waypoint> edge : edges) {
-				if (processedFindables.contains(edge)) {
-					continue;
+			Map<Edge, Boolean> undirected = new HashMap<>();
+			for (Edge edge : roadMap.getEdges()) {
+				Edge contained = undirected.keySet().stream().filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart())).findFirst().orElse(null);
+				if (contained != null) {
+					undirected.put(contained, true);
+				} else {
+					undirected.put(edge, false);
 				}
-				List<Vector> points = BezierUtils.getBezierCurveDistanced(editModeVisualizer.getParticleDistance(), edge.first.getVector(), edge.second.getVector());
-				packets.addAll(points.stream()
-						.map(vector -> vector.toLocation(world))
-						.map(location -> particle.setLocation(location).toPacket())
-						.collect(Collectors.toSet()));
-				processedFindables.add(edge);
 			}
-			if (packets.size() > editModeVisualizer.getParticleLimit()) {
-				packets = packets.subList(0, editModeVisualizer.getParticleLimit());
+
+			Map<Color, List<Object>> packets = new HashMap<>();
+			Map<Color, ParticleBuilder> particles = new HashMap<>();
+
+			World world = roadMap.getWorld();
+			for (var entry : undirected.entrySet()) {
+				boolean directed = !entry.getValue();
+				Vector a = entry.getKey().getStart().getPosition();
+				Vector b = entry.getKey().getEnd().getPosition();
+				for (float i = 0; i < a.distance(b); i += particleDistance) {
+					Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i) : colorFrom;
+
+					ParticleBuilder builder = particles.computeIfAbsent(c, k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
+
+					List<Object> inner = packets.getOrDefault(c, new ArrayList<>());
+					inner.add(builder.setLocation(LerpUtils.lerp(a, b, i).toLocation(world)).toPacket());
+					packets.put(c, inner);
+				}
 			}
-			final List<Object> fPackets = packets;
-			editModeTask = TaskManager.startSuppliedTask(fPackets, editModeVisualizer.getSchedulerPeriod(), () -> editingPlayers.keySet().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).filter(Player::isOnline).collect(Collectors.toSet()));
+			for (var entry : packets.entrySet()) {
+				editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay, () -> editingPlayers.keySet().stream()
+						.map(Bukkit::getPlayer)
+						.filter(Objects::nonNull)
+						.filter(Player::isOnline)
+						.collect(Collectors.toSet())));
+			}
 		});
 	}
 }
