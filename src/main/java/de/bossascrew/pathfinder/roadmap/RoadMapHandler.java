@@ -17,10 +17,25 @@ public class RoadMapHandler {
 	@Getter
 	private static RoadMapHandler instance;
 	private final HashedRegistry<RoadMap> roadMaps;
+	private final HashedRegistry<RoadMapEditor> roadMapEditors;
 
 	public RoadMapHandler() {
 		instance = this;
 		roadMaps = new HashedRegistry<>();
+		roadMapEditors = new HashedRegistry<>();
+	}
+
+	public RoadMapEditor getRoadMapEditor(NamespacedKey key) {
+		RoadMapEditor editor = roadMapEditors.get(key);
+		if (editor == null) {
+			RoadMap roadMap = roadMaps.get(key);
+			if (roadMap == null) {
+				throw new IllegalArgumentException("No roadmap exists with key '" + key + "'. Cannot create editor.");
+			}
+			editor = new RoadMapEditor(roadMap);
+			roadMapEditors.put(editor);
+		}
+		return editor;
 	}
 
 	public void loadRoadMaps() {

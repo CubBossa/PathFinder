@@ -5,16 +5,15 @@ import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.PlayerNode;
 import de.bossascrew.pathfinder.node.Waypoint;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.AStarUtils;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -90,10 +89,10 @@ public class RoadMapCommand extends BaseCommand {
 	@Subcommand("create")
 	@Syntax("<name> [<world>] [findable]")
 	@CommandPermission("pathfinder.command.roadmap.create")
-	@CommandCompletion(BukkitMain.COMPLETE_NOTHING + " " + BukkitMain.COMPLETE_LOCAL_WORLDS + " findable")
+	@CommandCompletion("@nothing @worlds findable")
 	public void onCreate(Player player, String name,
 	                     @Optional @Values("@worlds") World world,
-	                     @Optional @Single @Values("findbar") String findable) {
+	                     @Optional @Single @Values("findable") String findable) {
 
 		boolean findableNodes = findable != null;
 		if (world == null) {
@@ -129,39 +128,41 @@ public class RoadMapCommand extends BaseCommand {
 	@Subcommand("editmode")
 	@CommandPermission("pathfinder.command.roadmap.editmode")
 	@CommandCompletion(PathPlugin.COMPLETE_ROADMAPS)
-	@Syntax("[<Straßenkarte>]")
+	@Syntax("[<roadmap>]")
 	public void onEdit(Player player, @Optional RoadMap roadMap) {
 		PathPlayer pp = PathPlayerHandler.getInstance().getPlayer(player);
 		if (pp == null) {
 			return;
 		}
 		if (roadMap == null) {
+			if (RoadMapHandler.getInstance().getRoadMaps().size() == 0) {
+				//TODO create roadmap first
+				return;
+			}
 			if (pp.getSelectedRoadMap() != null) {
 				roadMap = RoadMapHandler.getInstance().getRoadMap(pp.getSelectedRoadMap());
 			}
 		}
 		if (roadMap == null) {
 			if (RoadMapHandler.getInstance().getRoadMaps().size() == 1) {
-				roadMap = RoadMapHandler.getInstance().getRoadMaps().stream().findAny().orElse(null);
-				if (roadMap == null) {
-					if (RoadMapHandler.getInstance().getRoadMaps(player.getWorld()).size() == 1) {
-						roadMap = RoadMapHandler.getInstance().getRoadMaps(player.getWorld()).stream().findAny().orElse(null);
-					}
+				roadMap = RoadMapHandler.getInstance().getRoadMaps().iterator().next();
+			} else {
+				Collection<RoadMap> inWorld = RoadMapHandler.getInstance().getRoadMaps(player.getWorld());
+				if (inWorld.size() == 1) {
+					roadMap = inWorld.iterator().next();
 				}
 			}
 			if (roadMap != null) {
 				pp.setSelectedRoadMap(roadMap.getKey());
-				PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Straßenkarte ausgewählt.");
+				//TODO message selected
 			}
 		}
 		if (roadMap == null) {
-			PlayerUtils.sendMessage(player, ChatColor.RED + "Du musst eine Straßenkarte ausgewählt haben.");
+			//TODO message select roadmap
 			return;
 		}
-
-		roadMap.toggleEditMode(player.getUniqueId());
-		PlayerUtils.sendMessage(player, PathPlugin.PREFIX + "Bearbeitungsmodus: " +
-				(roadMap.isEditing(player) ? "AKTIVIERT" : "DEAKTIVIERT"));
+		RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey()).toggleEditMode(player.getUniqueId());
+		//TODO feedback
 	}
 
 	@Subcommand("list")

@@ -30,9 +30,12 @@ import java.util.*;
 
 @Getter
 @Setter
-public class FakeArmorstandUtils {
+public class FakeArmorstandHandler {
 
 	private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
+
+	private static final Vector ARMORSTAND_OFFSET = new Vector(0, -1.75, 0);
+	private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -1, 0);
 
 	private static final int META_INDEX_FLAGS = 0;
 	private static final int META_INDEX_NAME = 2;
@@ -53,7 +56,7 @@ public class FakeArmorstandUtils {
 	private final Map<Node, Integer> nodeEntityMap;
 	private final Map<Edge, Integer> edgeEntityMap;
 
-	public FakeArmorstandUtils(JavaPlugin plugin) {
+	public FakeArmorstandHandler(JavaPlugin plugin) {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 
 		chunkNodeMap = new HashMap<>();
@@ -139,7 +142,7 @@ public class FakeArmorstandUtils {
 		nodes.forEach(node -> chunkNodeMap.remove(new Pair<>((int) node.getPosition().getX() / 16, (int) node.getPosition().getZ() / 16)));
 	}
 
-	public void hideEdge(Collection<Edge> edges, Player player) {
+	public void hideEdges(Collection<Edge> edges, Player player) {
 		removeArmorstand(player, edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
 		edges.forEach(edgeEntityMap::remove);
 		edges.forEach(edge -> {
@@ -147,6 +150,14 @@ public class FakeArmorstandUtils {
 					edge.getEnd().getPosition().subtract(edge.getStart().getPosition()).multiply(.5f));
 			chunkNodeMap.remove(new Pair<>((int) pos.getX() / 16, (int) pos.getZ() / 16));
 		});
+	}
+
+	public void updateNodePosition(Node node, boolean updateEdges) {
+
+	}
+
+	public void updateNodeName(Node node, boolean updateEdges) {
+
 	}
 
 	private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
@@ -162,7 +173,7 @@ public class FakeArmorstandUtils {
 
 	public int spawnArmorstand(Player player, Location location) {
 
-		int entityId = FakeArmorstandUtils.entityId++;
+		int entityId = FakeArmorstandHandler.entityId++;
 
 		PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.SPAWN_ENTITY);
 		packet.getModifier().writeDefaults();

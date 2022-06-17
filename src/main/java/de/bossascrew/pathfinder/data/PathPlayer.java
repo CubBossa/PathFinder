@@ -35,7 +35,7 @@ public class PathPlayer {
     private final Map<NamespacedKey, Node> latestCreatedNodes;
 
     @Nullable
-    private Integer editModeRoadMapId = null;
+    private NamespacedKey editModeRoadMapId = null;
     @Nullable
     private NamespacedKey selectedRoadMap = null;
 
@@ -222,9 +222,8 @@ public class PathPlayer {
         }
     }
 
-    public void setEditMode(int roadMapId) {
-        this.editModeRoadMapId = roadMapId;
-        this.selectedRoadMap = roadMapId;
+    public void setEditMode(NamespacedKey key) {
+        this.editModeRoadMapId = key;
     }
 
     public void clearEditedRoadmap() {
@@ -239,7 +238,7 @@ public class PathPlayer {
         return RoadMapHandler.getInstance().getRoadMap(editModeRoadMapId);
     }
 
-    public void setSelectedRoadMap(int roadMapId) {
+    public void setSelectedRoadMap(NamespacedKey key) {
         deselectRoadMap();
         this.selectedRoadMap = roadMapId;
     }

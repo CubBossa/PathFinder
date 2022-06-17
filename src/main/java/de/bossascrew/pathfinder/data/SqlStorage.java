@@ -6,7 +6,6 @@ import de.bossascrew.core.util.Pair;
 import de.bossascrew.core.util.SQLUtils;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.*;
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
 import de.bossascrew.pathfinder.roadmap.RoadMap;

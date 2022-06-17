@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Node;

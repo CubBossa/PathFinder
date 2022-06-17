@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.node;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -15,6 +16,22 @@ public class Edge implements Comparable<Edge> {
 	private Node start;
 	private Node end;
 	private float weightModifier;
+
+	private Vector center;
+
+	public void setStart(Node start) {
+		this.start = start;
+		refreshCenter();
+	}
+
+	public void setEnd(Node end) {
+		this.end = end;
+		refreshCenter();
+	}
+
+	private void refreshCenter() {
+		center = start.getPosition().clone().add(end.getPosition().clone().subtract(start.getPosition()).multiply(.5f));
+	}
 
 	@Override
 	public boolean equals(Object o) {

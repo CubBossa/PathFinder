@@ -6,7 +6,6 @@ import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.data.DataStorage;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.handler.PathPlayerHandler;
 import de.bossascrew.pathfinder.handler.VisualizerHandler;
@@ -105,7 +104,6 @@ public class PathPlugin extends JavaPlugin {
 
 		commandManager.registerCommand(new PathFinderCommand());
 		commandManager.registerCommand(new CancelPath());
-		commandManager.registerCommand(new EditModeVisualizerCommand());
 		commandManager.registerCommand(new FindCommand());
 		commandManager.registerCommand(new NodeGroupCommand());
 		commandManager.registerCommand(new PathVisualizerCommand());
@@ -140,10 +138,6 @@ public class PathPlugin extends JavaPlugin {
 				.getInstance().getPathVisualizerStream()
 				.filter(PathVisualizer::isPickable)
 				.map(PathVisualizer::getName)
-				.collect(Collectors.toSet()));
-		commandCompletions.registerCompletion(COMPLETE_EDITMODE_VISUALIZER, context -> VisualizerHandler
-				.getInstance().getEditModeVisualizerStream()
-				.map(EditModeVisualizer::getName)
 				.collect(Collectors.toSet()));
 		commandCompletions.registerCompletion(COMPLETE_FINDABLE_GROUPS_BY_SELECTION, context -> resolveFromRoadMap(context, roadMap ->
 				completeNamespacedKey(context.getInput(), roadMap.getGroups().keySet().stream())));
@@ -303,18 +297,6 @@ public class PathPlugin extends JavaPlugin {
 					return null;
 				}
 				throw new InvalidCommandArgument("Ungültiger Pfad-Visualisierer.");
-			}
-			return visualizer;
-		});
-		contexts.registerContext(EditModeVisualizer.class, context -> {
-			String search = context.popFirstArg();
-
-			EditModeVisualizer visualizer = VisualizerHandler.getInstance().getEditModeVisualizer(search);
-			if (visualizer == null) {
-				if (context.isOptional()) {
-					return null;
-				}
-				throw new InvalidCommandArgument("Ungültiger EditMode-Visualisierer.");
 			}
 			return visualizer;
 		});

@@ -2,7 +2,6 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Node;

@@ -4,7 +4,6 @@ import de.bossascrew.core.networking.handling.PacketHandler;
 import de.bossascrew.core.networking.handling.PacketListener;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.SqlStorage;
-import de.bossascrew.pathfinder.data.visualisation.EditModeVisualizer;
 import de.bossascrew.pathfinder.data.visualisation.PathVisualizer;
 import de.bossascrew.pathfinder.networking.EditModeVisualizerUpdatePacket;
 import lombok.Getter;
