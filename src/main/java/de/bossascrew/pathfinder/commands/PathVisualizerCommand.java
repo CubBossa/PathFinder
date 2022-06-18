@@ -2,31 +2,13 @@ package de.bossascrew.pathfinder.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
-import de.bossascrew.core.BukkitMain;
-import de.bossascrew.core.base.ComponentMenu;
-import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.core.util.ComponentUtils;
-import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.util.CommandUtils;
-import de.bossascrew.pathfinder.util.StringUtils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.command.CommandSender;
 
 /**
  * Command zum erstellen, löschen und bearbeiten von Pfadvisualizer-Profilen
  */
 @CommandAlias("path-visualizer|pathv|pv")
 public class PathVisualizerCommand extends BaseCommand {
-
+/*
     @Subcommand("list")
     @CommandPermission("pathfinder.command.visualizer.path.list")
     public void onList(CommandSender sender) {
@@ -297,5 +279,5 @@ public class PathVisualizerCommand extends BaseCommand {
             visualizer.removePickable();
             PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style erfolgreich gelöscht: " + visualizer.getNameFormat());
         }
-    }
+    }*/
 }

@@ -1,19 +1,24 @@
 package de.bossascrew.pathfinder.util;
 
+import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.InventoryRow;
+import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
-import de.cubbossa.menuframework.util.ItemStackUtils;
+import de.cubbossa.translations.TranslatedItem;
+import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -27,12 +32,17 @@ public class EditModeMenu {
 
     private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+([0-9]+)$");
 
+    RoadMap roadMap;
     String lastNamed = "node_1";
     Node edgeStart = null;
     Node lastNode = null;
     NamespacedKey lastGroup = null;
 
-    public BottomInventoryMenu createHotbarMenu(RoadMap roadMap, RoadMapEditor editor) {
+    public EditModeMenu(RoadMap roadMap) {
+        this.roadMap = roadMap;
+    }
+
+    public BottomInventoryMenu createHotbarMenu(RoadMapEditor editor) {
         BottomInventoryMenu menu = new BottomInventoryMenu(InventoryRow.HOTBAR);
 
         menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
@@ -40,7 +50,7 @@ public class EditModeMenu {
         });
 
         menu.setButton(0, Button.builder()
-                .withItemStack(EditmodeUtils.NODE_TOOl)
+                .withItemStack(EditmodeUtils.NODE_TOOL)
                 .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
                     Player p = context.getPlayer();
                     roadMap.removeNode(context.getTarget());
@@ -62,13 +72,13 @@ public class EditModeMenu {
 
 
         menu.setButton(1, Button.builder()
-                .withItemStack(EditmodeUtils.EDGE_TOOL)
+                .withItemStack(() -> edgeStart == null ? EditmodeUtils.EDGE_TOOL : EditmodeUtils.EDGE_TOOL_GLOW)
                 .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
                     Player p = c.getPlayer();
 
                     if (edgeStart == null) {
                         edgeStart = c.getTarget();
-                        c.setItemStack(EditmodeUtils.EDGE_TOOL_GLOW);
+                        c.getMenu().refresh(c.getSlot());
                     } else {
                         if (edgeStart.equals(c.getTarget())) {
                             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
@@ -80,7 +90,7 @@ public class EditModeMenu {
                         }
                         roadMap.connectNodes(edgeStart, c.getTarget());
                         edgeStart = null;
-                        c.setItemStack(EditmodeUtils.EDGE_TOOL);
+                        c.getMenu().refresh(c.getSlot());
                     }
                     p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
                 }).withClickHandler(Action.RIGHT_CLICK_AIR, context -> {
@@ -89,9 +99,9 @@ public class EditModeMenu {
                     }
                     Player player = context.getPlayer();
                     edgeStart = null;
-                    player.sendMessage(PathPlugin.PREFIX + "Verbinden abgebrochen");
+                    TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_CANCELLED, player);
                     player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
-                    context.setItemStack(EditmodeUtils.EDGE_TOOL);
+                    context.getMenu().refresh(context.getSlot());
 
                 }).withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
                     Player player = context.getPlayer();
@@ -127,7 +137,7 @@ public class EditModeMenu {
                 }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
         menu.setButton(5, Button.builder()
-                .withItemStack(EditmodeUtils.TANGENT_TOOL)
+                .withItemStack(EditmodeUtils.CURVE_TOOL)
                 .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
                         openTangentStrengthMenu(context.getPlayer(), context.getTarget())));
 
@@ -152,13 +162,19 @@ public class EditModeMenu {
         return menu;
     }
 
-    private void openGroupMenu(Player player, RoadMap roadMap, Node node) {
+    private void openGroupMenu(Player player, Node node) {
 
         ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
         for (NodeGroup group : roadMap.getGroups().values()) {
 
             menu.addListEntry(Button.builder()
-                    .withItemStack(buildGroupItem(node, group))
+                    .withItemStack(() -> {
+                        ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem();
+                        if (node.getGroupKey() != null && node.getGroupKey().equals(group.getKey())) {
+                            stack = de.bossascrew.pathfinder.util.ItemStackUtils.setGlow(stack);
+                        }
+                        return stack;
+                    })
                     .withClickHandler(Action.LEFT, c -> {
                         node.setGroupKey(group.getKey());
                         lastGroup = group.getKey();
@@ -166,177 +182,64 @@ public class EditModeMenu {
                         menu.close(player);
                     }));
         }
-        ItemStack create = ItemStackUtils.createItemStack(Material.EMERALD, ChatColor.GREEN + "Neue Gruppe", "");
-        menu.setNavigationEntry(8, create, c -> {
-            openCreateGroupMenu(c.getPlayer(), node);
-        });
-        menu.setNavigationEntry(7, ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.WHITE + "Gruppe zurücksetzen", ""), c -> {
-            node.setGroup((NodeGroup) null, true);
-            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
-            openGroupMenu(c.getPlayer(), node);
-        });
-        menu.open(player);
-    }
+        menu.addPreset(presetApplier -> {
+            presetApplier.addItemOnTop(4 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+            presetApplier.addClickHandlerOnTop(4 * 9 + 7, Action.LEFT, c -> {
+                node.setGroupKey(null);
+                c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+            });
 
-    private void openCreateGroupMenu(Player player, Waypoint findable) {
-        AnvilMenu menu = new AnvilMenu(Component.text("Nodegruppe erstellen:"));
-
-        ItemStack result = new ItemStack(Material.CHEST);
-        ItemStack info = result.clone();
-        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Gruppe erstellen",
-                CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen eindeutigen Gruppennamen an. Gruppen dienen als findbare Orte auf der Karte. Zum Beispiel sollten alle Wegpunkte der Markthalle in einer Gruppe namens Markthalle sein.", "\n" + ChatColor.GRAY, 30));
-        ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Name vergeben.");
-
-        menu.setItem(0, info);
-        menu.setTextInputHandler((player1, s) -> {
-            s = StringUtils.replaceSpaces(s);
-            if (!roadMap.isGroupNameUnique(menu.getTextBoxText())) {
-                menu.setItem(2, error);
-            } else {
-                ItemStackUtils.setNameAndLore(result, s, "");
-                menu.setItem(2, result);
-            }
-        });
-        menu.setItemAndClickHandler(2, result, context -> {
-            if(menu.getTextBoxText() == null) {
-                return;
-            }
-            String s = StringUtils.replaceSpaces(menu.getTextBoxText());
-            Player p = context.getPlayer();
-            if (!roadMap.isGroupNameUnique(s)) {
-                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-                return;
-            }
-            NodeGroup group = roadMap.addFindableGroup(s, true);
-            findable.setGroup(group, true);
-            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-            menu.closeInventory();
+            presetApplier.addItemOnTop(4 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
+            presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> openCreateGroupMenu(c.getPlayer(), node));
         });
         menu.open(player);
     }
 
-    private static ItemStack buildGroupItem(Node clicked, NodeGroup group) {
-        ItemStack stack = new ItemStack(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST);
-        StringBuilder lore = new StringBuilder(ChatColor.GRAY + "Findbar: " + PathPlugin.CHAT_COLOR_LIGHT + (group.isFindable() ? "An" : "Aus")
-                + "\n" + ChatColor.GRAY + "Größe: " + PathPlugin.CHAT_COLOR_LIGHT + group.getFindables().size() + "\n" + ChatColor.GRAY + "Nodes in Gruppe:");
+    private void openCreateGroupMenu(Player player, Node node) {
+        AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group_x", AnvilInputValidator.VALIDATE_KEY);
 
-        int counter = 0;
-        for (Waypoint f : group.getFindables()) {
-            if (counter > 10) {
-                lore.append("\n" + ChatColor.DARK_GRAY + "...");
-                break;
-            } else {
-                lore.append("\n" + ChatColor.GRAY + "- ").append(PathPlugin.CHAT_COLOR_LIGHT).append(f.getNameFormat()).append(" (#").append(f.getNodeId()).append(")");
+        menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
+            NamespacedKey key = AnvilInputValidator.VALIDATE_KEY.getInputParser().apply(s.getTarget());
+            if (key == null || roadMap.getNodeGroup(key) != null) {
+                s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             }
-            counter++;
-        }
-        ItemStackUtils.setNameAndLore(stack, PathPlugin.CHAT_COLOR_DARK + group.getNameFormat() + " (#" + group.getGroupId() + ")", lore.toString());
-        if (clicked.getGroup() != null && clicked.getGroup().equals(group)) {
-            ItemStackUtils.setGlowing(stack);
-        }
-        return stack;
-    }
-
-    private static void openNodeNameMenu(Player player, Consumer<String> nodeFactory) {
-        openNodeNameMenu(player, "node", nodeFactory);
-    }
-
-    private static void openNodeNameMenu(Player player, String nameInput, Consumer<String> nodeFactory) {
-        AnvilMenu menu = new AnvilMenu(Component.text("Node erstellen:"));
-
-        ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
-        ItemStack info = result.clone();
-        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + nameInput,
-                CommandUtils.wordWrap(ChatColor.GRAY + "Gib einen für diese Straßenkarte einzigartigen Namen oder 'null' an.", "\n" + ChatColor.GRAY, 30));
-        ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Name vergeben.");
-
-        menu.setItem(0, info);
-        menu.setTextInputHandler((player1, s) -> {
-            s = StringUtils.replaceSpaces(s);
-            if (!roadMap.isNodeNameUnique(menu.getTextBoxText())) {
-                menu.setItem(2, error);
-            } else {
-                ItemStackUtils.setNameAndLore(result, s, "");
-                menu.setItem(2, result);
-            }
-        });
-        menu.setItemAndClickHandler(2, result, context -> {
-            Player p = context.getPlayer();
-            if(menu.getTextBoxText() == null) {
-                return;
-            }
-            String s = StringUtils.replaceSpaces(menu.getTextBoxText());
-            if (!roadMap.isNodeNameUnique(s)) {
-                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-                return;
-            }
-            nodeFactory.accept(s);
-            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-            menu.closeInventory();
+            NodeGroup group = roadMap.createNodeGroup(key, true);
+            node.setGroupKey(group.getKey());
         });
         menu.open(player);
     }
 
-    private static void openTangentStrengthMenu(Player player, Node findable) {
-        AnvilMenu menu = new AnvilMenu(Component.text("Rundung einstellen:"));
+    private void openNodeNameMenu(Player player, Consumer<String> onSuccess) {
+        openNodeNameMenu(player, "Waypoint X", onSuccess);
+    }
 
-        ItemStack result = HeadDBUtils.getHeadById(roadMap.getEditModeVisualizer().getNodeHeadId());
-        ItemStack info = result.clone();
-        ItemStackUtils.setNameAndLore(info, ChatColor.WHITE + "Tangentenstärke setzen",
-                CommandUtils.wordWrap(ChatColor.GRAY + "Mit der Tangentenstärke setzt man, wie weit die Kontrollpunkte von dem Wegpunkt entfernt sein " +
-                                "sollen und damit, wie sehr der Pfad gerundet werden soll. Die Eingaben none oder null setzen den Wert auf den Straßenkarten-Standard.",
-                        "\n" + ChatColor.GRAY, 35));
-        ItemStack error = ItemStackUtils.createItemStack(Material.BARRIER, ChatColor.RED + "Ungültige Eingabe", ChatColor.GRAY + "Beispiel: 7.3");
+    private void openNodeNameMenu(Player player, String nameInput, Consumer<String> onSuccess) {
+        AnvilMenu menu = newAnvilMenu(Component.text("Node erstellen:"), nameInput);
 
-        menu.setItem(0, info);
-        menu.setTextInputHandler((player1, s) -> {
-            if (s == null) {
-                menu.setItem(2, error);
-                return;
-            }
-            if (s.equalsIgnoreCase("null") || s.equalsIgnoreCase("none")) {
-                ItemStackUtils.setNameAndLore(result, ChatColor.WHITE + "Keine", "");
-                menu.setItem(2, result);
-                return;
-            }
-            double val = 0;
-            try {
-                val = Double.parseDouble(s);
-            } catch (NumberFormatException e) {
-                menu.setItem(2, error);
-                return;
-            }
-            ItemStackUtils.setNameAndLore(result, ChatColor.WHITE + "" + val + " Blöcke", "");
-            menu.setItem(2, result);
-        });
-        menu.setItemAndClickHandler(2, result, context -> {
-            String in = menu.getTextBoxText();
-            if (in == null) {
-                return;
-            }
-            Player p = context.getPlayer();
-            Double val = null;
-            if (in.equalsIgnoreCase("null") || in.equalsIgnoreCase("none")) {
-                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-                findable.setBezierTangentLength(val);
-                menu.closeInventory();
-                return;
-            }
-            try {
-                val = Double.parseDouble(in);
-            } catch (NumberFormatException e) {
-                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-                return;
-            }
-            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-            findable.setBezierTangentLength(val);
-            menu.closeInventory();
+        menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
+            onSuccess.accept(s.getTarget());
+            s.getMenu().close(s.getPlayer());
         });
         menu.open(player);
     }
 
-    private static void openNodePermissionMenu(Player player, Node node) {
-        AnvilMenu menu = new AnvilMenu(Component.text("Permission setzen:"), "null");
+    private void openTangentStrengthMenu(Player player, Node findable) {
+        AnvilMenu menu = newAnvilMenu(Component.text("Rundung einstellen:"), "3.0", AnvilInputValidator.VALIDATE_FLOAT);
+
+        menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
+            if (!AnvilInputValidator.VALIDATE_FLOAT.getInputValidator().test(s.getTarget())) {
+                s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                return;
+            }
+            Double strength = s.getTarget().equalsIgnoreCase("null") ? null : Double.parseDouble(s.getTarget());
+            findable.setBezierTangentLength(strength);
+            menu.close(s.getPlayer());
+        });
+        menu.open(player);
+    }
+
+    private void openNodePermissionMenu(Player player, Node node) {
+        AnvilMenu menu = newAnvilMenu(Component.text("Permission setzen:"), "null", AnvilInputValidator.VALIDATE_PERMISSION);
         menu.setItem(0, new ItemStack(Material.PAPER));
         menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
             Player p = s.getPlayer();
@@ -345,5 +248,24 @@ public class EditModeMenu {
             menu.close(p);
         });
         menu.open(player);
+    }
+
+    public static AnvilMenu newAnvilMenu(ComponentLike title, String suggestion) {
+        return newAnvilMenu(title, suggestion, null);
+    }
+
+    public static <T> AnvilMenu newAnvilMenu(ComponentLike title, String suggestion, AnvilInputValidator<T> validator) {
+        AnvilMenu menu = new AnvilMenu(title, suggestion);
+        menu.addPreset(MenuPresets.back(1, Action.LEFT));
+        menu.setClickHandler(0, AnvilMenu.WRITE, s -> {
+            if (validator != null && !validator.getInputValidator().test(s.getTarget())) {
+                menu.setItem(2, ItemStackUtils.createErrorItem(Messages.GEN_GUI_WARNING_N, Messages.GEN_GUI_WARNING_L
+                        .format(TagResolver.resolver("format", Tag.inserting(validator.getRequiredFormat())))));
+            } else {
+                menu.setItem(2, ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_LETTER_CHECK_MARK, Messages.GEN_GUI_ACCEPT_N, Messages.GEN_GUI_ACCEPT_L));
+            }
+            menu.refresh(2);
+        });
+        return menu;
     }
 }

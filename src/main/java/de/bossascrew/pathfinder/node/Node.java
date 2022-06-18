@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.node;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
@@ -13,12 +12,6 @@ public interface Node extends Navigable, Comparable<Node> {
 	int getNodeId();
 
 	NamespacedKey getRoadMapKey();
-
-	String getNameFormat();
-
-	void setNameFormat(String format);
-
-	Component getDisplayName();
 
 	Vector getPosition();
 

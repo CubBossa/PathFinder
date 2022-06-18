@@ -1,8 +1,11 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.node.*;
+import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.Findable;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -64,7 +67,7 @@ public interface DataStorage {
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	SimpleCurveVisualizer newPathVisualizer(String name, @Nullable SimpleCurveVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod);
+	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod);
 
 	Map<Integer, SimpleCurveVisualizer> loadPathVisualizer();
 

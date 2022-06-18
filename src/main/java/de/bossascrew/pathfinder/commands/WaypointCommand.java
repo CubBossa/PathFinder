@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
@@ -122,7 +122,7 @@ public class WaypointCommand extends BaseCommand {
 
         PathPlugin.getInstance().getAudiences().player(player).sendMessage(Component.join(
                 JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-                new ArrayList<>(roadMap.getNodes()).subList(pageInput * 40, (pageInput + 1) * 40).stream()
+                CommandUtils.subList(new ArrayList<>(roadMap.getNodes()), pageInput, 40).stream()
                         .map(n -> {
 
                             TagResolver r = TagResolver.builder()

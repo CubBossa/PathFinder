@@ -37,7 +37,7 @@ public class NodeGroupCommand extends BaseCommand {
 
         TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
 
-        for (NodeGroup group : new ArrayList<>(roadMap.getGroups().values()).subList(pageInput * 10, (pageInput + 1) * 10)) {
+        for (NodeGroup group : CommandUtils.subList(new ArrayList<>(roadMap.getGroups().values()), pageInput, 10)) {
 
             TagResolver r = TagResolver.builder()
                     .tag("key", Tag.inserting(Component.text(group.getKey().toString())))

@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.visualizer;
 
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.events.internal.SimpleCurveVisualizerUpdate;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.util.GameAction;
@@ -22,7 +23,7 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 
 	private final NamespacedKey key;
 	private String nameFormat;
-	private Component dislayName;
+	private Component displayName;
 
 	@Nullable
 	private String permission = null;
@@ -38,15 +39,25 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 
 	public SimpleCurveVisualizer(NamespacedKey key, String nameFormat) {
 		this.key = key;
-		this.nameFormat = nameFormat;
+		setNameFormat(nameFormat);
 		updateParticle = new GameAction<>();
 	}
 
+	public void setNameFormat(String nameFormat) {
+		this.nameFormat = nameFormat;
+		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
+	}
+
 	@Override
-	public void playParticle(Player player, Location location, int index, int time) {
+	public void playParticle(Player player, Location location, int index, long time) {
 		if (index % particleSteps == time % particleSteps) {
 			player.spawnParticle(particle, location, 1);
 		}
+	}
+
+	@Override
+	public int getTickDelay() {
+		return schedulerPeriod;
 	}
 
 	@Override

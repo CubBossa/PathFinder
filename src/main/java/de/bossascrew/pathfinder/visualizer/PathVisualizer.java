@@ -1,18 +1,23 @@
 package de.bossascrew.pathfinder.visualizer;
 
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.util.NodeUtils;
 import de.bossascrew.splinelib.interpolate.Interpolation;
 import de.bossascrew.splinelib.util.Spline;
+import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface PathVisualizer {
+public interface PathVisualizer extends Keyed, Named {
+
+	@Nullable String getPermission();
 
 	double getTangentLength();
 
@@ -37,5 +42,5 @@ public interface PathVisualizer {
 		return curve;
 	}
 
-	void playParticle(Player player, Location location, int index, int time);
+	void playParticle(Player player, Location location, int index, long time);
 }

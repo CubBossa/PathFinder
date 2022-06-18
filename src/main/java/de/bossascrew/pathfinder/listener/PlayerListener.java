@@ -1,46 +1,23 @@
 package de.bossascrew.pathfinder.listener;
 
-import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.visualizer.ParticlePath;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
-import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.events.NodeFindEvent;
-import de.bossascrew.pathfinder.events.NodeGroupFindEvent;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-
-        GlobalPlayer globalPlayer = de.bossascrew.core.player.PlayerHandler.getInstance().getGlobalPlayer(event.getPlayer().getUniqueId());
-        if (globalPlayer == null) {
-            return;
-        }
-        PathPlayerHandler.getInstance().getPlayer(globalPlayer.getDatabaseId());
+        PathPlayerHandler.getInstance().getPlayer(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -51,13 +28,13 @@ public class PlayerListener implements Listener {
             return;
         }
         if (player.isEditing()) {
-            player.getEdited().setEditMode(player.getUuid(), false);
+            RoadMapHandler.getInstance().getRoadMapEditor(player.getEdited().getKey()).setEditMode(player.getUuid(), false);
         }
     }
 
     @Getter
     private static final Map<UUID, Map<Integer, AtomicBoolean>> hasFoundTarget = new ConcurrentHashMap<>();
-
+/*
     @EventHandler
     public void onMove(final PlayerMoveEvent event) {
 
@@ -186,5 +163,5 @@ public class PlayerListener implements Listener {
             }
         }
         return null;
-    }
+    }*/
 }

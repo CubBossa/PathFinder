@@ -2,11 +2,11 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.StringUtils;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -40,13 +40,13 @@ public class RoadMap implements Keyed {
 	private final Collection<Edge> edges;
 	private final HashedRegistry<NodeGroup> groups;
 
-	private SimpleCurveVisualizer simpleCurveVisualizer;
+	private PathVisualizer visualizer;
 
-	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, SimpleCurveVisualizer simpleCurveVisualizer,
+	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer visualizer,
 				   double nodeFindDistance, double defaultBezierTangentLength) {
 
 		this.key = key;
-		this.nameFormat = name;
+		this.setNameFormat(name);
 		this.world = world;
 		this.findableNodes = findableNodes;
 		this.nodeFindDistance = nodeFindDistance;
@@ -56,7 +56,12 @@ public class RoadMap implements Keyed {
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();
 
-		setSimpleCurveVisualizer(simpleCurveVisualizer);
+		setVisualizer(visualizer);
+	}
+
+	public void setNameFormat(String nameFormat) {
+		this.nameFormat = nameFormat;
+		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
 	public void loadGroups() {

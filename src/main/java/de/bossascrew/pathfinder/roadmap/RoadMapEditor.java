@@ -2,7 +2,7 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
@@ -89,7 +89,7 @@ public class RoadMapEditor implements Keyed {
 			}
 			editor.setEditMode(key);
 
-			BottomInventoryMenu menu = new EditModeMenu().createHotbarMenu(roadMap, this);
+			BottomInventoryMenu menu = new EditModeMenu(roadMap).createHotbarMenu(this);
 			editingPlayers.put(uuid, menu);
 			menu.openSync(player);
 

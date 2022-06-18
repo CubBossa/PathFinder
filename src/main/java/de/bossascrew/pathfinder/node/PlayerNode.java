@@ -11,17 +11,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 
 @Getter
 public class PlayerNode implements Node {
 
     private final Player player;
+    private final RoadMap roadMap;
 
-    public PlayerNode(Player player) {
+    public PlayerNode(Player player, RoadMap roadMap) {
         this.player = player;
+        this.roadMap = roadMap;
     }
 
     @Override
@@ -74,9 +74,10 @@ public class PlayerNode implements Node {
 
         RoadMap roadMap;
 
+        // score for each node of nearest 10.
+        // score = dist / (blocksInWay² + 1)
+
         Vector pos = player.getLocation().toVector();
-        List<Node> other = roadMap.getNodes().stream().sorted(Comparator.comparingDouble(n -> n.getPosition().distance(pos)));
-        other.forEach(node -> );
 
         return null;
     }

@@ -5,30 +5,22 @@ import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.VisualizerHandler;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.Findable;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.PlayerNode;
-import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
-import de.cubbossa.menuframework.chat.ComponentMenu;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -53,19 +45,20 @@ public class RoadMapCommand extends BaseCommand {
 		FormattedMessage message = Messages.CMD_RM_INFO.format(TagResolver.builder()
 				.tag("id", Tag.preProcessParsed(roadMap.getKey() + ""))
 				.tag("name", Tag.inserting(roadMap.getDisplayName()))
+				.tag("name-format", Tag.inserting(Component.text(roadMap.getNameFormat())))
 				.tag("world", Tag.preProcessParsed(roadMap.getWorld().getName()))
 				.tag("findable", Tag.inserting(roadMap.isFindableNodes() ?
 						Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
 				.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 				.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-				.tag("path-visualizer", Tag.inserting(roadMap.getSimpleCurveVisualizer().getDisplayName()))
+				.tag("path-visualizer", Tag.inserting(roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
 	}
 
 	@Subcommand("create")
-	@Syntax("<name> [<world>] [findable]")
+	@Syntax("<key> [<world>] [findable]")
 	@CommandPermission("pathfinder.command.roadmap.create")
 	@CommandCompletion("@nothing @worlds findable")
 	public void onCreate(Player player, NamespacedKey key,
@@ -79,13 +72,15 @@ public class RoadMapCommand extends BaseCommand {
 
 		try {
 			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(key, world, findableNodes);
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), player);
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS
+					.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), player);
 
 			PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
 			pathPlayer.setSelectedRoadMap(roadMap.getKey());
 
 		} catch (Exception e) {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_FAIL, player);
+			e.printStackTrace();
 		}
 	}
 
@@ -122,11 +117,11 @@ public class RoadMapCommand extends BaseCommand {
 		}
 		if (roadMap == null) {
 			if (RoadMapHandler.getInstance().getRoadMaps().size() == 1) {
-				roadMap = RoadMapHandler.getInstance().getRoadMaps().iterator().next();
+				roadMap = RoadMapHandler.getInstance().getRoadMaps().values().stream().findAny().orElse(null);
 			} else {
 				Collection<RoadMap> inWorld = RoadMapHandler.getInstance().getRoadMaps(player.getWorld());
 				if (inWorld.size() == 1) {
-					roadMap = inWorld.iterator().next();
+					roadMap = inWorld.stream().findAny().orElse(null);
 				}
 			}
 			if (roadMap != null) {
@@ -140,7 +135,7 @@ public class RoadMapCommand extends BaseCommand {
 			return;
 		}
 		RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey()).toggleEditMode(player.getUniqueId());
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_SELECT.format(TagResolver.resolver("roadmap",
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_ACTIVATED.format(TagResolver.resolver("roadmap",
 				Tag.inserting(roadMap.getDisplayName()))), player);
 	}
 
@@ -149,33 +144,34 @@ public class RoadMapCommand extends BaseCommand {
 	@Syntax("[<page>]")
 	public void onList(CommandSender sender, @Optional Integer page) {
 
-		page = page == null ? 0 : page;
+		page = page == null ? 0 : page - 1;
 
 		PathPlayer player = PathPlayerHandler.getInstance().getPlayer(sender);
 		NamespacedKey selection = player.getSelectedRoadMap();
 
 		TagResolver resolver = TagResolver.builder()
-				.tag("page", Tag.preProcessParsed(page + ""))
-				.tag("prev-page", Tag.preProcessParsed(Integer.max(0, page - 1) + ""))
-				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 1) + ""))
+				.tag("page", Tag.preProcessParsed(page + 1 + ""))
+				.tag("prev-page", Tag.preProcessParsed(Integer.max(1, page + 1) + ""))
+				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 3) + ""))
+				.tag("pages", Tag.preProcessParsed((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.) + ""))
 				.build();
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_HEADER.format(resolver), sender);
 
-		for (RoadMap roadMap : new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()).subList(page * 10, (page + 1) * 10)) {
+		for (RoadMap roadMap : CommandUtils.subList(new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()), page, 10)) {
 			TagResolver r = TagResolver.builder()
-					.tag("id", Tag.preProcessParsed(roadMap.getKey() + ""))
+					.tag("id", Tag.preProcessParsed(roadMap.getKey().getKey() + ""))
 					.tag("name", Tag.inserting(roadMap.getDisplayName()))
 					.tag("world", Tag.preProcessParsed(roadMap.getWorld().getName()))
 					.tag("findable", Tag.inserting(roadMap.isFindableNodes() ?
 							Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
 					.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 					.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-					.tag("path-visualizer", Tag.inserting(roadMap.getSimpleCurveVisualizer().getDisplayName()))
+					.tag("path-visualizer", Tag.inserting(roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 					.build();
 
 			TranslationHandler.getInstance().sendMessage(
-					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_ENTRY : Messages.CMD_RM_LIST_SELECTED)
+					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_SELECTED : Messages.CMD_RM_LIST_ENTRY)
 							.format(resolver, r),
 					sender);
 		}
@@ -256,76 +252,102 @@ public class RoadMapCommand extends BaseCommand {
 		@Syntax("<Style>")
 		@CommandPermission("pathfinder.command.roadmap.set.path-visualizer")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER)
-		public void onStyle(CommandSender sender, SimpleCurveVisualizer visualizer) {
+		public void onStyle(CommandSender sender, PathVisualizer visualizer) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			roadMap.setVisualizer(visualizer);
 
-			roadMap.setSimpleCurveVisualizer(visualizer);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Partikel-Style erfolgreich auf Straßenkarte angewendet.");
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_VISUALIZER.format(TagResolver.builder()
+					.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+					.tag("visualizer", Tag.inserting(visualizer.getDisplayName()))
+					.build()), sender);
 		}
 
 		@Subcommand("name")
 		@Syntax("<new name>")
 		@CommandPermission("pathfinder.command.roadmap.set.name")
 		public void onRename(CommandSender sender, @Single String nameNew) {
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			Component old = roadMap.getDisplayName();
+			roadMap.setNameFormat(nameNew);
 
-			CommandUtils.getSelectedRoadMap(sender).setNameFormat(nameNew);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Straßenkarte erfolgreich umbenannt: " + nameNew);
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_NAME.format(TagResolver.builder()
+					.tag("roadmap", Tag.inserting(old))
+					.tag("name-format", Tag.inserting(Component.text(nameNew)))
+					.tag("display-name", Tag.preProcessParsed(nameNew))
+					.build()), sender);
 		}
 
-		@Subcommand("tangent-strength")
-		@Syntax("<Wert>")
-		@CommandPermission("pathfinder.command.roadmap.set.tangent-strength")
+		@Subcommand("curve-length")
+		@Syntax("<value>")
+		@CommandPermission("pathfinder.command.roadmap.set.curved")
 		public void onChangeTangentStrength(CommandSender sender, double strength) {
-			CommandUtils.getSelectedRoadMap(sender).setDefaultBezierTangentLength(strength);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Standard-Tangentenstärke erfolgreich gesetzt: " + strength);
+			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			roadMap.setDefaultBezierTangentLength(strength);
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_CURVED.format(TagResolver.builder()
+					.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+					.tag("value", Tag.preProcessParsed(String.format("%,.2f", strength)))
+					.build()), sender);
 		}
 
 		@Subcommand("world")
-		@Syntax("<Welt> [erzwingen]")
+		@Syntax("<world> [force]")
 		@CommandPermission("pathfinder.command.roadmap.set.world")
-		@CommandCompletion(BukkitMain.COMPLETE_LOCAL_WORLDS + " erzwingen")
-		public void onChangeWorld(CommandSender sender, World world, @Optional @Single @Values("erzwingen") String forceString) {
+		@CommandCompletion("@worlds force")
+		public void onChangeWorld(CommandSender sender, World world, @Optional @Single @Values("force") String forceString) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+			RoadMapEditor editor = RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey());
 			boolean force = forceString != null;
 
-			if (!force && roadMap.isEdited()) {
-				PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + ChatColor.RED + "Diese Straßenkarte wird gerade bearbeitet. " +
-						"Nutze den [erzwingen] Parameter, um die Welt trotzdem zu ändern.");
+			if (!force && editor.isEdited()) {
+				TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CURRENTLY_EDITED, sender);
 				return;
 			}
-
-			if (roadMap.isEdited()) {
-				roadMap.cancelEditModes();
+			if (editor.isEdited()) {
+				editor.cancelEditModes();
 			}
-
 			roadMap.setWorld(world);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Die Welt für " + roadMap.getNameFormat() + " wurde erfolgreich gewechselt.\n" +
-					ChatColor.RED + "ACHTUNG! Wegpunke sind möglicherweise nicht da, wo man sie erwartet.");
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_WORLD.format(TagResolver.builder()
+					.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+					.tag("world", Tag.inserting(Component.text(world.getName())))
+					.build()), sender);
 		}
 
 		@Subcommand("find-distance")
-		@Syntax("<finde-entfernung>")
+		@Syntax("<distance>")
 		@CommandPermission("pathfinder.command.roadmap.set.find-distance")
 		public void onFindDistance(CommandSender sender, double findDistance) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+
+			TagResolver resolver = TagResolver.builder()
+					.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+					.tag("value", Tag.preProcessParsed(String.format("%,.2f", findDistance)))
+					.build();
+
 			if (findDistance < 0.05) {
-				PlayerUtils.sendMessage(sender, ChatColor.RED + "Die angebenene Distanz ist zu klein.");
+				TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_FIND_DIST_TOO_SMALL.format(resolver), sender);
 				return;
 			}
 			roadMap.setNodeFindDistance(findDistance);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Finde-Entfernung erfolgreich gesetzt: " + PathPlugin.CHAT_COLOR_LIGHT + findDistance);
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_FIND_DIST.format(resolver), sender);
 		}
 
 		@Subcommand("findable")
-		@Syntax("<findbare Nodes>")
+		@Syntax("<findable>")
 		@CommandPermission("pathfinder.command.roadmap.set.findable")
-		@CommandCompletion(BukkitMain.COMPLETE_BOOLEAN)
-		public void onSetFindable(CommandSender sender, boolean findbar) {
+		@CommandCompletion("true|false")
+		public void onSetFindable(CommandSender sender, @Optional Boolean findable) {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
-			roadMap.setFindableNodes(findbar);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Node-Findbarkeit umgestellt auf: " + PathPlugin.CHAT_COLOR_LIGHT + (findbar ? "an" : "aus"));
+			roadMap.setFindableNodes(findable);
+			findable = findable != null && findable;
+
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_FINDABLE.format(TagResolver.builder()
+					.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+					.tag("value", Tag.inserting(Messages.formatBool(findable)))
+					.build()), sender);
 		}
 	}
+
+	/*
 
 	@Subcommand("style")
 	@CommandPermission("pathfinder.command.roadmap.style")
@@ -419,5 +441,5 @@ public class RoadMapCommand extends BaseCommand {
 					.append(ComponentUtils.getCommandComponent("/cancelpath", ClickEvent.Action.RUN_COMMAND))
 					.append(Component.text(")", NamedTextColor.GRAY)));
 		}
-	}
+	}*/
 }

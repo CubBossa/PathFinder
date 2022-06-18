@@ -86,7 +86,7 @@ public class SelectionUtils {
 		}).collect(Collectors.toList());
 	}, "..1", "1.5", "2..");
 
-	public static final Selector SELECT_KEY_LIMIT = new Selector("limit", Pattern.compile("[0-9]+"), (nodes, context) -> nodes.subList(0, Integer.parseInt(context.value())), IntStream.range(1, 10).mapToObj(i -> "" + i).toArray(String[]::new));
+	public static final Selector SELECT_KEY_LIMIT = new Selector("limit", Pattern.compile("[0-9]+"), (nodes, context) -> CommandUtils.subList(nodes, 0, Integer.parseInt(context.value())), IntStream.range(1, 10).mapToObj(i -> "" + i).toArray(String[]::new));
 
 	public static final Selector SELECT_KEY_SORT = new Selector("sort", Pattern.compile("(nearest|furthest|random|arbitrary)"), (nodes, context) -> {
 		Vector pVec = context.player().getLocation().toVector();
@@ -151,24 +151,23 @@ public class SelectionUtils {
 		return new NodeSelection(nodes);
 	}
 
-	public static List<String> completeNodeSelection(Collection<? extends Node> input, String selectString) {
+	public static List<String> completeNodeSelection(String selectString) {
 		if (!selectString.startsWith("@n[")) {
 			return Lists.newArrayList("@n[");
 		}
+		String in = selectString;
 		selectString = selectString.substring(3);
+
 		String[] args = selectString.split(",");
 		selectString = args[args.length - 1];
 
 		String sel = selectString;
-		if (selectString.endsWith("=")) {
-			return Arrays.stream(SELECTORS)
-					.flatMap(s -> sel.substring(0, sel.length() - 1).equalsIgnoreCase(s.key) ? Arrays.stream(s.completions()) : Stream.empty())
-					.collect(Collectors.toList());
-		}
+		String sub = in.substring(0, Integer.max(in.lastIndexOf(','), in.lastIndexOf('[')) + 1);
 
 		return Arrays.stream(SELECTORS)
-				.map(s -> s.key() + "=")
-				.filter(sel::startsWith)
+				.map(s -> sel.endsWith("=") ? Arrays.stream(s.completions()).map(c -> s.key() + "=" + c).collect(Collectors.toList()) : Lists.newArrayList(s.key() + "="))
+				.flatMap(Collection::stream)
+				.map(s -> sub + s)
 				.collect(Collectors.toList());
 	}
 

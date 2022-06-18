@@ -152,10 +152,15 @@ public class InMemoryDatabase implements DataStorage {
 		log("Delete Foundinfos");
 	}
 
-
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(String name, @Nullable SimpleCurveVisualizer parent, @Nullable Particle particle, @Nullable Double particleDistance, @Nullable Integer particleLimit, @Nullable Integer particleSteps, @Nullable Integer schedulerPeriod) {
-		return new SimpleCurveVisualizer(0, name, null);
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod) {
+		log("Created Visualizer");
+		var vis = new SimpleCurveVisualizer(key, nameFormat);
+		vis.setParticle( particle);
+		vis.setParticleDistance(particleDistance);
+		vis.setParticleSteps(particleSteps);
+		vis.setSchedulerPeriod(schedulerPeriod);
+		return vis;
 	}
 
 	@Override

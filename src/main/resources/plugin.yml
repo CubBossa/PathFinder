@@ -5,5 +5,4 @@ main: de.bossascrew.pathfinder.PathPlugin
 api-version: 1.17
 
 depend:
-  - bossascrew-core-bukkit
   - ProtocolLib

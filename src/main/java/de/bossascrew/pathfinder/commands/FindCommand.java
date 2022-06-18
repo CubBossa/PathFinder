@@ -1,49 +1,11 @@
 package de.bossascrew.pathfinder.commands;
 
-import com.google.common.collect.Lists;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
-import de.bossascrew.core.BukkitMain;
-import de.bossascrew.core.base.ComponentMenu;
-import de.bossascrew.core.base.Menu;
-import de.bossascrew.core.bukkit.inventory.menu.PagedChestMenu;
-import de.bossascrew.core.bukkit.player.PlayerUtils;
-import de.bossascrew.core.bukkit.util.ItemStackUtils;
-import de.bossascrew.core.util.ComponentUtils;
-import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
-import de.bossascrew.pathfinder.node.Waypoint;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
-import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.util.CommandUtils;
-import de.cubbossa.menuframework.chat.ComponentMenu;
-import de.cubbossa.menuframework.chat.TextMenu;
-import de.cubbossa.menuframework.inventory.implementations.RectInventoryMenu;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.group.GroupManager;
-import org.bukkit.ChatColor;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @CommandAlias("finde|find")
 public class FindCommand extends BaseCommand {
-
+/*
     @CatchUnknown
     @HelpCommand
     public void onDefault(Player player) {
@@ -157,7 +119,7 @@ public class FindCommand extends BaseCommand {
             if (actual.equals(visualizer)) {
                 ItemStackUtils.setGlowing(stack);
             }
-            menu.addMenuEntry(stack, /*hasPerm ? 0 : spender ? 1 : spender2 ? 2 : 3, */context -> {
+            menu.addMenuEntry(stack, hasPerm ? 0 : spender ? 1 : spender2 ? 2 : 3, context -> {
                 if (!hasPerm) {
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                     return;
@@ -218,5 +180,5 @@ public class FindCommand extends BaseCommand {
             return;
         }
         AStarUtils.startPath(player, f, true);
-    }
+    }*/
 }

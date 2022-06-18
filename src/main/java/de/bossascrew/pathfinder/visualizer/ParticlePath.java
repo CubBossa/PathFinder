@@ -2,7 +2,7 @@ package de.bossascrew.pathfinder.visualizer;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.splinelib.util.Spline;
@@ -28,9 +28,7 @@ public class ParticlePath extends ArrayList<Node> {
 
     private boolean active;
     private BukkitTask task;
-
-    private double cachedDistance = -1;
-    private List<Location> calculatedPoints;
+    private final List<Location> calculatedPoints;
 
     public ParticlePath(RoadMap roadMap, UUID playerUuid, SimpleCurveVisualizer visualizer) {
         this.roadMap = roadMap;
@@ -68,7 +66,10 @@ public class ParticlePath extends ArrayList<Node> {
                 if (searching == null) {
                     return;
                 }
-                calculatedPoints.forEach(location -> visualizer.playParticle(searching, location, , ));
+                long fullTime = roadMap.getWorld().getFullTime();
+                for (int i = 0; i < calculatedPoints.size(); i++) {
+                    visualizer.playParticle(searching, calculatedPoints.get(i), i, fullTime);
+                }
             }, 0L, visualizer.getTickDelay());
         });
     }
@@ -81,14 +82,7 @@ public class ParticlePath extends ArrayList<Node> {
      * Nur im Mainthread aufrufen
      */
     public void cancelSync() {
-        List<SchedulerHandler> handlers = new ArrayList<>(schedulerHandlers);
-        for (SchedulerHandler handler : handlers) {
-            handler.setCancelled(true);
-            for (int i : handler.getSchedulerIds()) {
-                Bukkit.getScheduler().cancelTask(i);
-            }
-            schedulerHandlers.remove(handler);
-        }
+        Bukkit.getScheduler().cancelTask(task.getTaskId());
         this.active = false;
     }
 }

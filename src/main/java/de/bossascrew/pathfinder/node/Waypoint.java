@@ -22,7 +22,7 @@ public class Waypoint implements Node, Findable, Navigable {
 	protected final int nodeId;
 	protected final NamespacedKey roadMapKey;
 	protected final RoadMap roadMap;
-	protected final List<Integer> edges;
+	protected final List<Edge> edges;
 
 	protected Vector position;
 	protected String nameFormat;

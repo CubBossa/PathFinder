@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder;
 
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
+import de.cubbossa.translations.MessageFile;
 import de.cubbossa.translations.MessageMeta;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -10,65 +11,116 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
+@MessageFile
 public class Messages {
 
-	public static final Message COL_SEVERE = new Message("colors.severe");
-	public static final Message COL_BACKGROUND = new Message("colors.background");
-	public static final Message COL_FILL = new Message("colors.default");
-	public static final Message COL_BASE_A = new Message("colors.baseA");
-	public static final Message COL_BASE_B = new Message("colors.baseB");
-	public static final Message COL_ROADMAP = new Message("colors.roadmap");
-	public static final Message COL_NODE = new Message("colors.node");
-	public static final Message COL_EDGE = new Message("colors.edge");
+	// #6569eb = default blue
+	// #8f65eb = default purple
+	// #8265eb = roadmap
 
 
+	@MessageMeta("<#7b42f5>PathFinder</#7b42f5> <dark_gray>»</dark_gray> <gray>")
+	public static final Message PREFIX = new Message("prefix");
+	@MessageMeta("<#8f65eb>true</#8f65eb>")
 	public static final Message GEN_TRUE = new Message("general.true");
+	@MessageMeta("<#8f65eb>false</#8f65eb>")
 	public static final Message GEN_FALSE = new Message("general.false");
-	@MessageMeta(placeholders = {"x", "y", "z"})
+	@MessageMeta(value = "<#8f65eb><x><gray>,</gray> <y><gray>,</gray> <z></#8f65eb>", placeholders = {"x", "y", "z"})
 	public static final Message GEN_VECTOR = new Message("general.vector");
+	@MessageMeta(value = "<#8f65eb><namespace><gray>:</gray><key></#8f65eb>", placeholders = {"namespace", "key"})
 	public static final Message GEN_KEY = new Message("general.key");
+	@MessageMeta(value = "<#6569eb><permission></#6569eb>", placeholders = "permission")
 	public static final Message GEN_PERMISSION = new Message("general.permission");
+	@MessageMeta(value = "<#6569eb>null</#6569eb>")
 	public static final Message GEN_NULL = new Message("general.null");
+	@MessageMeta("<green>Accept</green>")
+	public static final Message GEN_GUI_ACCEPT_N = new Message("general.gui.accept.name");
+	public static final Message GEN_GUI_ACCEPT_L = new Message("general.gui.accept.lore");
+	@MessageMeta("<yellow>Warning")
+	public static final Message GEN_GUI_WARNING_N = new Message("general.gui.warning.name");
+	public static final Message GEN_GUI_WARNING_L = new Message("general.gui.warning.lore");
 
+	public static final Message ERROR_PARSE_STRING = new Message("error.parse.string");
+	public static final Message ERROR_PARSE_INTEGER = new Message("error.parse.integer");
+	public static final Message ERROR_PARSE_DOUBLE = new Message("error.parse.double");
+	public static final Message ERROR_PARSE_PERCENT = new Message("error.parse.percent");
+	public static final Message ERROR_PARSE_KEY = new Message("error.parse.namespaced_key");
+
+	@MessageMeta(placeholders = "error")
+	public static final Message RELOAD_ERROR = new Message("command.reload.error");
+	@MessageMeta(value = "<ins:prefix>Successfully reloaded in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
+	public static final Message RELOAD_SUCCESS = new Message("command.reload.success");
 
 	@MessageMeta(value = """
-			Roadmap: <name> (#<id>)
-			<col:colors.background>» <col:colors.default>Name: <hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename #<id> <new name>><name></click></hover>
-			<col:colors.background>» <col:colors.default>World: <col:colors.baseA><hover:show_text:"Click to change world"><click:suggest_command:/roadmap setworld #<id> <new world>><world></click></hover>
-			<col:colors.background>» <col:colors.default>Findable: <col:colors.baseA><hover:show_text:"Click to change findable state"><click:suggest_command:/roadmap set findable #<id> true|false><findable></click></hover>
-			<col:colors.background>» <col:colors.default>Find Distance: <col:colors.baseA><hover:show_text:"Click to change find distance"><click:suggest_command:/roadmap set find-distance #<id> <distance>><find-distance></click></hover>
-			<col:colors.background>» <col:colors.baseB>Particles:
-			<col:colors.background>  » <col:colors.default>Curve length: <col:colors.baseA><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length #<id> <curve-length>><find-distance></click></hover>
-			<col:colors.background>  » <col:colors.default>Particles: <col:colors.baseA><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer #<id> <pre><path-visualizer></pre>><path-visualizer></click></hover>
-			<col:colors.background>  » <col:colors.default>Edit Particles: <col:colors.baseA><hover:show_text:"Click to change editmode-visualizer"><click:suggest_command:/roadmap set editmode-visualizer #<id> <pre><editmode-visualizer></pre>><editmode-visualizer></click></hover>
-			""", placeholders = {"name", "id", "world", "findable", "find-distance", "curve-length", "path-visualizer", "editmode-visualizer"})
-	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info.header");
-	@MessageMeta("<msg:prefix><col:colors.roadmap>Roadmap <col:colors.default>selected: <name>")
+			<#7b42f5>Roadmap:</7b42f5> <name> <gray>(<id>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>World: <#6569eb><hover:show_text:"Click to change world"><click:suggest_command:/roadmap setworld <id> [new world]><world></click></hover>
+			<dark_gray>» </dark_gray><gray>Findable: <#6569eb><hover:show_text:"Click to change findable state"><click:suggest_command:/roadmap set findable <id> true|false><findable></click></hover>
+			<dark_gray>» </dark_gray><gray>Find Distance: <#6569eb><hover:show_text:"Click to change find distance"><click:suggest_command:/roadmap set find-distance <id> [distance]><find-distance></click></hover>
+			<#8265eb>Particles:</#8265eb>
+			<dark_gray>  » </dark_gray><gray>Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
+			<dark_gray>  » </dark_gray><gray>Particles: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
+			""", placeholders = {"name", "id", "name-format", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
+	@MessageMeta("<msg:prefix><#8265eb>Roadmap</#8265eb> <gray>selected: <name>")
 	public static final Message CMD_RM_SELECT = new Message("commands.roadmap.select");
-	@MessageMeta("<msg:prefix><col:colors.roadmap>Roadmap <col:colors.default>deselected.")
+	@MessageMeta("<msg:prefix><#8265eb>Roadmap</#8265eb> <gray>deselected.")
 	public static final Message CMD_RM_DESELECT = new Message("commands.roadmap.deselect");
-	@MessageMeta("<col:colors.severe>Could not create Roadmap. Check out console for details.")
+	@MessageMeta("<red>Could not create Roadmap. Check out console for details.")
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
-	@MessageMeta(value = "<col:prefix>Successfully created Roadmap <name>.", placeholders = "name")
+	@MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <#8265eb><name></#8265eb>.</gray>", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
-	@MessageMeta(placeholders = "roadmap")
+	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Roadmap <#8265eb><roadmap></#8265eb>.</gray>", placeholders = "roadmap")
 	public static final Message CMD_RM_DELETE = new Message("commands.roadmap.delete");
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
+			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
+	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
+			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
+	@MessageMeta(value = "<gray>» </gray><name> <gray>(<id>)</gray> <white><i>Selected</i></white>",
+			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_SELECTED = new Message("commands.roadmap.list.entry_selected");
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
+			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
+	@MessageMeta("<red>No roadmap found. Create a new roadmap with <click:suggest_command:/roadmap create>/roadmap create <pre><key></pre></click>.")
 	public static final Message CMD_RM_EM_CREATE = new Message("commands.roadmap.editmode.create_new");
-	@MessageMeta(placeholders = "roadmap")
+	@MessageMeta(value = "<msg:prefix><gray>Nearest <#8265eb>roadmap</#8265eb> <roadmap> selected.</gray>", placeholders = "roadmap")
 	public static final Message CMD_RM_EM_SELECTED = new Message("commands.roadmap.editmode.selected");
+	@MessageMeta(value = "<red>You have to select a <#8265eb>roadmap</#8265eb> first.")
 	public static final Message CMD_RM_EM_SELECT = new Message("commands.roadmap.editmode.select");
-	@MessageMeta(placeholders = {"roadmap", "value"})
-	public static final Message CMD_RM_EM_TOGGLED = new Message("commands.roadmap.editmode.toggled");
-	@MessageMeta(value = "<col:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
+	@MessageMeta(value = "<ins:prefix>Editmode activated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
+	public static final Message CMD_RM_EM_ACTIVATED = new Message("commands.roadmap.editmode.activated");
+	@MessageMeta(value = "<ins:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
-	@MessageMeta(placeholders = {"name", "selection"})
+	@MessageMeta(value = "<msg:prefix>Player <name> forgot about <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
+	@MessageMeta(value = "<red>This roadmap is currently being edited. Try again later.")
+	public static final Message CMD_RM_CURRENTLY_EDITED = new Message("commands.roadmap.currently_edited");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set world for <#8265eb><roadmap></#8265eb> to <#8f65eb><world></#8f65eb></gray>.",
+			placeholders = {"roadmap", "world"})
+	public static final Message CMD_RM_SET_WORLD = new Message("commands.roadmap.set_world");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set name for <#8265eb><roadmap></#8265eb> to <display-name>. (<pre><name-format></pre>)</gray>",
+			placeholders = {"roadmap", "name-format", "display-name"})
+	public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set curve length for <#8265eb><roadmap></#8265eb> to <#8f65eb><value></#8f65eb>",
+			placeholders = {"roadmap", "value"})
+	public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curved");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set visualizer for <#8265eb><roadmap></#8265eb> to <#8f65eb><visualizer></#8f65eb>.</gray>",
+			placeholders = {"roadmap", "visualizer"})
+	public static final Message CMD_RM_SET_VISUALIZER = new Message("commands.roadmap.set_visualizer");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set find distance for <#8265eb><roadmap></#8265eb> to <#8f65eb><value></#8f65eb>.</gray>",
+			placeholders = {"roadmap", "value"})
+	public static final Message CMD_RM_SET_FIND_DIST = new Message("commands.roadmap.set_find_distance.success");
+	@MessageMeta(value = "<red>Find distance '<value>' is too small. Try again.",
+			placeholders = {"roadmap", "value"})
+	public static final Message CMD_RM_SET_FIND_DIST_TOO_SMALL = new Message("commands.roadmap.set_find_distance.too_small");
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set findable = '<#8f65eb><value></#8f65eb>' for <#8265eb><roadmap></#8265eb>.</gray>",
+			placeholders = {"roadmap", "value"})
+	public static final Message CMD_RM_SET_FINDABLE = new Message("commands.roadmap.set_findable");
 
-	@MessageMeta(value = "<col:prefix>Successfully created Node <name>.", placeholders = "name")
+	@MessageMeta(value = "<ins:prefix>Successfully created Node <name>.", placeholders = "name")
 	public static final Message CMD_N_CREATE = new Message("commands.node.create");
 	@MessageMeta(placeholders = "selection")
 	public static final Message CMD_N_DELETE = new Message("commands.node.delete");
@@ -114,14 +166,39 @@ public class Messages {
 	public static final Message CMD_NG_SET_NAME = new Message("commands.node_group.set_name");
 	@MessageMeta(placeholders = {"name", "value"})
 	public static final Message CMD_NG_SET_FINDABLE = new Message("commands.node_group.set_findable");
-	@MessageMeta(value = "<col:prefix>Search terms for <name>:\n<col:colors.background>»<values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<ins:colors.background>»<values>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_LIST = new Message("commands.node_group.terms.list");
-	@MessageMeta(value = "<col:prefix>Successfully added search terms to <name>: <values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully added search terms to <name>: <values>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_ADD = new Message("commands.node_group.terms.add");
-	@MessageMeta(value = "<col:prefix>Successfully removed search terms from <name>: <values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <values>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
+
+	public static final Message E_NODE_TOOL_N = new Message("editor.toolbar.node_tool.name");
+	public static final Message E_NODE_TOOL_L = new Message("editor.toolbar.node_tool.lore");
+	public static final Message E_EDGE_TOOL_N = new Message("editor.toolbar.edge_tool.name");
+	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
+	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
+	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
+	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");
+	public static final Message E_LAST_GROUP_TOOL_N = new Message("editor.toolbar.last_group_tool.name");
+	public static final Message E_LAST_GROUP_TOOL_L = new Message("editor.toolbar.last_group_tool.lore");
+	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");
+	public static final Message E_CURVE_TOOL_L = new Message("editor.toolbar.curve_tool.lore");
+	public static final Message E_PERM_TOOL_N = new Message("editor.toolbar.permission_tool.name");
+	public static final Message E_PERM_TOOL_L = new Message("editor.toolbar.permission_tool.lore");
+	public static final Message E_NAME_TOOL_N = new Message("editor.toolbar.rename_tool.name");
+	public static final Message E_NAME_TOOL_L = new Message("editor.toolbar.rename_tool.lore");
+	public static final Message E_TP_TOOL_N = new Message("editor.toolbar.teleport_tool.name");
+	public static final Message E_TP_TOOL_L = new Message("editor.toolbar.teleport_tool.lore");
+	public static final Message E_SUB_GROUP_NEW_N = new Message("editor.groups.new.name");
+	public static final Message E_SUB_GROUP_NEW_L = new Message("editor.groups.new.lore");
+	public static final Message E_SUB_GROUP_RESET_N = new Message("editor.groups.reset.name");
+	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");
+	public static final Message E_SUB_GROUP_ENTRY_N = new Message("editor.groups.entry.name");
+	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
+
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;

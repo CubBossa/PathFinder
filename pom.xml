@@ -29,6 +29,72 @@
                     <target>16</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactSet>
+                        <includes>
+                            <include>co.aikar:acf-bukkit</include>
+                            <include>net.kyori:**</include>
+                            <include>com.github.CubBossa.MenuFramework:MenuFramework</include>
+                            <include>de.cubbossa:MenuFramework</include>
+                            <include>de.cubbossa:Translations</include>
+                            <include>de.cubbossa:SplineLib</include>
+                            <include>org.bstats</include>
+                            <include>xyz.xenondevs:particle</include>
+                            <include>org.jgrapht:jgrapht-core</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>co.aikar.commands</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.acf</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>co.aikar.locales</pattern>
+                            <shadedPattern>de.bossascrew.pathfinder.locales</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.kyori</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.kyori</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.cubbossa.menuframework</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.gui</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.cubbossa.translations</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.translations</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.bossascrew.splinelib</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.splinelib</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>xyz.xenondevs.particle</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.particle</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.jgrapht</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.graphs</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -64,6 +130,11 @@
             <id>maven-snapshots</id>
             <url>http://oss.sonatype.org/content/repositories/snapshots</url>
             <layout>default</layout>
+        </repository>
+
+        <repository>
+            <id>minecraft-repo</id>
+            <url>https://libraries.minecraft.net/</url>
         </repository>
     </repositories>
 
@@ -166,6 +237,12 @@
             <groupId>de.cubbossa</groupId>
             <artifactId>SplineLib</artifactId>
             <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>authlib</artifactId>
+            <version>1.5.21</version>
         </dependency>
     </dependencies>
 </project>

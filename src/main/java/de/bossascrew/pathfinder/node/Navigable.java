@@ -1,12 +1,10 @@
 package de.bossascrew.pathfinder.node;
 
-import net.kyori.adventure.text.Component;
+import de.bossascrew.pathfinder.Named;
 
 import java.util.Collection;
 
-public interface Navigable {
-
-	Component getDisplayName();
+public interface Navigable extends Named {
 
 	Collection<String> getSearchTerms();
 }

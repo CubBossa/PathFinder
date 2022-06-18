@@ -1,14 +1,13 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.visualizer.ParticlePath;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.handler.PathPlayerHandler;
-import de.bossascrew.pathfinder.handler.VisualizerHandler;
-import de.bossascrew.pathfinder.listener.PlayerListener;
-import de.bossascrew.pathfinder.node.*;
+import de.bossascrew.pathfinder.node.Findable;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.PlayerNode;
+import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.visualizer.ParticlePath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -18,9 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
@@ -28,9 +25,7 @@ public class PathPlayer {
 
     private final UUID uuid;
 
-    private final Map<Integer, FoundInfo> foundNodes;
-    private final Map<Integer, FoundInfo> foundGroups;
-
+    private final Map<NamespacedKey, FoundInfo> foundFindables;
     private final Map<NamespacedKey, ParticlePath> activePaths;
 
     @Nullable
@@ -46,8 +41,7 @@ public class PathPlayer {
         this.uuid = uuid;
         this.activePaths = new HashMap<>();
 
-        foundNodes = new HashMap<>();
-        foundGroups = new HashMap<>();
+        foundFindables = new HashMap<>();
     }
 
     public void find(Findable findable, boolean group, Date date) {
@@ -59,30 +53,17 @@ public class PathPlayer {
     }
 
     public boolean hasFound(Findable findable) {
-
+        return true;
     }
 
     /**
      * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
      */
     public int getFoundAmount(RoadMap roadMap) {
-        Collection<Integer> ids = roadMap.getNodes().stream()
-                .filter(f -> f.getGroup() == null)
-                .filter(this::hasFound)
-                .map(Waypoint::getNodeId)
-                .collect(Collectors.toSet());
-        Collection<Integer> counts = foundGroups.values().stream()
-                .map(fi -> roadMap.getNodeGroup(fi.getFoundId()))
-                .filter(Objects::nonNull)
-                .filter(NodeGroup::isFindable)
-                .map(g -> g.getFindables().size())
-                .collect(Collectors.toList());
-
-        int count = 0;
-        for (int i : counts) {
-            count += i;
-        }
-        return ids.size() + count;
+        return (int) foundFindables.values().stream()
+                .filter(foundInfo -> foundInfo.found().getRoadMapKey().equals(roadMap.getKey()))
+                .filter(foundInfo -> !(foundInfo.found() instanceof Node node) || node.getGroupKey() == null)
+                .count();
     }
 
     public void setPath(Waypoint targetNode) {
@@ -99,7 +80,9 @@ public class PathPlayer {
             return;
         }
         final PlayerNode playerNode = new PlayerNode(player, target.getRoadMap());
-        PluginUtils.getInstance().runAsync(() -> AStarUtils.startPath(pathPlayer, playerNode, target, false));
+        CompletableFuture.runAsync(() -> {
+            //TODO find path
+        });
     }
 
     public void setPath(@NotNull ParticlePath path) {
@@ -110,9 +93,12 @@ public class PathPlayer {
         path.run(uuid);
         activePaths.put(path.getRoadMap().getKey(), path);
 
+        /* TODO hä`?
         Map<Integer, AtomicBoolean> lock = PlayerListener.getHasFoundTarget().getOrDefault(uuid, new ConcurrentHashMap<>());
         lock.put(path.getRoadMap().getKey(), new AtomicBoolean(false));
         PlayerListener.getHasFoundTarget().put(uuid, lock);
+
+         */
     }
 
     public Collection<ParticlePath> getActivePaths() {
@@ -197,7 +183,7 @@ public class PathPlayer {
         selectedRoadMap = null;
     }
 
-    public void setVisualizer(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+    /*public void setVisualizer(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
         Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().getOrDefault(globalPlayerId, new HashMap<>());
         if (map.containsKey(roadMap.getKey())) {
             SqlStorage.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, simpleCurveVisualizer);
@@ -215,12 +201,12 @@ public class PathPlayer {
     public SimpleCurveVisualizer getVisualizer(RoadMap roadMap) {
         Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().get(globalPlayerId);
         if (map == null) {
-            return roadMap.getSimpleCurveVisualizer();
+            return roadMap.getVisualizer();
         }
         Integer id = map.get(roadMap.getKey());
         if (id == null) {
-            return roadMap.getSimpleCurveVisualizer();
+            return roadMap.getVisualizer();
         }
         return VisualizerHandler.getInstance().getPathVisualizer(id);
-    }
+    }*/
 }

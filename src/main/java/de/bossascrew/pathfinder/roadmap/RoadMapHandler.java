@@ -8,9 +8,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.Collection;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,7 +45,7 @@ public class RoadMapHandler {
 	}
 
 	public RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes) {
-		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, StringUtils.getRandHexString() + "A Roadmap", world, findableNodes);
+		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()), world, findableNodes);
 		roadMaps.put(rm);
 		return rm;
 	}
