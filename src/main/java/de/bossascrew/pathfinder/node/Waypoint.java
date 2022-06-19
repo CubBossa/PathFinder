@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.node;
 
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,9 +40,14 @@ public class Waypoint implements Node, Findable, Navigable {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapKey = roadMap.getKey();
-		this.nameFormat = nameFormat;
+		this.setNameFormat(nameFormat);
 
 		edges = new ArrayList<>();
+	}
+
+	public void setNameFormat(String nameFormat) {
+		this.nameFormat = nameFormat;
+		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
 	@Override

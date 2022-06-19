@@ -2,6 +2,8 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.events.node.NodeCreatedEvent;
+import de.bossascrew.pathfinder.events.node.NodeDeletedEvent;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -84,12 +86,15 @@ public class RoadMap implements Keyed {
 		return createNode(vector, name, null, null);
 	}
 
-	public Waypoint createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
+	public @Nullable
+	Waypoint createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
 
 		Waypoint node = PathPlugin.getInstance().getDatabase().createNode(this, Waypoint.class, null,
 				vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
 
 		addNode(node);
+		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
+
 		return node;
 	}
 
@@ -120,6 +125,8 @@ public class RoadMap implements Keyed {
 
 		nodes.remove(node.getNodeId());
 		PathPlugin.getInstance().getDatabase().deleteNode(node.getNodeId());
+
+		Bukkit.getPluginManager().callEvent(new NodeDeletedEvent(node));
 	}
 
 	public void addNode(Node node) {

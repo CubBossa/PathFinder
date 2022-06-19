@@ -55,7 +55,8 @@ public class EditModeMenu {
                     Player p = context.getPlayer();
                     roadMap.removeNode(context.getTarget());
                     p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
-                }).withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
+                })
+                .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
                     String name = lastNamed;
                     Matcher matcher = LAST_INT_PATTERN.matcher(name);
                     if (matcher.find()) {
@@ -65,8 +66,10 @@ public class EditModeMenu {
 
                     openNodeNameMenu(context.getPlayer(), name, s -> {
                         Node node = roadMap.createNode((context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
-                        node.setGroupKey(lastGroup);
-                        lastNode = node;
+                        if (node != null) {
+                            node.setGroupKey(lastGroup);
+                            lastNode = node;
+                        }
                     });
                 }));
 
@@ -114,7 +117,7 @@ public class EditModeMenu {
                 }));
 
 
-        menu.setButton(7, Button.builder()
+        menu.setButton(8, Button.builder()
                 .withItemStack(EditmodeUtils.TP_TOOL)
                 .withClickHandler(context -> {
                     double dist = -1;
@@ -135,6 +138,12 @@ public class EditModeMenu {
                     p.teleport(newLoc);
                     p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
                 }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
+
+        menu.setButton(7, Button.builder()
+                .withItemStack(EditmodeUtils.RENAME_TOOL)
+                .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
+                    openNodeNameMenu(context.getPlayer(), context.getTarget().getNameFormat(), string -> context.getTarget().setNameFormat(string));
+                }));
 
         menu.setButton(5, Button.builder()
                 .withItemStack(EditmodeUtils.CURVE_TOOL)

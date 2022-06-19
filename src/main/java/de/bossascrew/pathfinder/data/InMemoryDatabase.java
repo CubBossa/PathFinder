@@ -88,7 +88,7 @@ public class InMemoryDatabase implements DataStorage {
 		node.setPosition(new Vector(x, y, z));
 		node.setBezierTangentLength(tangentLength);
 		node.setPermission(permission);
-		log("Delete Node");
+		log("Create Node");
 		return node;
 	}
 

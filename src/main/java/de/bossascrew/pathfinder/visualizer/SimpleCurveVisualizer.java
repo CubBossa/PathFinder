@@ -1,7 +1,6 @@
 package de.bossascrew.pathfinder.visualizer;
 
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.events.internal.SimpleCurveVisualizerUpdate;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.util.GameAction;
 import de.bossascrew.splinelib.util.Spline;
@@ -35,12 +34,9 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 	private Integer schedulerPeriod = 10;
 	private double tangentLength = 3;
 
-	protected final GameAction<SimpleCurveVisualizerUpdate> updateParticle;
-
 	public SimpleCurveVisualizer(NamespacedKey key, String nameFormat) {
 		this.key = key;
 		setNameFormat(nameFormat);
-		updateParticle = new GameAction<>();
 	}
 
 	public void setNameFormat(String nameFormat) {

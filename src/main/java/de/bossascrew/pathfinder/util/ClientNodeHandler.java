@@ -38,8 +38,8 @@ public class ClientNodeHandler {
 
 	public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
 	public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
-	public static final Action<TargetContext<Node>> RIGHT_CLICK_EDGE = new Action<>();
-	public static final Action<TargetContext<Node>> LEFT_CLICK_EDGE = new Action<>();
+	public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
+	public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
 	private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
@@ -57,13 +57,16 @@ public class ClientNodeHandler {
 	private static int entityId = 10_000;
 	private final ProtocolManager protocolManager;
 
-	private ItemStack nodeHead;
-	private ItemStack edgeHead;
+	private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
+	private ItemStack nodeGroupHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_BLUE);
+	private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
 	private final Map<Pair<Integer, Integer>, Collection<Node>> chunkNodeMap;
 	private final Map<Pair<Integer, Integer>, Collection<Edge>> chunkEdgeMap;
 	private final Map<Node, Integer> nodeEntityMap;
+	private final Map<Integer, Node> entityNodeMap;
 	private final Map<Edge, Integer> edgeEntityMap;
+	private final Map<Integer, Edge> entityEdgeMap;
 
 	public ClientNodeHandler(JavaPlugin plugin) {
 		entityId = Bukkit.getWorlds().stream().mapToInt(w -> w.getEntities().stream().mapToInt(Entity::getEntityId).max().orElse(0)).max().orElse(0) + 10_000;
@@ -72,7 +75,9 @@ public class ClientNodeHandler {
 		chunkNodeMap = new HashMap<>();
 		chunkEdgeMap = new HashMap<>();
 		nodeEntityMap = new HashMap<>();
+		entityNodeMap = new TreeMap<>();
 		edgeEntityMap = new HashMap<>();
+		entityEdgeMap = new TreeMap<>();
 
 		protocolManager.addPacketListener(new PacketAdapter(plugin,
 				ListenerPriority.NORMAL,
@@ -95,6 +100,36 @@ public class ClientNodeHandler {
 				}
 			}
 		});
+
+		protocolManager.addPacketListener(new PacketAdapter(plugin,
+				ListenerPriority.NORMAL,
+				PacketType.Play.Client.USE_ENTITY) {
+
+			@Override
+			public void onPacketReceiving(PacketEvent event) {
+				PacketContainer packet = event.getPacket();
+				int entityId = packet.getIntegers().read(0);
+
+				boolean left = packet.getEnumEntityUseActions().read(0).getAction().equals(EnumWrappers.EntityUseAction.ATTACK);
+				if (entityNodeMap.containsKey(entityId)) {
+					Node node = entityNodeMap.get(entityId);
+					if (node == null) {
+						throw new IllegalStateException("ClientNodeHandler Tables off sync!");
+					}
+					event.setCancelled(true);
+					System.out.println((left ? "Hit" : "Clicked") + " node");
+					//TODO call hotbar menu action
+				}
+				if (entityEdgeMap.containsKey(entityId)) {
+					Edge edge = entityEdgeMap.get(entityId);
+					if (edge == null) {
+						throw new IllegalStateException("ClientNodeHandler Tables off sync!");
+					}
+					event.setCancelled(true);
+					//TODO call hotbar menu action
+				}
+			}
+		});
 	}
 
 	public void showNodes(Collection<Node> nodes, Player player) {
@@ -105,11 +140,13 @@ public class ClientNodeHandler {
 
 	public void showNode(Node node, Player player) {
 		Location location = node.getLocation();
-		int id = spawnArmorstand(player, location);
-		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, null, nodeHead});
-		setupMeta(player, id, GSON.serialize(node.getDisplayName()), false);
+		int id = spawnArmorstand(player, location, node.getDisplayName());
+		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node.getGroupKey() != null ? nodeGroupHead : nodeSingleHead});
+
 		nodeEntityMap.put(node, id);
-		var key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
+		entityNodeMap.put(id, node);
+
+		Pair<Integer, Integer> key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
 		Collection<Node> inner = chunkNodeMap.getOrDefault(key, new HashSet<>());
 		inner.add(node);
 		chunkNodeMap.put(key, inner);
@@ -134,13 +171,15 @@ public class ClientNodeHandler {
 		Vector pos = edge.getStart().getPosition().clone().add(
 				edge.getEnd().getPosition().subtract(edge.getStart().getPosition()).multiply(.5f));
 		Location location = pos.toLocation(RoadMapHandler.getInstance().getRoadMap(edge.getStart().getRoadMapKey()).getWorld());
-		int id = spawnArmorstand(player, location);
-		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, null, edgeHead});
-		setupMeta(player, id, GSON.serialize(edge.getStart().getDisplayName()
-								.append(Component.text(undirected ? " <-> " : " -> "))
-								.append(edge.getEnd().getDisplayName())), true);
+		int id = spawnArmorstand(player, location, edge.getStart().getDisplayName()
+				.append(Component.text(undirected ? " <-> " : " -> "))
+				.append(edge.getEnd().getDisplayName()));
+		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, edgeHead});
+
 		edgeEntityMap.put(edge, id);
-		var key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
+		entityEdgeMap.put(id, edge);
+
+		Pair<Integer, Integer> key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
 		Collection<Edge> inner = chunkEdgeMap.getOrDefault(key, new HashSet<>());
 		inner.add(edge);
 		chunkEdgeMap.put(key, inner);
@@ -148,7 +187,10 @@ public class ClientNodeHandler {
 
 	public void hideNodes(Collection<Node> nodes, Player player) {
 		removeArmorstand(player, nodes.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
+
 		nodes.forEach(nodeEntityMap::remove);
+		new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodes.contains(e.getValue())).map(Map.Entry::getKey).forEach(entityNodeMap::remove);
+
 		nodes.forEach(node -> chunkNodeMap.remove(new Pair<>((int) node.getPosition().getX() / 16, (int) node.getPosition().getZ() / 16)));
 	}
 
@@ -181,7 +223,7 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public int spawnArmorstand(Player player, Location location) {
+	public int spawnArmorstand(Player player, Location location, Component name) {
 
 		int entityId = ClientNodeHandler.entityId++;
 
@@ -198,14 +240,14 @@ public class ClientNodeHandler {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		setupMeta(player, entityId, "Hugobert", true);
+		setupMeta(player, entityId, name, true);
 		return entityId;
 	}
 
-	private void setupMeta(Player player, int id, String nameJson, boolean small) {
+	private void setupMeta(Player player, int id, Component name, boolean small) {
 		WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),
-				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(Component.text(nameJson))).getHandle()));
+				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_FLAGS, WrappedDataWatcher.Registry.get(Byte.class)), META_FLAG_INVISIBLE);
 		if (small) {
@@ -258,10 +300,10 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public void renameArmorstand(Player player, Integer id, String nameJson) {
+	public void renameArmorstand(Player player, Integer id, Component name) {
 		WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),
-				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(Component.text(nameJson))).getHandle()));
+				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);
 		sendMeta(player, id, dataWatcher);
 	}

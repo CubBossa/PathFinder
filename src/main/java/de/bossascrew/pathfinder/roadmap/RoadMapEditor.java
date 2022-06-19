@@ -1,11 +1,14 @@
 package de.bossascrew.pathfinder.roadmap;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.events.node.NodeCreatedEvent;
+import de.bossascrew.pathfinder.events.node.NodeDeletedEvent;
 import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
+import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import lombok.Getter;
@@ -13,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
@@ -27,7 +33,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class RoadMapEditor implements Keyed {
+public class RoadMapEditor implements Keyed, Listener {
 
 	private final NamespacedKey key;
 	private final RoadMap roadMap;
@@ -51,6 +57,12 @@ public class RoadMapEditor implements Keyed {
 		this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
 		this.editingPlayers = new HashMap<>();
 		this.preservedGameModes = new HashMap<>();
+
+		Bukkit.getPluginManager().registerEvents(this, PathPlugin.getInstance());
+	}
+
+	public void dispose() {
+		HandlerList.unregisterAll(this);
 	}
 
 	public boolean isEdited() {
@@ -191,5 +203,15 @@ public class RoadMapEditor implements Keyed {
 						.collect(Collectors.toSet())));
 			}
 		});
+	}
+
+	@EventHandler
+	public void onNodeCreated(NodeCreatedEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> armorstandHandler.showNode(event.getNode(), player));
+	}
+
+	@EventHandler
+	public void onNodeDeleted(NodeDeletedEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> armorstandHandler.hideNodes(Lists.newArrayList(event.getNode()), player));
 	}
 }
