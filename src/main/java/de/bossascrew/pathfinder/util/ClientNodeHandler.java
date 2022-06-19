@@ -15,6 +15,8 @@ import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.InvMenuHandler;
+import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import lombok.Getter;
 import lombok.Setter;
@@ -117,8 +119,11 @@ public class ClientNodeHandler {
 						throw new IllegalStateException("ClientNodeHandler Tables off sync!");
 					}
 					event.setCancelled(true);
-					System.out.println((left ? "Hit" : "Clicked") + " node");
-					//TODO call hotbar menu action
+					Player player = event.getPlayer();
+					int slot = player.getInventory().getHeldItemSlot();
+					Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
+					Action<TargetContext<Node>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
+					menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
 				}
 				if (entityEdgeMap.containsKey(entityId)) {
 					Edge edge = entityEdgeMap.get(entityId);
@@ -126,7 +131,11 @@ public class ClientNodeHandler {
 						throw new IllegalStateException("ClientNodeHandler Tables off sync!");
 					}
 					event.setCancelled(true);
-					//TODO call hotbar menu action
+					Player player = event.getPlayer();
+					int slot = player.getInventory().getHeldItemSlot();
+					Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
+					Action<TargetContext<Edge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
+					menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, edge));
 				}
 			}
 		});

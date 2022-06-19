@@ -175,21 +175,29 @@ public class Messages {
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
+	@MessageMeta("<white><u>Node Tool</u></white>")
 	public static final Message E_NODE_TOOL_N = new Message("editor.toolbar.node_tool.name");
 	public static final Message E_NODE_TOOL_L = new Message("editor.toolbar.node_tool.lore");
+	@MessageMeta("<white><u>Edge Tool</u></white>")
 	public static final Message E_EDGE_TOOL_N = new Message("editor.toolbar.edge_tool.name");
 	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
 	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
+	@MessageMeta("<white><u>Assign Group</u></white>")
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
 	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");
+	@MessageMeta("<white><u>Assign Last Group</u></white>")
 	public static final Message E_LAST_GROUP_TOOL_N = new Message("editor.toolbar.last_group_tool.name");
 	public static final Message E_LAST_GROUP_TOOL_L = new Message("editor.toolbar.last_group_tool.lore");
+	@MessageMeta("<white><u>Curve Tool</u></white>")
 	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");
 	public static final Message E_CURVE_TOOL_L = new Message("editor.toolbar.curve_tool.lore");
+	@MessageMeta("<white><u>Permission Tool</u></white>")
 	public static final Message E_PERM_TOOL_N = new Message("editor.toolbar.permission_tool.name");
 	public static final Message E_PERM_TOOL_L = new Message("editor.toolbar.permission_tool.lore");
+	@MessageMeta("<white><u>Naming Tool</u></white>")
 	public static final Message E_NAME_TOOL_N = new Message("editor.toolbar.rename_tool.name");
 	public static final Message E_NAME_TOOL_L = new Message("editor.toolbar.rename_tool.lore");
+	@MessageMeta("<white><u>Teleport Tool</u></white>")
 	public static final Message E_TP_TOOL_N = new Message("editor.toolbar.teleport_tool.name");
 	public static final Message E_TP_TOOL_L = new Message("editor.toolbar.teleport_tool.lore");
 	public static final Message E_SUB_GROUP_NEW_N = new Message("editor.groups.new.name");

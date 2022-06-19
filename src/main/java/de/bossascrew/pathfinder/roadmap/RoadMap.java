@@ -126,7 +126,7 @@ public class RoadMap implements Keyed {
 		nodes.remove(node.getNodeId());
 		PathPlugin.getInstance().getDatabase().deleteNode(node.getNodeId());
 
-		Bukkit.getPluginManager().callEvent(new NodeDeletedEvent(node));
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new NodeDeletedEvent(node)));
 	}
 
 	public void addNode(Node node) {
