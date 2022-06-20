@@ -2,6 +2,8 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.events.node.EdgeCreatedEvent;
+import de.bossascrew.pathfinder.events.node.EdgeDeletedEvent;
 import de.bossascrew.pathfinder.events.node.NodeCreatedEvent;
 import de.bossascrew.pathfinder.events.node.NodeDeletedEvent;
 import de.bossascrew.pathfinder.node.*;
@@ -197,6 +199,8 @@ public class RoadMap implements Keyed {
 		start.getEdges().add(edge);
 		edges.add(edge);
 
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeCreatedEvent(edge)));
+
 		return edge;
 	}
 
@@ -215,6 +219,8 @@ public class RoadMap implements Keyed {
 		edge.getStart().getEdges().remove(edge);
 		edge.getEnd().getEdges().remove(edge);
 		edges.remove(edge);
+
+		Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge));
 	}
 
 	public void delete() {

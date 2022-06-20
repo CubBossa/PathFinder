@@ -149,7 +149,7 @@ public class ClientNodeHandler {
 
 	public void showNode(Node node, Player player) {
 		Location location = node.getLocation();
-		int id = spawnArmorstand(player, location, node.getDisplayName());
+		int id = spawnArmorstand(player, location, node.getDisplayName(), false);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node.getGroupKey() != null ? nodeGroupHead : nodeSingleHead});
 
 		nodeEntityMap.put(node, id);
@@ -178,11 +178,11 @@ public class ClientNodeHandler {
 
 	public void showEdge(Edge edge, Player player, boolean undirected) {
 		Vector pos = edge.getStart().getPosition().clone().add(
-				edge.getEnd().getPosition().subtract(edge.getStart().getPosition()).multiply(.5f));
+				edge.getEnd().getPosition().clone().subtract(edge.getStart().getPosition()).multiply(.5f));
 		Location location = pos.toLocation(RoadMapHandler.getInstance().getRoadMap(edge.getStart().getRoadMapKey()).getWorld());
 		int id = spawnArmorstand(player, location, edge.getStart().getDisplayName()
 				.append(Component.text(undirected ? " <-> " : " -> "))
-				.append(edge.getEnd().getDisplayName()));
+				.append(edge.getEnd().getDisplayName()), true);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, edgeHead});
 
 		edgeEntityMap.put(edge, id);
@@ -208,17 +208,21 @@ public class ClientNodeHandler {
 		edges.forEach(edgeEntityMap::remove);
 		edges.forEach(edge -> {
 			Vector pos = edge.getStart().getPosition().clone().add(
-					edge.getEnd().getPosition().subtract(edge.getStart().getPosition()).multiply(.5f));
+					edge.getEnd().getPosition().clone().subtract(edge.getStart().getPosition()).multiply(.5f));
 			chunkNodeMap.remove(new Pair<>((int) pos.getX() / 16, (int) pos.getZ() / 16));
 		});
 	}
 
-	public void updateNodePosition(Node node, boolean updateEdges) {
+	public void updateNodePosition(Node node, Player player, boolean updateEdges) {
 
 	}
 
-	public void updateNodeName(Node node, boolean updateEdges) {
-
+	public void updateNodeName(Node node, Player player, boolean updateEdges) {
+		Integer entityId = nodeEntityMap.get(node);
+		if (entityId == null) {
+			return;
+		}
+		renameArmorstand(player, entityId, node.getDisplayName());
 	}
 
 	private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
@@ -232,8 +236,9 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public int spawnArmorstand(Player player, Location location, Component name) {
+	public int spawnArmorstand(Player player, Location location, Component name, boolean small) {
 
+		location = location.clone().add((small ? ARMORSTAND_CHILD_OFFSET : ARMORSTAND_OFFSET));
 		int entityId = ClientNodeHandler.entityId++;
 
 		PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.SPAWN_ENTITY);
@@ -249,7 +254,7 @@ public class ClientNodeHandler {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		setupMeta(player, entityId, name, true);
+		setupMeta(player, entityId, name, small);
 		return entityId;
 	}
 

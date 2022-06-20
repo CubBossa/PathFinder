@@ -4,8 +4,7 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
-import de.bossascrew.pathfinder.events.node.NodeCreatedEvent;
-import de.bossascrew.pathfinder.events.node.NodeDeletedEvent;
+import de.bossascrew.pathfinder.events.node.*;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
 import de.bossascrew.pathfinder.util.EditModeMenu;
@@ -17,6 +16,7 @@ import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.util.Vector;
@@ -176,6 +176,7 @@ public class RoadMapEditor implements Keyed, Listener {
 					undirected.put(edge, false);
 				}
 			}
+			System.out.println("Roadmap has " + roadMap.getEdges().size() + ", direct mapping: " + undirected.size());
 
 			Map<Color, List<Object>> packets = new HashMap<>();
 			Map<Color, ParticleBuilder> particles = new HashMap<>();
@@ -183,18 +184,19 @@ public class RoadMapEditor implements Keyed, Listener {
 			World world = roadMap.getWorld();
 			for (var entry : undirected.entrySet()) {
 				boolean directed = !entry.getValue();
+
 				Vector a = entry.getKey().getStart().getPosition();
 				Vector b = entry.getKey().getEnd().getPosition();
-				for (float i = 0; i < a.distance(b); i += particleDistance) {
-					Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i) : colorFrom;
+				double dist = a.distance(b);
+
+				for (float i = 0; i < dist; i += particleDistance) {
+					Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
 
 					ParticleBuilder builder = particles.computeIfAbsent(c, k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-
-					List<Object> inner = packets.getOrDefault(c, new ArrayList<>());
-					inner.add(builder.setLocation(LerpUtils.lerp(a, b, i).toLocation(world)).toPacket());
-					packets.put(c, inner);
+					packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(LerpUtils.lerp(a, b, i / dist).toLocation(world)).toPacket());
 				}
 			}
+			System.out.println("Starting task for " + particles.size() + " colors.");
 			for (var entry : packets.entrySet()) {
 				editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay, () -> editingPlayers.keySet().stream()
 						.map(Bukkit::getPlayer)
@@ -202,6 +204,9 @@ public class RoadMapEditor implements Keyed, Listener {
 						.filter(Player::isOnline)
 						.collect(Collectors.toSet())));
 			}
+		}).exceptionally(throwable -> {
+			throwable.printStackTrace();
+			return null;
 		});
 	}
 
@@ -211,7 +216,39 @@ public class RoadMapEditor implements Keyed, Listener {
 	}
 
 	@EventHandler
+	public void onEdgeCreated(EdgeCreatedEvent event) {
+		Edge e = event.getEdge();
+		Edge otherDirection = roadMap.getEdge(e.getEnd(), e.getStart());
+		boolean directed = otherDirection == null;
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
+			if (!directed) {
+				armorstandHandler.hideEdges(Lists.newArrayList(otherDirection), player);
+			}
+			armorstandHandler.showEdge(event.getEdge(), player, !directed);
+		});
+		updateEditModeParticles();
+	}
+
+	@EventHandler
 	public void onNodeDeleted(NodeDeletedEvent event) {
-		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> armorstandHandler.hideNodes(Lists.newArrayList(event.getNode()), player));
+		Collection<Edge> edges = roadMap.getEdges().stream().filter(edge -> edge.getEnd().equals(event.getNode())).collect(Collectors.toList());
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
+			armorstandHandler.hideEdges(edges, player);
+			armorstandHandler.hideNodes(Lists.newArrayList(event.getNode()), player);
+		});
+		updateEditModeParticles();
+	}
+
+	@EventHandler
+	public void onEdgesDeleted(EdgeDeletedEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				armorstandHandler.hideEdges(Lists.newArrayList(event.getEdge()), player));
+		updateEditModeParticles();
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onNodeRename(NodeRenameEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				armorstandHandler.updateNodeName(event.getNode(), player, true));
 	}
 }

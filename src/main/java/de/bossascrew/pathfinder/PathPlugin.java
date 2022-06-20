@@ -152,6 +152,7 @@ public class PathPlugin extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
 	}
 

@@ -81,4 +81,8 @@ public class RoadMapHandler {
 	public boolean isKeyUnique(NamespacedKey key) {
 		return !roadMaps.containsKey(key);
 	}
+
+	public void cancelAllEditModes() {
+		roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
+	}
 }

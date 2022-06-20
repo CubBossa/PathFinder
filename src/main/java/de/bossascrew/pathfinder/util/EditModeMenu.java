@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.events.node.NodeRenameEvent;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
@@ -81,7 +82,6 @@ public class EditModeMenu {
 
                     if (edgeStart == null) {
                         edgeStart = c.getTarget();
-                        c.getMenu().refresh(c.getSlot());
                     } else {
                         if (edgeStart.equals(c.getTarget())) {
                             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
@@ -93,10 +93,11 @@ public class EditModeMenu {
                         }
                         roadMap.connectNodes(edgeStart, c.getTarget());
                         edgeStart = null;
-                        c.getMenu().refresh(c.getSlot());
                     }
+                    c.getMenu().refresh(c.getSlot());
                     p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
-                }).withClickHandler(Action.RIGHT_CLICK_AIR, context -> {
+                })
+                .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
                     if (edgeStart == null) {
                         return;
                     }
@@ -106,11 +107,13 @@ public class EditModeMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
                     context.getMenu().refresh(context.getSlot());
 
-                }).withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
+                })
+                .withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
                     Player player = context.getPlayer();
-
+                    roadMap.disconnectNodes(context.getTarget());
                     player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
-                }).withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+                })
+                .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
                     Player player = context.getPlayer();
                     roadMap.disconnectNode(context.getTarget());
                     player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
@@ -142,7 +145,18 @@ public class EditModeMenu {
         menu.setButton(7, Button.builder()
                 .withItemStack(EditmodeUtils.RENAME_TOOL)
                 .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-                    openNodeNameMenu(context.getPlayer(), context.getTarget().getNameFormat(), string -> context.getTarget().setNameFormat(string));
+                    openNodeNameMenu(context.getPlayer(), context.getTarget().getNameFormat(), string -> {
+
+                        Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+
+                            NodeRenameEvent event = new NodeRenameEvent(context.getTarget(), string);
+                            Bukkit.getPluginManager().callEvent(event);
+                            if (event.isCancelled()) {
+                                return;
+                            }
+                            context.getTarget().setNameFormat(string);
+                        });
+                    });
                 }));
 
         menu.setButton(5, Button.builder()
