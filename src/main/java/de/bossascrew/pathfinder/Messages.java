@@ -182,6 +182,8 @@ public class Messages {
 	public static final Message E_EDGE_TOOL_N = new Message("editor.toolbar.edge_tool.name");
 	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
 	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
+	@MessageMeta(value = "<msg:prefix><gray>Edges directed: <#6569eb><value><#6569eb>", placeholders = "value")
+	public static final Message E_EDGE_TOOL_DIR_TOGGLE = new Message("editor.toolbar.edge_tool.directed");
 	@MessageMeta("<white><u>Assign Group</u></white>")
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
 	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");

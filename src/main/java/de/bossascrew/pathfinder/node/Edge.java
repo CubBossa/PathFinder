@@ -33,6 +33,10 @@ public class Edge implements Comparable<Edge> {
 		refreshCenter();
 	}
 
+	public double getWeightedLength() {
+		return start.getPosition().distance(end.getPosition()) * weightModifier;
+	}
+
 	private void refreshCenter() {
 		center = start.getPosition().clone().add(end.getPosition().clone().subtract(start.getPosition()).multiply(.5f));
 	}

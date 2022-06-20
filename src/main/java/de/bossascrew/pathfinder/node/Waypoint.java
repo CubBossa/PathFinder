@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.node;
 
+import com.google.common.collect.Sets;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
@@ -34,6 +35,7 @@ public class Waypoint implements Node, Findable, Navigable {
 	protected String permission = null;
 	@Nullable
 	protected Double bezierTangentLength = null;
+	//TODO necessary? More than 1 group per node instead?
 	protected Collection<String> searchTerms;
 
 	public Waypoint(int databaseId, RoadMap roadMap, @Nullable String nameFormat) {
@@ -88,12 +90,7 @@ public class Waypoint implements Node, Findable, Navigable {
 	}
 
 	@Override
-	public NamespacedKey getIdentifier() {
-		return new NamespacedKey(roadMapKey.getNamespace(), nodeId + "");
-	}
-
-	@Override
-	public Collection<Findable> getGrouped() {
-		return groupKey == null ? new HashSet<>() : roadMap.getNodeGroup(groupKey).getGrouped();
+	public Collection<Node> getGroup() {
+		return Sets.newHashSet(this);
 	}
 }

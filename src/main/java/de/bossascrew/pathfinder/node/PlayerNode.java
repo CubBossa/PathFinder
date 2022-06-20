@@ -30,6 +30,11 @@ public class PlayerNode implements Node {
     }
 
     @Override
+    public Collection<Node> getGroup() {
+        return new HashSet<>();
+    }
+
+    @Override
     public int getNodeId() {
         return -1;
     }
@@ -71,15 +76,7 @@ public class PlayerNode implements Node {
 
     @Override
     public Collection<Edge> getEdges() {
-
-        RoadMap roadMap;
-
-        // score for each node of nearest 10.
-        // score = dist / (blocksInWay² + 1)
-
-        Vector pos = player.getLocation().toVector();
-
-        return null;
+        return new HashSet<>();
     }
 
     @Override

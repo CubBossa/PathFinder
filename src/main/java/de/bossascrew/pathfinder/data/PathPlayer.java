@@ -61,7 +61,7 @@ public class PathPlayer {
      */
     public int getFoundAmount(RoadMap roadMap) {
         return (int) foundFindables.values().stream()
-                .filter(foundInfo -> foundInfo.found().getRoadMapKey().equals(roadMap.getKey()))
+                .filter(foundInfo -> foundInfo.found().getRoadMap().equals(roadMap))
                 .filter(foundInfo -> !(foundInfo.found() instanceof Node node) || node.getGroupKey() == null)
                 .count();
     }

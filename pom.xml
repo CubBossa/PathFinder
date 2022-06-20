@@ -127,12 +127,6 @@
         </repository>
 
         <repository>
-            <id>maven-snapshots</id>
-            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-            <layout>default</layout>
-        </repository>
-
-        <repository>
             <id>minecraft-repo</id>
             <url>https://libraries.minecraft.net/</url>
         </repository>

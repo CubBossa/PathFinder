@@ -30,7 +30,7 @@ public class ParticlePath extends ArrayList<Node> {
     private BukkitTask task;
     private final List<Location> calculatedPoints;
 
-    public ParticlePath(RoadMap roadMap, UUID playerUuid, SimpleCurveVisualizer visualizer) {
+    public ParticlePath(RoadMap roadMap, UUID playerUuid, PathVisualizer visualizer) {
         this.roadMap = roadMap;
         this.playerUuid = playerUuid;
         this.active = false;
@@ -43,7 +43,7 @@ public class ParticlePath extends ArrayList<Node> {
 
         Spline spline = visualizer.makeSpline(path);
         List<Vector> curve = visualizer.interpolate(spline);
-        calculatedPoints.addAll(visualizer.transform(curve).stream().map(vector -> vector.toLocation(roadMap.getWorld())).collect(Collectors.toList()));
+        calculatedPoints.addAll(visualizer.transform(curve).stream().map(vector -> vector.toLocation(roadMap.getWorld())).toList());
     }
 
     public void run() {
@@ -58,8 +58,6 @@ public class ParticlePath extends ArrayList<Node> {
                 return;
             }
             this.active = true;
-
-            World world = roadMap.getWorld();
 
             task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
                 Player searching = Bukkit.getPlayer(uuid);

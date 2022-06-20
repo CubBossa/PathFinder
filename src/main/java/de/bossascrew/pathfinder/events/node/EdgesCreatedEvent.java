@@ -1,20 +1,24 @@
 package de.bossascrew.pathfinder.events.node;
 
 import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Node;
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 @Getter
-public class EdgeCreatedEvent extends Event {
+public class EdgesCreatedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
-	private final Edge edge;
+	private final Collection<Edge> edges;
 
-	public EdgeCreatedEvent(Edge edge) {
-		this.edge = edge;
+	public EdgesCreatedEvent(Edge... edges) {
+		this.edges = new HashSet<>();
+		this.edges.addAll(List.of(edges));
 	}
 
 	public HandlerList getHandlers() {

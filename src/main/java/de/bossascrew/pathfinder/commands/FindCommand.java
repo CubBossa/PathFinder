@@ -1,10 +1,53 @@
 package de.bossascrew.pathfinder.commands;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.Subcommand;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.node.*;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.visualizer.ParticlePath;
+import org.bukkit.entity.Player;
+import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
-@CommandAlias("finde|find")
+@CommandAlias("find|gps|navigate")
 public class FindCommand extends BaseCommand {
+
+	@Subcommand("location")
+	public void onFindSpot(Player player, NavigateSelection navigables) {
+
+		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
+
+		RoadMap roadMap = navigables.getRoadMap();
+		if (roadMap == null) {
+			return;
+		}
+
+		// Prepare graph:
+		// Every target node will be connected with a new introduced destination node.
+		// All new edges have the same weight. The shortest path can only cross a target node.
+		// Finally, take a sublist of the shortest path to exclude the destination.
+
+		PlayerNode playerNode = new PlayerNode(player, roadMap);
+		Graph<Node, Edge> graph = roadMap.toGraph(playerNode);
+
+		EmptyNode destination = new EmptyNode(roadMap);
+		graph.addVertex(destination);
+		navigables.stream().flatMap(x -> x.getGroup().stream()).distinct().forEach(n -> {
+			Edge e = new Edge(n, destination, 0);
+			graph.addEdge(n, destination, e);
+			graph.setEdgeWeight(e, 1);
+		});
+
+		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
+		ParticlePath particlePath = new ParticlePath(roadMap, player.getUniqueId(), roadMap.getVisualizer());
+		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
+		pathPlayer.setPath(particlePath);
+	}
+
 /*
     @CatchUnknown
     @HelpCommand

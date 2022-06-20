@@ -216,15 +216,17 @@ public class RoadMapEditor implements Keyed, Listener {
 	}
 
 	@EventHandler
-	public void onEdgeCreated(EdgeCreatedEvent event) {
-		Edge e = event.getEdge();
-		Edge otherDirection = roadMap.getEdge(e.getEnd(), e.getStart());
-		boolean directed = otherDirection == null;
-		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
-			if (!directed) {
-				armorstandHandler.hideEdges(Lists.newArrayList(otherDirection), player);
+	public void onEdgeCreated(EdgesCreatedEvent event) {
+		Collection<Edge> toHide = new HashSet<>();
+		for (Edge edge : event.getEdges()) {
+			Edge otherDirection = roadMap.getEdge(edge.getEnd(), edge.getStart());
+			if (otherDirection != null && !event.getEdges().contains(otherDirection)) {
+				toHide.add(otherDirection);
 			}
-			armorstandHandler.showEdge(event.getEdge(), player, !directed);
+		}
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
+			armorstandHandler.hideEdges(toHide, player);
+			armorstandHandler.showEdges(event.getEdges(), player);
 		});
 		updateEditModeParticles();
 	}
@@ -250,5 +252,11 @@ public class RoadMapEditor implements Keyed, Listener {
 	public void onNodeRename(NodeRenameEvent event) {
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
 				armorstandHandler.updateNodeName(event.getNode(), player, true));
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onTeleportNode(NodeTeleportEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				armorstandHandler.updateNodePosition(event.getNode(), player, true));
 	}
 }

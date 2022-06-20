@@ -46,10 +46,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
 	public static final String PERM_COMMAND_FIND_INFO = "pathfinder.command.find.info";
 	public static final String PERM_COMMAND_FIND_STYLE = "pathfinder.command.find.style";
-	public static final String PERM_COMMAND_FIND_ITEMS = "pathfinder.command.find.items";
 	public static final String PERM_COMMAND_FIND_LOCATIONS = "pathfinder.command.find.location";
-	public static final String PERM_COMMAND_FIND_QUESTS = "pathfinder.command.find.quest";
-	public static final String PERM_COMMAND_FIND_TRADERS = "pathfinder.command.find.trader";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
@@ -64,14 +61,6 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_PARAMETER = "@nodegroups_findable_parametered";
 	public static final String COMPLETE_FINDABLE_GROUPS_BY_SELECTION = "@nodegroups_findable_selection";
 	public static final String COMPLETE_FINDABLE_LOCATIONS = "@findable_locations";
-
-	public static final int COLOR_LIGHT_INT = 0x7F7FFF;
-	public static final int COLOR_DARK_INT = 0x5555FF;
-
-	public static final TextColor COLOR_LIGHT = TextColor.color(COLOR_LIGHT_INT);
-	public static final TextColor COLOR_DARK = TextColor.color(COLOR_DARK_INT);
-	public static final ChatColor CHAT_COLOR_LIGHT = ChatColor.of(new Color(COLOR_LIGHT_INT));
-	public static final ChatColor CHAT_COLOR_DARK = ChatColor.of(new Color(COLOR_DARK_INT));
 
 	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
 		@Override

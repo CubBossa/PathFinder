@@ -35,17 +35,12 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Findable {
     }
 
     @Override
-    public NamespacedKey getIdentifier() {
-        return key;
+    public RoadMap getRoadMap() {
+        return roadMap;
     }
 
     @Override
-    public NamespacedKey getRoadMapKey() {
-        return roadMap.getKey();
-    }
-
-    @Override
-    public Collection<Findable> getGrouped() {
-        return this.stream().filter(n -> n instanceof Findable).map(n -> (Findable) n).collect(Collectors.toList());
+    public Collection<Node> getGroup() {
+        return new HashSet<>(this);
     }
 }

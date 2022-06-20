@@ -2,10 +2,7 @@ package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.events.node.EdgeCreatedEvent;
-import de.bossascrew.pathfinder.events.node.EdgeDeletedEvent;
-import de.bossascrew.pathfinder.events.node.NodeCreatedEvent;
-import de.bossascrew.pathfinder.events.node.NodeDeletedEvent;
+import de.bossascrew.pathfinder.events.node.*;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -14,14 +11,12 @@ import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -47,7 +42,7 @@ public class RoadMap implements Keyed {
 	private PathVisualizer visualizer;
 
 	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer visualizer,
-				   double nodeFindDistance, double defaultBezierTangentLength) {
+	               double nodeFindDistance, double defaultBezierTangentLength) {
 
 		this.key = key;
 		this.setNameFormat(name);
@@ -80,8 +75,41 @@ public class RoadMap implements Keyed {
 		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this));
 	}
 
-	public Graph<Node, Edge> toGraph() {
-		return new DefaultDirectedGraph<>(Edge.class);
+	public Graph<Node, Edge> toGraph(PlayerNode player) {
+		Graph<Node, Edge> graph = new SimpleDirectedWeightedGraph<>(Edge.class);
+		nodes.values().forEach(graph::addVertex);
+		edges.forEach(e -> graph.addEdge(e.getStart(), e.getEnd(), e));
+		edges.forEach(e -> graph.setEdgeWeight(e, e.getWeightedLength()));
+
+		Vector pos = player.getPosition();
+		Node bestEdge = nodes.values().stream()
+				.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(pos)))
+				.sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
+				.limit(10)
+				.map(e -> {
+					Node n = e.getKey();
+					Vector dir = n.getPosition().clone().subtract(pos);
+					Location loc = n.getLocation();
+					loc.setDirection(dir);
+					BlockIterator i = new BlockIterator(loc, 1.5, (int) dir.length());
+					int count = 1;
+					while (i.hasNext()) {
+						if (i.next().getType().isSolid()) {
+							count++;
+						}
+					}
+					return new AbstractMap.SimpleEntry<>(e.getValue() * count, n);
+				})
+				.min(Comparator.comparingDouble(AbstractMap.SimpleEntry::getKey))
+				.map(AbstractMap.SimpleEntry::getValue)
+				.orElse(null);
+
+		if (bestEdge != null) {
+			graph.addVertex(player);
+			graph.addEdge(player, bestEdge, new Edge(player, bestEdge, 1));
+		}
+
+		return graph;
 	}
 
 	public Waypoint createNode(Vector vector, String name) {
@@ -98,6 +126,53 @@ public class RoadMap implements Keyed {
 		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
 
 		return node;
+	}
+
+	/**
+	 * This method changes the name of the node and calls the corresponding event.
+	 * If the event is not cancelled, the change will be updated to the database.
+	 * Don't call this method asynchronous, events can only be called in the main thread.
+	 * <p>
+	 * To only modify the name without event or database update, simply call {@link Node#setNameFormat(String)}.
+	 *
+	 * @param node       The node to change the name for.
+	 * @param nameFormat The name in MiniMessage format. The method will automatically parse it to a component and set the display name attribute.
+	 * @return true if the name was successfully set, false if the even was cancelled.
+	 */
+	public boolean setNodeName(Node node, String nameFormat) {
+
+		NodeRenameEvent event = new NodeRenameEvent(node, nameFormat);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		node.setNameFormat(event.getNewNameFormat());
+		PathPlugin.getInstance().getDatabase().updateNode(node);
+		return true;
+	}
+
+	/**
+	 * This method changes the position of the node and calls the corresponding event.
+	 * If the event is not cancelled, the change will be updated to the database.
+	 * Don't call this method asynchronous, events can only be called in the main thread.
+	 * <p>
+	 * TO only modify the position without event or database update, simply call {@link Node#setPosition(Vector)}
+	 *
+	 * @param node     The node to change the position for.
+	 * @param position The position to set. No world attribute is required, the roadmap attribute is used. Use {@link Location#toVector()}
+	 *                 to set a location.
+	 * @return true if the position was successfully set, false if the event was cancelled
+	 */
+	public boolean setNodeLocation(Node node, Vector position) {
+
+		NodeTeleportEvent event = new NodeTeleportEvent(node, position);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		node.setPosition(event.getNewPositionModified());
+		PathPlugin.getInstance().getDatabase().updateNode(node);
+		return true;
 	}
 
 	public void removeNodes(NodeSelection selection) {
@@ -187,10 +262,27 @@ public class RoadMap implements Keyed {
 	 * erstellt neue Edge in der Datenbank
 	 */
 	public Edge connectNodes(Node start, Node end) {
-		return connectNodes(start, end, 1);
+		return connectNodes(start, end, false, 1, 1);
 	}
 
-	public Edge connectNodes(Node start, Node end, float weight) {
+	/**
+	 * Connects two nodes with an edge. Edges are stored directed, therefore it must be stated if the new node should
+	 * only be from start to end or also from end to start.
+	 * <p>
+	 * This method calls the corresponding {@link EdgesCreatedEvent}. This will always be called sync, so that the
+	 * method can be called async.
+	 *
+	 * @param start      The node to start the edge from.
+	 * @param end        The node to end the edge at.
+	 * @param directed   If another edge should be created from end to start. Prefer this method against calling it twice,
+	 *                   as the edit mode particle setup has to be recalculated for each edge change.
+	 * @param weight     The weight modifier for this edge. This will be taken into account when calculating the shortest path.
+	 *                   The actual length of the edge will be multiplied with the modifier, so when players have to crouch along some
+	 *                   edges of your roadmap, you might want to change the modifier to 2.
+	 * @param weightBack Same as weight, but for the directed edge in the opposite direction.
+	 * @return the created edge from start to end.
+	 */
+	public Edge connectNodes(Node start, Node end, boolean directed, float weight, float weightBack) {
 		if (start.equals(end)) {
 			throw new IllegalArgumentException("Cannot connect node with itself.");
 		}
@@ -199,7 +291,18 @@ public class RoadMap implements Keyed {
 		start.getEdges().add(edge);
 		edges.add(edge);
 
-		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeCreatedEvent(edge)));
+		Edge other = edge;
+		if (!directed) {
+			Edge existing = getEdge(end, start);
+			if (existing != null) {
+				other = PathPlugin.getInstance().getDatabase().createEdge(end, start, weightBack);
+				end.getEdges().add(other);
+				edges.add(edge);
+			}
+		}
+
+		Edge finalOther = other;
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
 
 		return edge;
 	}
