@@ -8,6 +8,7 @@ import de.bossascrew.pathfinder.data.InMemoryDatabase;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.node.NavigateSelection;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
@@ -35,6 +36,7 @@ import org.bukkit.util.Vector;
 
 import java.awt.*;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -305,6 +307,22 @@ public class PathPlugin extends JavaPlugin {
 				throw new InvalidCommandArgument("Not a valid group key: '" + search + "'.");
 			}
 			return roadMap.getNodeGroup(key);
+		});
+		contexts.registerContext(NavigateSelection.class, context -> {
+			String search = context.popFirstArg();
+			Player player = context.getPlayer();
+			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+			if (pPlayer == null) {
+				throw new InvalidCommandArgument("Unknown player '" + player.getName() + "', please contact an administrator.");
+			}
+			if (pPlayer.getSelectedRoadMap() == null) {
+				throw new InvalidCommandArgument("You need to have a roadmap selected to parse node groups.");
+			}
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
+			if (roadMap == null) {
+				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
+			}
+			return roadMap.getNavigables(Arrays.stream(search.split(",")).map(String::trim).collect(Collectors.toList()));
 		});
 		contexts.registerContext(NodeSelection.class, context -> {
 			String search = context.popFirstArg();

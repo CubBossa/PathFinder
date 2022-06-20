@@ -45,6 +45,7 @@ public class Waypoint implements Node, Findable, Navigable {
 		this.setNameFormat(nameFormat);
 
 		edges = new ArrayList<>();
+		this.searchTerms = Sets.newHashSet(databaseId + "");
 	}
 
 	public void setNameFormat(String nameFormat) {

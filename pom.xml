@@ -53,6 +53,7 @@
                             <include>org.bstats</include>
                             <include>xyz.xenondevs:particle</include>
                             <include>org.jgrapht:jgrapht-core</include>
+                            <include>org.jheaps:jheaps</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -90,7 +91,11 @@
                         </relocation>
                         <relocation>
                             <pattern>org.jgrapht</pattern>
-                            <shadedPattern>de.cubbossa.pathfinder.graphs</shadedPattern>
+                            <shadedPattern>de.cubbossa.pathfinder.jgrapht</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.jheaps</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.jheaps</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -237,6 +242,12 @@
             <groupId>com.mojang</groupId>
             <artifactId>authlib</artifactId>
             <version>1.5.21</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jheaps</groupId>
+            <artifactId>jheaps</artifactId>
+            <version>0.14</version>
         </dependency>
     </dependencies>
 </project>

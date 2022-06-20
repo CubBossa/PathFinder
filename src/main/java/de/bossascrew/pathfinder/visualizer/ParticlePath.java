@@ -80,6 +80,9 @@ public class ParticlePath extends ArrayList<Node> {
      * Nur im Mainthread aufrufen
      */
     public void cancelSync() {
+        if(task == null) {
+            return;
+        }
         Bukkit.getScheduler().cancelTask(task.getTaskId());
         this.active = false;
     }

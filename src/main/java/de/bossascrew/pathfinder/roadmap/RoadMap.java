@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.roadmap;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;
@@ -110,6 +111,30 @@ public class RoadMap implements Keyed {
 		}
 
 		return graph;
+	}
+
+	public NavigateSelection getNavigables() {
+		NavigateSelection navigables = new NavigateSelection(this);
+		navigables.addAll(nodes.values());
+		navigables.addAll(groups.values().stream().filter(g -> g instanceof Navigable).map(g -> (Navigable) g).collect(Collectors.toList()));
+		return navigables;
+	}
+
+	public NavigateSelection getNavigables(String... keywords) {
+		return getNavigables(Lists.newArrayList(keywords));
+	}
+
+	public NavigateSelection getNavigables(Collection<String> keywords) {
+		return getNavigables().stream()
+				.filter(node -> {
+					for (String keyword : keywords) {
+						if (node.getSearchTerms().contains(keyword)) {
+							return true;
+						}
+					}
+					return false;
+				})
+				.collect(Collectors.toCollection(() -> new NavigateSelection(this)));
 	}
 
 	public Waypoint createNode(Vector vector, String name) {

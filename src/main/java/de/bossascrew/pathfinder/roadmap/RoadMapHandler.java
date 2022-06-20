@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.roadmap;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.StringUtils;
+import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -47,6 +48,7 @@ public class RoadMapHandler {
 	public RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes) {
 		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()), world, findableNodes);
 		roadMaps.put(rm);
+		rm.setVisualizer(VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer());
 		return rm;
 	}
 
