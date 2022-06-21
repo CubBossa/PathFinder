@@ -42,7 +42,7 @@ public interface DataStorage {
 	void deleteEdge(Node start, Node end);
 
 
-	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, NamespacedKey group, Double x, Double y, Double z, Double tangentLength, String permission);
+	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission);
 
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 

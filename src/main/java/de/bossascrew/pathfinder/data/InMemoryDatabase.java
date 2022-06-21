@@ -1,10 +1,7 @@
 package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.NodeType;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Findable;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
@@ -87,11 +84,14 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, NamespacedKey group, Double x, Double y, Double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
 		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
 		node.setPosition(new Vector(x, y, z));
 		node.setBezierTangentLength(tangentLength);
 		node.setPermission(permission);
+		if (node instanceof Groupable groupable) {
+			groups.forEach(groupable::addGroup);
+		}
 		log("Create Node");
 		return node;
 	}

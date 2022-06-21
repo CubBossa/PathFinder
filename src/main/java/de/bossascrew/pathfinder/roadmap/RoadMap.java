@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.roadmap;
 
 import com.google.common.collect.Lists;
+import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;
@@ -143,15 +144,18 @@ public class RoadMap implements Keyed {
 				.collect(Collectors.toCollection(() -> new NavigateSelection(this)));
 	}
 
-	public Waypoint createNode(Vector vector) {
-		return createNode(vector, null, null);
+	public Waypoint createWaypoint(Vector vector) {
+		return createNode(RoadMapHandler.WAYPOINT_TYPE, vector);
 	}
 
-	public @Nullable
-	Waypoint createNode(Vector vector, @Nullable Double bezierTangentLength, String permission) {
+	public <T extends Node> T createNode(NodeType<T> type, Vector vector) {
+		return createNode(type, vector, null, null);
+	}
 
-		Waypoint node = PathPlugin.getInstance().getDatabase().createNode(this, RoadMapHandler.WAYPOINT_TYPE, null,
-				vector.getX(), vector.getY(), vector.getZ(), bezierTangentLength, permission);
+	public <T extends Node> T createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
+
+		T node = PathPlugin.getInstance().getDatabase().createNode(this, type, Arrays.stream(groups).filter(Objects::nonNull).toList(),
+				vector.getX(), vector.getY(), vector.getZ(), null, permission);
 
 		addNode(node);
 		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
@@ -307,7 +311,7 @@ public class RoadMap implements Keyed {
 		Edge other = edge;
 		if (!directed) {
 			Edge existing = getEdge(end, start);
-			if (existing != null) {
+			if (existing == null) {
 				other = PathPlugin.getInstance().getDatabase().createEdge(end, start, weightBack);
 				end.getEdges().add(other);
 				edges.add(edge);

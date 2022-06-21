@@ -25,16 +25,13 @@ import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import java.awt.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +53,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String COMPLETE_PATH_VISUALIZER_STYLES = "@path_visualizer_styles";
 	public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
 	public static final String COMPLETE_NODE_SELECTION = "@nodes";
+	public static final String COMPLETE_NAVIGABLES = "@navigables";
 	public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
 	public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
 	public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
@@ -234,6 +232,8 @@ public class PathPlugin extends JavaPlugin {
 				.filter(findable -> (findable.getGroupKey() != null && !roadMap.getNodeGroup(findable).isFindable()) || PathPlayerHandler.getInstance().getPlayer(context.getPlayer()).hasFound(findable))
 				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));*/
+		commandCompletions.registerCompletion(COMPLETE_NAVIGABLES, context ->
+				resolveFromRoadMap(context, roadMap -> roadMap.getNavigables().stream().flatMap(n -> n.getSearchTerms().stream()).collect(Collectors.toList())));
 	}
 
 	private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Function<RoadMap, Collection<String>> fromRoadmap) {

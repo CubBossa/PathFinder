@@ -24,7 +24,7 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, 
     private Collection<String> searchTerms;
 
     public NodeGroup(NamespacedKey key, RoadMap roadMap, String nameFormat) {
-        this(key, roadMap, nameFormat, null);
+        this(key, roadMap, nameFormat, new HashSet<>());
     }
 
     public NodeGroup(NamespacedKey key, RoadMap roadMap, String nameFormat, Collection<Waypoint> nodes) {

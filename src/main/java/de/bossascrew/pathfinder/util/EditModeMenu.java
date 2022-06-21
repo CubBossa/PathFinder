@@ -8,10 +8,7 @@ import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
-import de.cubbossa.menuframework.inventory.Action;
-import de.cubbossa.menuframework.inventory.Button;
-import de.cubbossa.menuframework.inventory.InventoryRow;
-import de.cubbossa.menuframework.inventory.MenuPresets;
+import de.cubbossa.menuframework.inventory.*;
 import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
@@ -27,11 +24,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 public class EditModeMenu {
-
-	private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+([0-9]+)$");
 
 	private final RoadMap roadMap;
 	private Node edgeStart = null;
@@ -67,9 +61,10 @@ public class EditModeMenu {
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup.getKey(), pos.getX(), pos.getY(), pos.getZ(), null, null);
+						lastNode = roadMap.createNode(type, pos, null, lastGroup);
+					} else {
+						openNodeTypeMenu(context.getPlayer(), pos);
 					}
-					openNodeTypeMenu(context.getPlayer(), pos);
 				}));
 
 
@@ -101,7 +96,7 @@ public class EditModeMenu {
 					// switch mode
 					if (edgeStart == null) {
 						undirectedEdges = !undirectedEdges;
-						TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_CANCELLED
+						TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
 								.format(TagResolver.resolver("value", Tag.inserting(Messages.formatBool(!undirectedEdges)))), player);
 						return;
 					}
@@ -184,6 +179,7 @@ public class EditModeMenu {
 	private void openGroupMenu(Player player, Groupable groupable) {
 
 		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
+		menu.addPreset(MenuPresets.fillRow(MenuPresets.FILLER_DARK, 4));
 		for (NodeGroup group : roadMap.getGroups().values()) {
 
 			menu.addListEntry(Button.builder()
@@ -217,12 +213,16 @@ public class EditModeMenu {
 			});
 
 			presetApplier.addItemOnTop(4 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
-			presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> openCreateGroupMenu(c.getPlayer(), groupable));
+			presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> {
+				if (c.getMenu() instanceof TopInventoryMenu top) {
+					top.openSubMenu(c.getPlayer(), newCreateGroupMenu(groupable));
+				}
+			});
 		});
 		menu.open(player);
 	}
 
-	private void openCreateGroupMenu(Player player, Groupable groupable) {
+	private TopInventoryMenu newCreateGroupMenu(Groupable groupable) {
 		AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group_x", AnvilInputValidator.VALIDATE_KEY);
 
 		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
@@ -232,8 +232,9 @@ public class EditModeMenu {
 			}
 			NodeGroup group = roadMap.createNodeGroup(key, true);
 			groupable.addGroup(group);
+			menu.close(s.getPlayer());
 		});
-		menu.open(player);
+		return menu;
 	}
 
 	private void openNodeTypeMenu(Player player, Vector pos) {
@@ -244,7 +245,7 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
 					.withClickHandler(Action.LEFT, c -> {
-						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup.getKey(), pos.getX(), pos.getY(), pos.getZ(), null, null);
+						lastNode = roadMap.createNode(type, pos, null, lastGroup);
 						menu.close(player);
 					}));
 		}

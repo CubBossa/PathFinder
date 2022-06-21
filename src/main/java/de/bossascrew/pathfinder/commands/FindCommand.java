@@ -2,7 +2,9 @@ package de.bossascrew.pathfinder.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.*;
@@ -17,6 +19,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 public class FindCommand extends BaseCommand {
 
 	@Subcommand("location")
+	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onFindSpot(Player player, NavigateSelection navigables) {
 
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
@@ -43,6 +46,11 @@ public class FindCommand extends BaseCommand {
 		});
 
 		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
+
+		if(path == null) {
+			player.sendMessage(":C");
+		}
+
 		ParticlePath particlePath = new ParticlePath(roadMap, player.getUniqueId(), roadMap.getVisualizer());
 		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
 		pathPlayer.setPath(particlePath);
