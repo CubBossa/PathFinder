@@ -1,8 +1,12 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.node.*;
+import de.bossascrew.pathfinder.NodeType;
+import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.Findable;
+import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -83,8 +87,8 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, Class<T> type, NamespacedKey group, Double x, Double y, Double z, String name, Double tangentLength, String permission) {
-		T node = (T) new Waypoint(nodeIdCounter++, roadMap, name);
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, NamespacedKey group, Double x, Double y, Double z, Double tangentLength, String permission) {
+		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
 		node.setPosition(new Vector(x, y, z));
 		node.setBezierTangentLength(tangentLength);
 		node.setPermission(permission);

@@ -31,15 +31,6 @@ public class SelectionUtils {
 						   String... completions) {
 	}
 
-	public static final Selector SELECT_KEY_NAME = new Selector("name", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2.)*?\\1"), (nodes, context) -> {
-		boolean regex = context.value().startsWith("regex:");
-		String arg = regex ? context.value().substring(6) : context.value();
-		Pattern pattern = regex ? Pattern.compile(arg) : null;
-		return nodes.stream()
-				.filter(n -> regex ? pattern.matcher(n.getNameFormat()).matches() : n.getNameFormat().equalsIgnoreCase(arg))
-				.collect(Collectors.toList());
-	}, "<name>");
-
 	public static final Selector SELECT_KEY_PERMISSION = new Selector("permission", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2.)*?\\1"), (nodes, context) -> {
 		boolean regex = context.value().startsWith("regex:");
 		String arg = regex ? context.value().substring(6) : context.value();
@@ -109,7 +100,7 @@ public class SelectionUtils {
 	public static final String SELECT_KEY_EDGE = "has_edge";
 
 	public static final Selector[] SELECTORS = {
-			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH, SELECT_KEY_NAME, SELECT_KEY_PERMISSION,
+			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH, SELECT_KEY_PERMISSION,
 			SELECT_KEY_SORT
 	};
 
@@ -174,7 +165,7 @@ public class SelectionUtils {
 	public static Component formatSelection(NodeSelection selection) {
 
 		Component hover = Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)), selection.stream()
-				.map(Node::getDisplayName).collect(Collectors.toList()));
+				.map(Node::getNodeId).map(Component::text).collect(Collectors.toList()));
 
 		return Component.text(selection.size() + " Nodes")
 				.color(NamedTextColor.WHITE)

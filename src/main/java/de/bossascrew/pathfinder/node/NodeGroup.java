@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.node;
 
+import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Node> implements Keyed, Findable {
+public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, Navigable {
 
     private final NamespacedKey key;
     private final RoadMap roadMap;
@@ -32,11 +33,7 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Findable {
         this.roadMap = roadMap;
         this.nameFormat = nameFormat;
         this.findable = false;
-    }
-
-    @Override
-    public RoadMap getRoadMap() {
-        return roadMap;
+        this.searchTerms = new HashSet<>();
     }
 
     @Override

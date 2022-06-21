@@ -43,7 +43,6 @@ public class WaypointCommand extends BaseCommand {
 		Node node = selection.get(0);
 		FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
 				.tag("id", Tag.preProcessParsed(node.getNodeId() + ""))
-				.tag("name", Tag.inserting(node.getDisplayName()))
 				.tag("roadmap", Tag.inserting(Messages.formatKey(node.getRoadMapKey())))
 				.tag("permission", Tag.inserting(Messages.formatPermission(node.getPermission())))
 				.tag("group", Tag.inserting(Messages.formatKey(node.getGroupKey())))
@@ -56,13 +55,13 @@ public class WaypointCommand extends BaseCommand {
 	}
 
 	@Subcommand("create default")
-	@Syntax("<name>")
+	@Syntax("<type>")
 	@CommandPermission("pathfinder.command.waypoint.create")
-	public void onCreate(Player player, @Single String name) {
+	public void onCreate(Player player) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
-		Node node = roadMap.createNode(player.getLocation().toVector().add(new Vector(0, 1, 0)), name);
+		Node node = roadMap.createNode(player.getLocation().toVector().add(new Vector(0, 1, 0)));
 		//TODO save to database obvsly
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE.format(TagResolver.resolver("name", Tag.inserting(node.getDisplayName()))), player);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);
 	}
 
 	@Subcommand("delete")
@@ -137,7 +136,6 @@ public class WaypointCommand extends BaseCommand {
 
 							TagResolver r = TagResolver.builder()
 									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-									.tag("name", Tag.inserting(n.getDisplayName()))
 									.tag("permission", Tag.preProcessParsed(n.getPermission() == null ? "null" : n.getPermission()))
 									.tag("position", Tag.inserting(Messages.formatVector(n.getPosition())))
 									.tag("group-key", Tag.preProcessParsed(n.getGroupKey() == null ? "null" : n.getGroupKey().toString()))
@@ -158,8 +156,8 @@ public class WaypointCommand extends BaseCommand {
 		for (Node start : startSelection) {
 			for (Node end : endSelection) {
 				TagResolver resolver = TagResolver.builder()
-						.tag("start", Tag.inserting(start.getDisplayName()))
-						.tag("end", Tag.inserting(end.getDisplayName()))
+						.tag("start", Tag.inserting(Component.text(start.getNodeId())))
+						.tag("end", Tag.inserting(Component.text(end.getNodeId())))
 						.build();
 
 				if (start.equals(end)) {
@@ -185,8 +183,8 @@ public class WaypointCommand extends BaseCommand {
 		for (Node start : startSelection) {
 			for (Node end : endSelection) {
 				TagResolver resolver = TagResolver.builder()
-						.tag("start", Tag.inserting(start.getDisplayName()))
-						.tag("end", Tag.inserting(end.getDisplayName()))
+						.tag("start", Tag.inserting(Component.text(start.getNodeId())))
+						.tag("end", Tag.inserting(Component.text(end.getNodeId())))
 						.build();
 
 				start.disconnect(end);
@@ -197,25 +195,6 @@ public class WaypointCommand extends BaseCommand {
 
 	@Subcommand("set")
 	public class WaypointSetCommand extends BaseCommand {
-
-		@Subcommand("name")
-		@Syntax("<nodes> <name>")
-		@CommandPermission("pathfinder.command.waypoint.rename")
-		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
-		public void onRename(Player player, NodeSelection selection, String name) {
-			if (selection.size() == 0) {
-				return;
-			}
-			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(selection.get(0).getRoadMapKey());
-			if (roadMap == null) {
-				return;
-			}
-			selection.forEach(node -> roadMap.setNodeName(node, name));
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_RENAMED.format(TagResolver.builder()
-					.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
-					.tag("name", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(name)))
-					.build()), player);
-		}
 
 		@Subcommand("permission")
 		@Syntax("<nodes> <permission>")

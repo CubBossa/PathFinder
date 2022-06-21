@@ -1,12 +1,12 @@
 package de.bossascrew.pathfinder.util;
 
 import de.bossascrew.pathfinder.Messages;
+import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
-import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.InventoryRow;
@@ -25,8 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class EditModeMenu {
@@ -34,14 +33,15 @@ public class EditModeMenu {
 	private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+([0-9]+)$");
 
 	private final RoadMap roadMap;
-	private String lastNamed = "node_1";
 	private Node edgeStart = null;
 	private Node lastNode = null;
 	private Boolean undirectedEdges = false;
 	private NamespacedKey lastGroup = null;
+	private final Collection<NodeType<?>> types;
 
-	public EditModeMenu(RoadMap roadMap) {
+	public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
 		this.roadMap = roadMap;
+		this.types = types;
 	}
 
 	public BottomInventoryMenu createHotbarMenu(RoadMapEditor editor) {
@@ -59,20 +59,16 @@ public class EditModeMenu {
 					p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
 				})
 				.withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
-					String name = lastNamed;
-					Matcher matcher = LAST_INT_PATTERN.matcher(name);
-					if (matcher.find()) {
-						String first = matcher.group(0).replace(matcher.group(1), "");
-						name = first + (Integer.parseInt(matcher.group(1)) + 1);
-					}
+					Vector pos = (context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5));
 
-					openNodeNameMenu(context.getPlayer(), name, s -> {
-						Node node = roadMap.createNode((context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5)), s, null, null);
-						if (node != null) {
-							node.setGroupKey(lastGroup);
-							lastNode = node;
+					if (types.size() <= 1) {
+						NodeType<?> type = types.stream().findAny().orElse(null);
+						if (type == null) {
+							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-					});
+						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup, pos.getX(), pos.getY(), pos.getZ(), null, null);
+					}
+					openNodeTypeMenu(context.getPlayer(), pos);
 				}));
 
 
@@ -149,21 +145,6 @@ public class EditModeMenu {
 					p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
 				}, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
-		menu.setButton(7, Button.builder()
-				.withItemStack(EditmodeUtils.RENAME_TOOL)
-				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-					openNodeNameMenu(context.getPlayer(), context.getTarget().getNameFormat(), string -> {
-
-						RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(context.getTarget().getRoadMapKey());
-						if (roadMap == null) {
-							return;
-						}
-						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							roadMap.setNodeName(context.getTarget(), string);
-						});
-					});
-				}));
-
 		menu.setButton(5, Button.builder()
 				.withItemStack(EditmodeUtils.CURVE_TOOL)
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
@@ -237,17 +218,18 @@ public class EditModeMenu {
 		menu.open(player);
 	}
 
-	private void openNodeNameMenu(Player player, Consumer<String> onSuccess) {
-		openNodeNameMenu(player, "Waypoint X", onSuccess);
-	}
+	private void openNodeTypeMenu(Player player, Vector pos) {
 
-	private void openNodeNameMenu(Player player, String nameInput, Consumer<String> onSuccess) {
-		AnvilMenu menu = newAnvilMenu(Component.text("Node erstellen:"), nameInput);
+		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 2);
+		for (NodeType<?> type : types) {
 
-		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
-			onSuccess.accept(s.getTarget());
-			s.getMenu().close(s.getPlayer());
-		});
+			menu.addListEntry(Button.builder()
+					.withItemStack(type::getDisplayItem)
+					.withClickHandler(Action.LEFT, c -> {
+						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup, pos.getX(), pos.getY(), pos.getZ(), null, null);
+						menu.close(player);
+					}));
+		}
 		menu.open(player);
 	}
 

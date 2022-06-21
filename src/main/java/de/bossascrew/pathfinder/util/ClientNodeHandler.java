@@ -31,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -149,7 +150,7 @@ public class ClientNodeHandler {
 
 	public void showNode(Node node, Player player) {
 		Location location = node.getLocation();
-		int id = spawnArmorstand(player, location, node.getDisplayName(), false);
+		int id = spawnArmorstand(player, location, null, false);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node.getGroupKey() != null ? nodeGroupHead : nodeSingleHead});
 
 		nodeEntityMap.put(node, id);
@@ -180,9 +181,7 @@ public class ClientNodeHandler {
 		Vector pos = edge.getStart().getPosition().clone().add(
 				edge.getEnd().getPosition().clone().subtract(edge.getStart().getPosition()).multiply(.5f));
 		Location location = pos.toLocation(RoadMapHandler.getInstance().getRoadMap(edge.getStart().getRoadMapKey()).getWorld());
-		int id = spawnArmorstand(player, location, edge.getStart().getDisplayName()
-				.append(Component.text(undirected ? " <-> " : " -> "))
-				.append(edge.getEnd().getDisplayName()), true);
+		int id = spawnArmorstand(player, location, null, true);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, edgeHead});
 
 		edgeEntityMap.put(edge, id);
@@ -222,7 +221,7 @@ public class ClientNodeHandler {
 		if (entityId == null) {
 			return;
 		}
-		renameArmorstand(player, entityId, node.getDisplayName());
+		renameArmorstand(player, entityId, null);
 	}
 
 	private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
@@ -236,7 +235,7 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public int spawnArmorstand(Player player, Location location, Component name, boolean small) {
+	public int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
 
 		location = location.clone().add((small ? ARMORSTAND_CHILD_OFFSET : ARMORSTAND_OFFSET));
 		int entityId = ClientNodeHandler.entityId++;
@@ -258,11 +257,15 @@ public class ClientNodeHandler {
 		return entityId;
 	}
 
-	private void setupMeta(Player player, int id, Component name, boolean small) {
+	private void setupMeta(Player player, int id, @Nullable Component name, boolean small) {
 		WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
-		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),
-				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
-		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);
+
+		if (name != null) {
+			dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),
+					Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
+			dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);
+		}
+
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_FLAGS, WrappedDataWatcher.Registry.get(Byte.class)), META_FLAG_INVISIBLE);
 		if (small) {
 			dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_CHILD, WrappedDataWatcher.Registry.get(Byte.class)), META_FLAG_SMALL);

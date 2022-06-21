@@ -21,7 +21,6 @@ public class EditmodeUtils {
     public static final ItemStack LAST_GROUP_TOOL = new TranslatedItem(Material.ENDER_CHEST, Messages.E_LAST_GROUP_TOOL_N, Messages.E_LAST_GROUP_TOOL_L).createItem();
     public static final ItemStack CURVE_TOOL = new TranslatedItem(Material.LEAD, Messages.E_CURVE_TOOL_N, Messages.E_CURVE_TOOL_L).createItem();
     public static final ItemStack PERMISSION_TOOL = new TranslatedItem(Material.STRUCTURE_VOID, Messages.E_PERM_TOOL_N, Messages.E_PERM_TOOL_L).createItem();
-    public static final ItemStack RENAME_TOOL = new TranslatedItem(Material.NAME_TAG, Messages.E_NAME_TOOL_N, Messages.E_NAME_TOOL_L).createItem();
     public static final ItemStack TP_TOOL = new TranslatedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N, Messages.E_TP_TOOL_L).createItem();
 
     /*public static final ItemStack NODE_TOOl = createTool(Material.NETHER_STAR, ChatColor.WHITE + "Wegpunkte-Tool",

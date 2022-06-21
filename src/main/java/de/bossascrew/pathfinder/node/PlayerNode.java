@@ -45,21 +45,6 @@ public class PlayerNode implements Node {
     }
 
     @Override
-    public String getNameFormat() {
-        return "";
-    }
-
-    @Override
-    public void setNameFormat(String format) {
-
-    }
-
-    @Override
-    public Component getDisplayName() {
-        return null;
-    }
-
-    @Override
     public Vector getPosition() {
         return player.getLocation().toVector();
     }

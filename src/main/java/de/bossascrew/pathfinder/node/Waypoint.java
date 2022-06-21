@@ -1,11 +1,9 @@
 package de.bossascrew.pathfinder.node;
 
 import com.google.common.collect.Sets;
-import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
@@ -19,7 +17,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class Waypoint implements Node, Findable, Navigable {
+public class Waypoint implements Node, Findable {
 
 	protected final int nodeId;
 	protected final NamespacedKey roadMapKey;
@@ -27,30 +25,19 @@ public class Waypoint implements Node, Findable, Navigable {
 	protected final List<Edge> edges;
 
 	protected Vector position;
-	protected String nameFormat;
-	protected Component displayName;
 	@Nullable
 	protected NamespacedKey groupKey = null;
 	@Nullable
 	protected String permission = null;
 	@Nullable
 	protected Double bezierTangentLength = null;
-	//TODO necessary? More than 1 group per node instead?
-	protected Collection<String> searchTerms;
 
-	public Waypoint(int databaseId, RoadMap roadMap, @Nullable String nameFormat) {
+	public Waypoint(int databaseId, RoadMap roadMap) {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapKey = roadMap.getKey();
-		this.setNameFormat(nameFormat);
 
 		edges = new ArrayList<>();
-		this.searchTerms = Sets.newHashSet(databaseId + "");
-	}
-
-	public void setNameFormat(String nameFormat) {
-		this.nameFormat = nameFormat;
-		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
 	@Override
@@ -88,6 +75,15 @@ public class Waypoint implements Node, Findable, Navigable {
 	@Override
 	public int compareTo(@NotNull Node o) {
 		return Integer.compare(nodeId, o.getNodeId());
+	}
+
+	@Override
+	public Collection<String> getSearchTerms() {
+		if (groupKey == null) {
+			return new HashSet<>();
+		}
+		NodeGroup group = roadMap.getNodeGroup(groupKey);
+		return group == null ? new HashSet<>() : group.getSearchTerms();
 	}
 
 	@Override

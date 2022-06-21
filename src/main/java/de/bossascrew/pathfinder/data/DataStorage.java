@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Findable;
 import de.bossascrew.pathfinder.node.Node;
@@ -41,7 +42,7 @@ public interface DataStorage {
 	void deleteEdge(Node start, Node end);
 
 
-	<T extends Node> T createNode(RoadMap roadMap, Class<T> type, NamespacedKey group, Double x, Double y, Double z, String name, Double tangentLength, String permission);
+	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, NamespacedKey group, Double x, Double y, Double z, Double tangentLength, String permission);
 
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 

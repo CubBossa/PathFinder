@@ -66,25 +66,6 @@ public class PathPlayer {
                 .count();
     }
 
-    public void setPath(Waypoint targetNode) {
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) {
-            return;
-        }
-        setPath(player, targetNode);
-    }
-
-    public void setPath(final Player player, final Waypoint target) {
-        final PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-        if (pathPlayer == null) {
-            return;
-        }
-        final PlayerNode playerNode = new PlayerNode(player, target.getRoadMap());
-        CompletableFuture.runAsync(() -> {
-            //TODO find path
-        });
-    }
-
     public void setPath(@NotNull ParticlePath path) {
         ParticlePath active = activePaths.get(path.getRoadMap().getKey());
         if (active != null) {

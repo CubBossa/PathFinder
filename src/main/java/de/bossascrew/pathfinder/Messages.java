@@ -196,9 +196,6 @@ public class Messages {
 	@MessageMeta("<white><u>Permission Tool</u></white>")
 	public static final Message E_PERM_TOOL_N = new Message("editor.toolbar.permission_tool.name");
 	public static final Message E_PERM_TOOL_L = new Message("editor.toolbar.permission_tool.lore");
-	@MessageMeta("<white><u>Naming Tool</u></white>")
-	public static final Message E_NAME_TOOL_N = new Message("editor.toolbar.rename_tool.name");
-	public static final Message E_NAME_TOOL_L = new Message("editor.toolbar.rename_tool.lore");
 	@MessageMeta("<white><u>Teleport Tool</u></white>")
 	public static final Message E_TP_TOOL_N = new Message("editor.toolbar.teleport_tool.name");
 	public static final Message E_TP_TOOL_L = new Message("editor.toolbar.teleport_tool.lore");

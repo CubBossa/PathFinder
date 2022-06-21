@@ -101,7 +101,7 @@ public class RoadMapEditor implements Keyed, Listener {
 			}
 			editor.setEditMode(key);
 
-			BottomInventoryMenu menu = new EditModeMenu(roadMap).createHotbarMenu(this);
+			BottomInventoryMenu menu = new EditModeMenu(roadMap, RoadMapHandler.getInstance().getNodeTypes()).createHotbarMenu(this);
 			editingPlayers.put(uuid, menu);
 			menu.openSync(player);
 
@@ -246,12 +246,6 @@ public class RoadMapEditor implements Keyed, Listener {
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
 				armorstandHandler.hideEdges(Lists.newArrayList(event.getEdge()), player));
 		updateEditModeParticles();
-	}
-
-	@EventHandler(priority = EventPriority.MONITOR)
-	public void onNodeRename(NodeRenameEvent event) {
-		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-				armorstandHandler.updateNodeName(event.getNode(), player, true));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

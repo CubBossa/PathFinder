@@ -21,21 +21,6 @@ public class EmptyNode implements Node {
 	}
 
 	@Override
-	public String getNameFormat() {
-		return "empty";
-	}
-
-	@Override
-	public void setNameFormat(String name) {
-
-	}
-
-	@Override
-	public Component getDisplayName() {
-		return Component.text("empty");
-	}
-
-	@Override
 	public Collection<String> getSearchTerms() {
 		return new HashSet<>();
 	}

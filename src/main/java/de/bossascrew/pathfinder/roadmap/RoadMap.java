@@ -137,43 +137,20 @@ public class RoadMap implements Keyed {
 				.collect(Collectors.toCollection(() -> new NavigateSelection(this)));
 	}
 
-	public Waypoint createNode(Vector vector, String name) {
-		return createNode(vector, name, null, null);
+	public Waypoint createNode(Vector vector) {
+		return createNode(vector, null, null);
 	}
 
 	public @Nullable
-	Waypoint createNode(Vector vector, String name, @Nullable Double bezierTangentLength, String permission) {
+	Waypoint createNode(Vector vector, @Nullable Double bezierTangentLength, String permission) {
 
-		Waypoint node = PathPlugin.getInstance().getDatabase().createNode(this, Waypoint.class, null,
-				vector.getX(), vector.getY(), vector.getZ(), name, bezierTangentLength, permission);
+		Waypoint node = PathPlugin.getInstance().getDatabase().createNode(this, RoadMapHandler.WAYPOINT_TYPE, null,
+				vector.getX(), vector.getY(), vector.getZ(), bezierTangentLength, permission);
 
 		addNode(node);
 		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
 
 		return node;
-	}
-
-	/**
-	 * This method changes the name of the node and calls the corresponding event.
-	 * If the event is not cancelled, the change will be updated to the database.
-	 * Don't call this method asynchronous, events can only be called in the main thread.
-	 * <p>
-	 * To only modify the name without event or database update, simply call {@link Node#setNameFormat(String)}.
-	 *
-	 * @param node       The node to change the name for.
-	 * @param nameFormat The name in MiniMessage format. The method will automatically parse it to a component and set the display name attribute.
-	 * @return true if the name was successfully set, false if the even was cancelled.
-	 */
-	public boolean setNodeName(Node node, String nameFormat) {
-
-		NodeRenameEvent event = new NodeRenameEvent(node, nameFormat);
-		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
-		node.setNameFormat(event.getNewNameFormat());
-		PathPlugin.getInstance().getDatabase().updateNode(node);
-		return true;
 	}
 
 	/**
