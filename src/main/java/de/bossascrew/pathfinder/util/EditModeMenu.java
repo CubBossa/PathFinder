@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.util;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
@@ -36,7 +37,7 @@ public class EditModeMenu {
 	private Node edgeStart = null;
 	private Node lastNode = null;
 	private Boolean undirectedEdges = false;
-	private NamespacedKey lastGroup = null;
+	private NodeGroup lastGroup = null;
 	private final Collection<NodeType<?>> types;
 
 	public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
@@ -66,7 +67,7 @@ public class EditModeMenu {
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup, pos.getX(), pos.getY(), pos.getZ(), null, null);
+						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup.getKey(), pos.getX(), pos.getY(), pos.getZ(), null, null);
 					}
 					openNodeTypeMenu(context.getPlayer(), pos);
 				}));
@@ -157,21 +158,30 @@ public class EditModeMenu {
 
 		menu.setButton(2, Button.builder()
 				.withItemStack(EditmodeUtils.GROUP_TOOL)
-				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
-						openGroupMenu(context.getPlayer(), context.getTarget()))
+				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
+					if (context.getTarget() instanceof Groupable groupable) {
+						openGroupMenu(context.getPlayer(), groupable);
+					}
+				})
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-					context.getTarget().setGroupKey(null);
-					context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+					if (context.getTarget() instanceof Groupable groupable) {
+						groupable.clearGroups();
+						context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+					}
 				}));
 
 		menu.setButton(3, Button.builder()
 				.withItemStack(EditmodeUtils.LAST_GROUP_TOOL)
-				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> context.getTarget().setGroupKey(lastGroup)));
+				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
+					if (lastGroup != null && context.getTarget() instanceof Groupable groupable) {
+						groupable.addGroup(lastGroup);
+					}
+				}));
 
 		return menu;
 	}
 
-	private void openGroupMenu(Player player, Node node) {
+	private void openGroupMenu(Player player, Groupable groupable) {
 
 		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
 		for (NodeGroup group : roadMap.getGroups().values()) {
@@ -179,32 +189,40 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
 						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem();
-						if (node.getGroupKey() != null && node.getGroupKey().equals(group.getKey())) {
+						if (groupable.getGroups().contains(group)) {
 							stack = de.bossascrew.pathfinder.util.ItemStackUtils.setGlow(stack);
 						}
 						return stack;
 					})
 					.withClickHandler(Action.LEFT, c -> {
-						node.setGroupKey(group.getKey());
-						lastGroup = group.getKey();
-						c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-						menu.close(player);
+						if (!groupable.getGroups().contains(group)) {
+							groupable.addGroup(group);
+							c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+							menu.refresh(menu.getListSlots());
+						}
+					})
+					.withClickHandler(Action.RIGHT, c -> {
+						if (groupable.getGroups().contains(group)) {
+							groupable.removeGroup(group);
+							c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+							menu.refresh(menu.getListSlots());
+						}
 					}));
 		}
 		menu.addPreset(presetApplier -> {
 			presetApplier.addItemOnTop(4 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
 			presetApplier.addClickHandlerOnTop(4 * 9 + 7, Action.LEFT, c -> {
-				node.setGroupKey(null);
+				groupable.clearGroups();
 				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 			});
 
 			presetApplier.addItemOnTop(4 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
-			presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> openCreateGroupMenu(c.getPlayer(), node));
+			presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> openCreateGroupMenu(c.getPlayer(), groupable));
 		});
 		menu.open(player);
 	}
 
-	private void openCreateGroupMenu(Player player, Node node) {
+	private void openCreateGroupMenu(Player player, Groupable groupable) {
 		AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group_x", AnvilInputValidator.VALIDATE_KEY);
 
 		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
@@ -213,7 +231,7 @@ public class EditModeMenu {
 				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 			}
 			NodeGroup group = roadMap.createNodeGroup(key, true);
-			node.setGroupKey(group.getKey());
+			groupable.addGroup(group);
 		});
 		menu.open(player);
 	}
@@ -226,7 +244,7 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
 					.withClickHandler(Action.LEFT, c -> {
-						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup, pos.getX(), pos.getY(), pos.getZ(), null, null);
+						lastNode = PathPlugin.getInstance().getDatabase().createNode(roadMap, type, lastGroup.getKey(), pos.getX(), pos.getY(), pos.getZ(), null, null);
 						menu.close(player);
 					}));
 		}

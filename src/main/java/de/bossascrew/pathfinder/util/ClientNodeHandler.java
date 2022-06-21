@@ -12,6 +12,7 @@ import com.comphenix.protocol.wrappers.Pair;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.cubbossa.menuframework.inventory.Action;
@@ -151,7 +152,7 @@ public class ClientNodeHandler {
 	public void showNode(Node node, Player player) {
 		Location location = node.getLocation();
 		int id = spawnArmorstand(player, location, null, false);
-		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node.getGroupKey() != null ? nodeGroupHead : nodeSingleHead});
+		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
 
 		nodeEntityMap.put(node, id);
 		entityNodeMap.put(id, node);

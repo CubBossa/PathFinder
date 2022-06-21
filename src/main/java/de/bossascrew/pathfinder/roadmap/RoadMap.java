@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 import org.jgrapht.Graph;
@@ -39,11 +38,13 @@ public class RoadMap implements Keyed {
 	private final Map<Integer, Node> nodes;
 	private final Collection<Edge> edges;
 	private final HashedRegistry<NodeGroup> groups;
+	private final Collection<Navigable> navigables;
+	private final Collection<Findable> findables;
 
 	private PathVisualizer visualizer;
 
 	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer visualizer,
-	               double nodeFindDistance, double defaultBezierTangentLength) {
+				   double nodeFindDistance, double defaultBezierTangentLength) {
 
 		this.key = key;
 		this.setNameFormat(name);
@@ -55,6 +56,8 @@ public class RoadMap implements Keyed {
 		this.groups = new HashedRegistry<>();
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();
+		this.navigables = new HashSet<>();
+		this.findables = new HashSet<>();
 
 		setVisualizer(visualizer);
 	}
@@ -71,7 +74,13 @@ public class RoadMap implements Keyed {
 
 	public void loadNodesAndEdges() {
 		nodes.clear();
-		nodes.putAll(PathPlugin.getInstance().getDatabase().loadNodes(this));
+		PathPlugin.getInstance().getDatabase().loadNodes(this).values().forEach(node -> {
+			nodes.put(node.getNodeId(), node);
+			navigables.add(node);
+			if (node instanceof Findable findable) {
+				findables.add(findable);
+			}
+		});
 		edges.clear();
 		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this));
 	}
@@ -114,10 +123,7 @@ public class RoadMap implements Keyed {
 	}
 
 	public NavigateSelection getNavigables() {
-		NavigateSelection navigables = new NavigateSelection(this);
-		navigables.addAll(nodes.values());
-		navigables.addAll(groups.values().stream().filter(g -> g instanceof Navigable).map(g -> (Navigable) g).collect(Collectors.toList()));
-		return navigables;
+		return new NavigateSelection(this, navigables);
 	}
 
 	public NavigateSelection getNavigables(String... keywords) {
@@ -177,6 +183,11 @@ public class RoadMap implements Keyed {
 		return true;
 	}
 
+	public boolean setGroupFindable(NodeGroup group, boolean findable) {
+		//TODO implement. Refreshes the findable collection.
+		return true;
+	}
+
 	public void removeNodes(NodeSelection selection) {
 		for (Node node : selection) {
 			removeNode(node);
@@ -210,15 +221,10 @@ public class RoadMap implements Keyed {
 
 	public void addNode(Node node) {
 		nodes.put(node.getNodeId(), node);
-	}
-
-	public void setNodes(Map<Integer, Waypoint> nodes) {
-		this.nodes.clear();
-		this.nodes.putAll(nodes);
-	}
-
-	public void addFindables(Map<Integer, Waypoint> findables) {
-		this.nodes.putAll(findables);
+		navigables.add(node);
+		if (node instanceof Findable findable) {
+			findables.add(findable);
+		}
 	}
 
 	public @Nullable
@@ -232,11 +238,6 @@ public class RoadMap implements Keyed {
 	}
 
 	public @Nullable
-	NodeGroup getNodeGroup(Node node) {
-		return getNodeGroup(node.getGroupKey());
-	}
-
-	public @Nullable
 	NodeGroup getNodeGroup(NamespacedKey key) {
 		if (key == null) {
 			return null;
@@ -245,13 +246,23 @@ public class RoadMap implements Keyed {
 	}
 
 	public void removeNodeGroup(NodeGroup group) {
-		this.groups.remove(group.getKey());
+		groups.remove(group.getKey());
+		navigables.remove(group);
+		findables.remove(group);
+		nodes.values().stream()
+				.filter(node -> node instanceof Groupable)
+				.map(node -> (Groupable) node)
+				.forEach(node -> node.removeGroup(group));
 	}
 
 	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable) {
 
 		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, StringUtils.getRandHexString() + "A Group", findable);
 		groups.put(group);
+		navigables.add(group);
+		if (group.isFindable()) {
+			findables.add(group);
+		}
 		return group;
 	}
 
@@ -356,22 +367,14 @@ public class RoadMap implements Keyed {
 		return nodes.values();
 	}
 
-	public Collection<Node> getNodes(PathPlayer player) {
+	public Collection<Node> getFoundFindables(PathPlayer player) {
 		if (!findableNodes) {
 			return getNodes();
 		}
-		Player bukkitPlayer = Bukkit.getPlayer(player.getUuid());
-		if (bukkitPlayer == null) {
-			return new ArrayList<>();
-		}
-		return getNodes().stream()
-				.filter(node -> node instanceof Findable)
-				.filter(node -> {
-					NodeGroup g = node.getGroupKey() == null ? null : getNodeGroup(node);
-					return g != null && g.isFindable() || player.hasFound((Findable) node);
-				})
-				.filter(node -> node.getPermission() == null || bukkitPlayer.hasPermission(node.getPermission()))
-				.collect(Collectors.toSet());
+		return findables.stream()
+				.filter(player::hasFound)
+				.flatMap(findable -> findable.getGroup().stream())
+				.collect(Collectors.toList());
 	}
 
 	public @Nullable
@@ -383,13 +386,6 @@ public class RoadMap implements Keyed {
 	}
 
 	public int getMaxFoundSize() {
-		List<Integer> sizes = groups.values().stream().filter(NodeGroup::isFindable).map(HashSet::size).collect(Collectors.toList());
-		sizes.add((int) nodes.values().stream().filter(f -> f.getGroupKey() == null).count());
-
-		int size = 0;
-		for (int i : sizes) {
-			size += i;
-		}
-		return size;
+		return findables.size();
 	}
 }

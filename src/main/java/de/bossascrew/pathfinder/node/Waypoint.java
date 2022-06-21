@@ -14,28 +14,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class Waypoint implements Node, Findable {
+public class Waypoint implements Node, Findable, Groupable {
 
-	protected final int nodeId;
-	protected final NamespacedKey roadMapKey;
-	protected final RoadMap roadMap;
-	protected final List<Edge> edges;
+	private final int nodeId;
+	private final NamespacedKey roadMapKey;
+	private final RoadMap roadMap;
+	private final List<Edge> edges;
+	private final Collection<NodeGroup> groups;
 
-	protected Vector position;
+	private Vector position;
 	@Nullable
-	protected NamespacedKey groupKey = null;
+	private String permission = null;
 	@Nullable
-	protected String permission = null;
-	@Nullable
-	protected Double bezierTangentLength = null;
+	private Double bezierTangentLength = null;
 
 	public Waypoint(int databaseId, RoadMap roadMap) {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapKey = roadMap.getKey();
+		this.groups = new HashSet<>();
 
 		edges = new ArrayList<>();
 	}
@@ -79,15 +80,26 @@ public class Waypoint implements Node, Findable {
 
 	@Override
 	public Collection<String> getSearchTerms() {
-		if (groupKey == null) {
-			return new HashSet<>();
-		}
-		NodeGroup group = roadMap.getNodeGroup(groupKey);
-		return group == null ? new HashSet<>() : group.getSearchTerms();
+		return groups.stream().flatMap(group -> group.getSearchTerms().stream()).collect(Collectors.toSet());
 	}
 
 	@Override
 	public Collection<Node> getGroup() {
 		return Sets.newHashSet(this);
+	}
+
+	@Override
+	public void addGroup(NodeGroup group) {
+		groups.add(group);
+	}
+
+	@Override
+	public void removeGroup(NodeGroup group) {
+		groups.remove(group);
+	}
+
+	@Override
+	public void clearGroups() {
+		groups.clear();
 	}
 }

@@ -4,10 +4,8 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -20,8 +18,6 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -45,7 +41,9 @@ public class WaypointCommand extends BaseCommand {
 				.tag("id", Tag.preProcessParsed(node.getNodeId() + ""))
 				.tag("roadmap", Tag.inserting(Messages.formatKey(node.getRoadMapKey())))
 				.tag("permission", Tag.inserting(Messages.formatPermission(node.getPermission())))
-				.tag("group", Tag.inserting(Messages.formatKey(node.getGroupKey())))
+				.tag("groups", node instanceof Groupable groupable ?
+						Tag.inserting(Messages.formatNodeGroups(groupable.getGroups())) :
+						Tag.inserting(Component.text("none"))) //TODO as message
 				.tag("position", Tag.inserting(Messages.formatVector(node.getPosition())))
 				.tag("curve-length", Tag.preProcessParsed(node.getBezierTangentLength() + ""))
 				.tag("edge-count", Tag.preProcessParsed(node.getEdges().size() + ""))
@@ -138,7 +136,9 @@ public class WaypointCommand extends BaseCommand {
 									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
 									.tag("permission", Tag.preProcessParsed(n.getPermission() == null ? "null" : n.getPermission()))
 									.tag("position", Tag.inserting(Messages.formatVector(n.getPosition())))
-									.tag("group-key", Tag.preProcessParsed(n.getGroupKey() == null ? "null" : n.getGroupKey().toString()))
+									.tag("groups", n instanceof Groupable groupable ?
+											Tag.inserting(Messages.formatNodeGroups(groupable.getGroups())) :
+											Tag.inserting(Component.text("none"))) //TODO as message
 									.build();
 
 							return TranslationHandler.getInstance().translateLine(Messages.CMD_N_LIST_ELEMENT.format(resolver, r), player);
@@ -220,7 +220,7 @@ public class WaypointCommand extends BaseCommand {
 					.build()), player);
 		}
 
-		@Subcommand("group")
+		/*TODO @Subcommand("group")
 		@Syntax("<nodes> <group>")
 		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " null|" + PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
 		public void onSetGroup(CommandSender sender, NodeSelection selection, @Single NamespacedKey key) {
@@ -238,7 +238,6 @@ public class WaypointCommand extends BaseCommand {
 			}
 			selection.forEach(node -> node.setGroupKey(key));
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_GROUP.format(resolver), sender);
-			PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(sender);
-		}
+		}*/
 	}
 }

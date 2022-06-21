@@ -21,10 +21,6 @@ public interface Node extends Navigable, Comparable<Node> {
 
 	Collection<Edge> getEdges();
 
-	@Nullable NamespacedKey getGroupKey();
-
-	void setGroupKey(@Nullable NamespacedKey key);
-
 	@Nullable String getPermission();
 
 	void setPermission(@Nullable String permission);

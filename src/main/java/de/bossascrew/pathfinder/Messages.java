@@ -1,15 +1,20 @@
 package de.bossascrew.pathfinder;
 
+import de.bossascrew.pathfinder.node.NodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
 import de.cubbossa.translations.MessageMeta;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.function.Function;
 
 @MessageFile
 public class Messages {
@@ -39,6 +44,8 @@ public class Messages {
 	@MessageMeta("<yellow>Warning")
 	public static final Message GEN_GUI_WARNING_N = new Message("general.gui.warning.name");
 	public static final Message GEN_GUI_WARNING_L = new Message("general.gui.warning.lore");
+	public static final Message GEN_NODE_SEL = new Message("general.selection.nodes");
+	public static final Message GEN_GROUP_SEL = new Message("general.selection.groups");
 
 	public static final Message ERROR_PARSE_STRING = new Message("error.parse.string");
 	public static final Message ERROR_PARSE_INTEGER = new Message("error.parse.integer");
@@ -209,6 +216,14 @@ public class Messages {
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;
+	}
+
+	public static Component formatNodeGroups(Collection<NodeGroup> groups) {
+		return formatGroup(GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
+	}
+
+	public static <T> Component formatGroup(Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
+		return Component.text("Unimplemented"); //TODO
 	}
 
 	public static FormattedMessage formatVector(Vector vector) {

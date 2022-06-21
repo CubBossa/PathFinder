@@ -2,22 +2,18 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.node.Findable;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.PlayerNode;
-import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.visualizer.ParticlePath;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
@@ -60,10 +56,7 @@ public class PathPlayer {
      * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
      */
     public int getFoundAmount(RoadMap roadMap) {
-        return (int) foundFindables.values().stream()
-                .filter(foundInfo -> foundInfo.found().getRoadMap().equals(roadMap))
-                .filter(foundInfo -> !(foundInfo.found() instanceof Node node) || node.getGroupKey() == null)
-                .count();
+        return roadMap.getFoundFindables(this).size();
     }
 
     public void setPath(@NotNull ParticlePath path) {

@@ -61,16 +61,6 @@ public class EmptyNode implements Node {
 	}
 
 	@Override
-	public @Nullable NamespacedKey getGroupKey() {
-		return null;
-	}
-
-	@Override
-	public void setGroupKey(@Nullable NamespacedKey key) {
-
-	}
-
-	@Override
 	public @Nullable String getPermission() {
 		return null;
 	}
