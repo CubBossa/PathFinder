@@ -259,9 +259,9 @@ public class RoadMap implements Keyed {
 				.forEach(node -> node.removeGroup(group));
 	}
 
-	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable, String nameFormat) {
 
-		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, StringUtils.getRandHexString() + "A Group", findable);
+		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, nameFormat, findable);
 		groups.put(group);
 		navigables.add(group);
 		if (group.isFindable()) {
@@ -347,17 +347,11 @@ public class RoadMap implements Keyed {
 		PathPlugin.getInstance().getDatabase().deleteRoadMap(this);
 	}
 
-	private Collection<Edge> getEdgesFrom(Node node) {
-		Collection<Edge> ret = new ArrayList<>();
-		for (Edge edge : edges) {
-			if (edge.getStart().equals(node)) {
-				ret.add(edge);
-			}
-		}
-		return ret;
+	public Collection<Edge> getEdgesFrom(Node node) {
+		return node.getEdges();
 	}
 
-	private Collection<Edge> getEdgesTo(Node node) {
+	public Collection<Edge> getEdgesTo(Node node) {
 		Collection<Edge> ret = new ArrayList<>();
 		for (Edge edge : edges) {
 			if (edge.getEnd().equals(node)) {

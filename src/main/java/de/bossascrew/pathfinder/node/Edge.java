@@ -76,4 +76,13 @@ public class Edge implements Comparable<Edge> {
 		int compareStart = Integer.compare(sA, sB);
 		return compareStart == 0 ? Integer.compare(eA, eB) : compareStart;
 	}
+
+	@Override
+	public String toString() {
+		return "Edge{" +
+				"start=" + start +
+				", end=" + end +
+				", weightModifier=" + weightModifier +
+				'}';
+	}
 }

@@ -239,11 +239,12 @@ public class PathPlugin extends JavaPlugin {
 					int lastIndex = Lists.newArrayList('!', '&', '|', ')', '(').stream()
 							.map(input::lastIndexOf).mapToInt(value -> value).max().orElse(0);
 
-					String begin = input.substring(0, lastIndex);
+					String begin = lastIndex == -1 ? "" : input.substring(0, lastIndex);
 
 					List<String> completions = roadMap.getNavigables().stream()
 							.flatMap(navigable -> navigable.getSearchTerms().stream())
-							.map(s -> begin + s).toList();
+							.map(s -> begin + s)
+							.collect(Collectors.toList());
 					completions.add(input + "&");
 					completions.add(input + "|");
 					completions.add(input + "(");

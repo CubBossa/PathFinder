@@ -19,7 +19,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 public class FindCommand extends BaseCommand {
 
 	@Subcommand("location")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
+	@CommandCompletion(PathPlugin.COMPLETE_NAVIGABLES)
 	public void onFindSpot(Player player, NavigateSelection navigables) {
 
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);

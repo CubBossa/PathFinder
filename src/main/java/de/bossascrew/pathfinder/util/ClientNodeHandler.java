@@ -14,6 +14,7 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
@@ -213,8 +214,16 @@ public class ClientNodeHandler {
 		});
 	}
 
-	public void updateNodePosition(Node node, Player player, boolean updateEdges) {
-
+	public void updateNodePosition(Node node, Player player, Location location, boolean updateEdges) {
+		teleportArmorstand(player, nodeEntityMap.get(node), location.clone().subtract(ARMORSTAND_OFFSET));
+		if (updateEdges) {
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey());
+			for (Edge e : roadMap.getEdgesTo(node)) {
+				teleportArmorstand(player, edgeEntityMap.get(e), e.getCenter().clone()
+						.subtract(ARMORSTAND_CHILD_OFFSET)
+						.toLocation(location.getWorld()));
+			}
+		}
 	}
 
 	public void updateNodeName(Node node, Player player, boolean updateEdges) {
@@ -236,7 +245,7 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
+	public synchronized int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
 
 		location = location.clone().add((small ? ARMORSTAND_CHILD_OFFSET : ARMORSTAND_OFFSET));
 		int entityId = ClientNodeHandler.entityId++;

@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.util;
 
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.node.Node;
+import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -11,27 +12,24 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class SelectionUtils {
 
-	private static final Pattern SELECT_PATTERN = Pattern.compile("@n(\\[((.+=.+,)*(.+=.+))?])?");
+	@Getter
+	public static class PlayerContext extends SelectionParser.Context {
 
-	private record Context(Player player, String value) {
+		private final Player player;
+
+		public PlayerContext(String value, Player player) {
+			super(value);
+			this.player = player;
+		}
 	}
 
-	public record Selector(String key, Pattern value,
-						   BiFunction<List<Node>, Context, List<Node>> filter,
-						   String... completions) {
-	}
-
-	public static final Selector SELECT_KEY_PERMISSION = new Selector("permission", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2.)*?\\1"), (nodes, context) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_PERMISSION = new SelectionParser.Filter<>("permission", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2\\.)*?\\1"), (nodes, context) -> {
 		boolean regex = context.value().startsWith("regex:");
 		String arg = regex ? context.value().substring(6) : context.value();
 		Pattern pattern = regex ? Pattern.compile(arg) : null;
@@ -41,10 +39,12 @@ public class SelectionUtils {
 				.collect(Collectors.toList());
 	}, "<permission>");
 
-	public static final Selector SELECT_KEY_TANGENT_LENGTH = new Selector("tangent_length", Pattern.compile("(..)?[0-9]*(.[0-9]+)?(..)?"), (nodes, context) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_TANGENT_LENGTH = new SelectionParser.Filter<>("tangent_length", Pattern.compile("(\\.\\.)?[0-9]*(\\.[0-9]+)?(\\.\\.)?"), (nodes, context) -> {
 		boolean smaller = context.value().startsWith("..");
 		boolean larger = context.value().endsWith("..");
-		if (smaller && larger) return nodes;
+		if (smaller && larger) {
+			return nodes;
+		}
 		String arg = context.value();
 		if (smaller) {
 			arg = arg.substring(2);
@@ -54,15 +54,17 @@ public class SelectionUtils {
 		}
 		float req = Float.parseFloat(arg);
 		return nodes.stream().filter(node -> {
-			double dist = node.getPosition().distance(context.player().getLocation().toVector());
+			double dist = node.getPosition().distance(context.getPlayer().getLocation().toVector());
 			return smaller && dist <= req || larger && dist >= req || dist == req;
 		}).collect(Collectors.toList());
 	}, "..1", "1.5", "2..");
 
-	public static final Selector SELECT_KEY_DISTANCE = new Selector("distance", Pattern.compile("(..)?[0-9]*(.[0-9]+)?(..)?"), (nodes, context) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_DISTANCE = new SelectionParser.Filter<>("distance", Pattern.compile("(\\.\\.)?[0-9]*(\\.[0-9]+)?(\\.\\.)?"), (nodes, context) -> {
 		boolean smaller = context.value().startsWith("..");
 		boolean larger = context.value().endsWith("..");
-		if (smaller && larger) return nodes;
+		if (smaller && larger) {
+			return nodes;
+		}
 		String arg = context.value();
 		if (smaller) {
 			arg = arg.substring(2);
@@ -72,15 +74,15 @@ public class SelectionUtils {
 		}
 		float req = Float.parseFloat(arg);
 		return nodes.stream().filter(node -> {
-			double dist = node.getPosition().distance(context.player().getLocation().toVector());
+			double dist = node.getPosition().distance(context.getPlayer().getLocation().toVector());
 			return smaller && dist <= req || larger && dist >= req || dist == req;
 		}).collect(Collectors.toList());
 	}, "..1", "1.5", "2..");
 
-	public static final Selector SELECT_KEY_LIMIT = new Selector("limit", Pattern.compile("[0-9]+"), (nodes, context) -> CommandUtils.subList(nodes, 0, Integer.parseInt(context.value())), IntStream.range(1, 10).mapToObj(i -> "" + i).toArray(String[]::new));
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_LIMIT = new SelectionParser.Filter<>("limit", Pattern.compile("[0-9]+"), (nodes, context) -> CommandUtils.subList(new ArrayList<>(nodes), 0, Integer.parseInt(context.value())), IntStream.range(1, 10).mapToObj(i -> "" + i).toArray(String[]::new));
 
-	public static final Selector SELECT_KEY_SORT = new Selector("sort", Pattern.compile("(nearest|furthest|random|arbitrary)"), (nodes, context) -> {
-		Vector pVec = context.player().getLocation().toVector();
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_SORT = new SelectionParser.Filter<>("sort", Pattern.compile("(nearest|furthest|random|arbitrary)"), (nodes, context) -> {
+		Vector pVec = context.getPlayer().getLocation().toVector();
 		return switch (context.value()) {
 			case "nearest" -> nodes.stream().sorted(Comparator.comparingDouble(o -> o.getPosition().distance(pVec))).collect(Collectors.toList());
 			case "furthest" -> nodes.stream()
@@ -99,47 +101,14 @@ public class SelectionUtils {
 
 	public static final String SELECT_KEY_EDGE = "has_edge";
 
-	public static final Selector[] SELECTORS = {
+	public static final ArrayList<SelectionParser.Filter<Node, PlayerContext>> SELECTORS = Lists.newArrayList(
 			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH, SELECT_KEY_PERMISSION,
 			SELECT_KEY_SORT
-	};
+	);
 
 	public static NodeSelection getNodeSelection(Player player, Collection<Node> input, String selectString) {
-		Matcher matcher = SELECT_PATTERN.matcher(selectString);
-		if (!matcher.matches()) {
-			throw new IllegalArgumentException("Select String must be of format @n[<key>=<value>,...]");
-		}
-		if (matcher.groupCount() < 2) {
-			return new NodeSelection(input);
-		}
-		String argumentString = matcher.group(2);
-
-		Map<Selector, String> arguments = new HashMap<>();
-		while (argumentString.length() > 0) {
-			int len = argumentString.length();
-			for (Selector selector : SELECTORS) {
-				if (!argumentString.startsWith(selector.key())) {
-					continue;
-				}
-				argumentString = argumentString.substring(selector.key().length() + 1);
-				Matcher m = selector.value().matcher(argumentString);
-				MatchResult matchResult = m.toMatchResult();
-				if (matchResult.start() != 0) {
-					throw new IllegalArgumentException("Illegal value for key '" + selector.key() + "': " + argumentString);
-				}
-				String value = argumentString.substring(matcher.end() + 1);
-				arguments.put(selector, value);
-			}
-			if (len <= argumentString.length()) {
-				throw new IllegalArgumentException("Illegal selection argument: " + argumentString);
-			}
-		}
-
-		List<Node> nodes = new ArrayList<>(input);
-		for (Map.Entry<Selector, String> entry : arguments.entrySet()) {
-			nodes = entry.getKey().filter().apply(nodes, new Context(player, entry.getValue()));
-		}
-		return new NodeSelection(nodes);
+		return new SelectionParser<>(SELECTORS, string -> new PlayerContext(string, player), "n", "node")
+				.parseSelection(input, selectString, NodeSelection::new);
 	}
 
 	public static List<String> completeNodeSelection(String selectString) {
@@ -155,7 +124,7 @@ public class SelectionUtils {
 		String sel = selectString;
 		String sub = in.substring(0, Integer.max(in.lastIndexOf(','), in.lastIndexOf('[')) + 1);
 
-		return Arrays.stream(SELECTORS)
+		return SELECTORS.stream()
 				.map(s -> sel.endsWith("=") ? Arrays.stream(s.completions()).map(c -> s.key() + "=" + c).collect(Collectors.toList()) : Lists.newArrayList(s.key() + "="))
 				.flatMap(Collection::stream)
 				.map(s -> sub + s)

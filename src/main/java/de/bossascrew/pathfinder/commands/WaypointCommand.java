@@ -177,7 +177,7 @@ public class WaypointCommand extends BaseCommand {
 	@Subcommand("disconnect")
 	@Syntax("<node> <node>")
 	@CommandPermission("pathfinder.command.waypoint.disconnect")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " " + PathPlugin.COMPLETE_FINDABLES_CONNECTED)
+	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " " + PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onDisconnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
 
 		for (Node start : startSelection) {

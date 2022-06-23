@@ -102,4 +102,12 @@ public class Waypoint implements Node, Findable, Groupable {
 	public void clearGroups() {
 		groups.clear();
 	}
+
+	@Override
+	public String toString() {
+		return "Waypoint{" +
+				"nodeId=" + nodeId +
+				", position=" + position +
+				'}';
+	}
 }

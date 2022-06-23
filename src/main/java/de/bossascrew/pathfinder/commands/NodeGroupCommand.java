@@ -7,6 +7,7 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
+import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -30,9 +31,15 @@ public class NodeGroupCommand extends BaseCommand {
     public void onList(Player player, @Optional Integer pageInput) {
         RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
+        int pages = (int) Math.ceil(roadMap.getGroups().size() / 10.);
+        pageInput = pageInput == null ? 0 : Integer.max(0, Integer.min(pageInput, pages));
+
         TagResolver resolver = TagResolver.builder()
                 .tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
                 .tag("page", Tag.preProcessParsed(pageInput + ""))
+                .tag("pages", Tag.preProcessParsed(pageInput + ""))
+                .tag("prev-page", Tag.preProcessParsed(Integer.max(0, pageInput - 1) + ""))
+                .tag("next-page", Tag.preProcessParsed(pageInput + 1 + ""))
                 .build();
 
         TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
@@ -40,7 +47,7 @@ public class NodeGroupCommand extends BaseCommand {
         for (NodeGroup group : CommandUtils.subList(new ArrayList<>(roadMap.getGroups().values()), pageInput, 10)) {
 
             TagResolver r = TagResolver.builder()
-                    .tag("key", Tag.inserting(Component.text(group.getKey().toString())))
+                    .tag("id", Tag.inserting(Component.text(group.getKey().toString())))
                     .tag("name", Tag.inserting(group.getDisplayName()))
                     .tag("size", Tag.inserting(Component.text(group.size())))
                     .tag("findable", Tag.inserting(Component.text(group.isFindable())))
@@ -62,7 +69,7 @@ public class NodeGroupCommand extends BaseCommand {
             return;
         }
 
-        NodeGroup group = roadMap.createNodeGroup(key, true);
+        NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
         TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
     }
 

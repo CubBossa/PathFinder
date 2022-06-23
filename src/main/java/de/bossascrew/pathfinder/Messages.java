@@ -163,11 +163,14 @@ public class Messages {
 	public static final Message CMD_NG_CREATE = new Message("commands.node_group.create");
 	@MessageMeta(placeholders = "name")
 	public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
-	@MessageMeta(placeholders = {"roadmap", "page"})
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
+			placeholders = {"roadmap", "page", "next-page", "prev-page"})
 	public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
-	@MessageMeta(placeholders = {"roadmap", "page", "id", "name", "size", "findable"})
+	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
+			placeholders = {"roadmap", "page", "id", "name", "size", "findable"})
 	public static final Message CMD_NG_LIST_LINE = new Message("commands.node_group.list.line");
-	@MessageMeta(placeholders = {"roadmap", "page"})
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
+			placeholders = {"roadmap", "page", "next-page", "prev-page"})
 	public static final Message CMD_NG_LIST_FOOTER = new Message("commands.node_group.list.footer");
 	@MessageMeta(placeholders = {"name", "value"})
 	public static final Message CMD_NG_SET_NAME = new Message("commands.node_group.set_name");

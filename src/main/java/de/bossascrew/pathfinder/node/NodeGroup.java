@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.node;
 
 import de.bossascrew.pathfinder.Named;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +11,6 @@ import org.bukkit.NamespacedKey;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -31,9 +31,14 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, 
         super(nodes);
         this.key = key;
         this.roadMap = roadMap;
-        this.nameFormat = nameFormat;
+        this.setNameFormat(nameFormat);
         this.findable = false;
         this.searchTerms = new HashSet<>();
+    }
+
+    public void setNameFormat(String nameFormat) {
+        this.nameFormat = nameFormat;
+        this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
     }
 
     @Override

@@ -178,15 +178,15 @@ public class EditModeMenu {
 
 	private void openGroupMenu(Player player, Groupable groupable) {
 
-		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5);
-		menu.addPreset(MenuPresets.fillRow(MenuPresets.FILLER_DARK, 4));
+		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5); //TODO message title
+		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 4)); //TODO extract icon
 		for (NodeGroup group : roadMap.getGroups().values()) {
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
 						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem();
 						if (groupable.getGroups().contains(group)) {
-							stack = de.bossascrew.pathfinder.util.ItemStackUtils.setGlow(stack);
+							stack = ItemStackUtils.setGlow(stack);
 						}
 						return stack;
 					})
@@ -209,6 +209,7 @@ public class EditModeMenu {
 			presetApplier.addItemOnTop(4 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
 			presetApplier.addClickHandlerOnTop(4 * 9 + 7, Action.LEFT, c -> {
 				groupable.clearGroups();
+				menu.refresh(menu.getListSlots());
 				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 			});
 
@@ -230,9 +231,11 @@ public class EditModeMenu {
 			if (key == null || roadMap.getNodeGroup(key) != null) {
 				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 			}
-			NodeGroup group = roadMap.createNodeGroup(key, true);
+			NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
 			groupable.addGroup(group);
-			menu.close(s.getPlayer());
+			ListMenu prev = (ListMenu) menu.getPrevious(s.getPlayer());
+			prev.refresh(prev.getListSlots());
+			menu.openPreviousMenu(s.getPlayer());
 		});
 		return menu;
 	}
