@@ -8,6 +8,7 @@ import de.bossascrew.pathfinder.data.InMemoryDatabase;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.listener.PlayerListener;
+import de.bossascrew.pathfinder.node.Navigable;
 import de.bossascrew.pathfinder.node.NavigateSelection;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
@@ -15,6 +16,7 @@ import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
+import de.bossascrew.pathfinder.util.SetArithmeticParser;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
 import de.bossascrew.splinelib.SplineLib;
@@ -33,7 +35,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -233,7 +234,24 @@ public class PathPlugin extends JavaPlugin {
 				.map(Node::getNameFormat)
 				.collect(Collectors.toSet())));*/
 		commandCompletions.registerCompletion(COMPLETE_NAVIGABLES, context ->
-				resolveFromRoadMap(context, roadMap -> roadMap.getNavigables().stream().flatMap(n -> n.getSearchTerms().stream()).collect(Collectors.toList())));
+				resolveFromRoadMap(context, roadMap -> {
+					String input = context.getInput();
+					int lastIndex = Lists.newArrayList('!', '&', '|', ')', '(').stream()
+							.map(input::lastIndexOf).mapToInt(value -> value).max().orElse(0);
+
+					String begin = input.substring(0, lastIndex);
+
+					List<String> completions = roadMap.getNavigables().stream()
+							.flatMap(navigable -> navigable.getSearchTerms().stream())
+							.map(s -> begin + s).toList();
+					completions.add(input + "&");
+					completions.add(input + "|");
+					completions.add(input + "(");
+					completions.add(input + ")");
+					completions.add(input + "!");
+
+					return completions;
+				}));
 	}
 
 	private Collection<String> resolveFromRoadMap(BukkitCommandCompletionContext context, Function<RoadMap, Collection<String>> fromRoadmap) {
@@ -322,7 +340,8 @@ public class PathPlugin extends JavaPlugin {
 			if (roadMap == null) {
 				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
 			}
-			return roadMap.getNavigables(Arrays.stream(search.split(",")).map(String::trim).collect(Collectors.toList()));
+			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(roadMap.getNavigables(), Navigable::getSearchTerms);
+			return new NavigateSelection(roadMap, parser.parse(search));
 		});
 		contexts.registerContext(NodeSelection.class, context -> {
 			String search = context.popFirstArg();
