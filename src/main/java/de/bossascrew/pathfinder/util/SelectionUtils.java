@@ -130,15 +130,4 @@ public class SelectionUtils {
 				.map(s -> sub + s)
 				.collect(Collectors.toList());
 	}
-
-	public static Component formatSelection(NodeSelection selection) {
-
-		Component hover = Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)), selection.stream()
-				.map(Node::getNodeId).map(Component::text).collect(Collectors.toList()));
-
-		return Component.text(selection.size() + " Nodes")
-				.color(NamedTextColor.WHITE)
-				.decorate(TextDecoration.UNDERLINED)
-				.hoverEvent(HoverEvent.showText(hover));
-	}
 }

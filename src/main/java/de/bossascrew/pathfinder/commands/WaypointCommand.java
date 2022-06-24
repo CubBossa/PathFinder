@@ -42,7 +42,7 @@ public class WaypointCommand extends BaseCommand {
 				.tag("roadmap", Tag.inserting(Messages.formatKey(node.getRoadMapKey())))
 				.tag("permission", Tag.inserting(Messages.formatPermission(node.getPermission())))
 				.tag("groups", node instanceof Groupable groupable ?
-						Tag.inserting(Messages.formatNodeGroups(groupable.getGroups())) :
+						Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 						Tag.inserting(Component.text("none"))) //TODO as message
 				.tag("position", Tag.inserting(Messages.formatVector(node.getPosition())))
 				.tag("curve-length", Tag.preProcessParsed(node.getBezierTangentLength() + ""))
@@ -70,7 +70,8 @@ public class WaypointCommand extends BaseCommand {
 	public void onDelete(Player player, NodeSelection selection) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 		selection.forEach(roadMap::removeNode);
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE.format(TagResolver.resolver("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))), player);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE
+				.format(TagResolver.resolver("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
 	}
 
 	@Subcommand("tphere")
@@ -89,7 +90,7 @@ public class WaypointCommand extends BaseCommand {
 		selection.forEach(node -> roadMap.setNodeLocation(node, pos));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
 				.tag("position", Tag.inserting(Messages.formatVector(player.getLocation().toVector())))
 				.build()), player);
 	}
@@ -109,7 +110,7 @@ public class WaypointCommand extends BaseCommand {
 		});
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
 				.tag("position", Tag.inserting(Messages.formatVector(xS, yS, zS)))
 				.build()), player);
 	}
@@ -138,7 +139,7 @@ public class WaypointCommand extends BaseCommand {
 									.tag("permission", Tag.preProcessParsed(n.getPermission() == null ? "null" : n.getPermission()))
 									.tag("position", Tag.inserting(Messages.formatVector(n.getPosition())))
 									.tag("groups", n instanceof Groupable groupable ?
-											Tag.inserting(Messages.formatNodeGroups(groupable.getGroups())) :
+											Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 											Tag.inserting(Component.text("none"))) //TODO as message
 									.build();
 
@@ -204,7 +205,7 @@ public class WaypointCommand extends BaseCommand {
 		public void onSetPermission(Player player, NodeSelection selection, @Single String perm) {
 			selection.forEach(node -> node.setPermission(perm.equalsIgnoreCase("null") ? null : perm));
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_PERMISSION.format(TagResolver.builder()
-					.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+					.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
 					.tag("permission", Tag.inserting(Component.text(perm)))
 					.build()), player);
 		}
@@ -216,7 +217,7 @@ public class WaypointCommand extends BaseCommand {
 		public void onSetTangent(Player player, NodeSelection selection, Double strength) {
 			selection.forEach(node -> node.setBezierTangentLength(strength));
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
-					.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+					.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
 					.tag("length", Tag.inserting(Component.text(strength)))
 					.build()), player);
 		}
@@ -228,7 +229,7 @@ public class WaypointCommand extends BaseCommand {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 
 			TagResolver resolver = TagResolver.builder()
-					.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+					.tag("selection", Tag.inserting(Messages.formatNodeSelection(selection)))
 					.tag("group", Tag.inserting(Messages.formatKey(key)))
 					.build();
 

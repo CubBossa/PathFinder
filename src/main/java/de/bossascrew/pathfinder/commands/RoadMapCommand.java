@@ -198,7 +198,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
 				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection)))
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(sender, selection)))
 				.build()), sender);
 	}
 
@@ -222,7 +222,7 @@ public class RoadMapCommand extends BaseCommand {
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
 				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-				.tag("selection", Tag.inserting(SelectionUtils.formatSelection(selection))).build()), sender);
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(sender, selection))).build()), sender);
 	}
 
 	@Subcommand("select")

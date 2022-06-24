@@ -8,14 +8,20 @@ import de.cubbossa.translations.MessageFile;
 import de.cubbossa.translations.MessageMeta;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @MessageFile
 public class Messages {
@@ -244,16 +250,18 @@ public class Messages {
 		return val ? GEN_TRUE : GEN_FALSE;
 	}
 
-	public static Component formatNodeSelection(Collection<Node> nodes) {
-		return formatGroup(GEN_NODE_SEL, nodes, node -> Component.text("#" + node.getNodeId()));
+	public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
+		return formatGroup(sender, GEN_NODE_SEL, nodes, node -> Component.text("#" + node.getNodeId()));
 	}
 
-	public static Component formatNodeGroups(Collection<NodeGroup> groups) {
-		return formatGroup(GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
+	public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
+		return formatGroup(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
 	}
 
-	public static <T> Component formatGroup(Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
-		return Component.text("Unimplemented"); //TODO
+	public static <T> Component formatGroup(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
+		return placeHolder.format(Placeholder.parsed("amount", collection.size() + "")).asComponent(sender)
+				.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+						collection.stream().map(converter).collect(Collectors.toList()))));
 	}
 
 	public static FormattedMessage formatVector(Vector vector) {
