@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder;
 
+import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
@@ -40,11 +41,15 @@ public class Messages {
 	public static final Message GEN_NULL = new Message("general.null");
 	@MessageMeta("<green>Accept</green>")
 	public static final Message GEN_GUI_ACCEPT_N = new Message("general.gui.accept.name");
+	@MessageMeta("")
 	public static final Message GEN_GUI_ACCEPT_L = new Message("general.gui.accept.lore");
 	@MessageMeta("<yellow>Warning")
 	public static final Message GEN_GUI_WARNING_N = new Message("general.gui.warning.name");
+	@MessageMeta("")
 	public static final Message GEN_GUI_WARNING_L = new Message("general.gui.warning.lore");
+	@MessageMeta(value = "<white><u><amount> Nodes</u></white>", placeholders = "amount")
 	public static final Message GEN_NODE_SEL = new Message("general.selection.nodes");
+	@MessageMeta(value = "<white><u><amount> Groups</u></white>", placeholders = "amount")
 	public static final Message GEN_GROUP_SEL = new Message("general.selection.groups");
 
 	public static final Message ERROR_PARSE_STRING = new Message("error.parse.string");
@@ -127,14 +132,22 @@ public class Messages {
 			placeholders = {"roadmap", "value"})
 	public static final Message CMD_RM_SET_FINDABLE = new Message("commands.roadmap.set_findable");
 
-	@MessageMeta(value = "<ins:prefix>Successfully created Node <name>.", placeholders = "name")
+	@MessageMeta(value = "<ins:prefix>Successfully created Node #<id>.", placeholders = "id")
 	public static final Message CMD_N_CREATE = new Message("commands.node.create");
-	@MessageMeta(placeholders = "selection")
+	@MessageMeta(value = "<ins:prefix>Successfully deleted <selection>.",
+			placeholders = "selection")
 	public static final Message CMD_N_DELETE = new Message("commands.node.delete");
-	@MessageMeta(placeholders = {"selection", "location"})
+	@MessageMeta(value = "<ins:prefix>Moved <selection> to <location>.",
+			placeholders = {"selection", "location"})
 	public static final Message CMD_N_MOVED = new Message("commands.node.moved");
-	@MessageMeta(placeholders = {"selection", "name"})
-	public static final Message CMD_N_RENAMED = new Message("commands.node.renamed");
+	@MessageMeta(value = """
+			<#7b42f5>Node #<id></7b42f5> <gray>(<roadmap>)</gray>
+			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><permission></#6569eb>
+			<dark_gray>» </dark_gray><gray>Groups: <#6569eb><groups></#6569eb>
+			<dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb>
+			<dark_gray>» </dark_gray><gray>Curve-Length: <#6569eb><curve-length></#6569eb>
+			<dark_gray>» </dark_gray><gray>Edge-Count: <#6569eb><edge-count></#6569eb>
+			""", placeholders = {"id", "roadmap", "permission", "groups", "position", "curve-length", "edge-count"})
 	public static final Message CMD_N_INFO = new Message("commands.node.info");
 	@MessageMeta(placeholders = {"selection", "permission"})
 	public static final Message CMD_N_SET_PERMISSION = new Message("commands.node.set_permission");
@@ -219,6 +232,10 @@ public class Messages {
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;
+	}
+
+	public static Component formatNodeSelection(Collection<Node> nodes) {
+		return formatGroup(GEN_NODE_SEL, nodes, node -> Component.text("#" + node.getNodeId()));
 	}
 
 	public static Component formatNodeGroups(Collection<NodeGroup> groups) {

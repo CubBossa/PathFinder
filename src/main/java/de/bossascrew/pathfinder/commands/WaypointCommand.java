@@ -59,7 +59,8 @@ public class WaypointCommand extends BaseCommand {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 		Node node = roadMap.createNode(null, player.getLocation().toVector().add(new Vector(0, 1, 0)));
 		//TODO save to database obvsly
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
+				.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);
 	}
 
 	@Subcommand("delete")
