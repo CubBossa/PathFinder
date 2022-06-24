@@ -8,7 +8,6 @@ import de.bossascrew.pathfinder.events.node.*;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.util.StringUtils;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.Setter;
@@ -314,12 +313,13 @@ public class RoadMap implements Keyed {
 			if (existing == null) {
 				other = PathPlugin.getInstance().getDatabase().createEdge(end, start, weightBack);
 				end.getEdges().add(other);
-				edges.add(edge);
+				edges.add(other);
 			}
 		}
 
 		Edge finalOther = other;
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
+
 
 		return edge;
 	}
@@ -340,7 +340,7 @@ public class RoadMap implements Keyed {
 		edge.getEnd().getEdges().remove(edge);
 		edges.remove(edge);
 
-		Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge));
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge)));
 	}
 
 	public void delete() {

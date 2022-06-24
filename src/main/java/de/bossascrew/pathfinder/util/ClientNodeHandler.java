@@ -215,12 +215,12 @@ public class ClientNodeHandler {
 	}
 
 	public void updateNodePosition(Node node, Player player, Location location, boolean updateEdges) {
-		teleportArmorstand(player, nodeEntityMap.get(node), location.clone().subtract(ARMORSTAND_OFFSET));
+		teleportArmorstand(player, nodeEntityMap.get(node), location.clone().add(ARMORSTAND_OFFSET));
 		if (updateEdges) {
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey());
 			for (Edge e : roadMap.getEdgesTo(node)) {
 				teleportArmorstand(player, edgeEntityMap.get(e), e.getCenter().clone()
-						.subtract(ARMORSTAND_CHILD_OFFSET)
+						.add(ARMORSTAND_CHILD_OFFSET)
 						.toLocation(location.getWorld()));
 			}
 		}

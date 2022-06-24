@@ -46,8 +46,8 @@
                         <includes>
                             <include>co.aikar:acf-bukkit</include>
                             <include>net.kyori:**</include>
-                            <include>com.github.CubBossa.MenuFramework:MenuFramework</include>
                             <include>de.cubbossa:MenuFramework</include>
+                            <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
                             <include>de.cubbossa:Translations</include>
                             <include>de.cubbossa:SplineLib</include>
                             <include>org.bstats</include>
@@ -220,7 +220,7 @@
             <version>0.5.1-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>com.github.CubBossa.MenuFramework</groupId>
             <artifactId>MenuFramework</artifactId>
             <version>v1.1.4</version>
@@ -230,6 +230,18 @@
             <groupId>com.github.CubBossa.MenuFramework</groupId>
             <artifactId>MenuFramework-Protocol-Extension</artifactId>
             <version>v1.1.4</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>de.cubbossa</groupId>
+            <artifactId>MenuFramework</artifactId>
+            <version>1.1.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.cubbossa</groupId>
+            <artifactId>MenuFramework-Protocol-Extension</artifactId>
+            <version>1.1.5</version>
         </dependency>
 
         <dependency>

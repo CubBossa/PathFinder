@@ -169,8 +169,8 @@ public class RoadMapEditor implements Keyed, Listener {
 
 			Map<Edge, Boolean> undirected = new HashMap<>();
 			for (Edge edge : roadMap.getEdges()) {
-				Edge contained = undirected.keySet().stream().filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart())).findFirst().orElse(null);
-				if (contained != null) {
+				Edge contained = roadMap.getEdge(edge.getEnd(), edge.getStart());
+				if (contained != null && undirected.containsKey(contained)) {
 					undirected.put(contained, true);
 				} else {
 					undirected.put(edge, false);
@@ -195,7 +195,6 @@ public class RoadMapEditor implements Keyed, Listener {
 					packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(LerpUtils.lerp(a, b, i / dist).toLocation(world)).toPacket());
 				}
 			}
-			System.out.println("Starting task for " + particles.size() + " colors.");
 			for (var entry : packets.entrySet()) {
 				editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay, () -> editingPlayers.keySet().stream()
 						.map(Bukkit::getPlayer)
@@ -219,7 +218,7 @@ public class RoadMapEditor implements Keyed, Listener {
 		Collection<Edge> edges = new HashSet<>(event.getEdges());
 		for (Edge edge : event.getEdges()) {
 			Edge otherDirection = roadMap.getEdge(edge.getEnd(), edge.getStart());
-			if (otherDirection != null && !event.getEdges().contains(otherDirection)) {
+			if (otherDirection != null && event.getEdges().contains(otherDirection)) {
 				edges.remove(otherDirection);
 			}
 		}
