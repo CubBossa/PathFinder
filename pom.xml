@@ -54,6 +54,7 @@
                             <include>xyz.xenondevs:particle</include>
                             <include>org.jgrapht:jgrapht-core</include>
                             <include>org.jheaps:jheaps</include>
+                            <include>dev.jorel:commandapi-shade</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -97,6 +98,10 @@
                             <pattern>org.jheaps</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.jheaps</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>dev.jorel.commandapi</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.commandapi</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
             </plugin>
@@ -138,6 +143,18 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>brigadier</artifactId>
+            <version>1.0.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.jorel</groupId>
+            <artifactId>commandapi-shade</artifactId>
+            <version>8.4.1</version>
+        </dependency>
 
         <dependency>
             <groupId>xyz.xenondevs</groupId>

@@ -118,7 +118,7 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 		String sub = matcher.group(1);
 		String in = matcher.group(3);
 
-		Filter<T, C> filter = filters.stream().filter(f -> f.key.equals(in)).findAny().orElse(null);
+		Filter<T, C> filter = filters.stream().filter(f -> f.key.equals(in)).findAny( ).orElse(null);
 		if (filter == null) {
 			return filters.stream().map(Filter::key).map(s -> sub + s + "=").collect(Collectors.toList());
 		}

@@ -169,18 +169,19 @@ public class InMemoryDatabase implements DataStorage {
 
 	@Override
 	public Map<Integer, SimpleCurveVisualizer> loadPathVisualizer() {
+		log("Loaded Visualizers");
 		return new HashMap<>();
 	}
 
 
 	@Override
 	public void updatePathVisualizer(SimpleCurveVisualizer visualizer) {
-
+		log("Updated Visualizer");
 	}
 
 	@Override
 	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
-
+		log("Deleted Visualizer");
 	}
 
 

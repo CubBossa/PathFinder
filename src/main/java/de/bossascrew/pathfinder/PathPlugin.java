@@ -24,6 +24,8 @@ import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandAPIConfig;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -31,9 +33,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -50,6 +49,11 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_COMMAND_FIND_INFO = "pathfinder.command.find.info";
 	public static final String PERM_COMMAND_FIND_STYLE = "pathfinder.command.find.style";
 	public static final String PERM_COMMAND_FIND_LOCATIONS = "pathfinder.command.find.location";
+
+	public static final String PERM_CMD_NG_LIST = "pathfinder.nodegroup.list";
+	public static final String PERM_CMD_NG_CREATE = "pathfinder.nodegroup.create";
+	public static final String PERM_CMD_NG_DELETE = "pathfinder.nodegroup.delete";
+	public static final String PERM_CMD_NG_RENAME = "pathfinder.nodegroup.rename";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
@@ -101,6 +105,12 @@ public class PathPlugin extends JavaPlugin {
 	private DataStorage database;
 
 
+	@Override
+	public void onLoad() {
+		CommandAPI.onLoad(new CommandAPIConfig()
+				.verboseOutput(true));
+	}
+
 	@SneakyThrows
 	@Override
 	public void onEnable() {
@@ -119,16 +129,18 @@ public class PathPlugin extends JavaPlugin {
 
 		// Commands
 
+		CommandAPI.onEnable(this);
+		new CNodeGroupCommand();
+
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
 
-		commandManager.registerCommand(new PathFinderCommand());
+		/*commandManager.registerCommand(new PathFinderCommand());
 		commandManager.registerCommand(new CancelPath());
 		commandManager.registerCommand(new FindCommand());
 		commandManager.registerCommand(new NodeGroupCommand());
-		commandManager.registerCommand(new PathVisualizerCommand());
+		commandManager.registerCommand(new PathVisualizerCommand());*/
 		commandManager.registerCommand(new RoadMapCommand());
-		commandManager.registerCommand(new WaypointCommand());
 
 		registerCompletions();
 
