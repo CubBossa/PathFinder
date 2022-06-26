@@ -165,23 +165,22 @@ public class ClientNodeHandler {
 	}
 
 	public void showEdges(Collection<Edge> edges, Player player) {
-		Map<Edge, Boolean> undirected = new HashMap<>();
+		Map<Edge, Edge> undirected = new HashMap<>();
 		for (Edge edge : edges) {
 			Edge contained = undirected.keySet().stream().filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart())).findFirst().orElse(null);
 			if (contained != null) {
-				undirected.put(contained, true);
+				undirected.put(contained, edge);
 			} else {
-				undirected.put(edge, false);
+				undirected.put(edge, null);
 			}
 		}
 		for (var entry : undirected.entrySet()) {
-			showEdge(entry.getKey(), player, entry.getValue());
+			showEdge(entry.getKey(), entry.getValue(), player);
 		}
 	}
 
-	public void showEdge(Edge edge, Player player, boolean undirected) {
-		Vector pos = edge.getStart().getPosition().clone().add(
-				edge.getEnd().getPosition().clone().subtract(edge.getStart().getPosition()).multiply(.5f));
+	public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
+		Vector pos = LerpUtils.lerp(edge.getStart().getPosition(), edge.getEnd().getPosition(), .3f);
 		Location location = pos.toLocation(RoadMapHandler.getInstance().getRoadMap(edge.getStart().getRoadMapKey()).getWorld());
 		int id = spawnArmorstand(player, location, null, true);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, edgeHead});
@@ -193,6 +192,10 @@ public class ClientNodeHandler {
 		Collection<Edge> inner = chunkEdgeMap.getOrDefault(key, new HashSet<>());
 		inner.add(edge);
 		chunkEdgeMap.put(key, inner);
+
+		if (otherDirection != null) {
+			showEdge(otherDirection, null, player);
+		}
 	}
 
 	public void hideNodes(Collection<Node> nodes, Player player) {
@@ -218,11 +221,17 @@ public class ClientNodeHandler {
 		teleportArmorstand(player, nodeEntityMap.get(node), location.clone().add(ARMORSTAND_OFFSET));
 		if (updateEdges) {
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey());
-			for (Edge e : roadMap.getEdgesTo(node)) {
-				teleportArmorstand(player, edgeEntityMap.get(e), e.getCenter().clone()
-						.add(ARMORSTAND_CHILD_OFFSET)
-						.toLocation(location.getWorld()));
+			if (roadMap == null) {
+				throw new RuntimeException("Roadmap unexpectedly null.");
 			}
+			roadMap.getEdges().stream()
+					.filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node))
+					.forEach(e -> {
+						teleportArmorstand(player, edgeEntityMap.get(e), LerpUtils.lerp(e.getStart().getPosition(), e.getEnd().getPosition(), 0.3f)
+								.clone()
+								.add(ARMORSTAND_CHILD_OFFSET)
+								.toLocation(location.getWorld()));
+					});
 		}
 	}
 

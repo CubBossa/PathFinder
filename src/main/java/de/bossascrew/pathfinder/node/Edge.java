@@ -21,6 +21,7 @@ public class Edge implements Comparable<Edge> {
 		this.start = start;
 		this.end = end;
 		this.weightModifier = weightModifier;
+		refreshCenter();
 	}
 
 	public void setStart(Node start) {

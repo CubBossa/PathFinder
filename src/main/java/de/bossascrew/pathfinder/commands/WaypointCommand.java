@@ -91,7 +91,7 @@ public class WaypointCommand extends BaseCommand {
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("position", Tag.inserting(Messages.formatVector(player.getLocation().toVector())))
+				.tag("location", Tag.inserting(Messages.formatVector(player.getLocation().toVector())))
 				.build()), player);
 	}
 
@@ -111,7 +111,7 @@ public class WaypointCommand extends BaseCommand {
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("position", Tag.inserting(Messages.formatVector(xS, yS, zS)))
+				.tag("location", Tag.inserting(Messages.formatVector(xS, yS, zS)))
 				.build()), player);
 	}
 

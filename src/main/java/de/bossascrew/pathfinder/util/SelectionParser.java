@@ -5,15 +5,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SelectionParser<T, C extends SelectionParser.Context> {
 
@@ -33,7 +31,7 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 
 	private static final Pattern SELECT_PATTERN = Pattern.compile("@[a-zA-Z0-9]+(\\[((.+=.+,)*(.+=.+))?])?");
 
-	private final Collection<String> classifiers;
+	private final List<String> classifiers;
 	private final Collection<Filter<T, C>> filters;
 	@Getter
 	@Setter
@@ -102,5 +100,28 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 			}
 		}
 		return result;
+	}
+
+	private static final Pattern COMPLETION_START = Pattern.compile("(@\\w+\\[(.*=.*,)*)([^=,]*)(=([^=,]*))?");
+
+	public Collection<String> completeSelectionString(String input) {
+		if (input.isEmpty() || input.equals("@")) {
+			return Lists.newArrayList("@" + classifiers.get(0));
+		}
+		if (!input.startsWith("@")) {
+			return new ArrayList<>();
+		}
+		Matcher matcher = COMPLETION_START.matcher(input);
+		if (!matcher.matches()) {
+			return Lists.newArrayList(input + "[");
+		}
+		String sub = matcher.group(1);
+		String in = matcher.group(3);
+
+		Filter<T, C> filter = filters.stream().filter(f -> f.key.equals(in)).findAny().orElse(null);
+		if (filter == null) {
+			return filters.stream().map(Filter::key).map(s -> sub + s + "=").collect(Collectors.toList());
+		}
+		return Arrays.stream(filter.completions).map(s -> input + s).collect(Collectors.toList());
 	}
 }

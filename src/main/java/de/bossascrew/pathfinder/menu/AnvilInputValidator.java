@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.util;
+package de.bossascrew.pathfinder.menu;
 
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;

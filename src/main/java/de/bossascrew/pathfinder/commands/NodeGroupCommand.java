@@ -13,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -89,10 +90,13 @@ public class NodeGroupCommand extends BaseCommand {
     @CommandPermission("pathfinder.command.nodegroup.rename")
     @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
     public void onRename(Player player, NodeGroup group, @Single String newName) {
+        Component oldName = group.getDisplayName();
         group.setNameFormat(newName);
 
         TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
-                .tag("name", Tag.inserting(group.getDisplayName()))
+                .resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
+                .resolver(Placeholder.component("name", oldName))
+                .tag("new-name", Tag.inserting(group.getDisplayName()))
                 .tag("value", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(newName)))
                 .build()), player);
     }
@@ -104,7 +108,7 @@ public class NodeGroupCommand extends BaseCommand {
     public void onSetFindable(Player player, NodeGroup group, boolean findable) {
         group.setFindable(findable);
 
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
+        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
                 .tag("name", Tag.inserting(group.getDisplayName()))
                 .tag("value", Tag.inserting(Component.text(findable)))
                 .build()), player);
@@ -119,7 +123,7 @@ public class NodeGroupCommand extends BaseCommand {
         @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
         public void onTermList(Player player, NodeGroup group) {
 
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
+            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
                     .tag("name", Tag.inserting(group.getDisplayName()))
                     .tag("values", Tag.inserting(toList(group.getSearchTerms())))
                     .build()), player);

@@ -66,13 +66,6 @@ public class PathPlayer {
         }
         path.run(uuid);
         activePaths.put(path.getRoadMap().getKey(), path);
-
-        /* TODO hä`?
-        Map<Integer, AtomicBoolean> lock = PlayerListener.getHasFoundTarget().getOrDefault(uuid, new ConcurrentHashMap<>());
-        lock.put(path.getRoadMap().getKey(), new AtomicBoolean(false));
-        PlayerListener.getHasFoundTarget().put(uuid, lock);
-
-         */
     }
 
     public Collection<ParticlePath> getActivePaths() {

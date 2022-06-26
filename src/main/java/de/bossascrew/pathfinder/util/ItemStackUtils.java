@@ -188,6 +188,9 @@ public class ItemStackUtils {
 
 	public ItemStack setGlow(ItemStack item) {
 		ItemMeta meta = item.getItemMeta();
+		if (meta == null) {
+			meta = Bukkit.getItemFactory().getItemMeta(item.getType());
+		}
 		if (meta != null) {
 			meta.addEnchant(Enchantment.LUCK, 1, true);
 			meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

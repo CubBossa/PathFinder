@@ -51,6 +51,7 @@ public class ParticlePath extends ArrayList<Node> {
     }
 
     public void run(UUID uuid) {
+        prepare(this);
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             cancelSync();
             PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(uuid);

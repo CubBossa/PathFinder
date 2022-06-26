@@ -5,9 +5,9 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.events.node.*;
+import de.bossascrew.pathfinder.menu.EditModeMenu;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
-import de.bossascrew.pathfinder.util.EditModeMenu;
 import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import lombok.Getter;
@@ -215,15 +215,15 @@ public class RoadMapEditor implements Keyed, Listener {
 
 	@EventHandler
 	public void onEdgeCreated(EdgesCreatedEvent event) {
-		Collection<Edge> edges = new HashSet<>(event.getEdges());
+		Collection<Edge> edges = new HashSet<>();
 		for (Edge edge : event.getEdges()) {
 			Edge otherDirection = roadMap.getEdge(edge.getEnd(), edge.getStart());
-			if (otherDirection != null && event.getEdges().contains(otherDirection)) {
-				edges.remove(otherDirection);
+			if (otherDirection != null && !edges.contains(otherDirection)) {
+				edges.add(otherDirection);
 			}
 		}
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
-			armorstandHandler.showEdges(edges, player);
+			armorstandHandler.showEdges(event.getEdges(), player);
 		});
 		updateEditModeParticles();
 	}
@@ -247,11 +247,16 @@ public class RoadMapEditor implements Keyed, Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onTeleportNode(NodeTeleportEvent event) {
-		editingPlayers.keySet().stream()
-				.map(Bukkit::getPlayer)
-				.filter(Objects::nonNull)
-				.forEach(player ->
-				armorstandHandler.updateNodePosition(event.getNode(), player, player.getLocation(), true));
-		updateEditModeParticles();
+		Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
+			if (event.isCancelled()) {
+				return;
+			}
+			editingPlayers.keySet().stream()
+					.map(Bukkit::getPlayer)
+					.filter(Objects::nonNull)
+					.forEach(player ->
+							armorstandHandler.updateNodePosition(event.getNode(), player, player.getLocation(), true));
+			updateEditModeParticles();
+		}, 1);
 	}
 }

@@ -87,4 +87,25 @@ public class SelectionParserTest {
 				Lists.newArrayList("123"),
 				parser.parseSelection(SCOPE, "@s[length=..5,type=number]", ArrayList::new));
 	}
+
+	@Test
+	public void testCompletion1() {
+		Assert.assertEquals(
+				Lists.newArrayList("@s[length=..5,type=letter", "@s[length=..5,type=number"),
+				parser.completeSelectionString("@s[length=..5,type="));
+	}
+
+	@Test
+	public void testCompletion2() {
+		Assert.assertEquals(
+				Lists.newArrayList("@s"),
+				parser.completeSelectionString(""));
+	}
+
+	@Test
+	public void testCompletion3() {
+		Assert.assertEquals(
+				Lists.newArrayList("@s[length=..5,length=", "@s[length=..5,type="),
+				parser.completeSelectionString("@s[length=..5,"));
+	}
 }

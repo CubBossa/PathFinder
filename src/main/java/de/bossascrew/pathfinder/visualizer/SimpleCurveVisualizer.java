@@ -2,7 +2,6 @@ package de.bossascrew.pathfinder.visualizer;
 
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.util.GameAction;
 import de.bossascrew.splinelib.util.Spline;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,10 +27,10 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 	private String permission = null;
 	private Material iconType = Material.NAME_TAG;
 
-	private int particleSteps = 1;
+	private int particleSteps = 10;
 	private Particle particle = Particle.REDSTONE;
 	private Double particleDistance = .2;
-	private Integer schedulerPeriod = 10;
+	private Integer schedulerPeriod = 2;
 	private double tangentLength = 3;
 
 	public SimpleCurveVisualizer(NamespacedKey key, String nameFormat) {
@@ -46,8 +45,8 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 
 	@Override
 	public void playParticle(Player player, Location location, int index, long time) {
-		if (index % particleSteps == time % particleSteps) {
-			player.spawnParticle(particle, location, 1);
+		if (index % particleSteps == time/schedulerPeriod % particleSteps) {
+			player.spawnParticle(particle, location, 1, new Particle.DustOptions(Color.AQUA, 1));
 		}
 	}
 

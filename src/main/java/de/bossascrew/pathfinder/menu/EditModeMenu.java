@@ -1,4 +1,4 @@
-package de.bossascrew.pathfinder.util;
+package de.bossascrew.pathfinder.menu;
 
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.NodeType;
@@ -8,6 +8,7 @@ import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
+import de.bossascrew.pathfinder.util.*;
 import de.cubbossa.menuframework.inventory.*;
 import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
@@ -16,7 +17,10 @@ import de.cubbossa.translations.TranslatedItem;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -24,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class EditModeMenu {
 
@@ -178,13 +183,29 @@ public class EditModeMenu {
 
 	private void openGroupMenu(Player player, Groupable groupable) {
 
-		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 5); //TODO message title
-		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 4)); //TODO extract icon
+		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asTranslatable(), 4);
+		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
 		for (NodeGroup group : roadMap.getGroups().values()) {
+
+			TagResolver resolver = TagResolver.builder()
+					.resolver(Placeholder.component("name", group.getDisplayName()))
+					.resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
+					.resolver(Placeholder.parsed("name-format", group.getNameFormat()))
+					.resolver(Placeholder.component("findable", Messages.formatBool(group.isFindable())))
+					.resolver(Placeholder.component("roadmap", group.getRoadMap().getDisplayName()))
+					.resolver(Placeholder.component("roadmap-id", Messages.formatKey(group.getRoadMap().getKey())))
+					.resolver(Placeholder.component("search-terms", Component.join(
+							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+					)))
+					.build();
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem();
+						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST,
+								Messages.E_SUB_GROUP_ENTRY_N.format(resolver),
+								Messages.E_SUB_GROUP_ENTRY_L.format(resolver)
+						).createItem();
 						if (groupable.getGroups().contains(group)) {
 							stack = ItemStackUtils.setGlow(stack);
 						}
@@ -206,15 +227,15 @@ public class EditModeMenu {
 					}));
 		}
 		menu.addPreset(presetApplier -> {
-			presetApplier.addItemOnTop(4 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
-			presetApplier.addClickHandlerOnTop(4 * 9 + 7, Action.LEFT, c -> {
+			presetApplier.addItemOnTop(3 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+			presetApplier.addClickHandlerOnTop(3 * 9 + 7, Action.LEFT, c -> {
 				groupable.clearGroups();
 				menu.refresh(menu.getListSlots());
 				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 			});
 
-			presetApplier.addItemOnTop(4 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
-			presetApplier.addClickHandlerOnTop(4 * 9 + 8, Action.LEFT, c -> {
+			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
+			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
 				if (c.getMenu() instanceof TopInventoryMenu top) {
 					top.openSubMenu(c.getPlayer(), newCreateGroupMenu(groupable));
 				}

@@ -15,6 +15,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
+import java.util.stream.Collectors;
+
 @CommandAlias("find|gps|navigate")
 public class FindCommand extends BaseCommand {
 
@@ -47,12 +49,14 @@ public class FindCommand extends BaseCommand {
 
 		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
 
-		if(path == null) {
+
+		if (path == null) {
 			player.sendMessage(":C");
+			return;
 		}
 
 		ParticlePath particlePath = new ParticlePath(roadMap, player.getUniqueId(), roadMap.getVisualizer());
-		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
+		particlePath.addAll(path.getVertexList());
 		pathPlayer.setPath(particlePath);
 	}
 

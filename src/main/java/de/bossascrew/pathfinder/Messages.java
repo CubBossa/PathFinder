@@ -143,7 +143,7 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Successfully deleted <selection>.",
 			placeholders = "selection")
 	public static final Message CMD_N_DELETE = new Message("commands.node.delete");
-	@MessageMeta(value = "<ins:prefix>Moved <selection> to <location>.",
+	@MessageMeta(value = "<ins:prefix><gray>Moved <selection> to <location>.</gray>",
 			placeholders = {"selection", "location"})
 	public static final Message CMD_N_MOVED = new Message("commands.node.moved");
 	@MessageMeta(value = """
@@ -176,11 +176,14 @@ public class Messages {
 	@MessageMeta(placeholders = {"start", "end"})
 	public static final Message CMD_N_DISCONNECT = new Message("commands.node.disconnect.success");
 
-	@MessageMeta(placeholders = "name")
+	@MessageMeta(value = "<red>A node group with this namespaced key (<name>) already exists.</red>",
+			placeholders = "name")
 	public static final Message CMD_NG_ALREADY_EXISTS = new Message("commands.node_group.already_exists");
-	@MessageMeta(placeholders = "name")
+	@MessageMeta(value = "<ins:prefix><gray>Node group created: <name>.</gray>",
+			placeholders = "name")
 	public static final Message CMD_NG_CREATE = new Message("commands.node_group.create");
-	@MessageMeta(placeholders = "name")
+	@MessageMeta(value = "<ins:prefix><gray>Node group deleted: <name>.</gray>",
+			placeholders = "name")
 	public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
 			placeholders = {"roadmap", "page", "next-page", "prev-page"})
@@ -191,15 +194,17 @@ public class Messages {
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"roadmap", "page", "next-page", "prev-page"})
 	public static final Message CMD_NG_LIST_FOOTER = new Message("commands.node_group.list.footer");
-	@MessageMeta(placeholders = {"name", "value"})
+	@MessageMeta(value = "<ins:prefix>Displayname for <id> set from <name> to <new-name> (<value>).",
+			placeholders = {"id", "name", "new-name", "value"})
 	public static final Message CMD_NG_SET_NAME = new Message("commands.node_group.set_name");
-	@MessageMeta(placeholders = {"name", "value"})
+	@MessageMeta(value = "<ins:prefix><gray>Group <name> findable set to: <value>.</gray>",
+			placeholders = {"name", "value"})
 	public static final Message CMD_NG_SET_FINDABLE = new Message("commands.node_group.set_findable");
-	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<ins:colors.background>»<values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<dark_gray>» <#8f65eb><values></#8f65eb></dark_gray>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_LIST = new Message("commands.node_group.terms.list");
-	@MessageMeta(value = "<ins:prefix>Successfully added search terms to <name>: <values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully added search terms to <name>: <#8f65eb><values></#8f65eb>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_ADD = new Message("commands.node_group.terms.add");
-	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <values>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <#8f65eb><values></#8f65eb>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
@@ -207,25 +212,27 @@ public class Messages {
 	@MessageMeta("<white><u>Node Tool</u></white>")
 	public static final Message E_NODE_TOOL_N = new Message("editor.toolbar.node_tool.name");
 	@MessageMeta("""
-			<gray» <yellow>right-click:</yellow> Create node<gray>
-			<gray» <yellow>left-click:</yellow> Delete clicked node<gray>""")
+			<gray>» <yellow>right-click:</yellow> Create node</gray>
+			<gray>» <yellow>left-click:</yellow> Delete clicked node</gray>""")
 	public static final Message E_NODE_TOOL_L = new Message("editor.toolbar.node_tool.lore");
 	@MessageMeta("<white><u>Edge Tool</u></white>")
 	public static final Message E_EDGE_TOOL_N = new Message("editor.toolbar.edge_tool.name");
 	@MessageMeta("""
-			<gray» <yellow>right-click node:</yellow> Connect nodes<gray>
-			<gray» <yellow>left-click node:</yellow> Disconnect all edges<gray>
-			<gray» <yellow>left-click edge:</yellow> Dissolve edge<gray>
-			<gray» <yellow>left-click air:</yellow> Toggle directed<gray>""")
+			<gray>» <yellow>right-click node:</yellow> Connect nodes</gray>
+			<gray>» <yellow>left-click node:</yellow> Disconnect all edges</gray>
+			<gray>» <yellow>left-click edge:</yellow> Dissolve edge</gray>
+			<gray>» <yellow>left-click air:</yellow> Toggle directed</gray>""")
 	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
 	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
 	@MessageMeta(value = "<msg:prefix><gray>Edges directed: <#6569eb><value><#6569eb>", placeholders = "value")
 	public static final Message E_EDGE_TOOL_DIR_TOGGLE = new Message("editor.toolbar.edge_tool.directed");
 	@MessageMeta("<white><u>Assign Group</u></white>")
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
+	@MessageMeta
 	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");
 	@MessageMeta("<white><u>Assign Last Group</u></white>")
 	public static final Message E_LAST_GROUP_TOOL_N = new Message("editor.toolbar.last_group_tool.name");
+	@MessageMeta
 	public static final Message E_LAST_GROUP_TOOL_L = new Message("editor.toolbar.last_group_tool.lore");
 	@MessageMeta("<white><u>Curve Tool</u></white>")
 	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");
@@ -237,14 +244,28 @@ public class Messages {
 	public static final Message E_PERM_TOOL_L = new Message("editor.toolbar.permission_tool.lore");
 	@MessageMeta("<white><u>Teleport Tool</u></white>")
 	public static final Message E_TP_TOOL_N = new Message("editor.toolbar.teleport_tool.name");
+	@MessageMeta("<gray>Teleports you to the\n<gray>nearest node.")
 	public static final Message E_TP_TOOL_L = new Message("editor.toolbar.teleport_tool.lore");
+	@MessageMeta("Assign Node Groups")
+	public static final Message E_SUB_GROUP_TITLE = new Message("editor.groups.title");
+	@MessageMeta("<green>Create New Group</green>")
 	public static final Message E_SUB_GROUP_NEW_N = new Message("editor.groups.new.name");
+	@MessageMeta("<gray>Create a new nodegroup and\n<gray>assign it to this node.")
 	public static final Message E_SUB_GROUP_NEW_L = new Message("editor.groups.new.lore");
+	@MessageMeta("<red>Reset Groups</red>")
 	public static final Message E_SUB_GROUP_RESET_N = new Message("editor.groups.reset.name");
+	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")
 	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");
+	@MessageMeta(value = "<name>",
+			placeholders = {"id", "name", "name-format", "findable", "roadmap", "roadmap-id", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_N = new Message("editor.groups.entry.name");
+	@MessageMeta(value = """
+			<dark_gray>» </dark_gray><gray>Name: <name></gray>
+			<dark_gray>» </dark_gray><gray>Findable: <findable></gray>
+			<dark_gray>» </dark_gray><gray>Roadmap: <roadmap></gray>
+			<dark_gray>» </dark_gray><gray>Search terms: <search-terms></gray>""",
+			placeholders = {"id", "name", "name-format", "findable", "roadmap", "roadmap-id", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
-
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;
