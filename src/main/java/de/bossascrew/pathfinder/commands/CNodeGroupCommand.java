@@ -9,6 +9,7 @@ import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
 import net.kyori.adventure.text.Component;
@@ -52,7 +53,7 @@ public class CNodeGroupCommand extends CommandAPICommand {
 				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
 				.withArguments(
 						CustomArgs.nodeGroupArgument("group"),
-						CustomArgs.miniMessageArgument("new name")
+						CustomArgs.miniMessageArgument("name")
 				)
 				.executesPlayer((player, objects) -> {
 					renameGroup(player, (NodeGroup) objects[0], (String) objects[1]);
