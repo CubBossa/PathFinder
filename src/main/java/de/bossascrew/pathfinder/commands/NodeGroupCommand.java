@@ -1,14 +1,18 @@
 package de.bossascrew.pathfinder.commands;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.commands.argument.CustomArgs;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.BooleanArgument;
+import dev.jorel.commandapi.arguments.IntegerArgument;
+import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,151 +27,199 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@CommandAlias("nodegroup ")
-public class NodeGroupCommand extends BaseCommand {
+public class NodeGroupCommand extends CommandAPICommand {
 
-    @Subcommand("list")
-    @Syntax("[<page>]")
-    @CommandPermission("pathfinder.command.nodegroup.list")
-    public void onList(Player player, @Optional Integer pageInput) {
-        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public NodeGroupCommand() {
+		super("nodegroup");
 
-        int pages = (int) Math.ceil(roadMap.getGroups().size() / 10.);
-        pageInput = pageInput == null ? 0 : Integer.max(0, Integer.min(pageInput, pages));
+		withSubcommand(new CommandAPICommand("list")
+				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
+				.executesPlayer((player, objects) -> {
+					listGroups(player, 0);
+				}));
+		withSubcommand(new CommandAPICommand("list")
+				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
+				.withArguments(new IntegerArgument("page"))
+				.executesPlayer((player, objects) -> {
+					listGroups(player, (int) objects[0]);
+				}));
+		withSubcommand(new CommandAPICommand("create")
+				.withPermission(PathPlugin.PERM_CMD_NG_CREATE)
+				.withArguments(new NamespacedKeyArgument("name"))
+				.executesPlayer((player, objects) -> {
+					createGroup(player, (NamespacedKey) objects[0]);
+				}));
+		withSubcommand(new CommandAPICommand("delete")
+				.withPermission(PathPlugin.PERM_CMD_NG_DELETE)
+				.withArguments(CustomArgs.nodeGroupArgument("group"))
+				.executesPlayer((player, objects) -> {
+					deleteGroup(player, (NodeGroup) objects[0]);
+				}));
+		withSubcommand(new CommandAPICommand("rename")
+				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
+				.withArguments(
+						CustomArgs.nodeGroupArgument("group"),
+						CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
+				)
+				.executesPlayer((player, objects) -> {
+					renameGroup(player, (NodeGroup) objects[0], (String) objects[1]);
+				}));
+		withSubcommand(new CommandAPICommand("search-terms")
+				.withSubcommand(new CommandAPICommand("add")
+						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
+						.withArguments(
+								CustomArgs.nodeGroupArgument("group"),
+								CustomArgs.suggestCommaSeparatedList("search-terms")
+						)
+						.executesPlayer((player, objects) -> {
+							searchTermsAdd(player, (NodeGroup) objects[0], (String) objects[1]);
+						}))
+				.withSubcommand(new CommandAPICommand("remove")
+						.withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
+						.withArguments(
+								CustomArgs.nodeGroupArgument("group"),
+								CustomArgs.suggestCommaSeparatedList("search-terms")
+						)
+						.executesPlayer((player, objects) -> {
+							searchTermsRemove(player, (NodeGroup) objects[0], (String) objects[1]);
+						}))
+				.withSubcommand(new CommandAPICommand("list")
+						.withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
+						.withArguments(CustomArgs.nodeGroupArgument("group"))
+						.executesPlayer((player, objects) -> {
+							searchTermsList(player, (NodeGroup) objects[0]);
+						})));
+		withSubcommand(new CommandAPICommand("set")
+				.withSubcommand(new CommandAPICommand("findable")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
+						.withArguments(
+								CustomArgs.nodeGroupArgument("group"),
+								new BooleanArgument("value")
+						)
+						.executesPlayer((player, objects) -> {
+							setFindable(player, (NodeGroup) objects[0], (Boolean) objects[1]);
+						})));
 
-        TagResolver resolver = TagResolver.builder()
-                .tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
-                .tag("page", Tag.preProcessParsed(pageInput + ""))
-                .tag("pages", Tag.preProcessParsed(pageInput + ""))
-                .tag("prev-page", Tag.preProcessParsed(Integer.max(0, pageInput - 1) + ""))
-                .tag("next-page", Tag.preProcessParsed(pageInput + 1 + ""))
-                .build();
+		withSubcommand(new CommandAPICommand("test")
+				.withSubcommand(new CommandAPICommand("abc")
+						.withArguments(
+								CustomArgs.nodeGroupArgument("group"),
+								CustomArgs.suggestCommaSeparatedList("search-terms"))
+						.executesPlayer((player, objects) -> {}))
+				.withSubcommand(new CommandAPICommand("test")
+						.withArguments(
+								CustomArgs.nodeGroupArgument("group"),
+								CustomArgs.suggestCommaSeparatedList("search-terms"))
+						.executesPlayer((player, objects) -> {})));
 
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
+		register();
+	}
 
-        for (NodeGroup group : CommandUtils.subList(new ArrayList<>(roadMap.getGroups().values()), pageInput, 10)) {
+	public void searchTermsList(Player player, NodeGroup group) {
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
+				.tag("name", Tag.inserting(group.getDisplayName()))
+				.tag("values", Tag.inserting(toList(group.getSearchTerms())))
+				.build()), player);
+	}
 
-            TagResolver r = TagResolver.builder()
-                    .tag("id", Tag.inserting(Component.text(group.getKey().toString())))
-                    .tag("name", Tag.inserting(group.getDisplayName()))
-                    .tag("size", Tag.inserting(Component.text(group.size())))
-                    .tag("findable", Tag.inserting(Component.text(group.isFindable())))
-                    .build();
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
-        }
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_FOOTER.format(resolver), player);
-    }
+	public void searchTermsAdd(Player player, NodeGroup group, String commaSeparatedList) {
+		Collection<String> toAdd = Arrays.stream(commaSeparatedList.split(","))
+				.map(String::trim)
+				.map(String::toLowerCase)
+				.toList();
+		group.getSearchTerms().addAll(toAdd);
 
-    @Subcommand("create")
-    @Syntax("<name>")
-    @CommandPermission("pathfinder.command.nodegroup.create")
-    public void onCreate(Player player, NamespacedKey key) {
-        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_ADD.format(TagResolver.builder()
+				.tag("name", Tag.inserting(group.getDisplayName()))
+				.tag("values", Tag.inserting(toList(toAdd)))
+				.build()), player);
+	}
 
-        if (roadMap.getNodeGroup(key) != null) {
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_ALREADY_EXISTS
-                    .format(TagResolver.resolver("name", Tag.inserting(Component.text(key.toString())))), player);
-            return;
-        }
+	public void searchTermsRemove(Player player, NodeGroup group, String commaSeparatedList) {
+		Collection<String> toRemove = Arrays.stream(commaSeparatedList.split(","))
+				.map(String::trim)
+				.map(String::toLowerCase)
+				.toList();
+		group.getSearchTerms().removeAll(toRemove);
 
-        NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
-    }
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_REMOVE.format(TagResolver.builder()
+				.tag("name", Tag.inserting(group.getDisplayName()))
+				.tag("values", Tag.inserting(toList(toRemove)))
+				.build()), player);
+	}
 
-    @Subcommand("delete")
-    @Syntax("<group>")
-    @CommandPermission("pathfinder.command.nodegroup.delete")
-    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-    public void onDelete(Player player, NodeGroup group) {
-        RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	private Component toList(Collection<String> tags) {
+		return Component.join(JoinConfiguration.separator(Component.text(",", NamedTextColor.GRAY)), tags.stream()
+				.map(Component::text).collect(Collectors.toList()));
+	}
 
-        roadMap.removeNodeGroup(group);
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
-    }
+	public void setFindable(Player player, NodeGroup group, boolean findable) {
+		group.setFindable(findable);
 
-    @Subcommand("set name")
-    @Syntax("<group> <new name>")
-    @CommandPermission("pathfinder.command.nodegroup.rename")
-    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-    public void onRename(Player player, NodeGroup group, @Single String newName) {
-        Component oldName = group.getDisplayName();
-        group.setNameFormat(newName);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
+				.tag("name", Tag.inserting(group.getDisplayName()))
+				.tag("value", Tag.inserting(Component.text(findable)))
+				.build()), player);
+	}
 
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
-                .resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
-                .resolver(Placeholder.component("name", oldName))
-                .tag("new-name", Tag.inserting(group.getDisplayName()))
-                .tag("value", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(newName)))
-                .build()), player);
-    }
+	public void renameGroup(Player player, NodeGroup group, String newName) {
+		Component oldName = group.getDisplayName();
+		group.setNameFormat(newName);
 
-    @Subcommand("set findable")
-    @Syntax("<group> <findable>")
-    @CommandPermission("pathfinder.command.nodegroup.setfindable")
-    @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION + " true|false")
-    public void onSetFindable(Player player, NodeGroup group, boolean findable) {
-        group.setFindable(findable);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
+				.resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", oldName))
+				.tag("new-name", Tag.inserting(group.getDisplayName()))
+				.tag("value", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(newName)))
+				.build()), player);
+	}
 
-        TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
-                .tag("name", Tag.inserting(group.getDisplayName()))
-                .tag("value", Tag.inserting(Component.text(findable)))
-                .build()), player);
-    }
+	public void deleteGroup(Player player, NodeGroup group) {
+		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-    @Subcommand("search-terms")
-    public class Search extends BaseCommand {
+		roadMap.removeNodeGroup(group);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
+	}
 
-        @Subcommand("list")
-        @Syntax("<group>")
-        @CommandPermission("pathfinder.command.nodegroup.searchterms.list")
-        @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-        public void onTermList(Player player, NodeGroup group) {
+	public void createGroup(Player player, NamespacedKey key) {
+		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
-                    .tag("name", Tag.inserting(group.getDisplayName()))
-                    .tag("values", Tag.inserting(toList(group.getSearchTerms())))
-                    .build()), player);
-        }
+		if (roadMap.getNodeGroup(key) != null) {
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_ALREADY_EXISTS
+					.format(TagResolver.resolver("name", Tag.inserting(Component.text(key.toString())))), player);
+			return;
+		}
 
-        @Subcommand("add")
-        @Syntax("<group> {<term>,}<term>")
-        @CommandPermission("pathfinder.command.nodegroup.searchterms.add")
-        @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-        public void onTermAdd(Player player, NodeGroup group, String terms) {
+		NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
+	}
 
-            Collection<String> toAdd = Arrays.stream(terms.split(","))
-                    .map(String::trim)
-                    .map(String::toLowerCase)
-                    .toList();
-            group.getSearchTerms().addAll(toAdd);
+	public void listGroups(Player player, int pageInput) {
+		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_ADD.format(TagResolver.builder()
-                    .tag("name", Tag.inserting(group.getDisplayName()))
-                    .tag("values", Tag.inserting(toList(toAdd)))
-                    .build()), player);
-        }
+		int pages = (int) Math.ceil(roadMap.getGroups().size() / 10.);
+		pageInput = Integer.max(0, Integer.min(pageInput, pages));
 
-        @Subcommand("remove")
-        @Syntax("<group> {<term>,}<term>")
-        @CommandPermission("pathfinder.command.nodegroup.searchterms.remove")
-        @CommandCompletion(PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-        public void onTermRemove(Player player, NodeGroup group, String terms) {
+		TagResolver resolver = TagResolver.builder()
+				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+				.tag("page", Tag.preProcessParsed(pageInput + ""))
+				.tag("pages", Tag.preProcessParsed(pageInput + ""))
+				.tag("prev-page", Tag.preProcessParsed(Integer.max(0, pageInput - 1) + ""))
+				.tag("next-page", Tag.preProcessParsed(pageInput + 1 + ""))
+				.build();
 
-            Collection<String> toRemove = Arrays.stream(terms.split(","))
-                    .map(String::trim)
-                    .map(String::toLowerCase)
-                    .toList();
-            group.getSearchTerms().removeAll(toRemove);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
 
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_REMOVE.format(TagResolver.builder()
-                    .tag("name", Tag.inserting(group.getDisplayName()))
-                    .tag("values", Tag.inserting(toList(toRemove)))
-                    .build()), player);
-        }
+		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(roadMap.getGroups().values()), pageInput, 10)) {
 
-        private Component toList(Collection<String> tags) {
-            return Component.join(JoinConfiguration.separator(Component.text(",", NamedTextColor.GRAY)), tags.stream()
-                    .map(Component::text).collect(Collectors.toList()));
-        }
-    }
+			TagResolver r = TagResolver.builder()
+					.tag("id", Tag.inserting(Component.text(group.getKey().toString())))
+					.tag("name", Tag.inserting(group.getDisplayName()))
+					.tag("size", Tag.inserting(Component.text(group.size())))
+					.tag("findable", Tag.inserting(Component.text(group.isFindable())))
+					.build();
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_FOOTER.format(resolver), player);
+	}
 }

@@ -54,6 +54,10 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_NG_CREATE = "pathfinder.nodegroup.create";
 	public static final String PERM_CMD_NG_DELETE = "pathfinder.nodegroup.delete";
 	public static final String PERM_CMD_NG_RENAME = "pathfinder.nodegroup.rename";
+	public static final String PERM_CMD_NG_SET_FINDABLE = "pathfinder.nodegroup.set_findable";
+	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.nodegroup.searchterms.list";
+	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.nodegroup.searchterms.add";
+	public static final String PERM_CMD_NG_ST_REMOVE = "pathfinder.nodegroup.searchterms.remove";
 
 	public static final String COMPLETE_ROADMAPS = "@roadmaps";
 	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
@@ -130,7 +134,7 @@ public class PathPlugin extends JavaPlugin {
 		// Commands
 
 		CommandAPI.onEnable(this);
-		new CNodeGroupCommand();
+		new NodeGroupCommand();
 
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
@@ -157,6 +161,7 @@ public class PathPlugin extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		CommandAPI.unregister("nodegroup");
 		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
 	}
