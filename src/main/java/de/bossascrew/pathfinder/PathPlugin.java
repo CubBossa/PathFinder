@@ -3,10 +3,7 @@ package de.bossascrew.pathfinder;
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
-import de.bossascrew.pathfinder.data.DataStorage;
-import de.bossascrew.pathfinder.data.InMemoryDatabase;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.data.*;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.node.Navigable;
 import de.bossascrew.pathfinder.node.NavigateSelection;
@@ -129,7 +126,10 @@ public class PathPlugin extends JavaPlugin {
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.loadLanguages();
 
-		database = new InMemoryDatabase(this.getLogger());
+		//database = new InMemoryDatabase(this.getLogger());
+		var db = new SqliteDatabase(new File(getDataFolder(), "database.db"));
+		db.connect();
+		database = db;
 
 		// Commands
 

@@ -24,7 +24,8 @@ public abstract class SqlDatabase implements DataStorage {
 
 	abstract Connection getConnection();
 
-	public SqlDatabase() {
+	@Override
+	public void connect() {
 		createRoadMapTable();
 		createNodeTable();
 		createNodeGroupTable();
@@ -53,7 +54,7 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodes` (" +
-					"`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ," +
+					"`id` INT NOT NULL PRIMARY KEY ," +
 					"`type` VARCHAR(64) NOT NULL ," +
 					"`roadmap_key` VARCHAR(64) NOT NULL ," +
 					"`x` DOUBLE NOT NULL ," +
@@ -71,11 +72,12 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createEdgeTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_edges` (" +
-					"`start_id` INT NOT NULL PRIMARY KEY ," +
-					"`end_id` INT NOT NULL PRIMARY KEY ," +
+					"`start_id` INT NOT NULL ," +
+					"`end_id` INT NOT NULL ," +
 					"`weight_modifier` DOUBLE NOT NULL DEFAULT 1 ," +
 					"FOREIGN KEY (start_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE ," +
-					"FOREIGN KEY (end_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE )")) {
+					"FOREIGN KEY (end_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE ," +
+					"PRIMARY KEY (start_id ,end_id) )")) {
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -101,8 +103,9 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeGroupSearchTermsTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_search_terms` (" +
-					"`group_key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
-					"`search_term` VARCHAR(64) NOT NULL PRIMARY KEY ," +
+					"`group_key` VARCHAR(64) NOT NULL ," +
+					"`search_term` VARCHAR(64) NOT NULL ," +
+					"PRIMARY KEY (group_key, search_term) ," +
 					"FOREIGN KEY (group_key) REFERENCES pathfinder_nodegroups(key) ON DELETE CASCADE )")) {
 				stmt.executeUpdate();
 			}
@@ -114,8 +117,9 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeGroupNodesTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodegroups_nodes` (" +
-					"`group_key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
-					"`node_id` INT NOT NULL PRIMARY KEY ," +
+					"`group_key` VARCHAR(64) NOT NULL ," +
+					"`node_id` INT NOT NULL ," +
+					"PRIMARY KEY (group_key, node_id) , " +
 					"FOREIGN KEY (group_key) REFERENCES pathfinder_nodegroups(key) ON DELETE CASCADE ," +
 					"FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE )")) {
 				stmt.executeUpdate();
@@ -135,7 +139,7 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
 					"(`key`, `name_format`, `world`, `nodes_findable`, `path_visualizer`, `nodes_find_distance`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?)")) {
+					"(?, ?, ?, ?, ?, ?, ?)")) {
 				stmt.setString(1, key.toString());
 				stmt.setString(2, nameFormat);
 				stmt.setString(3, world.getUID().toString());
@@ -196,6 +200,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setString(4, roadMap.getVisualizer().getKey().toString());
 				stmt.setDouble(5, roadMap.getNodeFindDistance());
 				stmt.setDouble(6, roadMap.getDefaultBezierTangentLength());
+				stmt.setString(7, roadMap.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (SQLException e) {

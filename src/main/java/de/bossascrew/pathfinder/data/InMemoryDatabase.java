@@ -29,6 +29,16 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
+	public void connect() {
+
+	}
+
+	@Override
+	public void disconnect() {
+
+	}
+
+	@Override
 	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes) {
 		return createRoadMap(key, nameFormat, world, findableNodes, null, 1f, 1f);
 	}

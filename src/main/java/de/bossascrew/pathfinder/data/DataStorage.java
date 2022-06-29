@@ -20,6 +20,10 @@ import java.util.UUID;
 
 public interface DataStorage {
 
+	void connect();
+
+	void disconnect();
+
 	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes);
 
 	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength);
