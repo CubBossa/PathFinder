@@ -22,8 +22,8 @@ import java.util.stream.Stream;
 @Getter
 public class RoadMapHandler {
 
-	public static NodeType<Waypoint> WAYPOINT_TYPE = new NodeType<>("<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), (roadMap, integer) ->
-			new Waypoint(integer, roadMap));
+	public static NodeType<Waypoint> WAYPOINT_TYPE = new NodeType<>(new NamespacedKey(PathPlugin.getInstance(), "waypoint"),
+			"<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), (roadMap, integer) -> new Waypoint(integer, roadMap));
 
 	@Getter
 	private static RoadMapHandler instance;

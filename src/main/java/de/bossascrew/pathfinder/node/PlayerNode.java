@@ -75,12 +75,12 @@ public class PlayerNode implements Node {
     }
 
     @Override
-    public @Nullable Double getBezierTangentLength() {
+    public @Nullable Double getCurveLength() {
         return null;
     }
 
     @Override
-    public void setBezierTangentLength(Double value) {
+    public void setCurveLength(Double value) {
 
     }
 

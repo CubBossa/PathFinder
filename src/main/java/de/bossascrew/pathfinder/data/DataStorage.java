@@ -41,6 +41,10 @@ public interface DataStorage {
 
 	Collection<Edge> loadEdges(RoadMap roadMap);
 
+	void deleteEdgesFrom(Node start);
+
+	void deleteEdgesTo(Node end);
+
 	void deleteEdge(Edge edge);
 
 	void deleteEdge(Node start, Node end);

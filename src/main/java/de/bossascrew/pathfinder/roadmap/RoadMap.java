@@ -83,6 +83,9 @@ public class RoadMap implements Keyed {
 		});
 		edges.clear();
 		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this));
+		for (Edge edge : edges) {
+			edge.getStart().getEdges().add(edge);
+		}
 	}
 
 	public Graph<Node, Edge> toGraph(PlayerNode player) {

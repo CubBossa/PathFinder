@@ -1,24 +1,17 @@
 package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.NodeType;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Findable;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.*;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
+import java.sql.*;
 import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class SqlDatabase implements DataStorage {
 
@@ -166,7 +159,7 @@ public abstract class SqlDatabase implements DataStorage {
 						String nameFormat = resultSet.getString("name_format");
 						String worldUUIDString = resultSet.getString("world");
 						boolean nodesFindable = resultSet.getBoolean("nodes_findable");
-						String pathVisualizerKeyString = resultSet.getString("path_visualizer");
+						String pathVisualizerKeyString = resultSet.getString("path_visualizer"); //TODO
 						double nodeFindDistance = resultSet.getDouble("nodes_find_distance");
 						double pathCurveLength = resultSet.getDouble("path_curve_length");
 
@@ -187,12 +180,12 @@ public abstract class SqlDatabase implements DataStorage {
 	public void updateRoadMap(RoadMap roadMap) {
 		try (Connection connection = getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_roadmaps` SET " +
-					"`name_format` = ?," +
-					"`world` = ?," +
-					"`nodes_findable` = ?," +
-					"`path_visualizer` = ?," +
-					"`nodes_find_distance` = ?," +
-					"`path_curve_length` = ?" +
+					"`name_format` = ?, " +
+					"`world` = ?, " +
+					"`nodes_findable` = ?, " +
+					"`path_visualizer` = ?, " +
+					"`nodes_find_distance` = ?, " +
+					"`path_curve_length` = ?, " +
 					"WHERE `key` = ?")) {
 				stmt.setString(1, roadMap.getNameFormat());
 				stmt.setString(2, roadMap.getWorld().getUID().toString());
@@ -210,9 +203,14 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public boolean deleteRoadMap(RoadMap roadMap) {
+		return deleteRoadMap(roadMap.getKey());
+	}
+
+	@Override
+	public boolean deleteRoadMap(NamespacedKey key) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_roadmaps` WHERE `key` = ?")) {
-				stmt.setString(1, roadMap.getKey().toString());
+				stmt.setString(1, key.toString());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -222,48 +220,198 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public boolean deleteRoadMap(NamespacedKey key) {
-		return false;
-	}
-
-	@Override
 	public Edge createEdge(Node start, Node end, float weight) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_edges` " +
+					"(`start_id`, `end_id`, `weight_modifier`) VALUES " +
+					"(?, ?, ?)")) {
+				stmt.setInt(1, start.getNodeId());
+				stmt.setInt(2, end.getNodeId());
+				stmt.setDouble(3, weight);
+
+				return new Edge(start, end, weight);
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create new edge.", e);
+		}
 	}
 
 	@Override
 	public Collection<Edge> loadEdges(RoadMap roadMap) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_edges` pe " +
+					"JOIN pathfinder_nodes pn ON pn.id = pe.start_id " +
+					"WHERE `pn`.`roadmap_key` = ?")) {
+				stmt.setString(1, roadMap.getKey().toString());
+
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					HashSet<Edge> edges = new HashSet<>();
+					while (resultSet.next()) {
+						int startId = resultSet.getInt("start_id");
+						int endId = resultSet.getInt("end_id");
+						double weight = resultSet.getDouble("weight_modifier");
+
+						Node start = roadMap.getNode(startId);
+						Node end = roadMap.getNode(endId);
+
+						if (start == null || end == null) {
+							deleteEdge(startId, endId);
+						}
+						edges.add(new Edge(start, end, (float) weight));
+					}
+					return edges;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not load edges.", e);
+		}
+	}
+
+	@Override
+	public void deleteEdgesFrom(Node start) {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_edges` WHERE `start_id` = ?")) {
+				stmt.setInt(1, start.getNodeId());
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete edges.", e);
+		}
+	}
+
+	@Override
+	public void deleteEdgesTo(Node end) {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_edges` WHERE `end_id` = ?")) {
+				stmt.setInt(1, end.getNodeId());
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete edges.", e);
+		}
 	}
 
 	@Override
 	public void deleteEdge(Edge edge) {
-
+		deleteEdge(edge.getStart().getNodeId(), edge.getEnd().getNodeId());
 	}
 
 	@Override
 	public void deleteEdge(Node start, Node end) {
+		deleteEdge(start.getNodeId(), end.getNodeId());
+	}
 
+	public void deleteEdge(int start, int end) {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_edges` WHERE `start_id` = ? AND `end_id` = ?")) {
+				stmt.setInt(1, start);
+				stmt.setInt(2, end);
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete edge.", e);
+		}
 	}
 
 	@Override
 	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
+					"(`type`, `roadmap_key`, `x`, `y`, `z`, `permission`, `path_curve_length`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?)")) {
+				stmt.setString(1, type.getKey().toString());
+				stmt.setString(2, roadMap.getKey().toString());
+				stmt.setDouble(3, x);
+				stmt.setDouble(4, y);
+				stmt.setDouble(5, z);
+				stmt.setDouble(6, tangentLength);
+				stmt.setString(7, permission);
+
+				stmt.executeUpdate();
+
+				try (ResultSet res = stmt.getResultSet()) {
+					T node = type.getFactory().apply(roadMap, res.getInt(1));
+					node.setPosition(new Vector(x, y, z));
+					node.setPermission(permission);
+					node.setCurveLength(tangentLength);
+					if (node instanceof Groupable groupable) {
+						groups.forEach(groupable::addGroup);
+					}
+					return node;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create new node.", e);
+		}
 	}
 
 	@Override
 	public Map<Integer, Node> loadNodes(RoadMap roadMap) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_key` = ?")) {
+				stmt.setString(1, roadMap.getKey().toString());
+
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					Map<Integer, Node> nodes = new TreeMap<>();
+					while (resultSet.next()) {
+						int id = resultSet.getInt("id");
+						String type = resultSet.getString("type");
+						double x = resultSet.getDouble("x");
+						double y = resultSet.getDouble("y");
+						double z = resultSet.getDouble("z");
+						String permission = resultSet.getString("permission");
+						double curveLength = resultSet.getDouble("path_curve_length");
+
+						NodeType<?> nodeType = NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
+						Node node = nodeType.getFactory().apply(roadMap, id);
+						node.setPosition(new Vector(x, y, z));
+						node.setPermission(permission);
+						node.setCurveLength(curveLength);
+						nodes.put(id, node);
+					}
+					return nodes;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not load nodes.", e);
+		}
 	}
 
 	@Override
 	public void updateNode(Node node) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("UPDATE `pathfinder_nodes` SET " +
+					"`x` = ?, " +
+					"`y` = ?, " +
+					"`z` = ?, " +
+					"`permission` = ?, " +
+					"`path_curve_length` = ?, " +
+					"WHERE `id` = ?")) {
+				stmt.setDouble(1, node.getPosition().getX());
+				stmt.setDouble(2, node.getPosition().getY());
+				stmt.setDouble(3, node.getPosition().getZ());
+				stmt.setString(4, node.getPermission());
+				if (node.getCurveLength() == null) {
+					stmt.setNull(5, Types.DOUBLE);
+				} else {
+					stmt.setDouble(5, node.getCurveLength());
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not update node.", e);
+		}
 	}
 
 	@Override
 	public void deleteNode(int nodeId) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodes` WHERE `id` = ?")) {
+				stmt.setInt(1, nodeId);
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete node.", e);
+		}
 	}
 
 	@Override

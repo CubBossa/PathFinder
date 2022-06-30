@@ -97,7 +97,7 @@ public class InMemoryDatabase implements DataStorage {
 	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
 		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
 		node.setPosition(new Vector(x, y, z));
-		node.setBezierTangentLength(tangentLength);
+		node.setCurveLength(tangentLength);
 		node.setPermission(permission);
 		if (node instanceof Groupable groupable) {
 			groups.forEach(groupable::addGroup);

@@ -25,9 +25,9 @@ public interface Node extends Navigable, Comparable<Node> {
 
 	void setPermission(@Nullable String permission);
 
-	@Nullable Double getBezierTangentLength();
+	@Nullable Double getCurveLength();
 
-	void setBezierTangentLength(Double value);
+	void setCurveLength(Double value);
 
 	Edge connect(Node target);
 

@@ -10,7 +10,6 @@ import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.util.SelectionUtils;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
@@ -45,7 +44,7 @@ public class WaypointCommand extends BaseCommand {
 						Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 						Tag.inserting(Component.text("none"))) //TODO as message
 				.tag("position", Tag.inserting(Messages.formatVector(node.getPosition())))
-				.tag("curve-length", Tag.preProcessParsed(node.getBezierTangentLength() + ""))
+				.tag("curve-length", Tag.preProcessParsed(node.getCurveLength() + ""))
 				.tag("edge-count", Tag.preProcessParsed(node.getEdges().size() + ""))
 				.build());
 
@@ -215,7 +214,7 @@ public class WaypointCommand extends BaseCommand {
 		@CommandPermission("pathfinder.command.waypoint.setcurvelength")
 		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
 		public void onSetTangent(Player player, NodeSelection selection, Double strength) {
-			selection.forEach(node -> node.setBezierTangentLength(strength));
+			selection.forEach(node -> node.setCurveLength(strength));
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
 					.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
 					.tag("length", Tag.inserting(Component.text(strength)))

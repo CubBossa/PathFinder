@@ -285,7 +285,7 @@ public class EditModeMenu {
 				return;
 			}
 			Double strength = s.getTarget().equalsIgnoreCase("null") ? null : Double.parseDouble(s.getTarget());
-			findable.setBezierTangentLength(strength);
+			findable.setCurveLength(strength);
 			menu.close(s.getPlayer());
 		});
 		menu.open(player);
