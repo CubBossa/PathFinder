@@ -1,8 +1,8 @@
 package de.bossascrew.pathfinder.roadmap;
 
-import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.node.NodeType;
+import de.bossascrew.pathfinder.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.node.Waypoint;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.StringUtils;
@@ -11,10 +11,11 @@ import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,22 +30,12 @@ public class RoadMapHandler {
 	private static RoadMapHandler instance;
 	private final HashedRegistry<RoadMap> roadMaps;
 	private final HashedRegistry<RoadMapEditor> roadMapEditors;
-	private final Collection<NodeType<?>> nodeTypes;
 
 	public RoadMapHandler() {
 		instance = this;
 		roadMaps = new HashedRegistry<>();
 		roadMapEditors = new HashedRegistry<>();
-		nodeTypes = new ArrayList<>();
-		registerNodeType(WAYPOINT_TYPE);
-	}
-
-	public <T extends Node> void registerNodeType(NodeType<T> type) {
-		nodeTypes.add(type);
-	}
-
-	public <T extends Node> void unregisterNodeType(NodeType<T> type) {
-		nodeTypes.remove(type);
+		NodeTypeHandler.getInstance().registerNodeType(WAYPOINT_TYPE);
 	}
 
 	public RoadMapEditor getRoadMapEditor(NamespacedKey key) {

@@ -36,6 +36,8 @@ public class NodeUtils {
 		Vector end = path.get(path.size() - 1).getPosition();
 		Vector prev = path.get(path.size() - 2).getPosition();
 		Vector endDir = prev.clone().add(end.clone().subtract(prev).multiply(.5f)).normalize().multiply(tangentLength);
+		System.out.println("Start dir: " + startDir);
+		System.out.println("End dir: " + endDir);
 		vectors.add(new BezierVector(SPLINES.convertToVector(prev), SPLINES.convertToVector(prev.clone().add(endDir)), SPLINES.convertToVector(prev.clone().add(endDir).multiply(-1))));
 
 		return vectors;

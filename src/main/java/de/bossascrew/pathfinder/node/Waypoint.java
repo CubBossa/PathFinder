@@ -30,7 +30,7 @@ public class Waypoint implements Node, Findable, Groupable {
 	@Nullable
 	private String permission = null;
 	@Nullable
-	private Double bezierTangentLength = null;
+	private Double curveLength = null;
 
 	public Waypoint(int databaseId, RoadMap roadMap) {
 		this.nodeId = databaseId;

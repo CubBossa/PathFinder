@@ -7,6 +7,7 @@ import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.events.node.*;
 import de.bossascrew.pathfinder.menu.EditModeMenu;
 import de.bossascrew.pathfinder.node.Edge;
+import de.bossascrew.pathfinder.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
 import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
@@ -101,7 +102,7 @@ public class RoadMapEditor implements Keyed, Listener {
 			}
 			editor.setEditMode(key);
 
-			BottomInventoryMenu menu = new EditModeMenu(roadMap, RoadMapHandler.getInstance().getNodeTypes()).createHotbarMenu(this);
+			BottomInventoryMenu menu = new EditModeMenu(roadMap, NodeTypeHandler.getInstance().getTypes().values()).createHotbarMenu(this);
 			editingPlayers.put(uuid, menu);
 			menu.openSync(player);
 

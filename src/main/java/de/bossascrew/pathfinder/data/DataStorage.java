@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.NodeType;
+import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.Edge;
 import de.bossascrew.pathfinder.node.Findable;
 import de.bossascrew.pathfinder.node.Node;

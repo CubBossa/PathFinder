@@ -1,86 +1,132 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
-import org.bukkit.World;
-import org.bukkit.util.Vector;
+import org.bukkit.*;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-public class InMemoryDatabase implements DataStorage {
+public class YmlDatabase implements DataStorage {
 
-	private final Logger logger;
-	private int nodeIdCounter = 0;
+	private static final String DIR_RM = "roadmaps";
+	private static final String DIR_PV = "path_visualizer";
 
-	public InMemoryDatabase(Logger logger) {
-		this.logger = logger;
-	}
+	private File dataDirectory;
+	private File roadMapDir;
+	private File pathVisualizerDir;
 
-	private void log(String message) {
-		logger.log(Level.INFO, "Database - " + message);
+	private final Map<NamespacedKey, YamlConfiguration> roadmapHandles;
+
+	public YmlDatabase(File dataDirectory) {
+		if (!dataDirectory.isDirectory()) {
+			throw new IllegalArgumentException("Data directory must be a directory!");
+		}
+		this.dataDirectory = dataDirectory;
+		this.roadmapHandles = new HashMap<>();
 	}
 
 	@Override
 	public void connect() {
-
+		if (!dataDirectory.exists()) {
+			dataDirectory.mkdirs();
+		}
+		this.roadMapDir = new File(dataDirectory, DIR_RM);
+		this.roadMapDir.mkdirs();
+		this.pathVisualizerDir = new File(dataDirectory, DIR_PV);
+		this.pathVisualizerDir.mkdirs();
 	}
 
 	@Override
 	public void disconnect() {
-
 	}
 
 	@Override
 	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes) {
-		return createRoadMap(key, nameFormat, world, findableNodes, null, 1f, 1f);
+		return createRoadMap(key, nameFormat, world, findableNodes, null, 3, 3);
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength) {
-		log("Create Roadmap");
-		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, tangentLength);
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double curveLength) {
+		File file = new File(roadMapDir, key.toString().replace(":", "_") + ".yml");
+		try {
+			file.createNewFile();
+		} catch (IOException e) {
+			throw new DataStorageException("Could not create roadmap file.", e);
+		}
+		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+		cfg.set("key", key);
+		cfg.set("name_format", nameFormat);
+		cfg.set("world", world.getUID().toString());
+		cfg.set("nodes_findable", findableNodes);
+		cfg.set("path_visualizer", pathVis);
+		cfg.set("node_find_distance", findDist);
+		cfg.set("curve_length", curveLength);
+
+		try {
+			cfg.save(file);
+		} catch (IOException e) {
+			throw new DataStorageException("Could not save roadmap file.", e);
+		}
+		roadmapHandles.put(key, cfg);
+		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, curveLength);
 	}
 
 	@Override
 	public Map<NamespacedKey, RoadMap> loadRoadMaps() {
-		log("Load Roadmaps");
-		return new HashMap<>();
+		HashedRegistry<RoadMap> registry = new HashedRegistry<>();
+		for (File file : Arrays.stream(roadMapDir.listFiles())
+				.filter(file -> file.getName().matches("\\w+_\\w\\.yml"))
+				.collect(Collectors.toList())) {
+			try {
+				NamespacedKey key = NamespacedKey.fromString(file.getName().substring(0, file.getName().length() - 4).replace("_", ":"));
+				YamlConfiguration cfg = roadmapHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
+
+				registry.put(new RoadMap(key,
+						cfg.getString("name_format"),
+						Bukkit.getWorld(UUID.fromString(cfg.getString("world"))),
+						cfg.getBoolean("nodes_findable"),
+						null, //TODO
+						cfg.getDouble("node_find_distance"),
+						cfg.getDouble("curve_length")));
+
+
+			} catch (Throwable t) {
+				//TODO log
+			}
+		}
+		return registry;
 	}
 
 	@Override
 	public void updateRoadMap(RoadMap roadMap) {
-		log("Update Roadmap");
+
 	}
 
 	@Override
 	public boolean deleteRoadMap(RoadMap roadMap) {
-		return deleteRoadMap(roadMap.getKey());
+		return false;
 	}
 
 	@Override
 	public boolean deleteRoadMap(NamespacedKey key) {
-		log("Delete Roadmap");
-		return true;
+		return false;
 	}
 
 	@Override
 	public Edge createEdge(Node start, Node end, float weight) {
-		log("Create Edge");
-		return new Edge(start, end, weight);
+		return null;
 	}
 
 	@Override
 	public Collection<Edge> loadEdges(RoadMap roadMap) {
-		log("Load Edge");
-		return new HashSet<>();
+		return null;
 	}
 
 	@Override
@@ -95,119 +141,97 @@ public class InMemoryDatabase implements DataStorage {
 
 	@Override
 	public void deleteEdge(Edge edge) {
-		log("Delete Edge");
+
 	}
 
 	@Override
 	public void deleteEdge(Node start, Node end) {
-		log("Delete Edge");
+
 	}
 
 	@Override
 	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
-		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
-		node.setPosition(new Vector(x, y, z));
-		node.setCurveLength(tangentLength);
-		node.setPermission(permission);
-		if (node instanceof Groupable groupable) {
-			groups.forEach(groupable::addGroup);
-		}
-		log("Create Node");
-		return node;
+		return null;
 	}
 
 	@Override
 	public Map<Integer, Node> loadNodes(RoadMap roadMap) {
-		log("Load Nodes");
-		return new HashMap<>();
+		return null;
 	}
 
 	@Override
 	public void updateNode(Node node) {
-		log("Update Node");
+
 	}
 
 	@Override
 	public void deleteNode(int nodeId) {
-		log("Delete Node");
+
 	}
 
 	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
-		log("Create Nodegroup");
-		return new NodeGroup(key, roadMap, nameFormat);
+		return null;
 	}
 
 	@Override
 	public Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap) {
-		log("Load Nodegroups");
-		return new HashMap<>();
+		return null;
 	}
 
 	@Override
 	public void updateNodeGroup(NodeGroup group) {
-		log("Update Nodegroup");
+
 	}
 
 	@Override
 	public void deleteNodeGroup(NodeGroup group) {
-		log("Delete Nodegroup");
+
 	}
 
 	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
-		log("Delete Nodegroup");
+
 	}
 
 	@Override
 	public FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate) {
-		log("Create Foundinfo");
-		return new FoundInfo(player, findable, foundDate);
+		return null;
 	}
 
 	@Override
 	public Map<Integer, FoundInfo> loadFoundInfo(int globalPlayerId, boolean group) {
-		log("Load Foundinfos");
-		return new TreeMap<>();
+		return null;
 	}
 
 	@Override
 	public void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group) {
-		log("Delete Foundinfos");
+
 	}
 
 	@Override
 	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod) {
-		log("Created Visualizer");
-		var vis = new SimpleCurveVisualizer(key, nameFormat);
-		vis.setParticle( particle);
-		vis.setParticleDistance(particleDistance);
-		vis.setParticleSteps(particleSteps);
-		vis.setSchedulerPeriod(schedulerPeriod);
-		return vis;
+		return null;
 	}
 
 	@Override
 	public Map<Integer, SimpleCurveVisualizer> loadPathVisualizer() {
-		log("Loaded Visualizers");
-		return new HashMap<>();
+		return null;
 	}
-
 
 	@Override
 	public void updatePathVisualizer(SimpleCurveVisualizer visualizer) {
-		log("Updated Visualizer");
+
 	}
 
 	@Override
 	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
-		log("Deleted Visualizer");
-	}
 
+	}
 
 	@Override
 	public Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers() {
-		return new HashMap<>();
+		return null;
 	}
 
 	@Override

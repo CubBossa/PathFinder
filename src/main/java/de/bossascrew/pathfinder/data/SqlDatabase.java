@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.NodeType;
+import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.HashedRegistry;
@@ -326,7 +326,6 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setDouble(5, z);
 				stmt.setDouble(6, tangentLength);
 				stmt.setString(7, permission);
-
 				stmt.executeUpdate();
 
 				try (ResultSet res = stmt.getResultSet()) {
@@ -396,6 +395,7 @@ public abstract class SqlDatabase implements DataStorage {
 				} else {
 					stmt.setDouble(5, node.getCurveLength());
 				}
+				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
 			throw new DataStorageException("Could not update node.", e);
@@ -416,27 +416,80 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
+					"(`key`, `roadmap_key`, `name_format`, `findable`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?)")) {
+				stmt.setString(1, key.toString());
+				stmt.setString(2, roadMap.getKey().toString());
+				stmt.setString(3, nameFormat);
+				stmt.setBoolean(4, findable);
+				stmt.executeUpdate();
+
+				NodeGroup group = new NodeGroup(key, roadMap, nameFormat);
+				group.setFindable(findable);
+				return group;
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create new node group.", e);
+		}
 	}
 
 	@Override
 	public Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap) {
-		return null;
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups` WHERE `roadmap_key` = ?")) {
+				stmt.setString(1, roadMap.getKey().toString());
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
+					while (resultSet.next()) {
+						String keyString = resultSet.getString("key");
+						String nameFormat = resultSet.getString("name_format");
+						boolean nodesFindable = resultSet.getBoolean("findable");
+
+						NodeGroup group = new NodeGroup(NamespacedKey.fromString(keyString), roadMap, nameFormat);
+						group.setFindable(nodesFindable);
+						registry.put(group);
+					}
+					return registry;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not load node groups.", e);
+		}
 	}
 
 	@Override
 	public void updateNodeGroup(NodeGroup group) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("UPDATE `pathfinder_nodegroups` SET " +
+					"`name_format` = ?, " +
+					"`findable` = ?, " +
+					"WHERE `key` = ?")) {
+				stmt.setString(1, group.getNameFormat());
+				stmt.setBoolean(2, group.isFindable());
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not update node group.", e);
+		}
 	}
 
 	@Override
 	public void deleteNodeGroup(NodeGroup group) {
-
+		deleteNodeGroup(group.getKey());
 	}
 
 	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodegroups` WHERE `id` = ?")) {
+				stmt.setString(1, key.toString());
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete node group.", e);
+		}
 	}
 
 	@Override

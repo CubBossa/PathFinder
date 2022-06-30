@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.roadmap;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.NodeType;
+import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;

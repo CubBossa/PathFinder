@@ -3,11 +3,13 @@ package de.bossascrew.pathfinder;
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
+import de.bossascrew.pathfinder.configuration.Configuration;
 import de.bossascrew.pathfinder.data.*;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.node.Navigable;
 import de.bossascrew.pathfinder.node.NavigateSelection;
 import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -104,6 +106,8 @@ public class PathPlugin extends JavaPlugin {
 	private BukkitCommandManager commandManager;
 	@Getter
 	private DataStorage database;
+	@Getter
+	private Configuration configuration;
 
 
 	@Override
@@ -120,16 +124,22 @@ public class PathPlugin extends JavaPlugin {
 		audiences = BukkitAudiences.create(this);
 		miniMessage = MiniMessage.miniMessage();
 
+		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
+
 		// Data
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
 		new PacketTranslationHandler(this);
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
+		translationHandler.setFallbackLanguage(configuration.getFallbackLanguage());
+		translationHandler.setUseClientLanguage(configuration.isClientLanguage());
 		translationHandler.loadLanguages();
 
-		//database = new InMemoryDatabase(this.getLogger());
-		var db = new SqliteDatabase(new File(getDataFolder(), "database.db"));
-		db.connect();
-		database = db;
+		database = switch (configuration.getDatabaseType()) {
+			case IN_MEMORY -> new InMemoryDatabase(this.getLogger());
+			case SQLITE -> new SqliteDatabase(new File(getDataFolder() + "data/", "database.db"));
+			default -> new YmlDatabase(new File(getDataFolder(), "data/"));
+		};
+		database.connect();
 
 		// Commands
 
@@ -139,15 +149,15 @@ public class PathPlugin extends JavaPlugin {
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
 
-		/*commandManager.registerCommand(new PathFinderCommand());
+		commandManager.registerCommand(new PathFinderCommand());
 		commandManager.registerCommand(new CancelPath());
 		commandManager.registerCommand(new FindCommand());
-		commandManager.registerCommand(new NodeGroupCommand());
-		commandManager.registerCommand(new PathVisualizerCommand());*/
+		commandManager.registerCommand(new PathVisualizerCommand());
 		commandManager.registerCommand(new RoadMapCommand());
 
 		registerCompletions();
 
+		new NodeTypeHandler();
 		new PathPlayerHandler();
 		new RoadMapHandler();
 		new VisualizerHandler();
@@ -159,11 +169,14 @@ public class PathPlugin extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 	}
 
+	@SneakyThrows
 	@Override
 	public void onDisable() {
+
 		CommandAPI.unregister("nodegroup");
 		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
+
 	}
 
 	private void registerCompletions() {

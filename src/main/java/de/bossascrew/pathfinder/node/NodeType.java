@@ -1,5 +1,7 @@
-package de.bossascrew.pathfinder;
+package de.bossascrew.pathfinder.node;
 
+import de.bossascrew.pathfinder.Named;
+import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;

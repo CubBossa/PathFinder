@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.node;
 
-import de.bossascrew.pathfinder.NodeType;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
@@ -10,6 +9,7 @@ public class NodeTypeHandler {
 	@Getter
 	private static NodeTypeHandler instance;
 
+	@Getter
 	private final HashedRegistry<NodeType<?>> types;
 
 	public NodeTypeHandler() {

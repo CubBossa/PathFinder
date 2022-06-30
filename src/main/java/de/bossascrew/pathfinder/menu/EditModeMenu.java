@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.menu;
 
 import de.bossascrew.pathfinder.Messages;
-import de.bossascrew.pathfinder.NodeType;
+import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
