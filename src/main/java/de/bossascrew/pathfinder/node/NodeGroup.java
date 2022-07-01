@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.node;
 import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -44,5 +45,17 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, 
     @Override
     public Collection<Node> getGroup() {
         return new HashSet<>(this);
+    }
+
+    public void removeSearchTerms(Collection<String> terms) {
+        searchTerms.removeAll(terms);
+    }
+
+    public void addSearchTerms(Collection<String> terms) {
+        searchTerms.addAll(terms);
+    }
+
+    public void clearSearchTerms(Collection<String> terms) {
+        searchTerms.clear();
     }
 }

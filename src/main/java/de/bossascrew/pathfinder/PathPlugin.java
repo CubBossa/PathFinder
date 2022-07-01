@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.commands.*;
 import de.bossascrew.pathfinder.configuration.Configuration;
 import de.bossascrew.pathfinder.data.*;
+import de.bossascrew.pathfinder.listener.DatabaseListener;
 import de.bossascrew.pathfinder.listener.PlayerListener;
 import de.bossascrew.pathfinder.node.Navigable;
 import de.bossascrew.pathfinder.node.NavigateSelection;
@@ -160,16 +161,17 @@ public class PathPlugin extends JavaPlugin {
 
 		registerCompletions();
 
+		new VisualizerHandler();
 		new NodeTypeHandler();
 		new PathPlayerHandler();
-		new RoadMapHandler();
-		new VisualizerHandler();
+		new RoadMapHandler().loadRoadMaps();
 
 		new GUIHandler(this).enable();
 
 		// Listeners
 
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+		Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
 	}
 
 	@SneakyThrows

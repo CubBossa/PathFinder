@@ -4,7 +4,8 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
+import org.bukkit.inventory.ItemStack;
+import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,21 +32,24 @@ public class VisualizerHandler {
 		defaultSimpleCurveVisualizer = new SimpleCurveVisualizer(new NamespacedKey(PathPlugin.getInstance(), "default"), "<gray>Default Particles</gray>");
 
 		this.pathVisualizerMap = new HashedRegistry<>();
+		pathVisualizerMap.put(defaultSimpleCurveVisualizer);
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
 	}
 
 	public SimpleCurveVisualizer createPathVisualizer(NamespacedKey key,
 													  String nameFormat,
-													  Particle particle,
-													  Double particleDistance,
-													  Integer particleSteps,
-													  Integer schedulerPeriod) {
+													  ParticleBuilder particle,
+													  ItemStack displayItem,
+													  double particleDistance,
+													  int particleSteps,
+													  int schedulerPeriod) {
 
 		if (pathVisualizerMap.containsKey(key)) {
 			throw new IllegalArgumentException("Could not insert new path visualizer, another visualizer with key '" + key + "' already exists.");
 		}
-		SimpleCurveVisualizer visualizer = PathPlugin.getInstance().getDatabase().newPathVisualizer(key, nameFormat, particle, particleDistance, particleSteps, schedulerPeriod);
+		SimpleCurveVisualizer visualizer = PathPlugin.getInstance().getDatabase().newPathVisualizer(key, nameFormat,
+				particle, displayItem, particleDistance, particleSteps, schedulerPeriod, 3);
 		pathVisualizerMap.put(visualizer);
 		return visualizer;
 	}

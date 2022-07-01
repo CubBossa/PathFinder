@@ -1,10 +1,10 @@
 package de.bossascrew.pathfinder.roadmap;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -157,7 +157,7 @@ public class RoadMap implements Keyed {
 	public <T extends Node> T createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
 
 		T node = PathPlugin.getInstance().getDatabase().createNode(this, type, Arrays.stream(groups).filter(Objects::nonNull).toList(),
-				vector.getX(), vector.getY(), vector.getZ(), null, permission);
+				vector.getX(), vector.getY(), vector.getZ(), 3, permission);
 
 		addNode(node);
 		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
@@ -255,6 +255,9 @@ public class RoadMap implements Keyed {
 		groups.remove(group.getKey());
 		navigables.remove(group);
 		findables.remove(group);
+
+		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
+
 		nodes.values().stream()
 				.filter(node -> node instanceof Groupable)
 				.map(node -> (Groupable) node)

@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.roadmap;
 
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.events.roadmap.RoadMapDeletedEvent;
 import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.node.Waypoint;
@@ -8,11 +9,10 @@ import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
@@ -67,10 +67,11 @@ public class RoadMapHandler {
 	}
 
 	public void deleteRoadMap(RoadMap roadMap) {
+
+		roadMaps.remove(roadMap.getKey());
+		Bukkit.getPluginManager().callEvent(new RoadMapDeletedEvent(roadMap));
 		//TODO delete all nodes and edges
 		//TODO deselect roadmap for all players
-		PathPlugin.getInstance().getDatabase().deleteRoadMap(roadMap);
-		roadMaps.remove(roadMap.getKey());
 	}
 
 	public @Nullable

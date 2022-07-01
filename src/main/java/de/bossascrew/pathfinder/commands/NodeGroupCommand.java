@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.commands.argument.CustomArgs;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
@@ -19,6 +20,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
@@ -128,6 +130,9 @@ public class NodeGroupCommand extends CommandAPICommand {
 				.map(String::toLowerCase)
 				.toList();
 		group.getSearchTerms().addAll(toAdd);
+		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
+				group, NodeGroupSearchTermsChangedEvent.Action.ADD, toAdd
+		));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_ADD.format(TagResolver.builder()
 				.tag("name", Tag.inserting(group.getDisplayName()))
@@ -141,6 +146,10 @@ public class NodeGroupCommand extends CommandAPICommand {
 				.map(String::toLowerCase)
 				.toList();
 		group.getSearchTerms().removeAll(toRemove);
+
+		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
+				group, NodeGroupSearchTermsChangedEvent.Action.REMOVE, toRemove
+		));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_REMOVE.format(TagResolver.builder()
 				.tag("name", Tag.inserting(group.getDisplayName()))

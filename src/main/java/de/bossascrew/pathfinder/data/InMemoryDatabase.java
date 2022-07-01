@@ -7,13 +7,11 @@ import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -98,7 +96,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission) {
 		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
 		node.setPosition(new Vector(x, y, z));
 		node.setCurveLength(tangentLength);
@@ -154,6 +152,16 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
+	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
+	}
+
+	@Override
+	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
+	}
+
+	@Override
 	public FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate) {
 		log("Create Foundinfo");
 		return new FoundInfo(player, findable, foundDate);
@@ -171,7 +179,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		log("Created Visualizer");
 		var vis = new SimpleCurveVisualizer(key, nameFormat);
 		vis.setParticle(particle);

@@ -135,13 +135,13 @@ public abstract class SqlDatabase implements DataStorage {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_visualizer` (" +
 					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
 					"`name_format` TEXT NOT NULL ," +
-					"`permission` VARCHAR(64) NULL" +
+					"`permission` VARCHAR(64) NULL ," +
 					"`display_item` TEXT NOT NULL ," +
 					"`particle` VARCHAR(128) NOT NULL ," +
 					"`particle_steps` INT NOT NULL ," +
 					"`particle_distance` DOUBLE NOT NULL ," +
 					"`scheduler_period` INT NOT NULL ," +
-					"`curve_length DOUBLE NOT NULL` )")) {
+					"`curve_length` DOUBLE NOT NULL )")) {
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -162,6 +162,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setString(5, pathVis.getKey().toString());
 				stmt.setDouble(6, 3);
 				stmt.setDouble(7, 3);
+				stmt.executeUpdate();
 
 				return new RoadMap(key, nameFormat, world, findableNodes, null, 3, 3);
 			}
@@ -247,6 +248,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setInt(1, start.getNodeId());
 				stmt.setInt(2, end.getNodeId());
 				stmt.setDouble(3, weight);
+				stmt.executeUpdate();
 
 				return new Edge(start, end, weight);
 			}
@@ -323,7 +325,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
 					"(`type`, `roadmap_key`, `x`, `y`, `z`, `permission`, `path_curve_length`) VALUES " +
@@ -428,7 +430,7 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
 					"(`key`, `roadmap_key`, `name_format`, `findable`) VALUES " +
-					"(?, ?, ?, ?, ?, ?, ?)")) {
+					"(?, ?, ?, ?)")) {
 				stmt.setString(1, key.toString());
 				stmt.setString(2, roadMap.getKey().toString());
 				stmt.setString(3, nameFormat);
@@ -487,13 +489,23 @@ public abstract class SqlDatabase implements DataStorage {
 	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodegroups` WHERE `id` = ?")) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodegroups` WHERE `key` = ?")) {
 				stmt.setString(1, key.toString());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
 			throw new DataStorageException("Could not delete node group.", e);
 		}
+	}
+
+	@Override
+	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
+	}
+
+	@Override
+	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
 	}
 
 	@Override
@@ -512,7 +524,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_path_visualizer` " +
 					"(`key`, `name_format`, `permission`, `display_item`, `particle`, `particle_steps`, `particle_distance`, `particle_period`, `curve_length`) VALUES " +
@@ -553,7 +565,14 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_path_visualizer` WHERE `key` = ?")) {
+				stmt.setString(1, visualizer.getKey().toString());
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete path visualizer.", e);
+		}
 	}
 
 	@Override

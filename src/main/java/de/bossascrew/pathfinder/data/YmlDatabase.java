@@ -139,7 +139,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission) {
 		return null;
 	}
 
@@ -179,6 +179,16 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
+	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
+	}
+
+	@Override
+	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+
+	}
+
+	@Override
 	public FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate) {
 		return null;
 	}
@@ -194,7 +204,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		return null;
 	}
 

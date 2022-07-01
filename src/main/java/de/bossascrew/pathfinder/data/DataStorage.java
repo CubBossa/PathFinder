@@ -6,11 +6,9 @@ import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -19,6 +17,11 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface DataStorage {
+
+	/*TODO before publishing
+	- Should groups have permissions?
+	- Should roadmaps have a custom tangent length?
+	 */
 
 	void connect();
 
@@ -59,7 +62,7 @@ public interface DataStorage {
 
 	void deleteEdge(int startId, int endId);
 
-	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission);
+	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission);
 
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 
@@ -80,6 +83,9 @@ public interface DataStorage {
 
 	void deleteNodeGroup(NamespacedKey key);
 
+	void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
+
+	void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
 	FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate);
 
@@ -87,7 +93,7 @@ public interface DataStorage {
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength);
+	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
 
 	Map<Integer, SimpleCurveVisualizer> loadPathVisualizer();
 
