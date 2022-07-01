@@ -57,9 +57,12 @@ public class RoadMapHandler {
 	}
 
 	public RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes) {
-		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key, StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()), world, findableNodes);
+		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key,
+				StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()),
+				world,
+				findableNodes,
+				VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer());
 		roadMaps.put(rm);
-		rm.setVisualizer(VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer());
 		return rm;
 	}
 

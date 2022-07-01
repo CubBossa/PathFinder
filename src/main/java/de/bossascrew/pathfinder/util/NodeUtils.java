@@ -19,8 +19,8 @@ public class NodeUtils {
 
 		Vector start = path.get(0).getPosition();
 		Vector next = path.get(1).getPosition();
-		Vector startDir = start.clone().add(next.clone().subtract(start).multiply(.5f)).normalize().multiply(tangentLength);
-		vectors.add(new BezierVector(SPLINES.convertToVector(start), SPLINES.convertToVector(start.clone().add(startDir)), SPLINES.convertToVector(start.clone().add(startDir).multiply(-1))));
+		Vector startDir = next.clone().subtract(start).normalize().multiply(tangentLength);
+		vectors.add(new BezierVector(SPLINES.convertToVector(start), SPLINES.convertToVector(start.clone().add(startDir)), SPLINES.convertToVector(start.clone().add(startDir.multiply(-1)))));
 
 		for (int i = 1; i < path.size() - 1; i++) {
 			Vector p = path.get(i - 1).getPosition();
@@ -30,15 +30,13 @@ public class NodeUtils {
 			Vector r = p.clone().add(n.clone().subtract(p).multiply(.5f)).normalize();
 
 			Vector dir = u.clone().crossProduct(r).normalize().multiply(tangentLength);
-			vectors.add(new BezierVector(SPLINES.convertToVector(c), SPLINES.convertToVector(dir), SPLINES.convertToVector(dir).multiply(-1)));
+			vectors.add(new BezierVector(SPLINES.convertToVector(c), SPLINES.convertToVector(c.clone().add(dir.clone().multiply(-1))), SPLINES.convertToVector(c.clone().add(dir))));
 		}
 
 		Vector end = path.get(path.size() - 1).getPosition();
 		Vector prev = path.get(path.size() - 2).getPosition();
-		Vector endDir = prev.clone().add(end.clone().subtract(prev).multiply(.5f)).normalize().multiply(tangentLength);
-		System.out.println("Start dir: " + startDir);
-		System.out.println("End dir: " + endDir);
-		vectors.add(new BezierVector(SPLINES.convertToVector(prev), SPLINES.convertToVector(prev.clone().add(endDir)), SPLINES.convertToVector(prev.clone().add(endDir).multiply(-1))));
+		Vector endDir = end.clone().subtract(prev).normalize().multiply(tangentLength);
+		vectors.add(new BezierVector(SPLINES.convertToVector(prev), SPLINES.convertToVector(end.clone().add(endDir)), SPLINES.convertToVector(prev.clone().add(endDir).multiply(-1))));
 
 		return vectors;
 	}

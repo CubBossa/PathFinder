@@ -1,5 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 
 import java.io.File;

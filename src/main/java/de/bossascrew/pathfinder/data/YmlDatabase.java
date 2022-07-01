@@ -3,10 +3,14 @@ package de.bossascrew.pathfinder.data;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.HashedRegistry;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,12 +52,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes) {
-		return createRoadMap(key, nameFormat, world, findableNodes, null, 3, 3);
-	}
-
-	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double curveLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double curveLength) {
 		File file = new File(roadMapDir, key.toString().replace(":", "_") + ".yml");
 		try {
 			file.createNewFile();
@@ -110,11 +109,6 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public boolean deleteRoadMap(RoadMap roadMap) {
-		return false;
-	}
-
-	@Override
 	public boolean deleteRoadMap(NamespacedKey key) {
 		return false;
 	}
@@ -140,12 +134,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteEdge(Edge edge) {
-
-	}
-
-	@Override
-	public void deleteEdge(Node start, Node end) {
+	public void deleteEdge(int startId, int endId) {
 
 	}
 
@@ -185,11 +174,6 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNodeGroup(NodeGroup group) {
-
-	}
-
-	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
 
 	}
@@ -210,7 +194,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod) {
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
 		return null;
 	}
 

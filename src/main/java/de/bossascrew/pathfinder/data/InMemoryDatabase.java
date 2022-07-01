@@ -3,13 +3,17 @@ package de.bossascrew.pathfinder.data;
 import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -39,12 +43,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes) {
-		return createRoadMap(key, nameFormat, world, findableNodes, null, 1f, 1f);
-	}
-
-	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength) {
 		log("Create Roadmap");
 		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, tangentLength);
 	}
@@ -94,12 +93,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteEdge(Edge edge) {
-		log("Delete Edge");
-	}
-
-	@Override
-	public void deleteEdge(Node start, Node end) {
+	public void deleteEdge(int startId, int endId) {
 		log("Delete Edge");
 	}
 
@@ -177,10 +171,10 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod) {
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
 		log("Created Visualizer");
 		var vis = new SimpleCurveVisualizer(key, nameFormat);
-		vis.setParticle( particle);
+		vis.setParticle(particle);
 		vis.setParticleDistance(particleDistance);
 		vis.setParticleSteps(particleSteps);
 		vis.setSchedulerPeriod(schedulerPeriod);

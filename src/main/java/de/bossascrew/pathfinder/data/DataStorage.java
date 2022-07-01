@@ -1,16 +1,16 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.NodeType;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.Findable;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -24,15 +24,19 @@ public interface DataStorage {
 
 	void disconnect();
 
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes);
+	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis) {
+		return createRoadMap(key, nameFormat, world, findableNodes, pathVis, 3, 3);
+	}
 
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength);
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
 	void updateRoadMap(RoadMap roadMap);
 
-	boolean deleteRoadMap(RoadMap roadMap);
+	default boolean deleteRoadMap(RoadMap roadMap) {
+		return deleteRoadMap(roadMap.getKey());
+	}
 
 	boolean deleteRoadMap(NamespacedKey key);
 
@@ -45,10 +49,15 @@ public interface DataStorage {
 
 	void deleteEdgesTo(Node end);
 
-	void deleteEdge(Edge edge);
+	default void deleteEdge(Edge edge) {
+		deleteEdge(edge.getStart().getNodeId(), edge.getEnd().getNodeId());
+	}
 
-	void deleteEdge(Node start, Node end);
+	default void deleteEdge(Node start, Node end) {
+		deleteEdge(start.getNodeId(), end.getNodeId());
+	}
 
+	void deleteEdge(int startId, int endId);
 
 	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Double x, Double y, Double z, Double tangentLength, String permission);
 
@@ -65,7 +74,9 @@ public interface DataStorage {
 
 	void updateNodeGroup(NodeGroup group);
 
-	void deleteNodeGroup(NodeGroup group);
+	default void deleteNodeGroup(NodeGroup group) {
+		deleteNodeGroup(group.getKey());
+	}
 
 	void deleteNodeGroup(NamespacedKey key);
 
@@ -76,7 +87,7 @@ public interface DataStorage {
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod);
+	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength);
 
 	Map<Integer, SimpleCurveVisualizer> loadPathVisualizer();
 

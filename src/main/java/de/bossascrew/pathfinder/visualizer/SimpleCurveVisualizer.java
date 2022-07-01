@@ -6,8 +6,14 @@ import de.bossascrew.splinelib.util.Spline;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.*;
+import org.bukkit.Keyed;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -25,10 +31,13 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 
 	@Nullable
 	private String permission = null;
-	private Material iconType = Material.NAME_TAG;
+	private ItemStack displayItem = new ItemStack(Material.REDSTONE);
 
 	private int particleSteps = 10;
-	private Particle particle = Particle.REDSTONE;
+	private ParticleBuilder particle = new ParticleBuilder(ParticleEffect.BLOCK_DUST)
+			.setAmount(1)
+			.setSpeed(0)
+			.setColor(java.awt.Color.GREEN);
 	private Double particleDistance = .2;
 	private Integer schedulerPeriod = 2;
 	private double tangentLength = 3;
@@ -46,7 +55,7 @@ public class SimpleCurveVisualizer implements Keyed, PathVisualizer {
 	@Override
 	public void playParticle(Player player, Location location, int index, long time) {
 		if (index % particleSteps == time/schedulerPeriod % particleSteps) {
-			player.spawnParticle(particle, location, 1, new Particle.DustOptions(Color.AQUA, 1));
+			particle.setLocation(location).display(player);
 		}
 	}
 

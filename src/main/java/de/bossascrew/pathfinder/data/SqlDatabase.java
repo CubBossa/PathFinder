@@ -1,13 +1,20 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.DataUtils;
 import de.bossascrew.pathfinder.util.HashedRegistry;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import org.bukkit.*;
+import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.sql.*;
 import java.util.Date;
@@ -19,6 +26,7 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public void connect() {
+		createSimpleCurveVisualizerDatabase();
 		createRoadMapTable();
 		createNodeTable();
 		createNodeGroupTable();
@@ -34,7 +42,7 @@ public abstract class SqlDatabase implements DataStorage {
 					"`name_format` TEXT NOT NULL ," +
 					"`world` VARCHAR(36) NOT NULL ," +
 					"`nodes_findable` TINYINT(1) NULL ," +
-					"`path_visualizer` VARCHAR(64) NOT NULL ," + //TODO foreign key
+					"`path_visualizer` VARCHAR(64) NOT NULL ," +
 					"`nodes_find_distance` DOUBLE NOT NULL DEFAULT 3 ," +
 					"`path_curve_length` DOUBLE NOT NULL DEFAULT 3 )")) {
 				stmt.executeUpdate();
@@ -122,13 +130,27 @@ public abstract class SqlDatabase implements DataStorage {
 		}
 	}
 
-	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes) {
-		return createRoadMap(key, nameFormat, world, findableNodes, null, 3, 3);
+	private void createSimpleCurveVisualizerDatabase() {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_visualizer` (" +
+					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
+					"`name_format` TEXT NOT NULL ," +
+					"`permission` VARCHAR(64) NULL" +
+					"`display_item` TEXT NOT NULL ," +
+					"`particle` VARCHAR(128) NOT NULL ," +
+					"`particle_steps` INT NOT NULL ," +
+					"`particle_distance` DOUBLE NOT NULL ," +
+					"`scheduler_period` INT NOT NULL ," +
+					"`curve_length DOUBLE NOT NULL` )")) {
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create path visualizer table.", e);
+		}
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, SimpleCurveVisualizer pathVis, double findDist, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
 					"(`key`, `name_format`, `world`, `nodes_findable`, `path_visualizer`, `nodes_find_distance`, `path_curve_length`) VALUES " +
@@ -159,14 +181,16 @@ public abstract class SqlDatabase implements DataStorage {
 						String nameFormat = resultSet.getString("name_format");
 						String worldUUIDString = resultSet.getString("world");
 						boolean nodesFindable = resultSet.getBoolean("nodes_findable");
-						String pathVisualizerKeyString = resultSet.getString("path_visualizer"); //TODO
+						String pathVisualizerKeyString = resultSet.getString("path_visualizer");
 						double nodeFindDistance = resultSet.getDouble("nodes_find_distance");
 						double pathCurveLength = resultSet.getDouble("path_curve_length");
 
 						registry.put(new RoadMap(NamespacedKey.fromString(keyString),
 								nameFormat,
 								Bukkit.getWorld(UUID.fromString(worldUUIDString)),
-								nodesFindable, null, nodeFindDistance, pathCurveLength));
+								nodesFindable,
+								VisualizerHandler.getInstance().getPathVisualizerMap().get(NamespacedKey.fromString(pathVisualizerKeyString)),
+								nodeFindDistance, pathCurveLength));
 					}
 					return registry;
 				}
@@ -199,11 +223,6 @@ public abstract class SqlDatabase implements DataStorage {
 		} catch (SQLException e) {
 			throw new DataStorageException("Could not update roadmap.", e);
 		}
-	}
-
-	@Override
-	public boolean deleteRoadMap(RoadMap roadMap) {
-		return deleteRoadMap(roadMap.getKey());
 	}
 
 	@Override
@@ -289,16 +308,6 @@ public abstract class SqlDatabase implements DataStorage {
 		} catch (Exception e) {
 			throw new DataStorageException("Could not delete edges.", e);
 		}
-	}
-
-	@Override
-	public void deleteEdge(Edge edge) {
-		deleteEdge(edge.getStart().getNodeId(), edge.getEnd().getNodeId());
-	}
-
-	@Override
-	public void deleteEdge(Node start, Node end) {
-		deleteEdge(start.getNodeId(), end.getNodeId());
 	}
 
 	public void deleteEdge(int start, int end) {
@@ -476,11 +485,6 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNodeGroup(NodeGroup group) {
-		deleteNodeGroup(group.getKey());
-	}
-
-	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodegroups` WHERE `id` = ?")) {
@@ -508,8 +512,33 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, Particle particle, Double particleDistance, Integer particleSteps, Integer schedulerPeriod) {
-		return null;
+	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, Double particleDistance, Integer particleSteps, Integer schedulerPeriod, double curveLength) {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_path_visualizer` " +
+					"(`key`, `name_format`, `permission`, `display_item`, `particle`, `particle_steps`, `particle_distance`, `particle_period`, `curve_length`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+				stmt.setString(1, key.toString());
+				stmt.setString(2, nameFormat);
+				stmt.setNull(3, Types.VARCHAR);
+				stmt.setString(4, DataUtils.serializeItemStack(displayIcon));
+				stmt.setString(5, DataUtils.serializeParticle(particle));
+				stmt.setDouble(6, particleSteps);
+				stmt.setDouble(7, particleDistance);
+				stmt.setInt(8, schedulerPeriod);
+				stmt.setDouble(9, curveLength);
+
+				SimpleCurveVisualizer vis = new SimpleCurveVisualizer(key, nameFormat);
+				vis.setParticle(particle);
+				vis.setDisplayItem(displayIcon);
+				vis.setParticleSteps(particleSteps);
+				vis.setParticleDistance(particleDistance);
+				vis.setSchedulerPeriod(schedulerPeriod);
+				vis.setTangentLength(curveLength);
+				return vis;
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create new path visualizer.", e);
+		}
 	}
 
 	@Override

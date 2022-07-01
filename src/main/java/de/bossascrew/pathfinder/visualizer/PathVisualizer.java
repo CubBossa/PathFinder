@@ -33,7 +33,7 @@ public interface PathVisualizer extends Keyed, Named {
 	default List<Vector> interpolate(Spline bezierVectors) {
 		return PathPlugin.SPLINES.newCurveBuilder(bezierVectors)
 				.withClosedPath(false)
-				.withRoundingInterpolation(Interpolation.linearInterpolation(.2))
+				.withRoundingInterpolation(Interpolation.bezierInterpolation(16))
 				.withSpacingInterpolation(Interpolation.equidistantInterpolation(.2))
 				.buildAndConvert();
 	}

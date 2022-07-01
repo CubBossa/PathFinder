@@ -134,12 +134,15 @@ public class PathPlugin extends JavaPlugin {
 		translationHandler.setUseClientLanguage(configuration.isClientLanguage());
 		translationHandler.loadLanguages();
 
+		new File(getDataFolder(), "data/").mkdirs();
 		database = switch (configuration.getDatabaseType()) {
 			case IN_MEMORY -> new InMemoryDatabase(this.getLogger());
-			case SQLITE -> new SqliteDatabase(new File(getDataFolder() + "data/", "database.db"));
+			case SQLITE -> new SqliteDatabase(new File(getDataFolder() + "/data/", "database.db"));
 			default -> new YmlDatabase(new File(getDataFolder(), "data/"));
 		};
 		database.connect();
+
+		System.out.println(database);
 
 		// Commands
 

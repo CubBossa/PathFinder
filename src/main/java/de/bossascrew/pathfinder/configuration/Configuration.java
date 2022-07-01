@@ -67,7 +67,7 @@ public class Configuration {
 		Configuration configuration = new Configuration();
 		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 
-		List<Field> fields = Arrays.stream(Configuration.class.getFields())
+		List<Field> fields = Arrays.stream(Configuration.class.getDeclaredFields())
 				.filter(field -> field.isAnnotationPresent(ConfigValue.class))
 				.toList();
 
