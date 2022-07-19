@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
@@ -11,10 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import xyz.xenondevs.particle.ParticleBuilder;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public interface DataStorage {
 
@@ -71,6 +69,10 @@ public interface DataStorage {
 	void deleteNode(int nodeId);
 
 
+	void assignNodesToGroup(NodeGroup group, NodeSelection selection);
+
+	Map<NamespacedKey, List<Integer>> loadNodeGroupNodes();
+
 	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable);
 
 	Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap);
@@ -82,6 +84,8 @@ public interface DataStorage {
 	}
 
 	void deleteNodeGroup(NamespacedKey key);
+
+	Map<NamespacedKey, Collection<String>> loadSearchTerms();
 
 	void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
 

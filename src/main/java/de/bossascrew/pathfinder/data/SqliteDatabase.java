@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
 
 import java.io.File;
@@ -41,7 +40,8 @@ public class SqliteDatabase extends SqlDatabase {
 
 	public Connection getConnection() {
 		try {
-			return DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+			connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+			return connection;
 		} catch (SQLException e) {
 			throw new DataStorageException("Could not connect to Sqlite database.", e);
 		}

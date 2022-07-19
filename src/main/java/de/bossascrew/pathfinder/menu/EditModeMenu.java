@@ -1,11 +1,13 @@
 package de.bossascrew.pathfinder.menu;
 
 import de.bossascrew.pathfinder.Messages;
-import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupAssignEvent;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupRemoveEvent;
 import de.bossascrew.pathfinder.node.Groupable;
 import de.bossascrew.pathfinder.node.Node;
 import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.util.*;
@@ -202,9 +204,10 @@ public class EditModeMenu {
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST : Material.ENDER_CHEST,
+						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART,
 								Messages.E_SUB_GROUP_ENTRY_N.format(resolver),
 								Messages.E_SUB_GROUP_ENTRY_L.format(resolver)
+
 						).createItem();
 						if (groupable.getGroups().contains(group)) {
 							stack = ItemStackUtils.setGlow(stack);
@@ -213,16 +216,36 @@ public class EditModeMenu {
 					})
 					.withClickHandler(Action.LEFT, c -> {
 						if (!groupable.getGroups().contains(group)) {
-							groupable.addGroup(group);
-							c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-							menu.refresh(menu.getListSlots());
+
+							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+								NodeGroupAssignEvent event = new NodeGroupAssignEvent(group, new NodeSelection((Node) groupable));
+								Bukkit.getPluginManager().callEvent(event);
+
+								if(event.isCancelled()) {
+									return;
+								}
+
+								event.getNodes().forEach(node -> ((Groupable) node).addGroup(group));
+								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+								menu.refresh(menu.getListSlots());
+							});
 						}
 					})
 					.withClickHandler(Action.RIGHT, c -> {
 						if (groupable.getGroups().contains(group)) {
-							groupable.removeGroup(group);
-							c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-							menu.refresh(menu.getListSlots());
+
+							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+								NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(group, new NodeSelection((Node) groupable));
+								Bukkit.getPluginManager().callEvent(event);
+
+								if(event.isCancelled()) {
+									return;
+								}
+
+								event.getNodes().forEach(node -> ((Groupable) node).removeGroup(group));
+								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+								menu.refresh(menu.getListSlots());
+							});
 						}
 					}));
 		}
@@ -245,7 +268,7 @@ public class EditModeMenu {
 	}
 
 	private TopInventoryMenu newCreateGroupMenu(Groupable groupable) {
-		AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group_x", AnvilInputValidator.VALIDATE_KEY);
+		AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group", AnvilInputValidator.VALIDATE_KEY);
 
 		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
 			NamespacedKey key = AnvilInputValidator.VALIDATE_KEY.getInputParser().apply(s.getTarget());
@@ -255,8 +278,8 @@ public class EditModeMenu {
 			NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
 			groupable.addGroup(group);
 			ListMenu prev = (ListMenu) menu.getPrevious(s.getPlayer());
-			prev.refresh(prev.getListSlots());
 			menu.openPreviousMenu(s.getPlayer());
+			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> prev.refresh(prev.getListSlots()));
 		});
 		return menu;
 	}

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupAssignEvent;
 import de.bossascrew.pathfinder.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
@@ -70,6 +71,13 @@ public class RoadMap implements Keyed {
 	public void loadGroups() {
 		groups.clear();
 		groups.putAll(PathPlugin.getInstance().getDatabase().loadNodeGroups(this));
+		for(var entry : PathPlugin.getInstance().getDatabase().loadSearchTerms().entrySet()) {
+			NodeGroup group = getNodeGroup(entry.getKey());
+			if(group == null) {
+				continue;
+			}
+			group.addSearchTerms(entry.getValue());
+		}
 	}
 
 	public void loadNodesAndEdges() {
@@ -81,6 +89,21 @@ public class RoadMap implements Keyed {
 				findables.add(findable);
 			}
 		});
+		for(var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
+			NodeGroup group = getNodeGroup(entry.getKey());
+			if(group == null) {
+				continue;
+			}
+			for(int i : entry.getValue()) {
+				Node node = nodes.get(i);
+				group.add(node);
+				if(!(node instanceof Groupable groupable)) {
+					continue;
+				}
+				groupable.addGroup(group);
+			}
+		}
+
 		edges.clear();
 		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this));
 		for (Edge edge : edges) {

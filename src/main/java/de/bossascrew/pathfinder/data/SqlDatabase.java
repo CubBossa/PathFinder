@@ -4,6 +4,7 @@ import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.DataUtils;
 import de.bossascrew.pathfinder.util.HashedRegistry;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
@@ -55,7 +56,7 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodes` (" +
-					"`id` INT NOT NULL PRIMARY KEY ," +
+					"`id` INTEGER PRIMARY KEY AUTOINCREMENT ," +
 					"`type` VARCHAR(64) NOT NULL ," +
 					"`roadmap_key` VARCHAR(64) NOT NULL ," +
 					"`x` DOUBLE NOT NULL ," +
@@ -89,10 +90,11 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeGroupTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodegroups` (" +
-					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
+					"`key` VARCHAR(64) NOT NULL ," +
 					"`roadmap_key` VARCHAR(64) NOT NULL ," +
 					"`name_format` TEXT NOT NULL ," +
 					"`findable` TINYINT(1) NULL ," +
+					"PRIMARY KEY (`key`, `roadmap_key`)" +
 					"FOREIGN KEY (roadmap_key) REFERENCES pathfinder_roadmaps(key) ON DELETE CASCADE )")) {
 				stmt.executeUpdate();
 			}
@@ -329,7 +331,7 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
 					"(`type`, `roadmap_key`, `x`, `y`, `z`, `permission`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?, ?)")) {
+					"(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
 				stmt.setString(1, type.getKey().toString());
 				stmt.setString(2, roadMap.getKey().toString());
 				stmt.setDouble(3, x);
@@ -339,7 +341,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setString(7, permission);
 				stmt.executeUpdate();
 
-				try (ResultSet res = stmt.getResultSet()) {
+				try (ResultSet res = stmt.getGeneratedKeys()) {
 					T node = type.getFactory().apply(roadMap, res.getInt(1));
 					node.setPosition(new Vector(x, y, z));
 					node.setPermission(permission);
@@ -426,6 +428,49 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
+	public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
+		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups_nodes` " +
+					"(`group_key`, `node_id`) VALUES (?, ?)")) {
+				for (Node node : selection) {
+					stmt.setString(1, group.getKey().toString());
+					stmt.setInt(2, node.getNodeId());
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
+			}
+			con.commit();
+			con.setAutoCommit(wasAuto);
+		} catch (Exception e) {
+			throw new DataStorageException("Could not add node to group.", e);
+		}
+	}
+
+	@Override
+	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups_nodes`")) {
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					Map<NamespacedKey, List<Integer>> registry = new HashMap<>();
+					while (resultSet.next()) {
+						String keyString = resultSet.getString("group_key");
+						int nodeId = resultSet.getInt("node_id");
+
+						List<Integer> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString), key -> new ArrayList<>());
+						l.add(nodeId);
+					}
+					return registry;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not load node group nodes.", e);
+		}
+	}
+
+	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
@@ -499,13 +544,59 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+	public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_search_terms`")) {
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					Map<NamespacedKey, Collection<String>> registry = new HashMap<>();
+					while (resultSet.next()) {
+						String keyString = resultSet.getString("group_key");
+						String searchTerm = resultSet.getString("search_term");
 
+						Collection<String> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString), key -> new HashSet<>());
+						l.add(searchTerm);
+					}
+					return registry;
+				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not load node group nodes.", e);
+		}
+	}
+
+	@Override
+	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
+		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_search_terms` " +
+					"(`group_key`, `search_term`) VALUES (?, ?)")) {
+				for (String term : searchTerms) {
+					stmt.setString(1, group.getKey().toString());
+					stmt.setString(2, term);
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
+			}
+			con.commit();
+			con.setAutoCommit(wasAuto);
+		} catch (Exception e) {
+			throw new DataStorageException("Could not add search terms.", e);
+		}
 	}
 
 	@Override
 	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_search_terms` WHERE `group_key` = ? AND `search_term` = ?")) {
+				stmt.setString(1, group.getKey().toString());
+				stmt.setArray(2, con.createArrayOf("TEXT", searchTerms.toArray()));
+				stmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not remove search terms.", e);
+		}
 	}
 
 	@Override

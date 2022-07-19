@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.data;
 import de.bossascrew.pathfinder.node.NodeType;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
@@ -125,6 +126,16 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
+	public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
+
+	}
+
+	@Override
+	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
+		return null;
+	}
+
+	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
 		log("Create Nodegroup");
 		return new NodeGroup(key, roadMap, nameFormat);
@@ -149,6 +160,11 @@ public class InMemoryDatabase implements DataStorage {
 	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
 		log("Delete Nodegroup");
+	}
+
+	@Override
+	public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
+		return null;
 	}
 
 	@Override

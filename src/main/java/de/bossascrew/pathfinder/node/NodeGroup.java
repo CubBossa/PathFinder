@@ -58,4 +58,28 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, 
     public void clearSearchTerms(Collection<String> terms) {
         searchTerms.clear();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NodeGroup)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        NodeGroup group = (NodeGroup) o;
+
+        return key.equals(group.key);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + key.hashCode();
+        return result;
+    }
 }

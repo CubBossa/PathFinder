@@ -54,6 +54,8 @@ public class RoadMapHandler {
 	public void loadRoadMaps() {
 		roadMaps.clear();
 		roadMaps.putAll(PathPlugin.getInstance().getDatabase().loadRoadMaps());
+		roadMaps.forEach(RoadMap::loadGroups);
+		roadMaps.forEach(RoadMap::loadNodesAndEdges);
 	}
 
 	public RoadMap createRoadMap(NamespacedKey key, World world, boolean findableNodes) {

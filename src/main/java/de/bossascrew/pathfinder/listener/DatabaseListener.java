@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.listener;
 
 import de.bossascrew.pathfinder.data.DataStorage;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupAssignEvent;
 import de.bossascrew.pathfinder.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.bossascrew.pathfinder.events.roadmap.RoadMapDeletedEvent;
@@ -29,6 +30,12 @@ public class DatabaseListener implements Listener {
 		data.deleteNodeGroup(event.getGroup().getKey());
 	}
 
+	@EventHandler
+	public void onGroupAssign(NodeGroupAssignEvent event) {
+		data.assignNodesToGroup(event.getGroup(), event.getNodes());
+	}
+
+	@EventHandler
 	public void onSearchTermsChanged(NodeGroupSearchTermsChangedEvent event) {
 		switch (event.getAction()) {
 			case ADD -> data.addSearchTerms(event.getGroup(), event.getChangedTerms());

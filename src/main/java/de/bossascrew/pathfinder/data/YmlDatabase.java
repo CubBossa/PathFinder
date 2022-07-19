@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.data;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.HashedRegistry;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
 import org.bukkit.*;
@@ -159,6 +160,16 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
+	public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
+
+	}
+
+	@Override
+	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
+		return null;
+	}
+
+	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
 		return null;
 	}
@@ -176,6 +187,11 @@ public class YmlDatabase implements DataStorage {
 	@Override
 	public void deleteNodeGroup(NamespacedKey key) {
 
+	}
+
+	@Override
+	public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
+		return null;
 	}
 
 	@Override
