@@ -209,6 +209,8 @@ public class Messages {
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
+	@MessageMeta(value = "<list>", placeholders = "list")
+	public static final Message E_NODE_NAME = new Message("editor.node_name");
 	@MessageMeta("<white><u>Node Tool</u></white>")
 	public static final Message E_NODE_TOOL_N = new Message("editor.toolbar.node_tool.name");
 	@MessageMeta("""

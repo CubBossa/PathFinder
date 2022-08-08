@@ -148,16 +148,16 @@ public class PathPlugin extends JavaPlugin {
 		// Commands
 
 		CommandAPI.onEnable(this);
-		new NodeGroupCommand();
+		new NodeGroupCommand().register();
+		new FindCommand().register();
+		new RoadMapCommand().register();
+		new PathFinderCommand().register();
+		new CancelPathCommand().register();
 
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
 
-		commandManager.registerCommand(new PathFinderCommand());
-		commandManager.registerCommand(new CancelPath());
-		commandManager.registerCommand(new FindCommand());
 		commandManager.registerCommand(new PathVisualizerCommand());
-		commandManager.registerCommand(new RoadMapCommand());
 
 		registerCompletions();
 
@@ -179,6 +179,7 @@ public class PathPlugin extends JavaPlugin {
 	public void onDisable() {
 
 		CommandAPI.unregister("nodegroup");
+		CommandAPI.unregister("roadmap");
 		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
 

@@ -67,7 +67,6 @@ public class ParticlePath extends ArrayList<Node> {
                 }
                 long fullTime = roadMap.getWorld().getFullTime();
                 for (int i = 0; i < calculatedPoints.size(); i++) {
-                    System.out.println(calculatedPoints.get(i));
                     visualizer.playParticle(searching, calculatedPoints.get(i), i, fullTime);
                 }
             }, 0L, visualizer.getTickDelay());

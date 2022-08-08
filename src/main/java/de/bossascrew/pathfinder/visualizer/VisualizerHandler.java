@@ -18,7 +18,7 @@ public class VisualizerHandler {
 	@Getter
 	private static VisualizerHandler instance;
 
-	private final SimpleCurveVisualizer defaultSimpleCurveVisualizer;
+	private final PathVisualizer defaultSimpleCurveVisualizer;
 	private final HashedRegistry<PathVisualizer> pathVisualizerMap;
 
 	// Map<Player, Map<RoadMap, PathVisualizer>>
@@ -29,7 +29,7 @@ public class VisualizerHandler {
 	public VisualizerHandler() {
 
 		instance = this;
-		defaultSimpleCurveVisualizer = new SimpleCurveVisualizer(new NamespacedKey(PathPlugin.getInstance(), "default"), "<gray>Default Particles</gray>");
+		defaultSimpleCurveVisualizer = new DebugVisualizer(new NamespacedKey(PathPlugin.getInstance(), "debug"));
 
 		this.pathVisualizerMap = new HashedRegistry<>();
 		pathVisualizerMap.put(defaultSimpleCurveVisualizer);

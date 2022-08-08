@@ -1,27 +1,33 @@
 package de.bossascrew.pathfinder.commands;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.Subcommand;
-import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.commands.argument.CustomArgs;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.visualizer.ParticlePath;
+import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.CustomArgument;
 import org.bukkit.entity.Player;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
-import java.util.stream.Collectors;
+public class FindCommand extends CommandAPICommand {
 
-@CommandAlias("find|gps|navigate")
-public class FindCommand extends BaseCommand {
+	public FindCommand() {
+		super("find");
+		withAliases("gps", "navigate");
 
-	@Subcommand("location")
-	@CommandCompletion(PathPlugin.COMPLETE_NAVIGABLES)
+		withSubcommand(new CommandAPICommand("location")
+				.withArguments(CustomArgs.navigateSelectionArgument("selection"))
+				.executesPlayer((player, args) -> {
+					onFindSpot(player, (NavigateSelection) args[0]);
+				}));
+
+	}
+
+
 	public void onFindSpot(Player player, NavigateSelection navigables) {
 
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);

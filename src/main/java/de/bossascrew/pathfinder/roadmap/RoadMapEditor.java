@@ -1,19 +1,22 @@
 package de.bossascrew.pathfinder.roadmap;
 
 import com.google.common.collect.Lists;
+import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.events.node.*;
+import de.bossascrew.pathfinder.events.nodegroup.NodeGroupAssignEvent;
 import de.bossascrew.pathfinder.menu.EditModeMenu;
-import de.bossascrew.pathfinder.node.Edge;
-import de.bossascrew.pathfinder.node.NodeTypeHandler;
+import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
 import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -207,6 +210,21 @@ public class RoadMapEditor implements Keyed, Listener {
 			throwable.printStackTrace();
 			return null;
 		});
+	}
+
+	@EventHandler
+	public void onNodeAssign(NodeGroupAssignEvent event) { //TODO auch bei erzeugung der heads
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				event.getNodes().forEach(node -> {
+					int value = node.getNodeId();
+					armorstandHandler.updateNodeHead(player, value);
+					armorstandHandler.renameArmorstand(player, value, Messages.formatGroup(
+							player, Messages.E_NODE_NAME, ((Groupable)node).getGroups().stream()
+									.map(NodeGroup::getSearchTerms)
+									.flatMap(Collection::stream).collect(Collectors.toList()),
+							Component::text
+					));
+				}));
 	}
 
 	@EventHandler

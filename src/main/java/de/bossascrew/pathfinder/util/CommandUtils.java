@@ -34,7 +34,7 @@ public class CommandUtils {
             if (!cancelIfUnselected) {
                 return null;
             }
-            throw new ConditionFailedException("Du musst eine Straßenkarte ausgewählt haben. (/roadmap select <Straßenkarte>)");
+            throw new ConditionFailedException("You have to select a roadmap. (/roadmap select <roadmap>)");
         }
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMap());
         return roadMap;

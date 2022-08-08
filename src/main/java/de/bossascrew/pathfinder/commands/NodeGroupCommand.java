@@ -11,6 +11,7 @@ import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
@@ -101,20 +102,6 @@ public class NodeGroupCommand extends CommandAPICommand {
 						.executesPlayer((player, objects) -> {
 							setFindable(player, (NodeGroup) objects[0], (Boolean) objects[1]);
 						})));
-
-		withSubcommand(new CommandAPICommand("test")
-				.withSubcommand(new CommandAPICommand("abc")
-						.withArguments(
-								CustomArgs.nodeGroupArgument("group"),
-								CustomArgs.suggestCommaSeparatedList("search-terms"))
-						.executesPlayer((player, objects) -> {}))
-				.withSubcommand(new CommandAPICommand("test")
-						.withArguments(
-								CustomArgs.nodeGroupArgument("group"),
-								CustomArgs.suggestCommaSeparatedList("search-terms"))
-						.executesPlayer((player, objects) -> {})));
-
-		register();
 	}
 
 	public void searchTermsList(Player player, NodeGroup group) {

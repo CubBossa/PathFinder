@@ -336,6 +336,14 @@ public class ClientNodeHandler {
 		}
 	}
 
+	public void updateNodeHead(Player player, Integer id) {
+		Node node = entityNodeMap.get(id);
+		if(node == null) {
+			return;
+		}
+		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
+	}
+
 	public void renameArmorstand(Player player, Integer id, Component name) {
 		WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),

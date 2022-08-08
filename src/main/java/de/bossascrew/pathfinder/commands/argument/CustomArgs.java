@@ -1,23 +1,36 @@
 package de.bossascrew.pathfinder.commands.argument;
 
+import co.aikar.commands.InvalidCommandArgument;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.node.Navigable;
+import de.bossascrew.pathfinder.node.NavigateSelection;
 import de.bossascrew.pathfinder.node.NodeGroup;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
-import de.bossascrew.pathfinder.util.CommandUtils;
+import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.util.NodeSelection;
+import de.bossascrew.pathfinder.util.SetArithmeticParser;
+import de.bossascrew.pathfinder.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
+import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -41,6 +54,10 @@ public class CustomArgs {
 
 	private static final Pattern MINI_FINISH = Pattern.compile(".*(</?[^<>]*)");
 	private static final Pattern MINI_CLOSE = Pattern.compile(".*<([^/<>:]+)(:[^/<>]+)?>[^/<>]*");
+
+	public Argument<String> miniMessageArgument(String nodeName) {
+		return miniMessageArgument(nodeName, suggestionInfo -> new ArrayList<>());
+	}
 
 	public Argument<String> miniMessageArgument(String nodeName, Function<SuggestionInfo, Collection<String>> supplier) {
 		return new GreedyStringArgument(nodeName).replaceSuggestions((info, builder) -> {
@@ -79,7 +96,43 @@ public class CustomArgs {
 		});
 	}
 
-	public ArgumentSuggestions suggestNamespacedKeys(Function<CommandSender, Collection<NamespacedKey>> keysSupplier) {
+	public Argument<RoadMap> roadMapArgument(String nodeName) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+			return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
+		}).includeSuggestions(suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
+				.map(RoadMap::getKey).collect(Collectors.toList())));
+	}
+
+	public Argument<World> worldArgument(String nodeName) {
+		return new CustomArgument<>(new StringArgument(nodeName), customArgumentInfo -> {
+			World world = Bukkit.getWorld(customArgumentInfo.currentInput());
+			if (world == null) {
+				throw new CustomArgument.CustomArgumentException("There is no world with this name.");
+			}
+			return world;
+		}).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+			Bukkit.getWorlds().stream().map(World::getName).forEach(suggestionsBuilder::suggest);
+			return suggestionsBuilder.buildFuture();
+		});
+	}
+
+	public Argument<PathVisualizer> pathVisualizerArgument(String nodeName) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+			PathVisualizer vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			if (vis == null) {
+				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+			}
+			return vis;
+		}).includeSuggestions(suggestNamespacedKeys(sender ->
+				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().keySet())
+		));
+	}
+
+	private interface NamespacedSuggestions {
+		Collection<NamespacedKey> apply(CommandSender sender) throws CommandSyntaxException;
+	}
+
+	public ArgumentSuggestions suggestNamespacedKeys(NamespacedSuggestions keysSupplier) {
 		return (suggestionInfo, suggestionsBuilder) -> {
 
 			Collection<NamespacedKey> keys = keysSupplier.apply(suggestionInfo.sender());
@@ -121,21 +174,109 @@ public class CustomArgs {
 		};*/
 	}
 
+	public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
+		return new CustomArgument<>(new StringArgument(nodeName), customArgumentInfo -> {
+			return new NodeSelection();
+		});
+	}
+
 	public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-			RoadMap roadMap = CommandUtils.getSelectedRoadMap(info.sender());
+			RoadMap roadMap = resolveRoadMap(info.sender());
 			NodeGroup group = roadMap.getNodeGroup(info.currentInput());
 			if (group == null) {
 				throw new CustomArgument.CustomArgumentException("abc");
 			}
 			return group;
-		}).replaceSuggestions(suggestNamespacedKeys(sender -> {
-			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender, false);
-			if (roadMap == null) {
-				return new HashSet<>();
-			}
+		}).replaceSuggestions(suggestNamespacedKeys((sender -> {
+			RoadMap roadMap = resolveRoadMapInSuggestion(sender);
 			return roadMap.getGroups().values().stream().map(NodeGroup::getKey).collect(Collectors.toList());
-		}));
+		})));
 	}
 
+	private static final List<Character> LIST_SYMBOLS = Lists.newArrayList('!', '&', '|', ')', '(');
+	private static final List<String> LIST_SYMBOLS_STRING = Lists.newArrayList("!", "&", "|", ")", "(");
+
+	public Argument<NavigateSelection> navigateSelectionArgument(String nodeName) {
+		return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
+			String search = context.currentInput();
+			Player player = (Player) context.sender(); //TODO
+			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
+			if (pPlayer == null) {
+				throw new InvalidCommandArgument("Unknown player '" + player.getName() + "', please contact an administrator.");
+			}
+			if (pPlayer.getSelectedRoadMap() == null) {
+				throw new InvalidCommandArgument("You need to have a roadmap selected to parse node groups.");
+			}
+			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
+			if (roadMap == null) {
+				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
+			}
+			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(roadMap.getNavigables(), Navigable::getSearchTerms);
+			return new NavigateSelection(roadMap, parser.parse(search));
+		})
+				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+					String input = suggestionsBuilder.getInput();
+
+					RoadMap roadMap;
+					try {
+						roadMap = resolveRoadMap((Player) suggestionInfo.sender());
+					} catch (Exception e) {
+						throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException(), e::getMessage);
+					}
+
+					int lastIndex = LIST_SYMBOLS.stream()
+							.map(input::lastIndexOf).mapToInt(value -> value).max().orElse(0);
+					lastIndex = Integer.max(suggestionsBuilder.getInput().length() - suggestionsBuilder.getRemaining().length(), lastIndex + 1);
+
+					StringRange range = StringRange.between(lastIndex, input.length());
+					List<Suggestion> suggestions = new ArrayList<>();
+
+					StringRange finalRange = range;
+					String inRange = finalRange.get(input);
+					roadMap.getNavigables().stream()
+							.map(Navigable::getSearchTerms)
+							.flatMap(Collection::stream)
+							.filter(s -> s.startsWith(inRange))
+							.map(s -> new Suggestion(finalRange, s))
+							.forEach(suggestions::add);
+
+					if (suggestions.isEmpty()) {
+						range = StringRange.at(suggestionInfo.currentInput().length() - 1);
+						for (String s : LIST_SYMBOLS_STRING) {
+							suggestions.add(new Suggestion(range, s));
+						}
+					}
+
+					return CompletableFuture.completedFuture(new Suggestions(range, suggestions));
+				});
+	}
+
+	public RoadMap resolveRoadMapWrappedException(CommandSender sender) throws WrapperCommandSyntaxException {
+		try {
+			return resolveRoadMapInSuggestion(sender);
+		} catch (CommandSyntaxException e) {
+			throw new WrapperCommandSyntaxException(e);
+		}
+	}
+
+	public RoadMap resolveRoadMapInSuggestion(CommandSender sender) throws CommandSyntaxException {
+		try {
+			return resolveRoadMap(sender);
+		} catch (CustomArgument.CustomArgumentException e) {
+			throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(), () -> "You have to select a roadmap.");
+		}
+	}
+
+	public RoadMap resolveRoadMap(CommandSender sender) throws CustomArgument.CustomArgumentException {
+
+		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(sender);
+		if (pPlayer == null) {
+			throw new CustomArgument.CustomArgumentException("You have to select a roadmap.");
+		}
+		if (pPlayer.getSelectedRoadMap() == null) {
+			throw new CustomArgument.CustomArgumentException("You have to select a roadmap.");
+		}
+		return RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
+	}
 }

@@ -192,7 +192,8 @@ public abstract class SqlDatabase implements DataStorage {
 								nameFormat,
 								Bukkit.getWorld(UUID.fromString(worldUUIDString)),
 								nodesFindable,
-								VisualizerHandler.getInstance().getPathVisualizerMap().get(NamespacedKey.fromString(pathVisualizerKeyString)),
+								VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer(),
+								//VisualizerHandler.getInstance().getPathVisualizerMap().get(NamespacedKey.fromString(pathVisualizerKeyString)),
 								nodeFindDistance, pathCurveLength));
 					}
 					return registry;
