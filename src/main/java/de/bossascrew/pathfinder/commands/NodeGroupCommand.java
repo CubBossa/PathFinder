@@ -10,10 +10,10 @@ import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
+import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -30,78 +30,71 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class NodeGroupCommand extends CommandAPICommand {
+public class NodeGroupCommand extends CommandTree {
 
 	public NodeGroupCommand() {
 		super("nodegroup");
 
-		withSubcommand(new CommandAPICommand("list")
+		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
 				.executesPlayer((player, objects) -> {
 					listGroups(player, 0);
-				}));
-		withSubcommand(new CommandAPICommand("list")
-				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
-				.withArguments(new IntegerArgument("page"))
-				.executesPlayer((player, objects) -> {
-					listGroups(player, (int) objects[0]);
-				}));
-		withSubcommand(new CommandAPICommand("create")
+				})
+				.then(new IntegerArgument("page")
+						.executesPlayer((player, objects) -> {
+							listGroups(player, (int) objects[0]);
+						})));
+
+		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_NG_CREATE)
-				.withArguments(new NamespacedKeyArgument("name"))
-				.executesPlayer((player, objects) -> {
-					createGroup(player, (NamespacedKey) objects[0]);
-				}));
-		withSubcommand(new CommandAPICommand("delete")
+				.then(new NamespacedKeyArgument("name")
+						.executesPlayer((player, objects) -> {
+							createGroup(player, (NamespacedKey) objects[0]);
+						})));
+
+		then(new LiteralArgument("delete")
 				.withPermission(PathPlugin.PERM_CMD_NG_DELETE)
-				.withArguments(CustomArgs.nodeGroupArgument("group"))
-				.executesPlayer((player, objects) -> {
-					deleteGroup(player, (NodeGroup) objects[0]);
-				}));
-		withSubcommand(new CommandAPICommand("rename")
+				.then(CustomArgs.nodeGroupArgument("group")
+						.executesPlayer((player, objects) -> {
+							deleteGroup(player, (NodeGroup) objects[0]);
+						})));
+		then(new LiteralArgument("rename")
 				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
-				.withArguments(
-						CustomArgs.nodeGroupArgument("group"),
-						CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
-				)
-				.executesPlayer((player, objects) -> {
-					renameGroup(player, (NodeGroup) objects[0], (String) objects[1]);
-				}));
-		withSubcommand(new CommandAPICommand("search-terms")
-				.withSubcommand(new CommandAPICommand("add")
+				.then(CustomArgs.nodeGroupArgument("group")
+						.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
+								.executesPlayer((player, objects) -> {
+									renameGroup(player, (NodeGroup) objects[0], (String) objects[1]);
+								})
+						)));
+		then(new LiteralArgument("search-terms")
+				.then(new LiteralArgument("add")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
-						.withArguments(
-								CustomArgs.nodeGroupArgument("group"),
-								CustomArgs.suggestCommaSeparatedList("search-terms")
-						)
-						.executesPlayer((player, objects) -> {
-							searchTermsAdd(player, (NodeGroup) objects[0], (String) objects[1]);
-						}))
-				.withSubcommand(new CommandAPICommand("remove")
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
+										.executesPlayer((player, objects) -> {
+											searchTermsAdd(player, (NodeGroup) objects[0], (String) objects[1]);
+										}))))
+				.then(new LiteralArgument("remove")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
-						.withArguments(
-								CustomArgs.nodeGroupArgument("group"),
-								CustomArgs.suggestCommaSeparatedList("search-terms")
-						)
-						.executesPlayer((player, objects) -> {
-							searchTermsRemove(player, (NodeGroup) objects[0], (String) objects[1]);
-						}))
-				.withSubcommand(new CommandAPICommand("list")
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
+										.executesPlayer((player, objects) -> {
+											searchTermsRemove(player, (NodeGroup) objects[0], (String) objects[1]);
+										}))))
+				.then(new LiteralArgument("list")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
-						.withArguments(CustomArgs.nodeGroupArgument("group"))
-						.executesPlayer((player, objects) -> {
-							searchTermsList(player, (NodeGroup) objects[0]);
-						})));
-		withSubcommand(new CommandAPICommand("set")
-				.withSubcommand(new CommandAPICommand("findable")
+						.then(CustomArgs.nodeGroupArgument("group")
+								.executesPlayer((player, objects) -> {
+									searchTermsList(player, (NodeGroup) objects[0]);
+								}))));
+		then(new LiteralArgument("set")
+				.then(new LiteralArgument("findable")
 						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
-						.withArguments(
-								CustomArgs.nodeGroupArgument("group"),
-								new BooleanArgument("value")
-						)
-						.executesPlayer((player, objects) -> {
-							setFindable(player, (NodeGroup) objects[0], (Boolean) objects[1]);
-						})));
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(new BooleanArgument("value")
+										.executesPlayer((player, objects) -> {
+											setFindable(player, (NodeGroup) objects[0], (Boolean) objects[1]);
+										})))));
 	}
 
 	public void searchTermsList(Player player, NodeGroup group) {

@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder.commands;
 
-import co.aikar.commands.annotation.*;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Single;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.commands.argument.CustomArgs;
@@ -17,7 +17,7 @@ import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.*;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import net.kyori.adventure.identity.Identity;
@@ -34,167 +34,140 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-public class RoadMapCommand extends CommandAPICommand {
+public class RoadMapCommand extends CommandTree {
 
 	public RoadMapCommand() {
 		super("roadmap");
 
 		withAliases("rm");
-		withSubcommand(new CommandAPICommand("info")
+
+		then(new LiteralArgument("info")
 				.withPermission("pathfinder.command.roadmap.info")
 				.executes((commandSender, objects) -> {
 					onInfo(commandSender, null);
-				}));
-		withSubcommand(new CommandAPICommand("info")
-				.withPermission("pathfinder.command.roadmap.info")
-				.withArguments(CustomArgs.roadMapArgument("roadmap"))
-				.executes((commandSender, args) -> {
-					onInfo(commandSender, (RoadMap) args[0]);
-				}));
+				})
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.executes((commandSender, args) -> {
+							onInfo(commandSender, (RoadMap) args[0]);
+						})));
 
-		withSubcommand(new CommandAPICommand("create")
+		then(new LiteralArgument("create")
 				.withPermission("pathfinder.command.roadmap.create")
-				.withArguments(new NamespacedKeyArgument("key"))
-				.executesPlayer((player, args) -> {
-					onCreate(player, (NamespacedKey) args[0], player.getWorld(), false);
-				}));
-		withSubcommand(new CommandAPICommand("create")
-				.withPermission("pathfinder.command.roadmap.create")
-				.withArguments(
-						new NamespacedKeyArgument("key"),
-						CustomArgs.worldArgument("world")
-				)
-				.executes((player, args) -> {
-					onCreate(player, (NamespacedKey) args[0], (World) args[1], false);
-				}));
-		withSubcommand(new CommandAPICommand("create")
-				.withPermission("pathfinder.command.roadmap.create")
-				.withArguments(
-						new NamespacedKeyArgument("key"),
-						CustomArgs.worldArgument("world"),
-						new LiteralArgument("findable"))
-				.executes((player, args) -> {
-					onCreate(player, (NamespacedKey) args[0], (World) args[1], true);
-				}));
+				.then(new NamespacedKeyArgument("key")
+						.executesPlayer((player, args) -> {
+							onCreate(player, (NamespacedKey) args[0], player.getWorld(), false);
+						})
+						.then(CustomArgs.worldArgument("world")
+								.executes((player, args) -> {
+									onCreate(player, (NamespacedKey) args[0], (World) args[1], false);
+								})
+								.then(new LiteralArgument("findable")
+										.executes((player, args) -> {
+											onCreate(player, (NamespacedKey) args[0], (World) args[1], true);
+										})))));
 
-		withSubcommand(new CommandAPICommand("delete")
+		then(new LiteralArgument("delete")
 				.withPermission("pathfinder.command.roadmap.delete")
-				.withArguments(CustomArgs.roadMapArgument("roadmap"))
-				.executes((commandSender, args) -> {
-					onDelete(commandSender, (RoadMap) args[0]);
-				}));
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.executes((commandSender, args) -> {
+							onDelete(commandSender, (RoadMap) args[0]);
+						})));
 
-		withSubcommand(new CommandAPICommand("editmode")
-				.withAliases("edit")
+		then(new LiteralArgument("editmode")
 				.withPermission("pathfinder.command.roadmap.editmode")
 				.executesPlayer((player, args) -> {
 					onEdit(player, null);
-				}));
-		withSubcommand(new CommandAPICommand("editmode")
-				.withAliases("edit")
-				.withPermission("pathfinder.command.roadmap.editmode")
-				.withArguments(CustomArgs.roadMapArgument("roadmap"))
-				.executesPlayer((player, args) -> {
-					onEdit(player, (RoadMap) args[0]);
-				}));
+				})
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.executesPlayer((player, args) -> {
+							onEdit(player, (RoadMap) args[0]);
+						})));
 
-		withSubcommand(new CommandAPICommand("list")
+		then(new LiteralArgument("list")
 				.withPermission("pathfinder.command.roadmap.list")
 				.executes((commandSender, args) -> {
 					onList(commandSender, 0);
-				}));
-		withSubcommand(new CommandAPICommand("list")
-				.withPermission("pathfinder.command.roadmap.list")
-				.withArguments(new IntegerArgument("page", 1))
-				.executes((commandSender, args) -> {
-					onList(commandSender, (Integer) args[0]);
-				}));
+				})
+				.then(new IntegerArgument("page", 1)
+						.executes((commandSender, args) -> {
+							onList(commandSender, (Integer) args[0]);
+						})));
 
-		withSubcommand(new CommandAPICommand("forcefind")
+		then(new LiteralArgument("forcefind")
 				.withPermission("pathfinder.command.roadmap.forcefind")
-				.withArguments(
-						CustomArgs.roadMapArgument("roadmap"),
-						new PlayerArgument("player"),
-						CustomArgs.navigateSelectionArgument("selection")
-				)
-				.executes((commandSender, args) -> {
-					onForceFind(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
-				}));
-		withSubcommand(new CommandAPICommand("forceforget")
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.then(new PlayerArgument("player")
+								.then(CustomArgs.navigateSelectionArgument("selection")
+										.executes((commandSender, args) -> {
+											onForceFind(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
+										})))));
+		then(new LiteralArgument("forceforget")
 				.withPermission("pathfinder.command.roadmap.forceforget")
-				.withArguments(
-						CustomArgs.roadMapArgument("roadmap"),
-						new PlayerArgument("player"),
-						CustomArgs.navigateSelectionArgument("selection")
-				)
-				.executes((commandSender, args) -> {
-					onForceForget(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
-				}));
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.then(new PlayerArgument("player")
+								.then(CustomArgs.navigateSelectionArgument("selection")
+										.executes((commandSender, args) -> {
+											onForceForget(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
+										})))));
 
-		withSubcommand(new CommandAPICommand("select")
+		then(new LiteralArgument("select")
 				.withPermission("pathfinder.command.roadmap.select")
-				.withArguments(CustomArgs.roadMapArgument("roadmap"))
-				.executes((commandSender, objects) -> {
-					onSelect(commandSender, (RoadMap) objects[0]);
-				}));
-		withSubcommand(new CommandAPICommand("deselect")
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.executes((commandSender, objects) -> {
+							onSelect(commandSender, (RoadMap) objects[0]);
+						})));
+		then(new LiteralArgument("deselect")
 				.withPermission("pathfinder.command.roadmap.select")
 				.executes((commandSender, args) -> {
 					onDeselect(commandSender);
 				}));
 
-		withSubcommand(new CommandAPICommand("set")
-				.withSubcommand(new CommandAPICommand("visualizer")
-						.withAliases("path-visualizer")
+		then(new LiteralArgument("set")
+				.then(new LiteralArgument("visualizer")
 						.withPermission("pathfinder.command.roadmap.set.path-visualizer")
-						.withArguments(CustomArgs.pathVisualizerArgument("visualizer"))
-						.executes((commandSender, args) -> {
-							onStyle(commandSender, (PathVisualizer) args[0]);
-						}))
+						.then(CustomArgs.pathVisualizerArgument("visualizer")
+								.executes((commandSender, args) -> {
+									onStyle(commandSender, (PathVisualizer) args[0]);
+								})))
 
-				.withSubcommand(new CommandAPICommand("name")
+				.then(new LiteralArgument("name")
 						.withPermission("pathfinder.command.roadmap.set.name")
-						.withArguments(CustomArgs.miniMessageArgument("name"))
-						.executes((commandSender, args) -> {
-							onRename(commandSender, (String) args[0]);
-						}))
+						.then(CustomArgs.miniMessageArgument("name")
+								.executes((commandSender, args) -> {
+									onRename(commandSender, (String) args[0]);
+								})))
 
-				.withSubcommand(new CommandAPICommand("world")
+				.then(new LiteralArgument("world")
 						.withPermission("pathfinder.command.roadmap.set.world")
-						.withArguments(CustomArgs.worldArgument("world"))
-						.executes((commandSender, objects) -> {
-							onChangeWorld(commandSender, (World) objects[0], false);
-						}))
-				.withSubcommand(new CommandAPICommand("world")
+						.then(CustomArgs.worldArgument("world")
+								.executes((commandSender, objects) -> {
+									onChangeWorld(commandSender, (World) objects[0], false);
+								})))
+				.then(new LiteralArgument("world")
 						.withPermission("pathfinder.command.roadmap.set.world")
-						.withArguments(
-								CustomArgs.worldArgument("world"),
-								new LiteralArgument("force")
-						)
-						.executes((commandSender, args) -> {
-							onChangeWorld(commandSender, (World) args[0], true);
-						}))
-
-				.withSubcommand(new CommandAPICommand("find-distance")
+						.then(CustomArgs.worldArgument("world")
+								.then(new LiteralArgument("force")
+										.executes((commandSender, args) -> {
+											onChangeWorld(commandSender, (World) args[0], true);
+										}))))
+				.then(new LiteralArgument("find-distance")
 						.withPermission("pathfinder.command.roadmap.set.find-distance")
-						.withArguments(new DoubleArgument("distance", 0.01))
-						.executes((commandSender, args) -> {
-							onFindDistance(commandSender, (Double) args[0]);
-						}))
-
-				.withSubcommand(new CommandAPICommand("findable")
+						.then(new DoubleArgument("distance", 0.01)
+								.executes((commandSender, args) -> {
+									onFindDistance(commandSender, (Double) args[0]);
+								})))
+				.then(new LiteralArgument("findable")
 						.withPermission("pathfinder.command.roadmap.set.findable")
-						.withArguments(new BooleanArgument("findable"))
-						.executes((commandSender, args) -> {
-							onSetFindable(commandSender, (Boolean) args[0]);
-						}))
-
-				.withSubcommand(new CommandAPICommand("curve-length")
+						.then(new BooleanArgument("findable")
+								.executes((commandSender, args) -> {
+									onSetFindable(commandSender, (Boolean) args[0]);
+								})))
+				.then(new LiteralArgument("curve-length")
 						.withPermission("pathfinder.command.roadmap.set.curvelength")
-						.withArguments(new DoubleArgument("curvelength", 0))
-						.executes((commandSender, args) -> {
-							onChangeTangentStrength(commandSender, (Double) args[0]);
-						})));
+						.then(new DoubleArgument("curvelength", 0)
+								.executes((commandSender, args) -> {
+									onChangeTangentStrength(commandSender, (Double) args[0]);
+								}))));
 	}
 
 	public void onInfo(CommandSender sender, @Nullable RoadMap roadMap) throws WrapperCommandSyntaxException {

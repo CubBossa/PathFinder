@@ -6,24 +6,27 @@ import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.visualizer.ParticlePath;
-import dev.jorel.commandapi.CommandAPICommand;
-import dev.jorel.commandapi.arguments.CustomArgument;
+import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.arguments.LiteralArgument;
 import org.bukkit.entity.Player;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
-public class FindCommand extends CommandAPICommand {
+public class FindCommand extends CommandTree {
 
 	public FindCommand() {
 		super("find");
 		withAliases("gps", "navigate");
 
-		withSubcommand(new CommandAPICommand("location")
-				.withArguments(CustomArgs.navigateSelectionArgument("selection"))
-				.executesPlayer((player, args) -> {
-					onFindSpot(player, (NavigateSelection) args[0]);
-				}));
+		then(new LiteralArgument("location")
+				.then(CustomArgs.navigateSelectionArgument("selection")
+						.executesPlayer((player, args) -> {
+							onFindSpot(player, (NavigateSelection) args[0]);
+						})
+				)
+		);
 
 	}
 

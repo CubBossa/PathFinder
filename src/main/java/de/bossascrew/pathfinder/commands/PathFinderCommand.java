@@ -4,6 +4,7 @@ import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.arguments.LiteralArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -16,9 +17,9 @@ public class PathFinderCommand extends CommandTree {
 	public PathFinderCommand() {
 		super("pathfinder");
 
-		withSubcommand(new CommandTree("reload")
-				.withSubcommand(new CommandTree("language")
-						.withPermission("pathfinder.command.pathfinder.reload")
+		then(new LiteralArgument("reload")
+				.withPermission("pathfinder.command.pathfinder.reload")
+				.then(new LiteralArgument("language")
 						.executes((sender, objects) -> {
 							long now = System.currentTimeMillis();
 
@@ -41,6 +42,8 @@ public class PathFinderCommand extends CommandTree {
 											.build()), sender);
 								}
 							});
-						})));
+						})
+				)
+		);
 	}
 }
