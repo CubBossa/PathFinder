@@ -97,7 +97,7 @@ public class RoadMapCommand extends CommandTree {
 				.withPermission("pathfinder.command.roadmap.forcefind")
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new PlayerArgument("player")
-								.then(CustomArgs.navigateSelectionArgument("selection")
+								.then(CustomArgs.nodeSelectionArgument("selection")
 										.executes((commandSender, args) -> {
 											onForceFind(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
 										})))));
@@ -105,7 +105,7 @@ public class RoadMapCommand extends CommandTree {
 				.withPermission("pathfinder.command.roadmap.forceforget")
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new PlayerArgument("player")
-								.then(CustomArgs.navigateSelectionArgument("selection")
+								.then(CustomArgs.nodeSelectionArgument("selection")
 										.executes((commandSender, args) -> {
 											onForceForget(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
 										})))));
@@ -122,52 +122,101 @@ public class RoadMapCommand extends CommandTree {
 					onDeselect(commandSender);
 				}));
 
-		then(new LiteralArgument("set")
-				.then(new LiteralArgument("visualizer")
-						.withPermission("pathfinder.command.roadmap.set.path-visualizer")
-						.then(CustomArgs.pathVisualizerArgument("visualizer")
-								.executes((commandSender, args) -> {
-									onStyle(commandSender, (PathVisualizer) args[0]);
-								})))
+		then(new LiteralArgument("visualizer")
+				.withPermission("pathfinder.command.roadmap.set.path-visualizer")
+				.then(CustomArgs.pathVisualizerArgument("visualizer")
+						.executes((commandSender, args) -> {
+							onStyle(commandSender, (PathVisualizer) args[0]);
+						})));
 
-				.then(new LiteralArgument("name")
-						.withPermission("pathfinder.command.roadmap.set.name")
-						.then(CustomArgs.miniMessageArgument("name")
-								.executes((commandSender, args) -> {
-									onRename(commandSender, (String) args[0]);
-								})))
+		then(new LiteralArgument("name")
+				.withPermission("pathfinder.command.roadmap.set.name")
+				.then(CustomArgs.miniMessageArgument("name")
+						.executes((commandSender, args) -> {
+							onRename(commandSender, (String) args[0]);
+						})));
 
-				.then(new LiteralArgument("world")
-						.withPermission("pathfinder.command.roadmap.set.world")
-						.then(CustomArgs.worldArgument("world")
-								.executes((commandSender, objects) -> {
-									onChangeWorld(commandSender, (World) objects[0], false);
-								})))
-				.then(new LiteralArgument("world")
-						.withPermission("pathfinder.command.roadmap.set.world")
-						.then(CustomArgs.worldArgument("world")
-								.then(new LiteralArgument("force")
-										.executes((commandSender, args) -> {
-											onChangeWorld(commandSender, (World) args[0], true);
-										}))))
-				.then(new LiteralArgument("find-distance")
-						.withPermission("pathfinder.command.roadmap.set.find-distance")
-						.then(new DoubleArgument("distance", 0.01)
+		then(new LiteralArgument("world")
+				.withPermission("pathfinder.command.roadmap.set.world")
+				.then(CustomArgs.worldArgument("world")
+						.executes((commandSender, objects) -> {
+							onChangeWorld(commandSender, (World) objects[0], false);
+						})));
+		then(new LiteralArgument("world")
+				.withPermission("pathfinder.command.roadmap.set.world")
+				.then(CustomArgs.worldArgument("world")
+						.then(new LiteralArgument("force")
 								.executes((commandSender, args) -> {
-									onFindDistance(commandSender, (Double) args[0]);
-								})))
-				.then(new LiteralArgument("findable")
-						.withPermission("pathfinder.command.roadmap.set.findable")
-						.then(new BooleanArgument("findable")
-								.executes((commandSender, args) -> {
-									onSetFindable(commandSender, (Boolean) args[0]);
-								})))
-				.then(new LiteralArgument("curve-length")
-						.withPermission("pathfinder.command.roadmap.set.curvelength")
-						.then(new DoubleArgument("curvelength", 0)
-								.executes((commandSender, args) -> {
-									onChangeTangentStrength(commandSender, (Double) args[0]);
+									onChangeWorld(commandSender, (World) args[0], true);
 								}))));
+		then(new LiteralArgument("find-distance")
+				.withPermission("pathfinder.command.roadmap.set.find-distance")
+				.then(new DoubleArgument("distance", 0.01)
+						.executes((commandSender, args) -> {
+							onFindDistance(commandSender, (Double) args[0]);
+						})));
+		then(new LiteralArgument("findable")
+				.withPermission("pathfinder.command.roadmap.set.findable")
+				.then(new BooleanArgument("findable")
+						.executes((commandSender, args) -> {
+							onSetFindable(commandSender, (Boolean) args[0]);
+						})));
+		then(new LiteralArgument("curve-length")
+				.withPermission("pathfinder.command.roadmap.set.curvelength")
+				.then(new DoubleArgument("curvelength", 0)
+						.executes((commandSender, args) -> {
+							onChangeTangentStrength(commandSender, (Double) args[0]);
+						})));
+
+		then(new LiteralArgument("edit")
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.then(new NodeGroupCommand(1))
+
+						.then(new LiteralArgument("visualizer")
+								.withPermission("pathfinder.command.roadmap.set.path-visualizer")
+								.then(CustomArgs.pathVisualizerArgument("visualizer")
+										.executes((commandSender, args) -> {
+											onStyle(commandSender, (PathVisualizer) args[1]);
+										})))
+
+						.then(new LiteralArgument("name")
+								.withPermission("pathfinder.command.roadmap.set.name")
+								.then(CustomArgs.miniMessageArgument("name")
+										.executes((commandSender, args) -> {
+											onRename(commandSender, (String) args[1]);
+										})))
+
+						.then(new LiteralArgument("world")
+								.withPermission("pathfinder.command.roadmap.set.world")
+								.then(CustomArgs.worldArgument("world")
+										.executes((commandSender, objects) -> {
+											onChangeWorld(commandSender, (World) objects[1], false);
+										})))
+						.then(new LiteralArgument("world")
+								.withPermission("pathfinder.command.roadmap.set.world")
+								.then(CustomArgs.worldArgument("world")
+										.then(new LiteralArgument("force")
+												.executes((commandSender, args) -> {
+													onChangeWorld(commandSender, (World) args[1], true);
+												}))))
+						.then(new LiteralArgument("find-distance")
+								.withPermission("pathfinder.command.roadmap.set.find-distance")
+								.then(new DoubleArgument("distance", 0.01)
+										.executes((commandSender, args) -> {
+											onFindDistance(commandSender, (Double) args[1]);
+										})))
+						.then(new LiteralArgument("findable")
+								.withPermission("pathfinder.command.roadmap.set.findable")
+								.then(new BooleanArgument("findable")
+										.executes((commandSender, args) -> {
+											onSetFindable(commandSender, (Boolean) args[1]);
+										})))
+						.then(new LiteralArgument("curve-length")
+								.withPermission("pathfinder.command.roadmap.set.curvelength")
+								.then(new DoubleArgument("curvelength", 0)
+										.executes((commandSender, args) -> {
+											onChangeTangentStrength(commandSender, (Double) args[1]);
+										})))));
 	}
 
 	public void onInfo(CommandSender sender, @Nullable RoadMap roadMap) throws WrapperCommandSyntaxException {

@@ -2,7 +2,6 @@ package de.bossascrew.pathfinder.node;
 
 import de.bossascrew.pathfinder.roadmap.RoadMap;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -46,7 +45,7 @@ public class PlayerNode implements Node {
 
     @Override
     public Vector getPosition() {
-        return player.getLocation().toVector();
+        return player.getLocation().add(0, .5f, 0).toVector();
     }
 
     @Override
@@ -56,7 +55,7 @@ public class PlayerNode implements Node {
 
     @Override
     public Location getLocation() {
-        return player.getLocation();
+        return player.getLocation().add(0, .5f, 0);
     }
 
     @Override
@@ -97,5 +96,12 @@ public class PlayerNode implements Node {
     @Override
     public int compareTo(@NotNull Node o) {
         return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "PlayerNode{" +
+                "player=" + player.getName() +
+                '}';
     }
 }

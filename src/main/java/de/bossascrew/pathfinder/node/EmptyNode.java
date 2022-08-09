@@ -94,4 +94,9 @@ public class EmptyNode implements Node {
 	public int compareTo(@NotNull Node o) {
 		return 0;
 	}
+
+	@Override
+	public String toString() {
+		return "EmptyNode{}";
+	}
 }

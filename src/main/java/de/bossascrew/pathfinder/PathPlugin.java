@@ -24,10 +24,7 @@ import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandAPIConfig;
-import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.*;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -150,7 +147,7 @@ public class PathPlugin extends JavaPlugin {
 		// Commands
 
 		CommandAPI.onEnable(this);
-		new NodeGroupCommand().register();
+		//new ArgumentTree(new NodeGroupCommand()).register();
 		new FindCommand().register();
 		new RoadMapCommand().register();
 		new PathFinderCommand().register();

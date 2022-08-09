@@ -28,6 +28,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -180,9 +181,11 @@ public class CustomArgs {
 		});
 	}
 
-	public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
+	public Argument<NodeGroup> nodeGroupArgument(String nodeName, @Nullable Integer roadmapIndex) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-			RoadMap roadMap = resolveRoadMap(info.sender());
+			RoadMap roadMap = roadmapIndex != null ?
+					(RoadMap) info.previousArgs()[roadmapIndex] :
+					resolveRoadMap(info.sender());
 			NodeGroup group = roadMap.getNodeGroup(info.currentInput());
 			if (group == null) {
 				throw new CustomArgument.CustomArgumentException("abc");
@@ -203,14 +206,14 @@ public class CustomArgs {
 			Player player = (Player) context.sender(); //TODO
 			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
 			if (pPlayer == null) {
-				throw new InvalidCommandArgument("Unknown player '" + player.getName() + "', please contact an administrator.");
+				throw new CustomArgument.CustomArgumentException("Unknown player '" + player.getName() + "', please contact an administrator.");
 			}
 			if (pPlayer.getSelectedRoadMap() == null) {
-				throw new InvalidCommandArgument("You need to have a roadmap selected to parse node groups.");
+				throw new CustomArgument.CustomArgumentException("You need to have a roadmap selected to parse node groups.");
 			}
 			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
 			if (roadMap == null) {
-				throw new InvalidCommandArgument("Your currently selected roadmap is invalid. Please reselect it.");
+				throw new CustomArgument.CustomArgumentException("Your currently selected roadmap is invalid. Please reselect it.");
 			}
 			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(roadMap.getNavigables(), Navigable::getSearchTerms);
 			return new NavigateSelection(roadMap, parser.parse(search));

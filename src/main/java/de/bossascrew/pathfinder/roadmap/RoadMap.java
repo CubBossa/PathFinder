@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.events.node.*;
-import de.bossascrew.pathfinder.events.nodegroup.NodeGroupAssignEvent;
 import de.bossascrew.pathfinder.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.node.*;
 import de.bossascrew.pathfinder.util.HashedRegistry;
@@ -14,9 +13,11 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.util.Triple;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
@@ -117,33 +118,41 @@ public class RoadMap implements Keyed {
 		edges.forEach(e -> graph.addEdge(e.getStart(), e.getEnd(), e));
 		edges.forEach(e -> graph.setEdgeWeight(e, e.getWeightedLength()));
 
-		Vector pos = player.getPosition();
-		Node bestEdge = nodes.values().stream()
-				.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(pos)))
+		Vector playerPosition = player.getPosition();
+		graph.addVertex(player);
+		List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
+				.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(playerPosition)))
 				.sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
 				.limit(10)
 				.map(e -> {
 					Node n = e.getKey();
-					Vector dir = n.getPosition().clone().subtract(pos);
-					Location loc = n.getLocation();
-					loc.setDirection(dir);
-					BlockIterator i = new BlockIterator(loc, 1.5, (int) dir.length());
+					Vector dir = n.getPosition().clone().add(new Vector(0, .5f, 0)).subtract(playerPosition);
+					double length = dir.length();
+					dir.normalize();
+					Location loc = player.getLocation().setDirection(dir);
 					int count = 1;
-					while (i.hasNext()) {
-						if (i.next().getType().isSolid()) {
+					BlockIterator iterator = new BlockIterator(loc, 0, (int) length);
+					while (iterator.hasNext()) {
+						Block block = iterator.next();
+						if (block.getType().isBlock() && block.getType().isSolid()) {
 							count++;
 						}
 					}
-					return new AbstractMap.SimpleEntry<>(e.getValue() * count, n);
+					return new Triple<>(n, length, count);
 				})
-				.min(Comparator.comparingDouble(AbstractMap.SimpleEntry::getKey))
-				.map(AbstractMap.SimpleEntry::getValue)
-				.orElse(null);
+				.collect(Collectors.toList());
 
-		if (bestEdge != null) {
-			graph.addVertex(player);
-			graph.addEdge(player, bestEdge, new Edge(player, bestEdge, 1));
-		}
+		boolean anyNullCount = triples.stream().anyMatch(e -> e.getThird() == 0);
+
+		triples.stream()
+				.filter(e -> !anyNullCount || e.getThird() == 0)
+				.forEach(e -> {
+					System.out.println(e.getFirst().getNodeId() + " -> " + e.getThird());
+
+					Edge edge = new Edge(player, e.getFirst(), e.getThird() * 100);
+					graph.addEdge(player, e.getFirst(), edge);
+					graph.setEdgeWeight(edge, e.getSecond() * edge.getWeightModifier());
+				});
 
 		return graph;
 	}

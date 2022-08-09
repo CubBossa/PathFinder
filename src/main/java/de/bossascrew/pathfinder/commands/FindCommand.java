@@ -51,13 +51,13 @@ public class FindCommand extends CommandTree {
 		EmptyNode destination = new EmptyNode(roadMap);
 		graph.addVertex(destination);
 		navigables.stream().flatMap(x -> x.getGroup().stream()).distinct().forEach(n -> {
-			Edge e = new Edge(n, destination, 0);
+			System.out.println("Creating edge");
+			Edge e = new Edge(n, destination, 1);
 			graph.addEdge(n, destination, e);
 			graph.setEdgeWeight(e, 1);
 		});
 
 		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
-
 
 		if (path == null) {
 			player.sendMessage(":C");
@@ -65,7 +65,7 @@ public class FindCommand extends CommandTree {
 		}
 
 		ParticlePath particlePath = new ParticlePath(roadMap, player.getUniqueId(), roadMap.getVisualizer());
-		particlePath.addAll(path.getVertexList());
+		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
 		pathPlayer.setPath(particlePath);
 	}
 

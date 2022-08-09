@@ -10,7 +10,6 @@ import de.bossascrew.pathfinder.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -24,76 +23,77 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class NodeGroupCommand extends CommandTree {
+public class NodeGroupCommand extends LiteralArgument {
 
-	public NodeGroupCommand() {
-		super("nodegroup");
+	public NodeGroupCommand(int offset) {
+		super("nodegroups");
 
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
 				.executesPlayer((player, objects) -> {
-					listGroups(player, 0);
+					listGroups(player, null, 0);
 				})
 				.then(new IntegerArgument("page")
 						.executesPlayer((player, objects) -> {
-							listGroups(player, (int) objects[0]);
+							listGroups(player, objects[0] == null ? null : (RoadMap) objects[0], (int) objects[offset]);
 						})));
 
 		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_NG_CREATE)
 				.then(new NamespacedKeyArgument("name")
 						.executesPlayer((player, objects) -> {
-							createGroup(player, (NamespacedKey) objects[0]);
+							createGroup(player, objects[0] == null ? null : (RoadMap) objects[0], (NamespacedKey) objects[offset]);
 						})));
 
 		then(new LiteralArgument("delete")
 				.withPermission(PathPlugin.PERM_CMD_NG_DELETE)
-				.then(CustomArgs.nodeGroupArgument("group")
+				.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 						.executesPlayer((player, objects) -> {
-							deleteGroup(player, (NodeGroup) objects[0]);
+							deleteGroup(player, objects[0] == null ? null : (RoadMap) objects[0], (NodeGroup) objects[offset]);
 						})));
 		then(new LiteralArgument("rename")
 				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
-				.then(CustomArgs.nodeGroupArgument("group")
+				.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 						.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
 								.executesPlayer((player, objects) -> {
-									renameGroup(player, (NodeGroup) objects[0], (String) objects[1]);
+									renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 								})
 						)));
 		then(new LiteralArgument("search-terms")
 				.then(new LiteralArgument("add")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
-						.then(CustomArgs.nodeGroupArgument("group")
+						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
 										.executesPlayer((player, objects) -> {
-											searchTermsAdd(player, (NodeGroup) objects[0], (String) objects[1]);
+											searchTermsAdd(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										}))))
 				.then(new LiteralArgument("remove")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
-						.then(CustomArgs.nodeGroupArgument("group")
+						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
 										.executesPlayer((player, objects) -> {
-											searchTermsRemove(player, (NodeGroup) objects[0], (String) objects[1]);
+											searchTermsRemove(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										}))))
 				.then(new LiteralArgument("list")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
-						.then(CustomArgs.nodeGroupArgument("group")
+						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 								.executesPlayer((player, objects) -> {
-									searchTermsList(player, (NodeGroup) objects[0]);
+									searchTermsList(player, (NodeGroup) objects[offset]);
 								}))));
 		then(new LiteralArgument("set")
 				.then(new LiteralArgument("findable")
 						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
-						.then(CustomArgs.nodeGroupArgument("group")
+						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
 								.then(new BooleanArgument("value")
 										.executesPlayer((player, objects) -> {
-											setFindable(player, (NodeGroup) objects[0], (Boolean) objects[1]);
+											setFindable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
 										})))));
 	}
 
@@ -163,15 +163,19 @@ public class NodeGroupCommand extends CommandTree {
 				.build()), player);
 	}
 
-	public void deleteGroup(Player player, NodeGroup group) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public void deleteGroup(Player player, @Nullable RoadMap roadMap, NodeGroup group) {
+		if (roadMap == null) {
+			roadMap = CommandUtils.getSelectedRoadMap(player);
+		}
 
 		roadMap.removeNodeGroup(group);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
-	public void createGroup(Player player, NamespacedKey key) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public void createGroup(Player player, @Nullable RoadMap roadMap, NamespacedKey key) {
+		if (roadMap == null) {
+			roadMap = CommandUtils.getSelectedRoadMap(player);
+		}
 
 		if (roadMap.getNodeGroup(key) != null) {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_ALREADY_EXISTS
@@ -183,8 +187,10 @@ public class NodeGroupCommand extends CommandTree {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
-	public void listGroups(Player player, int pageInput) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public void listGroups(Player player, @Nullable RoadMap roadMap, int pageInput) {
+		if (roadMap == null) {
+			roadMap = CommandUtils.getSelectedRoadMap(player);
+		}
 
 		int pages = (int) Math.ceil(roadMap.getGroups().size() / 10.);
 		pageInput = Integer.max(0, Integer.min(pageInput, pages));
