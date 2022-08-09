@@ -1,10 +1,10 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.*;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -97,13 +97,13 @@ public interface DataStorage {
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
+	PathVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
 
-	Map<Integer, SimpleCurveVisualizer> loadPathVisualizer();
+	Map<Integer, PathVisualizer> loadPathVisualizer();
 
-	void updatePathVisualizer(SimpleCurveVisualizer visualizer);
+	void updatePathVisualizer(PathVisualizer visualizer);
 
-	void deletePathVisualizer(SimpleCurveVisualizer visualizer);
+	void deletePathVisualizer(PathVisualizer visualizer);
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 

@@ -1,11 +1,9 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.Findable;
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
-import de.bossascrew.pathfinder.roadmap.RoadMapEditor;
-import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
-import de.bossascrew.pathfinder.visualizer.ParticlePath;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapEditor;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.module.visualizing.ParticlePath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
@@ -21,7 +19,6 @@ public class PathPlayer {
 
     private final UUID uuid;
 
-    private final Map<NamespacedKey, FoundInfo> foundFindables;
     private final Map<NamespacedKey, ParticlePath> activePaths;
 
     @Nullable
@@ -36,27 +33,6 @@ public class PathPlayer {
     public PathPlayer(UUID uuid) {
         this.uuid = uuid;
         this.activePaths = new HashMap<>();
-
-        foundFindables = new HashMap<>();
-    }
-
-    public void find(Findable findable, boolean group, Date date) {
-
-    }
-
-    public void forget(Findable findable, boolean deep) {
-
-    }
-
-    public boolean hasFound(Findable findable) {
-        return true;
-    }
-
-    /**
-     * Wie viele FoundInfo Objekte der Spieler zu einer Roadmap hat
-     */
-    public int getFoundAmount(RoadMap roadMap) {
-        return roadMap.getFoundFindables(this).size();
     }
 
     public void setPath(@NotNull ParticlePath path) {

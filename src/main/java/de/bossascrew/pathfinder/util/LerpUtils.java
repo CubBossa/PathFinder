@@ -1,7 +1,5 @@
 package de.bossascrew.pathfinder.util;
 
-import com.comphenix.protocol.wrappers.AdventureComponentConverter;
-import de.bossascrew.pathfinder.node.Node;
 import org.bukkit.util.Vector;
 
 import java.awt.*;

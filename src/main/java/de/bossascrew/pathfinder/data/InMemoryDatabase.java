@@ -1,11 +1,11 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.NodeType;
-import de.bossascrew.pathfinder.node.*;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.node.NodeType;
+import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -206,19 +206,19 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<Integer, SimpleCurveVisualizer> loadPathVisualizer() {
+	public Map<Integer, PathVisualizer> loadPathVisualizer() {
 		log("Loaded Visualizers");
 		return new HashMap<>();
 	}
 
 
 	@Override
-	public void updatePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer visualizer) {
 		log("Updated Visualizer");
 	}
 
 	@Override
-	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer visualizer) {
 		log("Deleted Visualizer");
 	}
 

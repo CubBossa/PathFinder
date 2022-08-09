@@ -1,17 +1,16 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.*;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
 
 import java.io.File;
 import java.io.IOException;
@@ -220,22 +219,22 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
+	public PathVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		return null;
 	}
 
 	@Override
-	public Map<Integer, SimpleCurveVisualizer> loadPathVisualizer() {
+	public Map<Integer, PathVisualizer> loadPathVisualizer() {
 		return null;
 	}
 
 	@Override
-	public void updatePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer visualizer) {
 
 	}
 

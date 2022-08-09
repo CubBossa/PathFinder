@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.util;
 
-import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.splinelib.util.BezierVector;
 import org.bukkit.util.Vector;
 

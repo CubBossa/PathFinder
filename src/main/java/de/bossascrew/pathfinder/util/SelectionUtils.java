@@ -1,13 +1,8 @@
 package de.bossascrew.pathfinder.util;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.node.Node;
+import de.bossascrew.pathfinder.core.node.Node;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 

@@ -1,13 +1,13 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.*;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.DataUtils;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -646,17 +646,17 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<Integer, SimpleCurveVisualizer> loadPathVisualizer() {
+	public Map<Integer, PathVisualizer> loadPathVisualizer() {
 		return null;
 	}
 
 	@Override
-	public void updatePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void deletePathVisualizer(SimpleCurveVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer visualizer) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_path_visualizer` WHERE `key` = ?")) {
 				stmt.setString(1, visualizer.getKey().toString());

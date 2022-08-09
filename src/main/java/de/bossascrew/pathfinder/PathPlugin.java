@@ -2,29 +2,31 @@ package de.bossascrew.pathfinder;
 
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.commands.*;
-import de.bossascrew.pathfinder.configuration.Configuration;
+import de.bossascrew.pathfinder.core.commands.*;
+import de.bossascrew.pathfinder.core.configuration.Configuration;
 import de.bossascrew.pathfinder.data.*;
-import de.bossascrew.pathfinder.listener.DatabaseListener;
-import de.bossascrew.pathfinder.listener.PlayerListener;
-import de.bossascrew.pathfinder.node.Navigable;
-import de.bossascrew.pathfinder.node.NavigateSelection;
-import de.bossascrew.pathfinder.node.NodeGroup;
-import de.bossascrew.pathfinder.node.NodeTypeHandler;
-import de.bossascrew.pathfinder.roadmap.RoadMap;
-import de.bossascrew.pathfinder.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.core.listener.DatabaseListener;
+import de.bossascrew.pathfinder.core.listener.PlayerListener;
+import de.bossascrew.pathfinder.module.visualizing.command.PathVisualizerCommand;
+import de.bossascrew.pathfinder.core.node.Navigable;
+import de.bossascrew.pathfinder.core.node.NavigateSelection;
+import de.bossascrew.pathfinder.core.node.NodeGroup;
+import de.bossascrew.pathfinder.core.node.NodeTypeHandler;
+import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SelectionUtils;
 import de.bossascrew.pathfinder.util.SetArithmeticParser;
-import de.bossascrew.pathfinder.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.visualizer.VisualizerHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import de.bossascrew.splinelib.SplineLib;
 import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.*;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandAPIConfig;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -152,11 +154,11 @@ public class PathPlugin extends JavaPlugin {
 		new RoadMapCommand().register();
 		new PathFinderCommand().register();
 		new CancelPathCommand().register();
+		new PathVisualizerCommand(0).register();
 
 		commandManager = new BukkitCommandManager(this);
 		registerContexts();
 
-		commandManager.registerCommand(new PathVisualizerCommand());
 
 		registerCompletions();
 

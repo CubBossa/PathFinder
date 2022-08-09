@@ -1,7 +1,7 @@
 package de.bossascrew.pathfinder;
 
-import de.bossascrew.pathfinder.node.Node;
-import de.bossascrew.pathfinder.node.NodeGroup;
+import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.core.node.NodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -208,6 +208,26 @@ public class Messages {
 	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
 
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
+
+
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Visualizer</#8265eb> ------------</gradient>",
+			placeholders = {"page", "next-page", "prev-page"})
+	public static final Message CMD_VIS_LIST_HEADER = new Message("commands.path_visualizer.list.header");
+	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
+			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+	public static final Message CMD_VIS_LIST_ENTRY = new Message("commands.path_visualizer.list.entry");
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
+			placeholders = {"page", "next-page", "prev-page"})
+	public static final Message CMD_VIS_LIST_FOOTER = new Message("commands.path_visualizer.list.footer");
+
+	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
+	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
+	public static final Message CMD_VIS_DELETE_SUCCESS = new Message("commands.path_visualizer.delete.success");
+	public static final Message CMD_VIS_DELETE_ERROR = new Message("commands.path_visualizer.delete.error");
+	public static final Message CMD_VIS_INFO = new Message("commands.path_visualizer.info");
+	public static final Message CMD_VIS_SET_NAME = new Message("commands.path_visualizer.set.name");
+
+
 
 	@MessageMeta(value = "<list>", placeholders = "list")
 	public static final Message E_NODE_NAME = new Message("editor.node_name");

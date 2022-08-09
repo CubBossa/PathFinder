@@ -1,8 +1,6 @@
 package de.bossascrew.pathfinder.data;
 
-import de.bossascrew.pathfinder.node.Findable;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import de.bossascrew.pathfinder.core.node.Findable;
 
 import java.util.Date;
 import java.util.UUID;
