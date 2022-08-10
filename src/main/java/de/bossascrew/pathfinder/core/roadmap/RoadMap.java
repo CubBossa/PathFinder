@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.core.roadmap;
 
 import com.google.common.collect.Lists;
+import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.core.events.node.*;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class RoadMap implements Keyed {
+public class RoadMap implements Keyed, Named {
 
 	private final NamespacedKey key;
 	private String nameFormat;

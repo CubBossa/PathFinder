@@ -1,17 +1,10 @@
-package de.bossascrew.pathfinder.core.commands;
+package de.bossascrew.pathfinder.module.visualizing.command;
 
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.core.node.*;
-import de.bossascrew.pathfinder.core.roadmap.RoadMap;
-import de.bossascrew.pathfinder.module.visualizing.ParticlePath;
+import de.bossascrew.pathfinder.module.visualizing.FindModule;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
-import org.bukkit.entity.Player;
-import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 public class FindCommand extends CommandTree {
 
@@ -22,51 +15,12 @@ public class FindCommand extends CommandTree {
 		then(new LiteralArgument("location")
 				.then(CustomArgs.navigateSelectionArgument("selection")
 						.executesPlayer((player, args) -> {
-							onFindSpot(player, (NavigateSelection) args[0]);
+							FindModule.getInstance().findPath(player, (NavigateSelection) args[0]);
 						})
 				)
 		);
-
 	}
 
-
-	public void onFindSpot(Player player, NavigateSelection navigables) {
-
-		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(player);
-
-		RoadMap roadMap = navigables.getRoadMap();
-		if (roadMap == null) {
-			return;
-		}
-
-		// Prepare graph:
-		// Every target node will be connected with a new introduced destination node.
-		// All new edges have the same weight. The shortest path can only cross a target node.
-		// Finally, take a sublist of the shortest path to exclude the destination.
-
-		PlayerNode playerNode = new PlayerNode(player, roadMap);
-		Graph<Node, Edge> graph = roadMap.toGraph(playerNode);
-
-		EmptyNode destination = new EmptyNode(roadMap);
-		graph.addVertex(destination);
-		navigables.stream().flatMap(x -> x.getGroup().stream()).distinct().forEach(n -> {
-			System.out.println("Creating edge");
-			Edge e = new Edge(n, destination, 1);
-			graph.addEdge(n, destination, e);
-			graph.setEdgeWeight(e, 1);
-		});
-
-		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
-
-		if (path == null) {
-			player.sendMessage(":C");
-			return;
-		}
-
-		ParticlePath particlePath = new ParticlePath(roadMap, player.getUniqueId(), roadMap.getVisualizer());
-		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
-		pathPlayer.setPath(particlePath);
-	}
 
 /*
     @CatchUnknown

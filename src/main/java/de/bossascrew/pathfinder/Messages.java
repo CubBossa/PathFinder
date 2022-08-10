@@ -289,6 +289,11 @@ public class Messages {
 			placeholders = {"id", "name", "name-format", "findable", "roadmap", "roadmap-id", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
+
+	@MessageMeta(value = "<prefix> Target reached.")
+	public static final Message TARGET_FOUND = new Message("general.target_found");
+
+
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;
 	}

@@ -72,8 +72,7 @@ public class PathVisualizerCommand extends CommandTree {
 										.then(new GreedyStringArgument("permission")
 												.executes((commandSender, objects) -> {
 
-												})))
-								.then(new LiteralArgument("")))));
+												}))))));
 	}
 
 	public void onList(CommandSender sender, int page) {
@@ -85,7 +84,7 @@ public class PathVisualizerCommand extends CommandTree {
 				.tag("pages", Tag.preProcessParsed((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.) + ""))
 				.build();
 
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_HEADER.format(resolver), sender);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_LIST_HEADER.format(resolver), sender);
 
 		for (RoadMap roadMap : CommandUtils.subList(new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()), page, 10)) {
 			TagResolver r = TagResolver.builder()
@@ -94,9 +93,9 @@ public class PathVisualizerCommand extends CommandTree {
 					.tag("name-format", Tag.inserting(Component.text(roadMap.getNameFormat())))
 					.build();
 
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_ENTRY.format(resolver, r), sender);
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(resolver, r), sender);
 		}
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_FOOTER.format(resolver), sender);
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_LIST_FOOTER.format(resolver), sender);
 
 	}
 

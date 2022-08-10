@@ -35,63 +35,7 @@ public class PathPlayer {
         this.activePaths = new HashMap<>();
     }
 
-    public void setPath(@NotNull ParticlePath path) {
-        ParticlePath active = activePaths.get(path.getRoadMap().getKey());
-        if (active != null) {
-            active.cancel();
-        }
-        path.run(uuid);
-        activePaths.put(path.getRoadMap().getKey(), path);
-    }
 
-    public Collection<ParticlePath> getActivePaths() {
-        return activePaths.values();
-    }
-
-    public void cancelPaths() {
-        for (ParticlePath path : activePaths.values()) {
-            path.cancel();
-        }
-        activePaths.clear();
-    }
-
-    public void cancelPath(RoadMap roadMap) {
-        ParticlePath toBeCancelled = activePaths.get(roadMap.getKey());
-        if (toBeCancelled == null) {
-            return;
-        }
-
-        toBeCancelled.cancel();
-        activePaths.remove(roadMap.getKey());
-    }
-
-    public void pauseActivePath(RoadMap roadMap) {
-        ParticlePath active = activePaths.get(roadMap.getKey());
-        if (active == null) {
-            return;
-        }
-        active.cancel();
-    }
-
-    public void pauseActivePaths() {
-        for (ParticlePath path : activePaths.values()) {
-            path.cancel();
-        }
-    }
-
-    public void resumePausedPath(RoadMap roadMap) {
-        ParticlePath paused = activePaths.get(roadMap.getKey());
-        if (paused == null) {
-            return;
-        }
-        paused.run(uuid);
-    }
-
-    public void resumePausedPaths() {
-        for (ParticlePath path : activePaths.values()) {
-            path.run(uuid);
-        }
-    }
 
     public void setEditMode(NamespacedKey key) {
         this.editModeRoadMapId = key;
