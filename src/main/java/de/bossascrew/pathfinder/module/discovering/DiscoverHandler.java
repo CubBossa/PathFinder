@@ -2,11 +2,10 @@ package de.bossascrew.pathfinder.module.discovering;
 
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.core.node.Findable;
+import de.bossascrew.pathfinder.core.node.Discoverable;
 import de.bossascrew.pathfinder.core.node.Navigable;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
-import de.bossascrew.pathfinder.data.FoundInfo;
-import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.DiscoverInfo;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -17,22 +16,20 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.time.Duration;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DiscoverHandler {
 
 	@Getter
 	private static DiscoverHandler instance;
 
-	private final Map<UUID, Map<NamespacedKey, FoundInfo>> foundFindables;
+	private final Map<UUID, Map<NamespacedKey, Map<Integer, DiscoverInfo>>> discovered;
 
 	public DiscoverHandler() {
 		instance = this;
 
-		foundFindables = new HashMap<>();
+		discovered = new HashMap<>();
 	}
 
 	public void playDiscovery(UUID playerId, Navigable findable) {
@@ -50,23 +47,40 @@ public class DiscoverHandler {
 		player.playSound(player.getLocation(), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1f, 1f);
 	}
 
-	public void discover(UUID playerId, Findable findable, boolean group, Date date) {
+	public void discover(UUID playerId, Discoverable discoverable, boolean group, Date date) {
 
 	}
 
-	public void forget(UUID playerId, Findable findable, boolean deep) {
+	public void forget(UUID playerId, Discoverable discoverable, boolean deep) {
 
 	}
 
-	public boolean hasDiscovered(UUID playerId, Findable findable) {
+	public boolean hasDiscovered(UUID playerId, Discoverable discoverable) {
 		return true;
 	}
 
-	public int getDiscoveredCount(PathPlayer pathPlayer, RoadMap roadMap) {
-		return roadMap.getFoundFindables(pathPlayer).size();
+	public Collection<Discoverable> getDiscovered(UUID playerId, RoadMap roadMap) {
+		return discovered.computeIfAbsent(playerId, uuid -> new HashMap<>())
+				.computeIfAbsent(roadMap.getKey(), key -> new HashMap<>()).values().stream()
+				.map(DiscoverInfo::discoverable).collect(Collectors.toSet());
 	}
 
-	public float getDiscoveredPercent(PathPlayer pathPlayer, RoadMap roadMap) {
-		return getDiscoveredCount(pathPlayer, roadMap) / (float) roadMap.getFindables().size();
+	public int getDiscoveredCount(UUID playerId, RoadMap roadMap) {
+		return getDiscovered(playerId, roadMap).size();
+	}
+
+	public float getDiscoveredPercent(UUID uuid, RoadMap roadMap) {
+		int count = 0, sum = 0;
+		for (Discoverable discoverable : getDiscovered(uuid, roadMap)) {
+			count += discoverable.getDiscoveringWeight();
+		}
+		for (Discoverable discoverable : roadMap.getDiscoverables()) {
+			sum += discoverable.getDiscoveringWeight();
+		}
+		return count / (float) sum;
+	}
+
+	public float getDiscoveryDistance(UUID playerId, RoadMap roadMap) {
+		return 3f;
 	}
 }

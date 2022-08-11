@@ -73,12 +73,12 @@ public class Messages {
 			<#7b42f5>Roadmap:</7b42f5> <name> <gray>(<id>)</gray>
 			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
 			<dark_gray>» </dark_gray><gray>World: <#6569eb><hover:show_text:"Click to change world"><click:suggest_command:/roadmap setworld <id> [new world]><world></click></hover>
-			<dark_gray>» </dark_gray><gray>Findable: <#6569eb><hover:show_text:"Click to change findable state"><click:suggest_command:/roadmap set findable <id> true|false><findable></click></hover>
+			<dark_gray>» </dark_gray><gray>Findable: <#6569eb><hover:show_text:"Click to change discoverable state"><click:suggest_command:/roadmap set discoverable <id> true|false><discoverable></click></hover>
 			<dark_gray>» </dark_gray><gray>Find Distance: <#6569eb><hover:show_text:"Click to change find distance"><click:suggest_command:/roadmap set find-distance <id> [distance]><find-distance></click></hover>
 			<#8265eb>Particles:</#8265eb>
 			<dark_gray>  » </dark_gray><gray>Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
 			<dark_gray>  » </dark_gray><gray>Particles: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
-			""", placeholders = {"name", "id", "name-format", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+			""", placeholders = {"name", "id", "name-format", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
 	@MessageMeta("<msg:prefix><#8265eb>Roadmap</#8265eb> <gray>selected: <name>")
 	public static final Message CMD_RM_SELECT = new Message("commands.roadmap.select");
@@ -94,15 +94,15 @@ public class Messages {
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
-			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+			placeholders = {"id", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
 	@MessageMeta(value = "<gray>» </gray><name> <gray>(<id>)</gray> <white><i>Selected</i></white>",
-			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+			placeholders = {"id", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_SELECTED = new Message("commands.roadmap.list.entry_selected");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
-	@MessageMeta("<red>No roadmap found. Create a new roadmap with <click:suggest_command:/roadmap create>/roadmap create <pre><key></pre></click>.")
+	@MessageMeta("<red>No roadmap discoverable. Create a new roadmap with <click:suggest_command:/roadmap create>/roadmap create <pre><key></pre></click>.")
 	public static final Message CMD_RM_EM_CREATE = new Message("commands.roadmap.editmode.create_new");
 	@MessageMeta(value = "<msg:prefix><gray>Nearest <#8265eb>roadmap</#8265eb> <roadmap> selected.</gray>", placeholders = "roadmap")
 	public static final Message CMD_RM_EM_SELECTED = new Message("commands.roadmap.editmode.selected");
@@ -110,7 +110,7 @@ public class Messages {
 	public static final Message CMD_RM_EM_SELECT = new Message("commands.roadmap.editmode.select");
 	@MessageMeta(value = "<ins:prefix>Editmode activated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
 	public static final Message CMD_RM_EM_ACTIVATED = new Message("commands.roadmap.editmode.activated");
-	@MessageMeta(value = "<ins:prefix>Player <name> found <selection>.", placeholders = {"name", "selection"})
+	@MessageMeta(value = "<ins:prefix>Player <name> discoverable <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
 	@MessageMeta(value = "<msg:prefix>Player <name> forgot about <selection>.", placeholders = {"name", "selection"})
 	public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
@@ -134,7 +134,7 @@ public class Messages {
 	@MessageMeta(value = "<red>Find distance '<value>' is too small. Try again.",
 			placeholders = {"roadmap", "value"})
 	public static final Message CMD_RM_SET_FIND_DIST_TOO_SMALL = new Message("commands.roadmap.set_find_distance.too_small");
-	@MessageMeta(value = "<msg:prefix><gray>Successfully set findable = '<#8f65eb><value></#8f65eb>' for <#8265eb><roadmap></#8265eb>.</gray>",
+	@MessageMeta(value = "<msg:prefix><gray>Successfully set discoverable = '<#8f65eb><value></#8f65eb>' for <#8265eb><roadmap></#8265eb>.</gray>",
 			placeholders = {"roadmap", "value"})
 	public static final Message CMD_RM_SET_FINDABLE = new Message("commands.roadmap.set_findable");
 
@@ -189,7 +189,7 @@ public class Messages {
 			placeholders = {"roadmap", "page", "next-page", "prev-page"})
 	public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
-			placeholders = {"roadmap", "page", "id", "name", "size", "findable"})
+			placeholders = {"roadmap", "page", "id", "name", "size", "discoverable"})
 	public static final Message CMD_NG_LIST_LINE = new Message("commands.node_group.list.line");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"roadmap", "page", "next-page", "prev-page"})
@@ -197,7 +197,7 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Displayname for <id> set from <name> to <new-name> (<value>).",
 			placeholders = {"id", "name", "new-name", "value"})
 	public static final Message CMD_NG_SET_NAME = new Message("commands.node_group.set_name");
-	@MessageMeta(value = "<ins:prefix><gray>Group <name> findable set to: <value>.</gray>",
+	@MessageMeta(value = "<ins:prefix><gray>Group <name> discoverable set to: <value>.</gray>",
 			placeholders = {"name", "value"})
 	public static final Message CMD_NG_SET_FINDABLE = new Message("commands.node_group.set_findable");
 	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<dark_gray>» <#8f65eb><values></#8f65eb></dark_gray>", placeholders = {"name", "values"})
@@ -214,7 +214,7 @@ public class Messages {
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_VIS_LIST_HEADER = new Message("commands.path_visualizer.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
-			placeholders = {"id", "name", "world", "findable", "find-distance", "curve-length", "path-visualizer"})
+			placeholders = {"id", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_VIS_LIST_ENTRY = new Message("commands.path_visualizer.list.entry");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page"})
@@ -279,14 +279,14 @@ public class Messages {
 	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")
 	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");
 	@MessageMeta(value = "<name>",
-			placeholders = {"id", "name", "name-format", "findable", "roadmap", "roadmap-id", "search-terms"})
+			placeholders = {"id", "name", "name-format", "discoverable", "roadmap", "roadmap-id", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_N = new Message("editor.groups.entry.name");
 	@MessageMeta(value = """
 			<dark_gray>» </dark_gray><gray>Name: <name></gray>
-			<dark_gray>» </dark_gray><gray>Findable: <findable></gray>
+			<dark_gray>» </dark_gray><gray>Findable: <discoverable></gray>
 			<dark_gray>» </dark_gray><gray>Roadmap: <roadmap></gray>
 			<dark_gray>» </dark_gray><gray>Search terms: <search-terms></gray>""",
-			placeholders = {"id", "name", "name-format", "findable", "roadmap", "roadmap-id", "search-terms"})
+			placeholders = {"id", "name", "name-format", "discoverable", "roadmap", "roadmap-id", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
 

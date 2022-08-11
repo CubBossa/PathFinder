@@ -1,5 +1,7 @@
-package de.bossascrew.pathfinder.core.node;
+package de.bossascrew.pathfinder.core.node.implementation;
 
+import de.bossascrew.pathfinder.core.node.Edge;
+import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import org.bukkit.Location;

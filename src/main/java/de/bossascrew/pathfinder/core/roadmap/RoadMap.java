@@ -6,6 +6,8 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.events.node.*;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.node.implementation.PlayerNode;
+import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
@@ -43,7 +45,7 @@ public class RoadMap implements Keyed, Named {
 	private final Collection<Edge> edges;
 	private final HashedRegistry<NodeGroup> groups;
 	private final Collection<Navigable> navigables;
-	private final Collection<Findable> findables;
+	private final Collection<Discoverable> discoverables;
 
 	private PathVisualizer visualizer;
 
@@ -61,7 +63,7 @@ public class RoadMap implements Keyed, Named {
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();
 		this.navigables = new HashSet<>();
-		this.findables = new HashSet<>();
+		this.discoverables = new HashSet<>();
 
 		setVisualizer(visualizer);
 	}
@@ -88,8 +90,8 @@ public class RoadMap implements Keyed, Named {
 		PathPlugin.getInstance().getDatabase().loadNodes(this).values().forEach(node -> {
 			nodes.put(node.getNodeId(), node);
 			navigables.add(node);
-			if (node instanceof Findable findable) {
-				findables.add(findable);
+			if (node instanceof Discoverable discoverable) {
+				discoverables.add(discoverable);
 			}
 		});
 		for(var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
@@ -258,8 +260,8 @@ public class RoadMap implements Keyed, Named {
 	public void addNode(Node node) {
 		nodes.put(node.getNodeId(), node);
 		navigables.add(node);
-		if (node instanceof Findable findable) {
-			findables.add(findable);
+		if (node instanceof Discoverable discoverable) {
+			discoverables.add(discoverable);
 		}
 	}
 
@@ -290,7 +292,7 @@ public class RoadMap implements Keyed, Named {
 	public void removeNodeGroup(NodeGroup group) {
 		groups.remove(group.getKey());
 		navigables.remove(group);
-		findables.remove(group);
+		discoverables.remove(group);
 
 		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
 
@@ -306,7 +308,7 @@ public class RoadMap implements Keyed, Named {
 		groups.put(group);
 		navigables.add(group);
 		if (group.isFindable()) {
-			findables.add(group);
+			discoverables.add(group);
 		}
 		return group;
 	}
@@ -411,16 +413,6 @@ public class RoadMap implements Keyed, Named {
 		return nodes.values();
 	}
 
-	public Collection<Node> getFoundFindables(PathPlayer player) {
-		if (!findableNodes) {
-			return getNodes();
-		}
-		return findables.stream()
-				.filter(f -> DiscoverHandler.getInstance().hasDiscovered(player.getUuid(), f))
-				.flatMap(findable -> findable.getGroup().stream())
-				.collect(Collectors.toList());
-	}
-
 	public @Nullable
 	Edge getEdge(int aId, int bId) {
 		return edges.stream()
@@ -430,6 +422,6 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public int getMaxFoundSize() {
-		return findables.size();
+		return discoverables.size();
 	}
 }

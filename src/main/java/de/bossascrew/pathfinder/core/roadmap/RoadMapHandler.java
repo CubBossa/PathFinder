@@ -4,7 +4,7 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.bossascrew.pathfinder.core.node.NodeType;
 import de.bossascrew.pathfinder.core.node.NodeTypeHandler;
-import de.bossascrew.pathfinder.core.node.Waypoint;
+import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;

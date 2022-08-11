@@ -1,6 +1,7 @@
-package de.bossascrew.pathfinder.core.node;
+package de.bossascrew.pathfinder.core.node.implementation;
 
 import com.google.common.collect.Sets;
+import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class Waypoint implements Node, Findable, Groupable {
+public class Waypoint implements Node, Groupable {
 
 	private final int nodeId;
 	private final NamespacedKey roadMapKey;

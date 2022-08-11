@@ -3,6 +3,8 @@ package de.bossascrew.pathfinder.module.visualizing;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.node.implementation.EmptyNode;
+import de.bossascrew.pathfinder.core.node.implementation.PlayerNode;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.module.Module;
 import de.bossascrew.pathfinder.module.visualizing.events.PathStartEvent;

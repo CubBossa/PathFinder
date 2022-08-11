@@ -93,9 +93,9 @@ public interface DataStorage {
 
 	void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
-	FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate);
+	DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate);
 
-	Map<Integer, FoundInfo> loadFoundInfo(int globalPlayerId, boolean group);
+	Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group);
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 

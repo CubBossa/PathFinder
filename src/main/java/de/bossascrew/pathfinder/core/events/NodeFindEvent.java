@@ -1,6 +1,6 @@
 package de.bossascrew.pathfinder.core.events;
 
-import de.bossascrew.pathfinder.core.node.Waypoint;
+import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;

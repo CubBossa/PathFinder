@@ -2,19 +2,22 @@ package de.bossascrew.pathfinder.core.node;
 
 import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, Navigable {
+public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverable, Navigable {
 
     private final NamespacedKey key;
     private final RoadMap roadMap;
@@ -80,5 +83,25 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Findable, 
         int result = super.hashCode();
         result = 31 * result + key.hashCode();
         return result;
+    }
+
+    @Override
+    public boolean fulfillsDiscoveringRequirements(Player player) {
+        float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), roadMap);
+        for (Node node : this) {
+            if (node.getPosition().getX() - player.getLocation().getX() > dist) {
+                continue;
+            }
+            if (node.getPosition().distance(player.getLocation().toVector()) > dist) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public NamespacedKey getUniqueKey() {
+        return key;
     }
 }

@@ -209,12 +209,12 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate) {
+	public DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate) {
 		return null;
 	}
 
 	@Override
-	public Map<Integer, FoundInfo> loadFoundInfo(int globalPlayerId, boolean group) {
+	public Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group) {
 		return null;
 	}
 

@@ -6,7 +6,7 @@ import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
 import de.bossascrew.pathfinder.core.events.roadmap.RoadmapSelectEvent;
-import de.bossascrew.pathfinder.core.node.Findable;
+import de.bossascrew.pathfinder.core.node.Discoverable;
 import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapEditor;
@@ -365,8 +365,8 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		}
 
 		for (Node node : selection) {
-			if (node instanceof Findable findable) {
-				DiscoverHandler.getInstance().discover(pathPlayer.getUuid(), findable, !findSingle, new Date());
+			if (node instanceof Discoverable discoverable) {
+				DiscoverHandler.getInstance().discover(pathPlayer.getUuid(), discoverable, !findSingle, new Date());
 			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
@@ -384,8 +384,8 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		}
 
 		for (Node node : selection) {
-			if (node instanceof Findable findable) {
-				DiscoverHandler.getInstance().forget(pathPlayer.getUuid(), findable, group);
+			if (node instanceof Discoverable discoverable) {
+				DiscoverHandler.getInstance().forget(pathPlayer.getUuid(), discoverable, group);
 			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()

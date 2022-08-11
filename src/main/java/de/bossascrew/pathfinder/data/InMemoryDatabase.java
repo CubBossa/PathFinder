@@ -183,13 +183,13 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public FoundInfo createFoundInfo(UUID player, Findable findable, Date foundDate) {
+	public DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate) {
 		log("Create Foundinfo");
-		return new FoundInfo(player, findable, foundDate);
+		return new DiscoverInfo(player, discoverable, foundDate);
 	}
 
 	@Override
-	public Map<Integer, FoundInfo> loadFoundInfo(int globalPlayerId, boolean group) {
+	public Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group) {
 		log("Load Foundinfos");
 		return new TreeMap<>();
 	}

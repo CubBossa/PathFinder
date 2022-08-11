@@ -87,23 +87,23 @@ public class PlayerListener implements Listener {
         if (!player.hasPermission(PathPlugin.PERM_FIND_NODE)) {
             return;
         }
-        Waypoint found = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
-        if (found == null) {
+        Waypoint discoverable = getFirstNodeInDistance(player, pathPlayer, event.getTo(), roadMaps);
+        if (discoverable == null) {
             return;
         }
 
         PluginUtils.getInstance().runSync(() -> {
             Date findDate = new Date();
-            boolean group = found.getGroup() != null;
+            boolean group = discoverable.getGroup() != null;
 
             int id;
             if (group) {
-                NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), found.getGroup(), found, findDate);
+                NodeGroupFindEvent findEvent = new NodeGroupFindEvent(globalPlayer.getPlayerId(), discoverable.getGroup(), discoverable, findDate);
                 Bukkit.getPluginManager().callEvent(findEvent);
                 findDate = findEvent.getDate();
                 id = findEvent.getGroup().getGroupId();
             } else {
-                NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), found, findDate);
+                NodeFindEvent findEvent = new NodeFindEvent(globalPlayer.getPlayerId(), discoverable, findDate);
                 Bukkit.getPluginManager().callEvent(findEvent);
                 findDate = findEvent.getDate();
                 id = findEvent.getFindable().getNodeId();
@@ -111,17 +111,17 @@ public class PlayerListener implements Listener {
             if (event.isCancelled()) {
                 return;
             }
-            if ((group && pathPlayer.hasFound(found.getGroup())) || pathPlayer.hasFound(found)) {
+            if ((group && pathPlayer.hasFound(discoverable.getGroup())) || pathPlayer.hasFound(discoverable)) {
                 return;
             }
             pathPlayer.find(id, group, findDate);
 
-            RoadMap rm = found.getRoadMap();
-            double percent = 100 * ((double) pathPlayer.getFoundAmount(found.getRoadMap())) / rm.getMaxFoundSize();
+            RoadMap rm = discoverable.getRoadMap();
+            double percent = 100 * ((double) pathPlayer.getFoundAmount(discoverable.getRoadMap())) / rm.getMaxFoundSize();
 
             player.showTitle(Title.title(Component.empty(), Component.text("Entdeckt: ").color(NamedTextColor.GRAY)
-                    .append(Component.text(found.getGroup() != null ? found.getGroup().getFriendlyName() : found.getFriendlyName()).color(NamedTextColor.WHITE))));
-            player.playSound(found.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
+                    .append(Component.text(discoverable.getGroup() != null ? discoverable.getGroup().getFriendlyName() : discoverable.getFriendlyName()).color(NamedTextColor.WHITE))));
+            player.playSound(discoverable.getVector().toLocation(rm.getWorld()), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1, 1);
             player.sendActionBar(
                     Component.text(rm.getNameFormat() + " erkundet: ", NamedTextColor.GRAY)
                             .append(Component.text(String.format("%,.2f", percent) + "%", NamedTextColor.WHITE)));
