@@ -71,6 +71,8 @@ public interface DataStorage {
 
 	void assignNodesToGroup(NodeGroup group, NodeSelection selection);
 
+	void removeNodesFromGroup(NodeGroup group, NodeSelection selection);
+
 	Map<NamespacedKey, List<Integer>> loadNodeGroupNodes();
 
 	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable);

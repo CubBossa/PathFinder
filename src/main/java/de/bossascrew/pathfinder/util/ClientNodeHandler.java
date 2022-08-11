@@ -235,14 +235,6 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public void updateNodeName(Node node, Player player, boolean updateEdges) {
-		Integer entityId = nodeEntityMap.get(node);
-		if (entityId == null) {
-			return;
-		}
-		renameArmorstand(player, entityId, null);
-	}
-
 	private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
 		PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
 		packet.getIntegers().write(0, id);
@@ -336,16 +328,26 @@ public class ClientNodeHandler {
 		}
 	}
 
-	public void updateNodeHead(Player player, Integer id) {
-		Node node = entityNodeMap.get(id);
-		if(node == null) {
-			return;
+	public void updateNodeHead(Player player, Node node) {
+		Integer id = nodeEntityMap.get(node);
+		if (id == null) {
+			throw new RuntimeException("Trying to update armorstand that was not registered for client side display.");
 		}
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
 	}
 
-	public void renameArmorstand(Player player, Integer id, Component name) {
+	public void renameArmorstand(Player player, Node node, @Nullable Component name) {
+		Integer id = nodeEntityMap.get(node);
+		if(id == null) {
+			throw new RuntimeException("Trying to update armorstand that was not registered for client side display.");
+		}
+
 		WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
+		if (name == null) {
+			dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), false);
+			sendMeta(player, id, dataWatcher);
+			return;
+		}
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME, WrappedDataWatcher.Registry.getChatComponentSerializer(true)),
 				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);

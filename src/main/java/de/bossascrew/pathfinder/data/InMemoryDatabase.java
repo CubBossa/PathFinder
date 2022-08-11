@@ -131,6 +131,11 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
+	public void removeNodesFromGroup(NodeGroup group, NodeSelection selection) {
+
+	}
+
+	@Override
 	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
 		return null;
 	}

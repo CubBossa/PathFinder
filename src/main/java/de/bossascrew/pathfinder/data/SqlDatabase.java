@@ -451,6 +451,28 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
+	public void removeNodesFromGroup(NodeGroup group, NodeSelection selection) {
+		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodegroups_nodes` " +
+					"WHERE `group_key` = ? AND `node_id` = ?")) {
+				for (Node node : selection) {
+					stmt.setString(1, group.getKey().toString());
+					stmt.setInt(2, node.getNodeId());
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
+			}
+			con.commit();
+			con.setAutoCommit(wasAuto);
+		} catch (Exception e) {
+			throw new DataStorageException("Could not add node to group.", e);
+		}
+	}
+
+	@Override
 	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups_nodes`")) {

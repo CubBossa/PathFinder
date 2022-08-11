@@ -1,14 +1,16 @@
 package de.bossascrew.pathfinder.core.listener;
 
-import de.bossascrew.pathfinder.data.DataStorage;
-import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
-import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
-import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.*;
 import de.bossascrew.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
+import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.data.DataStorage;
+import de.bossascrew.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+
+import java.util.stream.Collectors;
 
 public class DatabaseListener implements Listener {
 
@@ -31,8 +33,23 @@ public class DatabaseListener implements Listener {
 	}
 
 	@EventHandler
-	public void onGroupAssign(NodeGroupAssignEvent event) {
-		data.assignNodesToGroup(event.getGroup(), event.getNodes());
+	public void onGroupAssign(NodeGroupAssignedEvent event) {
+		event.getGroups().forEach(group -> {
+			data.assignNodesToGroup(group, event.getGroupables().stream()
+					.filter(g -> g instanceof Node)
+					.map(g -> (Node) g)
+					.collect(Collectors.toCollection(NodeSelection::new)));
+		});
+	}
+
+	@EventHandler
+	public void onGroupRemove(NodeGroupRemovedEvent event) {
+		event.getGroups().forEach(group -> {
+			data.removeNodesFromGroup(group, event.getGroupables().stream()
+					.filter(g -> g instanceof Node)
+					.map(g -> (Node) g)
+					.collect(Collectors.toCollection(NodeSelection::new)));
+		});
 	}
 
 	@EventHandler

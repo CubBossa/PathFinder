@@ -290,7 +290,7 @@ public class Messages {
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
 
-	@MessageMeta(value = "<prefix> Target reached.")
+	@MessageMeta(value = "<msg:prefix> Target reached.")
 	public static final Message TARGET_FOUND = new Message("general.target_found");
 
 
@@ -299,14 +299,22 @@ public class Messages {
 	}
 
 	public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
-		return formatGroup(sender, GEN_NODE_SEL, nodes, node -> Component.text("#" + node.getNodeId()));
+		return formatGroupInHover(sender, GEN_NODE_SEL, nodes, node -> Component.text("#" + node.getNodeId()));
 	}
 
 	public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
-		return formatGroup(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
+		return formatGroupInHover(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
 	}
 
-	public static <T> Component formatGroup(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
+	public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
+		return placeHolder.format(
+				Placeholder.parsed("amount", collection.size() + ""),
+				Placeholder.component("list", Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+						collection.stream().map(converter).collect(Collectors.toList())))
+		).asComponent(sender);
+	}
+
+	public static <T> Component formatGroupInHover(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
 		return placeHolder.format(Placeholder.parsed("amount", collection.size() + "")).asComponent(sender)
 				.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 						collection.stream().map(converter).collect(Collectors.toList()))));

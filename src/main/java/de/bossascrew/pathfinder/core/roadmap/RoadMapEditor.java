@@ -3,12 +3,13 @@ package de.bossascrew.pathfinder.core.roadmap;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.core.events.node.*;
-import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.bossascrew.pathfinder.core.menu.EditModeMenu;
 import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
 import de.bossascrew.pathfinder.util.LerpUtils;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
@@ -212,18 +213,32 @@ public class RoadMapEditor implements Keyed, Listener {
 	}
 
 	@EventHandler
-	public void onNodeAssign(NodeGroupAssignEvent event) { //TODO auch bei erzeugung der heads
+	public void onNodeGroupAssign(NodeGroupAssignedEvent event) { //TODO auch bei erzeugung der heads
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-				event.getNodes().forEach(node -> {
-					int value = node.getNodeId();
-					armorstandHandler.updateNodeHead(player, value);
-					armorstandHandler.renameArmorstand(player, value, Messages.formatGroup(
-							player, Messages.E_NODE_NAME, ((Groupable)node).getGroups().stream()
-									.map(NodeGroup::getSearchTerms)
-									.flatMap(Collection::stream).collect(Collectors.toList()),
-							Component::text
-					));
-				}));
+				event.getGroupables().stream()
+						.filter(groupable -> groupable instanceof Node)
+						.map(groupable -> (Node) groupable)
+						.forEach(node -> {
+							armorstandHandler.updateNodeHead(player, node);
+							armorstandHandler.renameArmorstand(player, node, Messages.formatGroupConcat(
+									player, Messages.E_NODE_NAME, ((Groupable) node).getGroups().stream()
+											.map(NodeGroup::getSearchTerms)
+											.flatMap(Collection::stream).collect(Collectors.toList()),
+									Component::text
+							));
+						}));
+	}
+
+	@EventHandler
+	public void onNodeGroupRemove(NodeGroupRemovedEvent event) {
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				event.getGroupables().stream()
+						.filter(groupable -> groupable instanceof Node)
+						.map(groupable -> (Node) groupable)
+						.forEach(node -> {
+							armorstandHandler.updateNodeHead(player, node);
+							armorstandHandler.renameArmorstand(player, node, null);
+						}));
 	}
 
 	@EventHandler
