@@ -3,14 +3,14 @@ package de.bossascrew.pathfinder.core.roadmap;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.core.events.node.*;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
-import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -242,15 +242,11 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public void removeNode(Node node) {
-		for (Edge edge : new ArrayList<>(edges)) {
-			if (edge.getEnd().equals(node)) {
-				edge.getEnd().getEdges().remove(edge);
-				edges.remove(edge);
-				PathPlugin.getInstance().getDatabase().deleteEdge(edge);
-			} else if (edge.getStart().equals(node)) {
-				edges.remove(edge);
-				PathPlugin.getInstance().getDatabase().deleteEdge(edge);
-			}
+		for (Edge edge : getEdgesAt(node)) {
+			edge.getEnd().getEdges().remove(edge);
+			edges.remove(edge);
+
+			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge)));
 		}
 
 		nodes.remove(node.getNodeId());
@@ -283,6 +279,12 @@ public class RoadMap implements Keyed, Named {
 			return null;
 		}
 		return groups.get(key);
+	}
+
+	public Collection<Node> getNodesByGroup(NodeGroup group) {
+		return nodes.values().stream()
+				.filter(node -> node instanceof Groupable groupable && groupable.getGroups().contains(group))
+				.collect(Collectors.toSet());
 	}
 
 	public void removeNodeGroup(NodeGroup group) {
@@ -401,6 +403,10 @@ public class RoadMap implements Keyed, Named {
 		return ret;
 	}
 
+	public Collection<Edge> getEdgesAt(Node node) {
+		return edges.stream().filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node)).collect(Collectors.toSet());
+	}
+
 	public Collection<Node> getNodes() {
 		return nodes.values();
 	}
@@ -410,7 +416,7 @@ public class RoadMap implements Keyed, Named {
 			return getNodes();
 		}
 		return findables.stream()
-				.filter(f -> DiscoverHandler.getInstance().hasFound(player.getUuid(), f))
+				.filter(f -> DiscoverHandler.getInstance().hasDiscovered(player.getUuid(), f))
 				.flatMap(findable -> findable.getGroup().stream())
 				.collect(Collectors.toList());
 	}

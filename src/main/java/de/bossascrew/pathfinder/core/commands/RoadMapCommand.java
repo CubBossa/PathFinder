@@ -5,19 +5,21 @@ import co.aikar.commands.annotation.Single;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
-import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
+import de.bossascrew.pathfinder.core.events.roadmap.RoadmapSelectEvent;
 import de.bossascrew.pathfinder.core.node.Findable;
 import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.*;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -25,20 +27,28 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.function.Predicate;
 
-public class RoadMapCommand extends CommandTree {
+public class RoadMapCommand extends CommandTree implements Listener {
 
 	public RoadMapCommand() {
 		super("roadmap");
+
+		// to update the roadmap selected requirement
+		Bukkit.getPluginManager().registerEvents(this, PathPlugin.getInstance());
 
 		withAliases("rm");
 
@@ -75,6 +85,7 @@ public class RoadMapCommand extends CommandTree {
 						})));
 
 		then(new LiteralArgument("editmode")
+				.withRequirement(hasRoadMapSelected())
 				.withPermission("pathfinder.command.roadmap.editmode")
 				.executesPlayer((player, args) -> {
 					onEdit(player, null);
@@ -118,56 +129,59 @@ public class RoadMapCommand extends CommandTree {
 							onSelect(commandSender, (RoadMap) objects[0]);
 						})));
 		then(new LiteralArgument("deselect")
+				.withRequirement(hasRoadMapSelected())
 				.withPermission("pathfinder.command.roadmap.select")
 				.executes((commandSender, args) -> {
 					onDeselect(commandSender);
 				}));
 
-		then(new LiteralArgument("visualizer")
-				.withPermission("pathfinder.command.roadmap.set.path-visualizer")
-				.then(CustomArgs.pathVisualizerArgument("visualizer")
-						.executes((commandSender, args) -> {
-							onStyle(commandSender, (PathVisualizer) args[0]);
-						})));
-
-		then(new LiteralArgument("name")
-				.withPermission("pathfinder.command.roadmap.set.name")
-				.then(CustomArgs.miniMessageArgument("name")
-						.executes((commandSender, args) -> {
-							onRename(commandSender, (String) args[0]);
-						})));
-
-		then(new LiteralArgument("world")
-				.withPermission("pathfinder.command.roadmap.set.world")
-				.then(CustomArgs.worldArgument("world")
-						.executes((commandSender, objects) -> {
-							onChangeWorld(commandSender, (World) objects[0], false);
-						})));
-		then(new LiteralArgument("world")
-				.withPermission("pathfinder.command.roadmap.set.world")
-				.then(CustomArgs.worldArgument("world")
-						.then(new LiteralArgument("force")
+		then(new LiteralArgument("set")
+				.withRequirement(hasRoadMapSelected())
+				.then(new LiteralArgument("visualizer")
+						.withPermission("pathfinder.command.roadmap.set.path-visualizer")
+						.then(CustomArgs.pathVisualizerArgument("visualizer")
 								.executes((commandSender, args) -> {
-									onChangeWorld(commandSender, (World) args[0], true);
+									onStyle(commandSender, (PathVisualizer) args[0]);
+								})))
+
+				.then(new LiteralArgument("name")
+						.withPermission("pathfinder.command.roadmap.set.name")
+						.then(CustomArgs.miniMessageArgument("name")
+								.executes((commandSender, args) -> {
+									onRename(commandSender, (String) args[0]);
+								})))
+
+				.then(new LiteralArgument("world")
+						.withPermission("pathfinder.command.roadmap.set.world")
+						.then(CustomArgs.worldArgument("world")
+								.executes((commandSender, objects) -> {
+									onChangeWorld(commandSender, (World) objects[0], false);
+								})))
+				.then(new LiteralArgument("world")
+						.withPermission("pathfinder.command.roadmap.set.world")
+						.then(CustomArgs.worldArgument("world")
+								.then(new LiteralArgument("force")
+										.executes((commandSender, args) -> {
+											onChangeWorld(commandSender, (World) args[0], true);
+										}))))
+				.then(new LiteralArgument("find-distance")
+						.withPermission("pathfinder.command.roadmap.set.find-distance")
+						.then(new DoubleArgument("distance", 0.01)
+								.executes((commandSender, args) -> {
+									onFindDistance(commandSender, (Double) args[0]);
+								})))
+				.then(new LiteralArgument("findable")
+						.withPermission("pathfinder.command.roadmap.set.findable")
+						.then(new BooleanArgument("findable")
+								.executes((commandSender, args) -> {
+									onSetFindable(commandSender, (Boolean) args[0]);
+								})))
+				.then(new LiteralArgument("curve-length")
+						.withPermission("pathfinder.command.roadmap.set.curvelength")
+						.then(new DoubleArgument("curvelength", 0)
+								.executes((commandSender, args) -> {
+									onChangeTangentStrength(commandSender, (Double) args[0]);
 								}))));
-		then(new LiteralArgument("find-distance")
-				.withPermission("pathfinder.command.roadmap.set.find-distance")
-				.then(new DoubleArgument("distance", 0.01)
-						.executes((commandSender, args) -> {
-							onFindDistance(commandSender, (Double) args[0]);
-						})));
-		then(new LiteralArgument("findable")
-				.withPermission("pathfinder.command.roadmap.set.findable")
-				.then(new BooleanArgument("findable")
-						.executes((commandSender, args) -> {
-							onSetFindable(commandSender, (Boolean) args[0]);
-						})));
-		then(new LiteralArgument("curve-length")
-				.withPermission("pathfinder.command.roadmap.set.curvelength")
-				.then(new DoubleArgument("curvelength", 0)
-						.executes((commandSender, args) -> {
-							onChangeTangentStrength(commandSender, (Double) args[0]);
-						})));
 
 		then(new LiteralArgument("edit")
 				.then(CustomArgs.roadMapArgument("roadmap")
@@ -218,6 +232,10 @@ public class RoadMapCommand extends CommandTree {
 										.executes((commandSender, args) -> {
 											onChangeTangentStrength(commandSender, (Double) args[1]);
 										})))));
+	}
+
+	private Predicate<CommandSender> hasRoadMapSelected() {
+		return sender -> PathPlayerHandler.getInstance().getPlayer(sender).getSelectedRoadMap() != null;
 	}
 
 	public void onInfo(CommandSender sender, @Nullable RoadMap roadMap) throws WrapperCommandSyntaxException {
@@ -348,7 +366,7 @@ public class RoadMapCommand extends CommandTree {
 
 		for (Node node : selection) {
 			if (node instanceof Findable findable) {
-				DiscoverHandler.getInstance().find(pathPlayer.getUuid(), findable, !findSingle, new Date());
+				DiscoverHandler.getInstance().discover(pathPlayer.getUuid(), findable, !findSingle, new Date());
 			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
@@ -464,6 +482,11 @@ public class RoadMapCommand extends CommandTree {
 				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
 				.tag("value", Tag.inserting(Messages.formatBool(findable)))
 				.build()), sender);
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onSelect(RoadmapSelectEvent event) {
+		CommandAPI.updateRequirements(event.getPlayer());
 	}
 }
 

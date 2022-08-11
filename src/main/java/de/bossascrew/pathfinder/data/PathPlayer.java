@@ -1,17 +1,20 @@
 package de.bossascrew.pathfinder.data;
 
+import de.bossascrew.pathfinder.core.events.roadmap.RoadmapSelectEvent;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.module.visualizing.ParticlePath;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -54,11 +57,27 @@ public class PathPlayer {
     }
 
     public void setSelectedRoadMap(NamespacedKey key) {
-        deselectRoadMap();
+        RoadmapSelectEvent event = new RoadmapSelectEvent(Bukkit.getPlayer(uuid), selectedRoadMap, key);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        deselectRoadMap(false);
         this.selectedRoadMap = key;
     }
 
     public void deselectRoadMap() {
+        deselectRoadMap(true);
+    }
+
+    private void deselectRoadMap(boolean callEvent) {
+        if (callEvent) {
+            RoadmapSelectEvent event = new RoadmapSelectEvent(Bukkit.getPlayer(uuid), selectedRoadMap, null);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+        }
         if (selectedRoadMap != null) {
             if (editModeRoadMapId != null) {
                 RoadMapEditor editor = RoadMapHandler.getInstance().getRoadMapEditor(editModeRoadMapId);

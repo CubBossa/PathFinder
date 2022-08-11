@@ -1,13 +1,15 @@
 package de.bossascrew.pathfinder.core.roadmap;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.events.node.*;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.bossascrew.pathfinder.core.menu.EditModeMenu;
-import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.node.Edge;
+import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.core.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
@@ -16,7 +18,6 @@ import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -220,12 +221,7 @@ public class RoadMapEditor implements Keyed, Listener {
 						.map(groupable -> (Node) groupable)
 						.forEach(node -> {
 							armorstandHandler.updateNodeHead(player, node);
-							armorstandHandler.renameArmorstand(player, node, Messages.formatGroupConcat(
-									player, Messages.E_NODE_NAME, ((Groupable) node).getGroups().stream()
-											.map(NodeGroup::getSearchTerms)
-											.flatMap(Collection::stream).collect(Collectors.toList()),
-									Component::text
-							));
+							armorstandHandler.updateNodeName(player, node);
 						}));
 	}
 
@@ -237,8 +233,15 @@ public class RoadMapEditor implements Keyed, Listener {
 						.map(groupable -> (Node) groupable)
 						.forEach(node -> {
 							armorstandHandler.updateNodeHead(player, node);
-							armorstandHandler.renameArmorstand(player, node, null);
+							armorstandHandler.updateNodeName(player, node);
 						}));
+	}
+
+	@EventHandler
+	public void onNodeGroupSeachTermsChanged(NodeGroupSearchTermsChangedEvent event) {
+		Collection<Node> nodes = event.getGroup().getRoadMap().getNodesByGroup(event.getGroup());
+		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
+				nodes.forEach(node -> armorstandHandler.updateNodeName(player, node)));
 	}
 
 	@EventHandler
@@ -263,9 +266,10 @@ public class RoadMapEditor implements Keyed, Listener {
 
 	@EventHandler
 	public void onNodeDeleted(NodeDeletedEvent event) {
-		Collection<Edge> edges = roadMap.getEdges().stream().filter(edge -> edge.getEnd().equals(event.getNode())).collect(Collectors.toList());
+		// No need to remove edges here, they are being removed by the roadmap
+		// beforehand with the according EdgeDeletedEvent
+
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
-			armorstandHandler.hideEdges(edges, player);
 			armorstandHandler.hideNodes(Lists.newArrayList(event.getNode()), player);
 		});
 		updateEditModeParticles();

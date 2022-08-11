@@ -2,12 +2,12 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.util.DataUtils;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -338,8 +338,8 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setDouble(3, x);
 				stmt.setDouble(4, y);
 				stmt.setDouble(5, z);
-				stmt.setDouble(6, tangentLength);
-				stmt.setString(7, permission);
+				stmt.setString(6, permission);
+				stmt.setDouble(7, tangentLength);
 				stmt.executeUpdate();
 
 				try (ResultSet res = stmt.getGeneratedKeys()) {
@@ -612,11 +612,19 @@ public abstract class SqlDatabase implements DataStorage {
 	@Override
 	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
 		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_search_terms` WHERE `group_key` = ? AND `search_term` = ?")) {
-				stmt.setString(1, group.getKey().toString());
-				stmt.setArray(2, con.createArrayOf("TEXT", searchTerms.toArray()));
-				stmt.executeUpdate();
+
+				for (String term : searchTerms) {
+					stmt.setString(1, group.getKey().toString());
+					stmt.setString(2, term);
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
 			}
+			con.commit();
+			con.setAutoCommit(wasAuto);
 		} catch (Exception e) {
 			throw new DataStorageException("Could not remove search terms.", e);
 		}

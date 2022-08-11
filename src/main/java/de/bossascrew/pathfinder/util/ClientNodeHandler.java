@@ -11,9 +11,11 @@ import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.Pair;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.core.node.Edge;
 import de.bossascrew.pathfinder.core.node.Groupable;
 import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.core.node.NodeGroup;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.menuframework.inventory.Action;
@@ -36,6 +38,7 @@ import org.bukkit.util.Vector;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -153,7 +156,6 @@ public class ClientNodeHandler {
 	public void showNode(Node node, Player player) {
 		Location location = node.getLocation();
 		int id = spawnArmorstand(player, location, null, false);
-		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
 
 		nodeEntityMap.put(node, id);
 		entityNodeMap.put(id, node);
@@ -162,6 +164,18 @@ public class ClientNodeHandler {
 		Collection<Node> inner = chunkNodeMap.getOrDefault(key, new HashSet<>());
 		inner.add(node);
 		chunkNodeMap.put(key, inner);
+
+		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
+		updateNodeName(player, node);
+	}
+
+	public void updateNodeName(Player player, Node node) {
+		renameArmorstand(player, node, node instanceof Groupable groupable && !groupable.getGroups().isEmpty() ? Messages.formatGroupConcat(
+				player, Messages.E_NODE_NAME, ((Groupable) node).getGroups().stream()
+						.map(NodeGroup::getSearchTerms)
+						.flatMap(Collection::stream).collect(Collectors.toList()),
+				Component::text
+		) : null);
 	}
 
 	public void showEdges(Collection<Edge> edges, Player player) {

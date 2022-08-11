@@ -290,9 +290,10 @@ public class Messages {
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
 
-	@MessageMeta(value = "<msg:prefix> Target reached.")
+	@MessageMeta(value = "<msg:prefix><gray>Target reached.")
 	public static final Message TARGET_FOUND = new Message("general.target_found");
-
+	public static final Message LOCATION_FOUND_TITLE_1 = new Message("general.target_discovered.title");
+	public static final Message LOCATION_FOUND_TITLE_2 = new Message("general.target_discovered.subtitle");
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;

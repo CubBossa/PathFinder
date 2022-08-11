@@ -1,6 +1,10 @@
 package de.bossascrew.pathfinder.core.listener;
 
-import de.bossascrew.pathfinder.core.events.nodegroup.*;
+import de.bossascrew.pathfinder.core.events.node.EdgeDeletedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
+import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.bossascrew.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.data.DataStorage;
@@ -25,6 +29,11 @@ public class DatabaseListener implements Listener {
 	@EventHandler
 	public void onRoadMapDeleted(RoadMapDeletedEvent event) {
 		data.deleteRoadMap(event.getRoadMap().getKey());
+	}
+
+	@EventHandler
+	public void onEdgeDeleted(EdgeDeletedEvent event) {
+		data.deleteEdge(event.getEdge());
 	}
 
 	@EventHandler
