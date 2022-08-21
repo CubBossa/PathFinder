@@ -47,11 +47,11 @@ public class DiscoverHandler {
 		player.playSound(player.getLocation(), Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, 1f, 1f);
 	}
 
-	public void discover(UUID playerId, Discoverable discoverable, boolean group, Date date) {
+	public void discover(UUID playerId, Discoverable discoverable, Date date) {
 
 	}
 
-	public void forget(UUID playerId, Discoverable discoverable, boolean deep) {
+	public void forget(UUID playerId, Discoverable discoverable) {
 
 	}
 

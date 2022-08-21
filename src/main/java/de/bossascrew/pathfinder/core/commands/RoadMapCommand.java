@@ -358,7 +358,6 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 	public void onForceFind(CommandSender sender, RoadMap roadMap, Player target, NodeSelection selection) {
 
-		boolean findSingle = true; //TODO
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
 		if (pathPlayer == null) {
 			return;
@@ -366,7 +365,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		for (Node node : selection) {
 			if (node instanceof Discoverable discoverable) {
-				DiscoverHandler.getInstance().discover(pathPlayer.getUuid(), discoverable, !findSingle, new Date());
+				DiscoverHandler.getInstance().discover(pathPlayer.getUuid(), discoverable, new Date());
 			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
@@ -377,7 +376,6 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 	public void onForceForget(CommandSender sender, RoadMap roadMap, Player target, NodeSelection selection) {
 
-		boolean group = true; //TODO
 		PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(target.getUniqueId());
 		if (pathPlayer == null) {
 			return;
@@ -385,7 +383,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		for (Node node : selection) {
 			if (node instanceof Discoverable discoverable) {
-				DiscoverHandler.getInstance().forget(pathPlayer.getUuid(), discoverable, group);
+				DiscoverHandler.getInstance().forget(pathPlayer.getUuid(), discoverable);
 			}
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()

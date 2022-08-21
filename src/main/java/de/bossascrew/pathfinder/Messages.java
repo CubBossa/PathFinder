@@ -279,14 +279,14 @@ public class Messages {
 	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")
 	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");
 	@MessageMeta(value = "<name>",
-			placeholders = {"id", "name", "name-format", "discoverable", "roadmap", "roadmap-id", "search-terms"})
+			placeholders = {"id", "name", "name-format", "discoverable", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_N = new Message("editor.groups.entry.name");
 	@MessageMeta(value = """
 			<dark_gray>» </dark_gray><gray>Name: <name></gray>
 			<dark_gray>» </dark_gray><gray>Findable: <discoverable></gray>
 			<dark_gray>» </dark_gray><gray>Roadmap: <roadmap></gray>
 			<dark_gray>» </dark_gray><gray>Search terms: <search-terms></gray>""",
-			placeholders = {"id", "name", "name-format", "discoverable", "roadmap", "roadmap-id", "search-terms"})
+			placeholders = {"id", "name", "name-format", "discoverable", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
 

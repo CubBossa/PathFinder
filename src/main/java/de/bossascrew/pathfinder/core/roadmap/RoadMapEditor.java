@@ -239,7 +239,7 @@ public class RoadMapEditor implements Keyed, Listener {
 
 	@EventHandler
 	public void onNodeGroupSeachTermsChanged(NodeGroupSearchTermsChangedEvent event) {
-		Collection<Node> nodes = event.getGroup().getRoadMap().getNodesByGroup(event.getGroup());
+		Collection<Node> nodes = event.getGroup();
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
 				nodes.forEach(node -> armorstandHandler.updateNodeName(player, node)));
 	}

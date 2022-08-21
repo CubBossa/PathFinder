@@ -143,7 +143,7 @@ public class InMemoryDatabase implements DataStorage {
 	@Override
 	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
 		log("Create Nodegroup");
-		return new NodeGroup(key, roadMap, nameFormat);
+		return new NodeGroup(key, nameFormat);
 	}
 
 	@Override

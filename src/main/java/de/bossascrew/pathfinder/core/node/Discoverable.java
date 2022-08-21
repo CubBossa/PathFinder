@@ -17,11 +17,6 @@ import org.bukkit.entity.Player;
 public interface Discoverable extends DatabaseObject<NamespacedKey>, Named {
 
 	/**
-	 * @return The roadmap that this discoverable belongs to.
-	 */
-	RoadMap getRoadMap();
-
-	/**
 	 * @return true, if the player fulfills all requirements to discover this {@link Discoverable} instance.
 	 */
 	boolean fulfillsDiscoveringRequirements(Player player);

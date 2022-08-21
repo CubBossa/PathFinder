@@ -3,7 +3,7 @@ package de.bossascrew.pathfinder.core.node;
 import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
-import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,22 +20,20 @@ import java.util.HashSet;
 public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverable, Navigable {
 
     private final NamespacedKey key;
-    private final RoadMap roadMap;
     private String nameFormat;
     private Component displayName;
-    private boolean findable;
+    private boolean discoverable;
     private Collection<String> searchTerms;
 
-    public NodeGroup(NamespacedKey key, RoadMap roadMap, String nameFormat) {
-        this(key, roadMap, nameFormat, new HashSet<>());
+    public NodeGroup(NamespacedKey key, String nameFormat) {
+        this(key, nameFormat, new HashSet<>());
     }
 
-    public NodeGroup(NamespacedKey key, RoadMap roadMap, String nameFormat, Collection<Waypoint> nodes) {
+    public NodeGroup(NamespacedKey key, String nameFormat, Collection<Waypoint> nodes) {
         super(nodes);
         this.key = key;
-        this.roadMap = roadMap;
         this.setNameFormat(nameFormat);
-        this.findable = false;
+        this.discoverable = false;
         this.searchTerms = new HashSet<>();
     }
 
@@ -87,8 +85,8 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverab
 
     @Override
     public boolean fulfillsDiscoveringRequirements(Player player) {
-        float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), roadMap);
         for (Node node : this) {
+            float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()));
             if (node.getPosition().getX() - player.getLocation().getX() > dist) {
                 continue;
             }

@@ -222,9 +222,7 @@ public class EditModeMenu {
 					.resolver(Placeholder.component("name", group.getDisplayName()))
 					.resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
 					.resolver(Placeholder.parsed("name-format", group.getNameFormat()))
-					.resolver(Placeholder.component("findable", Messages.formatBool(group.isFindable())))
-					.resolver(Placeholder.component("roadmap", group.getRoadMap().getDisplayName()))
-					.resolver(Placeholder.component("roadmap-id", Messages.formatKey(group.getRoadMap().getKey())))
+					.resolver(Placeholder.component("findable", Messages.formatBool(group.isDiscoverable())))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
@@ -233,7 +231,7 @@ public class EditModeMenu {
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem(group.isFindable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART,
+						ItemStack stack = new TranslatedItem(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART,
 								Messages.E_SUB_GROUP_ENTRY_N.format(resolver),
 								Messages.E_SUB_GROUP_ENTRY_L.format(resolver)
 

@@ -505,8 +505,8 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setBoolean(4, findable);
 				stmt.executeUpdate();
 
-				NodeGroup group = new NodeGroup(key, roadMap, nameFormat);
-				group.setFindable(findable);
+				NodeGroup group = new NodeGroup(key, nameFormat);
+				group.setDiscoverable(findable);
 				return group;
 			}
 		} catch (Exception e) {
@@ -526,8 +526,8 @@ public abstract class SqlDatabase implements DataStorage {
 						String nameFormat = resultSet.getString("name_format");
 						boolean nodesFindable = resultSet.getBoolean("findable");
 
-						NodeGroup group = new NodeGroup(NamespacedKey.fromString(keyString), roadMap, nameFormat);
-						group.setFindable(nodesFindable);
+						NodeGroup group = new NodeGroup(NamespacedKey.fromString(keyString), nameFormat);
+						group.setDiscoverable(nodesFindable);
 						registry.put(group);
 					}
 					return registry;
@@ -546,7 +546,7 @@ public abstract class SqlDatabase implements DataStorage {
 					"`findable` = ?, " +
 					"WHERE `key` = ?")) {
 				stmt.setString(1, group.getNameFormat());
-				stmt.setBoolean(2, group.isFindable());
+				stmt.setBoolean(2, group.isDiscoverable());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {

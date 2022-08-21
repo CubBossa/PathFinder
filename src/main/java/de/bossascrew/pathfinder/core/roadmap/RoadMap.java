@@ -8,8 +8,6 @@ import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.node.implementation.PlayerNode;
 import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -307,7 +305,7 @@ public class RoadMap implements Keyed, Named {
 		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, nameFormat, findable);
 		groups.put(group);
 		navigables.add(group);
-		if (group.isFindable()) {
+		if (group.isDiscoverable()) {
 			discoverables.add(group);
 		}
 		return group;

@@ -143,7 +143,7 @@ public class NodeGroupCommand extends LiteralArgument {
 	}
 
 	public void setFindable(Player player, NodeGroup group, boolean findable) {
-		group.setFindable(findable);
+		group.setDiscoverable(findable);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
 				.tag("name", Tag.inserting(group.getDisplayName()))
@@ -211,7 +211,7 @@ public class NodeGroupCommand extends LiteralArgument {
 					.tag("id", Tag.inserting(Component.text(group.getKey().toString())))
 					.tag("name", Tag.inserting(group.getDisplayName()))
 					.tag("size", Tag.inserting(Component.text(group.size())))
-					.tag("findable", Tag.inserting(Component.text(group.isFindable())))
+					.tag("findable", Tag.inserting(Component.text(group.isDiscoverable())))
 					.build();
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
 		}
