@@ -5,17 +5,18 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.core.node.Navigable;
 import de.bossascrew.pathfinder.core.node.NavigateSelection;
 import de.bossascrew.pathfinder.core.node.NodeGroup;
+import de.bossascrew.pathfinder.core.node.NodeGroupHandler;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
+import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.util.SetArithmeticParser;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -180,19 +181,17 @@ public class CustomArgs {
 		});
 	}
 
-	public Argument<NodeGroup> nodeGroupArgument(String nodeName, @Nullable Integer roadmapIndex) {
+	public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-			RoadMap roadMap = roadmapIndex != null ?
-					(RoadMap) info.previousArgs()[roadmapIndex] :
-					resolveRoadMap(info.sender());
-			NodeGroup group = roadMap.getNodeGroup(info.currentInput());
+			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
 			if (group == null) {
 				throw new CustomArgument.CustomArgumentException("abc");
 			}
 			return group;
 		}).replaceSuggestions(suggestNamespacedKeys((sender -> {
-			RoadMap roadMap = resolveRoadMapInSuggestion(sender);
-			return roadMap.getGroups().values().stream().map(NodeGroup::getKey).collect(Collectors.toList());
+			return NodeGroupHandler.getInstance().getNodeGroups().stream()
+					.map(NodeGroup::getKey)
+					.collect(Collectors.toList());
 		})));
 	}
 

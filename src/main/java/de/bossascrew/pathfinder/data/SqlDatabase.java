@@ -90,12 +90,9 @@ public abstract class SqlDatabase implements DataStorage {
 	private void createNodeGroupTable() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_nodegroups` (" +
-					"`key` VARCHAR(64) NOT NULL ," +
-					"`roadmap_key` VARCHAR(64) NOT NULL ," +
+					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
 					"`name_format` TEXT NOT NULL ," +
-					"`findable` TINYINT(1) NULL ," +
-					"PRIMARY KEY (`key`, `roadmap_key`)" +
-					"FOREIGN KEY (roadmap_key) REFERENCES pathfinder_roadmaps(key) ON DELETE CASCADE )")) {
+					"`findable` TINYINT(1) NULL )")) {
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -494,15 +491,14 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
-					"(`key`, `roadmap_key`, `name_format`, `findable`) VALUES " +
-					"(?, ?, ?, ?)")) {
+					"(`key`, `name_format`, `findable`) VALUES " +
+					"(?, ?, ?)")) {
 				stmt.setString(1, key.toString());
-				stmt.setString(2, roadMap.getKey().toString());
-				stmt.setString(3, nameFormat);
-				stmt.setBoolean(4, findable);
+				stmt.setString(2, nameFormat);
+				stmt.setBoolean(3, findable);
 				stmt.executeUpdate();
 
 				NodeGroup group = new NodeGroup(key, nameFormat);
@@ -515,10 +511,9 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap) {
+	public HashedRegistry<NodeGroup> loadNodeGroups() {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups` WHERE `roadmap_key` = ?")) {
-				stmt.setString(1, roadMap.getKey().toString());
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups`")) {
 				try (ResultSet resultSet = stmt.executeQuery()) {
 					HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
 					while (resultSet.next()) {

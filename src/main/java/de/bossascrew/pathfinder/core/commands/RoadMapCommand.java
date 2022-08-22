@@ -185,8 +185,6 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		then(new LiteralArgument("edit")
 				.then(CustomArgs.roadMapArgument("roadmap")
-						.then(new NodeGroupCommand(1))
-
 						.then(new LiteralArgument("visualizer")
 								.withPermission("pathfinder.command.roadmap.set.path-visualizer")
 								.then(CustomArgs.pathVisualizerArgument("visualizer")

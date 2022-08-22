@@ -4,12 +4,11 @@ import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.Named;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.events.node.*;
-import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.node.implementation.PlayerNode;
 import de.bossascrew.pathfinder.core.node.implementation.Waypoint;
+import de.bossascrew.pathfinder.data.DataStorageException;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,9 +40,6 @@ public class RoadMap implements Keyed, Named {
 
 	private final Map<Integer, Node> nodes;
 	private final Collection<Edge> edges;
-	private final HashedRegistry<NodeGroup> groups;
-	private final Collection<Navigable> navigables;
-	private final Collection<Discoverable> discoverables;
 
 	private PathVisualizer visualizer;
 
@@ -57,11 +53,8 @@ public class RoadMap implements Keyed, Named {
 		this.nodeFindDistance = nodeFindDistance;
 		this.defaultBezierTangentLength = defaultBezierTangentLength;
 
-		this.groups = new HashedRegistry<>();
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();
-		this.navigables = new HashSet<>();
-		this.discoverables = new HashSet<>();
 
 		setVisualizer(visualizer);
 	}
@@ -71,29 +64,11 @@ public class RoadMap implements Keyed, Named {
 		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
-	public void loadGroups() {
-		groups.clear();
-		groups.putAll(PathPlugin.getInstance().getDatabase().loadNodeGroups(this));
-		for(var entry : PathPlugin.getInstance().getDatabase().loadSearchTerms().entrySet()) {
-			NodeGroup group = getNodeGroup(entry.getKey());
-			if(group == null) {
-				continue;
-			}
-			group.addSearchTerms(entry.getValue());
-		}
-	}
-
 	public void loadNodesAndEdges() {
 		nodes.clear();
-		PathPlugin.getInstance().getDatabase().loadNodes(this).values().forEach(node -> {
-			nodes.put(node.getNodeId(), node);
-			navigables.add(node);
-			if (node instanceof Discoverable discoverable) {
-				discoverables.add(discoverable);
-			}
-		});
+		nodes.putAll(PathPlugin.getInstance().getDatabase().loadNodes(this));
 		for(var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
-			NodeGroup group = getNodeGroup(entry.getKey());
+			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(entry.getKey());
 			if(group == null) {
 				continue;
 			}
@@ -160,7 +135,9 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public NavigateSelection getNavigables() {
-		return new NavigateSelection(this, navigables);
+		return new NavigateSelection(this, NodeGroupHandler.getInstance().getNodeGroups().stream()
+				.filter(group -> nodes.values().stream().anyMatch(group::contains))
+				.collect(Collectors.toSet()));
 	}
 
 	public NavigateSelection getNavigables(String... keywords) {
@@ -185,7 +162,7 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public <T extends Node> T createNode(NodeType<T> type, Vector vector) {
-		return createNode(type, vector, null, null);
+		return createNode(type, vector, null);
 	}
 
 	public <T extends Node> T createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
@@ -194,8 +171,9 @@ public class RoadMap implements Keyed, Named {
 				vector.getX(), vector.getY(), vector.getZ(), 3, permission);
 
 		addNode(node);
-		Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
-
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+			Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
+		});
 		return node;
 	}
 
@@ -220,11 +198,6 @@ public class RoadMap implements Keyed, Named {
 		}
 		node.setPosition(event.getNewPositionModified());
 		PathPlugin.getInstance().getDatabase().updateNode(node);
-		return true;
-	}
-
-	public boolean setGroupFindable(NodeGroup group, boolean findable) {
-		//TODO implement. Refreshes the findable collection.
 		return true;
 	}
 
@@ -257,10 +230,6 @@ public class RoadMap implements Keyed, Named {
 
 	public void addNode(Node node) {
 		nodes.put(node.getNodeId(), node);
-		navigables.add(node);
-		if (node instanceof Discoverable discoverable) {
-			discoverables.add(discoverable);
-		}
 	}
 
 	public @Nullable
@@ -273,54 +242,65 @@ public class RoadMap implements Keyed, Named {
 		return null;
 	}
 
-	public @Nullable
-	NodeGroup getNodeGroup(NamespacedKey key) {
-		if (key == null) {
-			return null;
-		}
-		return groups.get(key);
-	}
-
 	public Collection<Node> getNodesByGroup(NodeGroup group) {
 		return nodes.values().stream()
 				.filter(node -> node instanceof Groupable groupable && groupable.getGroups().contains(group))
 				.collect(Collectors.toSet());
 	}
 
-	public void removeNodeGroup(NodeGroup group) {
-		groups.remove(group.getKey());
-		navigables.remove(group);
-		discoverables.remove(group);
-
-		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
-
-		nodes.values().stream()
-				.filter(node -> node instanceof Groupable)
-				.map(node -> (Groupable) node)
-				.forEach(node -> node.removeGroup(group));
-	}
-
-	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable, String nameFormat) {
-
-		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(this, key, nameFormat, findable);
-		groups.put(group);
-		navigables.add(group);
-		if (group.isDiscoverable()) {
-			discoverables.add(group);
-		}
-		return group;
-	}
-
-
 	public Edge getEdge(Node start, Node end) {
 		return edges.stream().filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end)).findFirst().orElse(null);
 	}
 
-	/**
-	 * erstellt neue Edge in der Datenbank
-	 */
 	public Edge connectNodes(Node start, Node end) {
 		return connectNodes(start, end, false, 1, 1);
+	}
+
+	/**
+	 * Connects two nodes with an edge. Edges are stored directed, therefore it must be stated if the new node should
+	 * only be from start to end or also from end to start.
+	 * <p>
+	 * This method calls the corresponding {@link EdgesCreatedEvent}. This will always be called sync, so that the
+	 * method can be called async.
+	 *
+	 * @param start    The node to start the edge from.
+	 * @param end      The node to end the edge at.
+	 * @param directed If another edge should be created from end to start. Prefer this method against calling it twice,
+	 *                 as the edit mode particle setup has to be recalculated for each edge change.
+	 * @return the created edge from start to end.
+	 */
+	public Edge connectNodes(Node start, Node end, boolean directed) {
+		if (start.equals(end)) {
+			throw new IllegalArgumentException("Cannot connect node with itself.");
+		}
+		Edge edge;
+		try {
+			edge = PathPlugin.getInstance().getDatabase().createEdge(start, end, 1);
+		} catch (DataStorageException e) {
+			throw new IllegalArgumentException("Error while connecting edges: " + start + " and " + end, e);
+		}
+
+		start.getEdges().add(edge);
+		edges.add(edge);
+
+		Edge other = edge;
+		if (!directed) {
+			Edge existing = getEdge(end, start);
+			if (existing == null) {
+				try {
+					other = PathPlugin.getInstance().getDatabase().createEdge(end, start, 1);
+				} catch (DataStorageException e) {
+					throw new IllegalArgumentException("Error while connecting edges: " + start + " and " + end, e);
+				}
+				end.getEdges().add(other);
+				edges.add(other);
+			}
+		}
+
+		Edge finalOther = other;
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
+
+		return edge;
 	}
 
 	/**
@@ -417,9 +397,5 @@ public class RoadMap implements Keyed, Named {
 				.filter(edge -> edge.getStart().getNodeId() == aId && edge.getEnd().getNodeId() == bId)
 				.findAny()
 				.orElse(null);
-	}
-
-	public int getMaxFoundSize() {
-		return discoverables.size();
 	}
 }

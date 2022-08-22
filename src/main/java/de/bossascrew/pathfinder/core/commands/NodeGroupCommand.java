@@ -6,10 +6,12 @@ import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.bossascrew.pathfinder.core.node.NodeGroup;
+import de.bossascrew.pathfinder.core.node.NodeGroupHandler;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -30,7 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class NodeGroupCommand extends LiteralArgument {
+public class NodeGroupCommand extends CommandTree {
 
 	public NodeGroupCommand(int offset) {
 		super("nodegroups");
@@ -49,18 +51,18 @@ public class NodeGroupCommand extends LiteralArgument {
 				.withPermission(PathPlugin.PERM_CMD_NG_CREATE)
 				.then(new NamespacedKeyArgument("name")
 						.executesPlayer((player, objects) -> {
-							createGroup(player, objects[0] == null ? null : (RoadMap) objects[0], (NamespacedKey) objects[offset]);
+							createGroup(player, (NamespacedKey) objects[offset]);
 						})));
 
 		then(new LiteralArgument("delete")
 				.withPermission(PathPlugin.PERM_CMD_NG_DELETE)
-				.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+				.then(CustomArgs.nodeGroupArgument("group")
 						.executesPlayer((player, objects) -> {
-							deleteGroup(player, objects[0] == null ? null : (RoadMap) objects[0], (NodeGroup) objects[offset]);
+							deleteGroup(player, (NodeGroup) objects[offset]);
 						})));
 		then(new LiteralArgument("rename")
 				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
-				.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+				.then(CustomArgs.nodeGroupArgument("group")
 						.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
 								.executesPlayer((player, objects) -> {
 									renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
@@ -69,28 +71,28 @@ public class NodeGroupCommand extends LiteralArgument {
 		then(new LiteralArgument("search-terms")
 				.then(new LiteralArgument("add")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
-						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+						.then(CustomArgs.nodeGroupArgument("group")
 								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
 										.executesPlayer((player, objects) -> {
 											searchTermsAdd(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										}))))
 				.then(new LiteralArgument("remove")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
-						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+						.then(CustomArgs.nodeGroupArgument("group")
 								.then(CustomArgs.suggestCommaSeparatedList("search-terms")
 										.executesPlayer((player, objects) -> {
 											searchTermsRemove(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										}))))
 				.then(new LiteralArgument("list")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
-						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+						.then(CustomArgs.nodeGroupArgument("group")
 								.executesPlayer((player, objects) -> {
 									searchTermsList(player, (NodeGroup) objects[offset]);
 								}))));
 		then(new LiteralArgument("set")
 				.then(new LiteralArgument("findable")
 						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
-						.then(CustomArgs.nodeGroupArgument("group", offset == 0 ? null : 0)
+						.then(CustomArgs.nodeGroupArgument("group")
 								.then(new BooleanArgument("value")
 										.executesPlayer((player, objects) -> {
 											setFindable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
@@ -163,27 +165,21 @@ public class NodeGroupCommand extends LiteralArgument {
 				.build()), player);
 	}
 
-	public void deleteGroup(Player player, @Nullable RoadMap roadMap, NodeGroup group) {
-		if (roadMap == null) {
-			roadMap = CommandUtils.getSelectedRoadMap(player);
-		}
+	public void deleteGroup(Player player, NodeGroup group) {
 
-		roadMap.removeNodeGroup(group);
+		NodeGroupHandler.getInstance().removeNodeGroup(group);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
-	public void createGroup(Player player, @Nullable RoadMap roadMap, NamespacedKey key) {
-		if (roadMap == null) {
-			roadMap = CommandUtils.getSelectedRoadMap(player);
-		}
+	public void createGroup(Player player, NamespacedKey key) {
 
-		if (roadMap.getNodeGroup(key) != null) {
+		if (NodeGroupHandler.getInstance().getNodeGroup(key) != null) {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_ALREADY_EXISTS
 					.format(TagResolver.resolver("name", Tag.inserting(Component.text(key.toString())))), player);
 			return;
 		}
 
-		NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
+		NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
@@ -192,7 +188,7 @@ public class NodeGroupCommand extends LiteralArgument {
 			roadMap = CommandUtils.getSelectedRoadMap(player);
 		}
 
-		int pages = (int) Math.ceil(roadMap.getGroups().size() / 10.);
+		int pages = (int) Math.ceil(NodeGroupHandler.getInstance().getNodeGroups().size() / 10.);
 		pageInput = Integer.max(0, Integer.min(pageInput, pages));
 
 		TagResolver resolver = TagResolver.builder()
@@ -205,7 +201,7 @@ public class NodeGroupCommand extends LiteralArgument {
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
 
-		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(roadMap.getGroups().values()), pageInput, 10)) {
+		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), pageInput, 10)) {
 
 			TagResolver r = TagResolver.builder()
 					.tag("id", Tag.inserting(Component.text(group.getKey().toString())))

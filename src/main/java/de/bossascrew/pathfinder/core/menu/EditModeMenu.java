@@ -7,10 +7,7 @@ import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemoveEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.bossascrew.pathfinder.core.node.Groupable;
-import de.bossascrew.pathfinder.core.node.Node;
-import de.bossascrew.pathfinder.core.node.NodeGroup;
-import de.bossascrew.pathfinder.core.node.NodeType;
+import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapEditor;
 import de.bossascrew.pathfinder.util.ClientNodeHandler;
@@ -216,7 +213,7 @@ public class EditModeMenu {
 
 		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asTranslatable(), 4);
 		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
-		for (NodeGroup group : roadMap.getGroups().values()) {
+		for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
 
 			TagResolver resolver = TagResolver.builder()
 					.resolver(Placeholder.component("name", group.getDisplayName()))
@@ -305,10 +302,10 @@ public class EditModeMenu {
 
 		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
 			NamespacedKey key = AnvilInputValidator.VALIDATE_KEY.getInputParser().apply(s.getTarget());
-			if (key == null || roadMap.getNodeGroup(key) != null) {
+			if (key == null || NodeGroupHandler.getInstance().getNodeGroup(key) != null) {
 				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 			}
-			NodeGroup group = roadMap.createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
+			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
 			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 				NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
 				Bukkit.getPluginManager().callEvent(event);

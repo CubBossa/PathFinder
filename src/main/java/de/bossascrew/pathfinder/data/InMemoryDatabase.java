@@ -3,6 +3,7 @@ package de.bossascrew.pathfinder.data;
 import de.bossascrew.pathfinder.core.node.NodeType;
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
@@ -141,15 +142,15 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable) {
 		log("Create Nodegroup");
 		return new NodeGroup(key, nameFormat);
 	}
 
 	@Override
-	public Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap) {
+	public HashedRegistry<NodeGroup> loadNodeGroups() {
 		log("Load Nodegroups");
-		return new HashMap<>();
+		return new HashedRegistry<>();
 	}
 
 	@Override

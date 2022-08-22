@@ -3,19 +3,18 @@ package de.bossascrew.pathfinder;
 import co.aikar.commands.*;
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.core.commands.CancelPathCommand;
+import de.bossascrew.pathfinder.core.commands.NodeGroupCommand;
 import de.bossascrew.pathfinder.core.commands.PathFinderCommand;
 import de.bossascrew.pathfinder.core.commands.RoadMapCommand;
 import de.bossascrew.pathfinder.core.configuration.Configuration;
 import de.bossascrew.pathfinder.core.listener.DatabaseListener;
 import de.bossascrew.pathfinder.core.listener.PlayerListener;
-import de.bossascrew.pathfinder.core.node.Navigable;
-import de.bossascrew.pathfinder.core.node.NavigateSelection;
-import de.bossascrew.pathfinder.core.node.NodeGroup;
-import de.bossascrew.pathfinder.core.node.NodeTypeHandler;
+import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.data.*;
 import de.bossascrew.pathfinder.module.Module;
+import de.bossascrew.pathfinder.module.maze.MazeCommand;
 import de.bossascrew.pathfinder.module.visualizing.FindModule;
 import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import de.bossascrew.pathfinder.module.visualizing.command.FindCommand;
@@ -163,10 +162,13 @@ public class PathPlugin extends JavaPlugin {
 		new RoadMapCommand().register();
 		new PathFinderCommand().register();
 		new CancelPathCommand().register();
+		new NodeGroupCommand(0).register();
 		new PathVisualizerCommand(0).register();
+		new MazeCommand().register();
 
 		new FindModule(this);
 
+		new NodeGroupHandler().loadGroups();
 		new VisualizerHandler();
 		new NodeTypeHandler();
 		new PathPlayerHandler();

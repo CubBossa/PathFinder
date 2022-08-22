@@ -74,9 +74,9 @@ public class DiscoverHandler {
 		for (Discoverable discoverable : getDiscovered(uuid, roadMap)) {
 			count += discoverable.getDiscoveringWeight();
 		}
-		for (Discoverable discoverable : roadMap.getDiscoverables()) {
+		/* TODO for (Discoverable discoverable : roadMap.getDiscoverables()) {
 			sum += discoverable.getDiscoveringWeight();
-		}
+		}*/
 		return count / (float) sum;
 	}
 

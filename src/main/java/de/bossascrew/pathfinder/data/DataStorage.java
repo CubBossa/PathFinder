@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
@@ -75,9 +76,9 @@ public interface DataStorage {
 
 	Map<NamespacedKey, List<Integer>> loadNodeGroupNodes();
 
-	NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable);
+	NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable);
 
-	Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap);
+	HashedRegistry<NodeGroup> loadNodeGroups();
 
 	void updateNodeGroup(NodeGroup group);
 

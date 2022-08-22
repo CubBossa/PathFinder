@@ -174,12 +174,12 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(RoadMap roadMap, NamespacedKey key, String nameFormat, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable) {
 		return null;
 	}
 
 	@Override
-	public Map<NamespacedKey, NodeGroup> loadNodeGroups(RoadMap roadMap) {
+	public HashedRegistry<NodeGroup> loadNodeGroups() {
 		return null;
 	}
 
