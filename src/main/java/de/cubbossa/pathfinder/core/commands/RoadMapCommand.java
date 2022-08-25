@@ -178,7 +178,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						.withPermission("pathfinder.command.roadmap.set.curvelength")
 						.then(new DoubleArgument("curvelength", 0)
 								.executes((commandSender, args) -> {
-									onChangeTangentStrength(commandSender, (Double) args[0]);
+									onChangeTangentStrength(commandSender, null, (Double) args[0]);
 								}))));
 
 		then(new LiteralArgument("edit")
@@ -226,7 +226,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 								.withPermission("pathfinder.command.roadmap.set.curvelength")
 								.then(new DoubleArgument("curvelength", 0)
 										.executes((commandSender, args) -> {
-											onChangeTangentStrength(commandSender, (Double) args[1]);
+											onChangeTangentStrength(commandSender, (RoadMap) args[0], (Double) args[1]);
 										})))));
 	}
 
@@ -423,8 +423,9 @@ public class RoadMapCommand extends CommandTree implements Listener {
 				.build()), sender);
 	}
 
-	public void onChangeTangentStrength(CommandSender sender, double strength) throws WrapperCommandSyntaxException {
-		RoadMap roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
+	public void onChangeTangentStrength(CommandSender sender, @Nullable RoadMap roadMap, double strength) throws WrapperCommandSyntaxException {
+		roadMap = roadMap != null ? roadMap : CustomArgs.resolveRoadMapWrappedException(sender);
+		RoadMapHandler.getInstance().setDefaultCurveLength(roadMap, strength);
 		roadMap.setDefaultBezierTangentLength(strength);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_CURVED.format(TagResolver.builder()
 				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))

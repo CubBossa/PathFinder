@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.data.DataStorage;
@@ -30,6 +31,11 @@ public class DatabaseListener implements Listener {
 	@EventHandler
 	public void onRoadMapDeleted(RoadMapDeletedEvent event) {
 		data.deleteRoadMap(event.getRoadMap().getKey());
+	}
+
+	@EventHandler
+	public void onRoadMapDefaultCurveLengthChanged(RoadMapCurveLengthChangedEvent event) {
+		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler

@@ -48,7 +48,9 @@ public class NodeUtils {
 		Vector end = endNode.getPosition();
 		Vector prev = nodes[nodes.length - 2].getPosition();
 		Vector endDir = end.clone().subtract(prev).normalize().multiply(path.get(endNode));
-		vectors.add(new BezierVector(PathPlugin.SPLINES.convertToVector(end), PathPlugin.SPLINES.convertToVector(end.clone().add(endDir).multiply(-1)), PathPlugin.SPLINES.convertToVector(prev.clone().add(endDir))));
+		vectors.add(new BezierVector(PathPlugin.SPLINES.convertToVector(end),
+				PathPlugin.SPLINES.convertToVector(end.clone().add(endDir)),
+				PathPlugin.SPLINES.convertToVector(end.clone().subtract(endDir))));
 
 		return vectors;
 	}

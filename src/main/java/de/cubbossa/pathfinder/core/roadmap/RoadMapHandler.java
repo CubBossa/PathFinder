@@ -1,13 +1,14 @@
 package de.cubbossa.pathfinder.core.roadmap;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.StringUtils;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -102,5 +103,11 @@ public class RoadMapHandler {
 
 	public void cancelAllEditModes() {
 		roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
+	}
+
+	public void setDefaultCurveLength(RoadMap roadMap, double value) {
+		double old = roadMap.getDefaultBezierTangentLength();
+		roadMap.setDefaultBezierTangentLength(value);
+		Bukkit.getPluginManager().callEvent(new RoadMapCurveLengthChangedEvent(roadMap, old, value));
 	}
 }

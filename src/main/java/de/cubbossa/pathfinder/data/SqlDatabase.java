@@ -380,7 +380,11 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setDouble(4, y);
 				stmt.setDouble(5, z);
 				stmt.setString(6, permission);
-				stmt.setDouble(7, tangentLength);
+				if (tangentLength == null) {
+					stmt.setNull(7, Types.DOUBLE);
+				} else {
+					stmt.setDouble(7, tangentLength);
+				}
 				stmt.executeUpdate();
 
 				try (ResultSet res = stmt.getGeneratedKeys()) {
