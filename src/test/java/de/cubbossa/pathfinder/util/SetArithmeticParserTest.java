@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.util.SetArithmeticParser;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

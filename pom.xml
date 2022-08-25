@@ -49,6 +49,8 @@
                             <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
                             <include>de.cubbossa:Translations</include>
                             <include>de.cubbossa:SplineLib</include>
+                            <include>de.cubbossa:NBO-Core</include>
+                            <include>de.cubbossa:SerializedEffects</include>
                             <include>org.bstats</include>
                             <include>xyz.xenondevs:particle</include>
                             <include>org.jgrapht:jgrapht-core</include>
@@ -60,6 +62,14 @@
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.cubbossa.serializedeffects</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.serializedeffects</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.cubbossa.nbo</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.nbo</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>net.kyori</pattern>
@@ -215,6 +225,12 @@
             <groupId>de.cubbossa</groupId>
             <artifactId>Translations</artifactId>
             <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.cubbossa</groupId>
+            <artifactId>NBO-Core</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

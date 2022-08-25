@@ -2,14 +2,18 @@
 <with EffectPlayer as de.cubbossa.pathfinder.serializedeffects.effects.EffectPlayer>
 <with Title as de.cubbossa.pathfinder.serializedeffects.effects.TitlePlayer>
 <with ActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ActionBarPlayer>
+<with ResetTitle as de.cubbossa.pathfinder.serializedeffects.effects.ResetTitle>
+<with ResetActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ResetActionBar>
 
 
 discover := EffectPlayer {
     delay_0: [
-        Sound {sound: 'minecraft:minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f},
+        ResetActionBar {},
+        ResetTitle {},
+        Sound { sound: 'minecraft:minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f },
         Title {
             title: "", subtitle: "<msg:blablabla>",
-            fade-in-ticks: 5, stay-ticks 20, fade-out-ticks: 5
+            fade-in-ticks: 5, stay-ticks: 20, fade-out-ticks: 5
         },
         ActionBar {text: "<msg:blablabla>"}
     ]
