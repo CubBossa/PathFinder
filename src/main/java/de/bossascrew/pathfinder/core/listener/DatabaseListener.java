@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.core.listener;
 
-import de.bossascrew.pathfinder.core.events.node.EdgeDeletedEvent;
+import de.bossascrew.pathfinder.core.events.node.EdgesDeletedEvent;
+import de.bossascrew.pathfinder.core.events.node.NodesDeletedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
@@ -32,8 +33,13 @@ public class DatabaseListener implements Listener {
 	}
 
 	@EventHandler
-	public void onEdgeDeleted(EdgeDeletedEvent event) {
-		data.deleteEdge(event.getEdge());
+	public void onNodesDeleted(NodesDeletedEvent event) {
+		data.deleteNodes(event.getNodes().stream().map(Node::getNodeId).collect(Collectors.toSet()));
+	}
+
+	@EventHandler
+	public void onEdgeDeleted(EdgesDeletedEvent event) {
+		data.deleteEdges(event.getEdges());
 	}
 
 	@EventHandler

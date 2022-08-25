@@ -27,6 +27,7 @@ public class MazeConverter {
 
 	private void placePattern(Location location, MazePattern pattern, short mask) {
 		switch (mask) {
+			case 0 -> pattern.placeNone(location);
 			case 1 -> pattern.placeNorth(location);
 			case 1 + 2 -> pattern.placeNorthEast(location);
 			case 1 + 2 + 4 -> pattern.placeNorthEastSouth(location);

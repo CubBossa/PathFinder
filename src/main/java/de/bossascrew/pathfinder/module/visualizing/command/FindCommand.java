@@ -1,8 +1,11 @@
 package de.bossascrew.pathfinder.module.visualizing.command;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
-import de.bossascrew.pathfinder.core.node.*;
+import de.bossascrew.pathfinder.core.node.NavigateSelection;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.module.visualizing.FindModule;
+import de.bossascrew.pathfinder.util.CommandUtils;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 
@@ -99,10 +102,10 @@ public class FindCommand extends CommandTree {
 
     private void openStyleMenu(Player player, PathPlayer pathPlayer, RoadMap roadMap) {
         RectInventoryMenu menu = new RectInventoryMenu(Component.text("Wähle deinen Partikelstyle"), 3);
-        SimpleCurveVisualizer actual = pathPlayer.getVisualizer(roadMap);
+        ParticleVisualizer actual = pathPlayer.getVisualizer(roadMap);
 
-        Collection<SimpleCurveVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
-        for (SimpleCurveVisualizer visualizer : visualizers) {
+        Collection<ParticleVisualizer> visualizers = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
+        for (ParticleVisualizer visualizer : visualizers) {
             String perm = visualizer.getPermission();
 
             boolean hasPerm = perm == null || player.hasPermission(perm);

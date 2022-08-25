@@ -21,7 +21,7 @@ public abstract class Visualizer implements PathVisualizer {
 	@Nullable
 	private String permission = null;
 	private ItemStack displayItem = new ItemStack(Material.REDSTONE);
-
+	private int tickDelay = 1;
 
 	public Visualizer(NamespacedKey key, String nameFormat) {
 		this.key = key;

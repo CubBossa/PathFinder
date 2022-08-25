@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.util;
 
-import co.aikar.commands.ConditionFailedException;
 import de.bossascrew.pathfinder.data.PathPlayer;
 import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
@@ -34,7 +33,7 @@ public class CommandUtils {
             if (!cancelIfUnselected) {
                 return null;
             }
-            throw new ConditionFailedException("You have to select a roadmap. (/roadmap select <roadmap>)");
+            throw new RuntimeException("You have to select a roadmap. (/roadmap select <roadmap>)");
         }
         RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pplayer.getSelectedRoadMap());
         return roadMap;

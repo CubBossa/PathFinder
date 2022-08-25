@@ -1,34 +1,153 @@
 package de.bossascrew.pathfinder.core.commands;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
 import de.bossascrew.pathfinder.core.node.Groupable;
 import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.core.node.NodeType;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.util.CommandUtils;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.arguments.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-@CommandAlias("waypoint|node|findable")
-public class WaypointCommand extends BaseCommand {
+public class WaypointCommand extends CommandTree {
 
-	@Subcommand("info")
-	@Syntax("<Node>")
-	@CommandPermission("pathfinder.command.waypoint.info")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
+	public WaypointCommand() {
+		super("waypoint");
+
+		withAliases("node");
+
+		then(new LiteralArgument("info")
+				.withPermission(PathPlugin.PERM_CMD_WP_INFO)
+				.then(CustomArgs.nodeSelectionArgument("nodes")
+						.executesPlayer((player, objects) -> {
+							onInfo(player, (NodeSelection) objects[0]);
+						})
+				)
+		);
+		then(new LiteralArgument("list")
+				.withPermission(PathPlugin.PERM_CMD_WP_LIST)
+				.executesPlayer((player, objects) -> {
+					onList(player, 1);
+				})
+				.then(new IntegerArgument("page", 1)
+						.executesPlayer((player, objects) -> {
+							onList(player, (Integer) objects[0]);
+						})
+				)
+		);
+		then(new LiteralArgument("create")
+				.withPermission(PathPlugin.PERM_CMD_WP_CREATE)
+				.executesPlayer((player, objects) -> {
+					onCreate(player, RoadMapHandler.WAYPOINT_TYPE, player.getLocation().toVector().add(new Vector(0, 1, 0)));
+				})
+				.then(new LocationArgument("location")
+						.executesPlayer((player, objects) -> {
+							onCreate(player, RoadMapHandler.WAYPOINT_TYPE, ((Location) objects[0]).toVector());
+						})
+				)
+				.then(CustomArgs.nodeTypeArgument("type")
+						.executesPlayer((player, objects) -> {
+							onCreate(player, (NodeType<? extends Node>) objects[0], player.getLocation().toVector().add(new Vector(0, 1, 0)));
+						})
+						.then(new LocationArgument("location")
+								.executesPlayer((player, objects) -> {
+									onCreate(player, (NodeType<? extends Node>) objects[0], ((Location) objects[1]).toVector());
+								})
+						)
+				)
+		);
+		then(new LiteralArgument("delete")
+				.withPermission(PathPlugin.PERM_CMD_WP_DELETE)
+				.then(CustomArgs.nodeSelectionArgument("nodes")
+						.executesPlayer((player, objects) -> {
+							onDelete(player, (NodeSelection) objects[0]);
+						})
+				)
+		);
+		then(new LiteralArgument("tphere")
+				.withPermission(PathPlugin.PERM_CMD_WP_TPHERE)
+				.then(CustomArgs.nodeSelectionArgument("nodes")
+						.executesPlayer((player, objects) -> {
+							onTphere(player, (NodeSelection) objects[0]);
+						})
+				)
+		);
+		then(new LiteralArgument("tp")
+				.withPermission(PathPlugin.PERM_CMD_WP_TP)
+				.then(CustomArgs.nodeSelectionArgument("nodes")
+						.then(new LocationArgument("location", LocationType.PRECISE_POSITION)
+								.executesPlayer((player, objects) -> {
+									onTp(player, (NodeSelection) objects[0], (Location) objects[1]);
+								})
+						)
+				)
+		);
+		then(new LiteralArgument("connect")
+				.withPermission(PathPlugin.PERM_CMD_WP_CONNECT)
+				.then(CustomArgs.nodeSelectionArgument("start")
+						.then(CustomArgs.nodeGroupArgument("end")
+								.executesPlayer((player, objects) -> {
+									onConnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
+								})
+						)
+				)
+		);
+		then(new LiteralArgument("disconnect")
+				.withPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
+				.then(CustomArgs.nodeSelectionArgument("start")
+						.executesPlayer((player, objects) -> {
+							onDisconnect(player, (NodeSelection) objects[0], null);
+						})
+						.then(CustomArgs.nodeGroupArgument("end")
+								.executesPlayer((player, objects) -> {
+									onDisconnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
+								})
+						)
+				)
+
+		);
+		then(new LiteralArgument("set")
+				.then(new LiteralArgument("permission")
+						.withPermission(PathPlugin.PERM_CMD_WP_SET_PERM)
+						.then(CustomArgs.nodeSelectionArgument("nodes")
+								.then(new GreedyStringArgument("permission").includeSuggestions(ArgumentSuggestions.strings("null"))
+										.executesPlayer((player, objects) -> {
+											onSetPermission(player, (NodeSelection) objects[0], (String) objects[1]);
+										})
+								)
+						)
+				)
+				.then(new LiteralArgument("curve-length")
+						.withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
+						.then(CustomArgs.nodeSelectionArgument("nodes")
+								.then(new DoubleArgument("length", 0.001)
+										.executesPlayer((player, objects) -> {
+											onSetTangent(player, (NodeSelection) objects[0], (Double) objects[1]);
+										})
+								)
+						)
+				)
+		);
+	}
+
+
 	public void onInfo(Player player, NodeSelection selection) {
 
 		if (selection.size() > 1) {
@@ -51,32 +170,21 @@ public class WaypointCommand extends BaseCommand {
 		TranslationHandler.getInstance().sendMessage(message, player);
 	}
 
-	@Subcommand("create default")
-	@Syntax("<type>")
-	@CommandPermission("pathfinder.command.waypoint.create")
-	public void onCreate(Player player) {
+	public void onCreate(Player player, NodeType<? extends Node> type, Vector location) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
-		Node node = roadMap.createNode(null, player.getLocation().toVector().add(new Vector(0, 1, 0)));
-		//TODO save to database obvsly
+		Node node = roadMap.createNode(type, location);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
 				.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);
 	}
 
-	@Subcommand("delete")
-	@Syntax("<nodes>")
-	@CommandPermission("pathfinder.command.waypoint.delete")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onDelete(Player player, NodeSelection selection) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
-		selection.forEach(roadMap::removeNode);
+		roadMap.removeNodes(selection);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE
 				.format(TagResolver.resolver("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
 	}
 
-	@Subcommand("tphere")
-	@Syntax("<nodes>")
-	@CommandPermission("pathfinder.command.waypoint.tphere")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onTphere(Player player, NodeSelection selection) {
 		if (selection.size() == 0) {
 			return;
@@ -94,31 +202,17 @@ public class WaypointCommand extends BaseCommand {
 				.build()), player);
 	}
 
-	@Subcommand("tp")
-	@Syntax("<nodes> <x> <y> <z>")
-	@CommandPermission("pathfinder.command.waypoint.tp")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " 0|~ 0|~ 0|~")
-	public void onTp(Player player, NodeSelection selection, String xS, String yS, String zS) {
+	public void onTp(Player player, NodeSelection selection, Location location) {
 
-		selection.forEach(node -> {
-			double x = xS.startsWith("~") ? Double.parseDouble(xS.substring(1)) + node.getPosition().getX() : Double.parseDouble(xS);
-			double y = xS.startsWith("~") ? Double.parseDouble(yS.substring(1)) + node.getPosition().getY() : Double.parseDouble(yS);
-			double z = xS.startsWith("~") ? Double.parseDouble(zS.substring(1)) + node.getPosition().getZ() : Double.parseDouble(zS);
-			Vector v = new Vector(x, y, z);
-			node.setPosition(v);
-		});
+		selection.forEach(node -> node.setPosition(location.toVector()));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("location", Tag.inserting(Messages.formatVector(xS, yS, zS)))
+				.tag("location", Tag.inserting(Messages.formatVector(location.toVector())))
 				.build()), player);
 	}
 
-	@Subcommand("list")
-	@Syntax("[<page>]")
-	@CommandPermission("pathfinder.command.waypoint.list")
-	public void onList(Player player, @Optional Integer pageInput) {
-		pageInput = pageInput == null ? 0 : pageInput;
+	public void onList(Player player, int pageInput) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 		TagResolver resolver = TagResolver.builder()
@@ -148,10 +242,6 @@ public class WaypointCommand extends BaseCommand {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_LIST_FOOTER.format(resolver), player);
 	}
 
-	@Subcommand("connect")
-	@Syntax("<node> <node>")
-	@CommandPermission("pathfinder.command.waypoint.connect")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " " + PathPlugin.COMPLETE_NODE_SELECTION)
 	public void onConnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
 
 		for (Node start : startSelection) {
@@ -175,13 +265,13 @@ public class WaypointCommand extends BaseCommand {
 		}
 	}
 
-	@Subcommand("disconnect")
-	@Syntax("<node> <node>")
-	@CommandPermission("pathfinder.command.waypoint.disconnect")
-	@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " " + PathPlugin.COMPLETE_NODE_SELECTION)
-	public void onDisconnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
+	public void onDisconnect(Player player, NodeSelection startSelection, @Nullable NodeSelection endSelection) {
 
 		for (Node start : startSelection) {
+			if (endSelection == null) {
+				RoadMapHandler.getInstance().getRoadMap(start.getRoadMapKey()).disconnectNode(start);
+				continue;
+			}
 			for (Node end : endSelection) {
 				TagResolver resolver = TagResolver.builder()
 						.tag("start", Tag.inserting(Component.text(start.getNodeId())))
@@ -194,32 +284,21 @@ public class WaypointCommand extends BaseCommand {
 		}
 	}
 
-	@Subcommand("set")
-	public class WaypointSetCommand extends BaseCommand {
+	public void onSetPermission(Player player, NodeSelection selection, String perm) {
+		selection.forEach(node -> node.setPermission(perm.equalsIgnoreCase("null") ? null : perm));
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_PERMISSION.format(TagResolver.builder()
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
+				.tag("permission", Tag.inserting(Component.text(perm)))
+				.build()), player);
+	}
 
-		@Subcommand("permission")
-		@Syntax("<nodes> <permission>")
-		@CommandPermission("pathfinder.command.waypoint.setpermission")
-		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " null|some.custom.permission")
-		public void onSetPermission(Player player, NodeSelection selection, @Single String perm) {
-			selection.forEach(node -> node.setPermission(perm.equalsIgnoreCase("null") ? null : perm));
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_PERMISSION.format(TagResolver.builder()
-					.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-					.tag("permission", Tag.inserting(Component.text(perm)))
-					.build()), player);
-		}
-
-		@Subcommand("curve-length")
-		@Syntax("<nodes> <length>")
-		@CommandPermission("pathfinder.command.waypoint.setcurvelength")
-		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION)
-		public void onSetTangent(Player player, NodeSelection selection, Double strength) {
-			selection.forEach(node -> node.setCurveLength(strength));
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
-					.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-					.tag("length", Tag.inserting(Component.text(strength)))
-					.build()), player);
-		}
+	public void onSetTangent(Player player, NodeSelection selection, Double strength) {
+		selection.forEach(node -> node.setCurveLength(strength));
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
+				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
+				.tag("length", Tag.inserting(Component.text(strength)))
+				.build()), player);
+	}
 
 		/*TODO @Subcommand("group")
 		@Syntax("<nodes> <group>")
@@ -240,5 +319,4 @@ public class WaypointCommand extends BaseCommand {
 			selection.forEach(node -> node.setGroupKey(key));
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_GROUP.format(resolver), sender);
 		}*/
-	}
 }

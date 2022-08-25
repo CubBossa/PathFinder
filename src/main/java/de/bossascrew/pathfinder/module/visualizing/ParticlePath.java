@@ -1,10 +1,12 @@
 package de.bossascrew.pathfinder.module.visualizing;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.data.PathPlayer;
-import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
+import de.bossascrew.pathfinder.data.PathPlayer;
+import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.splinelib.util.Spline;
 import lombok.Getter;
@@ -15,8 +17,11 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Getter
 public class ParticlePath extends ArrayList<Node> {
@@ -40,7 +45,11 @@ public class ParticlePath extends ArrayList<Node> {
     public void prepare(List<Node> path) {
         calculatedPoints.clear();
 
-        Spline spline = visualizer.makeSpline(path);
+        Spline spline = visualizer.makeSpline(path.stream().collect(Collectors.toMap(
+                o -> o,
+                o -> o.getCurveLength() == null ? RoadMapHandler.getInstance().getRoadMap(o.getRoadMapKey()).getDefaultBezierTangentLength() : o.getCurveLength(),
+                (aDouble, aDouble2) -> aDouble,
+                LinkedHashMap::new)));
         List<Vector> curve = visualizer.interpolate(spline);
         calculatedPoints.addAll(visualizer.transform(curve).stream().map(vector -> vector.toLocation(roadMap.getWorld())).toList());
     }
@@ -59,15 +68,15 @@ public class ParticlePath extends ArrayList<Node> {
             }
             this.active = true;
 
+            AtomicInteger interval = new AtomicInteger(0);
             task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
                 Player searching = Bukkit.getPlayer(uuid);
                 if (searching == null) {
                     return;
                 }
                 long fullTime = roadMap.getWorld().getFullTime();
-                for (int i = 0; i < calculatedPoints.size(); i++) {
-                    visualizer.playParticle(searching, calculatedPoints.get(i), i, fullTime);
-                }
+
+                visualizer.play(calculatedPoints, new PathVisualizer.VisualizerContext(Lists.newArrayList(searching), interval.getAndIncrement(), fullTime));
             }, 0L, visualizer.getTickDelay());
         });
     }

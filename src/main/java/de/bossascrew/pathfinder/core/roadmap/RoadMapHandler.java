@@ -62,7 +62,7 @@ public class RoadMapHandler {
 				StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()),
 				world,
 				findableNodes,
-				VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer());
+				VisualizerHandler.getInstance().getDefaultParticleVisualizer());
 		roadMaps.put(rm);
 		return rm;
 	}

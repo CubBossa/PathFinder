@@ -2,6 +2,7 @@ package de.bossascrew.pathfinder.util;
 
 import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.core.node.Node;
+import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -101,9 +102,10 @@ public class SelectionUtils {
 			SELECT_KEY_SORT
 	);
 
-	public static NodeSelection getNodeSelection(Player player, Collection<Node> input, String selectString) {
+	public static NodeSelection getNodeSelection(Player player, String selectString) {
 		return new SelectionParser<>(SELECTORS, string -> new PlayerContext(string, player), "n", "node")
-				.parseSelection(input, selectString, NodeSelection::new);
+				.parseSelection(RoadMapHandler.getInstance().getRoadMaps().values().stream()
+						.flatMap(roadMap -> roadMap.getNodes().stream()).collect(Collectors.toSet()), selectString, NodeSelection::new);
 	}
 
 	public static List<String> completeNodeSelection(String selectString) {

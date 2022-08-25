@@ -23,6 +23,8 @@ import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Getter
@@ -74,6 +76,10 @@ public class RoadMap implements Keyed, Named {
 			}
 			for(int i : entry.getValue()) {
 				Node node = nodes.get(i);
+				if(node == null) {
+					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null: " + i);
+					continue;
+				}
 				group.add(node);
 				if(!(node instanceof Groupable groupable)) {
 					continue;
@@ -89,53 +95,57 @@ public class RoadMap implements Keyed, Named {
 		}
 	}
 
-	public Graph<Node, Edge> toGraph(PlayerNode player) {
+	public Graph<Node, Edge> toGraph(@Nullable PlayerNode player) {
 		Graph<Node, Edge> graph = new SimpleDirectedWeightedGraph<>(Edge.class);
 		nodes.values().forEach(graph::addVertex);
 		edges.forEach(e -> graph.addEdge(e.getStart(), e.getEnd(), e));
 		edges.forEach(e -> graph.setEdgeWeight(e, e.getWeightedLength()));
 
-		Vector playerPosition = player.getPosition();
-		graph.addVertex(player);
-		List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
-				.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(playerPosition)))
-				.sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
-				.limit(10)
-				.map(e -> {
-					Node n = e.getKey();
-					Vector dir = n.getPosition().clone().add(new Vector(0, .5f, 0)).subtract(playerPosition);
-					double length = dir.length();
-					dir.normalize();
-					Location loc = player.getLocation().setDirection(dir);
-					int count = 1;
-					BlockIterator iterator = new BlockIterator(loc, 0, (int) length);
-					while (iterator.hasNext()) {
-						Block block = iterator.next();
-						if (block.getType().isBlock() && block.getType().isSolid()) {
-							count++;
+		if(player != null) {
+			Vector playerPosition = player.getPosition();
+			graph.addVertex(player);
+			List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
+					.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(playerPosition)))
+					.sequential()
+					.sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
+					.limit(10)
+					.map(e -> {
+						Node n = e.getKey();
+						Vector dir = n.getPosition().clone().add(new Vector(0, .5f, 0)).subtract(playerPosition);
+						double length = dir.length();
+						dir.normalize();
+						Location loc = player.getLocation().setDirection(dir);
+						int count = 1;
+
+						BlockIterator iterator = new BlockIterator(loc, 0, (int) length);
+						int cancel = 0; // sometimes the while loop does not cancel without extra counter
+						while (iterator.hasNext() && cancel++ < 100) {
+							Block block = iterator.next();
+							if (block.getType().isBlock() && block.getType().isSolid()) {
+								count++;
+							}
 						}
-					}
-					return new Triple<>(n, length, count);
-				})
-				.collect(Collectors.toList());
+						return new Triple<>(n, length, count);
+					})
+					.collect(Collectors.toList());
 
-		boolean anyNullCount = triples.stream().anyMatch(e -> e.getThird() == 0);
+			boolean anyNullCount = triples.stream().anyMatch(e -> e.getThird() == 1);
 
-		triples.stream()
-				.filter(e -> !anyNullCount || e.getThird() == 0)
-				.forEach(e -> {
-					System.out.println(e.getFirst().getNodeId() + " -> " + e.getThird());
+			triples.stream()
+					.filter(e -> !anyNullCount || e.getThird() == 1)
+					.forEach(e -> {
 
-					Edge edge = new Edge(player, e.getFirst(), e.getThird() * 100);
-					graph.addEdge(player, e.getFirst(), edge);
-					graph.setEdgeWeight(edge, e.getSecond() * edge.getWeightModifier());
-				});
+						Edge edge = new Edge(player, e.getFirst(), e.getThird() * 10_000); // prefer paths without interfering blocks
+						graph.addEdge(player, e.getFirst(), edge);
+						graph.setEdgeWeight(edge, e.getSecond() * edge.getWeightModifier());
+					});
+		}
 
 		return graph;
 	}
 
 	public NavigateSelection getNavigables() {
-		return new NavigateSelection(this, NodeGroupHandler.getInstance().getNodeGroups().stream()
+		return new NavigateSelection(NodeGroupHandler.getInstance().getNodeGroups().stream()
 				.filter(group -> nodes.values().stream().anyMatch(group::contains))
 				.collect(Collectors.toSet()));
 	}
@@ -154,7 +164,7 @@ public class RoadMap implements Keyed, Named {
 					}
 					return false;
 				})
-				.collect(Collectors.toCollection(() -> new NavigateSelection(this)));
+				.collect(Collectors.toCollection(NavigateSelection::new));
 	}
 
 	public Waypoint createWaypoint(Vector vector) {
@@ -168,13 +178,17 @@ public class RoadMap implements Keyed, Named {
 	public <T extends Node> T createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
 
 		T node = PathPlugin.getInstance().getDatabase().createNode(this, type, Arrays.stream(groups).filter(Objects::nonNull).toList(),
-				vector.getX(), vector.getY(), vector.getZ(), 3, permission);
+				vector.getX(), vector.getY(), vector.getZ(), null, permission);
 
 		addNode(node);
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 			Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
 		});
 		return node;
+	}
+
+	public void addNode(Node node) {
+		nodes.put(node.getNodeId(), node);
 	}
 
 	/**
@@ -202,34 +216,33 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public void removeNodes(NodeSelection selection) {
-		for (Node node : selection) {
-			removeNode(node);
-		}
+		removeNodes(selection.toArray(Node[]::new));
 	}
 
-	public void removeNode(int id) {
+	public void removeNodes(int id) {
 		Node node = getNode(id);
 		if (node != null) {
-			removeNode(node);
+			removeNodes(node);
 		}
 	}
 
-	public void removeNode(Node node) {
-		for (Edge edge : getEdgesAt(node)) {
-			edge.getEnd().getEdges().remove(edge);
-			edges.remove(edge);
+	public void removeNodes(Node... nodes) {
+		Collection<Edge> deleteEdges = new HashSet<>();
+		Collection<Node> deleteNodes = Lists.newArrayList(nodes);
 
-			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge)));
+		for (Node node : nodes) {
+			for (Edge edge : getEdgesAt(node)) {
+				edge.getEnd().getEdges().remove(edge);
+				edges.remove(edge);
+
+				deleteEdges.add(edge);
+			}
+			this.nodes.remove(node.getNodeId());
 		}
-
-		nodes.remove(node.getNodeId());
-		PathPlugin.getInstance().getDatabase().deleteNode(node.getNodeId());
-
-		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new NodeDeletedEvent(node)));
-	}
-
-	public void addNode(Node node) {
-		nodes.put(node.getNodeId(), node);
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+			Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(deleteEdges));
+			Bukkit.getPluginManager().callEvent(new NodesDeletedEvent(deleteNodes));
+		});
 	}
 
 	public @Nullable
@@ -342,7 +355,6 @@ public class RoadMap implements Keyed, Named {
 		Edge finalOther = other;
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
 
-
 		return edge;
 	}
 
@@ -351,7 +363,7 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public void disconnectNode(Node node) {
-
+		node.getEdges().forEach(this::disconnectNodes);
 	}
 
 	public void disconnectNodes(Edge edge) {
@@ -362,7 +374,7 @@ public class RoadMap implements Keyed, Named {
 		edge.getEnd().getEdges().remove(edge);
 		edges.remove(edge);
 
-		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgeDeletedEvent(edge)));
+		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(edge)));
 	}
 
 	public void delete() {
@@ -397,5 +409,35 @@ public class RoadMap implements Keyed, Named {
 				.filter(edge -> edge.getStart().getNodeId() == aId && edge.getEnd().getNodeId() == bId)
 				.findAny()
 				.orElse(null);
+	}
+
+	public RoadMapBatchEditor getBatchEditor() {
+		AtomicBoolean closed = new AtomicBoolean(false);
+
+		return new RoadMapBatchEditor() {
+			@Override
+			public <T extends Node> void createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
+				if (closed.get()) {
+					throw new IllegalStateException("Batch Editor already closed.");
+				}
+			}
+
+			@Override
+			public void commit() {
+				if (closed.get()) {
+					throw new IllegalStateException("Batch Editor already closed.");
+				}
+
+
+				closed.set(true);
+			}
+		};
+	}
+
+	public interface RoadMapBatchEditor {
+
+		<T extends Node> void createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups);
+
+		void commit();
 	}
 }

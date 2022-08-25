@@ -1,6 +1,7 @@
 package de.bossascrew.pathfinder.module.maze;
 
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.data.DataStorage;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -43,6 +44,11 @@ public class SimpleMazePattern extends MazePattern {
 				}
 			}
 		});
+	}
+
+	@Override
+	void placeNone(Location location) {
+		place(location, true, true, true, true);
 	}
 
 	@Override
@@ -118,5 +124,15 @@ public class SimpleMazePattern extends MazePattern {
 	@Override
 	void placeWest(Location location) {
 		place(location, true, true, true, false);
+	}
+
+	@Override
+	void start() {
+
+	}
+
+	@Override
+	void complete() {
+
 	}
 }

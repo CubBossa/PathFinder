@@ -61,7 +61,7 @@ public class EditModeMenu {
 				.withItemStack(EditmodeUtils.NODE_TOOL)
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					Player p = context.getPlayer();
-					roadMap.removeNode(context.getTarget());
+					roadMap.removeNodes(context.getTarget());
 					p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
 				})
 				.withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
@@ -245,11 +245,13 @@ public class EditModeMenu {
 								NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
 								Bukkit.getPluginManager().callEvent(event);
 
-								if(event.isCancelled()) {
+								if (event.isCancelled()) {
 									return;
 								}
 
 								event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::addGroup));
+								event.getModifiedGroups().forEach(g -> g.addAll(event.getModifiedGroupables()));
+
 								NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 								Bukkit.getPluginManager().callEvent(assigned);
 
@@ -270,6 +272,8 @@ public class EditModeMenu {
 								}
 
 								event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::removeGroup));
+								event.getModifiedGroups().forEach(g -> g.removeAll(event.getModifiedGroupables()));
+
 								NodeGroupRemovedEvent removed = new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 								Bukkit.getPluginManager().callEvent(removed);
 

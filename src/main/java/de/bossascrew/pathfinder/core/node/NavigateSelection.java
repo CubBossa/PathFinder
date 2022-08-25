@@ -1,6 +1,5 @@
 package de.bossascrew.pathfinder.core.node;
 
-import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -11,10 +10,7 @@ import java.util.HashSet;
 @Getter
 public class NavigateSelection extends HashSet<Navigable> {
 
-	private final RoadMap roadMap;
-
-	public NavigateSelection(RoadMap roadMap, Collection<Navigable> collection) {
+	public NavigateSelection(Collection<Navigable> collection) {
 		super(collection);
-		this.roadMap = roadMap;
 	}
 }

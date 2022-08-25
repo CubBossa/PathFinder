@@ -44,7 +44,6 @@
                 <configuration>
                     <artifactSet>
                         <includes>
-                            <include>co.aikar:acf-bukkit</include>
                             <include>net.kyori:**</include>
                             <include>de.cubbossa:MenuFramework</include>
                             <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
@@ -58,14 +57,6 @@
                         </includes>
                     </artifactSet>
                     <relocations>
-                        <relocation>
-                            <pattern>co.aikar.commands</pattern>
-                            <shadedPattern>de.cubbossa.pathfinder.acf</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>co.aikar.locales</pattern>
-                            <shadedPattern>de.bossascrew.pathfinder.locales</shadedPattern>
-                        </relocation>
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
@@ -123,12 +114,6 @@
         <repository>
             <id>codemc-snapshots</id>
             <url>https://repo.codemc.io/repository/maven-snapshots/</url>
-        </repository>
-
-
-        <repository>
-            <id>aikar</id>
-            <url>https://repo.aikar.co/content/groups/aikar/</url>
         </repository>
 
         <repository>
@@ -233,9 +218,9 @@
         </dependency>
 
         <dependency>
-            <groupId>co.aikar</groupId>
-            <artifactId>acf-bukkit</artifactId>
-            <version>0.5.1-SNAPSHOT</version>
+            <groupId>de.cubbossa</groupId>
+            <artifactId>SerializedEffects</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!--<dependency>

@@ -1,0 +1,16 @@
+<with Sound as de.cubbossa.pathfinder.serializedeffects.effects.SoundPlayer>
+<with EffectPlayer as de.cubbossa.pathfinder.serializedeffects.effects.EffectPlayer>
+<with Title as de.cubbossa.pathfinder.serializedeffects.effects.TitlePlayer>
+<with ActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ActionBarPlayer>
+
+
+discover := EffectPlayer {
+    delay_0: [
+        Sound {sound: 'minecraft:minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f},
+        Title {
+            title: "", subtitle: "<msg:blablabla>",
+            fade-in-ticks: 5, stay-ticks 20, fade-out-ticks: 5
+        },
+        ActionBar {text: "<msg:blablabla>"}
+    ]
+}

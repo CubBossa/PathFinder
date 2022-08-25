@@ -1,16 +1,19 @@
 package de.bossascrew.pathfinder.core.node;
 
 import de.bossascrew.pathfinder.PathPlugin;
+import de.bossascrew.pathfinder.core.events.node.NodesDeletedEvent;
 import de.bossascrew.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 
-public class NodeGroupHandler {
+public class NodeGroupHandler implements Listener {
 
 	@Getter
 	private static NodeGroupHandler instance;
@@ -20,6 +23,8 @@ public class NodeGroupHandler {
 	public NodeGroupHandler() {
 		instance = this;
 		groups = new HashedRegistry<>();
+
+		Bukkit.getPluginManager().registerEvents(this, PathPlugin.getInstance());
 	}
 
 	public void loadGroups() {
@@ -67,5 +72,12 @@ public class NodeGroupHandler {
 		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(key, nameFormat, findable);
 		groups.put(group);
 		return group;
+	}
+
+	@EventHandler
+	public void onNodeDelete(NodesDeletedEvent event) {
+		for (NodeGroup group : groups) {
+			group.removeAll(event.getNodes());
+		}
 	}
 }

@@ -3,11 +3,12 @@ package de.bossascrew.pathfinder.module.maze;
 import de.bossascrew.pathfinder.core.node.Node;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.menuframework.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 
-import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,34 +18,59 @@ public class RoadMapMazePattern extends MazePattern {
 
 	private int spacing = 2;
 	private RoadMap roadMap;
-	private Map<Integer, Node> xOpenQueue = new HashMap<>();
-	private Map<Integer, Node> yOpenQueue = new HashMap<>();
+	private Map<Integer, Node> southOpenQueue = new HashMap<>();
+	private Map<Integer, Node> eastOpenQueue = new HashMap<>();
+
+	private RoadMap.RoadMapBatchEditor batchEditor;
+	private Collection<Pair<Node, Node>> edges;
 
 	public RoadMapMazePattern(RoadMap roadMap) {
 		this.roadMap = roadMap;
 	}
 
-	void place(Location location, boolean north, boolean east, boolean south, boolean west) {
+	@Override
+	void start() {
+		batchEditor = roadMap.getBatchEditor();
+	}
+
+	@Override
+	void complete() {
+		batchEditor.commit();
+	}
+
+	void place(Location location, boolean northBlocked, boolean eastBlocked, boolean southBlocked, boolean westBlocked) {
 		location = location.getBlock().getLocation().add(.5, 1.5, .5);
+		int bz = location.getBlockZ();
+		int bx = location.getBlockX();
 
 		Node node = roadMap.createNode(RoadMapHandler.WAYPOINT_TYPE, location.toVector());
 
-		Node xOpen = xOpenQueue.get(location.getBlockZ());
-		if (xOpen != null && east) {
-			roadMap.connectNodes(xOpen, node, false);
-			xOpenQueue.remove(location.getBlockZ());
+		Node southOpen = southOpenQueue.get(bx);
+		if (southOpen != null) {
+			if (!northBlocked) {
+				roadMap.connectNodes(southOpen, node, false);
+			}
+			southOpenQueue.remove(bx);
 		}
-		Node yOpen = yOpenQueue.get(location.getBlockX());
-		if (yOpen != null && south) {
-			roadMap.connectNodes(yOpen, node, false);
-			yOpenQueue.remove(location.getBlockX());
+		if (!southBlocked) {
+			southOpenQueue.put(bx, node);
 		}
-		if (west) {
-			xOpenQueue.put(location.getBlockZ(), node);
+
+		Node eastOpen = eastOpenQueue.get(bz);
+		if (eastOpen != null) {
+			if (!westBlocked) {
+				roadMap.connectNodes(eastOpen, node, false);
+			}
+			eastOpenQueue.remove(bz);
 		}
-		if (north) {
-			yOpenQueue.put(location.getBlockX(), node);
+		if (!eastBlocked) {
+			eastOpenQueue.put(bz, node);
 		}
+	}
+
+	@Override
+	void placeNone(Location location) {
+		// not relevant
 	}
 
 	@Override
@@ -104,7 +130,7 @@ public class RoadMapMazePattern extends MazePattern {
 
 	@Override
 	void placeEastWest(Location location) {
-		//straight
+		// straight
 	}
 
 	@Override

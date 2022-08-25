@@ -5,6 +5,7 @@ import org.bukkit.Location;
 public abstract class MazePattern {
 
 	abstract int getSpacing();
+	abstract void placeNone(Location location);
 	abstract void placeNorth(Location location);
 	abstract void placeNorthEast(Location location);
 	abstract void placeNorthEastSouth(Location location);
@@ -20,4 +21,6 @@ public abstract class MazePattern {
 	abstract void placeSouth(Location location);
 	abstract void placeSouthWest(Location location);
 	abstract void placeWest(Location location);
+	abstract void start();
+	abstract void complete();
 }

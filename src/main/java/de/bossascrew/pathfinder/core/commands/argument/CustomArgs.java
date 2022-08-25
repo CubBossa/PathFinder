@@ -5,10 +5,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.bossascrew.pathfinder.core.node.Navigable;
-import de.bossascrew.pathfinder.core.node.NavigateSelection;
-import de.bossascrew.pathfinder.core.node.NodeGroup;
-import de.bossascrew.pathfinder.core.node.NodeGroupHandler;
+import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.data.PathPlayer;
@@ -16,6 +13,7 @@ import de.bossascrew.pathfinder.data.PathPlayerHandler;
 import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.NodeSelection;
+import de.bossascrew.pathfinder.util.SelectionUtils;
 import de.bossascrew.pathfinder.util.SetArithmeticParser;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
@@ -28,7 +26,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -175,8 +172,21 @@ public class CustomArgs {
 		};*/
 	}
 
+	public <T extends Node> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+			NodeType<T> type = NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
+			if (type == null) {
+				throw new CustomArgument.CustomArgumentException("Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
+			}
+			return type;
+		}).includeSuggestions(suggestNamespacedKeys(sender -> NodeTypeHandler.getInstance().getTypes().keySet()));
+	}
+
 	public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
-		return new CustomArgument<>(new StringArgument(nodeName), customArgumentInfo -> {
+		return new CustomArgument<>(new TextArgument(nodeName), customArgumentInfo -> {
+			if (customArgumentInfo.sender() instanceof Player player) {
+				return SelectionUtils.getNodeSelection(player, customArgumentInfo.input().substring(1, customArgumentInfo.input().length() - 1));
+			}
 			return new NodeSelection();
 		});
 	}
@@ -201,20 +211,11 @@ public class CustomArgs {
 	public Argument<NavigateSelection> navigateSelectionArgument(String nodeName) {
 		return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
 			String search = context.currentInput();
-			Player player = (Player) context.sender(); //TODO
-			PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(player.getUniqueId());
-			if (pPlayer == null) {
-				throw new CustomArgument.CustomArgumentException("Unknown player '" + player.getName() + "', please contact an administrator.");
-			}
-			if (pPlayer.getSelectedRoadMap() == null) {
-				throw new CustomArgument.CustomArgumentException("You need to have a roadmap selected to parse node groups.");
-			}
-			RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
-			if (roadMap == null) {
-				throw new CustomArgument.CustomArgumentException("Your currently selected roadmap is invalid. Please reselect it.");
-			}
-			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(roadMap.getNavigables(), Navigable::getSearchTerms);
-			return new NavigateSelection(roadMap, parser.parse(search));
+			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
+					.map(RoadMap::getNavigables)
+					.flatMap(Collection::stream)
+					.collect(Collectors.toSet()), Navigable::getSearchTerms);
+			return new NavigateSelection(parser.parse(search));
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
 					String input = suggestionsBuilder.getInput();

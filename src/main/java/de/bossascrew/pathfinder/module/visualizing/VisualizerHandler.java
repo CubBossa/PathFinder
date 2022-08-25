@@ -1,9 +1,8 @@
 package de.bossascrew.pathfinder.module.visualizing;
 
 import de.bossascrew.pathfinder.PathPlugin;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.DebugVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
@@ -22,21 +21,22 @@ public class VisualizerHandler {
 	@Getter
 	private static VisualizerHandler instance;
 
-	private final PathVisualizer defaultSimpleCurveVisualizer;
+	private final PathVisualizer defaultParticleVisualizer;
 	private final HashedRegistry<PathVisualizer> pathVisualizerMap;
 
 	// Map<Player, Map<RoadMap, PathVisualizer>>
 	private final Map<UUID, Map<NamespacedKey, PathVisualizer>> playerVisualizers;
-	private final Map<Integer, HashedRegistry<SimpleCurveVisualizer>> roadmapVisualizers;
+	private final Map<Integer, HashedRegistry<PathVisualizer>> roadmapVisualizers;
 
 
 	public VisualizerHandler() {
 
 		instance = this;
-		defaultSimpleCurveVisualizer = new DebugVisualizer(new NamespacedKey(PathPlugin.getInstance(), "debug"));
+		defaultParticleVisualizer// = new DebugVisualizer(new NamespacedKey(PathPlugin.getInstance(), "debug"));
+				= new ParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "debug"), "debug");
 
 		this.pathVisualizerMap = new HashedRegistry<>();
-		pathVisualizerMap.put(defaultSimpleCurveVisualizer);
+		pathVisualizerMap.put(defaultParticleVisualizer);
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
 	}

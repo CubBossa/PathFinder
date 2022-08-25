@@ -42,7 +42,7 @@ public class PlayerNode implements Node {
 
     @Override
     public NamespacedKey getRoadMapKey() {
-        return null;
+        return roadMap.getKey();
     }
 
     @Override

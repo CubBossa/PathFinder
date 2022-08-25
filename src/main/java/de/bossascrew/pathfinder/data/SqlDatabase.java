@@ -1,10 +1,11 @@
 package de.bossascrew.pathfinder.data;
 
+import com.google.common.collect.Lists;
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
 import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import de.bossascrew.pathfinder.util.DataUtils;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
@@ -15,11 +16,15 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.jgrapht.alg.util.Triple;
 import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class SqlDatabase implements DataStorage {
 
@@ -27,7 +32,7 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public void connect() {
-		createSimpleCurveVisualizerDatabase();
+		createParticleVisualizerDatabase();
 		createRoadMapTable();
 		createNodeTable();
 		createNodeGroupTable();
@@ -63,7 +68,8 @@ public abstract class SqlDatabase implements DataStorage {
 					"`y` DOUBLE NOT NULL ," +
 					"`z` DOUBLE NOT NULL ," +
 					"`permission` VARCHAR(64) NULL ," +
-					"`path_curve_length` DOUBLE NULL )")) {
+					"`path_curve_length` DOUBLE NULL ," +
+					"FOREIGN KEY (roadmap_key) REFERENCES pathfinder_roadmaps(key) ON DELETE CASCADE )")) {
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -129,7 +135,7 @@ public abstract class SqlDatabase implements DataStorage {
 		}
 	}
 
-	private void createSimpleCurveVisualizerDatabase() {
+	private void createParticleVisualizerDatabase() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_visualizer` (" +
 					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
@@ -189,7 +195,7 @@ public abstract class SqlDatabase implements DataStorage {
 								nameFormat,
 								Bukkit.getWorld(UUID.fromString(worldUUIDString)),
 								nodesFindable,
-								VisualizerHandler.getInstance().getDefaultSimpleCurveVisualizer(),
+								VisualizerHandler.getInstance().getDefaultParticleVisualizer(),
 								//VisualizerHandler.getInstance().getPathVisualizerMap().get(NamespacedKey.fromString(pathVisualizerKeyString)),
 								nodeFindDistance, pathCurveLength));
 					}
@@ -241,17 +247,31 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public Edge createEdge(Node start, Node end, float weight) {
+		return createEdges(Lists.newArrayList(new Triple<>(start, end, weight))).get(0);
+	}
+
+	@Override
+	public List<Edge> createEdges(List<Triple<Node, Node, Float>> edges) {
 		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_edges` " +
 					"(`start_id`, `end_id`, `weight_modifier`) VALUES " +
 					"(?, ?, ?)")) {
-				stmt.setInt(1, start.getNodeId());
-				stmt.setInt(2, end.getNodeId());
-				stmt.setDouble(3, weight);
-				stmt.executeUpdate();
-
-				return new Edge(start, end, weight);
+				for (var triple : edges) {
+					stmt.setInt(1, triple.getFirst().getNodeId());
+					stmt.setInt(2, triple.getSecond().getNodeId());
+					stmt.setDouble(3, triple.getThird());
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
 			}
+
+			con.commit();
+			con.setAutoCommit(wasAuto);
+
+			return edges.stream().map(t -> new Edge(t.getFirst(), t.getSecond(), t.getThird())).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new DataStorageException("Could not create new edge.", e);
 		}
@@ -325,7 +345,31 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission) {
+	public void deleteEdges(Collection<Edge> edges) {
+		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
+			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_edges` WHERE `start_id` = ? AND `end_id` = ?")) {
+				for (Edge edge : edges) {
+					stmt.setInt(1, edge.getStart().getNodeId());
+					stmt.setInt(2, edge.getEnd().getNodeId());
+					stmt.addBatch();
+				}
+				stmt.executeUpdate();
+
+				stmt.executeBatch();
+			}
+
+			con.commit();
+			con.setAutoCommit(wasAuto);
+		} catch (Exception e) {
+			throw new DataStorageException("Could not delete edge.", e);
+		}
+	}
+
+	@Override
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
 					"(`type`, `roadmap_key`, `x`, `y`, `z`, `permission`, `path_curve_length`) VALUES " +
@@ -349,6 +393,69 @@ public abstract class SqlDatabase implements DataStorage {
 					}
 					return node;
 				}
+			}
+		} catch (Exception e) {
+			throw new DataStorageException("Could not create new node.", e);
+		}
+	}
+
+	@Override
+	public NodeBatchCreator newNodeBatch() {
+		try (Connection con = getConnection()) {
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
+					"(`type`, `roadmap_key`, `x`, `y`, `z`, `permission`, `path_curve_length`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+
+				AtomicBoolean closed = new AtomicBoolean(false);
+				List<Function<Integer, Node>> nodes = new ArrayList<>();
+
+				return new NodeBatchCreator() {
+
+					@Override
+					public <T extends Node> void createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) throws SQLException {
+						if (closed.get()) {
+							throw new IllegalStateException("BatchCreator already closed");
+						}
+						stmt.setString(1, type.getKey().toString());
+						stmt.setString(2, roadMap.getKey().toString());
+						stmt.setDouble(3, x);
+						stmt.setDouble(4, y);
+						stmt.setDouble(5, z);
+						stmt.setString(6, permission);
+						stmt.setDouble(7, tangentLength);
+						stmt.addBatch();
+
+						nodes.add(integer -> {
+							T node = type.getFactory().apply(roadMap, integer);
+							node.setPermission(permission);
+							node.setPosition(new Vector(x, y, z));
+							node.setCurveLength(tangentLength);
+							if (node instanceof Groupable groupable) {
+								groups.forEach(groupable::addGroup);
+							}
+							return node;
+						});
+
+					}
+
+					@Override
+					public Collection<? extends Node> commit() throws SQLException {
+						if (closed.get()) {
+							throw new IllegalStateException("BatchCreator already closed");
+						}
+						List<Node> nodeList = new ArrayList<>();
+
+						stmt.executeBatch();
+						try (ResultSet res = stmt.getGeneratedKeys()) {
+							int counter = 0;
+							while (res.next()) {
+								nodes.get(counter++).apply(res.getInt(1));
+							}
+						}
+						closed.set(true);
+						return nodeList;
+					}
+				};
 			}
 		} catch (Exception e) {
 			throw new DataStorageException("Could not create new node.", e);
@@ -414,12 +521,26 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNode(int nodeId) {
+	public void deleteNodes(int... nodeIds) {
+		deleteNodes(Arrays.stream(nodeIds).boxed().collect(Collectors.toList()));
+	}
+
+	@Override
+	public void deleteNodes(Collection<Integer> nodeIds) {
 		try (Connection con = getConnection()) {
+			boolean wasAuto = con.getAutoCommit();
+			con.setAutoCommit(false);
+
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_nodes` WHERE `id` = ?")) {
-				stmt.setInt(1, nodeId);
-				stmt.executeUpdate();
+				for (int id : nodeIds) {
+					stmt.setInt(1, id);
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
 			}
+
+			con.commit();
+			con.setAutoCommit(wasAuto);
 		} catch (Exception e) {
 			throw new DataStorageException("Could not delete node.", e);
 		}
@@ -641,7 +762,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public SimpleCurveVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
+	public ParticleVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_path_visualizer` " +
 					"(`key`, `name_format`, `permission`, `display_item`, `particle`, `particle_steps`, `particle_distance`, `particle_period`, `curve_length`) VALUES " +
@@ -656,13 +777,11 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setInt(8, schedulerPeriod);
 				stmt.setDouble(9, curveLength);
 
-				SimpleCurveVisualizer vis = new SimpleCurveVisualizer(key, nameFormat);
+				ParticleVisualizer vis = new ParticleVisualizer(key, nameFormat);
 				vis.setParticle(particle);
 				vis.setDisplayItem(displayIcon);
 				vis.setParticleSteps(particleSteps);
 				vis.setParticleDistance(particleDistance);
-				vis.setSchedulerPeriod(schedulerPeriod);
-				vis.setTangentLength(curveLength);
 				return vis;
 			}
 		} catch (Exception e) {
@@ -698,27 +817,27 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void createPlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer) {
+	public void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer) {
+	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void loadVisualizerStyles(Collection<SimpleCurveVisualizer> visualizers) {
+	public void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers) {
 
 	}
 
 	@Override
-	public void newVisualizerStyle(SimpleCurveVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName) {
+	public void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName) {
 
 	}
 
 	@Override
-	public void updateVisualizerStyle(SimpleCurveVisualizer visualizer) {
+	public void updateVisualizerStyle(ParticleVisualizer visualizer) {
 
 	}
 
@@ -728,17 +847,17 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<Integer, Collection<SimpleCurveVisualizer>> loadStyleRoadmapMap(Collection<SimpleCurveVisualizer> visualizers) {
+	public Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(Collection<ParticleVisualizer> visualizers) {
 		return null;
 	}
 
 	@Override
-	public void addStyleToRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+	public void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
 
 	}
 
 	@Override
-	public void removeStyleFromRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+	public void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
 
 	}
 }

@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -86,6 +88,10 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverab
     @Override
     public boolean fulfillsDiscoveringRequirements(Player player) {
         for (Node node : this) {
+            if(node == null) {
+                PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
+                continue;
+            }
             float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()));
             if (node.getPosition().getX() - player.getLocation().getX() > dist) {
                 continue;

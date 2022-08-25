@@ -1,7 +1,5 @@
 package de.bossascrew.pathfinder.core.commands;
 
-import co.aikar.commands.annotation.Optional;
-import co.aikar.commands.annotation.Single;
 import de.bossascrew.pathfinder.Messages;
 import de.bossascrew.pathfinder.PathPlugin;
 import de.bossascrew.pathfinder.core.commands.argument.CustomArgs;
@@ -273,7 +271,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		}
 	}
 
-	public void onDelete(CommandSender sender, @Optional RoadMap roadMap) throws WrapperCommandSyntaxException {
+	public void onDelete(CommandSender sender, @Nullable RoadMap roadMap) throws WrapperCommandSyntaxException {
 		if (roadMap == null) {
 			roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
 		}
@@ -413,7 +411,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 				.build()), sender);
 	}
 
-	public void onRename(CommandSender sender, @Single String nameNew) throws WrapperCommandSyntaxException {
+	public void onRename(CommandSender sender, String nameNew) throws WrapperCommandSyntaxException {
 		RoadMap roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
 		Component old = roadMap.getDisplayName();
 		roadMap.setNameFormat(nameNew);
@@ -495,31 +493,31 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		@Subcommand("add")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
 		@Syntax("<Style>")
-		public void onAdd(CommandSender sender, SimpleCurveVisualizer simpleCurveVisualizer) {
-			if (!simpleCurveVisualizer.isPickable()) {
+		public void onAdd(CommandSender sender, ParticleVisualizer ParticleVisualizer) {
+			if (!ParticleVisualizer.isPickable()) {
 				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
 				return;
 			}
 			RoadMap roadMap = CustomArgs.resolveRoadMap(sender);
-			Collection<SimpleCurveVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
-			list.add(simpleCurveVisualizer);
+			Collection<ParticleVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>());
+			list.add(ParticleVisualizer);
 			VisualizerHandler.getInstance().getRoadmapVisualizers().put(roadMap.getKey(), list);
-			SqlStorage.getInstance().addStyleToRoadMap(roadMap, simpleCurveVisualizer);
-			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style hinzugefügt: " + PathPlugin.COLOR_LIGHT + simpleCurveVisualizer.getNameFormat());
+			SqlStorage.getInstance().addStyleToRoadMap(roadMap, ParticleVisualizer);
+			PlayerUtils.sendMessage(sender, PathPlugin.PREFIX + "Style hinzugefügt: " + PathPlugin.COLOR_LIGHT + ParticleVisualizer.getNameFormat());
 		}
 
 
 		@Subcommand("remove")
 		@CommandCompletion(PathPlugin.COMPLETE_PATH_VISUALIZER_STYLES)
 		@Syntax("<Style>")
-		public void onRemove(CommandSender sender, SimpleCurveVisualizer visualizer) {
+		public void onRemove(CommandSender sender, ParticleVisualizer visualizer) {
 			if (!visualizer.isPickable()) {
 				PlayerUtils.sendMessage(sender, ChatColor.RED + "Dieser Visualizer ist nicht auswählbar. Konfiguriere ihn mit /path-visualizer.");
 				return;
 			}
 			RoadMap roadMap = CustomArgs.resolveRoadMap(sender);
 			SqlStorage.getInstance().removeStyleFromRoadMap(roadMap, visualizer);
-			Collection<SimpleCurveVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().get(roadMap.getKey());
+			Collection<ParticleVisualizer> list = VisualizerHandler.getInstance().getRoadmapVisualizers().get(roadMap.getKey());
 			if (list != null) {
 				list.remove(visualizer);
 			}
@@ -530,7 +528,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		public void onList(CommandSender sender) {
 			Menu menu = new Menu("Alle Styles dieser Roadmap:");
 			RoadMap roadMap = CustomArgs.resolveRoadMap(sender);
-			for (SimpleCurveVisualizer visualizer : VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>())) {
+			for (ParticleVisualizer visualizer : VisualizerHandler.getInstance().getRoadmapVisualizers().getOrDefault(roadMap.getKey(), new ArrayList<>())) {
 				menu.addSub(new ComponentMenu(Component.empty()
 						.append(visualizer.getDisplayName())
 						.append(Component.text(" [X]", NamedTextColor.RED)

@@ -2,17 +2,19 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
+import org.jgrapht.alg.util.Triple;
 import xyz.xenondevs.particle.ParticleBuilder;
 
 import javax.annotation.Nullable;
+import java.sql.SQLException;
 import java.util.*;
 
 public interface DataStorage {
@@ -45,11 +47,15 @@ public interface DataStorage {
 
 	Edge createEdge(Node start, Node end, float weight);
 
+	List<Edge> createEdges(List<Triple<Node, Node, Float>> edges);
+
 	Collection<Edge> loadEdges(RoadMap roadMap);
 
 	void deleteEdgesFrom(Node start);
 
 	void deleteEdgesTo(Node end);
+
+	void deleteEdges(Collection<Edge> edges);
 
 	default void deleteEdge(Edge edge) {
 		deleteEdge(edge.getStart().getNodeId(), edge.getEnd().getNodeId());
@@ -61,13 +67,15 @@ public interface DataStorage {
 
 	void deleteEdge(int startId, int endId);
 
-	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission);
+	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission);
 
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 
 	void updateNode(Node node);
 
-	void deleteNode(int nodeId);
+	void deleteNodes(int... nodeId);
+
+	void deleteNodes(Collection<Integer> nodeIds);
 
 
 	void assignNodesToGroup(NodeGroup group, NodeSelection selection);
@@ -110,21 +118,29 @@ public interface DataStorage {
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 
-	void createPlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer);
+	void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
 
-	void updatePlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer);
+	void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
 
-	void loadVisualizerStyles(Collection<SimpleCurveVisualizer> visualizers);
+	void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers);
 
-	void newVisualizerStyle(SimpleCurveVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName);
+	void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName);
 
-	void updateVisualizerStyle(SimpleCurveVisualizer visualizer);
+	void updateVisualizerStyle(ParticleVisualizer visualizer);
 
 	void deleteStyleVisualizer(int visualizerId);
 
-	Map<Integer, Collection<SimpleCurveVisualizer>> loadStyleRoadmapMap(Collection<SimpleCurveVisualizer> visualizers);
+	Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(Collection<ParticleVisualizer> visualizers);
 
-	void addStyleToRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer);
+	void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
 
-	void removeStyleFromRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer);
+	void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
+
+	NodeBatchCreator newNodeBatch();
+
+	interface NodeBatchCreator {
+		<T extends Node> void createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) throws SQLException;
+
+		Collection<? extends Node> commit() throws SQLException;
+	}
 }

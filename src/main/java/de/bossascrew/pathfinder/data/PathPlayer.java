@@ -89,14 +89,14 @@ public class PathPlayer {
         selectedRoadMap = null;
     }
 
-    /*public void setVisualizer(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+    /*public void setVisualizer(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
         Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().getOrDefault(globalPlayerId, new HashMap<>());
         if (map.containsKey(roadMap.getKey())) {
-            SqlStorage.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, simpleCurveVisualizer);
+            SqlStorage.getInstance().updatePlayerVisualizer(globalPlayerId, roadMap, ParticleVisualizer);
         } else {
-            SqlStorage.getInstance().createPlayerVisualizer(globalPlayerId, roadMap, simpleCurveVisualizer);
+            SqlStorage.getInstance().createPlayerVisualizer(globalPlayerId, roadMap, ParticleVisualizer);
         }
-        map.put(roadMap.getKey(), simpleCurveVisualizer.getDatabaseId());
+        map.put(roadMap.getKey(), ParticleVisualizer.getDatabaseId());
         VisualizerHandler.getInstance().getPlayerVisualizers().put(globalPlayerId, map);
 
         if (activePaths.containsKey(roadMap.getKey())) {
@@ -104,7 +104,7 @@ public class PathPlayer {
         }
     }
 
-    public SimpleCurveVisualizer getVisualizer(RoadMap roadMap) {
+    public ParticleVisualizer getVisualizer(RoadMap roadMap) {
         Map<Integer, Integer> map = VisualizerHandler.getInstance().getPlayerVisualizers().get(globalPlayerId);
         if (map == null) {
             return roadMap.getVisualizer();

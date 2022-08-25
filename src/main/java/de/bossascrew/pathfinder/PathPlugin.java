@@ -1,32 +1,24 @@
 package de.bossascrew.pathfinder;
 
-import co.aikar.commands.*;
-import com.google.common.collect.Lists;
-import de.bossascrew.pathfinder.core.commands.CancelPathCommand;
-import de.bossascrew.pathfinder.core.commands.NodeGroupCommand;
-import de.bossascrew.pathfinder.core.commands.PathFinderCommand;
-import de.bossascrew.pathfinder.core.commands.RoadMapCommand;
+import de.bossascrew.pathfinder.core.commands.*;
 import de.bossascrew.pathfinder.core.configuration.Configuration;
 import de.bossascrew.pathfinder.core.listener.DatabaseListener;
 import de.bossascrew.pathfinder.core.listener.PlayerListener;
-import de.bossascrew.pathfinder.core.node.*;
-import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.core.node.NodeGroupHandler;
+import de.bossascrew.pathfinder.core.node.NodeTypeHandler;
 import de.bossascrew.pathfinder.core.roadmap.RoadMapHandler;
 import de.bossascrew.pathfinder.data.*;
 import de.bossascrew.pathfinder.module.Module;
+import de.bossascrew.pathfinder.module.discovering.DiscoverHandler;
 import de.bossascrew.pathfinder.module.maze.MazeCommand;
 import de.bossascrew.pathfinder.module.visualizing.FindModule;
 import de.bossascrew.pathfinder.module.visualizing.VisualizerHandler;
 import de.bossascrew.pathfinder.module.visualizing.command.FindCommand;
 import de.bossascrew.pathfinder.module.visualizing.command.PathVisualizerCommand;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.util.CommandUtils;
-import de.bossascrew.pathfinder.util.NodeSelection;
-import de.bossascrew.pathfinder.util.SelectionUtils;
-import de.bossascrew.pathfinder.util.SetArithmeticParser;
 import de.bossascrew.splinelib.SplineLib;
 import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
+import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandAPI;
@@ -36,18 +28,12 @@ import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class PathPlugin extends JavaPlugin {
 
@@ -64,21 +50,16 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.nodegroup.searchterms.list";
 	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.nodegroup.searchterms.add";
 	public static final String PERM_CMD_NG_ST_REMOVE = "pathfinder.nodegroup.searchterms.remove";
-
-	public static final String COMPLETE_ROADMAPS = "@roadmaps";
-	public static final String COMPLETE_ACTIVE_ROADMAPS = "@activeroadmaps";
-	public static final String COMPLETE_PATH_VISUALIZER = "@path_visualizer";
-	public static final String COMPLETE_PATH_VISUALIZER_STYLES = "@path_visualizer_styles";
-	public static final String COMPLETE_EDITMODE_VISUALIZER = "@editmode_visualizer";
-	public static final String COMPLETE_NODE_SELECTION = "@nodes";
-	public static final String COMPLETE_NAVIGABLES = "@navigables";
-	public static final String COMPLETE_FINDABLES_CONNECTED = "@nodes_connected";
-	public static final String COMPLETE_FINDABLES_FINDABLE = "@nodes_findable";
-	public static final String COMPLETE_FINDABLES_FOUND = "@nodes_found";
-	public static final String COMPLETE_GROUPS_BY_PARAMETER = "@nodegroups_parametered";
-	public static final String COMPLETE_FINDABLE_GROUPS_BY_PARAMETER = "@nodegroups_findable_parametered";
-	public static final String COMPLETE_FINDABLE_GROUPS_BY_SELECTION = "@nodegroups_findable_selection";
-	public static final String COMPLETE_FINDABLE_LOCATIONS = "@findable_locations";
+	public static final String PERM_CMD_WP_INFO = "pathfinder.command.waypoint.info";
+	public static final String PERM_CMD_WP_LIST = "pathfinder.command.waypoint.list";
+	public static final String PERM_CMD_WP_CREATE = "pathfinder.command.waypoint.create";
+	public static final String PERM_CMD_WP_DELETE = "pathfinder.command.waypoint.delete";
+	public static final String PERM_CMD_WP_TP = "pathfinder.command.waypoint.tp";
+	public static final String PERM_CMD_WP_TPHERE = "pathfinder.command.waypoint.tphere";
+	public static final String PERM_CMD_WP_CONNECT = "pathfinder.command.waypoint.connect";
+	public static final String PERM_CMD_WP_DISCONNECT = "pathfinder.command.waypoint.disconnect";
+	public static final String PERM_CMD_WP_SET_PERM = "pathfinder.command.waypoint.set_perm";
+	public static final String PERM_CMD_WP_SET_CURVE = "pathfinder.command.waypoint.set_curve_length";
 
 	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
 		@Override
@@ -154,27 +135,29 @@ public class PathPlugin extends JavaPlugin {
 
 		System.out.println(database);
 
-		// Commands
-
-		CommandAPI.onEnable(this);
-		//new ArgumentTree(new NodeGroupCommand()).register();
-		new FindCommand().register();
-		new RoadMapCommand().register();
-		new PathFinderCommand().register();
-		new CancelPathCommand().register();
-		new NodeGroupCommand(0).register();
-		new PathVisualizerCommand(0).register();
-		new MazeCommand().register();
-
 		new FindModule(this);
+
+		//new EffectHandler(this, TranslationHandler.getInstance().getAudiences(), TranslationHandler.getInstance().getMiniMessage());
 
 		new NodeGroupHandler().loadGroups();
 		new VisualizerHandler();
 		new NodeTypeHandler();
 		new PathPlayerHandler();
 		new RoadMapHandler().loadRoadMaps();
-
+		new DiscoverHandler();
 		new GUIHandler(this).enable();
+
+		// Commands
+
+		CommandAPI.onEnable(this);
+		new FindCommand().register();
+		new RoadMapCommand().register();
+		new PathFinderCommand().register();
+		new CancelPathCommand().register();
+		new NodeGroupCommand(0).register();
+		new PathVisualizerCommand(0).register();
+		new WaypointCommand().register();
+		new MazeCommand().register();
 
 		// Listeners
 

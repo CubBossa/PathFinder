@@ -2,7 +2,7 @@ package de.bossascrew.pathfinder.core.node;
 
 import java.util.Collection;
 
-public interface Groupable {
+public interface Groupable extends Node {
 
 	Collection<NodeGroup> getGroups();
 

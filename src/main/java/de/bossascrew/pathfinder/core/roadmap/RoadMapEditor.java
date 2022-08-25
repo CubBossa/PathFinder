@@ -170,7 +170,7 @@ public class RoadMapEditor implements Keyed, Listener {
 		CompletableFuture.runAsync(() -> {
 
 			var sched = Bukkit.getScheduler();
-			editModeTasks.forEach(sched::cancelTask);
+			new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
 
 			Map<Edge, Boolean> undirected = new HashMap<>();
 			for (Edge edge : roadMap.getEdges()) {
@@ -265,20 +265,20 @@ public class RoadMapEditor implements Keyed, Listener {
 	}
 
 	@EventHandler
-	public void onNodeDeleted(NodeDeletedEvent event) {
+	public void onNodesDeleted(NodesDeletedEvent event) {
 		// No need to remove edges here, they are being removed by the roadmap
 		// beforehand with the according EdgeDeletedEvent
 
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
-			armorstandHandler.hideNodes(Lists.newArrayList(event.getNode()), player);
+			armorstandHandler.hideNodes(event.getNodes(), player);
 		});
 		updateEditModeParticles();
 	}
 
 	@EventHandler
-	public void onEdgesDeleted(EdgeDeletedEvent event) {
+	public void onEdgesDeleted(EdgesDeletedEvent event) {
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-				armorstandHandler.hideEdges(Lists.newArrayList(event.getEdge()), player));
+				armorstandHandler.hideEdges(Lists.newArrayList(event.getEdges()), player));
 		updateEditModeParticles();
 	}
 

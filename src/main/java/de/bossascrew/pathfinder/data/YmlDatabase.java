@@ -2,14 +2,15 @@ package de.bossascrew.pathfinder.data;
 
 import de.bossascrew.pathfinder.core.node.*;
 import de.bossascrew.pathfinder.core.roadmap.RoadMap;
+import de.bossascrew.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.bossascrew.pathfinder.util.HashedRegistry;
 import de.bossascrew.pathfinder.util.NodeSelection;
 import de.bossascrew.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.pathfinder.module.visualizing.visualizer.SimpleCurveVisualizer;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.jgrapht.alg.util.Triple;
 import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.io.File;
@@ -119,6 +120,11 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
+	public List<Edge> createEdges(List<Triple<Node, Node, Float>> edges) {
+		return null;
+	}
+
+	@Override
 	public Collection<Edge> loadEdges(RoadMap roadMap) {
 		return null;
 	}
@@ -134,12 +140,17 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
+	public void deleteEdges(Collection<Edge> edges) {
+
+	}
+
+	@Override
 	public void deleteEdge(int startId, int endId) {
 
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) {
 		return null;
 	}
 
@@ -154,7 +165,12 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNode(int nodeId) {
+	public void deleteNodes(int... nodeId) {
+
+	}
+
+	@Override
+	public void deleteNodes(Collection<Integer> nodeIds) {
 
 	}
 
@@ -249,27 +265,27 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void createPlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer) {
+	public void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, SimpleCurveVisualizer visualizer) {
+	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
 
 	}
 
 	@Override
-	public void loadVisualizerStyles(Collection<SimpleCurveVisualizer> visualizers) {
+	public void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers) {
 
 	}
 
 	@Override
-	public void newVisualizerStyle(SimpleCurveVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName) {
+	public void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName) {
 
 	}
 
 	@Override
-	public void updateVisualizerStyle(SimpleCurveVisualizer visualizer) {
+	public void updateVisualizerStyle(ParticleVisualizer visualizer) {
 
 	}
 
@@ -279,17 +295,22 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<Integer, Collection<SimpleCurveVisualizer>> loadStyleRoadmapMap(Collection<SimpleCurveVisualizer> visualizers) {
+	public Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(Collection<ParticleVisualizer> visualizers) {
 		return null;
 	}
 
 	@Override
-	public void addStyleToRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+	public void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
 
 	}
 
 	@Override
-	public void removeStyleFromRoadMap(RoadMap roadMap, SimpleCurveVisualizer simpleCurveVisualizer) {
+	public void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
 
+	}
+
+	@Override
+	public NodeBatchCreator newNodeBatch() {
+		return null;
 	}
 }
