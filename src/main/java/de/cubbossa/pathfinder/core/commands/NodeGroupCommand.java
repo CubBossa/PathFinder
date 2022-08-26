@@ -8,14 +8,12 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedE
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
-import dev.jorel.commandapi.arguments.BooleanArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
-import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
+import dev.jorel.commandapi.arguments.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -40,18 +38,18 @@ public class NodeGroupCommand extends CommandTree {
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
 				.executesPlayer((player, objects) -> {
-					listGroups(player, null, 0);
+					listGroups(player, 0);
 				})
 				.then(new IntegerArgument("page")
 						.executesPlayer((player, objects) -> {
-							listGroups(player, objects[0] == null ? null : (RoadMap) objects[0], (int) objects[offset]);
+							listGroups(player, (int) objects[offset]);
 						})));
 
 		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_NG_CREATE)
-				.then(new NamespacedKeyArgument("name")
-						.executesPlayer((player, objects) -> {
-							createGroup(player, (NamespacedKey) objects[offset]);
+				.then(new StringArgument("name")
+						.executesPlayer((player, args) -> {
+							createGroup(player, new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
 						})));
 
 		then(new LiteralArgument("delete")
@@ -183,25 +181,18 @@ public class NodeGroupCommand extends CommandTree {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
-	public void listGroups(Player player, @Nullable RoadMap roadMap, int pageInput) {
-		if (roadMap == null) {
-			roadMap = CommandUtils.getSelectedRoadMap(player);
-		}
-
-		int pages = (int) Math.ceil(NodeGroupHandler.getInstance().getNodeGroups().size() / 10.);
-		pageInput = Integer.max(0, Integer.min(pageInput, pages));
+	public void listGroups(Player player, int page) {
 
 		TagResolver resolver = TagResolver.builder()
-				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
-				.tag("page", Tag.preProcessParsed(pageInput + ""))
-				.tag("pages", Tag.preProcessParsed(pageInput + ""))
-				.tag("prev-page", Tag.preProcessParsed(Integer.max(0, pageInput - 1) + ""))
-				.tag("next-page", Tag.preProcessParsed(pageInput + 1 + ""))
+				.tag("page", Tag.preProcessParsed(page + 1 + ""))
+				.tag("prev-page", Tag.preProcessParsed(Integer.max(1, page + 1) + ""))
+				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 3) + ""))
+				.tag("pages", Tag.preProcessParsed((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.) + ""))
 				.build();
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
 
-		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), pageInput, 10)) {
+		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), page, 10)) {
 
 			TagResolver r = TagResolver.builder()
 					.tag("id", Tag.inserting(Component.text(group.getKey().toString())))

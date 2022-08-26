@@ -80,11 +80,9 @@ public class RoadMap implements Keyed, Named {
 					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null: " + i);
 					continue;
 				}
-				group.add(node);
-				if(!(node instanceof Groupable groupable)) {
-					continue;
+				if(node instanceof Groupable groupable) {
+					group.add(groupable);
 				}
-				groupable.addGroup(group);
 			}
 		}
 

@@ -18,7 +18,7 @@ import java.util.logging.Level;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverable, Navigable {
+public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Discoverable, Navigable {
 
     private final NamespacedKey key;
     private String nameFormat;
@@ -41,6 +41,40 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverab
     public void setNameFormat(String nameFormat) {
         this.nameFormat = nameFormat;
         this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
+    }
+
+    @Override
+    public boolean add(Groupable node) {
+        node.addGroup(this);
+        return super.add(node);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends Groupable> c) {
+        for (Groupable g : c) {
+            g.addGroup(this);
+        }
+        return super.addAll(c);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        if (o instanceof Groupable groupable) {
+            groupable.removeGroup(this);
+            return super.remove(o);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        for (Object o : c) {
+            if (o instanceof Groupable groupable) {
+                groupable.removeGroup(this);
+                remove(this);
+            }
+        }
+        return true;
     }
 
     @Override
@@ -79,9 +113,7 @@ public class NodeGroup extends HashSet<Node> implements Keyed, Named, Discoverab
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + key.hashCode();
-        return result;
+        return key.hashCode();
     }
 
     @Override

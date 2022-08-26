@@ -506,7 +506,7 @@ public abstract class SqlDatabase implements DataStorage {
 					"`y` = ?, " +
 					"`z` = ?, " +
 					"`permission` = ?, " +
-					"`path_curve_length` = ?, " +
+					"`path_curve_length` = ? " +
 					"WHERE `id` = ?")) {
 				stmt.setDouble(1, node.getPosition().getX());
 				stmt.setDouble(2, node.getPosition().getY());

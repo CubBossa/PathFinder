@@ -1,6 +1,10 @@
 package de.cubbossa.pathfinder.core.menu;
 
 import com.google.common.collect.Lists;
+import de.cubbossa.menuframework.inventory.*;
+import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
+import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
+import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
@@ -14,10 +18,6 @@ import de.cubbossa.pathfinder.util.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.EditmodeUtils;
 import de.cubbossa.pathfinder.util.ItemStackUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
-import de.cubbossa.menuframework.inventory.*;
-import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
-import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
-import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.translations.TranslatedItem;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
@@ -171,13 +171,22 @@ public class EditModeMenu {
 				})
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
+						if (groupable.getGroups().isEmpty()) {
+							return;
+						}
+
 						NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(Lists.newArrayList(groupable), Lists.newArrayList(groupable.getGroups()));
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 							Bukkit.getPluginManager().callEvent(event);
 							if (event.isCancelled()) {
 								return;
 							}
-							event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::removeGroup));
+							for (NodeGroup g : event.getModifiedGroups()) {
+								for (Groupable gr : event.getModifiedGroupables()) {
+									g.remove(gr);
+								}
+							}
+
 							NodeGroupRemovedEvent removed = new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 							Bukkit.getPluginManager().callEvent(removed);
 
@@ -197,11 +206,12 @@ public class EditModeMenu {
 							if (event.isCancelled()) {
 								return;
 							}
-							event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::addGroup));
+							event.getModifiedGroups().forEach(g -> g.addAll(event.getModifiedGroupables()));
+
 							NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 							Bukkit.getPluginManager().callEvent(assigned);
 
-							groupable.addGroup(lastGroup);
+							lastGroup.add(groupable);
 						});
 					}
 				}));
@@ -233,13 +243,13 @@ public class EditModeMenu {
 								Messages.E_SUB_GROUP_ENTRY_L.format(resolver)
 
 						).createItem();
-						if (groupable.getGroups().contains(group)) {
+						if (group.contains(groupable)) {
 							stack = ItemStackUtils.setGlow(stack);
 						}
 						return stack;
 					})
 					.withClickHandler(Action.LEFT, c -> {
-						if (!groupable.getGroups().contains(group)) {
+						if (!group.contains(groupable)) {
 
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 								NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
@@ -248,8 +258,6 @@ public class EditModeMenu {
 								if (event.isCancelled()) {
 									return;
 								}
-
-								event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::addGroup));
 								event.getModifiedGroups().forEach(g -> g.addAll(event.getModifiedGroupables()));
 
 								NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
@@ -261,18 +269,20 @@ public class EditModeMenu {
 						}
 					})
 					.withClickHandler(Action.RIGHT, c -> {
-						if (groupable.getGroups().contains(group)) {
+						if (group.contains(groupable)) {
 
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 								NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(groupable, group);
 								Bukkit.getPluginManager().callEvent(event);
 
-								if(event.isCancelled()) {
+								if (event.isCancelled()) {
 									return;
 								}
-
-								event.getModifiedGroupables().forEach(g -> event.getModifiedGroups().forEach(g::removeGroup));
-								event.getModifiedGroups().forEach(g -> g.removeAll(event.getModifiedGroupables()));
+								for (NodeGroup g : event.getModifiedGroups()) {
+									for (Groupable gr : event.getModifiedGroupables()) {
+										g.remove(gr);
+									}
+								}
 
 								NodeGroupRemovedEvent removed = new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 								Bukkit.getPluginManager().callEvent(removed);
@@ -314,7 +324,7 @@ public class EditModeMenu {
 				NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
 				Bukkit.getPluginManager().callEvent(event);
 				if (!event.isCancelled()) {
-					event.getGroupables().forEach(g -> event.getGroups().forEach(g::addGroup));
+					event.getModifiedGroups().forEach(nodes -> nodes.addAll(event.getModifiedGroupables()));
 					NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
 					Bukkit.getPluginManager().callEvent(assigned);
 				}

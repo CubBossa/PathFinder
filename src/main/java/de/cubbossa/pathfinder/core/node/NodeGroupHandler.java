@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.node;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -11,7 +12,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class NodeGroupHandler implements Listener {
 
@@ -43,6 +46,10 @@ public class NodeGroupHandler implements Listener {
 		return groups.values();
 	}
 
+	public Collection<NodeGroup> getNodeGroups(RoadMap roadMap) {
+		return groups.values().stream().filter(nodes -> nodes.stream().anyMatch(node -> node.getRoadMapKey().equals(roadMap.getKey()))).collect(Collectors.toSet());
+	}
+
 	public boolean setGroupFindable(NodeGroup group, boolean findable) {
 		//TODO implement. Refreshes the findable collection.
 		return true;
@@ -65,6 +72,7 @@ public class NodeGroupHandler implements Listener {
 				.filter(node -> node instanceof Groupable)
 				.map(node -> (Groupable) node)
 				.forEach(node -> node.removeGroup(group));
+		group.clear();
 	}
 
 	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable, String nameFormat) {

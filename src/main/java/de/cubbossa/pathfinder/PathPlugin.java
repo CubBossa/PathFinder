@@ -14,6 +14,7 @@ import de.cubbossa.pathfinder.data.*;
 import de.cubbossa.pathfinder.module.Module;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
+import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -89,7 +90,11 @@ public class Waypoint implements Node, Groupable {
 
 	@Override
 	public Collection<Node> getGroup() {
-		return Sets.newHashSet(this);
+		return Lists.newArrayList(this);
+	}
+
+	public Collection<NodeGroup> getGroups() {
+		return new HashSet<>(groups);
 	}
 
 	@Override

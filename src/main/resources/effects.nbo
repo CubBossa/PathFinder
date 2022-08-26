@@ -12,7 +12,7 @@ discover := EffectPlayer {
         ResetTitle {},
         Sound { sound: 'minecraft:minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f },
         Title {
-            title: "", subtitle: "<msg:blablabla>",
+            title: "", subtitle: "You discovered: <name>",
             fade-in-ticks: 5, stay-ticks: 20, fade-out-ticks: 5
         },
         ActionBar {text: "<msg:blablabla>"}

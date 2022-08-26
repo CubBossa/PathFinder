@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core.roadmap;
 
 import com.google.common.collect.Lists;
+import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
@@ -8,13 +9,13 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.data.PathPlayer;
 import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.util.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
-import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -214,10 +215,9 @@ public class RoadMapEditor implements Keyed, Listener {
 	}
 
 	@EventHandler
-	public void onNodeGroupAssign(NodeGroupAssignedEvent event) { //TODO auch bei erzeugung der heads
+	public void onNodeGroupAssign(NodeGroupAssignedEvent event) {
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
 				event.getGroupables().stream()
-						.filter(groupable -> groupable instanceof Node)
 						.map(groupable -> (Node) groupable)
 						.forEach(node -> {
 							armorstandHandler.updateNodeHead(player, node);
@@ -225,20 +225,21 @@ public class RoadMapEditor implements Keyed, Listener {
 						}));
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onNodeGroupRemove(NodeGroupRemovedEvent event) {
-		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-				event.getGroupables().stream()
-						.map(groupable -> (Node) groupable)
-						.forEach(node -> {
-							armorstandHandler.updateNodeHead(player, node);
-							armorstandHandler.updateNodeName(player, node);
-						}));
+		Collection<Groupable> groupables = event.getGroupables();
+		for (UUID uuid : editingPlayers.keySet()) {
+			Player player = Bukkit.getPlayer(uuid);
+			for (Groupable node : groupables) {
+				armorstandHandler.updateNodeHead(player, node);
+				armorstandHandler.updateNodeName(player, node);
+			}
+		}
 	}
 
 	@EventHandler
 	public void onNodeGroupSeachTermsChanged(NodeGroupSearchTermsChangedEvent event) {
-		Collection<Node> nodes = event.getGroup();
+		Collection<? extends Node> nodes = event.getGroup();
 		editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
 				nodes.forEach(node -> armorstandHandler.updateNodeName(player, node)));
 	}

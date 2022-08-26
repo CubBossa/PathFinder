@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadmapSelectEvent;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
@@ -62,9 +63,9 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		then(new LiteralArgument("create")
 				.withPermission("pathfinder.command.roadmap.create")
-				.then(new NamespacedKeyArgument("key")
+				.then(new StringArgument("key")
 						.executesPlayer((player, args) -> {
-							onCreate(player, (NamespacedKey) args[0], player.getWorld(), false);
+							onCreate(player, new NamespacedKey(PathPlugin.getInstance(), (String) args[0]), player.getWorld(), false);
 						})
 						.then(CustomArgs.worldArgument("world")
 								.executes((player, args) -> {
@@ -243,8 +244,10 @@ public class RoadMapCommand extends CommandTree implements Listener {
 				.tag("id", Tag.preProcessParsed(roadMap.getKey() + ""))
 				.tag("name", Tag.inserting(roadMap.getDisplayName()))
 				.tag("name-format", Tag.inserting(Component.text(roadMap.getNameFormat())))
+				.tag("nodes", Tag.inserting(Messages.formatNodeSelection(sender, roadMap.getNodes())))
+				.tag("groups", Tag.inserting(Messages.formatNodeGroups(sender, NodeGroupHandler.getInstance().getNodeGroups(roadMap))))
 				.tag("world", Tag.preProcessParsed(roadMap.getWorld().getName()))
-				.tag("findable", Tag.inserting(roadMap.isFindableNodes() ?
+				.tag("discoverable", Tag.inserting(roadMap.isFindableNodes() ?
 						Messages.GEN_TRUE.asComponent(sender) : Messages.GEN_FALSE.asComponent(sender)))
 				.tag("find-distance", Tag.preProcessParsed(roadMap.getNodeFindDistance() + ""))
 				.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))

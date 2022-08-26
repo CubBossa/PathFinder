@@ -14,6 +14,7 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 import java.util.stream.Collectors;
@@ -63,12 +64,10 @@ public class DatabaseListener implements Listener {
 		});
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.MONITOR)
 	public void onGroupRemove(NodeGroupRemovedEvent event) {
 		event.getGroups().forEach(group -> {
 			data.removeNodesFromGroup(group, event.getGroupables().stream()
-					.filter(g -> g instanceof Node)
-					.map(g -> (Node) g)
 					.collect(Collectors.toCollection(NodeSelection::new)));
 		});
 	}

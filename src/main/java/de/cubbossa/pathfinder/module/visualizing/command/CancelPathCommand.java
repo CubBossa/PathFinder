@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.commands;
+package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;

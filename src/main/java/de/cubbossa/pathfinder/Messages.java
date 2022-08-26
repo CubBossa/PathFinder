@@ -76,15 +76,17 @@ public class Messages {
 	public static final Message RELOAD_SUCCESS_CFG = new Message("command.reload.success.config");
 
 	@MessageMeta(value = """
-			<#7b42f5>Roadmap:</7b42f5> <name> <gray>(<id>)</gray>
+			<#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<id>)</gray>
 			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
 			<dark_gray>» </dark_gray><gray>World: <#6569eb><hover:show_text:"Click to change world"><click:suggest_command:/roadmap setworld <id> [new world]><world></click></hover>
-			<dark_gray>» </dark_gray><gray>Findable: <#6569eb><hover:show_text:"Click to change discoverable state"><click:suggest_command:/roadmap set discoverable <id> true|false><discoverable></click></hover>
-			<dark_gray>» </dark_gray><gray>Find Distance: <#6569eb><hover:show_text:"Click to change find distance"><click:suggest_command:/roadmap set find-distance <id> [distance]><find-distance></click></hover>
-			<#8265eb>Particles:</#8265eb>
-			<dark_gray>  » </dark_gray><gray>Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
-			<dark_gray>  » </dark_gray><gray>Particles: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
-			""", placeholders = {"name", "id", "name-format", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
+			<dark_gray>» </dark_gray><gray>Discoverable: <#6569eb><hover:show_text:"Click to change discoverable state"><click:suggest_command:/roadmap set discoverable <id> true|false><discoverable></click></hover>
+			<dark_gray>» </dark_gray><gray>Discover Distance: <#6569eb><hover:show_text:"Click to change find distance"><click:suggest_command:/roadmap set find-distance <id> [distance]><find-distance></click></hover>
+			<dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
+			<dark_gray>» </dark_gray><gray>Groups: <groups></gray>
+			<dark_gray>» </dark_gray><#8265eb>Visualizer:</#8265eb>
+			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
+			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
+			""", placeholders = {"name", "id", "name-format", "world", "discoverable", "find-distance", "curve-length", "path-visualizer", "nodes", "groups"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
 	@MessageMeta("<msg:prefix><#8265eb>Roadmap</#8265eb> <gray>selected: <name>")
 	public static final Message CMD_RM_SELECT = new Message("commands.roadmap.select");
@@ -191,7 +193,7 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Node group deleted: <name>.</gray>",
 			placeholders = "name")
 	public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
-	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Node-Groups</#8265eb> ------------</gradient>",
 			placeholders = {"roadmap", "page", "next-page", "prev-page"})
 	public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
