@@ -332,7 +332,7 @@ public class EditModeMenu {
 				ListMenu prev = (ListMenu) menu.getPrevious(s.getPlayer());
 				menu.openPreviousMenu(s.getPlayer());
 
-				prev.refresh(prev.getListSlots());
+				Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> prev.refresh(prev.getListSlots()), 1L); //TODO refresh geht nicht
 			});
 		});
 		return menu;

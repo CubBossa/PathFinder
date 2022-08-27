@@ -15,6 +15,7 @@ import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +44,11 @@ public class Messages {
 	public static final Message GEN_KEY = new Message("general.key");
 	@MessageMeta(value = "<#6569eb><permission></#6569eb>", placeholders = "permission")
 	public static final Message GEN_PERMISSION = new Message("general.permission");
+	@MessageMeta(value = "<#6569eb><particle><#/6569eb>", placeholders = {"particle", "meta"})
+	public static final Message GEN_PARTICLE = new Message("general.particle");
+	@MessageMeta(value = "<#6569eb><particle> <gray>(<meta>)</gray><#/6569eb>", placeholders = {"particle", "meta"})
+	public static final Message GEN_PARTICLE_META = new Message("general.particle");
+
 	@MessageMeta(value = "<#6569eb>null</#6569eb>")
 	public static final Message GEN_NULL = new Message("general.null");
 	@MessageMeta("<green>Accept</green>")
@@ -221,20 +227,39 @@ public class Messages {
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Visualizer</#8265eb> ------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_VIS_LIST_HEADER = new Message("commands.path_visualizer.list.header");
-	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<id>)</gray>",
-			placeholders = {"id", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
+	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
+			placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_VIS_LIST_ENTRY = new Message("commands.path_visualizer.list.entry");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_VIS_LIST_FOOTER = new Message("commands.path_visualizer.list.footer");
 
+	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> of type '<type>'.</gray>", placeholders = {"key", "name", "name-format", "type"})
 	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
 	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
+	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Visualizer <#8265eb><name></#8265eb>.</gray>", placeholders = "key, name, nameformat")
 	public static final Message CMD_VIS_DELETE_SUCCESS = new Message("commands.path_visualizer.delete.success");
+	@MessageMeta("<red>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
 	public static final Message CMD_VIS_DELETE_ERROR = new Message("commands.path_visualizer.delete.error");
-	public static final Message CMD_VIS_INFO = new Message("commands.path_visualizer.info");
 	public static final Message CMD_VIS_SET_NAME = new Message("commands.path_visualizer.set.name");
+	public static final Message CMD_VIS_SET_PERM = new Message("commands.path_visualizer.set.perm");
+	public static final Message CMD_VIS_SET_DIST = new Message("commands.path_visualizer.set.distance");
 
+	@MessageMeta(placeholders = {
+			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
+			"particle", "particle-steps", "amount", "speed", "offset"
+	}, value = """
+			<#7b42f5>Visualizer:</#7b42f5> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/pathvisualizer edit particle <key> name ><name-format></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:/pathvisualizer edit particle <key> permission ><permission></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:/pathvisualizer edit particle <key> interval ><interval></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:/pathvisualizer edit particle <key> point-distance ><point-distance></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:/pathvisualizer edit particle <key> particle ><particle></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Particle-Steps: <#6569eb><hover:show_text:"Click to change particle-steps"><click:suggest_command:/pathvisualizer edit particle-steps <key> particle ><particle-steps></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:/pathvisualizer edit particle <key> particle ><amount></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:/pathvisualizer edit particle <key> particle ><speed></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Offset: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:/pathvisualizer edit particle <key> particle ><offset></click></hover></#6569eb>""")
+	public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.particle_visualizer");
 
 
 	@MessageMeta(value = "<list>", placeholders = "list")
@@ -328,6 +353,17 @@ public class Messages {
 		return placeHolder.format(Placeholder.parsed("amount", collection.size() + "")).asComponent(sender)
 				.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 						collection.stream().map(converter).collect(Collectors.toList()))));
+	}
+
+	public static FormattedMessage formatParticle(Particle particle, Object data) {
+		return data == null ?
+				GEN_PARTICLE.format(TagResolver.builder()
+						.tag("particle", Tag.inserting(Component.text(particle.toString())))
+						.build()) :
+				GEN_PARTICLE_META.format(TagResolver.builder()
+						.tag("particle", Tag.inserting(Component.text(particle.toString())))
+						.tag("meta", Tag.inserting(Component.text(data.toString())))
+						.build());
 	}
 
 	public static FormattedMessage formatVector(Vector vector) {

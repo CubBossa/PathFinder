@@ -12,12 +12,15 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.Module;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerStepsChangedEvent;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.Graph;
@@ -170,5 +173,19 @@ public class FindModule extends Module {
 	public void cancelPath(SearchInfo info) {
 		activePaths.computeIfAbsent(info.playerId, uuid -> new HashMap<>()).remove(info.path().getRoadMap().getKey());
 		info.path().cancel();
+	}
+
+	@EventHandler
+	public void onStepsChange(VisualizerStepsChangedEvent event) {
+		activePaths.forEach((uuid, info) -> info.forEach((key, searchInfo) -> {
+			if (searchInfo.path().getVisualizer().equals(event.getVisualizer())) {
+				searchInfo.path().run();
+			}
+		}));
+	}
+
+	@EventHandler
+	public void onDistanceChange(VisualizerDistanceChangedEvent event) {
+		//TODO recalculate paths D:
 	}
 }

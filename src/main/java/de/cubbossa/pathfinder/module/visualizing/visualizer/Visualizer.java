@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 @Getter
 @Setter
-public abstract class Visualizer implements PathVisualizer {
+public abstract class Visualizer<T extends PathVisualizer<T>> implements PathVisualizer<T> {
 
 	private final NamespacedKey key;
 	private String nameFormat;

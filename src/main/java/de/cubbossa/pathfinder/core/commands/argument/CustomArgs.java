@@ -11,6 +11,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.PathPlayer;
 import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
@@ -30,6 +31,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.regex.MatchResult;
@@ -123,6 +125,24 @@ public class CustomArgs {
 			return vis;
 		}).includeSuggestions(suggestNamespacedKeys(sender ->
 				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().keySet())
+		));
+	}
+
+	public Argument<PathVisualizer> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+			PathVisualizer vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			if (vis == null) {
+				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+			}
+			if (!vis.getType().equals(type)) {
+				throw new CustomArgument.CustomArgumentException("Visualizer '" + customArgumentInfo.currentInput() + "' is not of type " + type.getCommandName());
+			}
+			return vis;
+		}).includeSuggestions(suggestNamespacedKeys(sender ->
+				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().entrySet().stream()
+						.filter(entry -> entry.getValue().getType().equals(type))
+						.map(Map.Entry::getKey)
+						.collect(Collectors.toList()))
 		));
 	}
 
@@ -252,6 +272,17 @@ public class CustomArgs {
 
 					return CompletableFuture.completedFuture(new Suggestions(range, suggestions));
 				});
+	}
+
+	public Argument<? extends VisualizerType<?>> visualizerTypeArgument(String nodeName) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+
+			VisualizerType<?> type = VisualizerHandler.getInstance().getVisualizerType(customArgumentInfo.currentInput());
+			if (type == null) {
+				throw new CustomArgument.CustomArgumentException("Unknown type: '" + customArgumentInfo.currentInput() + "'.");
+			}
+			return type;
+		}).includeSuggestions(suggestNamespacedKeys(sender -> VisualizerHandler.getInstance().getVisualizerTypes().keySet()));
 	}
 
 	public RoadMap resolveRoadMapWrappedException(CommandSender sender) throws WrapperCommandSyntaxException {

@@ -28,7 +28,7 @@ public class ParticlePath extends ArrayList<Node> {
 
     private final RoadMap roadMap;
     private final UUID playerUuid;
-    private final PathVisualizer visualizer;
+    private final PathVisualizer<?> visualizer;
 
     private boolean active;
     private BukkitTask task;

@@ -219,9 +219,9 @@ public class InMemoryDatabase implements DataStorage {
 	public ParticleVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		log("Created Visualizer");
 		var vis = new ParticleVisualizer(key, nameFormat);
-		vis.setParticle(particle);
-		vis.setParticleDistance(particleDistance);
-		vis.setParticleSteps(particleSteps);
+		//vis.setParticle(particle);
+		vis.setPointDistance((float) particleDistance);
+		vis.setSchedulerSteps(particleSteps);
 		return vis;
 	}
 

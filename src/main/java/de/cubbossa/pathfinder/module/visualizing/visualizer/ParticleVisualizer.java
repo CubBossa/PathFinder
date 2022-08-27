@@ -1,28 +1,36 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
-public class ParticleVisualizer extends Visualizer {
+public class ParticleVisualizer extends Visualizer<ParticleVisualizer> {
 
-	private int particleSteps = 10;
-	/*	private ParticleBuilder particle = new ParticleBuilder(ParticleEffect.BLOCK_DUST)
-				.setAmount(1)
-				.setSpeed(0)
-				.setColor(java.awt.Color.GREEN);*/
-	private ParticleBuilder particle = new ParticleBuilder(ParticleEffect.FLAME).setAmount(1).setSpeed(0);
-	private Double particleDistance = .2;
+	private int schedulerSteps = 10;
+	private Particle particle = Particle.FLAME;
+	private Object particleData = null;
+	private float speed = 1;
+	private int amount = 1;
+	private Vector offset = new Vector(0.01f, 0.01f, 0.01f);
+	private float pointDistance = .2f;
 	private Map<Node, Double> curveLengths;
+
+	@Override
+	public VisualizerType<ParticleVisualizer> getType() {
+		return VisualizerHandler.PARTICLE_VISUALIZER_TYPE;
+	}
 
 	public ParticleVisualizer(NamespacedKey key, String nameFormat) {
 		super(key, nameFormat);
@@ -30,8 +38,10 @@ public class ParticleVisualizer extends Visualizer {
 
 	@Override
 	public void play(List<Location> path, VisualizerContext context) {
-		for (int i = context.interval() % getParticleSteps(); i < path.size(); i += getParticleSteps()) {
-			getParticle().setLocation(path.get(i)).display(context.players());
+		for (int i = context.interval() % getSchedulerSteps(); i < path.size(); i += getSchedulerSteps()) {
+			for (Player player : context.players()) {
+				player.spawnParticle(particle, path.get(i), amount, offset.getX(), offset.getY(), offset.getZ(), speed, particleData);
+			}
 		}
 	}
 }

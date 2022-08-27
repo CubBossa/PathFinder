@@ -1,30 +1,30 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.Named;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.util.NodeUtils;
 import de.bossascrew.splinelib.interpolate.Interpolation;
 import de.bossascrew.splinelib.util.Spline;
+import de.cubbossa.pathfinder.Named;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PermissionHolder;
+import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.util.NodeUtils;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public interface PathVisualizer extends Keyed, Named {
-
-	@Nullable
-	String getPermission();
+public interface PathVisualizer<T extends PathVisualizer<T>> extends Keyed, Named, PermissionHolder {
 
 	int getTickDelay();
 
-	default float getEquidistance() {
-		return .2f;
-	}
+	VisualizerType<T> getType();
+
+	float getPointDistance();
+
+	void setPointDistance(float distance);
 
 	default int getBezierSamplingRate() {
 		return 16;
@@ -44,7 +44,7 @@ public interface PathVisualizer extends Keyed, Named {
 		return PathPlugin.SPLINES.newCurveBuilder(bezierVectors)
 				.withClosedPath(false)
 				.withRoundingInterpolation(Interpolation.bezierInterpolation(getBezierSamplingRate()))
-				.withSpacingInterpolation(Interpolation.equidistantInterpolation(getEquidistance()))
+				.withSpacingInterpolation(Interpolation.equidistantInterpolation(getPointDistance()))
 				.buildAndConvert();
 	}
 
@@ -60,4 +60,8 @@ public interface PathVisualizer extends Keyed, Named {
 			return players.get(0);
 		}
 	}
+
+	void setSchedulerSteps(int steps);
+
+	int getSchedulerSteps();
 }

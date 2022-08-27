@@ -183,7 +183,7 @@ public class PathPlugin extends JavaPlugin {
 		cancelPathCommand.register();
 		nodeGroupCommand = new NodeGroupCommand(0);
 		nodeGroupCommand.register();
-		pathVisualizerCommand = new PathVisualizerCommand(0);
+		pathVisualizerCommand = new PathVisualizerCommand();
 		pathVisualizerCommand.register();
 		waypointCommand = new WaypointCommand();
 		waypointCommand.register();

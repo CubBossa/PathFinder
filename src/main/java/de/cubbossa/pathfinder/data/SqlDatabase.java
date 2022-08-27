@@ -782,10 +782,10 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setDouble(9, curveLength);
 
 				ParticleVisualizer vis = new ParticleVisualizer(key, nameFormat);
-				vis.setParticle(particle);
+				//vis.setParticle(particle);
 				vis.setDisplayItem(displayIcon);
-				vis.setParticleSteps(particleSteps);
-				vis.setParticleDistance(particleDistance);
+				vis.setSchedulerSteps(particleSteps);
+				vis.setPointDistance((float) particleDistance);
 				return vis;
 			}
 		} catch (Exception e) {
