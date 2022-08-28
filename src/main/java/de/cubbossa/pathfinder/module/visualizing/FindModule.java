@@ -10,10 +10,7 @@ import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.Module;
-import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerStepsChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.*;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -21,6 +18,7 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.Graph;
@@ -31,7 +29,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FindModule extends Module {
+public class FindModule extends Module  implements Listener {
 
 	public record SearchInfo(UUID playerId, ParticlePath path, Location target, float distance) {
 	}
@@ -61,6 +59,7 @@ public class FindModule extends Module {
 	public void registerListener() {
 		listener = new MoveListener();
 		Bukkit.getPluginManager().registerEvents(listener, plugin);
+		Bukkit.getPluginManager().registerEvents(this, plugin);
 	}
 
 	public void unregisterListener() {
@@ -176,7 +175,7 @@ public class FindModule extends Module {
 	}
 
 	@EventHandler
-	public void onStepsChange(VisualizerStepsChangedEvent event) {
+	public void onDistanceChange(VisualizerDistanceChangedEvent event) {
 		activePaths.forEach((uuid, info) -> info.forEach((key, searchInfo) -> {
 			if (searchInfo.path().getVisualizer().equals(event.getVisualizer())) {
 				searchInfo.path().run();
@@ -185,7 +184,11 @@ public class FindModule extends Module {
 	}
 
 	@EventHandler
-	public void onDistanceChange(VisualizerDistanceChangedEvent event) {
-		//TODO recalculate paths D:
+	public void onDistanceChange(VisualizerIntervalChangedEvent event) {
+		activePaths.forEach((uuid, info) -> info.forEach((key, searchInfo) -> {
+			if (searchInfo.path().getVisualizer().equals(event.getVisualizer())) {
+				searchInfo.path().run();
+			}
+		}));
 	}
 }

@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.common.collect.Lists;
+import de.bossascrew.splinelib.util.Spline;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
@@ -8,7 +9,6 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.PathPlayer;
 import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.bossascrew.splinelib.util.Spline;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,7 +34,7 @@ public class ParticlePath extends ArrayList<Node> {
     private BukkitTask task;
     private final List<Location> calculatedPoints;
 
-    public ParticlePath(RoadMap roadMap, UUID playerUuid, PathVisualizer visualizer) {
+    public ParticlePath(RoadMap roadMap, UUID playerUuid, PathVisualizer<?> visualizer) {
         this.roadMap = roadMap;
         this.playerUuid = playerUuid;
         this.active = false;
@@ -50,7 +50,7 @@ public class ParticlePath extends ArrayList<Node> {
                 o -> o.getCurveLength() == null ? RoadMapHandler.getInstance().getRoadMap(o.getRoadMapKey()).getDefaultBezierTangentLength() : o.getCurveLength(),
                 (aDouble, aDouble2) -> aDouble,
                 LinkedHashMap::new)));
-        List<Vector> curve = visualizer.interpolate(spline);
+        List<Vector> curve = visualizer.transform(visualizer.interpolate(spline));
         calculatedPoints.addAll(visualizer.transform(curve).stream().map(vector -> vector.toLocation(roadMap.getWorld())).toList());
     }
 
@@ -77,7 +77,7 @@ public class ParticlePath extends ArrayList<Node> {
                 long fullTime = roadMap.getWorld().getFullTime();
 
                 visualizer.play(calculatedPoints, new PathVisualizer.VisualizerContext(Lists.newArrayList(searching), interval.getAndIncrement(), fullTime));
-            }, 0L, visualizer.getTickDelay());
+            }, 0L, visualizer.getInterval());
         });
     }
 

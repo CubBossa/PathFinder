@@ -160,7 +160,8 @@ public class PathPlugin extends JavaPlugin {
 		new FindModule(this);
 
 		saveResource("effects.nbo", false);
-		new EffectHandler(this, TranslationHandler.getInstance().getAudiences(), TranslationHandler.getInstance().getMiniMessage());
+		new EffectHandler(this, TranslationHandler.getInstance().getAudiences(), TranslationHandler.getInstance().getMiniMessage(),
+				(context) -> TranslationHandler.getInstance().translateLine(context.text(), context.player(), context.resolver()));
 
 		new NodeGroupHandler().loadGroups();
 		new VisualizerHandler();

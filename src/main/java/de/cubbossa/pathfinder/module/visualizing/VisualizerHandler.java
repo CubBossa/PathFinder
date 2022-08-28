@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerStepsChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.ParticleVisualizerStepsChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.Visualizer;
@@ -18,6 +18,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -77,10 +78,17 @@ public class VisualizerHandler {
 									.executes((commandSender, objects) -> {
 										ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
 										int amount = (int) objects[argumentOffset];
-										VisualizerHandler.getInstance().setSteps(visualizer, amount);
+										onSetSteps(visualizer, amount);
 									})
 							)
 					);
+		}
+
+
+		private <T> void onSetSteps(ParticleVisualizer visualizer, int amount) {
+			int old = visualizer.getSchedulerSteps();
+			visualizer.setSchedulerSteps(amount);
+			Bukkit.getPluginManager().callEvent(new ParticleVisualizerStepsChangedEvent(visualizer, old, amount));
 		}
 
 		private <T> void onSetParticle(ParticleVisualizer visualizer, ParticleData<T> particle, @Nullable Integer amount, @Nullable Float speed, @Nullable Vector offset) {
@@ -106,24 +114,31 @@ public class VisualizerHandler {
 
 	private final HashedRegistry<VisualizerType<?>> visualizerTypes;
 
-	private final PathVisualizer defaultParticleVisualizer;
-	private final HashedRegistry<PathVisualizer> pathVisualizerMap;
+	private final PathVisualizer<?> defaultVisualizer;
+	private final HashedRegistry<PathVisualizer<?>> pathVisualizerMap;
 
 	// Map<Player, Map<RoadMap, PathVisualizer>>
-	private final Map<UUID, Map<NamespacedKey, PathVisualizer>> playerVisualizers;
-	private final Map<Integer, HashedRegistry<PathVisualizer>> roadmapVisualizers;
+	private final Map<UUID, Map<NamespacedKey, PathVisualizer<?>>> playerVisualizers;
+	private final Map<Integer, HashedRegistry<PathVisualizer<?>>> roadmapVisualizers;
 
 
 	public VisualizerHandler() {
 
 		instance = this;
-		defaultParticleVisualizer = new ParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "debug"), "debug");
+		ParticleVisualizer defaultVis = new ParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "default"), "Default");
+		defaultVis.setParticle(Particle.SCRAPE);
+		defaultVis.setSchedulerSteps(50);
+		defaultVis.setPointDistance(0.12f);
+		defaultVis.setAmount(1);
+		defaultVis.setSpeed(.5f);
+		defaultVis.setOffset(new Vector(0.02f, 0.02f, 0.02f));
+		defaultVisualizer = defaultVis;
 
 		this.visualizerTypes = new HashedRegistry<>();
 		visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
 
 		this.pathVisualizerMap = new HashedRegistry<>();
-		pathVisualizerMap.put(defaultParticleVisualizer);
+		pathVisualizerMap.put(defaultVisualizer);
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
 	}
@@ -137,46 +152,46 @@ public class VisualizerHandler {
 	}
 
 	public void unregisterVisualizerType(VisualizerType<?> type) {
-		visualizerTypes.remove(type);
+		visualizerTypes.remove(type.getKey());
 	}
 
-	public void setSteps(Visualizer visualizer, int value) {
+	public void setSteps(Visualizer<?> visualizer, int value) {
 		int old = visualizer.getSchedulerSteps();
 		visualizer.setSchedulerSteps(value);
-		Bukkit.getPluginManager().callEvent(new VisualizerStepsChangedEvent(visualizer, old, value));
+		Bukkit.getPluginManager().callEvent(new ParticleVisualizerStepsChangedEvent(visualizer, old, value));
 	}
 
-	public @Nullable PathVisualizer getPathVisualizer(NamespacedKey key) {
+	public @Nullable PathVisualizer<?> getPathVisualizer(NamespacedKey key) {
 		return pathVisualizerMap.get(key);
 	}
 
-	public PathVisualizer createPathVisualizer(NamespacedKey key) {
+	public PathVisualizer<?> createPathVisualizer(NamespacedKey key) {
 		return null; //TODO
 	}
 
-	public PathVisualizer createPathVisualizer(NamespacedKey key,
-											   String nameFormat,
-											   ParticleBuilder particle,
-											   ItemStack displayItem,
-											   double particleDistance,
-											   int particleSteps,
-											   int schedulerPeriod) {
+	public PathVisualizer<?> createPathVisualizer(NamespacedKey key,
+												  String nameFormat,
+												  ParticleBuilder particle,
+												  ItemStack displayItem,
+												  double particleDistance,
+												  int particleSteps,
+												  int schedulerPeriod) {
 
 		if (pathVisualizerMap.containsKey(key)) {
 			throw new IllegalArgumentException("Could not insert new path visualizer, another visualizer with key '" + key + "' already exists.");
 		}
-		PathVisualizer visualizer = PathPlugin.getInstance().getDatabase().newPathVisualizer(key, nameFormat,
+		PathVisualizer<?> visualizer = PathPlugin.getInstance().getDatabase().newPathVisualizer(key, nameFormat,
 				particle, displayItem, particleDistance, particleSteps, schedulerPeriod, 3);
 		pathVisualizerMap.put(visualizer);
 		return visualizer;
 	}
 
-	public boolean deletePathVisualizer(PathVisualizer visualizer) {
+	public boolean deletePathVisualizer(PathVisualizer<?> visualizer) {
 		PathPlugin.getInstance().getDatabase().deletePathVisualizer(visualizer);
 		return pathVisualizerMap.remove(visualizer.getKey()) != null;
 	}
 
-	public Stream<PathVisualizer> getPathVisualizerStream() {
+	public Stream<PathVisualizer<?>> getPathVisualizerStream() {
 		return pathVisualizerMap.values().stream();
 	}
 }

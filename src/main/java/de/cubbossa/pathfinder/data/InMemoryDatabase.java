@@ -43,7 +43,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double tangentLength) {
 		log("Create Roadmap");
 		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, tangentLength);
 	}
@@ -233,12 +233,12 @@ public class InMemoryDatabase implements DataStorage {
 
 
 	@Override
-	public void updatePathVisualizer(PathVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
 		log("Updated Visualizer");
 	}
 
 	@Override
-	public void deletePathVisualizer(PathVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
 		log("Deleted Visualizer");
 	}
 

@@ -18,7 +18,9 @@ import java.util.List;
 
 public interface PathVisualizer<T extends PathVisualizer<T>> extends Keyed, Named, PermissionHolder {
 
-	int getTickDelay();
+	int getInterval();
+
+	void setInterval(int interval);
 
 	VisualizerType<T> getType();
 

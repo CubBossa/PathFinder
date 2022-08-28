@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -53,8 +54,8 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double curveLength) {
-		File file = new File(roadMapDir, key.toString().replace(":", "_") + ".yml");
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double curveLength) {
+		File file = new File(roadMapDir, key.toString().replace(":", "$") + ".yml");
 		try {
 			file.createNewFile();
 		} catch (IOException e) {
@@ -65,8 +66,8 @@ public class YmlDatabase implements DataStorage {
 		cfg.set("name_format", nameFormat);
 		cfg.set("world", world.getUID().toString());
 		cfg.set("nodes_findable", findableNodes);
-		cfg.set("path_visualizer", pathVis);
-		cfg.set("node_find_distance", findDist);
+		cfg.set("path_visualizer", pathVis.getKey().toString());
+		cfg.set("find_distance", findDist);
 		cfg.set("curve_length", curveLength);
 
 		try {
@@ -82,7 +83,7 @@ public class YmlDatabase implements DataStorage {
 	public Map<NamespacedKey, RoadMap> loadRoadMaps() {
 		HashedRegistry<RoadMap> registry = new HashedRegistry<>();
 		for (File file : Arrays.stream(roadMapDir.listFiles())
-				.filter(file -> file.getName().matches("\\w+_\\w\\.yml"))
+				.filter(file -> file.getName().matches("\\w+_\\w+\\.yml"))
 				.collect(Collectors.toList())) {
 			try {
 				NamespacedKey key = NamespacedKey.fromString(file.getName().substring(0, file.getName().length() - 4).replace("_", ":"));
@@ -92,8 +93,8 @@ public class YmlDatabase implements DataStorage {
 						cfg.getString("name_format"),
 						Bukkit.getWorld(UUID.fromString(cfg.getString("world"))),
 						cfg.getBoolean("nodes_findable"),
-						null, //TODO
-						cfg.getDouble("node_find_distance"),
+						VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(cfg.getString("path_visualizer"))),
+						cfg.getDouble("find_distance"),
 						cfg.getDouble("curve_length")));
 
 
@@ -240,7 +241,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public PathVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
+	public PathVisualizer<?> newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
 		return null;
 	}
 
@@ -250,12 +251,12 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void updatePathVisualizer(PathVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
 
 	}
 
 	@Override
-	public void deletePathVisualizer(PathVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
 
 	}
 

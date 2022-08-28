@@ -35,10 +35,14 @@ public class DiscoverHandler {
 		if (player == null) {
 			throw new IllegalStateException("Player is null");
 		}
-		EffectHandler.getInstance().getEffect(PathPlugin.getInstance().getEffectsFile(), "discover")
-				.play(player, player.getLocation(), TagResolver.builder()
+		EffectHandler.getInstance().playEffect(
+				PathPlugin.getInstance().getEffectsFile(),
+				"discover",
+				player,
+				player.getLocation(),
+				TagResolver.builder()
 						.tag("name", Tag.inserting(discoverable.getDisplayName()))
-						.tag("percent", Tag.inserting(Component.text("10%fm")))
+						.tag("roadmaps", Tag.inserting(Component.text("Test, 10%")))
 						.build());
 	}
 

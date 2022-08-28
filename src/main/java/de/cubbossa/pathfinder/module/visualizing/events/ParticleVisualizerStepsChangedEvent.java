@@ -10,13 +10,13 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class VisualizerPermissionChangedEvent extends Event {
+public class ParticleVisualizerStepsChangedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
 	private final PathVisualizer<?> visualizer;
-	private final String oldPermission;
-	private final String newPermission;
+	private final int oldValue;
+	private final int newValue;
 
 	public HandlerList getHandlers() {
 		return handlers;

@@ -4,17 +4,19 @@
 <with ActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ActionBarPlayer>
 <with ResetTitle as de.cubbossa.pathfinder.serializedeffects.effects.ResetTitle>
 <with ResetActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ResetActionBar>
+<with Cooldown as de.cubbossa.pathfinder.serializedeffects.effects.Cooldown>
 
 
 discover := EffectPlayer {
     delay_0: [
         ResetActionBar {},
         ResetTitle {},
-        Sound { sound: 'minecraft:minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f },
+        Sound { sound: 'minecraft:entity.villager.work_cartographer', volume: 1.0f, pitch: 1.0f },
         Title {
-            title: "", subtitle: "You discovered: <name>",
+            title: "", subtitle: "<msg:general.target_discovered.title>",
             fade-in-ticks: 5, stay-ticks: 20, fade-out-ticks: 5
         },
-        ActionBar {text: "<msg:blablabla>"}
+        ActionBar {text: "<msg:general.target_discovered.actionbar>"},
+        Cooldown {ticks: 40}
     ]
 }

@@ -155,7 +155,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double tangentLength) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
 					"(`key`, `name_format`, `world`, `nodes_findable`, `path_visualizer`, `nodes_find_distance`, `path_curve_length`) VALUES " +
@@ -195,7 +195,7 @@ public abstract class SqlDatabase implements DataStorage {
 								nameFormat,
 								Bukkit.getWorld(UUID.fromString(worldUUIDString)),
 								nodesFindable,
-								VisualizerHandler.getInstance().getDefaultParticleVisualizer(),
+								VisualizerHandler.getInstance().getDefaultVisualizer(),
 								//VisualizerHandler.getInstance().getPathVisualizerMap().get(NamespacedKey.fromString(pathVisualizerKeyString)),
 								nodeFindDistance, pathCurveLength));
 					}
@@ -799,12 +799,12 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void updatePathVisualizer(PathVisualizer visualizer) {
+	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
 
 	}
 
 	@Override
-	public void deletePathVisualizer(PathVisualizer visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_path_visualizer` WHERE `key` = ?")) {
 				stmt.setString(1, visualizer.getKey().toString());

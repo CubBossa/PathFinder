@@ -21,7 +21,7 @@ public abstract class Visualizer<T extends PathVisualizer<T>> implements PathVis
 	@Nullable
 	private String permission = null;
 	private ItemStack displayItem = new ItemStack(Material.REDSTONE);
-	private int tickDelay = 1;
+	private int interval = 1;
 
 	public Visualizer(NamespacedKey key, String nameFormat) {
 		this.key = key;

@@ -43,9 +43,9 @@ public class RoadMap implements Keyed, Named {
 	private final Map<Integer, Node> nodes;
 	private final Collection<Edge> edges;
 
-	private PathVisualizer visualizer;
+	private PathVisualizer<?> visualizer;
 
-	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer visualizer,
+	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer<?> visualizer,
 				   double nodeFindDistance, double defaultBezierTangentLength) {
 
 		this.key = key;

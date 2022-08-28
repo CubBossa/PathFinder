@@ -28,11 +28,11 @@ public interface DataStorage {
 
 	void disconnect();
 
-	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis) {
+	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis) {
 		return createRoadMap(key, nameFormat, world, findableNodes, pathVis, 2, 1);
 	}
 
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer pathVis, double findDist, double tangentLength);
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -108,13 +108,13 @@ public interface DataStorage {
 
 	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
 
-	PathVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
+	PathVisualizer<?> newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
 
 	Map<Integer, PathVisualizer> loadPathVisualizer();
 
-	void updatePathVisualizer(PathVisualizer visualizer);
+	void updatePathVisualizer(PathVisualizer<?> visualizer);
 
-	void deletePathVisualizer(PathVisualizer visualizer);
+	void deletePathVisualizer(PathVisualizer<?> visualizer);
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 

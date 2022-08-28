@@ -236,13 +236,19 @@ public class Messages {
 
 	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> of type '<type>'.</gray>", placeholders = {"key", "name", "name-format", "type"})
 	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
+	@MessageMeta("<red>Another visualizer with this name already exists.")
 	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
 	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Visualizer <#8265eb><name></#8265eb>.</gray>", placeholders = "key, name, nameformat")
 	public static final Message CMD_VIS_DELETE_SUCCESS = new Message("commands.path_visualizer.delete.success");
 	@MessageMeta("<red>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
 	public static final Message CMD_VIS_DELETE_ERROR = new Message("commands.path_visualizer.delete.error");
+	@MessageMeta(value = "<ins:prefix><gray>Changed name of <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_NAME = new Message("commands.path_visualizer.set.name");
+	@MessageMeta(value = "<ins:prefix><gray>Changed permission of <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_PERM = new Message("commands.path_visualizer.set.perm");
+	@MessageMeta(value = "<ins:prefix><gray>Changed interval for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
+	public static final Message CMD_VIS_SET_INTERVAL = new Message("commands.path_visualizer.set.interval");
+	@MessageMeta(value = "<ins:prefix><gray>Changed point distance for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_DIST = new Message("commands.path_visualizer.set.distance");
 
 	@MessageMeta(placeholders = {
@@ -324,10 +330,15 @@ public class Messages {
 
 
 	@MessageMeta(value = "<msg:prefix><gray>Target reached.")
-	public static final Message TARGET_FOUND = new Message("general.target_found");
-	@MessageMeta(value = "You discovered:")
+	public static final Message TARGET_FOUND = new Message("general.target_reached");
+	@MessageMeta(value = "<roadmap>: <percent>", placeholders = {"roadmap", "percent"})
+	public static final Message LOCATION_FOUND_SINGLE_RM_PERCENT_FORMAT = new Message("general.target_discovered.percent");
+	@MessageMeta(value = "", placeholders = {"name", "roadmaps"})
 	public static final Message LOCATION_FOUND_TITLE_1 = new Message("general.target_discovered.title");
+	@MessageMeta(value = "You found <name>", placeholders = {"name", "roadmaps"})
 	public static final Message LOCATION_FOUND_TITLE_2 = new Message("general.target_discovered.subtitle");
+	@MessageMeta(value = "Discovered: <roadmaps>", placeholders = {"name", "roadmaps"})
+	public static final Message LOCATION_FOUND_AB = new Message("general.target_discovered.actionbar");
 
 	public static Message formatBool(boolean val) {
 		return val ? GEN_TRUE : GEN_FALSE;

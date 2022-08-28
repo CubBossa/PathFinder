@@ -404,7 +404,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DESELECT, sender);
 	}
 
-	public void onStyle(CommandSender sender, PathVisualizer visualizer) throws WrapperCommandSyntaxException {
+	public void onStyle(CommandSender sender, PathVisualizer<?> visualizer) throws WrapperCommandSyntaxException {
 		RoadMap roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
 		roadMap.setVisualizer(visualizer);
 

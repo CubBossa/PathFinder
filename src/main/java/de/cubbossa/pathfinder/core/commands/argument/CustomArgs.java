@@ -116,9 +116,9 @@ public class CustomArgs {
 		});
 	}
 
-	public Argument<PathVisualizer> pathVisualizerArgument(String nodeName) {
+	public Argument<? extends PathVisualizer<?>> pathVisualizerArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-			PathVisualizer vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			PathVisualizer<?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
 			if (vis == null) {
 				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
 			}
@@ -128,9 +128,9 @@ public class CustomArgs {
 		));
 	}
 
-	public Argument<PathVisualizer> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
+	public Argument<? extends PathVisualizer<?>> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-			PathVisualizer vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			PathVisualizer<?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
 			if (vis == null) {
 				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
 			}
@@ -231,6 +231,7 @@ public class CustomArgs {
 	public Argument<NavigateSelection> navigateSelectionArgument(String nodeName) {
 		return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
 			String search = context.currentInput();
+			//TODO wrong way round, has to check nodes that have common navigables, not navigables that have common search terms
 			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
 					.map(RoadMap::getNavigables)
 					.flatMap(Collection::stream)
@@ -239,13 +240,6 @@ public class CustomArgs {
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
 					String input = suggestionsBuilder.getInput();
-
-					RoadMap roadMap;
-					try {
-						roadMap = resolveRoadMap((Player) suggestionInfo.sender());
-					} catch (Exception e) {
-						throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException(), e::getMessage);
-					}
 
 					int lastIndex = LIST_SYMBOLS.stream()
 							.map(input::lastIndexOf).mapToInt(value -> value).max().orElse(0);
@@ -256,7 +250,9 @@ public class CustomArgs {
 
 					StringRange finalRange = range;
 					String inRange = finalRange.get(input);
-					roadMap.getNavigables().stream()
+					RoadMapHandler.getInstance().getRoadMaps().values().stream()
+							.map(RoadMap::getNavigables)
+							.flatMap(Collection::stream)
 							.map(Navigable::getSearchTerms)
 							.flatMap(Collection::stream)
 							.filter(s -> s.startsWith(inRange))
