@@ -1,0 +1,42 @@
+
+# ROADMAPS, WAYPOINTS AND EDGES
+
+To get started, first create a roadmap. A roadmap represents a so-called
+graph, a web of points and connections from one point to another.
+Roadmaps (graphs) in this plugin are directed graphs, which means that
+point A can be connected with point B, but B is not connected with point A.
+So if navigation is used, this would represent a one way road.
+
+To create a roadmap, use '/roadmap create <key>'. Afterwards, you can rename
+it with '/roadmap set name <name>'. Keep in mind though, that the key of the
+roadmap is permanent, so to administrators, the roadmap will always be named
+the way you name it first.
+
+If your roadmap has been created, you can then use '/roadmap editmode', to
+activate the editmode and create points (so-called nodes or waypoints) and
+edges.
+Place waypoints at crossings and connected them along the roads, if used to
+navigate through an actual roadmap.
+
+# NODEGROUPS - DISCOVERING & NAVIGATING
+
+To make waypoints discoverable as well as navigable, you have to assign them
+to a nodegroup. Nodegroups carry all the important information:
+- the name of the place to discover
+- the search-terms for your gps system ('/find location searchtermA&searchtermB')
+- if the group is actually discoverable
+Nodegroups are used across all roadmaps independently, so if you create a
+group 'towncenter' and use it twice on two different roadmaps, discovering
+the town center of town A will also discover the town center of town B.
+
+If this is not what you want to achieve, create two groups 'towncenterA' and
+'towncenterB' and name them both 'towncenter' with 'nodegroup set name <group> <name>'
+
+# PARTICLES
+
+The way particles look to the user can be changed with pathvisualizers.
+Pathvisualizers don't even require to be particles at all, they can also be
+an entity moving along the path or a sound that has to be followed.
+If you are into java development, you can extend pathvisualizers to your
+requirements.
+Otherwise, you can toggle everything possible with the /pathvisualizer command.
