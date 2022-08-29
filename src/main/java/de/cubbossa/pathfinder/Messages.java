@@ -220,7 +220,9 @@ public class Messages {
 	public static final Message CMD_NG_TERMS_ADD = new Message("commands.node_group.terms.add");
 	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <#8f65eb><values></#8f65eb>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
-
+	@MessageMeta(value = "<ins:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
+	public static final Message CMD_FIND = new Message("commands.find");
+	@MessageMeta(value = "<ins:prefix>Navigation cancelled.")
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
 

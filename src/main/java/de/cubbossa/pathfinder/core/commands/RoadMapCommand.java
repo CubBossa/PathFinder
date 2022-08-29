@@ -45,6 +45,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 	public RoadMapCommand() {
 		super("roadmap");
+		withPermission(PathPlugin.PERM_CMD_RM);
 
 		// to update the roadmap selected requirement
 		Bukkit.getPluginManager().registerEvents(this, PathPlugin.getInstance());

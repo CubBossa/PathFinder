@@ -25,6 +25,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.Graphs;
@@ -44,7 +45,7 @@ public class FindModule extends Module  implements Listener {
 	@Getter
 	private static FindModule instance;
 
-	private final Map<UUID, Map<NamespacedKey, SearchInfo>> activePaths;
+	private final Map<UUID, SearchInfo> activePaths;
 
 	private final PathPlugin plugin;
 	private MoveListener listener;
@@ -83,8 +84,8 @@ public class FindModule extends Module  implements Listener {
 		return new ArrayList<>(navigationFilter);
 	}
 
-	public Map<NamespacedKey, SearchInfo> getActivePaths(Player player) {
-		return activePaths.computeIfAbsent(player.getUniqueId(), uuid -> new HashMap<>());
+	public @Nullable SearchInfo getActivePath(Player player) {
+		return activePaths.get(player.getUniqueId());
 	}
 
 	public void findPath(Player player, NodeSelection targets) {
@@ -141,6 +142,10 @@ public class FindModule extends Module  implements Listener {
 			ParticlePath particlePath = new ParticlePath(firstRoadMap, player.getUniqueId(), firstRoadMap.getVisualizer());
 			particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
 			setPath(player.getUniqueId(), particlePath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(), (float) firstRoadMap.getNodeFindDistance());
+
+			
+			// Refresh cancel-path command so that it is visible
+			PathPlugin.getInstance().getCancelPathCommand().refresh(player);
 		});
 	}
 
@@ -159,47 +164,41 @@ public class FindModule extends Module  implements Listener {
 			return;
 		}
 
-		var map = activePaths.computeIfAbsent(playerId, uuid -> new HashMap<>());
-		SearchInfo current = map.put(path.getRoadMap().getKey(), new SearchInfo(playerId, path, target, distance));
+		SearchInfo current = activePaths.put(playerId, new SearchInfo(playerId, path, target, distance));
 		if (current != null) {
 			current.path().cancel();
 		}
 		path.run(playerId);
 	}
 
-	public void cancelPaths(UUID playerId) {
-		Map<NamespacedKey, SearchInfo> map = activePaths.computeIfAbsent(playerId, uuid -> new HashMap<>());
-		map.forEach((key, searchInfo) -> searchInfo.path().cancel());
-		map.clear();
-	}
-
-	public void cancelPath(UUID playerId, RoadMap roadMap) {
-		SearchInfo info = activePaths.computeIfAbsent(playerId, uuid -> new HashMap<>()).remove(roadMap.getKey());
-		if (info != null) {
-			info.path().cancel();
+	public void cancelPath(UUID playerId) {
+		if (activePaths.containsKey(playerId)) {
+			cancelPath(activePaths.get(playerId));
 		}
 	}
 
 	public void cancelPath(SearchInfo info) {
-		activePaths.computeIfAbsent(info.playerId, uuid -> new HashMap<>()).remove(info.path().getRoadMap().getKey());
+		activePaths.remove(info.playerId());
 		info.path().cancel();
+
+		PathPlugin.getInstance().getCancelPathCommand().refresh(Bukkit.getPlayer(info.playerId()));
 	}
 
 	@EventHandler
 	public void onDistanceChange(VisualizerDistanceChangedEvent event) {
-		activePaths.forEach((uuid, info) -> info.forEach((key, searchInfo) -> {
-			if (searchInfo.path().getVisualizer().equals(event.getVisualizer())) {
-				searchInfo.path().run();
+		activePaths.forEach((uuid, info) -> {
+			if (info.path().getVisualizer().equals(event.getVisualizer())) {
+				info.path().run();
 			}
-		}));
+		});
 	}
 
 	@EventHandler
 	public void onDistanceChange(VisualizerIntervalChangedEvent event) {
-		activePaths.forEach((uuid, info) -> info.forEach((key, searchInfo) -> {
-			if (searchInfo.path().getVisualizer().equals(event.getVisualizer())) {
-				searchInfo.path().run();
+		activePaths.forEach((uuid, info) -> {
+			if (info.path().getVisualizer().equals(event.getVisualizer())) {
+				info.path().run();
 			}
-		}));
+		});
 	}
 }

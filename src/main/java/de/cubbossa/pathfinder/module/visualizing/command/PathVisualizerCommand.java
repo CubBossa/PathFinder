@@ -31,6 +31,7 @@ public class PathVisualizerCommand extends CommandTree {
 
 	public PathVisualizerCommand() {
 		super("pathvisualizer");
+		withPermission(PathPlugin.PERM_CMD_PV);
 
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_PV_LIST)

@@ -1,28 +1,27 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandTree;
+import org.bukkit.entity.Player;
 
-public class CancelPathCommand extends CommandAPICommand {
+public class CancelPathCommand extends CommandTree {
 
     public CancelPathCommand() {
         super("cancelpath");
+        withPermission(PathPlugin.PERM_CMD_CANCELPATH);
+        withRequirement(sender -> sender instanceof Player player && FindModule.getInstance().getActivePath(player) != null);
 
-        withArguments(CustomArgs.roadMapArgument("roadmap"));
         executesPlayer((player, args) -> {
-            RoadMap roadMap = (RoadMap) args[0];
-
-            if (roadMap == null) {
-                FindModule.getInstance().cancelPaths(player.getUniqueId());
-
-            } else {
-                FindModule.getInstance().cancelPath(player.getUniqueId(), roadMap);
-            }
+            FindModule.getInstance().cancelPath(player.getUniqueId());
             TranslationHandler.getInstance().sendMessage(Messages.CMD_CANCEL, player);
         });
+    }
+
+    public void refresh(Player player) {
+        CommandAPI.updateRequirements(player);
     }
 }

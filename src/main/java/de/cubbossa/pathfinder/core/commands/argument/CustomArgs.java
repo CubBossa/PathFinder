@@ -229,10 +229,18 @@ public class CustomArgs {
 
 	public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
 		return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
+			if (!(context.sender() instanceof Player player)) {
+				throw new CustomArgument.CustomArgumentException("Only for players");
+			}
 			String search = context.currentInput();
 			SetArithmeticParser<Pair<Node, Collection<Navigable>>> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
 					.flatMap(roadMap -> {
-						Collection<NodeGroup> groups = NodeGroupHandler.getInstance().getNodeGroups();
+						Collection<NodeGroup> groups = NodeGroupHandler.getInstance().getNodeGroups().stream()
+								.map(nav -> new FindModule.NavigationRequestContext(player.getUniqueId(), nav))
+								.filter(c -> FindModule.getInstance().getNavigationFilter().stream().allMatch(p -> p.test(c)))
+								.map(FindModule.NavigationRequestContext::navigable)
+								.map(navigable -> (NodeGroup) navigable)
+								.collect(Collectors.toSet());
 						return roadMap.getNodes().stream().map(node -> new Pair<Node, Collection<Navigable>>(node, groups.stream().filter(g -> g.contains(node)).collect(Collectors.toSet())));
 					})
 					.collect(Collectors.toSet()), pair -> pair.getRight().stream().flatMap(navigable -> navigable.getSearchTerms().stream()).collect(Collectors.toSet()));

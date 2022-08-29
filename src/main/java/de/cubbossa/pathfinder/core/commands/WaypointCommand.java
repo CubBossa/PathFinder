@@ -24,12 +24,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class WaypointCommand extends CommandTree {
 
 	public WaypointCommand() {
 		super("waypoint");
+		withPermission(PathPlugin.PERM_CMD_WP);
 
 		withAliases("node");
 

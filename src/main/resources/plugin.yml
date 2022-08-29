@@ -10,9 +10,9 @@ depend:
 permissions:
   pathfinder.command.pathfinder.reload:
     default: op
-  pathfinder.command.find:
-    default: true
   pathfinder.command.find.location:
+    default: true
+  pathfinder.command.cancel_path:
     default: true
   pathfinder.command.roadmap.info:
     default: op
@@ -101,10 +101,14 @@ permissions:
   pathfinder.command.visualizer.particle.set_particle:
     default: op
 
-  pathfinder.admin:
+  pathfinder.command.pathfinder:
     default: false
     children:
       pathfinder.command.pathfinder.reload: true
+
+  pathfinder.command.roadmap:
+    default: false
+    children:
       pathfinder.command.roadmap.info: true
       pathfinder.command.roadmap.create: true
       pathfinder.command.roadmap.delete: true
@@ -120,14 +124,28 @@ permissions:
       pathfinder.command.roadmap.set.find-distance: true
       pathfinder.command.roadmap.set.findable: true
       pathfinder.command.roadmap.set.curvelength: true
-      pathfinder.nodegroup.list: true
-      pathfinder.nodegroup.create: true
-      pathfinder.nodegroup.delete: true
-      pathfinder.nodegroup.set_name: true
-      pathfinder.nodegroup.set_findable: true
-      pathfinder.nodegroup.searchterms.list: true
-      pathfinder.nodegroup.searchterms.add: true
-      pathfinder.nodegroup.searchterms.remove: true
+
+  pathfinder.command.find:
+    default: true
+    children:
+      pathfinder.command.find.location: true
+      pathfinder.command.cancel_path: true
+
+  pathfinder.command.nodegroup:
+    default: false
+    children:
+      pathfinder.command.nodegroup.list: true
+      pathfinder.command.nodegroup.create: true
+      pathfinder.command.nodegroup.delete: true
+      pathfinder.command.nodegroup.set_name: true
+      pathfinder.command.nodegroup.set_findable: true
+      pathfinder.command.nodegroup.searchterms.list: true
+      pathfinder.command.nodegroup.searchterms.add: true
+      pathfinder.command.nodegroup.searchterms.remove: true
+
+  pathfinder.command.waypoint:
+    default: false
+    children:
       pathfinder.command.waypoint.info: true
       pathfinder.command.waypoint.list: true
       pathfinder.command.waypoint.create: true
@@ -138,6 +156,10 @@ permissions:
       pathfinder.command.waypoint.disconnect: true
       pathfinder.command.waypoint.set_perm: true
       pathfinder.command.waypoint.set_curve_length: true
+
+  pathfinder.command.visualizer:
+    default: false
+    children:
       pathfinder.command.visualizer.list: true
       pathfinder.command.visualizer.create: true
       pathfinder.command.visualizer.delete: true
@@ -148,5 +170,14 @@ permissions:
       pathfinder.command.visualizer.set_distance: true
       pathfinder.command.visualizer.particle.set_particle_steps: true
       pathfinder.command.visualizer.particle.set_particle: true
+
+  pathfinder.admin:
+    default: false
+    children:
+      pathfinder.command.pathfinder: true
+      pathfinder.command.roadmap: true
+      pathfinder.command.nodegroup: true
+      pathfinder.command.waypoint: true
+      pathfinder.command.visualizer: true
 
 

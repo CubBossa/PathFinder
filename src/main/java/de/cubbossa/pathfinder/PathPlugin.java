@@ -42,9 +42,12 @@ import java.util.List;
 @Getter
 public class PathPlugin extends JavaPlugin {
 
+	public static final String PERM_CMD_PF = "pathfinder.command.pathfinder";
 	public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
-	public static final String PERM_CMD_FIND_GEN = "pathfinder.command.find";
+	public static final String PERM_CMD_FIND = "pathfinder.command.find";
 	public static final String PERM_CMD_FIND_LOC = "pathfinder.command.find.location";
+	public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
+	public static final String PERM_CMD_RM = "pathfinder.command.roadmap";
 	public static final String PERM_CMD_RM_INFO = "pathfinder.command.roadmap.info";
 	public static final String PERM_CMD_RM_CREATE = "pathfinder.command.roadmap.create";
 	public static final String PERM_CMD_RM_DELETE = "pathfinder.command.roadmap.delete";
@@ -60,14 +63,16 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_RM_SET_FIND_DIST = "pathfinder.command.roadmap.set.find-distance";
 	public static final String PERM_CMD_RM_SET_FINDABLE = "pathfinder.command.roadmap.set.findable";
 	public static final String PERM_CMD_RM_SET_CURVE = "pathfinder.command.roadmap.set.curvelength";
-	public static final String PERM_CMD_NG_LIST = "pathfinder.nodegroup.list";
-	public static final String PERM_CMD_NG_CREATE = "pathfinder.nodegroup.create";
-	public static final String PERM_CMD_NG_DELETE = "pathfinder.nodegroup.delete";
-	public static final String PERM_CMD_NG_SET_NAME = "pathfinder.nodegroup.set_name";
-	public static final String PERM_CMD_NG_SET_FINDABLE = "pathfinder.nodegroup.set_findable";
-	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.nodegroup.searchterms.list";
-	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.nodegroup.searchterms.add";
-	public static final String PERM_CMD_NG_ST_REMOVE = "pathfinder.nodegroup.searchterms.remove";
+	public static final String PERM_CMD_NG = "pathfinder.command.nodegroup";
+	public static final String PERM_CMD_NG_LIST = "pathfinder.command.nodegroup.list";
+	public static final String PERM_CMD_NG_CREATE = "pathfinder.command.nodegroup.create";
+	public static final String PERM_CMD_NG_DELETE = "pathfinder.command.nodegroup.delete";
+	public static final String PERM_CMD_NG_SET_NAME = "pathfinder.command.nodegroup.set_name";
+	public static final String PERM_CMD_NG_SET_FINDABLE = "pathfinder.command.nodegroup.set_findable";
+	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.command.nodegroup.searchterms.list";
+	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.command.nodegroup.searchterms.add";
+	public static final String PERM_CMD_NG_ST_REMOVE = "pathfinder.command.nodegroup.searchterms.remove";
+	public static final String PERM_CMD_WP = "pathfinder.command.waypoint";
 	public static final String PERM_CMD_WP_INFO = "pathfinder.command.waypoint.info";
 	public static final String PERM_CMD_WP_LIST = "pathfinder.command.waypoint.list";
 	public static final String PERM_CMD_WP_CREATE = "pathfinder.command.waypoint.create";
@@ -78,6 +83,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_WP_DISCONNECT = "pathfinder.command.waypoint.disconnect";
 	public static final String PERM_CMD_WP_SET_PERM = "pathfinder.command.waypoint.set_perm";
 	public static final String PERM_CMD_WP_SET_CURVE = "pathfinder.command.waypoint.set_curve_length";
+	public static final String PERM_CMD_PV = "pathfinder.command.visualizer";
 	public static final String PERM_CMD_PV_LIST = "pathfinder.command.visualizer.list";
 	public static final String PERM_CMD_PV_CREATE = "pathfinder.command.visualizer.create";
 	public static final String PERM_CMD_PV_DELETE = "pathfinder.command.visualizer.delete";

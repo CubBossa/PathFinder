@@ -35,6 +35,7 @@ public class NodeGroupCommand extends CommandTree {
 
 	public NodeGroupCommand(int offset) {
 		super("nodegroup");
+		withPermission(PathPlugin.PERM_CMD_NG);
 
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)

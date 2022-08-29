@@ -17,6 +17,7 @@ public class PathFinderCommand extends CommandTree {
 
 	public PathFinderCommand() {
 		super("pathfinder");
+		withPermission(PathPlugin.PERM_CMD_PF);
 
 		then(new LiteralArgument("reload")
 				.withPermission(PathPlugin.PERM_CMD_PF_RELOAD)
