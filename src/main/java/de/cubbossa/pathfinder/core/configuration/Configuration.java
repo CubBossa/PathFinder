@@ -29,6 +29,10 @@ public class Configuration {
 	@ConfigValue(path = "data.general.type")
 	private DatabaseType databaseType = DatabaseType.IN_MEMORY;
 
+	@ConfigValue(path = "module.navigation.requires-location-discovery", comments = """
+			Set this to true, if players have to discover nodegroups first to use the /find location <filter> command.
+			If set to false, one can always navigate to every group, even if it hasn't been discovered first.""")
+	private boolean findLocationRequiresDiscovery = true;
 
 	// Load and save
 

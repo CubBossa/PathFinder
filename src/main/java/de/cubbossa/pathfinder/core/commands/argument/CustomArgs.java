@@ -5,11 +5,13 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.menuframework.util.Pair;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.PathPlayer;
 import de.cubbossa.pathfinder.data.PathPlayerHandler;
+import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
@@ -28,10 +30,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.regex.MatchResult;
@@ -228,21 +227,29 @@ public class CustomArgs {
 	private static final List<Character> LIST_SYMBOLS = Lists.newArrayList('!', '&', '|', ')', '(');
 	private static final List<String> LIST_SYMBOLS_STRING = Lists.newArrayList("!", "&", "|", ")", "(");
 
-	public Argument<NavigateSelection> navigateSelectionArgument(String nodeName) {
+	public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
 		return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
 			String search = context.currentInput();
-			//TODO wrong way round, has to check nodes that have common navigables, not navigables that have common search terms
-			SetArithmeticParser<Navigable> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
-					.map(RoadMap::getNavigables)
-					.flatMap(Collection::stream)
-					.collect(Collectors.toSet()), Navigable::getSearchTerms);
-			return new NavigateSelection(parser.parse(search));
+			SetArithmeticParser<Pair<Node, Collection<Navigable>>> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
+					.flatMap(roadMap -> {
+						Collection<NodeGroup> groups = NodeGroupHandler.getInstance().getNodeGroups();
+						return roadMap.getNodes().stream().map(node -> new Pair<Node, Collection<Navigable>>(node, groups.stream().filter(g -> g.contains(node)).collect(Collectors.toSet())));
+					})
+					.collect(Collectors.toSet()), pair -> pair.getRight().stream().flatMap(navigable -> navigable.getSearchTerms().stream()).collect(Collectors.toSet()));
+			return new NodeSelection(parser.parse(search).stream().map(Pair::getLeft).collect(Collectors.toSet()));
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+					if (!(suggestionInfo.sender() instanceof Player player)) {
+						return suggestionsBuilder.buildFuture();
+					}
+					UUID playerId = player.getUniqueId();
 					String input = suggestionsBuilder.getInput();
 
 					int lastIndex = LIST_SYMBOLS.stream()
-							.map(input::lastIndexOf).mapToInt(value -> value).max().orElse(0);
+							.map(input::lastIndexOf)
+							.mapToInt(value -> value)
+							.max()
+							.orElse(0);
 					lastIndex = Integer.max(suggestionsBuilder.getInput().length() - suggestionsBuilder.getRemaining().length(), lastIndex + 1);
 
 					StringRange range = StringRange.between(lastIndex, input.length());
@@ -253,6 +260,9 @@ public class CustomArgs {
 					RoadMapHandler.getInstance().getRoadMaps().values().stream()
 							.map(RoadMap::getNavigables)
 							.flatMap(Collection::stream)
+							.map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
+							.filter(navigable -> FindModule.getInstance().getNavigationFilter().stream().allMatch(navigablePredicate -> navigablePredicate.test(navigable)))
+							.map(FindModule.NavigationRequestContext::navigable)
 							.map(Navigable::getSearchTerms)
 							.flatMap(Collection::stream)
 							.filter(s -> s.startsWith(inRange))

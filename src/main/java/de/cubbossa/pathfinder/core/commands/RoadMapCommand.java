@@ -52,7 +52,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		withAliases("rm");
 
 		then(new LiteralArgument("info")
-				.withPermission("pathfinder.command.roadmap.info")
+				.withPermission(PathPlugin.PERM_CMD_RM_INFO)
 				.executes((commandSender, objects) -> {
 					onInfo(commandSender, null);
 				})
@@ -62,7 +62,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						})));
 
 		then(new LiteralArgument("create")
-				.withPermission("pathfinder.command.roadmap.create")
+				.withPermission(PathPlugin.PERM_CMD_RM_CREATE)
 				.then(new StringArgument("key")
 						.executesPlayer((player, args) -> {
 							onCreate(player, new NamespacedKey(PathPlugin.getInstance(), (String) args[0]), player.getWorld(), false);
@@ -77,7 +77,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 										})))));
 
 		then(new LiteralArgument("delete")
-				.withPermission("pathfinder.command.roadmap.delete")
+				.withPermission(PathPlugin.PERM_CMD_RM_DELETE)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.executes((commandSender, args) -> {
 							onDelete(commandSender, (RoadMap) args[0]);
@@ -85,7 +85,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		then(new LiteralArgument("editmode")
 				.withRequirement(hasRoadMapSelected())
-				.withPermission("pathfinder.command.roadmap.editmode")
+				.withPermission(PathPlugin.PERM_CMD_RM_EDITMODE)
 				.executesPlayer((player, args) -> {
 					onEdit(player, null);
 				})
@@ -95,7 +95,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						})));
 
 		then(new LiteralArgument("list")
-				.withPermission("pathfinder.command.roadmap.list")
+				.withPermission(PathPlugin.PERM_CMD_RM_LIST)
 				.executes((commandSender, args) -> {
 					onList(commandSender, 0);
 				})
@@ -105,7 +105,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						})));
 
 		then(new LiteralArgument("forcefind")
-				.withPermission("pathfinder.command.roadmap.forcefind")
+				.withPermission(PathPlugin.PERM_CMD_RM_FORCEFIND)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new PlayerArgument("player")
 								.then(CustomArgs.nodeSelectionArgument("selection")
@@ -113,7 +113,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 											onForceFind(commandSender, (RoadMap) args[0], (Player) args[1], (NodeSelection) args[2]);
 										})))));
 		then(new LiteralArgument("forceforget")
-				.withPermission("pathfinder.command.roadmap.forceforget")
+				.withPermission(PathPlugin.PERM_CMD_RM_FORCEFORGET)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new PlayerArgument("player")
 								.then(CustomArgs.nodeSelectionArgument("selection")
@@ -122,14 +122,14 @@ public class RoadMapCommand extends CommandTree implements Listener {
 										})))));
 
 		then(new LiteralArgument("select")
-				.withPermission("pathfinder.command.roadmap.select")
+				.withPermission(PathPlugin.PERM_CMD_RM_SELECT)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.executes((commandSender, objects) -> {
 							onSelect(commandSender, (RoadMap) objects[0]);
 						})));
 		then(new LiteralArgument("deselect")
 				.withRequirement(hasRoadMapSelected())
-				.withPermission("pathfinder.command.roadmap.select")
+				.withPermission(PathPlugin.PERM_CMD_RM_DESELECT)
 				.executes((commandSender, args) -> {
 					onDeselect(commandSender);
 				}));
@@ -137,46 +137,43 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		then(new LiteralArgument("set")
 				.withRequirement(hasRoadMapSelected())
 				.then(new LiteralArgument("visualizer")
-						.withPermission("pathfinder.command.roadmap.set.path-visualizer")
+						.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
 						.then(CustomArgs.pathVisualizerArgument("visualizer")
 								.executes((commandSender, args) -> {
 									onStyle(commandSender, (PathVisualizer) args[0]);
 								})))
 
 				.then(new LiteralArgument("name")
-						.withPermission("pathfinder.command.roadmap.set.name")
+						.withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
 						.then(CustomArgs.miniMessageArgument("name")
 								.executes((commandSender, args) -> {
 									onRename(commandSender, (String) args[0]);
 								})))
 
 				.then(new LiteralArgument("world")
-						.withPermission("pathfinder.command.roadmap.set.world")
+						.withPermission(PathPlugin.PERM_CMD_RM_SET_WORLD)
 						.then(CustomArgs.worldArgument("world")
 								.executes((commandSender, objects) -> {
 									onChangeWorld(commandSender, (World) objects[0], false);
-								})))
-				.then(new LiteralArgument("world")
-						.withPermission("pathfinder.command.roadmap.set.world")
-						.then(CustomArgs.worldArgument("world")
+								})
 								.then(new LiteralArgument("force")
 										.executes((commandSender, args) -> {
 											onChangeWorld(commandSender, (World) args[0], true);
 										}))))
 				.then(new LiteralArgument("find-distance")
-						.withPermission("pathfinder.command.roadmap.set.find-distance")
+						.withPermission(PathPlugin.PERM_CMD_RM_SET_FIND_DIST)
 						.then(new DoubleArgument("distance", 0.01)
 								.executes((commandSender, args) -> {
 									onFindDistance(commandSender, (Double) args[0]);
 								})))
 				.then(new LiteralArgument("findable")
-						.withPermission("pathfinder.command.roadmap.set.findable")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
 						.then(new BooleanArgument("findable")
 								.executes((commandSender, args) -> {
 									onSetFindable(commandSender, (Boolean) args[0]);
 								})))
 				.then(new LiteralArgument("curve-length")
-						.withPermission("pathfinder.command.roadmap.set.curvelength")
+						.withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
 						.then(new DoubleArgument("curvelength", 0)
 								.executes((commandSender, args) -> {
 									onChangeTangentStrength(commandSender, null, (Double) args[0]);
@@ -185,46 +182,43 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		then(new LiteralArgument("edit")
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new LiteralArgument("visualizer")
-								.withPermission("pathfinder.command.roadmap.set.path-visualizer")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
 								.then(CustomArgs.pathVisualizerArgument("visualizer")
 										.executes((commandSender, args) -> {
 											onStyle(commandSender, (PathVisualizer) args[1]);
 										})))
 
 						.then(new LiteralArgument("name")
-								.withPermission("pathfinder.command.roadmap.set.name")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
 								.then(CustomArgs.miniMessageArgument("name")
 										.executes((commandSender, args) -> {
 											onRename(commandSender, (String) args[1]);
 										})))
 
 						.then(new LiteralArgument("world")
-								.withPermission("pathfinder.command.roadmap.set.world")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_WORLD)
 								.then(CustomArgs.worldArgument("world")
 										.executes((commandSender, objects) -> {
 											onChangeWorld(commandSender, (World) objects[1], false);
-										})))
-						.then(new LiteralArgument("world")
-								.withPermission("pathfinder.command.roadmap.set.world")
-								.then(CustomArgs.worldArgument("world")
+										})
 										.then(new LiteralArgument("force")
 												.executes((commandSender, args) -> {
 													onChangeWorld(commandSender, (World) args[1], true);
 												}))))
 						.then(new LiteralArgument("find-distance")
-								.withPermission("pathfinder.command.roadmap.set.find-distance")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_FIND_DIST)
 								.then(new DoubleArgument("distance", 0.01)
 										.executes((commandSender, args) -> {
 											onFindDistance(commandSender, (Double) args[1]);
 										})))
 						.then(new LiteralArgument("findable")
-								.withPermission("pathfinder.command.roadmap.set.findable")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_FINDABLE)
 								.then(new BooleanArgument("findable")
 										.executes((commandSender, args) -> {
 											onSetFindable(commandSender, (Boolean) args[1]);
 										})))
 						.then(new LiteralArgument("curve-length")
-								.withPermission("pathfinder.command.roadmap.set.curvelength")
+								.withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
 								.then(new DoubleArgument("curvelength", 0)
 										.executes((commandSender, args) -> {
 											onChangeTangentStrength(commandSender, (RoadMap) args[0], (Double) args[1]);

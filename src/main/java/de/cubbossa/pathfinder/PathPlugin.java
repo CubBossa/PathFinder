@@ -3,7 +3,10 @@ package de.cubbossa.pathfinder;
 import de.bossascrew.splinelib.SplineLib;
 import de.bossascrew.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
-import de.cubbossa.pathfinder.core.commands.*;
+import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
+import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
+import de.cubbossa.pathfinder.core.commands.RoadMapCommand;
+import de.cubbossa.pathfinder.core.commands.WaypointCommand;
 import de.cubbossa.pathfinder.core.configuration.Configuration;
 import de.cubbossa.pathfinder.core.listener.DatabaseListener;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
@@ -14,9 +17,9 @@ import de.cubbossa.pathfinder.data.*;
 import de.cubbossa.pathfinder.module.Module;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
-import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -36,17 +39,31 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class PathPlugin extends JavaPlugin {
 
-	public static final String PERM_FIND_NODE = "bcrew.pathfinder.find";
-	public static final String PERM_COMMAND_FIND_INFO = "pathfinder.command.find.info";
-	public static final String PERM_COMMAND_FIND_STYLE = "pathfinder.command.find.style";
-	public static final String PERM_COMMAND_FIND_LOCATIONS = "pathfinder.command.find.location";
-
+	public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
+	public static final String PERM_CMD_FIND_GEN = "pathfinder.command.find";
+	public static final String PERM_CMD_FIND_LOC = "pathfinder.command.find.location";
+	public static final String PERM_CMD_RM_INFO = "pathfinder.command.roadmap.info";
+	public static final String PERM_CMD_RM_CREATE = "pathfinder.command.roadmap.create";
+	public static final String PERM_CMD_RM_DELETE = "pathfinder.command.roadmap.delete";
+	public static final String PERM_CMD_RM_EDITMODE = "pathfinder.command.roadmap.editmode";
+	public static final String PERM_CMD_RM_LIST = "pathfinder.command.roadmap.list";
+	public static final String PERM_CMD_RM_FORCEFIND = "pathfinder.command.roadmap.forcefind";
+	public static final String PERM_CMD_RM_FORCEFORGET = "pathfinder.command.roadmap.forceforget";
+	public static final String PERM_CMD_RM_SELECT = "pathfinder.command.roadmap.select";
+	public static final String PERM_CMD_RM_DESELECT = "pathfinder.command.roadmap.deselect";
+	public static final String PERM_CMD_RM_SET_VIS = "pathfinder.command.roadmap.set.path-visualizer";
+	public static final String PERM_CMD_RM_SET_NAME = "pathfinder.command.roadmap.set.name";
+	public static final String PERM_CMD_RM_SET_WORLD = "pathfinder.command.roadmap.set.world";
+	public static final String PERM_CMD_RM_SET_FIND_DIST = "pathfinder.command.roadmap.set.find-distance";
+	public static final String PERM_CMD_RM_SET_FINDABLE = "pathfinder.command.roadmap.set.findable";
+	public static final String PERM_CMD_RM_SET_CURVE = "pathfinder.command.roadmap.set.curvelength";
 	public static final String PERM_CMD_NG_LIST = "pathfinder.nodegroup.list";
 	public static final String PERM_CMD_NG_CREATE = "pathfinder.nodegroup.create";
 	public static final String PERM_CMD_NG_DELETE = "pathfinder.nodegroup.delete";
-	public static final String PERM_CMD_NG_RENAME = "pathfinder.nodegroup.rename";
+	public static final String PERM_CMD_NG_SET_NAME = "pathfinder.nodegroup.set_name";
 	public static final String PERM_CMD_NG_SET_FINDABLE = "pathfinder.nodegroup.set_findable";
 	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.nodegroup.searchterms.list";
 	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.nodegroup.searchterms.add";
@@ -61,6 +78,17 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_WP_DISCONNECT = "pathfinder.command.waypoint.disconnect";
 	public static final String PERM_CMD_WP_SET_PERM = "pathfinder.command.waypoint.set_perm";
 	public static final String PERM_CMD_WP_SET_CURVE = "pathfinder.command.waypoint.set_curve_length";
+	public static final String PERM_CMD_PV_LIST = "pathfinder.command.visualizer.list";
+	public static final String PERM_CMD_PV_CREATE = "pathfinder.command.visualizer.create";
+	public static final String PERM_CMD_PV_DELETE = "pathfinder.command.visualizer.delete";
+	public static final String PERM_CMD_PV_INFO = "pathfinder.command.visualizer.info";
+	public static final String PERM_CMD_PV_SET_NAME = "pathfinder.command.visualizer.set_name";
+	public static final String PERM_CMD_PV_SET_PERMISSION = "pathfinder.command.visualizer.set_permission";
+	public static final String PERM_CMD_PV_INTERVAL = "pathfinder.command.visualizer.set_interval";
+	public static final String PERM_CMD_PV_POINT_DIST = "pathfinder.command.visualizer.set_distance";
+	public static final String PERM_CMD_PV_PARTICLE_STEPS = "pathfinder.command.visualizer.particle.set_particle_steps";
+	public static final String PERM_CMD_PV_PARTICLES = "pathfinder.command.visualizer.particle.set_particle";
+
 
 	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
 		@Override
@@ -87,33 +115,21 @@ public class PathPlugin extends JavaPlugin {
 	@Getter
 	private static PathPlugin instance;
 
-	@Getter
-	private File effectsFile;
 	private final List<Module> modules;
-	@Getter
 	private BukkitAudiences audiences;
-	@Getter
 	private MiniMessage miniMessage;
-	@Getter
+
+	private File effectsFile;
 	private DataStorage database;
-	@Getter
 	private Configuration configuration;
 
-	@Getter
 	private FindCommand findCommand;
-	@Getter
 	private RoadMapCommand roadMapCommand;
-	@Getter
 	private PathFinderCommand pathFinderCommand;
-	@Getter
 	private CancelPathCommand cancelPathCommand;
-	@Getter
 	private NodeGroupCommand nodeGroupCommand;
-	@Getter
 	private PathVisualizerCommand pathVisualizerCommand;
-	@Getter
 	private WaypointCommand waypointCommand;
-	@Getter
 	private MazeCommand mazeCommand;
 
 
@@ -122,11 +138,10 @@ public class PathPlugin extends JavaPlugin {
 		modules = new ArrayList<>();
 	}
 
-
 	@Override
 	public void onLoad() {
 		CommandAPI.onLoad(new CommandAPIConfig()
-				.verboseOutput(true));
+				.verboseOutput(false));
 	}
 
 	@SneakyThrows
@@ -138,6 +153,9 @@ public class PathPlugin extends JavaPlugin {
 		miniMessage = MiniMessage.miniMessage();
 
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
+
+		// Tutorial
+		saveResource("how-the-hell-do-i-use-it.txt", true);
 
 		// Data
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
@@ -154,8 +172,6 @@ public class PathPlugin extends JavaPlugin {
 			default -> new YmlDatabase(new File(getDataFolder(), "data/"));
 		};
 		database.connect();
-
-		System.out.println(database);
 
 		new FindModule(this);
 
@@ -213,7 +229,6 @@ public class PathPlugin extends JavaPlugin {
 		CommandAPI.unregister(mazeCommand.getName());
 		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
-
 	}
 
 	public void registerModule(Module module) {

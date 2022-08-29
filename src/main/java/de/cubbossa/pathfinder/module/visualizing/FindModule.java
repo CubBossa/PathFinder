@@ -3,14 +3,18 @@ package de.cubbossa.pathfinder.module.visualizing;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.NavigateSelection;
+import de.cubbossa.pathfinder.core.node.Navigable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.EmptyNode;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.Module;
-import de.cubbossa.pathfinder.module.visualizing.events.*;
+import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChangedEvent;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -27,9 +31,12 @@ import org.jgrapht.Graphs;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class FindModule extends Module  implements Listener {
+
+	public record NavigationRequestContext(UUID playerId, Navigable navigable) {}
 
 	public record SearchInfo(UUID playerId, ParticlePath path, Location target, float distance) {
 	}
@@ -41,6 +48,7 @@ public class FindModule extends Module  implements Listener {
 
 	private final PathPlugin plugin;
 	private MoveListener listener;
+	private final List<Predicate<NavigationRequestContext>> navigationFilter;
 
 	public FindModule(PathPlugin plugin) {
 		instance = this;
@@ -48,6 +56,7 @@ public class FindModule extends Module  implements Listener {
 		this.plugin = plugin;
 		this.plugin.registerModule(this);
 		this.activePaths = new HashMap<>();
+		this.navigationFilter = new ArrayList<>();
 	}
 
 	@Override
@@ -66,15 +75,23 @@ public class FindModule extends Module  implements Listener {
 		PlayerMoveEvent.getHandlerList().unregister(listener);
 	}
 
+	public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
+		navigationFilter.add(filter);
+	}
+
+	public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
+		return new ArrayList<>(navigationFilter);
+	}
+
 	public Map<NamespacedKey, SearchInfo> getActivePaths(Player player) {
 		return activePaths.computeIfAbsent(player.getUniqueId(), uuid -> new HashMap<>());
 	}
 
-	public void findPath(Player player, NavigateSelection navigables) {
-		findPath(player, navigables, RoadMapHandler.getInstance().getRoadMaps().values());
+	public void findPath(Player player, NodeSelection targets) {
+		findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
 	}
 
-	public void findPath(Player player, NavigateSelection navigables, Collection<RoadMap> scope) {
+	public void findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
 
 		// Prepare graph:
 		// Every target node will be connected with a new introduced destination node.
@@ -84,10 +101,7 @@ public class FindModule extends Module  implements Listener {
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 
 			Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
-			Collection<Node> nodes = navigables.stream()
-					.flatMap(x -> x.getGroup().stream())
-					.filter(node -> scopeKeys.contains(node.getRoadMapKey()))
-					.collect(Collectors.toSet());
+			Collection<Node> nodes = targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey())).collect(Collectors.toSet());
 
 			List<RoadMap> roadMaps = nodes.stream()
 					.map(Node::getRoadMapKey)
@@ -110,14 +124,11 @@ public class FindModule extends Module  implements Listener {
 
 			EmptyNode destination = new EmptyNode(firstRoadMap);
 			graph.addVertex(destination);
-			navigables.stream()
-					.flatMap(x -> x.getGroup().stream())
-					.distinct()
-					.forEach(n -> {
-						Edge e = new Edge(n, destination, 1);
-						graph.addEdge(n, destination, e);
-						graph.setEdgeWeight(e, 1);
-					});
+			targets.forEach(n -> {
+				Edge e = new Edge(n, destination, 1);
+				graph.addEdge(n, destination, e);
+				graph.setEdgeWeight(e, 1);
+			});
 
 			GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
 

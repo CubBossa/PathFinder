@@ -7,13 +7,15 @@ import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
-import dev.jorel.commandapi.arguments.*;
+import dev.jorel.commandapi.arguments.BooleanArgument;
+import dev.jorel.commandapi.arguments.IntegerArgument;
+import dev.jorel.commandapi.arguments.LiteralArgument;
+import dev.jorel.commandapi.arguments.StringArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,7 +25,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,14 +59,7 @@ public class NodeGroupCommand extends CommandTree {
 						.executesPlayer((player, objects) -> {
 							deleteGroup(player, (NodeGroup) objects[offset]);
 						})));
-		then(new LiteralArgument("rename")
-				.withPermission(PathPlugin.PERM_CMD_NG_RENAME)
-				.then(CustomArgs.nodeGroupArgument("group")
-						.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
-								.executesPlayer((player, objects) -> {
-									renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
-								})
-						)));
+
 		then(new LiteralArgument("search-terms")
 				.then(new LiteralArgument("add")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
@@ -88,6 +82,14 @@ public class NodeGroupCommand extends CommandTree {
 									searchTermsList(player, (NodeGroup) objects[offset]);
 								}))));
 		then(new LiteralArgument("set")
+				.then(new LiteralArgument("name")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
+										.executesPlayer((player, objects) -> {
+											renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
+										})
+								)))
 				.then(new LiteralArgument("findable")
 						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
 						.then(CustomArgs.nodeGroupArgument("group")

@@ -4,6 +4,7 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.data.DiscoverInfo;
+import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.serializedeffects.EffectHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -28,6 +29,14 @@ public class DiscoverHandler {
 
 		discovered = new HashMap<>();
 		Bukkit.getPluginManager().registerEvents(new MoveListener(), PathPlugin.getInstance());
+		if (PathPlugin.getInstance().getConfiguration().isFindLocationRequiresDiscovery()) {
+			FindModule.getInstance().registerFindPredicate(context -> {
+				if (context.navigable() instanceof Discoverable discoverable) {
+					return hasDiscovered(context.playerId(), discoverable);
+				}
+				return true;
+			});
+		}
 	}
 
 	public void playDiscovery(UUID playerId, Discoverable discoverable) {

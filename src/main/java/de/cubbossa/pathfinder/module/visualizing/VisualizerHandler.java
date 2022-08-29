@@ -49,6 +49,7 @@ public class VisualizerHandler {
 		public void appendEditCommand(ArgumentTree tree, int visualizerIndex, int argumentOffset) {
 			tree
 					.then(new LiteralArgument("particle")
+							.withPermission(PathPlugin.PERM_CMD_PV_PARTICLES)
 							.then(new ParticleArgument("particle")
 									.executes((commandSender, objects) -> {
 										ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
@@ -74,6 +75,7 @@ public class VisualizerHandler {
 									)
 							))
 					.then(new LiteralArgument("particle-steps")
+							.withPermission(PathPlugin.PERM_CMD_PV_PARTICLE_STEPS)
 							.then(new IntegerArgument("amount", 1)
 									.executes((commandSender, objects) -> {
 										ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];

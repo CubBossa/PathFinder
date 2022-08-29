@@ -19,7 +19,7 @@ public class PathFinderCommand extends CommandTree {
 		super("pathfinder");
 
 		then(new LiteralArgument("reload")
-				.withPermission("pathfinder.command.pathfinder.reload")
+				.withPermission(PathPlugin.PERM_CMD_PF_RELOAD)
 
 				.executes((sender, objects) -> {
 					long now = System.currentTimeMillis();

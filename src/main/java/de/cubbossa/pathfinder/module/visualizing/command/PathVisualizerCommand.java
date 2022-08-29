@@ -33,7 +33,7 @@ public class PathVisualizerCommand extends CommandTree {
 		super("pathvisualizer");
 
 		then(new LiteralArgument("list")
-				.withPermission("pathfinder.command.visualizer.list")
+				.withPermission(PathPlugin.PERM_CMD_PV_LIST)
 				.executes((commandSender, objects) -> {
 					onList(commandSender, 1);
 				})
@@ -43,7 +43,7 @@ public class PathVisualizerCommand extends CommandTree {
 						})));
 
 		then(new LiteralArgument("create")
-				.withPermission("pathfinder.command.visualizer.create")
+				.withPermission(PathPlugin.PERM_CMD_PV_CREATE)
 				.then(CustomArgs.visualizerTypeArgument("type")
 						.then(new StringArgument("key")
 								.executes((commandSender, objects) -> {
@@ -52,14 +52,14 @@ public class PathVisualizerCommand extends CommandTree {
 								}))));
 
 		then(new LiteralArgument("delete")
-				.withPermission("pathfinder.command.visualizer.delete")
+				.withPermission(PathPlugin.PERM_CMD_PV_DELETE)
 				.then(CustomArgs.pathVisualizerArgument("visualizer")
 						.executes((commandSender, objects) -> {
 							onDelete(commandSender, (PathVisualizer<?>) objects[0]);
 						})));
 
 		then(new LiteralArgument("info")
-				.withPermission("pathfinder.command.visualizer.info")
+				.withPermission(PathPlugin.PERM_CMD_PV_INFO)
 				.then(CustomArgs.pathVisualizerArgument("visualizer")
 						.executes((commandSender, objects) -> {
 							onInfo(commandSender, (PathVisualizer<?>) objects[0]);
@@ -76,25 +76,25 @@ public class PathVisualizerCommand extends CommandTree {
 			type.appendEditCommand(typeArg, 0, 1);
 
 			typeArg.then(new LiteralArgument("name")
-					.withPermission("pathfinder.command.visualizer.set_name")
+					.withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
 					.then(CustomArgs.miniMessageArgument("name")
 							.executes((commandSender, objects) -> {
 								onSetName(commandSender, (PathVisualizer<?>) objects[0], (String) objects[1]);
 							})));
 			typeArg.then(new LiteralArgument("permission")
-					.withPermission("pathfinder.command.visualizer.set_permission")
+					.withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
 					.then(new GreedyStringArgument("permission")
 							.executes((commandSender, objects) -> {
 								onSetPermission(commandSender, (PathVisualizer<?>) objects[0], (String) objects[1]);
 							})));
 			typeArg.then(new LiteralArgument("interval")
-					.withPermission("pathfinder.command.visualizer.set_interval")
+					.withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
 					.then(new IntegerArgument("ticks", 1)
 							.executes((commandSender, objects) -> {
 								onSetInterval(commandSender, (PathVisualizer<?>) objects[0], (Integer) objects[1]);
 							})));
 			typeArg.then(new LiteralArgument("point-distance")
-					.withPermission("pathfinder.command.visualizer.set_distance")
+					.withPermission(PathPlugin.PERM_CMD_PV_POINT_DIST)
 					.then(new FloatArgument("distance", .02f, 100)
 							.executes((commandSender, objects) -> {
 								onSetPointDistance(commandSender, (PathVisualizer<?>) objects[0], (Float) objects[1]);
