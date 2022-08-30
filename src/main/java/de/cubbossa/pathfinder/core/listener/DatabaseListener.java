@@ -3,8 +3,10 @@ package de.cubbossa.pathfinder.core.listener;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.*;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetCurveLengthEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetNameEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
@@ -33,8 +35,18 @@ public class DatabaseListener implements Listener {
 		data.deleteRoadMap(event.getRoadMap().getKey());
 	}
 
-	@EventHandler
-	public void onRoadMapDefaultCurveLengthChanged(RoadMapCurveLengthChangedEvent event) {
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onRoadMapUpdate(RoadMapSetNameEvent event) {
+		data.updateRoadMap(event.getRoadMap());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onRoadMapUpdate(RoadMapSetCurveLengthEvent event) {
+		data.updateRoadMap(event.getRoadMap());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onRoadMapUpdate(RoadMapSetVisualizerEvent event) {
 		data.updateRoadMap(event.getRoadMap());
 	}
 

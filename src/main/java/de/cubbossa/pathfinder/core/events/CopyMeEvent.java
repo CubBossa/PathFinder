@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.core.events;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

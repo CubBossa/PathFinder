@@ -8,6 +8,7 @@ import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.concurrent.CompletableFuture;
@@ -39,12 +40,12 @@ public class PathFinderCommand extends CommandTree {
 					}).whenComplete((unused, throwable) -> {
 						if (throwable != null) {
 							TranslationHandler.getInstance().sendMessage(Messages.RELOAD_ERROR.format(TagResolver.builder()
-									.tag("error", Tag.inserting(Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
+									.resolver(Placeholder.component("error", Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
 									.build()), sender);
 							PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Error occured while reloading files: ", throwable);
 						} else {
 							TranslationHandler.getInstance().sendMessage(Messages.RELOAD_SUCCESS.format(TagResolver.builder()
-									.tag("ms", Tag.preProcessParsed(System.currentTimeMillis() - now + ""))
+									.resolver(Placeholder.unparsed("ms", System.currentTimeMillis() - now + ""))
 									.build()), sender);
 						}
 					});
@@ -64,12 +65,12 @@ public class PathFinderCommand extends CommandTree {
 							}).whenComplete((unused, throwable) -> {
 								if (throwable != null) {
 									TranslationHandler.getInstance().sendMessage(Messages.RELOAD_ERROR.format(TagResolver.builder()
-											.tag("error", Tag.inserting(Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
+											.resolver(Placeholder.component("error", Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
 											.build()), sender);
 									PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Error occured while reloading files: ", throwable);
 								} else {
 									TranslationHandler.getInstance().sendMessage(Messages.RELOAD_SUCCESS_LANG.format(TagResolver.builder()
-											.tag("ms", Tag.preProcessParsed(System.currentTimeMillis() - now + ""))
+											.resolver(Placeholder.unparsed("ms", System.currentTimeMillis() - now + ""))
 											.build()), sender);
 								}
 							});
@@ -89,12 +90,12 @@ public class PathFinderCommand extends CommandTree {
 							}).whenComplete((unused, throwable) -> {
 								if (throwable != null) {
 									TranslationHandler.getInstance().sendMessage(Messages.RELOAD_ERROR.format(TagResolver.builder()
-											.tag("error", Tag.inserting(Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
+											.resolver(Placeholder.component("error", Component.text(throwable.getMessage().replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
 											.build()), sender);
 									PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Error occured while reloading files: ", throwable);
 								} else {
 									TranslationHandler.getInstance().sendMessage(Messages.RELOAD_SUCCESS_FX.format(TagResolver.builder()
-											.tag("ms", Tag.preProcessParsed(System.currentTimeMillis() - now + ""))
+											.resolver(Placeholder.unparsed("ms", System.currentTimeMillis() - now + ""))
 											.build()), sender);
 								}
 							});

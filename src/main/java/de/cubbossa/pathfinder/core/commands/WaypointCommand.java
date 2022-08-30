@@ -18,6 +18,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -148,11 +149,11 @@ public class WaypointCommand extends CommandTree {
 		Node node = selection.get(0);
 		FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
 				.tag("id", Tag.preProcessParsed(node.getNodeId() + ""))
-				.tag("roadmap", Tag.inserting(Messages.formatKey(node.getRoadMapKey())))
+				.tag("roadmap", Messages.formatKey(node.getRoadMapKey()))
 				.tag("groups", node instanceof Groupable groupable ?
 						Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 						Tag.inserting(Component.text("none"))) //TODO as message
-				.tag("position", Tag.inserting(Messages.formatVector(node.getLocation().toVector())))
+				.resolver(Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
 				.tag("curve-length", Tag.preProcessParsed(node.getCurveLength() + ""))
 				.tag("edge-count", Tag.preProcessParsed(node.getEdges().size() + ""))
 				.build());
@@ -186,8 +187,8 @@ public class WaypointCommand extends CommandTree {
 		selection.forEach(node -> roadMap.setNodeLocation(node, player.getLocation()));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("location", Tag.inserting(Messages.formatVector(player.getLocation().toVector())))
+				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
+				.resolver(Placeholder.component("location", Messages.formatVector(player.getLocation().toVector())))
 				.build()), player);
 	}
 
@@ -196,8 +197,8 @@ public class WaypointCommand extends CommandTree {
 		selection.forEach(node -> node.setLocation(location));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("location", Tag.inserting(Messages.formatVector(location.toVector())))
+				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
+				.resolver(Placeholder.component("location", Messages.formatVector(location.toVector())))
 				.build()), player);
 	}
 
@@ -205,7 +206,7 @@ public class WaypointCommand extends CommandTree {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 
 		TagResolver resolver = TagResolver.builder()
-				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
+				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
 				.tag("page", Tag.preProcessParsed(pageInput + ""))
 				.build();
 
@@ -218,7 +219,7 @@ public class WaypointCommand extends CommandTree {
 
 							TagResolver r = TagResolver.builder()
 									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-									.tag("position", Tag.inserting(Messages.formatVector(n.getLocation().toVector())))
+									.resolver(Placeholder.component("position", Messages.formatVector(n.getLocation().toVector())))
 									.tag("groups", n instanceof Groupable groupable ?
 											Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 											Tag.inserting(Component.text("none"))) //TODO as message
@@ -235,8 +236,8 @@ public class WaypointCommand extends CommandTree {
 		for (Node start : startSelection) {
 			for (Node end : endSelection) {
 				TagResolver resolver = TagResolver.builder()
-						.tag("start", Tag.inserting(Component.text(start.getNodeId())))
-						.tag("end", Tag.inserting(Component.text(end.getNodeId())))
+						.resolver(Placeholder.component("start", Component.text(start.getNodeId())))
+						.resolver(Placeholder.component("end", Component.text(end.getNodeId())))
 						.build();
 
 				if (start.equals(end)) {
@@ -262,8 +263,8 @@ public class WaypointCommand extends CommandTree {
 			}
 			for (Node end : endSelection) {
 				TagResolver resolver = TagResolver.builder()
-						.tag("start", Tag.inserting(Component.text(start.getNodeId())))
-						.tag("end", Tag.inserting(Component.text(end.getNodeId())))
+						.resolver(Placeholder.component("start", Component.text(start.getNodeId())))
+						.resolver(Placeholder.component("end", Component.text(end.getNodeId())))
 						.build();
 
 				start.disconnect(end);
@@ -275,8 +276,8 @@ public class WaypointCommand extends CommandTree {
 	public void onSetTangent(Player player, NodeSelection selection, Double strength) {
 		selection.forEach(node -> node.setCurveLength(strength));
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("length", Tag.inserting(Component.text(strength)))
+				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
+				.resolver(Placeholder.component("length", Component.text(strength)))
 				.build()), player);
 	}
 
@@ -287,8 +288,8 @@ public class WaypointCommand extends CommandTree {
 			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
 
 			TagResolver resolver = TagResolver.builder()
-					.tag("selection", Tag.inserting(Messages.formatNodeSelection(selection)))
-					.tag("group", Tag.inserting(Messages.formatKey(key)))
+					.resolver(Placeholder.component("selection", Messages.formatNodeSelection(selection)))
+					.resolver(Placeholder.component("group", Messages.formatKey(key)))
 					.build();
 
 			NodeGroup group = roadMap.getNodeGroup(key);

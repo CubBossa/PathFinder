@@ -14,6 +14,7 @@ import dev.jorel.commandapi.wrappers.ParticleData;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -37,11 +38,11 @@ public class VisualizerHandler {
 		@Override
 		public Message getInfoMessage(ParticleVisualizer element) {
 			return Messages.CMD_VIS_INFO_PARTICLES.format(TagResolver.builder()
-					.tag("particle", Tag.inserting(Messages.formatParticle(element.getParticle(), element.getParticleData())))
-					.tag("particle-steps", Tag.inserting(Component.text(element.getSchedulerSteps())))
-					.tag("amount", Tag.inserting(Component.text(element.getAmount())))
-					.tag("speed", Tag.inserting(Component.text(element.getSpeed())))
-					.tag("offset", Tag.inserting(Messages.formatVector(element.getOffset())))
+					.resolver(Placeholder.component("particle", Messages.formatParticle(element.getParticle(), element.getParticleData())))
+					.resolver(Placeholder.component("particle-steps", Component.text(element.getSchedulerSteps())))
+					.resolver(Placeholder.component("amount", Component.text(element.getAmount())))
+					.resolver(Placeholder.component("speed", Component.text(element.getSpeed())))
+					.resolver(Placeholder.component("offset", Messages.formatVector(element.getOffset())))
 					.build());
 		}
 

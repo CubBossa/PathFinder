@@ -220,7 +220,7 @@ public abstract class SqlDatabase implements DataStorage {
 			try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_roadmaps` SET " +
 					"`name_format` = ?, " +
 					"`path_visualizer` = ?, " +
-					"`path_curve_length` = ?, " +
+					"`path_curve_length` = ? " +
 					"WHERE `key` = ?")) {
 				stmt.setString(1, roadMap.getNameFormat());
 				stmt.setString(2, roadMap.getVisualizer().getKey().toString());
@@ -374,7 +374,7 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
 					"(`type`, `roadmap_key`, `x`, `y`, `z`, `world`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+					"(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
 				stmt.setString(1, type.getKey().toString());
 				stmt.setString(2, roadMap.getKey().toString());
 				stmt.setDouble(3, location.getX());

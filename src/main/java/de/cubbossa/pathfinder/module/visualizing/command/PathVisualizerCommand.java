@@ -20,6 +20,7 @@ import dev.jorel.commandapi.arguments.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -120,10 +121,10 @@ public class PathVisualizerCommand extends CommandTree {
 
 		for (PathVisualizer<?> visualizer : CommandUtils.subList(new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().values()), page, 10)) {
 			TagResolver r = TagResolver.builder()
-					.tag("key", Tag.preProcessParsed(visualizer.getKey().getKey() + ""))
-					.tag("name", Tag.inserting(visualizer.getDisplayName()))
-					.tag("name-format", Tag.inserting(Component.text(visualizer.getNameFormat())))
-					.tag("type", Tag.inserting(Component.text(visualizer.getNameFormat())))
+					.tag("key", Messages.formatKey(visualizer.getKey()))
+					.resolver(Placeholder.component("name", visualizer.getDisplayName()))
+					.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+					.resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
 					.build();
 
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(resolver, r), sender);
@@ -140,10 +141,10 @@ public class PathVisualizerCommand extends CommandTree {
 		PathVisualizer<?> visualizer = VisualizerHandler.getInstance().createPathVisualizer(key);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.format(TagResolver.builder()
-				.tag("key", Tag.inserting(Messages.formatKey(visualizer.getKey())))
-				.tag("name", Tag.inserting(visualizer.getDisplayName()))
-				.tag("name-format", Tag.inserting(Component.text(visualizer.getNameFormat())))
-				.tag("type", Tag.inserting(Component.text(visualizer.getNameFormat())))
+				.tag("key", Messages.formatKey(visualizer.getKey()))
+				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
+				.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+				.resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
 				.build()), sender);
 	}
 
@@ -153,21 +154,23 @@ public class PathVisualizerCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
-				.format(TagResolver.resolver("key", Tag.inserting(Messages.formatKey(visualizer.getKey()))),
-						TagResolver.resolver("name", Tag.inserting(visualizer.getDisplayName())),
-						TagResolver.resolver("name-format", Tag.inserting(Component.text(visualizer.getNameFormat())))), sender);
+				.format(TagResolver.builder()
+						.tag("key", Messages.formatKey(visualizer.getKey()))
+						.resolver(Placeholder.component("name", visualizer.getDisplayName()))
+						.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+						.build()), sender);
 	}
 
 	public <T extends PathVisualizer<T>> void onInfo(CommandSender sender, PathVisualizer<T> visualizer) {
 
 		FormattedMessage message = visualizer.getType().getInfoMessage((T) visualizer).format(TagResolver.builder()
-				.tag("id", Tag.preProcessParsed(visualizer.getKey().toString()))
-				.tag("name", Tag.inserting(visualizer.getDisplayName()))
-				.tag("name-format", Tag.inserting(Component.text(visualizer.getNameFormat())))
-				.tag("type", Tag.inserting(Component.text(visualizer.getNameFormat())))
-				.tag("permission", Tag.inserting(Messages.formatPermission(visualizer.getPermission())))
-				.tag("interval", Tag.inserting(Component.text(visualizer.getInterval())))
-				.tag("point-distance", Tag.inserting(Component.text(visualizer.getPointDistance())))
+				.tag("key", Messages.formatKey(visualizer.getKey()))
+				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
+				.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+				.resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
+				.resolver(Placeholder.component("permission", Messages.formatPermission(visualizer.getPermission())))
+				.resolver(Placeholder.component("interval", Component.text(visualizer.getInterval())))
+				.resolver(Placeholder.component("point-distance", Component.text(visualizer.getPointDistance())))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
@@ -208,11 +211,11 @@ public class PathVisualizerCommand extends CommandTree {
 
 	private <V extends ComponentLike> TagResolver tags(PathVisualizer<?> visualizer, V old, V value) {
 		return TagResolver.builder()
-				.tag("key", Tag.inserting(Messages.formatKey(visualizer.getKey())))
-				.tag("name", Tag.inserting(visualizer.getDisplayName()))
-				.tag("type", Tag.inserting(Component.text(visualizer.getType().getCommandName())))
-				.tag("old-value", Tag.inserting(old))
-				.tag("value", Tag.inserting(value))
+				.tag("key", Messages.formatKey(visualizer.getKey()))
+				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
+				.resolver(Placeholder.component("type", Component.text(visualizer.getType().getCommandName())))
+				.resolver(Placeholder.component("old-value", old))
+				.resolver(Placeholder.component("value", value))
 				.build();
 	}
 }

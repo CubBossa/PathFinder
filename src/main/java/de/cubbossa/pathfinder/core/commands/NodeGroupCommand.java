@@ -123,8 +123,8 @@ public class NodeGroupCommand extends CommandTree {
 
 	public void searchTermsList(Player player, NodeGroup group) {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
-				.tag("name", Tag.inserting(group.getDisplayName()))
-				.tag("values", Tag.inserting(toList(group.getSearchTerms())))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.resolver(Placeholder.component("values", toList(group.getSearchTerms())))
 				.build()), player);
 	}
 
@@ -139,8 +139,8 @@ public class NodeGroupCommand extends CommandTree {
 		));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_ADD.format(TagResolver.builder()
-				.tag("name", Tag.inserting(group.getDisplayName()))
-				.tag("values", Tag.inserting(toList(toAdd)))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.resolver(Placeholder.component("values", toList(toAdd)))
 				.build()), player);
 	}
 
@@ -156,8 +156,8 @@ public class NodeGroupCommand extends CommandTree {
 		));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_REMOVE.format(TagResolver.builder()
-				.tag("name", Tag.inserting(group.getDisplayName()))
-				.tag("values", Tag.inserting(toList(toRemove)))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.resolver(Placeholder.component("values", toList(toRemove)))
 				.build()), player);
 	}
 
@@ -173,10 +173,10 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
-				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", oldName))
-				.tag("new-name", Tag.inserting(group.getDisplayName()))
-				.tag("value", Tag.inserting(Component.text(group.getNameFormat())))
+				.resolver(Placeholder.component("new-name", group.getDisplayName()))
+				.resolver(Placeholder.component("value", Component.text(group.getNameFormat())))
 				.build()), player);
 	}
 
@@ -190,10 +190,10 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_PERM.format(TagResolver.builder()
-				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
-				.tag("old-value", Tag.inserting(Messages.formatPermission(oldValue)))
-				.tag("value", Tag.inserting(Messages.formatPermission(group.getPermission())))
+				.resolver(Placeholder.component("old-value", Messages.formatPermission(oldValue)))
+				.resolver(Placeholder.component("value", Messages.formatPermission(group.getPermission())))
 				.build()), player);
 	}
 
@@ -204,10 +204,10 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAVIGABLE.format(TagResolver.builder()
-				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
-				.tag("old-value", Tag.inserting(Messages.formatBool(oldValue)))
-				.tag("value", Tag.inserting(Messages.formatBool(group.isNavigable())))
+				.resolver(Placeholder.component("old-value", Messages.formatBool(oldValue)))
+				.resolver(Placeholder.component("value", Messages.formatBool(group.isNavigable())))
 				.build()), player);
 	}
 
@@ -218,7 +218,7 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_DISCOVERABLE.format(TagResolver.builder()
-				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
 				.resolver(Placeholder.component("old-value", Messages.formatBool(oldValue).asComponent(player)))
 				.resolver(Placeholder.component("value", Messages.formatBool(group.isDiscoverable()).asComponent(player)))
@@ -232,10 +232,10 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FIND_DIST.format(TagResolver.builder()
-				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
-				.tag("old-value", Tag.inserting(Component.text(oldValue)))
-				.tag("value", Tag.inserting(Component.text(group.getFindDistance())))
+				.resolver(Placeholder.component("old-value", Component.text(oldValue)))
+				.resolver(Placeholder.component("value", Component.text(group.getFindDistance())))
 				.build()), player);
 	}
 
@@ -271,10 +271,10 @@ public class NodeGroupCommand extends CommandTree {
 		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), page, 10)) {
 
 			TagResolver r = TagResolver.builder()
-					.tag("key", Tag.inserting(Component.text(group.getKey().toString())))
-					.tag("name", Tag.inserting(group.getDisplayName()))
-					.tag("size", Tag.inserting(Component.text(group.size())))
-					.tag("findable", Tag.inserting(Component.text(group.isDiscoverable())))
+					.resolver(Placeholder.component("key", Component.text(group.getKey().toString())))
+					.resolver(Placeholder.component("name", group.getDisplayName()))
+					.resolver(Placeholder.component("size", Component.text(group.size())))
+					.resolver(Placeholder.component("findable", Component.text(group.isDiscoverable())))
 					.build();
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
 		}

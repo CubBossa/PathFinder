@@ -1,12 +1,15 @@
 package de.cubbossa.pathfinder.core.roadmap;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetCurveLengthEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetNameEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
@@ -88,9 +91,42 @@ public class RoadMapHandler {
 		roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
 	}
 
-	public void setDefaultCurveLength(RoadMap roadMap, double value) {
+	public boolean setRoadMapName(RoadMap roadMap, String nameFormat) {
+		String old = roadMap.getNameFormat();
+		RoadMapSetNameEvent event = new RoadMapSetNameEvent(roadMap, nameFormat);
+		roadMap.setNameFormat(nameFormat);
+
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			roadMap.setNameFormat(old);
+			return false;
+		}
+		return true;
+	}
+
+	public boolean setRoadMapCurveLength(RoadMap roadMap, double value) {
 		double old = roadMap.getDefaultBezierTangentLength();
-		roadMap.setDefaultBezierTangentLength(value);
-		Bukkit.getPluginManager().callEvent(new RoadMapCurveLengthChangedEvent(roadMap, old, value));
+		RoadMapSetCurveLengthEvent event = new RoadMapSetCurveLengthEvent(roadMap, value);
+		roadMap.setDefaultBezierTangentLength(event.getValue());
+
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			roadMap.setDefaultBezierTangentLength(old);
+			return false;
+		}
+		return true;
+	}
+
+	public boolean setRoadMapVisualizer(RoadMap roadMap, PathVisualizer<?> visualizer) {
+		PathVisualizer<?> old = roadMap.getVisualizer();
+		RoadMapSetVisualizerEvent event = new RoadMapSetVisualizerEvent(roadMap, visualizer);
+		roadMap.setVisualizer(event.getVisualizer());
+
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			roadMap.setVisualizer(old);
+			return false;
+		}
+		return true;
 	}
 }

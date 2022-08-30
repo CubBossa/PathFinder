@@ -22,6 +22,7 @@ import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -125,14 +126,14 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
 						.then(CustomArgs.pathVisualizerArgument("visualizer")
 								.executes((commandSender, args) -> {
-									onStyle(commandSender, (PathVisualizer) args[0]);
+									onStyle(commandSender, null, (PathVisualizer) args[0]);
 								})))
 
 				.then(new LiteralArgument("name")
 						.withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
 						.then(CustomArgs.miniMessageArgument("name")
 								.executes((commandSender, args) -> {
-									onRename(commandSender, (String) args[0]);
+									onRename(commandSender, null, (String) args[0]);
 								})))
 				.then(new LiteralArgument("curve-length")
 						.withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
@@ -147,14 +148,14 @@ public class RoadMapCommand extends CommandTree implements Listener {
 								.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
 								.then(CustomArgs.pathVisualizerArgument("visualizer")
 										.executes((commandSender, args) -> {
-											onStyle(commandSender, (PathVisualizer) args[1]);
+											onStyle(commandSender, (RoadMap) args[0], (PathVisualizer<?>) args[1]);
 										})))
 
 						.then(new LiteralArgument("name")
 								.withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
 								.then(CustomArgs.miniMessageArgument("name")
 										.executes((commandSender, args) -> {
-											onRename(commandSender, (String) args[1]);
+											onRename(commandSender, (RoadMap) args[0], (String) args[1]);
 										})))
 						.then(new LiteralArgument("curve-length")
 								.withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
@@ -174,13 +175,13 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		}
 
 		FormattedMessage message = Messages.CMD_RM_INFO.format(TagResolver.builder()
-				.tag("key", Tag.preProcessParsed(roadMap.getKey() + ""))
-				.tag("name", Tag.inserting(roadMap.getDisplayName()))
-				.tag("name-format", Tag.inserting(Component.text(roadMap.getNameFormat())))
-				.tag("nodes", Tag.inserting(Messages.formatNodeSelection(sender, roadMap.getNodes())))
-				.tag("groups", Tag.inserting(Messages.formatNodeGroups(sender, NodeGroupHandler.getInstance().getNodeGroups(roadMap))))
-				.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-				.tag("path-visualizer", Tag.inserting(roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
+				.tag("key", Messages.formatKey(roadMap.getKey()))
+				.resolver(Placeholder.component("name", roadMap.getDisplayName()))
+				.resolver(Placeholder.component("name-format", Component.text(roadMap.getNameFormat())))
+				.resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, roadMap.getNodes())))
+				.resolver(Placeholder.component("groups", Messages.formatNodeGroups(sender, NodeGroupHandler.getInstance().getNodeGroups(roadMap))))
+				.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
+				.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
@@ -238,10 +239,10 @@ public class RoadMapCommand extends CommandTree implements Listener {
 
 		for (RoadMap roadMap : CommandUtils.subList(new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()), page, 10)) {
 			TagResolver r = TagResolver.builder()
-					.tag("key", Tag.preProcessParsed(roadMap.getKey().toString()))
-					.tag("name", Tag.inserting(roadMap.getDisplayName()))
-					.tag("curve-length", Tag.preProcessParsed(roadMap.getDefaultBezierTangentLength() + ""))
-					.tag("path-visualizer", Tag.inserting(roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
+					.tag("key", Messages.formatKey(roadMap.getKey()))
+					.resolver(Placeholder.component("name", roadMap.getDisplayName()))
+					.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
+					.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 					.build();
 
 			TranslationHandler.getInstance().sendMessage(
@@ -257,7 +258,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		DiscoverHandler.getInstance().discover(target.getUniqueId(), discoverable, new Date());
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
-				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+				.resolver(Placeholder.component("name", PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
 				.tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
 	}
 
@@ -266,7 +267,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		DiscoverHandler.getInstance().forget(target.getUniqueId(), discoverable);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
-				.tag("name", Tag.inserting(PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+				.resolver(Placeholder.component("name", PathPlugin.getInstance().getAudiences().player(target).getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
 				.tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
 	}
 
@@ -284,35 +285,52 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DESELECT, sender);
 	}
 
-	public void onStyle(CommandSender sender, PathVisualizer<?> visualizer) throws WrapperCommandSyntaxException {
-		RoadMap roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
-		roadMap.setVisualizer(visualizer);
+	public void onStyle(CommandSender sender, @Nullable RoadMap roadMap, PathVisualizer<?> visualizer) throws WrapperCommandSyntaxException {
+		roadMap = roadMap != null ? roadMap : CustomArgs.resolveRoadMapWrappedException(sender);
+		PathVisualizer<?> old = roadMap.getVisualizer();
+
+		if (!RoadMapHandler.getInstance().setRoadMapVisualizer(roadMap, visualizer)) {
+			return;
+		}
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_VISUALIZER.format(TagResolver.builder()
-				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
-				.tag("visualizer", Tag.inserting(visualizer.getDisplayName()))
+				.tag("key", Messages.formatKey(roadMap.getKey()))
+				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
+				.resolver(Placeholder.component("old-value", old.getDisplayName()))
+				.resolver(Placeholder.component("value", roadMap.getVisualizer().getDisplayName()))
 				.build()), sender);
 	}
 
-	public void onRename(CommandSender sender, String nameNew) throws WrapperCommandSyntaxException {
-		RoadMap roadMap = CustomArgs.resolveRoadMapWrappedException(sender);
+	public void onRename(CommandSender sender, @Nullable RoadMap roadMap, String nameNew) throws WrapperCommandSyntaxException {
+		roadMap = roadMap != null ? roadMap : CustomArgs.resolveRoadMapWrappedException(sender);
 		Component old = roadMap.getDisplayName();
-		roadMap.setNameFormat(nameNew);
+
+		if (!RoadMapHandler.getInstance().setRoadMapName(roadMap, nameNew)) {
+			return;
+		}
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_NAME.format(TagResolver.builder()
-				.tag("roadmap", Tag.inserting(old))
-				.tag("name-format", Tag.inserting(Component.text(nameNew)))
-				.tag("display-name", Tag.preProcessParsed(nameNew))
+				.tag("key", Messages.formatKey(roadMap.getKey()))
+				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
+				.resolver(Placeholder.component("old-value", old))
+				.resolver(Placeholder.unparsed("name-format", roadMap.getNameFormat()))
+				.resolver(Placeholder.component("value", roadMap.getDisplayName()))
 				.build()), sender);
 	}
 
 	public void onChangeTangentStrength(CommandSender sender, @Nullable RoadMap roadMap, double strength) throws WrapperCommandSyntaxException {
 		roadMap = roadMap != null ? roadMap : CustomArgs.resolveRoadMapWrappedException(sender);
-		RoadMapHandler.getInstance().setDefaultCurveLength(roadMap, strength);
-		roadMap.setDefaultBezierTangentLength(strength);
+		double old = roadMap.getDefaultBezierTangentLength();
+
+		if (!RoadMapHandler.getInstance().setRoadMapCurveLength(roadMap, strength)) {
+			return;
+		}
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_CURVED.format(TagResolver.builder()
-				.tag("roadmap", Tag.inserting(roadMap.getDisplayName()))
-				.tag("value", Tag.preProcessParsed(String.format("%,.2f", strength)))
+				.tag("key", Messages.formatKey(roadMap.getKey()))
+				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
+				.resolver(Placeholder.component("old-value", Component.text(old)))
+				.resolver(Placeholder.component("value", Component.text(roadMap.getDefaultBezierTangentLength())))
 				.build()), sender);
 	}
 

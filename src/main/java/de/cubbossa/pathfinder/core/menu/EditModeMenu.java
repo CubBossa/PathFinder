@@ -222,8 +222,8 @@ public class EditModeMenu {
 
 			TagResolver resolver = TagResolver.builder()
 					.resolver(Placeholder.component("name", group.getDisplayName()))
-					.resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
-					.resolver(Placeholder.parsed("name-format", group.getNameFormat()))
+					.tag("key", Messages.formatKey(group.getKey()))
+					.resolver(Placeholder.unparsed("name-format", group.getNameFormat()))
 					.resolver(Placeholder.component("findable", Messages.formatBool(group.isDiscoverable())))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),

@@ -11,7 +11,11 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.Context;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
@@ -21,6 +25,7 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,10 +43,13 @@ public class Messages {
 	public static final Message GEN_TRUE = new Message("general.true");
 	@MessageMeta("<#8f65eb>false</#8f65eb>")
 	public static final Message GEN_FALSE = new Message("general.false");
-	@MessageMeta(value = "<#8f65eb><x><gray>,</gray> <y><gray>,</gray> <z></#8f65eb>", placeholders = {"x", "y", "z"})
+	@MessageMeta(value = "<#8f65eb><x:#.00><gray>,</gray> <y:#.00><gray>,</gray> <z:#.00></#8f65eb>",
+			placeholders = {"x", "y", "z"},
+			comment = """
+					The numberformat can be specified as argument for x, y and z. Check out
+					https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html
+					for more information on number formatting.""")
 	public static final Message GEN_VECTOR = new Message("general.vector");
-	@MessageMeta(value = "<#8f65eb><namespace><gray>:</gray><key></#8f65eb>", placeholders = {"namespace", "key"})
-	public static final Message GEN_KEY = new Message("general.key");
 	@MessageMeta(value = "<#6569eb><permission></#6569eb>", placeholders = "permission")
 	public static final Message GEN_PERMISSION = new Message("general.permission");
 	@MessageMeta(value = "<#6569eb><particle><#/6569eb>", placeholders = {"particle", "meta"})
@@ -122,11 +130,11 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Player <name> forgot about <discovery>.", placeholders = {"name", "discovery"})
 	public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
 	@MessageMeta(value = "<ins:prefix>Successfully set name for <#8265eb><roadmap></#8265eb> to <display-name>. (<pre><name-format></pre>)</gray>",
-			placeholders = {"roadmap", "name-format", "display-name"})
+			placeholders = {"key", "roadmap", "old-value", "name-format", "value"})
 	public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
 	@MessageMeta(value = "<ins:prefix>Successfully set curve length for <#8265eb><roadmap></#8265eb> to <#8f65eb><value></#8f65eb>",
-			placeholders = {"roadmap", "value"})
-	public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curved");
+			placeholders = {"roadmap", "old-value", "value"})
+	public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curve_length");
 	@MessageMeta(value = "<ins:prefix>Successfully set visualizer for <#8265eb><roadmap></#8265eb> to <#8f65eb><visualizer></#8f65eb>.</gray>",
 			placeholders = {"roadmap", "visualizer"})
 	public static final Message CMD_RM_SET_VISUALIZER = new Message("commands.roadmap.set_visualizer");
@@ -345,14 +353,14 @@ public class Messages {
 
 	public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
 		return placeHolder.format(
-				Placeholder.parsed("amount", collection.size() + ""),
+				Placeholder.unparsed("amount", collection.size() + ""),
 				Placeholder.component("list", Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 						collection.stream().map(converter).collect(Collectors.toList())))
 		).asComponent(sender);
 	}
 
 	public static <T> Component formatGroupInHover(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {
-		return placeHolder.format(Placeholder.parsed("amount", collection.size() + "")).asComponent(sender)
+		return placeHolder.format(Placeholder.unparsed("amount", collection.size() + "")).asComponent(sender)
 				.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 						collection.stream().map(converter).collect(Collectors.toList()))));
 	}
@@ -360,27 +368,19 @@ public class Messages {
 	public static FormattedMessage formatParticle(Particle particle, Object data) {
 		return data == null ?
 				GEN_PARTICLE.format(TagResolver.builder()
-						.tag("particle", Tag.inserting(Component.text(particle.toString())))
+						.resolver(Placeholder.component("particle", Component.text(particle.toString())))
 						.build()) :
 				GEN_PARTICLE_META.format(TagResolver.builder()
-						.tag("particle", Tag.inserting(Component.text(particle.toString())))
-						.tag("meta", Tag.inserting(Component.text(data.toString())))
+						.resolver(Placeholder.component("particle", Component.text(particle.toString())))
+						.resolver(Placeholder.component("meta", Component.text(data.toString())))
 						.build());
 	}
 
 	public static FormattedMessage formatVector(Vector vector) {
 		return GEN_VECTOR.format(TagResolver.builder()
-				.tag("x", Tag.preProcessParsed(String.format("%,.2f", vector.getX())))
-				.tag("y", Tag.preProcessParsed(String.format("%,.2f", vector.getY())))
-				.tag("z", Tag.preProcessParsed(String.format("%,.2f", vector.getZ())))
-				.build());
-	}
-
-	public static FormattedMessage formatVector(String x, String y, String z) {
-		return GEN_VECTOR.format(TagResolver.builder()
-				.tag("x", Tag.preProcessParsed(x))
-				.tag("y", Tag.preProcessParsed(y))
-				.tag("z", Tag.preProcessParsed(z))
+				.resolver(Formatter.number("x", vector.getX()))
+				.resolver(Formatter.number("y", vector.getY()))
+				.resolver(Formatter.number("z", vector.getZ()))
 				.build());
 	}
 
@@ -390,11 +390,34 @@ public class Messages {
 				GEN_PERMISSION.format(TagResolver.resolver("permission", Tag.inserting(Component.text(permission))));
 	}
 
-	public static FormattedMessage formatKey(@Nullable NamespacedKey key) {
-		return key == null ?
-				GEN_NULL.format() :
-				GEN_KEY.format(TagResolver.builder()
-						.tag("namespace", Tag.preProcessParsed(key.getNamespace()))
-						.tag("key", Tag.preProcessParsed(key.getKey())).build());
+	public static BiFunction<ArgumentQueue, Context, Tag> formatKey(NamespacedKey key) {
+		return (queue, context) -> {
+			if (key == null) {
+				return Tag.selfClosingInserting(GEN_NULL.format());
+			}
+
+			TextColor namespaceColor, keyColor;
+
+			Component namespaceString = Component.text(key.getNamespace());
+			Component keyString = Component.text(key.getKey());
+
+			if (queue.hasNext()) {
+				namespaceColor = TextColor.fromCSSHexString(queue.pop().value());
+				if (namespaceColor != null) {
+					namespaceString = namespaceString.color(namespaceColor);
+					keyString = keyString.color(namespaceColor);
+				}
+				if (queue.hasNext()) {
+					keyColor = TextColor.fromCSSHexString(queue.pop().value());
+					if (keyColor != null) {
+						keyString = keyString.color(keyColor);
+					}
+				}
+			}
+			return Tag.selfClosingInserting(Component.empty()
+					.append(namespaceString)
+					.append(Component.text(":"))
+					.append(keyString));
+		};
 	}
 }

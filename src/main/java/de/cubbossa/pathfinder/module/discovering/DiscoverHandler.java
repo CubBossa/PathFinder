@@ -11,6 +11,7 @@ import de.cubbossa.serializedeffects.EffectHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -57,8 +58,7 @@ public class DiscoverHandler {
 				player,
 				player.getLocation(),
 				TagResolver.builder()
-						.tag("name", Tag.inserting(discoverable.getDisplayName()))
-						.tag("roadmaps", Tag.inserting(Component.text("Test, 10%")))
+						.resolver(Placeholder.component("name", discoverable.getDisplayName()))						.resolver(Placeholder.component("roadmaps", Component.text("Test, 10%")))
 						.build());
 	}
 
