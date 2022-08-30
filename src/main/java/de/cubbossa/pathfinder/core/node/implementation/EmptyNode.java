@@ -41,33 +41,18 @@ public class EmptyNode implements Node {
 	}
 
 	@Override
-	public Vector getPosition() {
-		return new Vector(0, 0, 0);
-	}
-
-	@Override
-	public void setPosition(Vector position) {
-
-	}
-
-	@Override
 	public Location getLocation() {
 		return null;
 	}
 
 	@Override
+	public void setLocation(Location location) {
+
+	}
+
+	@Override
 	public Collection<Edge> getEdges() {
 		return new HashSet<>();
-	}
-
-	@Override
-	public @Nullable String getPermission() {
-		return null;
-	}
-
-	@Override
-	public void setPermission(@Nullable String permission) {
-
 	}
 
 	@Override

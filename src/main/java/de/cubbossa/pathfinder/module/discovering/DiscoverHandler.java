@@ -4,6 +4,8 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.data.DiscoverInfo;
+import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
+import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.serializedeffects.EffectHandler;
 import lombok.Getter;
@@ -28,7 +30,12 @@ public class DiscoverHandler {
 		instance = this;
 
 		discovered = new HashMap<>();
+		discovered.putAll(PathPlugin.getInstance().getDatabase().loadDiscoverInfo());
+		if (!PathPlugin.getInstance().getConfiguration().isDiscoveryEnabled()) {
+			return;
+		}
 		Bukkit.getPluginManager().registerEvents(new MoveListener(), PathPlugin.getInstance());
+
 		if (PathPlugin.getInstance().getConfiguration().isFindLocationRequiresDiscovery()) {
 			FindModule.getInstance().registerFindPredicate(context -> {
 				if (context.navigable() instanceof Discoverable discoverable) {
@@ -56,22 +63,35 @@ public class DiscoverHandler {
 	}
 
 	public void discover(UUID playerId, Discoverable discoverable, Date date) {
-		if(hasDiscovered(playerId, discoverable)) {
+		if (hasDiscovered(playerId, discoverable)) {
 			return;
 		}
-		discovered.computeIfAbsent(playerId, uuid -> new HashMap<>()).put(discoverable.getUniqueKey(), new DiscoverInfo(playerId, discoverable, date));
+		PlayerDiscoverEvent event = new PlayerDiscoverEvent(playerId, discoverable, date);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return;
+		}
+		discovered.computeIfAbsent(playerId, uuid -> new HashMap<>()).put(discoverable.getUniqueKey(), new DiscoverInfo(playerId, discoverable.getUniqueKey(), date));
 		playDiscovery(playerId, discoverable);
 	}
 
 	public void forget(UUID playerId, Discoverable discoverable) {
-
+		if (!hasDiscovered(playerId, discoverable)) {
+			return;
+		}
+		PlayerForgetEvent event = new PlayerForgetEvent(playerId, discoverable);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return;
+		}
+		discovered.computeIfAbsent(playerId, uuid -> new HashMap<>()).remove(discoverable.getUniqueKey());
 	}
 
 	public boolean hasDiscovered(UUID playerId, Discoverable discoverable) {
 		return discovered.computeIfAbsent(playerId, uuid -> new HashMap<>()).containsKey(discoverable.getUniqueKey());
 	}
 
-	public Collection<Discoverable> getDiscovered(UUID playerId, RoadMap roadMap) {
+	public Collection<NamespacedKey> getDiscovered(UUID playerId, RoadMap roadMap) {
 		return discovered.computeIfAbsent(playerId, uuid -> new HashMap<>()).values().stream()
 				.map(DiscoverInfo::discoverable)
 				.collect(Collectors.toSet());
@@ -83,8 +103,8 @@ public class DiscoverHandler {
 
 	public float getDiscoveredPercent(UUID uuid, RoadMap roadMap) {
 		int count = 0, sum = 0;
-		for (Discoverable discoverable : getDiscovered(uuid, roadMap)) {
-			count += discoverable.getDiscoveringWeight();
+		for (NamespacedKey discoverable : getDiscovered(uuid, roadMap)) {
+			count++; //TODO weight
 		}
 		/* TODO for (Discoverable discoverable : roadMap.getDiscoverables()) {
 			sum += discoverable.getDiscoveringWeight();

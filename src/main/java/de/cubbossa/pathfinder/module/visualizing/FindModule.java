@@ -2,9 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Navigable;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.EmptyNode;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
@@ -35,9 +33,14 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class FindModule extends Module  implements Listener {
+public class FindModule extends Module implements Listener {
 
-	public record NavigationRequestContext(UUID playerId, Navigable navigable) {}
+	public enum NavigateResult {
+		SUCCESS, FAIL_BLOCKED, FAIL_EMPTY
+	}
+
+	public record NavigationRequestContext(UUID playerId, Navigable navigable) {
+	}
 
 	public record SearchInfo(UUID playerId, ParticlePath path, Location target, float distance) {
 	}
@@ -88,65 +91,62 @@ public class FindModule extends Module  implements Listener {
 		return activePaths.get(player.getUniqueId());
 	}
 
-	public void findPath(Player player, NodeSelection targets) {
-		findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
+	public NavigateResult findPath(Player player, NodeSelection targets) {
+		return findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
 	}
 
-	public void findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
+	public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
 
 		// Prepare graph:
 		// Every target node will be connected with a new introduced destination node.
 		// All new edges have the same weight. The shortest path can only cross a target node.
 		// Finally, take a sublist of the shortest path to exclude the destination.
 
-		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+		Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
+		Collection<Node> nodes = targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey())).collect(Collectors.toSet());
 
-			Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
-			Collection<Node> nodes = targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey())).collect(Collectors.toSet());
+		List<RoadMap> roadMaps = nodes.stream()
+				.map(Node::getRoadMapKey)
+				.distinct()
+				.map(key -> RoadMapHandler.getInstance().getRoadMap(key))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
 
-			List<RoadMap> roadMaps = nodes.stream()
-					.map(Node::getRoadMapKey)
-					.distinct()
-					.map(key -> RoadMapHandler.getInstance().getRoadMap(key))
-					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+		if (nodes.size() == 0) {
+			return NavigateResult.FAIL_EMPTY;
+		}
 
-			if (nodes.size() == 0) {
-				return; //TODO
-			}
+		RoadMap firstRoadMap = roadMaps.get(0);
+		PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
+		Graph<Node, Edge> graph = firstRoadMap.toGraph(playerNode);
 
-			RoadMap firstRoadMap = roadMaps.get(0);
-			PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-			Graph<Node, Edge> graph = firstRoadMap.toGraph(playerNode);
+		for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
+			Graphs.addGraph(graph, roadMap.toGraph(null));
+		}
 
-			for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
-				Graphs.addGraph(graph, roadMap.toGraph(null));
-			}
-
-			EmptyNode destination = new EmptyNode(firstRoadMap);
-			graph.addVertex(destination);
-			targets.forEach(n -> {
-				Edge e = new Edge(n, destination, 1);
-				graph.addEdge(n, destination, e);
-				graph.setEdgeWeight(e, 1);
-			});
-
-			GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
-
-			if (path == null) {
-				player.sendMessage(":C");
-				return;
-			}
-
-			//TODO not first roadmap
-			ParticlePath particlePath = new ParticlePath(firstRoadMap, player.getUniqueId(), firstRoadMap.getVisualizer());
-			particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
-			setPath(player.getUniqueId(), particlePath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(), (float) firstRoadMap.getNodeFindDistance());
-
-			
-			// Refresh cancel-path command so that it is visible
-			PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+		EmptyNode destination = new EmptyNode(firstRoadMap);
+		graph.addVertex(destination);
+		targets.forEach(n -> {
+			Edge e = new Edge(n, destination, 1);
+			graph.addEdge(n, destination, e);
+			graph.setEdgeWeight(e, 1);
 		});
+
+		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
+
+		if (path == null) {
+			return NavigateResult.FAIL_BLOCKED;
+		}
+
+		ParticlePath particlePath = new ParticlePath(player.getUniqueId(), firstRoadMap.getVisualizer());
+		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
+		setPath(player.getUniqueId(), particlePath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
+				NodeGroupHandler.getInstance().getFindDistance((Groupable) particlePath.get(particlePath.size() - 1)));
+
+		// Refresh cancel-path command so that it is visible
+		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+
+		return NavigateResult.SUCCESS;
 	}
 
 	public void reachTarget(SearchInfo info) {

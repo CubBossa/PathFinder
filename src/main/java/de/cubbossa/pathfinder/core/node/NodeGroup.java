@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,7 +24,10 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
     private final NamespacedKey key;
     private String nameFormat;
     private Component displayName;
+    private @Nullable String permission;
     private boolean discoverable;
+    private boolean navigable;
+    private float findDistance;
     private Collection<String> searchTerms;
 
     public NodeGroup(NamespacedKey key, String nameFormat) {
@@ -124,10 +128,10 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
                 continue;
             }
             float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()));
-            if (node.getPosition().getX() - player.getLocation().getX() > dist) {
+            if (node.getLocation().getX() - player.getLocation().getX() > dist) {
                 continue;
             }
-            if (node.getPosition().distance(player.getLocation().toVector()) > dist) {
+            if (node.getLocation().distance(player.getLocation()) > dist) {
                 continue;
             }
             return true;

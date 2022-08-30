@@ -3,14 +3,13 @@ package de.cubbossa.pathfinder.data;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 import org.jgrapht.alg.util.Triple;
 import xyz.xenondevs.particle.ParticleBuilder;
@@ -43,9 +42,9 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double tangentLength) {
 		log("Create Roadmap");
-		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, tangentLength);
+		return new RoadMap(key, nameFormat, pathVis, tangentLength);
 	}
 
 	@Override
@@ -108,11 +107,10 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) {
 		T node = type.getFactory().apply(roadMap, nodeIdCounter++);
-		node.setPosition(new Vector(x, y, z));
+		node.setLocation(location);
 		node.setCurveLength(tangentLength);
-		node.setPermission(permission);
 		if (node instanceof Groupable groupable) {
 			groups.forEach(groupable::addGroup);
 		}
@@ -132,7 +130,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNodes(int... nodeId) {
+	public void deleteNodes(Integer... nodeId) {
 
 	}
 
@@ -157,7 +155,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance) {
 		log("Create Nodegroup");
 		return new NodeGroup(key, nameFormat);
 	}
@@ -199,19 +197,19 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate) {
+	public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate) {
 		log("Create Foundinfo");
-		return new DiscoverInfo(player, discoverable, foundDate);
+		return new DiscoverInfo(player, discoverable.getUniqueKey(), foundDate);
 	}
 
 	@Override
-	public Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group) {
+	public Map<UUID, Map<NamespacedKey, DiscoverInfo>> loadDiscoverInfo() {
 		log("Load Foundinfos");
 		return new TreeMap<>();
 	}
 
 	@Override
-	public void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group) {
+	public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
 		log("Delete Foundinfos");
 	}
 

@@ -11,6 +11,10 @@ import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.Pair;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.InvMenuHandler;
+import de.cubbossa.menuframework.inventory.Menu;
+import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -18,10 +22,6 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.menuframework.inventory.Action;
-import de.cubbossa.menuframework.inventory.InvMenuHandler;
-import de.cubbossa.menuframework.inventory.Menu;
-import de.cubbossa.menuframework.inventory.context.TargetContext;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -194,8 +194,7 @@ public class ClientNodeHandler {
 	}
 
 	public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
-		Vector pos = LerpUtils.lerp(edge.getStart().getPosition(), edge.getEnd().getPosition(), .3f);
-		Location location = pos.toLocation(RoadMapHandler.getInstance().getRoadMap(edge.getStart().getRoadMapKey()).getWorld());
+		Location location = LerpUtils.lerp(edge.getStart().getLocation(), edge.getEnd().getLocation(), .3f);
 		int id = spawnArmorstand(player, location, null, true);
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, edgeHead});
 
@@ -218,15 +217,15 @@ public class ClientNodeHandler {
 		nodes.forEach(nodeEntityMap::remove);
 		new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodes.contains(e.getValue())).map(Map.Entry::getKey).forEach(entityNodeMap::remove);
 
-		nodes.forEach(node -> chunkNodeMap.remove(new Pair<>((int) node.getPosition().getX() / 16, (int) node.getPosition().getZ() / 16)));
+		nodes.forEach(node -> chunkNodeMap.remove(new Pair<>((int) node.getLocation().getX() / 16, (int) node.getLocation().getZ() / 16)));
 	}
 
 	public void hideEdges(Collection<Edge> edges, Player player) {
 		removeArmorstand(player, edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
 		edges.forEach(edgeEntityMap::remove);
 		edges.forEach(edge -> {
-			Vector pos = edge.getStart().getPosition().clone().add(
-					edge.getEnd().getPosition().clone().subtract(edge.getStart().getPosition()).multiply(.5f));
+			Location pos = edge.getStart().getLocation().clone().add(
+					edge.getEnd().getLocation().clone().subtract(edge.getStart().getLocation()).multiply(.5f));
 			chunkNodeMap.remove(new Pair<>((int) pos.getX() / 16, (int) pos.getZ() / 16));
 		});
 	}
@@ -241,10 +240,9 @@ public class ClientNodeHandler {
 			roadMap.getEdges().stream()
 					.filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node))
 					.forEach(e -> {
-						teleportArmorstand(player, edgeEntityMap.get(e), LerpUtils.lerp(e.getStart().getPosition(), e.getEnd().getPosition(), 0.3f)
+						teleportArmorstand(player, edgeEntityMap.get(e), LerpUtils.lerp(e.getStart().getLocation(), e.getEnd().getLocation(), 0.3f)
 								.clone()
-								.add(ARMORSTAND_CHILD_OFFSET)
-								.toLocation(location.getWorld()));
+								.add(ARMORSTAND_CHILD_OFFSET));
 					});
 		}
 	}

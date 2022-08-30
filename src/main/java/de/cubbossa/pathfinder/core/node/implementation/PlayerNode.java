@@ -46,33 +46,18 @@ public class PlayerNode implements Node {
     }
 
     @Override
-    public Vector getPosition() {
-        return player.getLocation().add(0, .5f, 0).toVector();
-    }
-
-    @Override
-    public void setPosition(Vector position) {
-
-    }
-
-    @Override
     public Location getLocation() {
         return player.getLocation().add(0, .5f, 0);
     }
 
     @Override
+    public void setLocation(Location location) {
+
+    }
+
+    @Override
     public Collection<Edge> getEdges() {
         return new HashSet<>();
-    }
-
-    @Override
-    public @Nullable String getPermission() {
-        return null;
-    }
-
-    @Override
-    public void setPermission(@Nullable String permission) {
-
     }
 
     @Override

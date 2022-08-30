@@ -1,8 +1,9 @@
 package de.cubbossa.pathfinder.core.node;
 
+import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
+import de.cubbossa.pathfinder.core.events.nodegroup.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
@@ -12,7 +13,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -68,18 +68,101 @@ public class NodeGroupHandler implements Listener {
 
 		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
 
-		group.stream()
-				.filter(node -> node instanceof Groupable)
-				.map(node -> (Groupable) node)
-				.forEach(node -> node.removeGroup(group));
+		for (Groupable node : group) {
+			node.removeGroup(group);
+		}
 		group.clear();
 	}
 
-	public NodeGroup createNodeGroup(NamespacedKey key, boolean findable, String nameFormat) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat) {
 
-		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(key, nameFormat, findable);
+		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(key, nameFormat, null, true, true, 1.5);
+		group.addSearchTerms(Lists.newArrayList(key.getKey()));
 		groups.put(group);
 		return group;
+	}
+
+	public boolean setNodeGroupName(NodeGroup group, String newName) {
+		NodeGroupSetNameEvent event = new NodeGroupSetNameEvent(group, newName);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		group.setNameFormat(event.getNameFormat());
+		return true;
+	}
+
+	public boolean setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
+		NodeGroupSetPermissionEvent event = new NodeGroupSetPermissionEvent(group, permission);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		group.setPermission(event.getPermission());
+		return true;
+	}
+
+	public boolean setNodeGroupDiscoverable(NodeGroup group, boolean value) {
+		NodeGroupSetDiscoverableEvent event = new NodeGroupSetDiscoverableEvent(group, value);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		group.setDiscoverable(value);
+		return true;
+	}
+
+	public boolean setNodeGroupNavigable(NodeGroup group, boolean value) {
+		NodeGroupSetNavigableEvent event = new NodeGroupSetNavigableEvent(group, value);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		group.setNavigable(value);
+		return true;
+	}
+
+	public boolean setNodeGroupFindDistance(NodeGroup group, float value) {
+		NodeGroupSetFindDistanceEvent event = new NodeGroupSetFindDistanceEvent(group, value);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+		group.setFindDistance(event.getValue());
+		return true;
+	}
+
+	public float getFindDistance(Groupable groupable) {
+		if (groupable.getGroups().isEmpty()) {
+			return 1.5f;
+		}
+		return (float) switch (PathPlugin.getInstance().getConfiguration().getFindDistancePolicy()) {
+			case SMALLEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
+			case LARGEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
+			case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().getFindDistance();
+		};
+	}
+
+	public boolean isNavigable(Groupable groupable) {
+		if (groupable.getGroups().isEmpty()) {
+			return false;
+		}
+		return switch (PathPlugin.getInstance().getConfiguration().getNavigablePolicy()) {
+			case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(NodeGroup::isNavigable);
+			case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(NodeGroup::isNavigable);
+			case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().isNavigable();
+		};
+	}
+
+	public boolean isDiscoverable(Groupable groupable) {
+		if (groupable.getGroups().isEmpty()) {
+			return false;
+		}
+		return switch (PathPlugin.getInstance().getConfiguration().getDiscoverablePolicy()) {
+			case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(NodeGroup::isDiscoverable);
+			case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(NodeGroup::isDiscoverable);
+			case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().isDiscoverable();
+		};
 	}
 
 	@EventHandler

@@ -138,7 +138,10 @@ permissions:
       pathfinder.command.nodegroup.create: true
       pathfinder.command.nodegroup.delete: true
       pathfinder.command.nodegroup.set_name: true
-      pathfinder.command.nodegroup.set_findable: true
+      pathfinder.command.nodegroup.set_permission: true
+      pathfinder.command.nodegroup.set_navigable: true
+      pathfinder.command.nodegroup.set_discoverable: true
+      pathfinder.command.nodegroup.set_find_distance: true
       pathfinder.command.nodegroup.searchterms.list: true
       pathfinder.command.nodegroup.searchterms.add: true
       pathfinder.command.nodegroup.searchterms.remove: true

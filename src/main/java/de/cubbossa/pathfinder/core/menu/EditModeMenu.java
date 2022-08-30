@@ -65,14 +65,14 @@ public class EditModeMenu {
 					p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
 				})
 				.withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
-					Vector pos = (context.getTarget()).getLocation().toVector().add(new Vector(0.5, 1.5, 0.5));
+					Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
 					if (types.size() <= 1) {
 						NodeType<?> type = types.stream().findAny().orElse(null);
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						lastNode = roadMap.createNode(type, pos, null, lastGroup);
+						lastNode = roadMap.createNode(type, pos, lastGroup);
 					} else {
 						openNodeTypeMenu(context.getPlayer(), pos);
 					}
@@ -135,9 +135,9 @@ public class EditModeMenu {
 				.withClickHandler(context -> {
 					double dist = -1;
 					Node nearest = null;
-					Vector vecP = context.getPlayer().getLocation().toVector();
+					Location pLoc = context.getPlayer().getLocation();
 					for (Node node : roadMap.getNodes()) {
-						double d = node.getPosition().distance(vecP);
+						double d = node.getLocation().distance(pLoc);
 						if (dist == -1 || d < dist) {
 							nearest = node;
 							dist = d;
@@ -156,11 +156,6 @@ public class EditModeMenu {
 				.withItemStack(EditmodeUtils.CURVE_TOOL)
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
 						openTangentStrengthMenu(context.getPlayer(), context.getTarget())));
-
-		menu.setButton(6, Button.builder()
-				.withItemStack(EditmodeUtils.PERMISSION_TOOL)
-				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
-						openNodePermissionMenu(context.getPlayer(), context.getTarget())));
 
 		menu.setButton(2, Button.builder()
 				.withItemStack(EditmodeUtils.GROUP_TOOL)
@@ -319,7 +314,7 @@ public class EditModeMenu {
 			if (key == null || NodeGroupHandler.getInstance().getNodeGroup(key) != null) {
 				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 			}
-			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
+			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.getRandHexString() + key.getKey());
 			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 				NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
 				Bukkit.getPluginManager().callEvent(event);
@@ -338,7 +333,7 @@ public class EditModeMenu {
 		return menu;
 	}
 
-	private void openNodeTypeMenu(Player player, Vector pos) {
+	private void openNodeTypeMenu(Player player, Location location) {
 
 		ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 2);
 		for (NodeType<?> type : types) {
@@ -346,7 +341,7 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
 					.withClickHandler(Action.LEFT, c -> {
-						lastNode = roadMap.createNode(type, pos, null, lastGroup);
+						lastNode = roadMap.createNode(type, location, lastGroup);
 						menu.close(player);
 					}));
 		}
@@ -364,18 +359,6 @@ public class EditModeMenu {
 			Double strength = s.getTarget().equalsIgnoreCase("null") ? null : Double.parseDouble(s.getTarget());
 			findable.setCurveLength(strength);
 			menu.close(s.getPlayer());
-		});
-		menu.open(player);
-	}
-
-	private void openNodePermissionMenu(Player player, Node node) {
-		AnvilMenu menu = newAnvilMenu(Component.text("Permission setzen:"), "null", AnvilInputValidator.VALIDATE_PERMISSION);
-		menu.setItem(0, new ItemStack(Material.PAPER));
-		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
-			Player p = s.getPlayer();
-			node.setPermission(s.getTarget().equalsIgnoreCase("null") ? null : s.getTarget());
-			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-			menu.close(p);
 		});
 		menu.open(player);
 	}

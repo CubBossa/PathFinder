@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import lombok.Getter;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -25,16 +26,6 @@ public class SelectionUtils {
 		}
 	}
 
-	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_PERMISSION = new SelectionParser.Filter<>("permission", Pattern.compile("([\"'])(?:(?=(\\\\?))\\2\\.)*?\\1"), (nodes, context) -> {
-		boolean regex = context.value().startsWith("regex:");
-		String arg = regex ? context.value().substring(6) : context.value();
-		Pattern pattern = regex ? Pattern.compile(arg) : null;
-		return nodes.stream()
-				.filter(n -> n.getPermission() != null)
-				.filter(n -> regex ? pattern.matcher(n.getPermission()).matches() : n.getPermission().equalsIgnoreCase(arg))
-				.collect(Collectors.toList());
-	}, "<permission>");
-
 	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_TANGENT_LENGTH = new SelectionParser.Filter<>("tangent_length", Pattern.compile("(\\.\\.)?[0-9]*(\\.[0-9]+)?(\\.\\.)?"), (nodes, context) -> {
 		boolean smaller = context.value().startsWith("..");
 		boolean larger = context.value().endsWith("..");
@@ -50,7 +41,7 @@ public class SelectionUtils {
 		}
 		float req = Float.parseFloat(arg);
 		return nodes.stream().filter(node -> {
-			double dist = node.getPosition().distance(context.getPlayer().getLocation().toVector());
+			double dist = node.getLocation().distance(context.getPlayer().getLocation());
 			return smaller && dist <= req || larger && dist >= req || dist == req;
 		}).collect(Collectors.toList());
 	}, "..1", "1.5", "2..");
@@ -70,7 +61,7 @@ public class SelectionUtils {
 		}
 		float req = Float.parseFloat(arg);
 		return nodes.stream().filter(node -> {
-			double dist = node.getPosition().distance(context.getPlayer().getLocation().toVector());
+			double dist = node.getLocation().distance(context.getPlayer().getLocation());
 			return smaller && dist <= req || larger && dist >= req || dist == req;
 		}).collect(Collectors.toList());
 	}, "..1", "1.5", "2..");
@@ -78,11 +69,11 @@ public class SelectionUtils {
 	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_LIMIT = new SelectionParser.Filter<>("limit", Pattern.compile("[0-9]+"), (nodes, context) -> CommandUtils.subList(new ArrayList<>(nodes), 0, Integer.parseInt(context.value())), IntStream.range(1, 10).mapToObj(i -> "" + i).toArray(String[]::new));
 
 	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_SORT = new SelectionParser.Filter<>("sort", Pattern.compile("(nearest|furthest|random|arbitrary)"), (nodes, context) -> {
-		Vector pVec = context.getPlayer().getLocation().toVector();
+		Location pLoc = context.getPlayer().getLocation();
 		return switch (context.value()) {
-			case "nearest" -> nodes.stream().sorted(Comparator.comparingDouble(o -> o.getPosition().distance(pVec))).collect(Collectors.toList());
+			case "nearest" -> nodes.stream().sorted(Comparator.comparingDouble(o -> o.getLocation().distance(pLoc))).collect(Collectors.toList());
 			case "furthest" -> nodes.stream()
-					.sorted((o1, o2) -> Double.compare(o2.getPosition().distance(pVec), o1.getPosition().distance(pVec)))
+					.sorted((o1, o2) -> Double.compare(o2.getLocation().distance(pLoc), o1.getLocation().distance(pLoc)))
 					.collect(Collectors.toList());
 			case "random" -> nodes.stream().collect(Collectors.collectingAndThen(Collectors.toList(), n -> {
 				Collections.shuffle(n);
@@ -98,7 +89,7 @@ public class SelectionUtils {
 	public static final String SELECT_KEY_EDGE = "has_edge";
 
 	public static final ArrayList<SelectionParser.Filter<Node, PlayerContext>> SELECTORS = Lists.newArrayList(
-			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH, SELECT_KEY_PERMISSION,
+			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH,
 			SELECT_KEY_SORT
 	);
 

@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.node;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Location;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +16,7 @@ public class Edge implements Comparable<Edge> {
 	private Node end;
 	private float weightModifier;
 
-	private Vector center;
+	private Location center;
 
 	public Edge(Node start, Node end, float weightModifier) {
 		this.start = start;
@@ -35,11 +36,11 @@ public class Edge implements Comparable<Edge> {
 	}
 
 	public double getWeightedLength() {
-		return start.getPosition().distance(end.getPosition()) * weightModifier;
+		return start.getLocation().distance(end.getLocation()) * weightModifier;
 	}
 
 	private void refreshCenter() {
-		center = start.getPosition().clone().add(end.getPosition().clone().subtract(start.getPosition()).multiply(.5f));
+		center = start.getLocation().clone().add(end.getLocation().clone().subtract(start.getLocation()).multiply(.5f));
 	}
 
 	@Override

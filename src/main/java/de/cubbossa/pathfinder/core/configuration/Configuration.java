@@ -15,6 +15,10 @@ import java.util.List;
 @Setter
 public class Configuration {
 
+	public enum NodeGroupPolicy {
+		NATURAL_ORDER, SMALLEST_VALUE, LARGEST_VALUE
+	}
+
 	// Config fields
 
 	@ConfigValue(path = "lang.client-language", comments = """
@@ -27,7 +31,22 @@ public class Configuration {
 
 
 	@ConfigValue(path = "data.general.type")
-	private DatabaseType databaseType = DatabaseType.IN_MEMORY;
+	private DatabaseType databaseType = DatabaseType.SQLITE;
+
+	@ConfigValue(path = "nodegroups.policies.permission")
+	private NodeGroupPolicy permissionPolicy = NodeGroupPolicy.SMALLEST_VALUE;
+	@ConfigValue(path = "nodegroups.policies.navigable")
+	private NodeGroupPolicy navigablePolicy = NodeGroupPolicy.SMALLEST_VALUE;
+	@ConfigValue(path = "nodegroups.policies.discoverable")
+	private NodeGroupPolicy discoverablePolicy = NodeGroupPolicy.SMALLEST_VALUE;
+	@ConfigValue(path = "nodegroups.policies.find-distance")
+	private NodeGroupPolicy findDistancePolicy = NodeGroupPolicy.LARGEST_VALUE;
+
+	@ConfigValue(path = "module.navigation.enabled")
+	private boolean navigationEnabled = true;
+
+	@ConfigValue(path = "module.discovery.enabled")
+	private boolean discoveryEnabled = true;
 
 	@ConfigValue(path = "module.navigation.requires-location-discovery", comments = """
 			Set this to true, if players have to discover nodegroups first to use the /find location <filter> command.

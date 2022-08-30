@@ -54,7 +54,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double curveLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double curveLength) {
 		File file = new File(roadMapDir, key.toString().replace(":", "$") + ".yml");
 		try {
 			file.createNewFile();
@@ -64,10 +64,7 @@ public class YmlDatabase implements DataStorage {
 		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 		cfg.set("key", key);
 		cfg.set("name_format", nameFormat);
-		cfg.set("world", world.getUID().toString());
-		cfg.set("nodes_findable", findableNodes);
 		cfg.set("path_visualizer", pathVis.getKey().toString());
-		cfg.set("find_distance", findDist);
 		cfg.set("curve_length", curveLength);
 
 		try {
@@ -76,7 +73,7 @@ public class YmlDatabase implements DataStorage {
 			throw new DataStorageException("Could not save roadmap file.", e);
 		}
 		roadmapHandles.put(key, cfg);
-		return new RoadMap(key, nameFormat, world, findableNodes, pathVis, findDist, curveLength);
+		return new RoadMap(key, nameFormat, pathVis, curveLength);
 	}
 
 	@Override
@@ -91,10 +88,7 @@ public class YmlDatabase implements DataStorage {
 
 				registry.put(new RoadMap(key,
 						cfg.getString("name_format"),
-						Bukkit.getWorld(UUID.fromString(cfg.getString("world"))),
-						cfg.getBoolean("nodes_findable"),
 						VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(cfg.getString("path_visualizer"))),
-						cfg.getDouble("find_distance"),
 						cfg.getDouble("curve_length")));
 
 
@@ -151,7 +145,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) {
+	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) {
 		return null;
 	}
 
@@ -166,7 +160,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteNodes(int... nodeId) {
+	public void deleteNodes(Integer... nodeId) {
 
 	}
 
@@ -191,7 +185,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable) {
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance) {
 		return null;
 	}
 
@@ -226,17 +220,17 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate) {
+	public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate) {
 		return null;
 	}
 
 	@Override
-	public Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group) {
+	public Map<UUID, Map<NamespacedKey, DiscoverInfo>> loadDiscoverInfo() {
 		return null;
 	}
 
 	@Override
-	public void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group) {
+	public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
 
 	}
 

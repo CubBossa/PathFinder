@@ -1,10 +1,19 @@
 package de.cubbossa.pathfinder.util;
 
+import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import java.awt.*;
+import java.util.Objects;
 
 public class LerpUtils {
+
+	public static Location lerp(Location a, Location b, double percent) {
+		if (!Objects.equals(a.getWorld(), b.getWorld())) {
+			throw new IllegalArgumentException("Both locations must be in the same world to be lerped.");
+		}
+		return lerp(a.toVector(), b.toVector(), percent).toLocation(a.getWorld());
+	}
 
 	public static Vector lerp(Vector a, Vector b, double percent) {
 		return a.clone().add(b.clone().subtract(a).multiply(percent));

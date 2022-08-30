@@ -13,7 +13,10 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
@@ -34,10 +37,6 @@ public class RoadMap implements Keyed, Named {
 	private final NamespacedKey key;
 	private String nameFormat;
 	private Component displayName;
-	private World world;
-
-	private boolean findableNodes;
-	private double nodeFindDistance;
 	private double defaultBezierTangentLength;
 
 	private final Map<Integer, Node> nodes;
@@ -45,14 +44,10 @@ public class RoadMap implements Keyed, Named {
 
 	private PathVisualizer<?> visualizer;
 
-	public RoadMap(NamespacedKey key, String name, World world, boolean findableNodes, PathVisualizer<?> visualizer,
-				   double nodeFindDistance, double defaultBezierTangentLength) {
+	public RoadMap(NamespacedKey key, String name, PathVisualizer<?> visualizer, double defaultBezierTangentLength) {
 
 		this.key = key;
 		this.setNameFormat(name);
-		this.world = world;
-		this.findableNodes = findableNodes;
-		this.nodeFindDistance = nodeFindDistance;
 		this.defaultBezierTangentLength = defaultBezierTangentLength;
 
 		this.nodes = new TreeMap<>();
@@ -100,16 +95,17 @@ public class RoadMap implements Keyed, Named {
 		edges.forEach(e -> graph.setEdgeWeight(e, e.getWeightedLength()));
 
 		if(player != null) {
-			Vector playerPosition = player.getPosition();
+			Location playerLocation = player.getLocation();
 			graph.addVertex(player);
 			List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
-					.map(node -> new AbstractMap.SimpleEntry<>(node, node.getPosition().distance(playerPosition)))
+					.filter(node -> Objects.equals(node.getLocation().getWorld(), playerLocation.getWorld()))
+					.map(node -> new AbstractMap.SimpleEntry<>(node, node.getLocation().distance(playerLocation)))
 					.sequential()
 					.sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
 					.limit(10)
 					.map(e -> {
 						Node n = e.getKey();
-						Vector dir = n.getPosition().clone().add(new Vector(0, .5f, 0)).subtract(playerPosition);
+						Vector dir = n.getLocation().toVector().clone().add(new Vector(0, .5f, 0)).subtract(playerLocation.toVector());
 						double length = dir.length();
 						dir.normalize();
 						Location loc = player.getLocation().setDirection(dir);
@@ -165,18 +161,14 @@ public class RoadMap implements Keyed, Named {
 				.collect(Collectors.toCollection(NavigateSelection::new));
 	}
 
-	public Waypoint createWaypoint(Vector vector) {
-		return createNode(RoadMapHandler.WAYPOINT_TYPE, vector);
+	public Waypoint createWaypoint(Location location) {
+		return createNode(RoadMapHandler.WAYPOINT_TYPE, location);
 	}
 
-	public <T extends Node> T createNode(NodeType<T> type, Vector vector) {
-		return createNode(type, vector, null);
-	}
-
-	public <T extends Node> T createNode(NodeType<T> type, Vector vector, String permission, NodeGroup... groups) {
+	public <T extends Node> T createNode(NodeType<T> type, Location location, NodeGroup... groups) {
 
 		T node = PathPlugin.getInstance().getDatabase().createNode(this, type, Arrays.stream(groups).filter(Objects::nonNull).toList(),
-				vector.getX(), vector.getY(), vector.getZ(), null, permission);
+				location, null);
 
 		addNode(node);
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
@@ -194,21 +186,21 @@ public class RoadMap implements Keyed, Named {
 	 * If the event is not cancelled, the change will be updated to the database.
 	 * Don't call this method asynchronous, events can only be called in the main thread.
 	 * <p>
-	 * TO only modify the position without event or database update, simply call {@link Node#setPosition(Vector)}
+	 * TO only modify the position without event or database update, simply call {@link Node#setLocation(Location)}
 	 *
 	 * @param node     The node to change the position for.
-	 * @param position The position to set. No world attribute is required, the roadmap attribute is used. Use {@link Location#toVector()}
+	 * @param location The position to set. No world attribute is required, the roadmap attribute is used. Use {@link Location#toVector()}
 	 *                 to set a location.
 	 * @return true if the position was successfully set, false if the event was cancelled
 	 */
-	public boolean setNodeLocation(Node node, Vector position) {
+	public boolean setNodeLocation(Node node, Location location) {
 
-		NodeTeleportEvent event = new NodeTeleportEvent(node, position);
+		NodeTeleportEvent event = new NodeTeleportEvent(node, location);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			return false;
 		}
-		node.setPosition(event.getNewPositionModified());
+		node.setLocation(event.getNewPositionModified());
 		PathPlugin.getInstance().getDatabase().updateNode(node);
 		return true;
 	}

@@ -6,9 +6,9 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.jgrapht.alg.util.Triple;
 import xyz.xenondevs.particle.ParticleBuilder;
@@ -19,20 +19,15 @@ import java.util.*;
 
 public interface DataStorage {
 
-	/*TODO before publishing
-	- Should groups have permissions?
-	- Should roadmaps have a custom tangent length?
-	 */
-
 	void connect();
 
 	void disconnect();
 
-	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis) {
-		return createRoadMap(key, nameFormat, world, findableNodes, pathVis, 2, 1);
+	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis) {
+		return createRoadMap(key, nameFormat, pathVis, 1);
 	}
 
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, World world, boolean findableNodes, PathVisualizer<?> pathVis, double findDist, double tangentLength);
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -67,13 +62,15 @@ public interface DataStorage {
 
 	void deleteEdge(int startId, int endId);
 
-	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission);
+	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength);
 
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 
 	void updateNode(Node node);
 
-	void deleteNodes(int... nodeId);
+	default void deleteNodes(Integer... nodeId) {
+		deleteNodes(Arrays.asList(nodeId));
+	}
 
 	void deleteNodes(Collection<Integer> nodeIds);
 
@@ -84,7 +81,7 @@ public interface DataStorage {
 
 	Map<NamespacedKey, List<Integer>> loadNodeGroupNodes();
 
-	NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, boolean findable);
+	NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance);
 
 	HashedRegistry<NodeGroup> loadNodeGroups();
 
@@ -102,11 +99,11 @@ public interface DataStorage {
 
 	void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
-	DiscoverInfo createFoundInfo(UUID player, Discoverable discoverable, Date foundDate);
+	DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
 
-	Map<Integer, DiscoverInfo> loadFoundInfo(int globalPlayerId, boolean group);
+	Map<UUID, Map<NamespacedKey, DiscoverInfo>> loadDiscoverInfo();
 
-	void deleteFoundInfo(int globalPlayerId, int nodeId, boolean group);
+	void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 
 	PathVisualizer<?> newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
 
@@ -139,7 +136,7 @@ public interface DataStorage {
 	NodeBatchCreator newNodeBatch();
 
 	interface NodeBatchCreator {
-		<T extends Node> void createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, double x, double y, double z, Double tangentLength, String permission) throws SQLException;
+		<T extends Node> void createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) throws SQLException;
 
 		Collection<? extends Node> commit() throws SQLException;
 	}

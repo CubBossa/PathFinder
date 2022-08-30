@@ -19,7 +19,10 @@ import de.cubbossa.pathfinder.util.LerpUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Keyed;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,7 +33,7 @@ import xyz.xenondevs.particle.ParticleBuilder;
 import xyz.xenondevs.particle.ParticleEffect;
 import xyz.xenondevs.particle.task.TaskManager;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -75,8 +78,10 @@ public class RoadMapEditor implements Keyed, Listener {
 		return !editingPlayers.isEmpty();
 	}
 
-	public void toggleEditMode(UUID uuid) {
-		setEditMode(uuid, !isEditing(uuid));
+	public boolean toggleEditMode(UUID uuid) {
+		boolean isEditing = isEditing(uuid);
+		setEditMode(uuid, !isEditing);
+		return !isEditing;
 	}
 
 	public void cancelEditModes() {
@@ -186,19 +191,21 @@ public class RoadMapEditor implements Keyed, Listener {
 			Map<Color, List<Object>> packets = new HashMap<>();
 			Map<Color, ParticleBuilder> particles = new HashMap<>();
 
-			World world = roadMap.getWorld();
 			for (var entry : undirected.entrySet()) {
+				if (!Objects.equals(entry.getKey().getStart().getLocation().getWorld(), entry.getKey().getEnd().getLocation().getWorld())) {
+					continue;
+				}
 				boolean directed = !entry.getValue();
 
-				Vector a = entry.getKey().getStart().getPosition();
-				Vector b = entry.getKey().getEnd().getPosition();
+				Vector a = entry.getKey().getStart().getLocation().toVector();
+				Vector b = entry.getKey().getEnd().getLocation().toVector();
 				double dist = a.distance(b);
 
 				for (float i = 0; i < dist; i += particleDistance) {
 					Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
 
 					ParticleBuilder builder = particles.computeIfAbsent(c, k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-					packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(LerpUtils.lerp(a, b, i / dist).toLocation(world)).toPacket());
+					packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(LerpUtils.lerp(a, b, i / dist).toLocation(entry.getKey().getStart().getLocation().getWorld())).toPacket());
 				}
 			}
 			for (var entry : packets.entrySet()) {

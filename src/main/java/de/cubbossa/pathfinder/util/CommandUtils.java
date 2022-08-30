@@ -18,11 +18,6 @@ public class CommandUtils {
         return list.subList(Integer.min(page * pageSize, list.size() == 0 ? 0 : list.size() - 1), Integer.min((page + 1) * pageSize, list.size()));
     }
 
-    public @Nullable
-	RoadMap getAnyRoadMap(World world) {
-        return RoadMapHandler.getInstance().getRoadMaps(world).stream().findFirst().orElse(null);
-    }
-
     public RoadMap getSelectedRoadMap(CommandSender sender) {
         return getSelectedRoadMap(sender, true);
     }

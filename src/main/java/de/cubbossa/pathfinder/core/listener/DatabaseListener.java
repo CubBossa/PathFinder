@@ -2,14 +2,13 @@ package de.cubbossa.pathfinder.core.listener;
 
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
+import de.cubbossa.pathfinder.core.events.nodegroup.*;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
+import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
@@ -72,6 +71,31 @@ public class DatabaseListener implements Listener {
 		});
 	}
 
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onGroupUpdate(NodeGroupSetNameEvent event) {
+		data.updateNodeGroup(event.getGroup());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onGroupUpdate(NodeGroupSetPermissionEvent event) {
+		data.updateNodeGroup(event.getGroup());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onGroupUpdate(NodeGroupSetNavigableEvent event) {
+		data.updateNodeGroup(event.getGroup());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onGroupUpdate(NodeGroupSetDiscoverableEvent event) {
+		data.updateNodeGroup(event.getGroup());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onGroupUpdate(NodeGroupSetFindDistanceEvent event) {
+		data.updateNodeGroup(event.getGroup());
+	}
+
 	@EventHandler
 	public void onSearchTermsChanged(NodeGroupSearchTermsChangedEvent event) {
 		switch (event.getAction()) {
@@ -81,4 +105,13 @@ public class DatabaseListener implements Listener {
 		}
 	}
 
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onDiscover(PlayerDiscoverEvent event) {
+		data.createDiscoverInfo(event.getPlayerId(), event.getDiscoverable(), event.getDate());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onForget(PlayerForgetEvent event) {
+		data.deleteDiscoverInfo(event.getPlayerId(), event.getDiscoverable().getUniqueKey());
+	}
 }

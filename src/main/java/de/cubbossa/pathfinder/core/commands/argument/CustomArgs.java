@@ -224,6 +224,13 @@ public class CustomArgs {
 		})));
 	}
 
+	public Argument<? extends Discoverable> discoverableArgument(String nodeName) {
+		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+			return NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
+		}).includeSuggestions(suggestNamespacedKeys(sender -> NodeGroupHandler.getInstance().getNodeGroups().stream()
+				.map(NodeGroup::getKey).collect(Collectors.toList())));
+	}
+
 	private static final List<Character> LIST_SYMBOLS = Lists.newArrayList('!', '&', '|', ')', '(');
 	private static final List<String> LIST_SYMBOLS_STRING = Lists.newArrayList("!", "&", "|", ")", "(");
 

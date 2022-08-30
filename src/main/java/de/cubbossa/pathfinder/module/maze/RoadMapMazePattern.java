@@ -43,7 +43,7 @@ public class RoadMapMazePattern extends MazePattern {
 		int bz = location.getBlockZ();
 		int bx = location.getBlockX();
 
-		Node node = roadMap.createNode(RoadMapHandler.WAYPOINT_TYPE, location.toVector());
+		Node node = roadMap.createNode(RoadMapHandler.WAYPOINT_TYPE, location);
 
 		Node southOpen = southOpenQueue.get(bx);
 		if (southOpen != null) {

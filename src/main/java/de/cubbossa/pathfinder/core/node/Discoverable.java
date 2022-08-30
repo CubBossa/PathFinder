@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.node;
 import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.data.DatabaseObject;
+import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
@@ -16,7 +17,7 @@ import java.util.Collection;
  * Discoverable extends the {@link Named} interface, which ensures a display name attribute.
  * The name attribute is used to signal the discovering to the player in a formatted way.
  */
-public interface Discoverable extends DatabaseObject<NamespacedKey>, Named {
+public interface Discoverable extends Keyed, DatabaseObject<NamespacedKey>, Named {
 
 	/**
 	 * @return true, if the player fulfills all requirements to discover this {@link Discoverable} instance.

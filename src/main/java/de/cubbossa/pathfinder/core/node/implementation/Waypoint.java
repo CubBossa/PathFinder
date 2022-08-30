@@ -1,17 +1,15 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -31,9 +29,7 @@ public class Waypoint implements Node, Groupable {
 	private final List<Edge> edges;
 	private final Collection<NodeGroup> groups;
 
-	private Vector position;
-	@Nullable
-	private String permission = null;
+	private Location location;
 	@Nullable
 	private Double curveLength = null;
 
@@ -61,11 +57,6 @@ public class Waypoint implements Node, Groupable {
 	@Override
 	public int hashCode() {
 		return nodeId;
-	}
-
-	@Override
-	public Location getLocation() {
-		return position.toLocation(roadMap.getWorld());
 	}
 
 	@Override
@@ -116,7 +107,9 @@ public class Waypoint implements Node, Groupable {
 	public String toString() {
 		return "Waypoint{" +
 				"nodeId=" + nodeId +
-				", position=" + position +
+				", roadMapKey=" + roadMapKey +
+				", location=" + location +
+				", curveLength=" + curveLength +
 				'}';
 	}
 }

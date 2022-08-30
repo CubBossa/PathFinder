@@ -26,12 +26,7 @@ public class MoveListener implements Listener {
 			if (!group.fulfillsDiscoveringRequirements(event.getPlayer())) {
 				continue;
 			}
-			PlayerDiscoverEvent e = new PlayerDiscoverEvent(event.getPlayer(), group, new Date());
-			Bukkit.getPluginManager().callEvent(e);
-			if (e.isCancelled()) {
-				continue;
-			}
-			DiscoverHandler.getInstance().discover(e.getPlayer().getUniqueId(), group, e.getDate());
+			DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, new Date());
 		}
 	}
 }

@@ -12,10 +12,7 @@ import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
-import dev.jorel.commandapi.arguments.BooleanArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
+import dev.jorel.commandapi.arguments.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -26,6 +23,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,7 +40,7 @@ public class NodeGroupCommand extends CommandTree {
 				.executesPlayer((player, objects) -> {
 					listGroups(player, 0);
 				})
-				.then(new IntegerArgument("page")
+				.then(new IntegerArgument("page", 1)
 						.executesPlayer((player, objects) -> {
 							listGroups(player, (int) objects[offset]);
 						})));
@@ -91,12 +89,35 @@ public class NodeGroupCommand extends CommandTree {
 											renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										})
 								)))
-				.then(new LiteralArgument("findable")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_FINDABLE)
+				.then(new LiteralArgument("permission")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(new GreedyStringArgument("permission")
+										.executesPlayer((player, objects) -> {
+											setGroupPermission(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
+										})
+								)))
+				.then(new LiteralArgument("navigable")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
 						.then(CustomArgs.nodeGroupArgument("group")
 								.then(new BooleanArgument("value")
 										.executesPlayer((player, objects) -> {
-											setFindable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
+											setGroupNavigable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
+										})
+								)))
+				.then(new LiteralArgument("discoverable")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(new BooleanArgument("value")
+										.executesPlayer((player, objects) -> {
+											setGroupDiscoverable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
+										}))))
+				.then(new LiteralArgument("find-distance")
+						.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
+						.then(CustomArgs.nodeGroupArgument("group")
+								.then(new FloatArgument("value", 0.01f)
+										.executesPlayer((player, objects) -> {
+											setGroupDiscoverDist(player, (NodeGroup) objects[offset], (Float) objects[offset + 1]);
 										})))));
 	}
 
@@ -145,24 +166,76 @@ public class NodeGroupCommand extends CommandTree {
 				.map(Component::text).collect(Collectors.toList()));
 	}
 
-	public void setFindable(Player player, NodeGroup group, boolean findable) {
-		group.setDiscoverable(findable);
+	public void renameGroup(Player player, NodeGroup group, String newName) {
 
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FINDABLE.format(TagResolver.builder()
-				.tag("name", Tag.inserting(group.getDisplayName()))
-				.tag("value", Tag.inserting(Component.text(findable)))
+		Component oldName = group.getDisplayName();
+		if (!NodeGroupHandler.getInstance().setNodeGroupName(group, newName)) {
+			return;
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
+				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", oldName))
+				.tag("new-name", Tag.inserting(group.getDisplayName()))
+				.tag("value", Tag.inserting(Component.text(group.getNameFormat())))
 				.build()), player);
 	}
 
-	public void renameGroup(Player player, NodeGroup group, String newName) {
-		Component oldName = group.getDisplayName();
-		group.setNameFormat(newName);
+	public void setGroupPermission(Player player, NodeGroup group, String permission) {
 
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
-				.resolver(Placeholder.component("id", Messages.formatKey(group.getKey())))
-				.resolver(Placeholder.component("name", oldName))
-				.tag("new-name", Tag.inserting(group.getDisplayName()))
-				.tag("value", Tag.inserting(PathPlugin.getInstance().getMiniMessage().deserialize(newName)))
+		permission = permission.equalsIgnoreCase("null") || permission.equalsIgnoreCase("none") ? null : permission;
+
+		@Nullable
+		String oldValue = group.getPermission();
+		if (!NodeGroupHandler.getInstance().setNodeGroupPermission(group, permission)) {
+			return;
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_PERM.format(TagResolver.builder()
+				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.tag("old-value", Tag.inserting(Messages.formatPermission(oldValue)))
+				.tag("value", Tag.inserting(Messages.formatPermission(group.getPermission())))
+				.build()), player);
+	}
+
+	public void setGroupNavigable(Player player, NodeGroup group, boolean value) {
+
+		boolean oldValue = group.isNavigable();
+		if (!NodeGroupHandler.getInstance().setNodeGroupNavigable(group, value)) {
+			return;
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAVIGABLE.format(TagResolver.builder()
+				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.tag("old-value", Tag.inserting(Messages.formatBool(oldValue)))
+				.tag("value", Tag.inserting(Messages.formatBool(group.isNavigable())))
+				.build()), player);
+	}
+
+	public void setGroupDiscoverable(Player player, NodeGroup group, boolean value) {
+
+		boolean oldValue = group.isDiscoverable();
+		if (!NodeGroupHandler.getInstance().setNodeGroupDiscoverable(group, value)) {
+			return;
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_DISCOVERABLE.format(TagResolver.builder()
+				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.resolver(Placeholder.component("old-value", Messages.formatBool(oldValue).asComponent(player)))
+				.resolver(Placeholder.component("value", Messages.formatBool(group.isDiscoverable()).asComponent(player)))
+				.build()), player);
+	}
+
+	public void setGroupDiscoverDist(Player player, NodeGroup group, float value) {
+
+		float oldValue = group.getFindDistance();
+		if (!NodeGroupHandler.getInstance().setNodeGroupFindDistance(group, value)) {
+			return;
+		}
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FIND_DIST.format(TagResolver.builder()
+				.resolver(Placeholder.component("key", Messages.formatKey(group.getKey())))
+				.resolver(Placeholder.component("name", group.getDisplayName()))
+				.tag("old-value", Tag.inserting(Component.text(oldValue)))
+				.tag("value", Tag.inserting(Component.text(group.getFindDistance())))
 				.build()), player);
 	}
 
@@ -180,7 +253,7 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 
-		NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, true, StringUtils.getRandHexString() + key.getKey());
+		NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.getRandHexString() + key.getKey());
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
@@ -198,7 +271,7 @@ public class NodeGroupCommand extends CommandTree {
 		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), page, 10)) {
 
 			TagResolver r = TagResolver.builder()
-					.tag("id", Tag.inserting(Component.text(group.getKey().toString())))
+					.tag("key", Tag.inserting(Component.text(group.getKey().toString())))
 					.tag("name", Tag.inserting(group.getDisplayName()))
 					.tag("size", Tag.inserting(Component.text(group.size())))
 					.tag("findable", Tag.inserting(Component.text(group.isDiscoverable())))

@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class WaypointCommand extends CommandTree {
@@ -57,20 +56,20 @@ public class WaypointCommand extends CommandTree {
 		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_WP_CREATE)
 				.executesPlayer((player, objects) -> {
-					onCreate(player, RoadMapHandler.WAYPOINT_TYPE, player.getLocation().toVector().add(new Vector(0, 1, 0)));
+					onCreate(player, RoadMapHandler.WAYPOINT_TYPE, player.getLocation().add(new Vector(0, 1, 0)));
 				})
 				.then(new LocationArgument("location")
 						.executesPlayer((player, objects) -> {
-							onCreate(player, RoadMapHandler.WAYPOINT_TYPE, ((Location) objects[0]).toVector());
+							onCreate(player, RoadMapHandler.WAYPOINT_TYPE, (Location) objects[0]);
 						})
 				)
 				.then(CustomArgs.nodeTypeArgument("type")
 						.executesPlayer((player, objects) -> {
-							onCreate(player, (NodeType<? extends Node>) objects[0], player.getLocation().toVector().add(new Vector(0, 1, 0)));
+							onCreate(player, (NodeType<? extends Node>) objects[0], player.getLocation().add(new Vector(0, 1, 0)));
 						})
 						.then(new LocationArgument("location")
 								.executesPlayer((player, objects) -> {
-									onCreate(player, (NodeType<? extends Node>) objects[0], ((Location) objects[1]).toVector());
+									onCreate(player, (NodeType<? extends Node>) objects[0], (Location) objects[1]);
 								})
 						)
 				)
@@ -126,16 +125,6 @@ public class WaypointCommand extends CommandTree {
 
 		);
 		then(new LiteralArgument("set")
-				.then(new LiteralArgument("permission")
-						.withPermission(PathPlugin.PERM_CMD_WP_SET_PERM)
-						.then(CustomArgs.nodeSelectionArgument("nodes")
-								.then(new GreedyStringArgument("permission").includeSuggestions(ArgumentSuggestions.strings("null"))
-										.executesPlayer((player, objects) -> {
-											onSetPermission(player, (NodeSelection) objects[0], (String) objects[1]);
-										})
-								)
-						)
-				)
 				.then(new LiteralArgument("curve-length")
 						.withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
 						.then(CustomArgs.nodeSelectionArgument("nodes")
@@ -160,11 +149,10 @@ public class WaypointCommand extends CommandTree {
 		FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
 				.tag("id", Tag.preProcessParsed(node.getNodeId() + ""))
 				.tag("roadmap", Tag.inserting(Messages.formatKey(node.getRoadMapKey())))
-				.tag("permission", Tag.inserting(Messages.formatPermission(node.getPermission())))
 				.tag("groups", node instanceof Groupable groupable ?
 						Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 						Tag.inserting(Component.text("none"))) //TODO as message
-				.tag("position", Tag.inserting(Messages.formatVector(node.getPosition())))
+				.tag("position", Tag.inserting(Messages.formatVector(node.getLocation().toVector())))
 				.tag("curve-length", Tag.preProcessParsed(node.getCurveLength() + ""))
 				.tag("edge-count", Tag.preProcessParsed(node.getEdges().size() + ""))
 				.build());
@@ -172,7 +160,7 @@ public class WaypointCommand extends CommandTree {
 		TranslationHandler.getInstance().sendMessage(message, player);
 	}
 
-	public void onCreate(Player player, NodeType<? extends Node> type, Vector location) {
+	public void onCreate(Player player, NodeType<? extends Node> type, Location location) {
 		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
 		Node node = roadMap.createNode(type, location);
 
@@ -195,8 +183,7 @@ public class WaypointCommand extends CommandTree {
 		if (roadMap == null) {
 			return;
 		}
-		Vector pos = player.getLocation().toVector();
-		selection.forEach(node -> roadMap.setNodeLocation(node, pos));
+		selection.forEach(node -> roadMap.setNodeLocation(node, player.getLocation()));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
@@ -206,7 +193,7 @@ public class WaypointCommand extends CommandTree {
 
 	public void onTp(Player player, NodeSelection selection, Location location) {
 
-		selection.forEach(node -> node.setPosition(location.toVector()));
+		selection.forEach(node -> node.setLocation(location));
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
@@ -231,8 +218,7 @@ public class WaypointCommand extends CommandTree {
 
 							TagResolver r = TagResolver.builder()
 									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-									.tag("permission", Tag.preProcessParsed(n.getPermission() == null ? "null" : n.getPermission()))
-									.tag("position", Tag.inserting(Messages.formatVector(n.getPosition())))
+									.tag("position", Tag.inserting(Messages.formatVector(n.getLocation().toVector())))
 									.tag("groups", n instanceof Groupable groupable ?
 											Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 											Tag.inserting(Component.text("none"))) //TODO as message
@@ -284,14 +270,6 @@ public class WaypointCommand extends CommandTree {
 				TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DISCONNECT.format(resolver), player);
 			}
 		}
-	}
-
-	public void onSetPermission(Player player, NodeSelection selection, String perm) {
-		selection.forEach(node -> node.setPermission(perm.equalsIgnoreCase("null") ? null : perm));
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_PERMISSION.format(TagResolver.builder()
-				.tag("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))
-				.tag("permission", Tag.inserting(Component.text(perm)))
-				.build()), player);
 	}
 
 	public void onSetTangent(Player player, NodeSelection selection, Double strength) {
