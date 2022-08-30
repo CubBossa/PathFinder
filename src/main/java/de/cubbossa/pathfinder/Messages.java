@@ -43,7 +43,7 @@ public class Messages {
 	public static final Message GEN_TRUE = new Message("general.true");
 	@MessageMeta("<#8f65eb>false</#8f65eb>")
 	public static final Message GEN_FALSE = new Message("general.false");
-	@MessageMeta(value = "<#8f65eb><x:#.00><gray>,</gray> <y:#.00><gray>,</gray> <z:#.00></#8f65eb>",
+	@MessageMeta(value = "<#8f65eb><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></#8f65eb>",
 			placeholders = {"x", "y", "z"},
 			comment = """
 					The numberformat can be specified as argument for x, y and z. Check out
@@ -151,10 +151,10 @@ public class Messages {
 			<#7b42f5>Node #<id></7b42f5> <gray>(<roadmap>)</gray>
 			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><permission></#6569eb>
 			<dark_gray>» </dark_gray><gray>Groups: <#6569eb><groups></#6569eb>
-			<dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb>
+			<dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb> (<world>)
 			<dark_gray>» </dark_gray><gray>Curve-Length: <#6569eb><curve-length></#6569eb>
 			<dark_gray>» </dark_gray><gray>Edge-Count: <#6569eb><edge-count></#6569eb>
-			""", placeholders = {"id", "roadmap", "permission", "groups", "position", "curve-length", "edge-count"})
+			""", placeholders = {"id", "roadmap", "permission", "groups", "position", "world", "curve-length", "edge-count"})
 	public static final Message CMD_N_INFO = new Message("commands.node.info");
 	@MessageMeta(placeholders = {"selection", "length"})
 	public static final Message CMD_N_SET_TANGENT = new Message("commands.node.set_curve_length");

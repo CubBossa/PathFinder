@@ -53,14 +53,10 @@ public interface DataStorage {
 	void deleteEdges(Collection<Edge> edges);
 
 	default void deleteEdge(Edge edge) {
-		deleteEdge(edge.getStart().getNodeId(), edge.getEnd().getNodeId());
+		deleteEdge(edge.getStart(), edge.getEnd());
 	}
 
-	default void deleteEdge(Node start, Node end) {
-		deleteEdge(start.getNodeId(), end.getNodeId());
-	}
-
-	void deleteEdge(int startId, int endId);
+	void deleteEdge(Node start, Node end);
 
 	<T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength);
 

@@ -102,7 +102,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public void deleteEdge(int startId, int endId) {
+	public void deleteEdge(Node start, Node end) {
 		log("Delete Edge");
 	}
 

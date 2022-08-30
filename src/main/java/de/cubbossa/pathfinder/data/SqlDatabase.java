@@ -297,7 +297,7 @@ public abstract class SqlDatabase implements DataStorage {
 						Node end = roadMap.getNode(endId);
 
 						if (start == null || end == null) {
-							deleteEdge(startId, endId);
+							deleteEdge(start, end);
 						}
 						edges.add(new Edge(start, end, (float) weight));
 					}
@@ -333,11 +333,11 @@ public abstract class SqlDatabase implements DataStorage {
 		}
 	}
 
-	public void deleteEdge(int start, int end) {
+	public void deleteEdge(Node start, Node end) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_edges` WHERE `start_id` = ? AND `end_id` = ?")) {
-				stmt.setInt(1, start);
-				stmt.setInt(2, end);
+				stmt.setInt(1, start.getNodeId());
+				stmt.setInt(2, end.getNodeId());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {

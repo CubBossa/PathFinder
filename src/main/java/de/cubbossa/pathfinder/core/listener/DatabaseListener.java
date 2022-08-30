@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.core.listener;
 
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeCurveLengthChangedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeLocationChangedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.*;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
@@ -53,6 +55,16 @@ public class DatabaseListener implements Listener {
 	@EventHandler
 	public void onNodesDeleted(NodesDeletedEvent event) {
 		data.deleteNodes(event.getNodes().stream().map(Node::getNodeId).collect(Collectors.toSet()));
+	}
+
+	@EventHandler
+	public void onNodeUpdate(NodeLocationChangedEvent event) {
+		event.getNodes().forEach(data::updateNode);
+	}
+
+	@EventHandler
+	public void onNodeUpdate(NodeCurveLengthChangedEvent event) {
+		event.getNodes().forEach(data::updateNode);
 	}
 
 	@EventHandler

@@ -87,7 +87,7 @@ public class WaypointCommand extends CommandTree {
 				.withPermission(PathPlugin.PERM_CMD_WP_TPHERE)
 				.then(CustomArgs.nodeSelectionArgument("nodes")
 						.executesPlayer((player, objects) -> {
-							onTphere(player, (NodeSelection) objects[0]);
+							onTp(player, (NodeSelection) objects[0], player.getLocation());
 						})
 				)
 		);
@@ -176,25 +176,12 @@ public class WaypointCommand extends CommandTree {
 				.format(TagResolver.resolver("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
 	}
 
-	public void onTphere(Player player, NodeSelection selection) {
+	public void onTp(Player player, NodeSelection selection, Location location) {
+
 		if (selection.size() == 0) {
 			return;
 		}
-		RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(selection.get(0).getRoadMapKey());
-		if (roadMap == null) {
-			return;
-		}
-		selection.forEach(node -> roadMap.setNodeLocation(node, player.getLocation()));
-
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
-				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
-				.resolver(Placeholder.component("location", Messages.formatVector(player.getLocation().toVector())))
-				.build()), player);
-	}
-
-	public void onTp(Player player, NodeSelection selection, Location location) {
-
-		selection.forEach(node -> node.setLocation(location));
+		RoadMapHandler.getInstance().setNodeLocation(selection, location);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
 				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
@@ -220,6 +207,7 @@ public class WaypointCommand extends CommandTree {
 							TagResolver r = TagResolver.builder()
 									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
 									.resolver(Placeholder.component("position", Messages.formatVector(n.getLocation().toVector())))
+									.resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
 									.tag("groups", n instanceof Groupable groupable ?
 											Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
 											Tag.inserting(Component.text("none"))) //TODO as message
@@ -274,7 +262,8 @@ public class WaypointCommand extends CommandTree {
 	}
 
 	public void onSetTangent(Player player, NodeSelection selection, Double strength) {
-		selection.forEach(node -> node.setCurveLength(strength));
+		RoadMapHandler.getInstance().setNodeCurveLength(selection, strength);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()
 				.resolver(Placeholder.component("selection", Messages.formatNodeSelection(player, selection)))
 				.resolver(Placeholder.component("length", Component.text(strength)))

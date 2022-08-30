@@ -164,7 +164,7 @@ public class PathPlugin extends JavaPlugin {
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
 
 		// Tutorial
-		saveResource("how-the-hell-do-i-use-it.txt", true);
+		saveResource("how-the-hell-do-i-use-it.txt", false);
 
 		// Data
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
@@ -184,7 +184,9 @@ public class PathPlugin extends JavaPlugin {
 
 		new FindModule(this);
 
-		saveResource("effects.nbo", false);
+		if (!effectsFile.exists()) {
+			saveResource("effects.nbo", false);
+		}
 		new EffectHandler(this, TranslationHandler.getInstance().getAudiences(), TranslationHandler.getInstance().getMiniMessage(),
 				context -> TranslationHandler.getInstance().translateLine(context.text(), context.player(), context.resolver()));
 

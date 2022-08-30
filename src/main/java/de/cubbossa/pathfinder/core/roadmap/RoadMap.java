@@ -181,30 +181,6 @@ public class RoadMap implements Keyed, Named {
 		nodes.put(node.getNodeId(), node);
 	}
 
-	/**
-	 * This method changes the position of the node and calls the corresponding event.
-	 * If the event is not cancelled, the change will be updated to the database.
-	 * Don't call this method asynchronous, events can only be called in the main thread.
-	 * <p>
-	 * TO only modify the position without event or database update, simply call {@link Node#setLocation(Location)}
-	 *
-	 * @param node     The node to change the position for.
-	 * @param location The position to set. No world attribute is required, the roadmap attribute is used. Use {@link Location#toVector()}
-	 *                 to set a location.
-	 * @return true if the position was successfully set, false if the event was cancelled
-	 */
-	public boolean setNodeLocation(Node node, Location location) {
-
-		NodeTeleportEvent event = new NodeTeleportEvent(node, location);
-		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
-		node.setLocation(event.getNewPositionModified());
-		PathPlugin.getInstance().getDatabase().updateNode(node);
-		return true;
-	}
-
 	public void removeNodes(NodeSelection selection) {
 		removeNodes(selection.toArray(Node[]::new));
 	}

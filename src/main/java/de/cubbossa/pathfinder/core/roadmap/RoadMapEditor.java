@@ -299,7 +299,7 @@ public class RoadMapEditor implements Keyed, Listener {
 					.map(Bukkit::getPlayer)
 					.filter(Objects::nonNull)
 					.forEach(player ->
-							armorstandHandler.updateNodePosition(event.getNode(), player, player.getLocation(), true));
+							armorstandHandler.updateNodePosition(event.getNodes(), player, player.getLocation(), true));
 			updateEditModeParticles();
 		}, 1);
 	}
