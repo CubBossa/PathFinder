@@ -32,6 +32,8 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimpleBarChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
@@ -39,6 +41,7 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class PathPlugin extends JavaPlugin {
@@ -226,6 +229,8 @@ public class PathPlugin extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
 
 		modules.forEach(Module::onEnable);
+
+		Metrics metrics = new Metrics(this, 16324);
 	}
 
 	@SneakyThrows

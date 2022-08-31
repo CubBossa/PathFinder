@@ -45,6 +45,7 @@
                     <artifactSet>
                         <includes>
                             <include>net.kyori:**</include>
+                            <include>org.bstats:bstats-bukkit</include>
                             <include>de.cubbossa:MenuFramework</include>
                             <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
                             <include>de.cubbossa:Translations</include>
@@ -102,6 +103,10 @@
                         <relocation>
                             <pattern>dev.jorel.commandapi</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.commandapi</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -280,5 +285,13 @@
             <artifactId>jheaps</artifactId>
             <version>0.14</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 </project>
