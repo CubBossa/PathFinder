@@ -169,9 +169,8 @@ public class NodeGroupCommand extends CommandTree {
 	public void renameGroup(Player player, NodeGroup group, String newName) {
 
 		Component oldName = group.getDisplayName();
-		if (!NodeGroupHandler.getInstance().setNodeGroupName(group, newName)) {
-			return;
-		}
+		NodeGroupHandler.getInstance().setNodeGroupName(group, newName);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAME.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", oldName))
@@ -186,9 +185,8 @@ public class NodeGroupCommand extends CommandTree {
 
 		@Nullable
 		String oldValue = group.getPermission();
-		if (!NodeGroupHandler.getInstance().setNodeGroupPermission(group, permission)) {
-			return;
-		}
+		NodeGroupHandler.getInstance().setNodeGroupPermission(group, permission);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_PERM.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
@@ -200,9 +198,8 @@ public class NodeGroupCommand extends CommandTree {
 	public void setGroupNavigable(Player player, NodeGroup group, boolean value) {
 
 		boolean oldValue = group.isNavigable();
-		if (!NodeGroupHandler.getInstance().setNodeGroupNavigable(group, value)) {
-			return;
-		}
+		NodeGroupHandler.getInstance().setNodeGroupNavigable(group, value);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_NAVIGABLE.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
@@ -214,9 +211,8 @@ public class NodeGroupCommand extends CommandTree {
 	public void setGroupDiscoverable(Player player, NodeGroup group, boolean value) {
 
 		boolean oldValue = group.isDiscoverable();
-		if (!NodeGroupHandler.getInstance().setNodeGroupDiscoverable(group, value)) {
-			return;
-		}
+		NodeGroupHandler.getInstance().setNodeGroupDiscoverable(group, value);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_DISCOVERABLE.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))
@@ -228,9 +224,8 @@ public class NodeGroupCommand extends CommandTree {
 	public void setGroupDiscoverDist(Player player, NodeGroup group, float value) {
 
 		float oldValue = group.getFindDistance();
-		if (!NodeGroupHandler.getInstance().setNodeGroupFindDistance(group, value)) {
-			return;
-		}
+		NodeGroupHandler.getInstance().setNodeGroupFindDistance(group, value);
+
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_SET_FIND_DIST.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(group.getKey()))
 				.resolver(Placeholder.component("name", group.getDisplayName()))

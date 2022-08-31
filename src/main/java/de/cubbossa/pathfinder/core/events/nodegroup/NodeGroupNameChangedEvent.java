@@ -11,18 +11,12 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 @AllArgsConstructor
-public class NodeGroupSetDiscoverableEvent extends Event implements Cancellable {
+public class NodeGroupNameChangedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
 	private final NodeGroup group;
-	private final boolean newValue;
-	private boolean cancelled;
-
-	public NodeGroupSetDiscoverableEvent(NodeGroup group, boolean value) {
-		this.group = group;
-		this.newValue = value;
-	}
+	private final String nameFormat;
 
 	public HandlerList getHandlers() {
 		return handlers;

@@ -86,54 +86,34 @@ public class NodeGroupHandler implements Listener {
 		return group;
 	}
 
-	public boolean setNodeGroupName(NodeGroup group, String newName) {
-		NodeGroupSetNameEvent event = new NodeGroupSetNameEvent(group, newName);
+	public void setNodeGroupName(NodeGroup group, String newName) {
+		NodeGroupNameChangedEvent event = new NodeGroupNameChangedEvent(group, newName);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
 		group.setNameFormat(event.getNameFormat());
-		return true;
 	}
 
-	public boolean setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
-		NodeGroupSetPermissionEvent event = new NodeGroupSetPermissionEvent(group, permission);
+	public void setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
+		NodeGroupPermissionChangedEvent event = new NodeGroupPermissionChangedEvent(group, permission);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
 		group.setPermission(event.getPermission());
-		return true;
 	}
 
-	public boolean setNodeGroupDiscoverable(NodeGroup group, boolean value) {
-		NodeGroupSetDiscoverableEvent event = new NodeGroupSetDiscoverableEvent(group, value);
+	public void setNodeGroupDiscoverable(NodeGroup group, boolean value) {
+		NodeGroupDiscoverableChangedEvent event = new NodeGroupDiscoverableChangedEvent(group, value);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
 		group.setDiscoverable(value);
-		return true;
 	}
 
-	public boolean setNodeGroupNavigable(NodeGroup group, boolean value) {
-		NodeGroupSetNavigableEvent event = new NodeGroupSetNavigableEvent(group, value);
-		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
+	public void setNodeGroupNavigable(NodeGroup group, boolean value) {
 		group.setNavigable(value);
-		return true;
+		NodeGroupNavigableChangedEvent event = new NodeGroupNavigableChangedEvent(group, value);
+		Bukkit.getPluginManager().callEvent(event);
 	}
 
-	public boolean setNodeGroupFindDistance(NodeGroup group, float value) {
-		NodeGroupSetFindDistanceEvent event = new NodeGroupSetFindDistanceEvent(group, value);
+	public void setNodeGroupFindDistance(NodeGroup group, float value) {
+		group.setFindDistance(value);
+		NodeGroupFindDistanceChangedEvent event = new NodeGroupFindDistanceChangedEvent(group, value);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return false;
-		}
-		group.setFindDistance(event.getValue());
-		return true;
 	}
 
 	public float getFindDistance(Groupable groupable) {

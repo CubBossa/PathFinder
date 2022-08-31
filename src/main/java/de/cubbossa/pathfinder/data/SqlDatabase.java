@@ -683,6 +683,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setBoolean(3, group.isNavigable());
 				stmt.setBoolean(4, group.isDiscoverable());
 				stmt.setDouble(5, group.getFindDistance());
+				stmt.setString(6, group.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {

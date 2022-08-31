@@ -269,16 +269,24 @@ public class CustomArgs {
 
 					StringRange finalRange = range;
 					String inRange = finalRange.get(input);
-					NodeGroupHandler.getInstance().getNodeGroups().stream()
+					Collection<String> allTerms = NodeGroupHandler.getInstance().getNodeGroups().stream()
 							.filter(NodeGroup::isNavigable)
 							.map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
 							.filter(navigable -> FindModule.getInstance().getNavigationFilter().stream().allMatch(navigablePredicate -> navigablePredicate.test(navigable)))
 							.map(FindModule.NavigationRequestContext::navigable)
 							.map(Navigable::getSearchTerms)
 							.flatMap(Collection::stream)
-							.filter(s -> s.startsWith(inRange))
+							.collect(Collectors.toSet());
+
+					/*TODO if (!Arrays.stream(suggestionInfo.currentInput().substring(0, lastIndex).split("[!&|()]")).allMatch(allTerms::contains)) {
+						throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(), () -> "At least one of the used search terms is incorrect");
+					}*/
+
+
+					allTerms.stream().filter(s -> s.startsWith(inRange))
 							.map(s -> new Suggestion(finalRange, s))
 							.forEach(suggestions::add);
+
 
 					if (suggestions.isEmpty()) {
 						range = StringRange.at(suggestionInfo.currentInput().length() - 1);

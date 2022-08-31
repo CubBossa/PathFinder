@@ -96,27 +96,27 @@ public class DatabaseListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGroupUpdate(NodeGroupSetNameEvent event) {
+	public void onGroupUpdate(NodeGroupNameChangedEvent event) {
 		data.updateNodeGroup(event.getGroup());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGroupUpdate(NodeGroupSetPermissionEvent event) {
+	public void onGroupUpdate(NodeGroupPermissionChangedEvent event) {
 		data.updateNodeGroup(event.getGroup());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGroupUpdate(NodeGroupSetNavigableEvent event) {
+	public void onGroupUpdate(NodeGroupNavigableChangedEvent event) {
 		data.updateNodeGroup(event.getGroup());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGroupUpdate(NodeGroupSetDiscoverableEvent event) {
+	public void onGroupUpdate(NodeGroupDiscoverableChangedEvent event) {
 		data.updateNodeGroup(event.getGroup());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGroupUpdate(NodeGroupSetFindDistanceEvent event) {
+	public void onGroupUpdate(NodeGroupFindDistanceChangedEvent event) {
 		data.updateNodeGroup(event.getGroup());
 	}
 

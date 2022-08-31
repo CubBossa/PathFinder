@@ -11,18 +11,12 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 @AllArgsConstructor
-public class NodeGroupSetFindDistanceEvent extends Event implements Cancellable {
+public class NodeGroupNavigableChangedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
 	private final NodeGroup group;
-	private float value;
-	private boolean cancelled;
-
-	public NodeGroupSetFindDistanceEvent(NodeGroup group, float value) {
-		this.group = group;
-		this.value = value;
-	}
+	private final boolean newValue;
 
 	public HandlerList getHandlers() {
 		return handlers;
