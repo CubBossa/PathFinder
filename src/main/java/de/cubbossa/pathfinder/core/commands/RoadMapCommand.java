@@ -73,7 +73,16 @@ public class RoadMapCommand extends CommandTree implements Listener {
 						})));
 
 		then(new LiteralArgument("editmode")
+				.withPermission(PathPlugin.PERM_CMD_RM_EDITMODE)
 				.withRequirement(hasRoadMapSelected())
+				.executesPlayer((player, args) -> {
+					RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(
+							PathPlayerHandler.getInstance().getPlayer(player).getSelectedRoadMap());
+					onEdit(player, roadMap);
+				})
+		);
+
+		then(new LiteralArgument("editmode")
 				.withPermission(PathPlugin.PERM_CMD_RM_EDITMODE)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.executesPlayer((player, args) -> {

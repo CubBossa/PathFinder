@@ -170,13 +170,13 @@ public class CustomArgs {
 
 	public Argument<String> suggestCommaSeparatedList(String node) {
 		return new GreedyStringArgument(node).replaceSuggestions((suggestionInfo, suggestionsBuilder) -> {
-
-			StringRange range = StringRange.at(suggestionInfo.currentInput().length());
+			return suggestionsBuilder.buildFuture();
+			/*StringRange range = StringRange.at(suggestionInfo.currentInput().length());
 			List<Suggestion> suggestions = Lists.newArrayList("abc", "def", "ghi").stream()
 					.map(s -> new Suggestion(range, s))
 					.collect(Collectors.toList());
 
-			return CompletableFuture.completedFuture(Suggestions.create(suggestionsBuilder.getInput(), suggestions));
+			return CompletableFuture.completedFuture(Suggestions.create(suggestionsBuilder.getInput(), suggestions));*/
 		});
 		/*return (suggestionInfo, suggestionsBuilder) -> {
 			if (!suggestionInfo.currentArg().matches("[0-9\\w,_]")) {
@@ -207,7 +207,7 @@ public class CustomArgs {
 				return SelectionUtils.getNodeSelection(player, customArgumentInfo.input().substring(1, customArgumentInfo.input().length() - 1));
 			}
 			return new NodeSelection();
-		});
+		}).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
 	}
 
 	public Argument<NodeGroup> nodeGroupArgument(String nodeName) {

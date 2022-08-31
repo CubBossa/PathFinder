@@ -28,6 +28,7 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -130,6 +131,7 @@ public class PathPlugin extends JavaPlugin {
 
 	private File effectsFile;
 	private DataStorage database;
+	@Setter
 	private Configuration configuration;
 
 	private FindCommand findCommand;

@@ -89,6 +89,28 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Successfully reloaded config files in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS_CFG = new Message("command.reload.success.config");
 
+	@MessageMeta("""
+			<gradient:black:dark_gray:black>------------ <#8265eb>Pathfinder</#8265eb> ------------</gradient>
+			<gray>See this tutorial for a full description on
+			<gray>On how to get started with the plugin.
+						
+			<white>Commands:</white>
+			<dark_gray>» </dark_gray><gray><#d3c4f5>/roadmap</#d3c4f5> - Edit roadmaps, that group together waypoints
+			<dark_gray>» </dark_gray><gray><#d3c4f5>/nodegroup</#d3c4f5> - Edit nodegroups, that add behaviour to groups of nodes
+			<dark_gray>» </dark_gray><gray><#d3c4f5>/node</#d3c4f5> - Create, edit and delete nodes
+			<dark_gray>» </dark_gray><gray><#d3c4f5>/pathvisualizer</#d3c4f5> - Edit pathvisualizers, to specify particles and more
+			<dark_gray>» </dark_gray><gray><#d3c4f5>/gps</#d3c4f5> - Find the shortest way to a nodegroup
+			""")
+	public static final Message HELP = new Message("command.help");
+	@MessageMeta(value = """
+			<gradient:black:dark_gray:black>------------ <#8265eb>Pathfinder</#8265eb> ------------</gradient>
+			<dark_gray>» </dark_gray><gray>Authors: <#d3c4f5><authors></#d3c4f5>
+			<dark_gray>» </dark_gray><gray>Current version: <#d3c4f5><version></#d3c4f5>
+			<dark_gray>» </dark_gray><gray>Main Game version: <#d3c4f5><api-version></#d3c4f5>
+			<dark_gray>» </dark_gray><gray>Spigot-Page: <#d3c4f5><ul><click:open_url:https://www.spigotmc.org/resources/plotborders-change-plot-border-and-plot-wall-for-plotsquared-v6.101978/>https://www.spigotmc.org/...</click></ul></#d3c4f5>
+			""", placeholders = {"authors", "version", "api-version"})
+	public static final Message INFO = new Message("command.info");
+
 	@MessageMeta(value = """
 			<#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<key>)</gray>
 			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
@@ -317,14 +339,17 @@ public class Messages {
 	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")
 	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");
 	@MessageMeta(value = "<name>",
-			placeholders = {"id", "name", "name-format", "discoverable", "search-terms"})
+			placeholders = {"key", "name", "name-format", "discoverable", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_N = new Message("editor.groups.entry.name");
 	@MessageMeta(value = """
-			<dark_gray>» </dark_gray><gray>Name: <name></gray>
-			<dark_gray>» </dark_gray><gray>Findable: <discoverable></gray>
-			<dark_gray>» </dark_gray><gray>Roadmap: <roadmap></gray>
+			<dark_gray>» </dark_gray><gray>Key: <key></gray>
+			<dark_gray>» </dark_gray><gray>Name: <name-format></gray>
+			<dark_gray>» </dark_gray><gray>Permission: <permission></gray>
+			<dark_gray>» </dark_gray><gray>Navigable: <navigable></gray>
+			<dark_gray>» </dark_gray><gray>Discoverable: <discoverable></gray>
+			<dark_gray>» </dark_gray><gray>Find distance: <find-distance:#.##></gray>
 			<dark_gray>» </dark_gray><gray>Search terms: <search-terms></gray>""",
-			placeholders = {"id", "name", "name-format", "discoverable", "search-terms"})
+			placeholders = {"key", "name", "name-format", "permission", "navigable", "discoverable", "find-distance", "search-terms"})
 	public static final Message E_SUB_GROUP_ENTRY_L = new Message("editor.groups.entry.lore");
 
 

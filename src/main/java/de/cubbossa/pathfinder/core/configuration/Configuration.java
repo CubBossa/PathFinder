@@ -30,10 +30,16 @@ public class Configuration {
 	private String fallbackLanguage = "en_US";
 
 
-	@ConfigValue(path = "data.general.type")
+	@ConfigValue(path = "data.general.type", comments = """
+			Set the database type to either SQLITE, YML, SQL or IN_MEMORY
+			!!! Up to the first full version of the plugin, only the SQLITE option
+			is guaranteed to work !!!""")
 	private DatabaseType databaseType = DatabaseType.SQLITE;
 
-	@ConfigValue(path = "nodegroups.policies.permission")
+	@ConfigValue(path = "nodegroups.policies.permission", comments = """
+			If one node has multiple node groups, SMALLEST_VALUE will make
+			one missing permission dominant, LARGEST_VALUE will require the
+			player to lack permissions for all groups. (AND and OR, in terms of logic operators)""")
 	private NodeGroupPolicy permissionPolicy = NodeGroupPolicy.SMALLEST_VALUE;
 	@ConfigValue(path = "nodegroups.policies.navigable")
 	private NodeGroupPolicy navigablePolicy = NodeGroupPolicy.SMALLEST_VALUE;
@@ -42,10 +48,14 @@ public class Configuration {
 	@ConfigValue(path = "nodegroups.policies.find-distance")
 	private NodeGroupPolicy findDistancePolicy = NodeGroupPolicy.LARGEST_VALUE;
 
-	@ConfigValue(path = "module.navigation.enabled")
+	@ConfigValue(path = "module.navigation.enabled", comments = """
+			Allows players to use the /find command to navigate to certain points of interest.
+			Make sure to setup nodegroups, the find command relies on the search terms of nodegroups to work.""")
 	private boolean navigationEnabled = true;
 
-	@ConfigValue(path = "module.discovery.enabled")
+	@ConfigValue(path = "module.discovery.enabled", comments = """
+			Allows players to discover nodegroups if the according groups have the feature enabled.
+			This will display an effect that can be modified in effects.nbo.""")
 	private boolean discoveryEnabled = true;
 
 	@ConfigValue(path = "module.navigation.requires-location-discovery", comments = """
@@ -70,11 +80,14 @@ public class Configuration {
 
 		for (Field field : fields) {
 			ConfigValue meta = field.getAnnotation(ConfigValue.class);
-			cfg.setComments(meta.path(), Arrays.stream(meta.comments())
+			cfg.set(meta.path(), field.getType().isEnum() ? field.get(this).toString().toLowerCase() : field.get(this));
+			List<String> comments = Arrays.stream(meta.comments())
 					.map(s -> s.split("\n"))
 					.flatMap(Arrays::stream)
-					.toList());
-			cfg.set(meta.path(), field.getType().isEnum() ? field.get(this).toString().toLowerCase() : field.get(this));
+					.toList();
+			if (!comments.isEmpty() && !(comments.size() == 1 && comments.get(0).equals(""))) {
+				cfg.setComments(meta.path(), comments);
+			}
 		}
 
 		cfg.save(file);

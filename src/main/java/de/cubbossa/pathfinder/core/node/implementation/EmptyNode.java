@@ -3,9 +3,10 @@ package de.cubbossa.pathfinder.core.node.implementation;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.util.Vector;
+import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,9 +16,12 @@ import java.util.HashSet;
 public class EmptyNode implements Node {
 
 	private final RoadMap roadMap;
+	@Getter
+	private final Location location;
 
-	public EmptyNode(RoadMap roadMap) {
+	public EmptyNode(RoadMap roadMap, World world) {
 		this.roadMap = roadMap;
+		this.location = new Location(world, 0, 0, 0);
 	}
 
 	@Override
@@ -38,11 +42,6 @@ public class EmptyNode implements Node {
 	@Override
 	public NamespacedKey getRoadMapKey() {
 		return roadMap.getKey();
-	}
-
-	@Override
-	public Location getLocation() {
-		return null;
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -124,7 +125,7 @@ public class FindModule extends Module implements Listener {
 			Graphs.addGraph(graph, roadMap.toGraph(null));
 		}
 
-		EmptyNode destination = new EmptyNode(firstRoadMap);
+		EmptyNode destination = new EmptyNode(firstRoadMap, player.getWorld());
 		graph.addVertex(destination);
 		targets.forEach(n -> {
 			Edge e = new Edge(n, destination, 1);

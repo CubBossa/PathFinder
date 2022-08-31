@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
+import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class SelectionParserTest {
 			int len = words.length();
 			return smaller && len <= req || larger && len >= req || len == req;
 		}).collect(Collectors.toList());
-	}, "..1", "3", "2..");
+	}, c -> Lists.newArrayList("..1", "3", "2.."));
 
 	public static final SelectionParser.Filter<String, SelectionParser.Context> TYPE = new SelectionParser.Filter<>("type", Pattern.compile("letter|number"), (strings, context) -> {
 		return switch (context.value()) {
@@ -38,7 +39,7 @@ public class SelectionParserTest {
 			case "number" -> strings.stream().filter(string -> string.matches("[0-9]+")).collect(Collectors.toList());
 			default -> strings;
 		};
-	}, "letter", "number");
+	}, c -> Lists.newArrayList("letter", "number"));
 
 	private static final List<String> SCOPE = Lists.newArrayList(
 			"A", "B", "C", "D", "E",
@@ -57,6 +58,7 @@ public class SelectionParserTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void testParseSelection1() {
 
 		Assert.assertEquals(
@@ -65,6 +67,7 @@ public class SelectionParserTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void testParseSelection2() {
 
 		Assert.assertEquals(
@@ -73,6 +76,7 @@ public class SelectionParserTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void testParseSelection3() {
 
 		Assert.assertEquals(
@@ -81,31 +85,11 @@ public class SelectionParserTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void testParseSelection4() {
 
 		Assert.assertEquals(
 				Lists.newArrayList("123"),
 				parser.parseSelection(SCOPE, "@s[length=..5,type=number]", ArrayList::new));
-	}
-
-	@Test
-	public void testCompletion1() {
-		Assert.assertEquals(
-				Lists.newArrayList("@s[length=..5,type=letter", "@s[length=..5,type=number"),
-				parser.completeSelectionString("@s[length=..5,type="));
-	}
-
-	@Test
-	public void testCompletion2() {
-		Assert.assertEquals(
-				Lists.newArrayList("@s"),
-				parser.completeSelectionString(""));
-	}
-
-	@Test
-	public void testCompletion3() {
-		Assert.assertEquals(
-				Lists.newArrayList("@s[length=..5,length=", "@s[length=..5,type="),
-				parser.completeSelectionString("@s[length=..5,"));
 	}
 }

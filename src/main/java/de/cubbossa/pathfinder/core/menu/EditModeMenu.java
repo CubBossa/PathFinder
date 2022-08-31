@@ -25,6 +25,7 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
@@ -224,7 +225,10 @@ public class EditModeMenu {
 					.resolver(Placeholder.component("name", group.getDisplayName()))
 					.tag("key", Messages.formatKey(group.getKey()))
 					.resolver(Placeholder.unparsed("name-format", group.getNameFormat()))
-					.resolver(Placeholder.component("findable", Messages.formatBool(group.isDiscoverable())))
+					.resolver(Placeholder.component("permission", Messages.formatPermission(group.getPermission())))
+					.resolver(Placeholder.component("discoverable", Messages.formatBool(group.isDiscoverable())))
+					.resolver(Placeholder.component("navigable", Messages.formatBool(group.isNavigable())))
+					.resolver(Formatter.number("find-distance", group.getFindDistance()))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
 							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
@@ -233,11 +237,10 @@ public class EditModeMenu {
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART,
-								Messages.E_SUB_GROUP_ENTRY_N.format(resolver),
-								Messages.E_SUB_GROUP_ENTRY_L.format(resolver)
-
-						).createItem();
+						ItemStack stack = new TranslatedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
+								.withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
+								.withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
+								.createItem();
 						if (group.contains(groupable)) {
 							stack = ItemStackUtils.setGlow(stack);
 						}

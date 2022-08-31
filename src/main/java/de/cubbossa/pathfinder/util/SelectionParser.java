@@ -1,17 +1,21 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.jorel.commandapi.SuggestionInfo;
+import dev.jorel.commandapi.arguments.CustomArgument;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class SelectionParser<T, C extends SelectionParser.Context> {
 
@@ -24,12 +28,32 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 		}
 	}
 
-	public record Filter<N, C extends SelectionParser.Context>(String key, Pattern value,
-							   BiFunction<Collection<N>, C, Collection<N>> filter,
-							   String... completions) {
+	@RequiredArgsConstructor
+	@Getter
+	public static class FilterException extends Exception {
+		private final String message;
 	}
 
-	private static final Pattern SELECT_PATTERN = Pattern.compile("@[a-zA-Z0-9]+(\\[((.+=.+,)*(.+=.+))?])?");
+	@RequiredArgsConstructor
+	@Getter
+	public static class SuggestionException extends Exception {
+		private final String message;
+	}
+
+	public interface FilterApplier<N, C> {
+		Collection<N> apply(Collection<N> elements, C context) throws FilterException;
+	}
+
+	public interface SuggestionsSupplier<N, C> {
+		Collection<String> apply(C context) throws SuggestionException;
+	}
+
+	public record Filter<N, C extends SelectionParser.Context>(String key, Pattern value,
+															   FilterApplier<N, C> filter,
+															   SuggestionsSupplier<N, C> completions) {
+	}
+
+	private static final Pattern SELECT_PATTERN = Pattern.compile("@[a-zA-Z0-9_]+(\\[((.+=.+,)*(.+=.+))?])?");
 
 	private final List<String> classifiers;
 	private final Collection<Filter<T, C>> filters;
@@ -53,10 +77,10 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 		filters.add(filter);
 	}
 
-	public <S extends Collection<T>> S parseSelection(Collection<T> scope, String input, Supplier<S> resultFactory) {
+	public <S extends Collection<T>> S parseSelection(Collection<T> scope, String input, Supplier<S> resultFactory) throws CustomArgument.CustomArgumentException {
 		Matcher matcher = SELECT_PATTERN.matcher(input);
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException("Select String must be of format @<classifier>[<key>=<value>,...]");
+			throw new CustomArgument.CustomArgumentException("Select String must be of format @<classifier>[<key>=<value>,...]");
 		}
 		if (matcher.groupCount() < 2) {
 			S res = resultFactory.get();
@@ -75,7 +99,7 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 				argumentString = argumentString.substring(filter.key().length() + 1);
 				Matcher m = filter.value().matcher(argumentString);
 				if (!m.find() || m.start() != 0) {
-					throw new IllegalArgumentException("Illegal value for key '" + filter.key() + "': " + argumentString);
+					throw new CustomArgument.CustomArgumentException("Illegal value for key '" + filter.key() + "': " + argumentString);
 				}
 				arguments.put(filter, argumentString.substring(0, m.end()));
 				argumentString = argumentString.substring(m.end());
@@ -84,14 +108,19 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 				}
 			}
 			if (len <= argumentString.length()) {
-				throw new IllegalArgumentException("Illegal selection argument: " + argumentString);
+				throw new CustomArgument.CustomArgumentException("Illegal selection argument: " + argumentString);
 			}
 		}
 
 		S result = resultFactory.get();
 		result.addAll(scope);
 		for (Map.Entry<Filter<T, C>, String> entry : arguments.entrySet()) {
-			Collection<T> x = entry.getKey().filter().apply(result, contextSupplier.apply(entry.getValue()));
+			Collection<T> x;
+			try {
+				x = entry.getKey().filter().apply(result, contextSupplier.apply(entry.getValue()));
+			} catch (FilterException e) {
+				throw new CustomArgument.CustomArgumentException(e.getMessage());
+			}
 			if (x.getClass().equals(result.getClass())) {
 				result = (S) x;
 			} else {
@@ -104,24 +133,49 @@ public class SelectionParser<T, C extends SelectionParser.Context> {
 
 	private static final Pattern COMPLETION_START = Pattern.compile("(@\\w+\\[(.*=.*,)*)([^=,]*)(=([^=,]*))?");
 
-	public Collection<String> completeSelectionString(String input) {
-		if (input.isEmpty() || input.equals("@")) {
-			return Lists.newArrayList("@" + classifiers.get(0));
+	public CompletableFuture<Suggestions> applySuggestions(SuggestionInfo suggestionInfo, SuggestionsBuilder suggestionsBuilder) throws CommandSyntaxException {
+		if (suggestionInfo.currentInput().contains("]")) {
+			return suggestionsBuilder.buildFuture();
 		}
-		if (!input.startsWith("@")) {
-			return new ArrayList<>();
-		}
-		Matcher matcher = COMPLETION_START.matcher(input);
-		if (!matcher.matches()) {
-			return Lists.newArrayList(input + "[");
-		}
-		String sub = matcher.group(1);
-		String in = matcher.group(3);
+		int lastSeparator = Integer.max(
+				suggestionInfo.currentInput().lastIndexOf(','),
+				suggestionInfo.currentInput().lastIndexOf('['));
+		int lastEquals = suggestionInfo.currentInput().lastIndexOf('=');
 
-		Filter<T, C> filter = filters.stream().filter(f -> f.key.equals(in)).findAny( ).orElse(null);
-		if (filter == null) {
-			return filters.stream().map(Filter::key).map(s -> sub + s + "=").collect(Collectors.toList());
+		if (lastSeparator == lastEquals) {
+			return suggestionsBuilder
+					.suggest("\"@n\"")
+					.suggest("\"@n[]\"")
+					.buildFuture();
 		}
-		return Arrays.stream(filter.completions).map(s -> input + s).collect(Collectors.toList());
+
+		if (lastSeparator > lastEquals) {
+			String key = suggestionInfo.currentInput().substring(lastSeparator + 1).toLowerCase();
+			SuggestionsBuilder b = suggestionsBuilder
+					.createOffset(lastSeparator + 1);
+			filters.stream()
+					.filter(tcFilter -> tcFilter.key().toLowerCase().contains(key))
+					.forEach(tcFilter -> b.suggest(tcFilter.key()));
+			return b.buildFuture();
+		} else {
+			String key = suggestionInfo.currentInput().substring(lastSeparator + 1, lastEquals);
+			String val = suggestionInfo.currentInput().substring(lastEquals + 1).toLowerCase();
+			Filter<T, C> filter = filters.stream().filter(tcFilter -> tcFilter.key().equalsIgnoreCase(key)).findFirst().orElse(null);
+			if (filter == null) {
+				return suggestionsBuilder.buildFuture();
+			}
+			SuggestionsBuilder b = suggestionsBuilder
+					.createOffset(lastEquals + 1);
+			try {
+				filter.completions.apply(contextSupplier.apply(val)).stream()
+						.distinct()
+						.filter(s -> s.toLowerCase().contains(val))
+						.forEach(b::suggest);
+				return b.buildFuture();
+
+			} catch (SuggestionException e) {
+				throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(), e::getMessage, val, suggestionInfo.currentInput().length());
+			}
+		}
 	}
 }
