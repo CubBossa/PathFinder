@@ -103,15 +103,12 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
         if (this == o) {
             return true;
         }
-        if (!(o instanceof NodeGroup)) {
+        if (!(o instanceof NodeGroup group)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-
-        NodeGroup group = (NodeGroup) o;
-
         return key.equals(group.key);
     }
 
@@ -122,8 +119,14 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
 
     @Override
     public boolean fulfillsDiscoveringRequirements(Player player) {
+        if (!discoverable) {
+            return false;
+        }
+        if (permission != null && !player.hasPermission(permission)) {
+            return false;
+        }
         for (Node node : this) {
-            if(node == null) {
+            if (node == null) {
                 PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
                 continue;
             }

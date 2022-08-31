@@ -9,6 +9,7 @@ import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -143,6 +144,17 @@ public class NodeGroupHandler implements Listener {
 			case SMALLEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
 			case LARGEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
 			case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().getFindDistance();
+		};
+	}
+
+	public boolean hasPermission(Player player, Groupable groupable) {
+		if (groupable.getGroups().isEmpty()) {
+			return false;
+		}
+		return switch (PathPlugin.getInstance().getConfiguration().getNavigablePolicy()) {
+			case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+			case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+			case NATURAL_ORDER -> groupable.getGroups().stream().limit(1).anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
 		};
 	}
 

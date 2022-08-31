@@ -18,7 +18,6 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -62,6 +61,14 @@ public class FindModule extends Module implements Listener {
 		this.plugin.registerModule(this);
 		this.activePaths = new HashMap<>();
 		this.navigationFilter = new ArrayList<>();
+
+		registerFindPredicate(navigationRequestContext -> {
+			if (!(navigationRequestContext.navigable() instanceof Groupable groupable)) {
+				return true;
+			}
+			Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
+			return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance().hasPermission(player, groupable);
+		});
 	}
 
 	@Override

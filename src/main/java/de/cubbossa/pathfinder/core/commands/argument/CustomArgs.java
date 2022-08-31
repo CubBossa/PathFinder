@@ -5,7 +5,6 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.menuframework.util.Pair;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
@@ -240,18 +239,16 @@ public class CustomArgs {
 				throw new CustomArgument.CustomArgumentException("Only for players");
 			}
 			String search = context.currentInput();
-			SetArithmeticParser<Pair<Node, Collection<Navigable>>> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
-					.flatMap(roadMap -> {
-						Collection<NodeGroup> groups = NodeGroupHandler.getInstance().getNodeGroups().stream()
-								.map(nav -> new FindModule.NavigationRequestContext(player.getUniqueId(), nav))
-								.filter(c -> FindModule.getInstance().getNavigationFilter().stream().allMatch(p -> p.test(c)))
-								.map(FindModule.NavigationRequestContext::navigable)
-								.map(navigable -> (NodeGroup) navigable)
-								.collect(Collectors.toSet());
-						return roadMap.getNodes().stream().map(node -> new Pair<Node, Collection<Navigable>>(node, groups.stream().filter(g -> g.contains(node)).collect(Collectors.toSet())));
-					})
-					.collect(Collectors.toSet()), pair -> pair.getRight().stream().flatMap(navigable -> navigable.getSearchTerms().stream()).collect(Collectors.toSet()));
-			return new NodeSelection(parser.parse(search).stream().map(Pair::getLeft).collect(Collectors.toSet()));
+			SetArithmeticParser<Groupable> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
+					.flatMap(roadMap -> roadMap.getNodes().stream()
+							.filter(node -> node instanceof Groupable)
+							.map(node -> (Groupable) node)
+							.filter(node -> {
+								FindModule.NavigationRequestContext c = new FindModule.NavigationRequestContext(player.getUniqueId(), node);
+								return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
+							}))
+					.collect(Collectors.toSet()), Navigable::getSearchTerms);
+			return new NodeSelection(new HashSet<>(parser.parse(search)));
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
 					if (!(suggestionInfo.sender() instanceof Player player)) {
@@ -272,9 +269,8 @@ public class CustomArgs {
 
 					StringRange finalRange = range;
 					String inRange = finalRange.get(input);
-					RoadMapHandler.getInstance().getRoadMaps().values().stream()
-							.map(RoadMap::getNavigables)
-							.flatMap(Collection::stream)
+					NodeGroupHandler.getInstance().getNodeGroups().stream()
+							.filter(NodeGroup::isNavigable)
 							.map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
 							.filter(navigable -> FindModule.getInstance().getNavigationFilter().stream().allMatch(navigablePredicate -> navigablePredicate.test(navigable)))
 							.map(FindModule.NavigationRequestContext::navigable)
