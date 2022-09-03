@@ -92,7 +92,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_RM_LIST)
 				.executes((commandSender, args) -> {
-					onList(commandSender, 0);
+					onList(commandSender, 1);
 				})
 				.then(new IntegerArgument("page", 1)
 						.executes((commandSender, args) -> {

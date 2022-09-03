@@ -37,7 +37,7 @@ public class NodeGroupCommand extends CommandTree {
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
 				.executesPlayer((player, objects) -> {
-					listGroups(player, 0);
+					listGroups(player, 1);
 				})
 				.then(new IntegerArgument("page", 1)
 						.executesPlayer((player, objects) -> {
