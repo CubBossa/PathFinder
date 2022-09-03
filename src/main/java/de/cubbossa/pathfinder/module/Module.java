@@ -5,4 +5,8 @@ public class Module {
 	public void onEnable() {
 
 	}
+
+	public void registerMessages() {
+
+	}
 }

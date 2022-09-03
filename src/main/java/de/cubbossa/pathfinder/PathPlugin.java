@@ -172,6 +172,8 @@ public class PathPlugin extends JavaPlugin {
 		saveResource("how-the-hell-do-i-use-it.txt", false);
 
 		// Data
+		saveResource("lang/de_DE.yml", false);
+
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
 		new PacketTranslationHandler(this);
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);

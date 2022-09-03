@@ -107,7 +107,7 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Authors: <#d3c4f5><authors></#d3c4f5>
 			<dark_gray>» </dark_gray><gray>Current version: <#d3c4f5><version></#d3c4f5>
 			<dark_gray>» </dark_gray><gray>Main Game version: <#d3c4f5><api-version></#d3c4f5>
-			<dark_gray>» </dark_gray><gray>Spigot-Page: <#d3c4f5><ul><click:open_url:https://www.spigotmc.org/resources/plotborders-change-plot-border-and-plot-wall-for-plotsquared-v6.101978/>https://www.spigotmc.org/...</click></ul></#d3c4f5>
+			<dark_gray>» </dark_gray><gray>Spigot-Page: <#d3c4f5><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></#d3c4f5>
 			""", placeholders = {"authors", "version", "api-version"})
 	public static final Message INFO = new Message("command.info");
 
