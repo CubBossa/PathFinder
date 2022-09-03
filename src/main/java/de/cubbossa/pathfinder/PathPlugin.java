@@ -248,7 +248,9 @@ public class PathPlugin extends JavaPlugin {
 		CommandAPI.unregister(nodeGroupCommand.getName());
 		CommandAPI.unregister(pathVisualizerCommand.getName());
 		CommandAPI.unregister(waypointCommand.getName());
-		CommandAPI.unregister(mazeCommand.getName());
+		if(configuration.isTesting()) {
+			CommandAPI.unregister(mazeCommand.getName());
+		}
 		RoadMapHandler.getInstance().cancelAllEditModes();
 		GUIHandler.getInstance().disable();
 	}
