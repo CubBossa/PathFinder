@@ -232,34 +232,34 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		}
 	}
 
+	/**
+	 * @param page first page is 1, not 0!
+	 */
 	public void onList(CommandSender sender, Integer page) {
 
 		PathPlayer player = PathPlayerHandler.getInstance().getPlayer(sender);
 		NamespacedKey selection = player.getSelectedRoadMap();
 
-		TagResolver resolver = TagResolver.builder()
-				.tag("page", Tag.preProcessParsed(page + 1 + ""))
-				.tag("prev-page", Tag.preProcessParsed(Integer.max(1, page + 1) + ""))
-				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 3) + ""))
-				.tag("pages", Tag.preProcessParsed((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.) + ""))
-				.build();
+		CommandUtils.printList(
+				sender,
+				page,
+				10,
+				new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()),
+				roadMap -> {
+					TagResolver r = TagResolver.builder()
+							.tag("key", Messages.formatKey(roadMap.getKey()))
+							.resolver(Placeholder.component("name", roadMap.getDisplayName()))
+							.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
+							.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
+							.build();
 
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_HEADER.format(resolver), sender);
-
-		for (RoadMap roadMap : CommandUtils.subList(new ArrayList<>(RoadMapHandler.getInstance().getRoadMaps().values()), page, 10)) {
-			TagResolver r = TagResolver.builder()
-					.tag("key", Messages.formatKey(roadMap.getKey()))
-					.resolver(Placeholder.component("name", roadMap.getDisplayName()))
-					.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
-					.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
-					.build();
-
-			TranslationHandler.getInstance().sendMessage(
-					(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_SELECTED : Messages.CMD_RM_LIST_ENTRY)
-							.format(resolver, r),
-					sender);
-		}
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_LIST_FOOTER.format(resolver), sender);
+					TranslationHandler.getInstance().sendMessage(
+							(roadMap.getKey().equals(selection) ? Messages.CMD_RM_LIST_SELECTED : Messages.CMD_RM_LIST_ENTRY)
+									.format(r),
+							sender);
+				},
+				Messages.CMD_RM_LIST_HEADER,
+				Messages.CMD_RM_LIST_FOOTER);
 	}
 
 	public void onForceFind(CommandSender sender, Player target, Discoverable discoverable) {

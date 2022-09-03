@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
@@ -252,27 +251,26 @@ public class NodeGroupCommand extends CommandTree {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 
+	/**
+	 * @param page first page is 1, not 0!
+	 */
 	public void listGroups(Player player, int page) {
 
-		TagResolver resolver = TagResolver.builder()
-				.tag("page", Tag.preProcessParsed(page + 1 + ""))
-				.tag("prev-page", Tag.preProcessParsed(Integer.max(1, page + 1) + ""))
-				.tag("next-page", Tag.preProcessParsed(Integer.min((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.), page + 3) + ""))
-				.tag("pages", Tag.preProcessParsed((int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / 10.) + ""))
-				.build();
-
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_HEADER.format(resolver), player);
-
-		for (NodeGroup group : CommandUtils.subList(new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()), page, 10)) {
-
-			TagResolver r = TagResolver.builder()
-					.resolver(Placeholder.component("key", Component.text(group.getKey().toString())))
-					.resolver(Placeholder.component("name", group.getDisplayName()))
-					.resolver(Placeholder.component("size", Component.text(group.size())))
-					.resolver(Placeholder.component("findable", Component.text(group.isDiscoverable())))
-					.build();
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(resolver, r), player);
-		}
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_FOOTER.format(resolver), player);
+		CommandUtils.printList(
+				player,
+				page,
+				10,
+				new ArrayList<>(NodeGroupHandler.getInstance().getNodeGroups()),
+				group -> {
+					TagResolver r = TagResolver.builder()
+							.resolver(Placeholder.component("key", Component.text(group.getKey().toString())))
+							.resolver(Placeholder.component("name", group.getDisplayName()))
+							.resolver(Placeholder.component("size", Component.text(group.size())))
+							.resolver(Placeholder.component("findable", Component.text(group.isDiscoverable())))
+							.build();
+					TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_LIST_LINE.format(r), player);
+				},
+				Messages.CMD_NG_LIST_HEADER,
+				Messages.CMD_NG_LIST_FOOTER);
 	}
 }
