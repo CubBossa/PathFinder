@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class FindModule extends Module implements Listener {
 	public record NavigationRequestContext(UUID playerId, Navigable navigable) {
 	}
 
-	public record SearchInfo(UUID playerId, ParticlePath path, Location target, float distance) {
+	public record SearchInfo(UUID playerId, VisualizerPath path, Location target, float distance) {
 	}
 
 	@Getter
@@ -146,10 +147,11 @@ public class FindModule extends Module implements Listener {
 			return NavigateResult.FAIL_BLOCKED;
 		}
 
-		ParticlePath particlePath = new ParticlePath(player.getUniqueId(), firstRoadMap.getVisualizer());
-		particlePath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
-		setPath(player.getUniqueId(), particlePath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
-				NodeGroupHandler.getInstance().getFindDistance((Groupable) particlePath.get(particlePath.size() - 1)));
+		PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
+		VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
+		visualizerPath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
+		setPath(player.getUniqueId(), visualizerPath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
+				NodeGroupHandler.getInstance().getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
 
 		// Refresh cancel-path command so that it is visible
 		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
@@ -165,7 +167,11 @@ public class FindModule extends Module implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.TARGET_FOUND, Bukkit.getPlayer(info.playerId()));
 	}
 
-	public void setPath(UUID playerId, @NotNull ParticlePath path, Location target, float distance) {
+	public void setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target, float distance) {
+		if (path.getVisualizer() == null) {
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_NO_VIS, Bukkit.getPlayer(playerId));
+			return;
+		}
 		PathStartEvent event = new PathStartEvent(playerId, path, target, distance);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {

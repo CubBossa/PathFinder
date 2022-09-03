@@ -83,7 +83,7 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double curveLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double curveLength) {
 		RoadMap roadMap = new RoadMap(key, nameFormat, pathVis, curveLength);
 		updateRoadMap(roadMap);
 		return roadMap;
@@ -380,22 +380,17 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public PathVisualizer<?> newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
+	public Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer() {
 		return null;
 	}
 
 	@Override
-	public Map<Integer, PathVisualizer> loadPathVisualizer() {
-		return null;
-	}
-
-	@Override
-	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
+	public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
 
 	}
 
 	@Override
-	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
 
 	}
 

@@ -114,9 +114,9 @@ public class CustomArgs {
 		});
 	}
 
-	public Argument<? extends PathVisualizer<?>> pathVisualizerArgument(String nodeName) {
+	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-			PathVisualizer<?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
 			if (vis == null) {
 				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
 			}
@@ -126,9 +126,9 @@ public class CustomArgs {
 		));
 	}
 
-	public Argument<? extends PathVisualizer<?>> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
+	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-			PathVisualizer<?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
+			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
 			if (vis == null) {
 				throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
 			}

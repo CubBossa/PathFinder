@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.events;
 
-import de.cubbossa.pathfinder.module.visualizing.ParticlePath;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
@@ -16,10 +16,10 @@ public class PathCancelEvent extends Event implements Cancellable {
 	private static final HandlerList handlers = new HandlerList();
 
 	private final UUID playerId;
-	private final ParticlePath path;
+	private final VisualizerPath path;
 	private boolean cancelled = false;
 
-	public PathCancelEvent(UUID playerId, ParticlePath path) {
+	public PathCancelEvent(UUID playerId, VisualizerPath path) {
 		this.playerId = playerId;
 		this.path = path;
 	}

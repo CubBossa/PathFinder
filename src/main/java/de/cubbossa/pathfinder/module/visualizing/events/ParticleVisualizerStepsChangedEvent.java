@@ -14,7 +14,7 @@ public class ParticleVisualizerStepsChangedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
-	private final PathVisualizer<?> visualizer;
+	private final PathVisualizer<?, ?> visualizer;
 	private final int oldValue;
 	private final int newValue;
 

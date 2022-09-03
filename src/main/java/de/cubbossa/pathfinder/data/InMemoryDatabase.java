@@ -42,7 +42,7 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength) {
 		log("Create Roadmap");
 		return new RoadMap(key, nameFormat, pathVis, tangentLength);
 	}
@@ -151,7 +151,8 @@ public class InMemoryDatabase implements DataStorage {
 
 	@Override
 	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
-		return null;
+		log("Load Nodegroup Nodes");
+		return new HashMap<>();
 	}
 
 	@Override
@@ -183,17 +184,18 @@ public class InMemoryDatabase implements DataStorage {
 
 	@Override
 	public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
-		return null;
+		log("Load Nodegroup Searchterms");
+		return new HashMap<>();
 	}
 
 	@Override
 	public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-
+		log("Add Searchterms");
 	}
 
 	@Override
 	public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-
+		log("Remove Searchterms");
 	}
 
 	@Override
@@ -214,29 +216,19 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public ParticleVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
-		log("Created Visualizer");
-		var vis = new ParticleVisualizer(key, nameFormat);
-		//vis.setParticle(particle);
-		vis.setPointDistance((float) particleDistance);
-		vis.setSchedulerSteps(particleSteps);
-		return vis;
-	}
-
-	@Override
-	public Map<Integer, PathVisualizer> loadPathVisualizer() {
+	public Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer() {
 		log("Loaded Visualizers");
 		return new HashMap<>();
 	}
 
 
 	@Override
-	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
+	public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
 		log("Updated Visualizer");
 	}
 
 	@Override
-	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
 		log("Deleted Visualizer");
 	}
 

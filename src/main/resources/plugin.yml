@@ -102,12 +102,12 @@ permissions:
     default: op
 
   pathfinder.command.pathfinder:
-    default: false
+    default: op
     children:
       pathfinder.command.pathfinder.reload: true
 
   pathfinder.command.roadmap:
-    default: false
+    default: op
     children:
       pathfinder.command.roadmap.info: true
       pathfinder.command.roadmap.create: true
@@ -132,7 +132,7 @@ permissions:
       pathfinder.command.cancel_path: true
 
   pathfinder.command.nodegroup:
-    default: false
+    default: op
     children:
       pathfinder.command.nodegroup.list: true
       pathfinder.command.nodegroup.create: true
@@ -147,7 +147,7 @@ permissions:
       pathfinder.command.nodegroup.searchterms.remove: true
 
   pathfinder.command.waypoint:
-    default: false
+    default: op
     children:
       pathfinder.command.waypoint.info: true
       pathfinder.command.waypoint.list: true
@@ -161,7 +161,7 @@ permissions:
       pathfinder.command.waypoint.set_curve_length: true
 
   pathfinder.command.visualizer:
-    default: false
+    default: op
     children:
       pathfinder.command.visualizer.list: true
       pathfinder.command.visualizer.create: true
@@ -175,7 +175,7 @@ permissions:
       pathfinder.command.visualizer.particle.set_particle: true
 
   pathfinder.admin:
-    default: false
+    default: op
     children:
       pathfinder.command.pathfinder: true
       pathfinder.command.roadmap: true

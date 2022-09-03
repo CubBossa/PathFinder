@@ -23,11 +23,11 @@ public interface DataStorage {
 
 	void disconnect();
 
-	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis) {
+	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis) {
 		return createRoadMap(key, nameFormat, pathVis, 1);
 	}
 
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double tangentLength);
+	RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -101,13 +101,11 @@ public interface DataStorage {
 
 	void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 
-	PathVisualizer<?> newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength);
+	Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
 
-	Map<Integer, PathVisualizer> loadPathVisualizer();
+	<T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 
-	void updatePathVisualizer(PathVisualizer<?> visualizer);
-
-	void deletePathVisualizer(PathVisualizer<?> visualizer);
+	void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 

@@ -8,9 +8,11 @@ import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 
+import java.util.Map;
+
 @Getter
 @Setter
-public abstract class VisualizerType<T extends PathVisualizer<T>> implements Keyed {
+public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements Keyed {
 
 	private final NamespacedKey key;
 
@@ -22,7 +24,16 @@ public abstract class VisualizerType<T extends PathVisualizer<T>> implements Key
 		return key.getKey();
 	}
 
+	public abstract T create(NamespacedKey key, String nameFormat);
+
 	public abstract Message getInfoMessage(T element);
 
-	public abstract void appendEditCommand(ArgumentTree tree, int visualizerIndex, int argumentOffset);
+	public abstract ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex, int argumentOffset);
+
+	public Map<String, Object> serialize(T visualizer) {
+		return null;
+	}
+
+	public void deserialize(T visualizer, Map<String, Object> values) {
+	}
 }

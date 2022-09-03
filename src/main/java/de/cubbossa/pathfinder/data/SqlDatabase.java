@@ -4,19 +4,19 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.util.DataUtils;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.jgrapht.alg.util.Triple;
-import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.sql.*;
 import java.util.Date;
@@ -140,14 +140,11 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_path_visualizer` (" +
 					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
+					"`type` VARCHAR(64) NOT NULL ," +
 					"`name_format` TEXT NOT NULL ," +
 					"`permission` VARCHAR(64) NULL ," +
-					"`display_item` TEXT NOT NULL ," +
-					"`particle` VARCHAR(128) NOT NULL ," +
-					"`particle_steps` INT NOT NULL ," +
-					"`particle_distance` DOUBLE NOT NULL ," +
-					"`scheduler_period` INT NOT NULL ," +
-					"`curve_length` DOUBLE NOT NULL )")) {
+					"`interval` INT NOT NULL ," +
+					"`data` TEXT NULL )")) {
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -170,7 +167,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?> pathVis, double tangentLength) {
+	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
 					"(`key`, `name_format`, `path_visualizer`, `path_curve_length`) VALUES " +
@@ -820,45 +817,81 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public ParticleVisualizer newPathVisualizer(NamespacedKey key, String nameFormat, ParticleBuilder particle, ItemStack displayIcon, double particleDistance, int particleSteps, int schedulerPeriod, double curveLength) {
+	public Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer() {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_path_visualizer` " +
-					"(`key`, `name_format`, `permission`, `display_item`, `particle`, `particle_steps`, `particle_distance`, `particle_period`, `curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-				stmt.setString(1, key.toString());
-				stmt.setString(2, nameFormat);
-				stmt.setNull(3, Types.VARCHAR);
-				stmt.setString(4, DataUtils.serializeItemStack(displayIcon));
-				stmt.setString(5, DataUtils.serializeParticle(particle));
-				stmt.setDouble(6, particleSteps);
-				stmt.setDouble(7, particleDistance);
-				stmt.setInt(8, schedulerPeriod);
-				stmt.setDouble(9, curveLength);
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_path_visualizer`")) {
+				try (ResultSet resultSet = stmt.executeQuery()) {
+					Map<PathVisualizer, String> dataMap = new HashMap<>();
+					while (resultSet.next()) {
+						String keyString = resultSet.getString("key");
+						String typeString = resultSet.getString("type");
+						String nameFormat = resultSet.getString("name_format");
+						int interval = resultSet.getInt("interval");
+						String permission = resultSet.getString("permission");
+						String data = resultSet.getString("data");
 
-				ParticleVisualizer vis = new ParticleVisualizer(key, nameFormat);
-				//vis.setParticle(particle);
-				vis.setDisplayItem(displayIcon);
-				vis.setSchedulerSteps(particleSteps);
-				vis.setPointDistance((float) particleDistance);
-				return vis;
+						VisualizerType<?> type = VisualizerHandler.getInstance().getVisualizerType(NamespacedKey.fromString(typeString));
+						PathVisualizer<?, ?> visualizer = type.create(NamespacedKey.fromString(keyString), nameFormat);
+						visualizer.setInterval(interval);
+						visualizer.setPermission(permission);
+						dataMap.put(visualizer, data);
+					}
+					HashedRegistry<PathVisualizer<?, ?>> registry = new HashedRegistry<>();
+					dataMap.forEach((visualizer, s) -> {
+						YamlConfiguration cfg = new YamlConfiguration();
+						try {
+							cfg.loadFromString(s);
+						} catch (InvalidConfigurationException e) {
+							e.printStackTrace();
+						}
+						visualizer.getType().deserialize(visualizer, cfg.getValues(false));
+						registry.put(visualizer);
+					});
+					return registry;
+				}
 			}
 		} catch (Exception e) {
-			throw new DataStorageException("Could not create new path visualizer.", e);
+			throw new DataStorageException("Could not load visualizers.", e);
 		}
 	}
 
 	@Override
-	public Map<Integer, PathVisualizer> loadPathVisualizer() {
-		return null;
+	public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
+		Map<String, Object> data = visualizer.getType().serialize(visualizer);
+		if (data == null) {
+			return;
+		}
+		YamlConfiguration cfg = new YamlConfiguration();
+		data.forEach(cfg::set);
+		String dataString = cfg.saveToString();
+
+		try (Connection connection = getConnection()) {
+			try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_path_visualizer` " +
+					"( `key`, `type`, `name_format`, `interval`, `permission`, `data`) VALUES (?, ?, ?, ?, ?, ?) " +
+					"ON CONFLICT(`key`) DO UPDATE SET " +
+					"`name_format` = ?, " +
+					"`interval` = ?, " +
+					"`permission` = ?, " +
+					"`data` = ? ")) {
+				stmt.setString(1, visualizer.getKey().toString());
+				stmt.setString(2, visualizer.getType().getKey().toString());
+				stmt.setString(3, visualizer.getNameFormat());
+				stmt.setInt(4, visualizer.getInterval());
+				stmt.setString(5, visualizer.getPermission());
+				stmt.setString(6, dataString);
+				stmt.setString(7, visualizer.getNameFormat());
+				stmt.setInt(8, visualizer.getInterval());
+				stmt.setString(9, visualizer.getPermission());
+				stmt.setString(10, dataString);
+				stmt.executeUpdate();
+			}
+		} catch (SQLException e) {
+			throw new DataStorageException("Could not update pathvisualizer.", e);
+		}
 	}
 
 	@Override
-	public void updatePathVisualizer(PathVisualizer<?> visualizer) {
-
-	}
-
-	@Override
-	public void deletePathVisualizer(PathVisualizer<?> visualizer) {
+	public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("DELETE FROM `pathfinder_path_visualizer` WHERE `key` = ?")) {
 				stmt.setString(1, visualizer.getKey().toString());

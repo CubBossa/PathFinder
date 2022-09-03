@@ -4,7 +4,7 @@ import de.cubbossa.pathfinder.core.events.roadmap.RoadmapSelectEvent;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.module.visualizing.ParticlePath;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -22,7 +22,7 @@ public class PathPlayer {
 
     private final UUID uuid;
 
-    private final Map<NamespacedKey, ParticlePath> activePaths;
+    private final Map<NamespacedKey, VisualizerPath> activePaths;
 
     @Nullable
     private NamespacedKey editModeRoadMapId = null;

@@ -12,7 +12,7 @@ public class VisualizerDistanceChangedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
-	private final PathVisualizer<?> visualizer;
+	private final PathVisualizer<?, ?> visualizer;
 	private final float oldValue;
 	private final float newValue;
 

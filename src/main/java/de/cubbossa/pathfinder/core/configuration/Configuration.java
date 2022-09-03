@@ -21,6 +21,12 @@ public class Configuration {
 
 	// Config fields
 
+	@ConfigValue(path = "development.verbose")
+	private boolean verbose = false;
+
+	@ConfigValue(path = "development.test_environment")
+	private boolean testing = false;
+
 	@ConfigValue(path = "lang.client-language", comments = """
 			If messages should automatically be translated to client language, if a translation file
 			for the provided client language exists.""")

@@ -33,7 +33,6 @@ import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimpleBarChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
@@ -41,7 +40,6 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 public class PathPlugin extends JavaPlugin {
@@ -99,6 +97,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_PV_SET_PERMISSION = "pathfinder.command.visualizer.set_permission";
 	public static final String PERM_CMD_PV_INTERVAL = "pathfinder.command.visualizer.set_interval";
 	public static final String PERM_CMD_PV_POINT_DIST = "pathfinder.command.visualizer.set_distance";
+	public static final String PERM_CMD_PV_SAMPLE_RATE = "pathfinder.command.visualizer.set_sample_rate";
 	public static final String PERM_CMD_PV_PARTICLE_STEPS = "pathfinder.command.visualizer.particle.set_particle_steps";
 	public static final String PERM_CMD_PV_PARTICLES = "pathfinder.command.visualizer.particle.set_particle";
 
@@ -152,10 +151,13 @@ public class PathPlugin extends JavaPlugin {
 		modules = new ArrayList<>();
 	}
 
+	@SneakyThrows
 	@Override
 	public void onLoad() {
-		CommandAPI.onLoad(new CommandAPIConfig()
-				.verboseOutput(false));
+
+		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
+
+		CommandAPI.onLoad(new CommandAPIConfig().verboseOutput(configuration.isVerbose()));
 	}
 
 	@SneakyThrows
@@ -165,8 +167,6 @@ public class PathPlugin extends JavaPlugin {
 
 		audiences = BukkitAudiences.create(this);
 		miniMessage = MiniMessage.miniMessage();
-
-		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
 
 		// Tutorial
 		saveResource("how-the-hell-do-i-use-it.txt", false);
@@ -220,8 +220,10 @@ public class PathPlugin extends JavaPlugin {
 		pathVisualizerCommand.register();
 		waypointCommand = new WaypointCommand();
 		waypointCommand.register();
-		mazeCommand = new MazeCommand();
-		mazeCommand.register();
+		if (configuration.isTesting()) {
+			mazeCommand = new MazeCommand();
+			mazeCommand.register();
+		}
 
 		// Listeners
 

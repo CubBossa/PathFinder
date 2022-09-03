@@ -12,7 +12,6 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -67,7 +66,7 @@ public class RoadMapHandler {
 	public RoadMap createRoadMap(NamespacedKey key) {
 		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key,
 				StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()),
-				VisualizerHandler.getInstance().getDefaultVisualizer());
+				null);
 		roadMaps.put(rm);
 		return rm;
 	}
@@ -123,8 +122,8 @@ public class RoadMapHandler {
 		return true;
 	}
 
-	public boolean setRoadMapVisualizer(RoadMap roadMap, PathVisualizer<?> visualizer) {
-		PathVisualizer<?> old = roadMap.getVisualizer();
+	public boolean setRoadMapVisualizer(RoadMap roadMap, PathVisualizer<?, ?> visualizer) {
+		PathVisualizer<?, ?> old = roadMap.getVisualizer();
 		RoadMapSetVisualizerEvent event = new RoadMapSetVisualizerEvent(roadMap, visualizer);
 		roadMap.setVisualizer(event.getVisualizer());
 

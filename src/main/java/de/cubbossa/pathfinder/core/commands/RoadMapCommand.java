@@ -157,7 +157,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 								.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
 								.then(CustomArgs.pathVisualizerArgument("visualizer")
 										.executes((commandSender, args) -> {
-											onStyle(commandSender, (RoadMap) args[0], (PathVisualizer<?>) args[1]);
+											onStyle(commandSender, (RoadMap) args[0], (PathVisualizer<?, ?>) args[1]);
 										})))
 
 						.then(new LiteralArgument("name")
@@ -294,9 +294,9 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DESELECT, sender);
 	}
 
-	public void onStyle(CommandSender sender, @Nullable RoadMap roadMap, PathVisualizer<?> visualizer) throws WrapperCommandSyntaxException {
+	public void onStyle(CommandSender sender, @Nullable RoadMap roadMap, PathVisualizer<?, ?> visualizer) throws WrapperCommandSyntaxException {
 		roadMap = roadMap != null ? roadMap : CustomArgs.resolveRoadMapWrappedException(sender);
-		PathVisualizer<?> old = roadMap.getVisualizer();
+		PathVisualizer<?, ?> old = roadMap.getVisualizer();
 
 		if (!RoadMapHandler.getInstance().setRoadMapVisualizer(roadMap, visualizer)) {
 			return;

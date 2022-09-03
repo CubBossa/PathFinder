@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.events;
 
-import de.cubbossa.pathfinder.module.visualizing.ParticlePath;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -17,12 +17,12 @@ public class PathStartEvent extends Event implements Cancellable {
 	private static final HandlerList handlers = new HandlerList();
 
 	private final UUID playerId;
-	private final ParticlePath path;
+	private final VisualizerPath path;
 	private Location target;
 	private float distance;
 	private boolean cancelled = false;
 
-	public PathStartEvent(UUID playerId, ParticlePath path, Location target, float distance) {
+	public PathStartEvent(UUID playerId, VisualizerPath path, Location target, float distance) {
 		this.playerId = playerId;
 		this.path = path;
 		this.target = target;

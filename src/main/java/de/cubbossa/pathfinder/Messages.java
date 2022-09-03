@@ -241,6 +241,8 @@ public class Messages {
 	public static final Message CMD_FIND_EMPTY = new Message("commands.find.no_nodes_found");
 	@MessageMeta(value = "<ins:prefix>No possible way could be found to reach that target.")
 	public static final Message CMD_FIND_BLOCKED = new Message("commands.find.no_path_found");
+	@MessageMeta(value = "<ins:prefix>No visualizer is set for this roadmap.")
+	public static final Message CMD_FIND_NO_VIS = new Message("commands.find.no_visualizer_selected");
 	@MessageMeta(value = "<ins:prefix>Navigation cancelled.")
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
@@ -255,7 +257,8 @@ public class Messages {
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_VIS_LIST_FOOTER = new Message("commands.path_visualizer.list.footer");
 
-	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> of type '<type>'.</gray>", placeholders = {"key", "name", "name-format", "type"})
+	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> (<name-format>) of type '<type>'.</gray>",
+			placeholders = {"key", "name", "name-format", "type"})
 	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
 	@MessageMeta("<red>Another visualizer with this name already exists.")
 	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
@@ -271,6 +274,8 @@ public class Messages {
 	public static final Message CMD_VIS_SET_INTERVAL = new Message("commands.path_visualizer.set.interval");
 	@MessageMeta(value = "<ins:prefix><gray>Changed point distance for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_DIST = new Message("commands.path_visualizer.set.distance");
+	@MessageMeta(value = "<ins:prefix><gray>Changed sample rate for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
+	public static final Message CMD_VIS_SET_SAMPLE = new Message("commands.path_visualizer.set.sample_rate");
 
 	@MessageMeta(placeholders = {
 			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
