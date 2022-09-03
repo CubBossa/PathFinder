@@ -305,7 +305,7 @@ public class RoadMapCommand extends CommandTree implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_SET_VISUALIZER.format(TagResolver.builder()
 				.tag("key", Messages.formatKey(roadMap.getKey()))
 				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
-				.resolver(Placeholder.component("old-value", old.getDisplayName()))
+				.resolver(Placeholder.component("old-value", old == null ? Messages.GEN_NULL.asComponent(sender) : old.getDisplayName()))
 				.resolver(Placeholder.component("value", roadMap.getVisualizer().getDisplayName()))
 				.build()), sender);
 	}
