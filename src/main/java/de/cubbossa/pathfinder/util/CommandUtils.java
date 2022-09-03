@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.experimental.UtilityClass;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -19,7 +18,11 @@ import java.util.function.Consumer;
 public class CommandUtils {
 
     public <T> void printList(CommandSender sender, int page, int pageSize, List<T> elements, Consumer<T> print, Message header, Message footer) {
-        int maxPage = (int) Math.ceil(RoadMapHandler.getInstance().getRoadMaps().size() / (float) pageSize);
+
+        int maxPage = (int) Math.ceil(elements.size() / (float) pageSize);
+        if (maxPage == 0) {
+            maxPage = 1;
+        }
         page = Integer.min(page, maxPage);
         int nextPage = Integer.min(page + 1, maxPage);
         int prevPage = Integer.max(page - 1, 1);
@@ -31,8 +34,8 @@ public class CommandUtils {
                 .resolver(Placeholder.parsed("pages", maxPage + ""))
                 .build();
 
-        TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
 
+        TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
         for (T element : CommandUtils.subList(elements, page - 1, pageSize)) {
             print.accept(element);
         }

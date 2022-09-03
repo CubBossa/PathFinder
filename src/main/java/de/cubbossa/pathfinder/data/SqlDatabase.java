@@ -46,7 +46,7 @@ public abstract class SqlDatabase implements DataStorage {
 			try (PreparedStatement stmt = con.prepareStatement("CREATE TABLE IF NOT EXISTS `pathfinder_roadmaps` (" +
 					"`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
 					"`name_format` TEXT NOT NULL ," +
-					"`path_visualizer` VARCHAR(64) NOT NULL ," +
+					"`path_visualizer` VARCHAR(64) NULL ," +
 					"`path_curve_length` DOUBLE NOT NULL DEFAULT 3 )")) {
 				stmt.executeUpdate();
 			}
@@ -174,7 +174,11 @@ public abstract class SqlDatabase implements DataStorage {
 					"(?, ?, ?, ?)")) {
 				stmt.setString(1, key.toString());
 				stmt.setString(2, nameFormat);
-				stmt.setString(3, pathVis.getKey().toString());
+				if (pathVis == null) {
+					stmt.setNull(3, Types.VARCHAR);
+				} else {
+					stmt.setString(3, pathVis.getKey().toString());
+				}
 				stmt.setDouble(4, tangentLength);
 				stmt.executeUpdate();
 
@@ -200,7 +204,7 @@ public abstract class SqlDatabase implements DataStorage {
 						registry.put(new RoadMap(
 								NamespacedKey.fromString(keyString),
 								nameFormat,
-								VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(pathVisualizerKeyString)),
+								pathVisualizerKeyString == null ? null : VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(pathVisualizerKeyString)),
 								pathCurveLength));
 					}
 					return registry;
@@ -220,7 +224,11 @@ public abstract class SqlDatabase implements DataStorage {
 					"`path_curve_length` = ? " +
 					"WHERE `key` = ?")) {
 				stmt.setString(1, roadMap.getNameFormat());
-				stmt.setString(2, roadMap.getVisualizer().getKey().toString());
+				if (roadMap.getVisualizer() == null) {
+					stmt.setNull(2, Types.VARCHAR);
+				} else {
+					stmt.setString(2, roadMap.getVisualizer().getKey().toString());
+				}
 				stmt.setDouble(3, roadMap.getDefaultBezierTangentLength());
 				stmt.setString(4, roadMap.getKey().toString());
 				stmt.executeUpdate();

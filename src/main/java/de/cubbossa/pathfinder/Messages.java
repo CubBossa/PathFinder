@@ -45,10 +45,7 @@ public class Messages {
 	public static final Message GEN_FALSE = new Message("general.false");
 	@MessageMeta(value = "<#8f65eb><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></#8f65eb>",
 			placeholders = {"x", "y", "z"},
-			comment = """
-					The numberformat can be specified as argument for x, y and z. Check out
-					https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html
-					for more information on number formatting.""")
+			comment = "The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
 	public static final Message GEN_VECTOR = new Message("general.vector");
 	@MessageMeta(value = "<#6569eb><permission></#6569eb>", placeholders = "permission")
 	public static final Message GEN_PERMISSION = new Message("general.permission");
