@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.configuration;
 
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.data.DatabaseType;
 import lombok.Getter;
 import lombok.Setter;
@@ -68,6 +69,10 @@ public class Configuration {
 			Set this to true, if players have to discover nodegroups first to use the /find location <filter> command.
 			If set to false, one can always navigate to every group, even if it hasn't been discovered first.""")
 	private boolean findLocationRequiresDiscovery = true;
+
+	@ConfigValue(path = "version", comments = """
+			Just don't change this, it helps to convert your data to newer database types automatically when updating""")
+	private String versionString = PathPlugin.getInstance().getDescription().getVersion();
 
 	// Load and save
 

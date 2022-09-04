@@ -155,6 +155,10 @@ public class PathPlugin extends JavaPlugin {
 	@Override
 	public void onLoad() {
 
+		generateIfAbsent("config.yml");
+		generateIfAbsent("how-the-hell-do-i-use-it.txt");
+		generateIfAbsent("lang/de_DE.yml");
+
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
 
 		CommandAPI.onLoad(new CommandAPIConfig().verboseOutput(configuration.isVerbose()));
@@ -168,11 +172,7 @@ public class PathPlugin extends JavaPlugin {
 		audiences = BukkitAudiences.create(this);
 		miniMessage = MiniMessage.miniMessage();
 
-		// Tutorial
-		saveResource("how-the-hell-do-i-use-it.txt", false);
-
 		// Data
-		saveResource("lang/de_DE.yml", false);
 
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
 		new PacketTranslationHandler(this);
@@ -248,7 +248,7 @@ public class PathPlugin extends JavaPlugin {
 		CommandAPI.unregister(nodeGroupCommand.getName());
 		CommandAPI.unregister(pathVisualizerCommand.getName());
 		CommandAPI.unregister(waypointCommand.getName());
-		if(configuration.isTesting()) {
+		if (configuration.isTesting()) {
 			CommandAPI.unregister(mazeCommand.getName());
 		}
 		RoadMapHandler.getInstance().cancelAllEditModes();
@@ -257,5 +257,11 @@ public class PathPlugin extends JavaPlugin {
 
 	public void registerModule(Module module) {
 		modules.add(module);
+	}
+
+	private void generateIfAbsent(String resource) {
+		if (!new File(getDataFolder(), resource).exists()) {
+			saveResource(resource, false);
+		}
 	}
 }
