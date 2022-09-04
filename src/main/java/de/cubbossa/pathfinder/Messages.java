@@ -110,18 +110,14 @@ public class Messages {
 
 	@MessageMeta(value = """
 			<#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<key>)</gray>
-			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <key> [new name]><name-format></click></hover></#6569eb>
 			<dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
 			<dark_gray>» </dark_gray><gray>Groups: <groups></gray>
 			<dark_gray>» </dark_gray><#8265eb>Visualizer:</#8265eb>
-			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
-			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
+			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <key> [path-visualizer]><path-visualizer></click></hover>
+			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <key> [curve-length]><curve-length></click></hover>
 			""", placeholders = {"name", "key", "name-format", "curve-length", "path-visualizer", "nodes", "groups"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
-	@MessageMeta("<ins:prefix><#8265eb>Roadmap</#8265eb> <gray>selected: <name>")
-	public static final Message CMD_RM_SELECT = new Message("commands.roadmap.select");
-	@MessageMeta("<ins:prefix><#8265eb>Roadmap</#8265eb> <gray>deselected.")
-	public static final Message CMD_RM_DESELECT = new Message("commands.roadmap.deselect");
 	@MessageMeta("<red>Could not create Roadmap. Check out console for details.")
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
 	@MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <#8265eb><name></#8265eb>.</gray>", placeholders = "name")
@@ -134,12 +130,11 @@ public class Messages {
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
 			placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
-	@MessageMeta(value = "<gray>» </gray><name> <gray>(<key>)</gray> <white><i>Selected</i></white>",
-			placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
-	public static final Message CMD_RM_LIST_SELECTED = new Message("commands.roadmap.list.entry_selected");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page"})
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
+	@MessageMeta("<red>Please specify a roadmap: /roadmap editmode <roadmap>")
+	public static final Message CMD_RM_EM_PROVIDE_RM = new Message("commands.roadmap.editmode.specify_roadmap");
 	@MessageMeta(value = "<ins:prefix>Editmode activated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
 	public static final Message CMD_RM_EM_ACTIVATED = new Message("commands.roadmap.editmode.activated");
 	@MessageMeta(value = "<ins:prefix>Editmode deactivated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
@@ -152,10 +147,11 @@ public class Messages {
 			placeholders = {"key", "roadmap", "old-value", "name-format", "value"})
 	public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
 	@MessageMeta(value = "<ins:prefix>Successfully set curve length for <#8265eb><roadmap></#8265eb> to <#8f65eb><value></#8f65eb>",
-			placeholders = {"roadmap", "old-value", "value"})
+			placeholders = {"key", "roadmap", "old-value", "value"})
 	public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curve_length");
-	@MessageMeta(value = "<ins:prefix>Successfully set visualizer for <#8265eb><roadmap></#8265eb> to <#8f65eb><visualizer></#8f65eb>.</gray>",
-			placeholders = {"roadmap", "visualizer"})
+	@MessageMeta(value = "<ins:prefix>Successfully set visualizer for <#8265eb><roadmap></#8265eb> " +
+			"from <old-value> to <value>.</gray>",
+			placeholders = {"key", "roadmap", "old-value", "value"})
 	public static final Message CMD_RM_SET_VISUALIZER = new Message("commands.roadmap.set_visualizer");
 
 	@MessageMeta(value = "<ins:prefix>Successfully created Node #<id>.", placeholders = "id")

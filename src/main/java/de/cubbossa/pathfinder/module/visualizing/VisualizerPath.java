@@ -3,8 +3,6 @@ package de.cubbossa.pathfinder.module.visualizing;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.data.PathPlayer;
-import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -44,10 +42,6 @@ public class VisualizerPath<D> extends ArrayList<Node> {
         prepare(this);
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             cancelSync();
-            PathPlayer pathPlayer = PathPlayerHandler.getInstance().getPlayer(uuid);
-            if (pathPlayer == null) {
-                return;
-            }
             this.active = true;
 
             AtomicInteger interval = new AtomicInteger(0);

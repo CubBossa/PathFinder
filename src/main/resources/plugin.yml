@@ -28,10 +28,6 @@ permissions:
     default: op
   pathfinder.command.roadmap.forceforget:
     default: op
-  pathfinder.command.roadmap.select:
-    default: op
-  pathfinder.command.roadmap.deselect:
-    default: op
   pathfinder.command.roadmap.set.path-visualizer:
     default: op
   pathfinder.command.roadmap.set.name:

@@ -21,7 +21,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import javax.annotation.Nullable;
 import java.util.stream.Stream;
@@ -63,9 +65,10 @@ public class RoadMapHandler {
 		roadMaps.forEach(RoadMap::loadNodesAndEdges);
 	}
 
-	public RoadMap createRoadMap(NamespacedKey key) {
-		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(key,
-				StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()),
+	public RoadMap createRoadMap(Plugin plugin, String key) {
+		NamespacedKey nKey = new NamespacedKey(plugin, key);
+		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(nKey,
+				StringUtils.getRandHexString() + StringUtils.capizalize(key),
 				null);
 		roadMaps.put(rm);
 		return rm;
@@ -164,5 +167,17 @@ public class RoadMapHandler {
 	public void setNodeCurveLength(NodeSelection nodes, Double length) {
 		nodes.forEach(node -> node.setCurveLength(length));
 		Bukkit.getPluginManager().callEvent(new NodeCurveLengthChangedEvent(nodes, length));
+	}
+
+	public boolean isEditing(Player player) {
+		return roadMapEditors.values().stream().anyMatch(roadMapEditor -> roadMapEditor.isEditing(player));
+	}
+
+	public NamespacedKey getEdited(Player player) {
+		return roadMapEditors.values().stream()
+				.filter(re -> re.isEditing(player))
+				.map(RoadMapEditor::getKey)
+				.findFirst()
+				.orElse(null);
 	}
 }

@@ -8,8 +8,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.data.PathPlayer;
-import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -213,7 +211,7 @@ public class CustomArgs {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
 			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
 			if (group == null) {
-				throw new CustomArgument.CustomArgumentException("abc");
+				throw new CustomArgument.CustomArgumentException("There is no nodegroup with this name.");
 			}
 			return group;
 		}).replaceSuggestions(suggestNamespacedKeys((sender -> {
@@ -225,7 +223,11 @@ public class CustomArgs {
 
 	public Argument<? extends Discoverable> discoverableArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-			return NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
+			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
+			if (group == null) {
+				throw new CustomArgument.CustomArgumentException("There is no discoverable object with this name.");
+			}
+			return group;
 		}).includeSuggestions(suggestNamespacedKeys(sender -> NodeGroupHandler.getInstance().getNodeGroups().stream()
 				.map(NodeGroup::getKey).collect(Collectors.toList())));
 	}
@@ -308,33 +310,5 @@ public class CustomArgs {
 			}
 			return type;
 		}).includeSuggestions(suggestNamespacedKeys(sender -> VisualizerHandler.getInstance().getVisualizerTypes().keySet()));
-	}
-
-	public RoadMap resolveRoadMapWrappedException(CommandSender sender) throws WrapperCommandSyntaxException {
-		try {
-			return resolveRoadMapInSuggestion(sender);
-		} catch (CommandSyntaxException e) {
-			throw new WrapperCommandSyntaxException(e);
-		}
-	}
-
-	public RoadMap resolveRoadMapInSuggestion(CommandSender sender) throws CommandSyntaxException {
-		try {
-			return resolveRoadMap(sender);
-		} catch (CustomArgument.CustomArgumentException e) {
-			throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(), () -> "You have to select a roadmap.");
-		}
-	}
-
-	public RoadMap resolveRoadMap(CommandSender sender) throws CustomArgument.CustomArgumentException {
-
-		PathPlayer pPlayer = PathPlayerHandler.getInstance().getPlayer(sender);
-		if (pPlayer == null) {
-			throw new CustomArgument.CustomArgumentException("You have to select a roadmap.");
-		}
-		if (pPlayer.getSelectedRoadMap() == null) {
-			throw new CustomArgument.CustomArgumentException("You have to select a roadmap.");
-		}
-		return RoadMapHandler.getInstance().getRoadMap(pPlayer.getSelectedRoadMap());
 	}
 }

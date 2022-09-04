@@ -57,8 +57,6 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_RM_LIST = "pathfinder.command.roadmap.list";
 	public static final String PERM_CMD_RM_FORCEFIND = "pathfinder.command.roadmap.forcefind";
 	public static final String PERM_CMD_RM_FORCEFORGET = "pathfinder.command.roadmap.forceforget";
-	public static final String PERM_CMD_RM_SELECT = "pathfinder.command.roadmap.select";
-	public static final String PERM_CMD_RM_DESELECT = "pathfinder.command.roadmap.deselect";
 	public static final String PERM_CMD_RM_SET_VIS = "pathfinder.command.roadmap.set.path-visualizer";
 	public static final String PERM_CMD_RM_SET_NAME = "pathfinder.command.roadmap.set.name";
 	public static final String PERM_CMD_RM_SET_WORLD = "pathfinder.command.roadmap.set.world";
@@ -200,7 +198,6 @@ public class PathPlugin extends JavaPlugin {
 		new NodeGroupHandler().loadGroups();
 		new VisualizerHandler();
 		new NodeTypeHandler();
-		new PathPlayerHandler();
 		new RoadMapHandler().loadRoadMaps();
 		new DiscoverHandler();
 		new GUIHandler(this).enable();

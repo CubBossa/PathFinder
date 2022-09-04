@@ -12,8 +12,6 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
-import de.cubbossa.pathfinder.data.PathPlayer;
-import de.cubbossa.pathfinder.data.PathPlayerHandler;
 import de.cubbossa.pathfinder.util.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import lombok.Getter;
@@ -98,10 +96,6 @@ public class RoadMapEditor implements Keyed, Listener {
 	 */
 	public void setEditMode(UUID uuid, boolean activate) {
 		Player player = Bukkit.getPlayer(uuid);
-		PathPlayer editor = PathPlayerHandler.getInstance().getPlayer(uuid);
-		if (editor == null) {
-			return;
-		}
 
 		if (activate) {
 			if (player == null) {
@@ -110,7 +104,6 @@ public class RoadMapEditor implements Keyed, Listener {
 			if (!isEdited()) {
 				startParticleTask();
 			}
-			editor.setEditMode(key);
 
 			BottomInventoryMenu menu = new EditModeMenu(roadMap, NodeTypeHandler.getInstance().getTypes().values()).createHotbarMenu(this);
 			editingPlayers.put(uuid, menu);
@@ -132,7 +125,6 @@ public class RoadMapEditor implements Keyed, Listener {
 			}
 
 			editingPlayers.remove(uuid);
-			editor.clearEditedRoadmap();
 
 			if (!isEdited()) {
 				stopParticleTask();

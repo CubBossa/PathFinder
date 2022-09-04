@@ -45,33 +45,37 @@ public class WaypointCommand extends CommandTree {
 		);
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_WP_LIST)
-				.executesPlayer((player, objects) -> {
-					onList(player, 1);
-				})
-				.then(new IntegerArgument("page", 1)
+				.then(CustomArgs.roadMapArgument("roadmap")
 						.executesPlayer((player, objects) -> {
-							onList(player, (Integer) objects[0]);
+							onList(player, (RoadMap) objects[0], 1);
 						})
+						.then(new IntegerArgument("page", 1)
+								.executesPlayer((player, objects) -> {
+									onList(player, (RoadMap) objects[0], (Integer) objects[1]);
+								})
+						)
 				)
 		);
 		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_WP_CREATE)
-				.executesPlayer((player, objects) -> {
-					onCreate(player, RoadMapHandler.WAYPOINT_TYPE, player.getLocation().add(new Vector(0, 1, 0)));
-				})
-				.then(new LocationArgument("location")
+				.then(CustomArgs.roadMapArgument("roadmap")
 						.executesPlayer((player, objects) -> {
-							onCreate(player, RoadMapHandler.WAYPOINT_TYPE, (Location) objects[0]);
-						})
-				)
-				.then(CustomArgs.nodeTypeArgument("type")
-						.executesPlayer((player, objects) -> {
-							onCreate(player, (NodeType<? extends Node>) objects[0], player.getLocation().add(new Vector(0, 1, 0)));
+							onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE, player.getLocation().add(new Vector(0, 1, 0)));
 						})
 						.then(new LocationArgument("location")
 								.executesPlayer((player, objects) -> {
-									onCreate(player, (NodeType<? extends Node>) objects[0], (Location) objects[1]);
+									onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE, (Location) objects[1]);
 								})
+						)
+						.then(CustomArgs.nodeTypeArgument("type")
+								.executesPlayer((player, objects) -> {
+									onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1], player.getLocation().add(new Vector(0, 1, 0)));
+								})
+								.then(new LocationArgument("location")
+										.executesPlayer((player, objects) -> {
+											onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1], (Location) objects[2]);
+										})
+								)
 						)
 				)
 		);
@@ -161,8 +165,7 @@ public class WaypointCommand extends CommandTree {
 		TranslationHandler.getInstance().sendMessage(message, player);
 	}
 
-	public void onCreate(Player player, NodeType<? extends Node> type, Location location) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node> type, Location location) {
 		Node node = roadMap.createNode(type, location);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
@@ -170,8 +173,9 @@ public class WaypointCommand extends CommandTree {
 	}
 
 	public void onDelete(Player player, NodeSelection selection) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
-		roadMap.removeNodes(selection);
+		for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
+			roadMap.removeNodes(selection);
+		}
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE
 				.format(TagResolver.resolver("selection", Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
 	}
@@ -189,8 +193,7 @@ public class WaypointCommand extends CommandTree {
 				.build()), player);
 	}
 
-	public void onList(Player player, int pageInput) {
-		RoadMap roadMap = CommandUtils.getSelectedRoadMap(player);
+	public void onList(Player player, RoadMap roadMap, int pageInput) {
 
 		TagResolver resolver = TagResolver.builder()
 				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
