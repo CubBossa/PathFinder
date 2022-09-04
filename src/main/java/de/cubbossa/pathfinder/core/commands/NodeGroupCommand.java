@@ -79,41 +79,37 @@ public class NodeGroupCommand extends CommandTree {
 								.executesPlayer((player, objects) -> {
 									searchTermsList(player, (NodeGroup) objects[offset]);
 								}))));
-		then(new LiteralArgument("set")
-				.then(new LiteralArgument("name")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
-						.then(CustomArgs.nodeGroupArgument("group")
+		then(new LiteralArgument("edit")
+				.then(CustomArgs.nodeGroupArgument("group")
+						.then(new LiteralArgument("name")
+								.withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
 								.then(CustomArgs.miniMessageArgument("name", i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
 										.executesPlayer((player, objects) -> {
 											renameGroup(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										})
-								)))
-				.then(new LiteralArgument("permission")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
-						.then(CustomArgs.nodeGroupArgument("group")
+								))
+						.then(new LiteralArgument("permission")
+								.withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
 								.then(new GreedyStringArgument("permission")
 										.executesPlayer((player, objects) -> {
 											setGroupPermission(player, (NodeGroup) objects[offset], (String) objects[offset + 1]);
 										})
-								)))
-				.then(new LiteralArgument("navigable")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
-						.then(CustomArgs.nodeGroupArgument("group")
+								))
+						.then(new LiteralArgument("navigable")
+								.withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
 								.then(new BooleanArgument("value")
 										.executesPlayer((player, objects) -> {
 											setGroupNavigable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
 										})
-								)))
-				.then(new LiteralArgument("discoverable")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
-						.then(CustomArgs.nodeGroupArgument("group")
+								))
+						.then(new LiteralArgument("discoverable")
+								.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
 								.then(new BooleanArgument("value")
 										.executesPlayer((player, objects) -> {
 											setGroupDiscoverable(player, (NodeGroup) objects[offset], (Boolean) objects[offset + 1]);
-										}))))
-				.then(new LiteralArgument("find-distance")
-						.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
-						.then(CustomArgs.nodeGroupArgument("group")
+										})))
+						.then(new LiteralArgument("find-distance")
+								.withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
 								.then(new FloatArgument("value", 0.01f)
 										.executesPlayer((player, objects) -> {
 											setGroupDiscoverDist(player, (NodeGroup) objects[offset], (Float) objects[offset + 1]);

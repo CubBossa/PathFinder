@@ -109,7 +109,7 @@ public class WaypointCommand extends CommandTree {
 		then(new LiteralArgument("connect")
 				.withPermission(PathPlugin.PERM_CMD_WP_CONNECT)
 				.then(CustomArgs.nodeSelectionArgument("start")
-						.then(CustomArgs.nodeGroupArgument("end")
+						.then(CustomArgs.nodeSelectionArgument("end")
 								.executesPlayer((player, objects) -> {
 									onConnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
 								})
@@ -122,7 +122,7 @@ public class WaypointCommand extends CommandTree {
 						.executesPlayer((player, objects) -> {
 							onDisconnect(player, (NodeSelection) objects[0], null);
 						})
-						.then(CustomArgs.nodeGroupArgument("end")
+						.then(CustomArgs.nodeSelectionArgument("end")
 								.executesPlayer((player, objects) -> {
 									onDisconnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
 								})
@@ -130,10 +130,10 @@ public class WaypointCommand extends CommandTree {
 				)
 
 		);
-		then(new LiteralArgument("set")
-				.then(new LiteralArgument("curve-length")
+		then(new LiteralArgument("edit")
+				.then(CustomArgs.nodeSelectionArgument("nodes")
 						.withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
-						.then(CustomArgs.nodeSelectionArgument("nodes")
+						.then(new LiteralArgument("curve-length")
 								.then(new DoubleArgument("length", 0.001)
 										.executesPlayer((player, objects) -> {
 											onSetTangent(player, (NodeSelection) objects[0], (Double) objects[1]);
