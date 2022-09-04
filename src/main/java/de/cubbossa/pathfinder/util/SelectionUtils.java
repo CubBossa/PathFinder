@@ -20,6 +20,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +40,20 @@ public class SelectionUtils {
 			this.player = player;
 		}
 	}
+
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_ID = new SelectionParser.Filter<>("id", Pattern.compile("[0-9]"), (elements, context) -> {
+		try {
+			Integer id = Integer.parseInt(context.value());
+			return elements.stream().filter(node -> node.getNodeId() == id).collect(Collectors.toSet());
+		} catch (NumberFormatException e) {
+			throw new SelectionParser.FilterException("ID must be a number.");
+		}
+	}, context -> RoadMapHandler.getInstance().getRoadMaps().values().stream()
+			.map(RoadMap::getNodes)
+			.flatMap(Collection::stream)
+			.map(Node::getNodeId)
+			.map(integer -> integer + "")
+			.collect(Collectors.toList()));
 
 	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_TANGENT_LENGTH = new SelectionParser.Filter<>("tangent_length", Pattern.compile("(\\.\\.)?[0-9]*(\\.[0-9]+)?(\\.\\.)?"), (nodes, context) -> {
 		boolean smaller = context.value().startsWith("..");
@@ -138,7 +153,7 @@ public class SelectionUtils {
 	public static final String SELECT_KEY_EDGE = "has_edge";
 
 	public static final ArrayList<SelectionParser.Filter<Node, PlayerContext>> SELECTORS = Lists.newArrayList(
-			SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH,
+			SELECT_KEY_ID, SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH,
 			SELECT_KEY_SORT, SELECT_KEY_WORLD, SELECT_KEY_ROADMAP, SELECT_KEY_GROUP
 	);
 

@@ -2,7 +2,7 @@ name: ${project.name}
 version: ${project.version}
 author: CubBossa
 main: de.cubbossa.pathfinder.PathPlugin
-api-version: 1.17
+api-version: 1.19
 
 depend:
   - ProtocolLib

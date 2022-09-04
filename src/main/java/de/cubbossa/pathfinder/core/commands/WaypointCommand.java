@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
@@ -15,9 +16,8 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.*;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
@@ -26,6 +26,7 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class WaypointCommand extends CommandTree {
 
@@ -193,33 +194,30 @@ public class WaypointCommand extends CommandTree {
 				.build()), player);
 	}
 
+	/**
+	 * @param pageInput starts with 1, not 0!
+	 */
 	public void onList(Player player, RoadMap roadMap, int pageInput) {
 
-		TagResolver resolver = TagResolver.builder()
-				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
-				.tag("page", Tag.preProcessParsed(pageInput + ""))
-				.build();
-
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_LIST_HEADER.format(resolver), player);
-
-		PathPlugin.getInstance().getAudiences().player(player).sendMessage(Component.join(
-				JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-				CommandUtils.subList(new ArrayList<>(roadMap.getNodes()), pageInput, 40).stream()
-						.map(n -> {
-
-							TagResolver r = TagResolver.builder()
-									.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-									.resolver(Placeholder.component("position", Messages.formatVector(n.getLocation().toVector())))
-									.resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-									.tag("groups", n instanceof Groupable groupable ?
-											Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
-											Tag.inserting(Component.text("none"))) //TODO as message
-									.build();
-
-							return TranslationHandler.getInstance().translateLine(Messages.CMD_N_LIST_ELEMENT.format(resolver, r), player);
-						})
-						.toList()));
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_LIST_FOOTER.format(resolver), player);
+		CommandUtils.printList(
+				player,
+				pageInput,
+				10,
+				new ArrayList<>(roadMap.getNodes()),
+				n -> {
+					TagResolver r = TagResolver.builder()
+							.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
+							.resolver(Placeholder.component("position", Messages.formatVector(n.getLocation().toVector())))
+							.resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
+							.resolver(Formatter.number("curve-length", n.getCurveLength() == null ?
+									roadMap.getDefaultBezierTangentLength() : n.getCurveLength()))
+							.resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, n.getEdges().stream().map(Edge::getEnd).collect(Collectors.toCollection(NodeSelection::new)))))
+							.resolver(Placeholder.component("groups", Messages.formatNodeGroups(player, n instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
+							.build();
+					TranslationHandler.getInstance().sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
+				},
+				Messages.CMD_N_LIST_HEADER,
+				Messages.CMD_N_LIST_FOOTER);
 	}
 
 	public void onConnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {

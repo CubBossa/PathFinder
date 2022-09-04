@@ -36,7 +36,6 @@ public class Messages {
 	// #8f65eb = default purple
 	// #8265eb = roadmap
 
-
 	@MessageMeta("<#7b42f5>PathFinder</#7b42f5> <dark_gray>»</dark_gray> <gray>")
 	public static final Message PREFIX = new Message("prefix");
 	@MessageMeta("<#8f65eb>true</#8f65eb>")
@@ -110,12 +109,12 @@ public class Messages {
 
 	@MessageMeta(value = """
 			<#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<key>)</gray>
-			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/roadmap rename <key> [new name]><name-format></click></hover></#6569eb>
+			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:'/roadmap edit <key> name <name-format>'><name-format></click></hover></#6569eb>
 			<dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
 			<dark_gray>» </dark_gray><gray>Groups: <groups></gray>
 			<dark_gray>» </dark_gray><#8265eb>Visualizer:</#8265eb>
-			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:/roadmap set path-visualizer <key> [path-visualizer]><path-visualizer></click></hover>
-			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:/roadmap set curve-length <key> [curve-length]><curve-length></click></hover>
+			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:'/roadmap edit <key> visualizer <path-visualizer>'><path-visualizer></click></hover>
+			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
 			""", placeholders = {"name", "key", "name-format", "curve-length", "path-visualizer", "nodes", "groups"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
 	@MessageMeta("<red>Could not create Roadmap. Check out console for details.")
@@ -125,13 +124,13 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Roadmap <#8265eb><roadmap></#8265eb>.</gray>", placeholders = "roadmap")
 	public static final Message CMD_RM_DELETE = new Message("commands.roadmap.delete");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
 			placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
 	@MessageMeta("<red>Please specify a roadmap: /roadmap editmode <roadmap>")
 	public static final Message CMD_RM_EM_PROVIDE_RM = new Message("commands.roadmap.editmode.specify_roadmap");
@@ -171,21 +170,29 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Edge-Count: <#6569eb><edge-count></#6569eb>
 			""", placeholders = {"id", "roadmap", "permission", "groups", "position", "world", "curve-length", "edge-count"})
 	public static final Message CMD_N_INFO = new Message("commands.node.info");
-	@MessageMeta(placeholders = {"selection", "length"})
+	@MessageMeta(value = "<ins:prefix>Curve-length set to <length> for <selection>.",
+			placeholders = {"selection", "length"})
 	public static final Message CMD_N_SET_TANGENT = new Message("commands.node.set_curve_length");
-	@MessageMeta(placeholders = {"roadmap", "page"})
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Waypoints</#8265eb> ------------</gradient>",
+			placeholders = {"roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_N_LIST_HEADER = new Message("commands.node.list.header");
-	@MessageMeta(placeholders = {"roadmap", "page", "name", "permission", "position", "group-key"})
+	@MessageMeta(value = "<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/waypoint info \"@n[id=<id>]\"><gray>#<id> at <position> (<world>)",
+			placeholders = {"id", "position", "world", "curve-length", "edges", "groups"})
 	public static final Message CMD_N_LIST_ELEMENT = new Message("commands.node.list.element");
-	@MessageMeta(placeholders = {"roadmap", "page"})
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/waypoint list <roadmap-key> <prev-page>>←</click> <page>/<pages> <click:run_command:/waypoint list <roadmap-key> <next-page>>→</click> </gray>-------------</gradient>",
+			placeholders = {"roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_N_LIST_FOOTER = new Message("commands.node.list.footer");
-	@MessageMeta(placeholders = {"start", "end"})
+	@MessageMeta(value = "<ins:prefix>Connected <start> to <end>.",
+			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT = new Message("commands.node.connect.success");
-	@MessageMeta(placeholders = {"start", "end"})
+	@MessageMeta(value = "<red>Nodes cannot be connected to themselves: <start>>",
+			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT_IDENTICAL = new Message("commands.node.connect.identical");
-	@MessageMeta(placeholders = {"start", "end"})
+	@MessageMeta(value = "<red><start> and <end> are already connected.",
+			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT_ALREADY_CONNECTED = new Message("commands.node.connect.already_connected");
-	@MessageMeta(placeholders = {"start", "end"})
+	@MessageMeta(value = "<ins:prefix>Disconnected <start> from <end>.",
+			placeholders = {"start", "end"})
 	public static final Message CMD_N_DISCONNECT = new Message("commands.node.disconnect.success");
 
 	@MessageMeta(value = "<red>A node group with this namespaced key (<name>) already exists.</red>",
@@ -198,13 +205,13 @@ public class Messages {
 			placeholders = "name")
 	public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Node-Groups</#8265eb> ------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
 			placeholders = {"page", "key", "name", "size", "discoverable"})
 	public static final Message CMD_NG_LIST_LINE = new Message("commands.node_group.list.line");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/nodegroup list <prev-page>>←</click> <page>/<pages> <click:run_command:/nodegroup list <next-page>>→</click> </gray>-------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_NG_LIST_FOOTER = new Message("commands.node_group.list.footer");
 	@MessageMeta(value = "<ins:prefix>Displayname set for <key> from <name> to <new-name> (<value>).",
 			placeholders = {"key", "name", "old-value", "value"})
@@ -241,13 +248,13 @@ public class Messages {
 
 
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Visualizer</#8265eb> ------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_VIS_LIST_HEADER = new Message("commands.path_visualizer.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
 			placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer"})
 	public static final Message CMD_VIS_LIST_ENTRY = new Message("commands.path_visualizer.list.entry");
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
-			placeholders = {"page", "next-page", "prev-page"})
+			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_VIS_LIST_FOOTER = new Message("commands.path_visualizer.list.footer");
 
 	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> (<name-format>) of type '<type>'.</gray>",
@@ -308,11 +315,11 @@ public class Messages {
 	public static final Message E_EDGE_TOOL_DIR_TOGGLE = new Message("editor.toolbar.edge_tool.directed");
 	@MessageMeta("<white><u>Assign Group</u></white>")
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
-	@MessageMeta
+	@MessageMeta("")
 	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");
 	@MessageMeta("<white><u>Assign Last Group</u></white>")
 	public static final Message E_LAST_GROUP_TOOL_N = new Message("editor.toolbar.last_group_tool.name");
-	@MessageMeta
+	@MessageMeta("")
 	public static final Message E_LAST_GROUP_TOOL_L = new Message("editor.toolbar.last_group_tool.lore");
 	@MessageMeta("<white><u>Curve Tool</u></white>")
 	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");

@@ -95,12 +95,12 @@ commands:
     # Valid placeholders: <name>, <key>, <name-format>, <curve-length>, <path-visualizer>, <nodes>, <groups>
     info: |
       <#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<key>)</gray>
-      <dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Klicke, um Namen zu ändern"><click:suggest_command:/roadmap rename <id> [new name]><name-format></click></hover></#6569eb>
+      <dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Klicke, um Namen zu ändern"><click:suggest_command:'/roadmap edit <key> name <name-format>'><name-format></click></hover></#6569eb>
       <dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
       <dark_gray>» </dark_gray><gray>Gruppen: <groups></gray>
       <dark_gray>» </dark_gray><#8265eb>Visualizer:</#8265eb>
-      <dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Klicke, um Path-Visualizer zu ändern"><click:suggest_command:/roadmap set path-visualizer <id> [path-visualizer]><path-visualizer></click></hover>
-      <dark_gray>  » </dark_gray><gray>Rundungsstärke: <#6569eb><hover:show_text:"Klicke, um Rundungsstärke zu ändern"><click:suggest_command:/roadmap set curve-length <id> [curve-length]><curve-length></click></hover>
+      <dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Klicke, um Path-Visualizer zu ändern"><click:suggest_command:'/roadmap edit <key> visualizer <path-visualizer>'><path-visualizer></click></hover>
+      <dark_gray>  » </dark_gray><gray>Rundungsstärke: <#6569eb><hover:show_text:"Klicke, um Rundungsstärke zu ändern"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
     select: '<ins:prefix><#8265eb>Roadmap</#8265eb> <gray>ausgewählt: <name>'
     deselect: <ins:prefix><#8265eb>Roadmap</#8265eb> <gray>abgewählt.
     create:
