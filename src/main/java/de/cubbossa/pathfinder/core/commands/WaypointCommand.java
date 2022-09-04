@@ -199,6 +199,11 @@ public class WaypointCommand extends CommandTree {
 	 */
 	public void onList(Player player, RoadMap roadMap, int pageInput) {
 
+		TagResolver resolver = TagResolver.builder()
+				.resolver(Placeholder.parsed("roadmap-key", roadMap.getKey().toString()))
+				.resolver(Placeholder.component("roadmap-name", roadMap.getDisplayName()))
+				.build();
+
 		CommandUtils.printList(
 				player,
 				pageInput,
@@ -216,8 +221,8 @@ public class WaypointCommand extends CommandTree {
 							.build();
 					TranslationHandler.getInstance().sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
 				},
-				Messages.CMD_N_LIST_HEADER,
-				Messages.CMD_N_LIST_FOOTER);
+				Messages.CMD_N_LIST_HEADER.format(resolver),
+				Messages.CMD_N_LIST_FOOTER.format(resolver));
 	}
 
 	public void onConnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
