@@ -243,7 +243,7 @@ public class NodeGroupCommand extends CommandTree {
 			return;
 		}
 
-		NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.getRandHexString() + key.getKey());
+		NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), player);
 	}
 

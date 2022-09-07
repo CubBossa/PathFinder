@@ -77,8 +77,9 @@ public class NodeGroupHandler implements Listener {
 
 	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat) {
 
-		NodeGroup group = PathPlugin.getInstance().getDatabase().createNodeGroup(key, nameFormat, null, true, true, 1.5);
+		NodeGroup group = new NodeGroup(key, nameFormat);
 		group.addSearchTerms(Lists.newArrayList(key.getKey()));
+		Bukkit.getPluginManager().callEvent(new NodeGroupCreatedEvent(group));
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.ADD, Lists.newArrayList(key.getKey())
 		));

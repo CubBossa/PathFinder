@@ -9,9 +9,6 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.ItemStack;
-import org.jgrapht.alg.util.Triple;
-import xyz.xenondevs.particle.ParticleBuilder;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
@@ -22,12 +19,6 @@ public interface DataStorage {
 	void connect();
 
 	void disconnect();
-
-	default RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis) {
-		return createRoadMap(key, nameFormat, pathVis, 1);
-	}
-
-	RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength);
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -40,9 +31,7 @@ public interface DataStorage {
 	boolean deleteRoadMap(NamespacedKey key);
 
 
-	Edge createEdge(Node start, Node end, float weight);
-
-	List<Edge> createEdges(List<Triple<Node, Node, Float>> edges);
+	void saveEdges(Collection<Edge> edges);
 
 	Collection<Edge> loadEdges(RoadMap roadMap);
 
@@ -77,8 +66,6 @@ public interface DataStorage {
 
 	Map<NamespacedKey, List<Integer>> loadNodeGroupNodes();
 
-	NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance);
-
 	HashedRegistry<NodeGroup> loadNodeGroups();
 
 	void updateNodeGroup(NodeGroup group);
@@ -108,8 +95,6 @@ public interface DataStorage {
 	void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
 
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
-
-	void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
 
 	void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
 

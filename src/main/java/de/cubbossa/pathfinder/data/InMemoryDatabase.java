@@ -9,10 +9,7 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.jgrapht.alg.util.Triple;
-import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -42,12 +39,6 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength) {
-		log("Create Roadmap");
-		return new RoadMap(key, nameFormat, pathVis, tangentLength);
-	}
-
-	@Override
 	public Map<NamespacedKey, RoadMap> loadRoadMaps() {
 		log("Load Roadmaps");
 		return new HashMap<>();
@@ -70,14 +61,8 @@ public class InMemoryDatabase implements DataStorage {
 	}
 
 	@Override
-	public Edge createEdge(Node start, Node end, float weight) {
-		log("Create Edge");
-		return new Edge(start, end, weight);
-	}
+	public void saveEdges(Collection<Edge> edges) {
 
-	@Override
-	public List<Edge> createEdges(List<Triple<Node, Node, Float>> edges) {
-		return null;
 	}
 
 	@Override
@@ -153,12 +138,6 @@ public class InMemoryDatabase implements DataStorage {
 	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
 		log("Load Nodegroup Nodes");
 		return new HashMap<>();
-	}
-
-	@Override
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance) {
-		log("Create Nodegroup");
-		return new NodeGroup(key, nameFormat);
 	}
 
 	@Override
@@ -238,10 +217,6 @@ public class InMemoryDatabase implements DataStorage {
 		return new HashMap<>();
 	}
 
-	@Override
-	public void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
-
-	}
 
 	@Override
 	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {

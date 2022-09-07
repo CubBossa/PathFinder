@@ -13,8 +13,10 @@ import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.data.*;
-import de.cubbossa.pathfinder.module.Module;
+import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.InMemoryDatabase;
+import de.cubbossa.pathfinder.data.SqliteDatabase;
+import de.cubbossa.pathfinder.data.YmlDatabase;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -25,8 +27,10 @@ import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
+import de.tr7zw.nbtapi.NBTContainer;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
+import dev.jorel.commandapi.nms.NMS_1_19_1_R1;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -34,7 +38,9 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.util.Vector;
 
 import java.io.File;
@@ -125,7 +131,7 @@ public class PathPlugin extends JavaPlugin {
 	@Getter
 	private static PathPlugin instance;
 
-	private final List<Module> modules;
+	private final List<PathPluginExtension> extensions;
 	private BukkitAudiences audiences;
 	private MiniMessage miniMessage;
 
@@ -145,8 +151,15 @@ public class PathPlugin extends JavaPlugin {
 
 
 	public PathPlugin() {
+		super();
 		instance = this;
-		modules = new ArrayList<>();
+		extensions = new ArrayList<>();
+	}
+
+	protected PathPlugin(JavaPluginLoader loader, PluginDescriptionFile descriptionFile, File dataFolder, File file) {
+		super(loader, descriptionFile, dataFolder, file);
+		instance = this;
+		extensions = new ArrayList<>();
 	}
 
 	@SneakyThrows
@@ -159,7 +172,10 @@ public class PathPlugin extends JavaPlugin {
 
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
 
-		CommandAPI.onLoad(new CommandAPIConfig().verboseOutput(configuration.isVerbose()));
+		CommandAPI.onLoad(new CommandAPIConfig()
+				.verboseOutput(configuration.isVerbose())
+				.useLatestNMSVersion(true)
+				.initializeNBTAPI(NBTContainer.class, NBTContainer::new));
 	}
 
 	@SneakyThrows
@@ -229,7 +245,7 @@ public class PathPlugin extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 		Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
 
-		modules.forEach(Module::onEnable);
+		extensions.forEach(PathPluginExtension::onEnable);
 
 		Metrics metrics = new Metrics(this, 16324);
 	}
@@ -252,8 +268,8 @@ public class PathPlugin extends JavaPlugin {
 		GUIHandler.getInstance().disable();
 	}
 
-	public void registerModule(Module module) {
-		modules.add(module);
+	public void registerExtension(PathPluginExtension module) {
+		extensions.add(module);
 	}
 
 	private void generateIfAbsent(String resource) {

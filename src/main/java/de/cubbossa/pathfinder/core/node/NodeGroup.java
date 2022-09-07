@@ -24,10 +24,10 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
     private final NamespacedKey key;
     private String nameFormat;
     private Component displayName;
-    private @Nullable String permission;
-    private boolean discoverable;
-    private boolean navigable;
-    private float findDistance;
+    private @Nullable String permission = null;
+    private boolean discoverable = true;
+    private boolean navigable = true;
+    private float findDistance = 1.5f;
     private Collection<String> searchTerms;
 
     public NodeGroup(NamespacedKey key, String nameFormat) {
@@ -38,7 +38,6 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
         super(nodes);
         this.key = key;
         this.setNameFormat(nameFormat);
-        this.discoverable = false;
         this.searchTerms = new HashSet<>();
     }
 

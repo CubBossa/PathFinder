@@ -1,14 +1,8 @@
 package de.cubbossa.pathfinder.core.listener;
 
-import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeCurveLengthChangedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeLocationChangedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.*;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetCurveLengthEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetNameEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.*;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
@@ -30,6 +24,11 @@ public class DatabaseListener implements Listener {
 
 	public DatabaseListener(DataStorage dataStorage) {
 		this.data = dataStorage;
+	}
+
+	@EventHandler
+	public void onRoadMapCreate(RoadMapCreatedEvent event) {
+		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler
@@ -68,8 +67,18 @@ public class DatabaseListener implements Listener {
 	}
 
 	@EventHandler
+	public void onEdgesCreated(EdgesCreatedEvent event) {
+		data.saveEdges(event.getEdges());
+	}
+
+	@EventHandler
 	public void onEdgeDeleted(EdgesDeletedEvent event) {
 		data.deleteEdges(event.getEdges());
+	}
+
+	@EventHandler
+	public void onGroupCreated(NodeGroupCreatedEvent event) {
+		data.updateNodeGroup(event.getGroup());
 	}
 
 	@EventHandler

@@ -316,8 +316,9 @@ public class EditModeMenu {
 			NamespacedKey key = AnvilInputValidator.VALIDATE_KEY.getInputParser().apply(s.getTarget());
 			if (key == null || NodeGroupHandler.getInstance().getNodeGroup(key) != null) {
 				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+				return;
 			}
-			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.getRandHexString() + key.getKey());
+			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
 			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 				NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
 				Bukkit.getPluginManager().callEvent(event);

@@ -12,10 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.jgrapht.alg.util.Triple;
-import xyz.xenondevs.particle.ParticleBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,27 +79,21 @@ public class YmlDatabase implements DataStorage {
 	public void disconnect() {
 	}
 
-	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double curveLength) {
-		RoadMap roadMap = new RoadMap(key, nameFormat, pathVis, curveLength);
-		updateRoadMap(roadMap);
-		return roadMap;
-	}
 
 	@Override
 	public Map<NamespacedKey, RoadMap> loadRoadMaps() {
 		HashedRegistry<RoadMap> registry = new HashedRegistry<>();
 		for (File file : Arrays.stream(roadMapDir.listFiles())
-				.filter(file -> file.getName().matches("\\w+_\\w+\\.yml"))
+				.filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
 				.collect(Collectors.toList())) {
 			try {
 				NamespacedKey key = fromFileName(file.getName());
 				YamlConfiguration cfg = roadmapHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
 
 				registry.put(new RoadMap(key,
-						cfg.getString("name_format"),
-						VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(cfg.getString("path_visualizer"))),
-						cfg.getDouble("curve_length")));
+						cfg.getString("name-format"),
+						VisualizerHandler.getInstance().getPathVisualizer(NamespacedKey.fromString(cfg.getString("path-visualizer"))),
+						cfg.getDouble("curve-length")));
 
 
 			} catch (Throwable t) {
@@ -126,9 +117,9 @@ public class YmlDatabase implements DataStorage {
 		}
 		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 		cfg.set("key", roadMap.getKey());
-		cfg.set("name_format", roadMap.getNameFormat());
-		cfg.set("path_visualizer", roadMap.getVisualizer().getKey().toString());
-		cfg.set("curve_length", roadMap.getDefaultBezierTangentLength());
+		cfg.set("name-format", roadMap.getNameFormat());
+		cfg.set("path-visualizer", roadMap.getVisualizer().getKey().toString());
+		cfg.set("curve-length", roadMap.getDefaultBezierTangentLength());
 
 		try {
 			cfg.save(file);
@@ -148,19 +139,22 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Edge createEdge(Node start, Node end, float weight) {
-		YamlConfiguration cfg = roadmapHandles.get(start.getRoadMapKey());
-		if (cfg == null) {
-			throw new DataStorageException("Tried to save edge for not existing roadmap");
+	public void saveEdges(Collection<Edge> edges) {
+		Map<NamespacedKey, Collection<Edge>> mappedEdges = new HashMap<>();
+		for (Edge edge : edges) {
+			mappedEdges.computeIfAbsent(edge.getStart().getRoadMapKey(), key -> new HashSet<>()).add(edge);
 		}
-		cfg.set("edges." + start.getNodeId() + "." + end.getNodeId(), weight);
-		saveRoadMapFile(start.getRoadMapKey());
-		return new Edge(start, end, weight);
-	}
-
-	@Override
-	public List<Edge> createEdges(List<Triple<Node, Node, Float>> edges) {
-		return null;
+		for (var entry : mappedEdges.entrySet()) {
+			NamespacedKey roadMapKey = entry.getKey();
+			YamlConfiguration cfg = roadmapHandles.get(roadMapKey);
+			if (cfg == null) {
+				throw new DataStorageException("Tried to save edge for not existing roadmap");
+			}
+			for (Edge edge : entry.getValue()) {
+				cfg.set("edges." + edge.getStart().getNodeId() + "." + edge.getEnd().getNodeId(), edge.getWeightModifier());
+			}
+			saveRoadMapFile(roadMapKey);
+		}
 	}
 
 	@Override
@@ -261,7 +255,7 @@ public class YmlDatabase implements DataStorage {
 	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
 		Map<NamespacedKey, List<Integer>> map = new HashMap<>();
 		for (File file : Arrays.stream(nodeGroupDir.listFiles())
-				.filter(file -> file.getName().matches("\\w+_\\w+\\.yml"))
+				.filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
 				.collect(Collectors.toList())) {
 			try {
 				NamespacedKey key = fromFileName(file.getName());
@@ -275,22 +269,12 @@ public class YmlDatabase implements DataStorage {
 		return map;
 	}
 
-	@Override
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance) {
-		NodeGroup group = new NodeGroup(key, nameFormat);
-		group.setPermission(permission);
-		group.setNavigable(navigable);
-		group.setDiscoverable(discoverable);
-		group.setFindDistance((float) findDistance);
-		updateNodeGroup(group);
-		return group;
-	}
 
 	@Override
 	public HashedRegistry<NodeGroup> loadNodeGroups() {
 		HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
 		for (File file : Arrays.stream(nodeGroupDir.listFiles())
-				.filter(file -> file.getName().matches("\\w+_\\w+\\.yml"))
+				.filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
 				.collect(Collectors.toList())) {
 			try {
 				NamespacedKey key = fromFileName(file.getName());
@@ -399,10 +383,6 @@ public class YmlDatabase implements DataStorage {
 		return null;
 	}
 
-	@Override
-	public void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
-
-	}
 
 	@Override
 	public void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {

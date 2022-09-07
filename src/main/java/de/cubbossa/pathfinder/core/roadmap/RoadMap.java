@@ -3,7 +3,10 @@ package de.cubbossa.pathfinder.core.roadmap;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.node.*;
+import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
+import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
@@ -254,7 +257,7 @@ public class RoadMap implements Keyed, Named {
 		}
 		Edge edge;
 		try {
-			edge = PathPlugin.getInstance().getDatabase().createEdge(start, end, 1);
+			edge = new Edge(start, end, 1);
 		} catch (DataStorageException e) {
 			throw new IllegalArgumentException("Error while connecting edges: " + start + " and " + end, e);
 		}
@@ -267,7 +270,7 @@ public class RoadMap implements Keyed, Named {
 			Edge existing = getEdge(end, start);
 			if (existing == null) {
 				try {
-					other = PathPlugin.getInstance().getDatabase().createEdge(end, start, 1);
+					other = new Edge(start, end, 1);
 				} catch (DataStorageException e) {
 					throw new IllegalArgumentException("Error while connecting edges: " + start + " and " + end, e);
 				}
@@ -303,7 +306,7 @@ public class RoadMap implements Keyed, Named {
 		if (start.equals(end)) {
 			throw new IllegalArgumentException("Cannot connect node with itself.");
 		}
-		Edge edge = PathPlugin.getInstance().getDatabase().createEdge(start, end, weight);
+		Edge edge = new Edge(start, end, weight);
 
 		start.getEdges().add(edge);
 		edges.add(edge);
@@ -312,7 +315,7 @@ public class RoadMap implements Keyed, Named {
 		if (!directed) {
 			Edge existing = getEdge(end, start);
 			if (existing == null) {
-				other = PathPlugin.getInstance().getDatabase().createEdge(end, start, weightBack);
+				other = new Edge(end, start, weightBack);
 				end.getEdges().add(other);
 				edges.add(other);
 			}

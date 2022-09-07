@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.data;
 
-import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
@@ -16,14 +15,12 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
-import org.jgrapht.alg.util.Triple;
 
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class SqlDatabase implements DataStorage {
 
@@ -166,28 +163,6 @@ public abstract class SqlDatabase implements DataStorage {
 		}
 	}
 
-	@Override
-	public RoadMap createRoadMap(NamespacedKey key, String nameFormat, PathVisualizer<?, ?> pathVis, double tangentLength) {
-		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_roadmaps` " +
-					"(`key`, `name_format`, `path_visualizer`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?)")) {
-				stmt.setString(1, key.toString());
-				stmt.setString(2, nameFormat);
-				if (pathVis == null) {
-					stmt.setNull(3, Types.VARCHAR);
-				} else {
-					stmt.setString(3, pathVis.getKey().toString());
-				}
-				stmt.setDouble(4, tangentLength);
-				stmt.executeUpdate();
-
-				return new RoadMap(key, nameFormat, pathVis, tangentLength);
-			}
-		} catch (Exception e) {
-			throw new DataStorageException("Could not create new roadmap.", e);
-		}
-	}
 
 	@Override
 	public Map<NamespacedKey, RoadMap> loadRoadMaps() {
@@ -217,20 +192,31 @@ public abstract class SqlDatabase implements DataStorage {
 
 	@Override
 	public void updateRoadMap(RoadMap roadMap) {
+
 		try (Connection connection = getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement("UPDATE `pathfinder_roadmaps` SET " +
+			try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmaps`" +
+					"(`key`, `name_format`, `path_visualizer`, `path_curve_length`) VALUES (?, ?, ?, ?) " +
+					"ON CONFLICT(`key`) DO UPDATE SET " +
 					"`name_format` = ?, " +
 					"`path_visualizer` = ?, " +
 					"`path_curve_length` = ? " +
 					"WHERE `key` = ?")) {
-				stmt.setString(1, roadMap.getNameFormat());
+				stmt.setString(1, roadMap.getKey().toString());
+				stmt.setString(2, roadMap.getNameFormat());
 				if (roadMap.getVisualizer() == null) {
-					stmt.setNull(2, Types.VARCHAR);
+					stmt.setNull(3, Types.VARCHAR);
 				} else {
-					stmt.setString(2, roadMap.getVisualizer().getKey().toString());
+					stmt.setString(3, roadMap.getVisualizer().getKey().toString());
 				}
-				stmt.setDouble(3, roadMap.getDefaultBezierTangentLength());
-				stmt.setString(4, roadMap.getKey().toString());
+				stmt.setDouble(4, roadMap.getDefaultBezierTangentLength());
+				stmt.setString(5, roadMap.getNameFormat());
+				if (roadMap.getVisualizer() == null) {
+					stmt.setNull(6, Types.VARCHAR);
+				} else {
+					stmt.setString(6, roadMap.getVisualizer().getKey().toString());
+				}
+				stmt.setDouble(7, roadMap.getDefaultBezierTangentLength());
+				stmt.setString(8, roadMap.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (SQLException e) {
@@ -252,12 +238,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Edge createEdge(Node start, Node end, float weight) {
-		return createEdges(Lists.newArrayList(new Triple<>(start, end, weight))).get(0);
-	}
-
-	@Override
-	public List<Edge> createEdges(List<Triple<Node, Node, Float>> edges) {
+	public void saveEdges(Collection<Edge> edges) {
 		try (Connection con = getConnection()) {
 			boolean wasAuto = con.getAutoCommit();
 			con.setAutoCommit(false);
@@ -265,10 +246,10 @@ public abstract class SqlDatabase implements DataStorage {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_edges` " +
 					"(`start_id`, `end_id`, `weight_modifier`) VALUES " +
 					"(?, ?, ?)")) {
-				for (var triple : edges) {
-					stmt.setInt(1, triple.getFirst().getNodeId());
-					stmt.setInt(2, triple.getSecond().getNodeId());
-					stmt.setDouble(3, triple.getThird());
+				for (var edge : edges) {
+					stmt.setInt(1, edge.getStart().getNodeId());
+					stmt.setInt(2, edge.getEnd().getNodeId());
+					stmt.setDouble(3, edge.getWeightModifier());
 					stmt.addBatch();
 				}
 				stmt.executeBatch();
@@ -276,8 +257,6 @@ public abstract class SqlDatabase implements DataStorage {
 
 			con.commit();
 			con.setAutoCommit(wasAuto);
-
-			return edges.stream().map(t -> new Edge(t.getFirst(), t.getSecond(), t.getThird())).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new DataStorageException("Could not create new edge.", e);
 		}
@@ -619,32 +598,6 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat, @Nullable String permission, boolean navigable, boolean discoverable, double findDistance) {
-		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
-					"(`key`, `name_format`, `permission`, `navigable`, `discoverable`, `find_distance`) VALUES " +
-					"(?, ?, ?, ?, ?, ?)")) {
-				stmt.setString(1, key.toString());
-				stmt.setString(2, nameFormat);
-				stmt.setString(3, permission);
-				stmt.setBoolean(4, navigable);
-				stmt.setBoolean(5, discoverable);
-				stmt.setDouble(6, findDistance);
-				stmt.executeUpdate();
-
-				NodeGroup group = new NodeGroup(key, nameFormat);
-				group.setPermission(permission);
-				group.setNavigable(navigable);
-				group.setDiscoverable(discoverable);
-				group.setFindDistance((float) findDistance);
-				return group;
-			}
-		} catch (Exception e) {
-			throw new DataStorageException("Could not create new node group.", e);
-		}
-	}
-
-	@Override
 	public HashedRegistry<NodeGroup> loadNodeGroups() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups`")) {
@@ -676,19 +629,27 @@ public abstract class SqlDatabase implements DataStorage {
 	@Override
 	public void updateNodeGroup(NodeGroup group) {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("UPDATE `pathfinder_nodegroups` SET " +
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
+					"(`key`, `name_format`, `permission`, `navigable`, `discoverable`, `find_distance`) VALUES (?, ?, ?, ?, ?, ?)" +
+					"ON CONFLICT(`key`) DO UPDATE  SET " +
 					"`name_format` = ?, " +
 					"`permission` = ?, " +
 					"`navigable` = ?, " +
 					"`discoverable` = ?, " +
 					"`find_distance` = ? " +
 					"WHERE `key` = ?")) {
-				stmt.setString(1, group.getNameFormat());
-				stmt.setString(2, group.getPermission());
-				stmt.setBoolean(3, group.isNavigable());
-				stmt.setBoolean(4, group.isDiscoverable());
-				stmt.setDouble(5, group.getFindDistance());
-				stmt.setString(6, group.getKey().toString());
+				stmt.setString(1, group.getKey().toString());
+				stmt.setString(2, group.getNameFormat());
+				stmt.setString(3, group.getPermission());
+				stmt.setBoolean(4, group.isNavigable());
+				stmt.setBoolean(5, group.isDiscoverable());
+				stmt.setDouble(6, group.getFindDistance());
+				stmt.setString(7, group.getNameFormat());
+				stmt.setString(8, group.getPermission());
+				stmt.setBoolean(9, group.isNavigable());
+				stmt.setBoolean(10, group.isDiscoverable());
+				stmt.setDouble(11, group.getFindDistance());
+				stmt.setString(12, group.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {
@@ -913,11 +874,6 @@ public abstract class SqlDatabase implements DataStorage {
 	@Override
 	public Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers() {
 		return null;
-	}
-
-	@Override
-	public void createPlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
-
 	}
 
 	@Override

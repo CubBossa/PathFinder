@@ -4,10 +4,7 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.NodeCurveLengthChangedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeLocationChangedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetCurveLengthEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetNameEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.*;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
@@ -67,10 +64,14 @@ public class RoadMapHandler {
 
 	public RoadMap createRoadMap(Plugin plugin, String key) {
 		NamespacedKey nKey = new NamespacedKey(plugin, key);
-		RoadMap rm = PathPlugin.getInstance().getDatabase().createRoadMap(nKey,
-				StringUtils.getRandHexString() + StringUtils.capizalize(key),
-				null);
+		RoadMap rm = new RoadMap(
+				nKey,
+				StringUtils.insertInRandomHexString(StringUtils.capizalize(key)),
+				null,
+				1
+		);
 		roadMaps.put(rm);
+		Bukkit.getPluginManager().callEvent(new RoadMapCreatedEvent(rm));
 		return rm;
 	}
 
