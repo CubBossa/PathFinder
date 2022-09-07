@@ -34,11 +34,6 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>> ex
 	}
 
 	@Override
-	public VisualizerType<T> getType() {
-		return null;
-	}
-
-	@Override
 	public BezierData prepare(List<Node> nodes) {
 
 		//TODO has to be rewritten if portals are being introduced

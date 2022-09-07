@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 public class VisualizerHandler {
 
 	public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE = new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
+	public static final VisualizerType<AdvancedParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new AdvancedParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "advanced-particle"));
 	public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE = new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
 
 	@Getter
@@ -39,6 +40,7 @@ public class VisualizerHandler {
 		this.visualizerTypes = new HashedRegistry<>();
 		visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
 		visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
+		visualizerTypes.put(ADV_PARTICLE_VISUALIZER_TYPE);
 
 		this.pathVisualizerMap = new HashedRegistry<>();
 		pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
@@ -69,7 +71,7 @@ public class VisualizerHandler {
 	}
 
 	public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type, NamespacedKey key) {
-		return createPathVisualizer(type, key, StringUtils.getRandHexString() + StringUtils.capizalize(key.getKey()));
+		return createPathVisualizer(type, key, StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
 	}
 
 	public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type, NamespacedKey key, String nameFormat) {

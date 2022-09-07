@@ -23,7 +23,6 @@ public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer>
 	private float speed = .5f;
 	private int amount = 1;
 	private Vector offset = new Vector(0.02f, 0.02f, 0.02f);
-	private Map<Node, Double> curveLengths;
 
 	@Override
 	public VisualizerType<ParticleVisualizer> getType() {
