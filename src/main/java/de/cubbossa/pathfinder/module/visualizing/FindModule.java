@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.core.node.implementation.EmptyNode;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.module.Module;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
@@ -34,10 +33,10 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class FindModule extends Module implements Listener {
+public class FindModule implements Listener {
 
 	public enum NavigateResult {
-		SUCCESS, FAIL_BLOCKED, FAIL_EMPTY
+		SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED
 	}
 
 	public record NavigationRequestContext(UUID playerId, Navigable navigable) {
@@ -59,7 +58,6 @@ public class FindModule extends Module implements Listener {
 		instance = this;
 
 		this.plugin = plugin;
-		this.plugin.registerModule(this);
 		this.activePaths = new HashMap<>();
 		this.navigationFilter = new ArrayList<>();
 
@@ -70,10 +68,6 @@ public class FindModule extends Module implements Listener {
 			Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
 			return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance().hasPermission(player, groupable);
 		});
-	}
-
-	@Override
-	public void onEnable() {
 
 		registerListener();
 	}
@@ -150,13 +144,14 @@ public class FindModule extends Module implements Listener {
 		PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
 		VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
 		visualizerPath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
-		setPath(player.getUniqueId(), visualizerPath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
+		NavigateResult result = setPath(player.getUniqueId(), visualizerPath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
 				NodeGroupHandler.getInstance().getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
 
-		// Refresh cancel-path command so that it is visible
-		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
-
-		return NavigateResult.SUCCESS;
+		if (result == NavigateResult.SUCCESS) {
+			// Refresh cancel-path command so that it is visible
+			PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+		}
+		return result;
 	}
 
 	public void reachTarget(SearchInfo info) {
@@ -167,15 +162,15 @@ public class FindModule extends Module implements Listener {
 		TranslationHandler.getInstance().sendMessage(Messages.TARGET_FOUND, Bukkit.getPlayer(info.playerId()));
 	}
 
-	public void setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target, float distance) {
+	public NavigateResult setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target, float distance) {
 		if (path.getVisualizer() == null) {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_NO_VIS, Bukkit.getPlayer(playerId));
-			return;
+			return NavigateResult.FAIL_NO_VISUALIZER_SELECTED;
 		}
 		PathStartEvent event = new PathStartEvent(playerId, path, target, distance);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
-			return;
+			return NavigateResult.FAIL_EVENT_CANCELLED;
 		}
 
 		SearchInfo current = activePaths.put(playerId, new SearchInfo(playerId, path, target, distance));
@@ -183,6 +178,7 @@ public class FindModule extends Module implements Listener {
 			current.path().cancel();
 		}
 		path.run(playerId);
+		return NavigateResult.SUCCESS;
 	}
 
 	public void cancelPath(UUID playerId) {
