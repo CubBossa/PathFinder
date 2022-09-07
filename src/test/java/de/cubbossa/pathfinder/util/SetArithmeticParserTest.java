@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,20 +12,20 @@ import java.util.stream.Collectors;
 
 public class SetArithmeticParserTest {
 
-	private SetArithmeticParser<Collection<String>> parser;
-	private final Collection<String> abc = Lists.newArrayList("A", "B", "C", "D", "E");
-	private final Collection<String> numbers = Lists.newArrayList("1", "2", "3", "4", "5");
-	private final Collection<String> mix = Lists.newArrayList("1", "B", "3", "D", "5", "E");
-	private final Collection<Collection<String>> scope = Lists.newArrayList(abc, numbers, mix);
+	private static SetArithmeticParser<Collection<String>> parser;
+	private static final Collection<String> abc = Lists.newArrayList("A", "B", "C", "D", "E");
+	private static final Collection<String> numbers = Lists.newArrayList("1", "2", "3", "4", "5");
+	private static final Collection<String> mix = Lists.newArrayList("1", "B", "3", "D", "5", "E");
+	private static final Collection<Collection<String>> scope = Lists.newArrayList(abc, numbers, mix);
 
-	@Before
-	public void setupParser() {
+	@BeforeAll
+	static void setupParser() {
 		parser = new SetArithmeticParser<>(scope, strings -> strings);
 	}
 
 	@Test
 	public void onParse0() {
-		Assert.assertEquals(Lists.newArrayList("A", "B", "&", "C", "!", "D", "&", "|", "!"),
+		Assertions.assertEquals(Lists.newArrayList("A", "B", "&", "C", "!", "D", "&", "|", "!"),
 				parser.toRPN(parser.tokenize("!(A&B|!C&D)")).stream()
 						.map(SetArithmeticParser.TokenMatch::match)
 						.collect(Collectors.toList()));
@@ -36,7 +36,7 @@ public class SetArithmeticParserTest {
 
 		List<Collection<String>> expected = new ArrayList<>();
 		expected.add(abc);
-		Assert.assertEquals(expected, parser.parse("A"));
+		Assertions.assertEquals(expected, parser.parse("A"));
 	}
 
 	@Test
@@ -45,7 +45,7 @@ public class SetArithmeticParserTest {
 		List<Collection<String>> expected = new ArrayList<>();
 		expected.add(numbers);
 		expected.add(mix);
-		Assert.assertEquals(expected, parser.parse("!A"));
+		Assertions.assertEquals(expected, parser.parse("!A"));
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class SetArithmeticParserTest {
 		List<Collection<String>> expected = new ArrayList<>();
 		expected.add(abc);
 		expected.add(mix);
-		Assert.assertEquals(expected, parser.parse("B&D&E"));
+		Assertions.assertEquals(expected, parser.parse("B&D&E"));
 	}
 
 	@Test
@@ -62,6 +62,6 @@ public class SetArithmeticParserTest {
 
 		List<Collection<String>> expected = new ArrayList<>();
 		expected.add(mix);
-		Assert.assertEquals(expected, parser.parse("E&1"));
+		Assertions.assertEquals(expected, parser.parse("E&1"));
 	}
 }

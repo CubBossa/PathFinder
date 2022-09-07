@@ -67,11 +67,13 @@ public class RoadMap implements Keyed, Named {
 
 	public void loadNodesAndEdges() {
 		nodes.clear();
-		for (var entry : PathPlugin.getInstance().getDatabase().loadNodes(this).entrySet()) {
+		var map1 = PathPlugin.getInstance().getDatabase().loadNodes(this);
+		var map2 = PathPlugin.getInstance().getDatabase().loadNodeGroupNodes();
+		for (var entry : map1.entrySet()) {
 			nodes.put(entry.getKey(), entry.getValue());
-			System.out.println(entry.getKey());
+			PathPlugin.getInstance().getLogger().log(Level.INFO, "" + entry.getKey());
 		}
-		for (var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
+		for (var entry : map2.entrySet()) {
 			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(entry.getKey());
 			if (group == null) {
 				continue;

@@ -356,7 +356,7 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setString(1, roadMap.getKey().toString());
 
 				try (ResultSet resultSet = stmt.executeQuery()) {
-					Map<Integer, Node> nodes = new TreeMap<>();
+					Map<Integer, Node> nodes = new LinkedHashMap<>();
 					while (resultSet.next()) {
 						int id = resultSet.getInt("id");
 						String type = resultSet.getString("type");
@@ -497,7 +497,7 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups_nodes`")) {
 				try (ResultSet resultSet = stmt.executeQuery()) {
-					Map<NamespacedKey, HashSet<Integer>> registry = new HashMap<>();
+					Map<NamespacedKey, HashSet<Integer>> registry = new LinkedHashMap<>();
 					while (resultSet.next()) {
 						String keyString = resultSet.getString("group_key");
 						int nodeId = resultSet.getInt("node_id");

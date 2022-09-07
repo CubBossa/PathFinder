@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,10 +48,10 @@ public class SelectionParserTest {
 			"            ", " ", "",
 			"More words than one", "Another sentence"
 	);
-	private SelectionParser<String, SelectionParser.Context> parser;
+	private static SelectionParser<String, SelectionParser.Context> parser;
 
-	@Before
-	public void setup() {
+	@BeforeAll
+	static void setup() {
 		parser = new SelectionParser<>(SelectionParser.Context::new, "s");
 		parser.addSelector(LENGTH);
 		parser.addSelector(TYPE);
@@ -61,7 +61,7 @@ public class SelectionParserTest {
 	@SneakyThrows
 	public void testParseSelection1() {
 
-		Assert.assertEquals(
+		Assertions.assertEquals(
 				Lists.newArrayList("A", "B", "C", "D", "E", " ", ""),
 				parser.parseSelection(SCOPE, "@s[length=..1]", ArrayList::new));
 	}
@@ -70,7 +70,7 @@ public class SelectionParserTest {
 	@SneakyThrows
 	public void testParseSelection2() {
 
-		Assert.assertEquals(
+		Assertions.assertEquals(
 				Lists.newArrayList("OtherWord", "00000000", "            ", "More words than one", "Another sentence"),
 				parser.parseSelection(SCOPE, "@s[length=5..]", ArrayList::new));
 	}
@@ -79,7 +79,7 @@ public class SelectionParserTest {
 	@SneakyThrows
 	public void testParseSelection3() {
 
-		Assert.assertEquals(
+		Assertions.assertEquals(
 				Lists.newArrayList("OtherWord"),
 				parser.parseSelection(SCOPE, "@s[length=5..,type=letter]", ArrayList::new));
 	}
@@ -88,7 +88,7 @@ public class SelectionParserTest {
 	@SneakyThrows
 	public void testParseSelection4() {
 
-		Assert.assertEquals(
+		Assertions.assertEquals(
 				Lists.newArrayList("123"),
 				parser.parseSelection(SCOPE, "@s[length=..5,type=number]", ArrayList::new));
 	}
