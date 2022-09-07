@@ -43,13 +43,14 @@ The syntax is quite simple:
 '|' means the union of two groups: [a, b, c] | [c, d, e] = [a, b, c, d, e]
 '&' means the intersection of two groups: [a, b, c] & [c, d, e] = [c]
 & binds stronger than |, so [a, b] | [b, c] & [c, d] is not [c] but [a, b, c]
-If you want to change the behavior, parenthesis can be used to change binding, like + and * in simple maths.
+Parenthesis can be used to change binding, like + and * in simple maths.
 
 Applied to nodegroups, this means:
 '/find location street&(shoppingcenter|parkinglot)'
 is equals to
 'Find me the nearest node that is in the group street and also either a shopping center or a parting lot'
-
+because each searchterm (street, shoppingcenter and parkinglot) represent a group of nodes.
+Of course, you can also simply type '/find location parkinglot' without set operations.
 
 # PATH VISUALIZATION
 
