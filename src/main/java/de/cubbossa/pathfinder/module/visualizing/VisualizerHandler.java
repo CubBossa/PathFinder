@@ -46,6 +46,11 @@ public class VisualizerHandler {
 		pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
+
+		AdvancedParticleVisualizer vis = new AdvancedParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "test"), "Test");
+		vis.setPathOffsetX(c -> (float) Math.cos(c.index() / 3.f) / 3);
+		vis.setPathOffsetY(c -> (float) Math.sin(c.index() / 3.f) / 3);
+		this.pathVisualizerMap.put(vis);
 	}
 
 	public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(NamespacedKey key) {

@@ -11,6 +11,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -46,8 +47,9 @@ public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedPar
 	@Override
 	public BezierData prepare(List<Node> nodes) {
 		BezierData bezierData = super.prepare(nodes);
-		Location previous = bezierData.points().get(0);
+		List<Location> points = new ArrayList<>();
 		for (int i = 1; i < bezierData.points().size() - 1; i++) {
+			Location previous = bezierData.points().get(i - 1);
 			Location point = bezierData.points().get(i);
 			Location next = bezierData.points().get(i + 1);
 
@@ -56,20 +58,18 @@ public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedPar
 			Vector up = dir.clone().crossProduct(right).normalize();
 
 			Context c = new Context(null, 0, 0, i, bezierData.points().size());
-			point
+			points.add(point.clone()
 					.add(right.multiply(pathOffsetX.apply(c)))
 					.add(up.multiply(pathOffsetY.apply(c)))
-					.add(dir.multiply(pathOffsetZ.apply(c)));
-			previous = point;
+					.add(dir.multiply(pathOffsetZ.apply(c))));
 		}
-		return bezierData;
+		return new BezierData(points);
 	}
 
 	@Override
 	public void play(VisualizerContext<BezierData> context) {
 		int step = context.interval() % schedulerSteps;
-		for(int i = 0; i < context.data().points().size(); i++) {
-		//for (int i = step; i < context.data().points().size(); i += schedulerSteps) {
+		for (int i = step; i < context.data().points().size(); i += schedulerSteps) {
 			for (Player player : context.players()) {
 				Context c = new Context(player, context.interval(), step, i, context.data().points().size());
 				player.spawnParticle(particle.apply(c), context.data().points().get(i), amount.apply(c), particleOffsetX.apply(c),

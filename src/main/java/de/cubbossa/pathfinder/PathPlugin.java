@@ -31,6 +31,7 @@ import de.tr7zw.nbtapi.NBTContainer;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import dev.jorel.commandapi.nms.NMS_1_19_1_R1;
+import dev.jorel.commandapi.test.MockNMS;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
