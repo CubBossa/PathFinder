@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -22,6 +23,11 @@ public class EmptyNode implements Node {
 	public EmptyNode(RoadMap roadMap, World world) {
 		this.roadMap = roadMap;
 		this.location = new Location(world, 0, 0, 0);
+	}
+
+	@Override
+	public NodeType<Node> getType() {
+		return null;
 	}
 
 	@Override

@@ -49,7 +49,7 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>> ex
 	public void onSetSampleRate(CommandSender sender, BezierPathVisualizer<?> edit, int rate) {
 		int old = edit.getBezierSamplingRate();
 		edit.setBezierSamplingRate(rate);
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_DIST.format(PathVisualizerCommand.tags(edit,
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_SAMPLE.format(PathVisualizerCommand.tags(edit,
 				Component.text(old), Component.text(rate))), sender);
 		Bukkit.getPluginManager().callEvent(new VisualizerDistanceChangedEvent(edit, old, rate));
 	}

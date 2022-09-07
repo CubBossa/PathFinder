@@ -9,8 +9,6 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemoveEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
@@ -73,7 +71,7 @@ public class EditModeMenu {
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						lastNode = roadMap.createNode(type, pos, lastGroup);
+						roadMap.createNode(type, pos);
 					} else {
 						openNodeTypeMenu(context.getPlayer(), pos);
 					}
@@ -171,21 +169,10 @@ public class EditModeMenu {
 							return;
 						}
 
-						NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(Lists.newArrayList(groupable), Lists.newArrayList(groupable.getGroups()));
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							Bukkit.getPluginManager().callEvent(event);
-							if (event.isCancelled()) {
-								return;
+							for (NodeGroup group : groupable.getGroups()) {
+								NodeGroupHandler.getInstance().removeNodes(group, Lists.newArrayList(groupable));
 							}
-							for (NodeGroup g : event.getModifiedGroups()) {
-								for (Groupable gr : event.getModifiedGroupables()) {
-									g.remove(gr);
-								}
-							}
-
-							NodeGroupRemovedEvent removed = new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
-							Bukkit.getPluginManager().callEvent(removed);
-
 							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
 						});
 					}
@@ -250,17 +237,7 @@ public class EditModeMenu {
 						if (!group.contains(groupable)) {
 
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-								NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
-								Bukkit.getPluginManager().callEvent(event);
-
-								if (event.isCancelled()) {
-									return;
-								}
-								event.getModifiedGroups().forEach(g -> g.addAll(event.getModifiedGroupables()));
-
-								NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
-								Bukkit.getPluginManager().callEvent(assigned);
-
+								NodeGroupHandler.getInstance().addNodes(group, Lists.newArrayList(groupable));
 								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
 								menu.refresh(menu.getListSlots());
 							});
@@ -270,21 +247,7 @@ public class EditModeMenu {
 						if (group.contains(groupable)) {
 
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-								NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(groupable, group);
-								Bukkit.getPluginManager().callEvent(event);
-
-								if (event.isCancelled()) {
-									return;
-								}
-								for (NodeGroup g : event.getModifiedGroups()) {
-									for (Groupable gr : event.getModifiedGroupables()) {
-										g.remove(gr);
-									}
-								}
-
-								NodeGroupRemovedEvent removed = new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
-								Bukkit.getPluginManager().callEvent(removed);
-
+								NodeGroupHandler.getInstance().removeNodes(group, Lists.newArrayList(groupable));
 								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
 								menu.refresh(menu.getListSlots());
 							});

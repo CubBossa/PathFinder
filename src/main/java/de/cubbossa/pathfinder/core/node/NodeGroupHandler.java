@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class NodeGroupHandler implements Listener {
@@ -115,6 +116,26 @@ public class NodeGroupHandler implements Listener {
 		group.setFindDistance(value);
 		NodeGroupFindDistanceChangedEvent event = new NodeGroupFindDistanceChangedEvent(group, value);
 		Bukkit.getPluginManager().callEvent(event);
+	}
+
+	public void addNodes(NodeGroup group, Collection<Groupable> nodes) {
+		NodeGroupAssignEvent event = new NodeGroupAssignEvent(nodes, Collections.singleton(group));
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return;
+		}
+		event.getModifiedGroups().forEach(g -> event.getModifiedGroupables().forEach(g::add));
+		Bukkit.getPluginManager().callEvent(new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups()));
+	}
+
+	public void removeNodes(NodeGroup group, Collection<Groupable> nodes) {
+		NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(nodes, Collections.singleton(group));
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return;
+		}
+		event.getModifiedGroups().forEach(g -> event.getModifiedGroupables().forEach(g::remove));
+		Bukkit.getPluginManager().callEvent(new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups()));
 	}
 
 	public float getFindDistance(Groupable groupable) {

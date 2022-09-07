@@ -44,7 +44,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>> ex
 				(aDouble, aDouble2) -> aDouble,
 				LinkedHashMap::new)));
 		List<Vector> curve = transform(interpolate(spline));
-		List<Location> calculatedPoints = new ArrayList<>(transform(curve).stream().map(vector -> vector.toLocation(world)).toList());
+		List<Location> calculatedPoints = new ArrayList<>(curve.stream().map(vector -> vector.toLocation(world)).toList());
 		return new BezierData(calculatedPoints);
 	}
 

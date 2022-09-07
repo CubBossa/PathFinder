@@ -24,7 +24,7 @@ public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedPar
 	}
 
 	private int schedulerSteps = 40;
-	private Function<Context, Particle> particle = c -> Particle.DOLPHIN;
+	private Function<Context, Particle> particle = c -> Particle.FLAME;
 	private Function<Context, Object> particleData = c -> null;
 	private Function<Context, Float> speed = c -> .05f;
 	private Function<Context, Integer> amount = c -> 1;

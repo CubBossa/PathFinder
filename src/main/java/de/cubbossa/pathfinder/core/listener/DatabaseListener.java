@@ -3,7 +3,9 @@ package de.cubbossa.pathfinder.core.listener;
 import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.*;
 import de.cubbossa.pathfinder.core.events.roadmap.*;
+import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
@@ -14,6 +16,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DatabaseListener implements Listener {
@@ -52,7 +58,21 @@ public class DatabaseListener implements Listener {
 	}
 
 	@EventHandler
+	public void onNodeCreatedEvent(NodeCreatedEvent event) {
+		data.updateNode(event.getNode());
+	}
+
+	@EventHandler
 	public void onNodesDeleted(NodesDeletedEvent event) {
+		Map<NodeGroup, Collection<Groupable>> map = new HashMap<>();
+		for (Node node : event.getNodes()) {
+			if (node instanceof Groupable groupable) {
+				groupable.getGroups().forEach(g -> map.computeIfAbsent(g, group -> new HashSet<>()).add(groupable));
+			}
+		}
+		for (Map.Entry<NodeGroup, Collection<Groupable>> entry : map.entrySet()) {
+			data.removeNodesFromGroup(entry.getKey(), entry.getValue());
+		}
 		data.deleteNodes(event.getNodes().stream().map(Node::getNodeId).collect(Collectors.toSet()));
 	}
 
@@ -98,10 +118,7 @@ public class DatabaseListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onGroupRemove(NodeGroupRemovedEvent event) {
-		event.getGroups().forEach(group -> {
-			data.removeNodesFromGroup(group, event.getGroupables().stream()
-					.collect(Collectors.toCollection(NodeSelection::new)));
-		});
+		event.getGroups().forEach(group -> data.removeNodesFromGroup(group, event.getGroupables()));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

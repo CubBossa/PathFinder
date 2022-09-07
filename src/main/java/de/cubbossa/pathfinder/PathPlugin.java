@@ -14,7 +14,6 @@ import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
-import de.cubbossa.pathfinder.data.InMemoryDatabase;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
 import de.cubbossa.pathfinder.data.YmlDatabase;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
@@ -30,8 +29,6 @@ import de.cubbossa.translations.TranslationHandler;
 import de.tr7zw.nbtapi.NBTContainer;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
-import dev.jorel.commandapi.nms.NMS_1_19_1_R1;
-import dev.jorel.commandapi.test.MockNMS;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -198,11 +195,13 @@ public class PathPlugin extends JavaPlugin {
 
 		new File(getDataFolder(), "data/").mkdirs();
 		database = switch (configuration.getDatabaseType()) {
-			case IN_MEMORY -> new InMemoryDatabase(this.getLogger());
+			case IN_MEMORY -> null;
 			case SQLITE -> new SqliteDatabase(new File(getDataFolder() + "/data/", "database.db"));
 			default -> new YmlDatabase(new File(getDataFolder(), "data/"));
 		};
-		database.connect();
+		if (database != null) {
+			database.connect();
+		}
 
 		new FindModule(this);
 
@@ -244,7 +243,9 @@ public class PathPlugin extends JavaPlugin {
 		// Listeners
 
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
-		Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
+		if (database != null) {
+			Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
+		}
 
 		extensions.forEach(PathPluginExtension::onEnable);
 

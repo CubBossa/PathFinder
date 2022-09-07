@@ -1,11 +1,9 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -52,6 +50,11 @@ public class Waypoint implements Node, Groupable {
 		}
 
 		return nodeId == waypoint.nodeId;
+	}
+
+	@Override
+	public NodeType<Waypoint> getType() {
+		return RoadMapHandler.WAYPOINT_TYPE;
 	}
 
 	@Override

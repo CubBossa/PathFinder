@@ -29,6 +29,7 @@ import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -66,15 +67,18 @@ public class RoadMap implements Keyed, Named {
 
 	public void loadNodesAndEdges() {
 		nodes.clear();
-		nodes.putAll(PathPlugin.getInstance().getDatabase().loadNodes(this));
-		for(var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
+		for (var entry : PathPlugin.getInstance().getDatabase().loadNodes(this).entrySet()) {
+			nodes.put(entry.getKey(), entry.getValue());
+			System.out.println(entry.getKey());
+		}
+		for (var entry : PathPlugin.getInstance().getDatabase().loadNodeGroupNodes().entrySet()) {
 			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(entry.getKey());
-			if(group == null) {
+			if (group == null) {
 				continue;
 			}
-			for(int i : entry.getValue()) {
+			for (int i : entry.getValue()) {
 				Node node = nodes.get(i);
-				if(node == null) {
+				if (node == null) {
 					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null: " + i);
 					continue;
 				}
@@ -170,10 +174,19 @@ public class RoadMap implements Keyed, Named {
 
 	public <T extends Node> T createNode(NodeType<T> type, Location location, NodeGroup... groups) {
 
-		T node = PathPlugin.getInstance().getDatabase().createNode(this, type, Arrays.stream(groups).filter(Objects::nonNull).toList(),
-				location, null);
+		T node = type.getFactory().apply(new NodeType.NodeCreationContext(
+				this,
+				RoadMapHandler.getInstance().requestNodeId(),
+				location
+		));
 
 		addNode(node);
+		if (node instanceof Groupable groupable) {
+			Collection<Groupable> col = Collections.singleton(groupable);
+			for (NodeGroup group : groups) {
+				NodeGroupHandler.getInstance().addNodes(group, col);
+			}
+		}
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 			Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
 		});

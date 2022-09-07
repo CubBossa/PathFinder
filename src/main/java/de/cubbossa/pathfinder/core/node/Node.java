@@ -12,6 +12,8 @@ public interface Node extends Navigable, Comparable<Node> {
 
 	NamespacedKey getRoadMapKey();
 
+	NodeType<? extends Node> getType();
+
 	Location getLocation();
 
 	void setLocation(Location location);

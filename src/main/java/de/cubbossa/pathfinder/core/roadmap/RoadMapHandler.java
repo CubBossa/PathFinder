@@ -29,12 +29,17 @@ import java.util.stream.Stream;
 public class RoadMapHandler {
 
 	public static NodeType<Waypoint> WAYPOINT_TYPE = new NodeType<>(new NamespacedKey(PathPlugin.getInstance(), "waypoint"),
-			"<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), (roadMap, integer) -> new Waypoint(integer, roadMap));
+			"<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), context -> {
+		Waypoint waypoint = new Waypoint(context.id(), context.roadMap());
+		waypoint.setLocation(context.location());
+		return waypoint;
+	});
 
 	@Getter
 	private static RoadMapHandler instance;
 	private final HashedRegistry<RoadMap> roadMaps;
 	private final HashedRegistry<RoadMapEditor> roadMapEditors;
+	private int nodeIdCounter;
 
 	public RoadMapHandler() {
 		instance = this;
@@ -59,11 +64,25 @@ public class RoadMapHandler {
 	public void loadRoadMaps() {
 		roadMaps.clear();
 		roadMaps.putAll(PathPlugin.getInstance().getDatabase().loadRoadMaps());
-		roadMaps.forEach(RoadMap::loadNodesAndEdges);
+		for (RoadMap map : roadMaps) {
+			map.loadNodesAndEdges();
+		}
+		nodeIdCounter = roadMaps.values().stream().flatMap(roadMap -> roadMap.getNodes().stream())
+				.mapToInt(Node::getNodeId)
+				.max().orElse(0);
+	}
+
+	public int requestNodeId() {
+		return ++nodeIdCounter;
 	}
 
 	public RoadMap createRoadMap(Plugin plugin, String key) {
+
 		NamespacedKey nKey = new NamespacedKey(plugin, key);
+		if (getRoadMap(nKey) != null) {
+			throw new IllegalStateException("Another roadmap with this key already exists.");
+		}
+
 		RoadMap rm = new RoadMap(
 				nKey,
 				StringUtils.insertInRandomHexString(StringUtils.capizalize(key)),

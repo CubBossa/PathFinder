@@ -1,16 +1,19 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
 import de.cubbossa.translations.Message;
+import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
@@ -35,23 +38,38 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 				.then(new LiteralArgument("add")
 						.then(CustomArgs.pathVisualizerArgument("child")
 								.executes((sender, objects) -> {
-									((CombinedVisualizer) objects[0]).addVisualizer((PathVisualizer<?, ?>) objects[1]);
+									CombinedVisualizer vis = (CombinedVisualizer) objects[0];
+									PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
+									vis.addVisualizer(target);
+									Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
+											Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+													CombinedVisualizerChangedEvent.Action.ADD, Collections.singleton(target))));
+									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_ADD, sender);
 								})))
 				.then(new LiteralArgument("list")
 						.executes((sender, objects) -> {
-							sender.sendMessage(((CombinedVisualizer) objects[0]).getVisualizers().stream()
-									.map(PathVisualizer::getKey)
-									.map(NamespacedKey::toString)
-									.collect(Collectors.joining(", ")));
+							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_LIST, sender);
 						}))
 				.then(new LiteralArgument("remove")
 						.then(CustomArgs.pathVisualizerArgument("child")
 								.executes((sender, objects) -> {
-									((CombinedVisualizer) objects[0]).removeVisualizer((PathVisualizer<?, ?>) objects[1]);
+									CombinedVisualizer vis = (CombinedVisualizer) objects[0];
+									PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
+									vis.removeVisualizer(target);
+									Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
+											Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+													CombinedVisualizerChangedEvent.Action.REMOVE, Collections.singleton(target))));
+									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_REMOVE, sender);
 								})))
 				.then(new LiteralArgument("clear")
 						.executes((commandSender, objects) -> {
-							((CombinedVisualizer) objects[0]).clearVisualizers();
+							CombinedVisualizer vis = (CombinedVisualizer) objects[0];
+							Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();
+							vis.clearVisualizers();
+							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
+									Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+											CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
+							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_CLEAR, commandSender);
 						}));
 	}
 

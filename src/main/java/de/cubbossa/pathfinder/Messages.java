@@ -277,6 +277,12 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Changed sample rate for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_SAMPLE = new Message("commands.path_visualizer.set.sample_rate");
 
+	//TODO
+	public static final Message CMD_VIS_COMBINED_LIST = new Message("commands.path_visualizer.combined.list");
+	public static final Message CMD_VIS_COMBINED_ADD = new Message("commands.path_visualizer.combined.add");
+	public static final Message CMD_VIS_COMBINED_REMOVE = new Message("commands.path_visualizer.combined.remove");
+	public static final Message CMD_VIS_COMBINED_CLEAR = new Message("commands.path_visualizer.combined.clear");
+
 	@MessageMeta(placeholders = {
 			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
 			"particle", "particle-steps", "amount", "speed", "offset"

@@ -11,8 +11,7 @@ import org.bukkit.event.HandlerList;
 public class NodeCreatedEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
-
-	private Node node;
+	private final Node node;
 
 	public NodeCreatedEvent(Node node) {
 		this.node = node;

@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -217,11 +216,6 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) {
-		return null;
-	}
-
-	@Override
 	public Map<Integer, Node> loadNodes(RoadMap roadMap) {
 		return null;
 	}
@@ -247,12 +241,12 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void removeNodesFromGroup(NodeGroup group, NodeSelection selection) {
+	public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
 		updateNodeGroup(group);
 	}
 
 	@Override
-	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
+	public Map<NamespacedKey, ? extends Collection<Integer>> loadNodeGroupNodes() {
 		Map<NamespacedKey, List<Integer>> map = new HashMap<>();
 		for (File file : Arrays.stream(nodeGroupDir.listFiles())
 				.filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
@@ -422,10 +416,5 @@ public class YmlDatabase implements DataStorage {
 	@Override
 	public void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
 
-	}
-
-	@Override
-	public NodeBatchCreator newNodeBatch() {
-		return null;
 	}
 }

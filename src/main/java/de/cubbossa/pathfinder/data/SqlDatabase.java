@@ -19,8 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 public abstract class SqlDatabase implements DataStorage {
 
@@ -199,8 +197,7 @@ public abstract class SqlDatabase implements DataStorage {
 					"ON CONFLICT(`key`) DO UPDATE SET " +
 					"`name_format` = ?, " +
 					"`path_visualizer` = ?, " +
-					"`path_curve_length` = ? " +
-					"WHERE `key` = ?")) {
+					"`path_curve_length` = ?")) {
 				stmt.setString(1, roadMap.getKey().toString());
 				stmt.setString(2, roadMap.getNameFormat());
 				if (roadMap.getVisualizer() == null) {
@@ -216,7 +213,6 @@ public abstract class SqlDatabase implements DataStorage {
 					stmt.setString(6, roadMap.getVisualizer().getKey().toString());
 				}
 				stmt.setDouble(7, roadMap.getDefaultBezierTangentLength());
-				stmt.setString(8, roadMap.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (SQLException e) {
@@ -354,102 +350,6 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public <T extends Node> T createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) {
-		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
-					"(`type`, `roadmap_key`, `x`, `y`, `z`, `world`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-				stmt.setString(1, type.getKey().toString());
-				stmt.setString(2, roadMap.getKey().toString());
-				stmt.setDouble(3, location.getX());
-				stmt.setDouble(4, location.getY());
-				stmt.setDouble(5, location.getZ());
-				stmt.setString(6, location.getWorld().getUID().toString());
-				if (tangentLength == null) {
-					stmt.setNull(7, Types.DOUBLE);
-				} else {
-					stmt.setDouble(7, tangentLength);
-				}
-				stmt.executeUpdate();
-
-				try (ResultSet res = stmt.getGeneratedKeys()) {
-					T node = type.getFactory().apply(roadMap, res.getInt(1));
-					node.setLocation(location);
-					node.setCurveLength(tangentLength);
-					if (node instanceof Groupable groupable) {
-						groups.forEach(groupable::addGroup);
-					}
-					return node;
-				}
-			}
-		} catch (Exception e) {
-			throw new DataStorageException("Could not create new node.", e);
-		}
-	}
-
-	@Override
-	public NodeBatchCreator newNodeBatch() {
-		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
-					"(`type`, `roadmap_key`, `x`, `y`, `z`, `path_curve_length`) VALUES " +
-					"(?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-
-				AtomicBoolean closed = new AtomicBoolean(false);
-				List<Function<Integer, Node>> nodes = new ArrayList<>();
-
-				return new NodeBatchCreator() {
-
-					@Override
-					public <T extends Node> void createNode(RoadMap roadMap, NodeType<T> type, Collection<NodeGroup> groups, Location location, Double tangentLength) throws SQLException {
-						if (closed.get()) {
-							throw new IllegalStateException("BatchCreator already closed");
-						}
-						stmt.setString(1, type.getKey().toString());
-						stmt.setString(2, roadMap.getKey().toString());
-						stmt.setDouble(3, location.getX());
-						stmt.setDouble(4, location.getY());
-						stmt.setDouble(5, location.getZ());
-						stmt.setString(6, location.getWorld().getUID().toString());
-						stmt.setDouble(7, tangentLength);
-						stmt.addBatch();
-
-						nodes.add(integer -> {
-							T node = type.getFactory().apply(roadMap, integer);
-							node.setLocation(location);
-							node.setCurveLength(tangentLength);
-							if (node instanceof Groupable groupable) {
-								groups.forEach(groupable::addGroup);
-							}
-							return node;
-						});
-
-					}
-
-					@Override
-					public Collection<? extends Node> commit() throws SQLException {
-						if (closed.get()) {
-							throw new IllegalStateException("BatchCreator already closed");
-						}
-						List<Node> nodeList = new ArrayList<>();
-
-						stmt.executeBatch();
-						try (ResultSet res = stmt.getGeneratedKeys()) {
-							int counter = 0;
-							while (res.next()) {
-								nodes.get(counter++).apply(res.getInt(1));
-							}
-						}
-						closed.set(true);
-						return nodeList;
-					}
-				};
-			}
-		} catch (Exception e) {
-			throw new DataStorageException("Could not create new node.", e);
-		}
-	}
-
-	@Override
 	public Map<Integer, Node> loadNodes(RoadMap roadMap) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodes` WHERE `roadmap_key` = ?")) {
@@ -467,8 +367,11 @@ public abstract class SqlDatabase implements DataStorage {
 						double curveLength = resultSet.getDouble("path_curve_length");
 
 						NodeType<?> nodeType = NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
-						Node node = nodeType.getFactory().apply(roadMap, id);
-						node.setLocation(new Location(Bukkit.getWorld(UUID.fromString(worldUid)), x, y, z));
+						Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(
+								roadMap,
+								id,
+								new Location(Bukkit.getWorld(UUID.fromString(worldUid)), x, y, z)
+						));
 						node.setCurveLength(curveLength);
 						nodes.put(id, node);
 					}
@@ -483,21 +386,34 @@ public abstract class SqlDatabase implements DataStorage {
 	@Override
 	public void updateNode(Node node) {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("UPDATE `pathfinder_nodes` SET " +
+			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
+					"(`id`, `type`, `roadmap_key`, `x`, `y`, `z`, `world`, `path_curve_length`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(`id`) DO UPDATE SET " +
 					"`x` = ?, " +
 					"`y` = ?, " +
 					"`z` = ?, " +
 					"`world` = ?, " +
-					"`path_curve_length` = ? " +
-					"WHERE `id` = ?")) {
-				stmt.setDouble(1, node.getLocation().getX());
-				stmt.setDouble(2, node.getLocation().getY());
-				stmt.setDouble(3, node.getLocation().getZ());
-				stmt.setString(4, node.getLocation().getWorld().getUID().toString());
+					"`path_curve_length` = ?")) {
+				stmt.setInt(1, node.getNodeId());
+				stmt.setString(2, node.getType().getKey().toString());
+				stmt.setString(3, node.getRoadMapKey().toString());
+				stmt.setDouble(4, node.getLocation().getX());
+				stmt.setDouble(5, node.getLocation().getY());
+				stmt.setDouble(6, node.getLocation().getZ());
+				stmt.setString(7, node.getLocation().getWorld().getUID().toString());
 				if (node.getCurveLength() == null) {
-					stmt.setNull(5, Types.DOUBLE);
+					stmt.setNull(8, Types.DOUBLE);
 				} else {
-					stmt.setDouble(5, node.getCurveLength());
+					stmt.setDouble(8, node.getCurveLength());
+				}
+				stmt.setDouble(9, node.getLocation().getX());
+				stmt.setDouble(10, node.getLocation().getY());
+				stmt.setDouble(11, node.getLocation().getZ());
+				stmt.setString(12, node.getLocation().getWorld().getUID().toString());
+				if (node.getCurveLength() == null) {
+					stmt.setNull(13, Types.DOUBLE);
+				} else {
+					stmt.setDouble(13, node.getCurveLength());
 				}
 				stmt.executeUpdate();
 			}
@@ -555,7 +471,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void removeNodesFromGroup(NodeGroup group, NodeSelection selection) {
+	public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
 		try (Connection con = getConnection()) {
 			boolean wasAuto = con.getAutoCommit();
 			con.setAutoCommit(false);
@@ -577,16 +493,16 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<NamespacedKey, List<Integer>> loadNodeGroupNodes() {
+	public Map<NamespacedKey, ? extends Collection<Integer>> loadNodeGroupNodes() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups_nodes`")) {
 				try (ResultSet resultSet = stmt.executeQuery()) {
-					Map<NamespacedKey, List<Integer>> registry = new HashMap<>();
+					Map<NamespacedKey, HashSet<Integer>> registry = new HashMap<>();
 					while (resultSet.next()) {
 						String keyString = resultSet.getString("group_key");
 						int nodeId = resultSet.getInt("node_id");
 
-						List<Integer> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString), key -> new ArrayList<>());
+						HashSet<Integer> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString), key -> new HashSet<>());
 						l.add(nodeId);
 					}
 					return registry;
@@ -631,13 +547,12 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
 					"(`key`, `name_format`, `permission`, `navigable`, `discoverable`, `find_distance`) VALUES (?, ?, ?, ?, ?, ?)" +
-					"ON CONFLICT(`key`) DO UPDATE  SET " +
+					"ON CONFLICT(`key`) DO UPDATE SET " +
 					"`name_format` = ?, " +
 					"`permission` = ?, " +
 					"`navigable` = ?, " +
 					"`discoverable` = ?, " +
-					"`find_distance` = ? " +
-					"WHERE `key` = ?")) {
+					"`find_distance` = ?")) {
 				stmt.setString(1, group.getKey().toString());
 				stmt.setString(2, group.getNameFormat());
 				stmt.setString(3, group.getPermission());
@@ -649,7 +564,6 @@ public abstract class SqlDatabase implements DataStorage {
 				stmt.setBoolean(9, group.isNavigable());
 				stmt.setBoolean(10, group.isDiscoverable());
 				stmt.setDouble(11, group.getFindDistance());
-				stmt.setString(12, group.getKey().toString());
 				stmt.executeUpdate();
 			}
 		} catch (Exception e) {

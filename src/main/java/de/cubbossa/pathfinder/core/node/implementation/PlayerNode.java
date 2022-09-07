@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -23,6 +24,11 @@ public class PlayerNode implements Node {
     public PlayerNode(Player player, RoadMap roadMap) {
         this.player = player;
         this.roadMap = roadMap;
+    }
+
+    @Override
+    public NodeType<Node> getType() {
+        return null;
     }
 
     @Override

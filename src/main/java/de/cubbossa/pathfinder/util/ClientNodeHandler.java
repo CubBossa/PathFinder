@@ -251,11 +251,7 @@ public class ClientNodeHandler {
 		PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
 		packet.getIntegers().write(0, id);
 		packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
-		try {
-			protocolManager.sendServerPacket(player, packet);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		protocolManager.sendServerPacket(player, packet);
 	}
 
 	public synchronized int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
@@ -271,11 +267,7 @@ public class ClientNodeHandler {
 		packet.getDoubles().write(0, location.getX());
 		packet.getDoubles().write(1, location.getY());
 		packet.getDoubles().write(2, location.getZ());
-		try {
-			protocolManager.sendServerPacket(player, packet);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		protocolManager.sendServerPacket(player, packet);
 		setupMeta(player, entityId, name, small);
 		return entityId;
 	}
@@ -301,11 +293,7 @@ public class ClientNodeHandler {
 		PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.ENTITY_DESTROY);
 		packet.getModifier().writeDefaults();
 		packet.getIntLists().write(0, ids);
-		try {
-			protocolManager.sendServerPacket(player, packet);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		protocolManager.sendServerPacket(player, packet);
 	}
 
 	public void teleportArmorstand(Player player, Integer id, Location location) {
@@ -315,11 +303,7 @@ public class ClientNodeHandler {
 		packet.getDoubles().write(0, location.getX());
 		packet.getDoubles().write(1, location.getY());
 		packet.getDoubles().write(2, location.getZ());
-		try {
-			protocolManager.sendServerPacket(player, packet);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		protocolManager.sendServerPacket(player, packet);
 	}
 
 	public void equipArmorstand(Player player, Integer id, ItemStack[] equip) {
@@ -333,11 +317,7 @@ public class ClientNodeHandler {
 		packet.getIntegers().write(0, id);
 		packet.getSlotStackPairLists().write(0, pairList);
 
-		try {
-			protocolManager.sendServerPacket(player, packet);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		protocolManager.sendServerPacket(player, packet);
 	}
 
 	public void updateNodeHead(Player player, Node node) {
