@@ -51,7 +51,7 @@ public class EditModeMenu {
 	}
 
 	public BottomInventoryMenu createHotbarMenu(RoadMapEditor editor) {
-		BottomInventoryMenu menu = new BottomInventoryMenu(InventoryRow.HOTBAR);
+		BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
 		menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
 			Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> editor.setEditMode(c.getPlayer().getUniqueId(), false), 1L);
@@ -130,7 +130,7 @@ public class EditModeMenu {
 				}));
 
 
-		menu.setButton(8, Button.builder()
+		menu.setButton(5, Button.builder()
 				.withItemStack(EditmodeUtils.TP_TOOL)
 				.withClickHandler(context -> {
 					double dist = -1;
@@ -166,9 +166,7 @@ public class EditModeMenu {
 						}
 
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							for (NodeGroup group : groupable.getGroups()) {
-								NodeGroupHandler.getInstance().removeNodes(group, Lists.newArrayList(groupable));
-							}
+							NodeGroupHandler.getInstance().removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
 							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
 						});
 					}
@@ -179,10 +177,7 @@ public class EditModeMenu {
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							List<Groupable> toAdd = Lists.newArrayList(groupable);
-							for (NodeGroup group : multiTool) {
-								NodeGroupHandler.getInstance().addNodes(group, toAdd);
-							}
+							NodeGroupHandler.getInstance().addNodes(multiTool, Lists.newArrayList(groupable));
 							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1, 1);
 						});
 					}
@@ -190,10 +185,7 @@ public class EditModeMenu {
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							List<Groupable> toRemove = Lists.newArrayList(groupable);
-							for (NodeGroup group : multiTool) {
-								NodeGroupHandler.getInstance().removeNodes(group, toRemove);
-							}
+							NodeGroupHandler.getInstance().removeNodes(multiTool, Lists.newArrayList(groupable));
 							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
 						});
 					}
@@ -260,11 +252,7 @@ public class EditModeMenu {
 			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
 
 				Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-
-					List<Groupable> toRemove = Lists.newArrayList(groupable);
-					for (NodeGroup group : groupable.getGroups()) {
-						NodeGroupHandler.getInstance().removeNodes(group, toRemove);
-					}
+					NodeGroupHandler.getInstance().removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
 					menu.refresh(menu.getListSlots());
 					c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 				});

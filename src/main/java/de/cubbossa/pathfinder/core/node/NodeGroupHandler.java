@@ -119,7 +119,11 @@ public class NodeGroupHandler implements Listener {
 	}
 
 	public void addNodes(NodeGroup group, Collection<Groupable> nodes) {
-		NodeGroupAssignEvent event = new NodeGroupAssignEvent(nodes, Collections.singleton(group));
+		addNodes(Collections.singleton(group), nodes);
+	}
+
+	public void addNodes(Collection<NodeGroup> groups, Collection<Groupable> nodes) {
+		NodeGroupAssignEvent event = new NodeGroupAssignEvent(nodes, groups);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			return;
