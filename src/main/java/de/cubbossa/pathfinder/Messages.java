@@ -173,6 +173,16 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Curve-length set to <length> for <selection>.",
 			placeholders = {"selection", "length"})
 	public static final Message CMD_N_SET_TANGENT = new Message("commands.node.set_curve_length");
+	@MessageMeta(value = "<ins:prefix>Added <nodes> to group <group>.",
+			placeholders = {"nodes", "group"})
+	public static final Message CMD_N_ADD_GROUP = new Message("commands.node.add_group");
+	@MessageMeta(value = "<ins:prefix>Removed <nodes> from group <group>.",
+			placeholders = {"nodes", "group"})
+	public static final Message CMD_N_REMOVE_GROUP = new Message("commands.node.remove_groups");
+	@MessageMeta(value = "<ins:prefix>Cleared all groups for <nodes>.",
+			placeholders = {"nodes"})
+	public static final Message CMD_N_CLEAR_GROUPS = new Message("commands.node.clear_groups");
+
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Waypoints</#8265eb> ------------</gradient>",
 			placeholders = {"roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_N_LIST_HEADER = new Message("commands.node.list.header");

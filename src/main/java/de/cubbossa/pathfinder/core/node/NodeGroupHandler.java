@@ -129,7 +129,11 @@ public class NodeGroupHandler implements Listener {
 	}
 
 	public void removeNodes(NodeGroup group, Collection<Groupable> nodes) {
-		NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(nodes, Collections.singleton(group));
+		removeNodes(Collections.singleton(group), nodes);
+	}
+
+	public void removeNodes(Collection<NodeGroup> groups, Collection<Groupable> nodes) {
+		NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(nodes, groups);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			return;

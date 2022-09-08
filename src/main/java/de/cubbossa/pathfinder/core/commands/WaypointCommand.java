@@ -3,10 +3,7 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
@@ -26,6 +23,7 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class WaypointCommand extends CommandTree {
@@ -132,13 +130,32 @@ public class WaypointCommand extends CommandTree {
 		);
 		then(new LiteralArgument("edit")
 				.then(CustomArgs.nodeSelectionArgument("nodes")
-						.withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
 						.then(new LiteralArgument("curve-length")
+								.withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
 								.then(new DoubleArgument("length", 0.001)
 										.executesPlayer((player, objects) -> {
 											onSetTangent(player, (NodeSelection) objects[0], (Double) objects[1]);
 										})
 								)
+						)
+						.then(new LiteralArgument("addgroup")
+								.then(CustomArgs.nodeGroupArgument("group")
+										.executesPlayer((player, objects) -> {
+											onAddGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+										})
+								)
+						)
+						.then(new LiteralArgument("removegroup")
+								.then(CustomArgs.nodeGroupArgument("group")
+										.executesPlayer((player, objects) -> {
+											onRemoveGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+										})
+								)
+						)
+						.then(new LiteralArgument("cleargroups")
+								.executesPlayer((player, objects) -> {
+									onClearGroups(player, (NodeSelection) objects[0]);
+								})
 						)
 				)
 		);
@@ -276,23 +293,41 @@ public class WaypointCommand extends CommandTree {
 				.build()), player);
 	}
 
-		/*TODO @Subcommand("group")
-		@Syntax("<nodes> <group>")
-		@CommandCompletion(PathPlugin.COMPLETE_NODE_SELECTION + " null|" + PathPlugin.COMPLETE_FINDABLE_GROUPS_BY_SELECTION)
-		public void onSetGroup(CommandSender sender, NodeSelection selection, @Single NamespacedKey key) {
-			RoadMap roadMap = CommandUtils.getSelectedRoadMap(sender);
+	public void onAddGroup(Player player, NodeSelection selection, NodeGroup group) {
+		NodeGroupHandler.getInstance().addNodes(group, selection.stream()
+				.filter(node -> node instanceof Groupable)
+				.map(n -> (Groupable) n)
+				.collect(Collectors.toSet()));
 
-			TagResolver resolver = TagResolver.builder()
-					.resolver(Placeholder.component("selection", Messages.formatNodeSelection(selection)))
-					.resolver(Placeholder.component("group", Messages.formatKey(key)))
-					.build();
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_ADD_GROUP.format(TagResolver.builder()
+				.resolver(Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
+				.resolver(Placeholder.component("group", group.getDisplayName()))
+				.build()), player);
+	}
 
-			NodeGroup group = roadMap.getNodeGroup(key);
-			if (group == null) {
-				TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_GROUP_UNKNOWN.format(resolver), sender);
-				return;
-			}
-			selection.forEach(node -> node.setGroupKey(key));
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_SET_GROUP.format(resolver), sender);
-		}*/
+	public void onRemoveGroup(Player player, NodeSelection selection, NodeGroup group) {
+		NodeGroupHandler.getInstance().removeNodes(group, selection.stream()
+				.filter(node -> node instanceof Groupable)
+				.map(n -> (Groupable) n)
+				.collect(Collectors.toSet()));
+
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_REMOVE_GROUP.format(TagResolver.builder()
+				.resolver(Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
+				.resolver(Placeholder.component("group", group.getDisplayName()))
+				.build()), player);
+	}
+
+	public void onClearGroups(Player player, NodeSelection selection) {
+		Collection<Groupable> groupables = selection.stream()
+				.filter(node -> node instanceof Groupable)
+				.map(n -> (Groupable) n)
+				.collect(Collectors.toSet());
+		NodeGroupHandler.getInstance().removeNodes(groupables.stream().flatMap(groupable -> groupable.getGroups().stream()).collect(Collectors.toSet()), groupables);
+
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CLEAR_GROUPS.format(TagResolver.builder()
+				.resolver(Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
+				.build()), player);
+	}
+
+
 }
