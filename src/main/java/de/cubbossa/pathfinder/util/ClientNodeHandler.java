@@ -36,7 +36,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -124,10 +123,13 @@ public class ClientNodeHandler {
 					if (node == null) {
 						throw new IllegalStateException("ClientNodeHandler Tables off sync!");
 					}
-					event.setCancelled(true);
 					Player player = event.getPlayer();
 					int slot = player.getInventory().getHeldItemSlot();
 					Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
+					if (menu == null) {
+						return;
+					}
+					event.setCancelled(true);
 					Action<TargetContext<Node>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
 					menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
 				}
