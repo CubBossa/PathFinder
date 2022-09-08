@@ -316,6 +316,7 @@ public class Messages {
 			<gray>» <yellow>left-click edge:</yellow> Dissolve edge</gray>
 			<gray>» <yellow>left-click air:</yellow> Toggle directed</gray>""")
 	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
+	@MessageMeta("<ins:prefix>Node connection mode cancelled")
 	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
 	@MessageMeta(value = "<ins:prefix>Edges directed: <#6569eb><value><#6569eb>", placeholders = "value")
 	public static final Message E_EDGE_TOOL_DIR_TOGGLE = new Message("editor.toolbar.edge_tool.directed");
@@ -323,10 +324,16 @@ public class Messages {
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
 	@MessageMeta("")
 	public static final Message E_GROUP_TOOL_L = new Message("editor.toolbar.group_tool.lore");
-	@MessageMeta("<white><u>Assign Last Group</u></white>")
-	public static final Message E_LAST_GROUP_TOOL_N = new Message("editor.toolbar.last_group_tool.name");
-	@MessageMeta("")
-	public static final Message E_LAST_GROUP_TOOL_L = new Message("editor.toolbar.last_group_tool.lore");
+	@MessageMeta("<white><u>Mutli Group Tool</u></white>")
+	public static final Message E_MULTI_GROUP_TOOL_N = new Message("editor.toolbar.multi_group_tool.name");
+	@MessageMeta("""
+			<gray>Assign and remove multiple
+			<gray>groups at once.
+			
+			<gray>» <yellow>right-click air:</yellow> Open GUI</gray>
+			<gray>» <yellow>right-click node:</yellow> Add groups</gray>
+			<gray>» <yellow>right-click node:</yellow> Remove groups</gray>""")
+	public static final Message E_MULTI_GROUP_TOOL_L = new Message("editor.toolbar.multi_group_tool.lore");
 	@MessageMeta("<white><u>Curve Tool</u></white>")
 	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");
 	@MessageMeta("<gray>Sets the curve strength for\n<gray>particle trails that pass\n<gray>this node.")
@@ -341,10 +348,10 @@ public class Messages {
 	public static final Message E_TP_TOOL_L = new Message("editor.toolbar.teleport_tool.lore");
 	@MessageMeta("Assign Node Groups")
 	public static final Message E_SUB_GROUP_TITLE = new Message("editor.groups.title");
-	@MessageMeta("<green>Create New Group</green>")
-	public static final Message E_SUB_GROUP_NEW_N = new Message("editor.groups.new.name");
-	@MessageMeta("<gray>Create a new nodegroup and\n<gray>assign it to this node.")
-	public static final Message E_SUB_GROUP_NEW_L = new Message("editor.groups.new.lore");
+	@MessageMeta("<gold>Info</gold>")
+	public static final Message E_SUB_GROUP_INFO_N = new Message("editor.groups.info.name");
+	@MessageMeta("<gray>Create a new nodegroup with\n<gray>» <yellow>/nodegroup create <key>")
+	public static final Message E_SUB_GROUP_INFO_L = new Message("editor.groups.info.lore");
 	@MessageMeta("<red>Reset Groups</red>")
 	public static final Message E_SUB_GROUP_RESET_N = new Message("editor.groups.reset.name");
 	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")

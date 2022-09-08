@@ -1,37 +1,39 @@
 package de.cubbossa.pathfinder.core.menu;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.menuframework.inventory.*;
-import de.cubbossa.menuframework.inventory.implementations.AnvilMenu;
+import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.Button;
+import de.cubbossa.menuframework.inventory.InventoryRow;
+import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.util.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.EditmodeUtils;
 import de.cubbossa.pathfinder.util.ItemStackUtils;
-import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslatedItem;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,9 +41,8 @@ public class EditModeMenu {
 
 	private final RoadMap roadMap;
 	private Node edgeStart = null;
-	private Node lastNode = null;
 	private Boolean undirectedEdges = false;
-	private NodeGroup lastGroup = null;
+	private Collection<NodeGroup> multiTool = new HashSet<>();
 	private final Collection<NodeType<?>> types;
 
 	public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
@@ -151,12 +152,7 @@ public class EditModeMenu {
 					p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
 				}, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
-		menu.setButton(5, Button.builder()
-				.withItemStack(EditmodeUtils.CURVE_TOOL)
-				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context ->
-						openTangentStrengthMenu(context.getPlayer(), context.getTarget())));
-
-		menu.setButton(2, Button.builder()
+		menu.setButton(3, Button.builder()
 				.withItemStack(EditmodeUtils.GROUP_TOOL)
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
@@ -178,26 +174,31 @@ public class EditModeMenu {
 					}
 				}));
 
-		menu.setButton(3, Button.builder()
-				.withItemStack(EditmodeUtils.LAST_GROUP_TOOL)
+		menu.setButton(4, Button.builder()
+				.withItemStack(EditmodeUtils.MULTI_GROUP_TOOL)
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-					if (lastGroup != null && context.getTarget() instanceof Groupable groupable) {
-						NodeGroupAssignEvent event = new NodeGroupAssignEvent(Lists.newArrayList(groupable), List.of(lastGroup));
-
+					if (context.getTarget() instanceof Groupable groupable) {
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-							Bukkit.getPluginManager().callEvent(event);
-							if (event.isCancelled()) {
-								return;
+							List<Groupable> toAdd = Lists.newArrayList(groupable);
+							for (NodeGroup group : multiTool) {
+								NodeGroupHandler.getInstance().addNodes(group, toAdd);
 							}
-							event.getModifiedGroups().forEach(g -> g.addAll(event.getModifiedGroupables()));
-
-							NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
-							Bukkit.getPluginManager().callEvent(assigned);
-
-							lastGroup.add(groupable);
+							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1, 1);
 						});
 					}
-				}));
+				})
+				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+					if (context.getTarget() instanceof Groupable groupable) {
+						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+							List<Groupable> toRemove = Lists.newArrayList(groupable);
+							for (NodeGroup group : multiTool) {
+								NodeGroupHandler.getInstance().removeNodes(group, toRemove);
+							}
+							context.getPlayer().playSound(context.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+						});
+					}
+				})
+				.withClickHandler(Action.RIGHT_CLICK_AIR, context -> openMutliToolMenu(context.getPlayer())));
 
 		return menu;
 	}
@@ -255,49 +256,88 @@ public class EditModeMenu {
 					}));
 		}
 		menu.addPreset(presetApplier -> {
-			presetApplier.addItemOnTop(3 * 9 + 7, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
-			presetApplier.addClickHandlerOnTop(3 * 9 + 7, Action.LEFT, c -> {
-				groupable.clearGroups();
-				menu.refresh(menu.getListSlots());
-				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
+
+				Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+
+					List<Groupable> toRemove = Lists.newArrayList(groupable);
+					for (NodeGroup group : groupable.getGroups()) {
+						NodeGroupHandler.getInstance().removeNodes(group, toRemove);
+					}
+					menu.refresh(menu.getListSlots());
+					c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+				});
 			});
 
-			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.EMERALD, Messages.E_SUB_GROUP_NEW_N, Messages.E_SUB_GROUP_NEW_L).createItem());
-			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
-				if (c.getMenu() instanceof TopInventoryMenu top) {
-					top.openSubMenu(c.getPlayer(), newCreateGroupMenu(groupable));
-				}
-			});
+			presetApplier.addItemOnTop(3 * 9 + 4, new TranslatedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem());
 		});
 		menu.open(player);
 	}
 
-	private TopInventoryMenu newCreateGroupMenu(Groupable groupable) {
-		AnvilMenu menu = newAnvilMenu(Component.text("Nodegruppe erstellen:"), "group", AnvilInputValidator.VALIDATE_KEY);
+	private void openMutliToolMenu(Player player) {
 
-		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
-			NamespacedKey key = AnvilInputValidator.VALIDATE_KEY.getInputParser().apply(s.getTarget());
-			if (key == null || NodeGroupHandler.getInstance().getNodeGroup(key) != null) {
-				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-				return;
-			}
-			NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key, StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
-			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-				NodeGroupAssignEvent event = new NodeGroupAssignEvent(groupable, group);
-				Bukkit.getPluginManager().callEvent(event);
-				if (!event.isCancelled()) {
-					event.getModifiedGroups().forEach(nodes -> nodes.addAll(event.getModifiedGroupables()));
-					NodeGroupAssignedEvent assigned = new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups());
-					Bukkit.getPluginManager().callEvent(assigned);
-				}
+		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asTranslatable(), 4);
+		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
+		for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
 
-				ListMenu prev = (ListMenu) menu.getPrevious(s.getPlayer());
-				menu.openPreviousMenu(s.getPlayer());
+			TagResolver resolver = TagResolver.builder()
+					.resolver(Placeholder.component("name", group.getDisplayName()))
+					.tag("key", Messages.formatKey(group.getKey()))
+					.resolver(Placeholder.unparsed("name-format", group.getNameFormat()))
+					.resolver(Placeholder.component("permission", Messages.formatPermission(group.getPermission())))
+					.resolver(Placeholder.component("discoverable", Messages.formatBool(group.isDiscoverable())))
+					.resolver(Placeholder.component("navigable", Messages.formatBool(group.isNavigable())))
+					.resolver(Formatter.number("find-distance", group.getFindDistance()))
+					.resolver(Placeholder.component("search-terms", Component.join(
+							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+					)))
+					.build();
 
-				Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> prev.refresh(prev.getListSlots()), 1L); //TODO refresh geht nicht
+			menu.addListEntry(Button.builder()
+					.withItemStack(() -> {
+						ItemStack stack = new TranslatedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
+								.withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
+								.withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
+								.createItem();
+						if (multiTool.contains(group)) {
+							stack = ItemStackUtils.setGlow(stack);
+						}
+						return stack;
+					})
+					.withClickHandler(Action.LEFT, c -> {
+						if (!multiTool.contains(group)) {
+
+							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+								multiTool.add(group);
+								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+								menu.refresh(menu.getListSlots());
+							});
+						}
+					})
+					.withClickHandler(Action.RIGHT, c -> {
+						if (multiTool.contains(group)) {
+
+							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+								multiTool.remove(group);
+								c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+								menu.refresh(menu.getListSlots());
+							});
+						}
+					}));
+		}
+		menu.addPreset(presetApplier -> {
+			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
+				multiTool.clear();
+				menu.refresh(menu.getListSlots());
+				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 			});
+
+			presetApplier.addItemOnTop(3 * 9 + 4, new TranslatedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem());
 		});
-		return menu;
+		menu.open(player);
 	}
 
 	private void openNodeTypeMenu(Player player, Location location) {
@@ -307,45 +347,11 @@ public class EditModeMenu {
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
-					.withClickHandler(Action.LEFT, c -> {
-						lastNode = roadMap.createNode(type, location, lastGroup);
+					.withClickHandler(Action.RIGHT, c -> {
+						roadMap.createNode(type, location);
 						menu.close(player);
 					}));
 		}
 		menu.open(player);
-	}
-
-	private void openTangentStrengthMenu(Player player, Node findable) {
-		AnvilMenu menu = newAnvilMenu(Component.text("Rundung einstellen:"), "3.0", AnvilInputValidator.VALIDATE_FLOAT);
-
-		menu.setOutputClickHandler(AnvilMenu.CONFIRM, s -> {
-			if (!AnvilInputValidator.VALIDATE_FLOAT.getInputValidator().test(s.getTarget())) {
-				s.getPlayer().playSound(s.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-				return;
-			}
-			Double strength = s.getTarget().equalsIgnoreCase("null") ? null : Double.parseDouble(s.getTarget());
-			findable.setCurveLength(strength);
-			menu.close(s.getPlayer());
-		});
-		menu.open(player);
-	}
-
-	public static AnvilMenu newAnvilMenu(ComponentLike title, String suggestion) {
-		return newAnvilMenu(title, suggestion, null);
-	}
-
-	public static <T> AnvilMenu newAnvilMenu(ComponentLike title, String suggestion, AnvilInputValidator<T> validator) {
-		AnvilMenu menu = new AnvilMenu(title, suggestion);
-		menu.addPreset(MenuPresets.back(1, Action.LEFT));
-		menu.setClickHandler(0, AnvilMenu.WRITE, s -> {
-			if (validator != null && !validator.getInputValidator().test(s.getTarget())) {
-				menu.setItem(2, ItemStackUtils.createErrorItem(Messages.GEN_GUI_WARNING_N, Messages.GEN_GUI_WARNING_L
-						.format(TagResolver.resolver("format", Tag.inserting(validator.getRequiredFormat())))));
-			} else {
-				menu.setItem(2, ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_LETTER_CHECK_MARK, Messages.GEN_GUI_ACCEPT_N, Messages.GEN_GUI_ACCEPT_L));
-			}
-			menu.refresh(2);
-		});
-		return menu;
 	}
 }
