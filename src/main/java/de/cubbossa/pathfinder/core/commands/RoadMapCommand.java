@@ -61,6 +61,7 @@ public class RoadMapCommand extends CommandTree {
 				.executesPlayer((player, args) -> {
 					if (RoadMapHandler.getInstance().getRoadMaps().size() != 1) {
 						TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_PROVIDE_RM, player);
+						return;
 					}
 					onEdit(player, RoadMapHandler.getInstance().getRoadMaps().values().iterator().next());
 				})
