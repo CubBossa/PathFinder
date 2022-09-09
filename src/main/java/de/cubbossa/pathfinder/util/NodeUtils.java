@@ -23,8 +23,8 @@ public class NodeUtils {
 
 		Node startNode = nodes[0];
 		Vector start = startNode.getLocation().toVector();
-		Vector next = nodes[1].getLocation().toVector();
-		Vector startDirFull = next.clone().subtract(start);
+		Vector second = nodes[1].getLocation().toVector();
+		Vector startDirFull = second.clone().subtract(start);
 		double startDirFullLength = startDirFull.length();
 		double tangentLength = path.get(startNode);
 		if (tangentLength > startDirFullLength / 3) {
@@ -35,18 +35,20 @@ public class NodeUtils {
 
 		for (int i = 1; i < path.size() - 1; i++) {
 			Node node = nodes[i];
-			Vector p = nodes[i - 1].getLocation().toVector();
-			Vector c = node.getLocation().toVector();
-			Vector n = nodes[i + 1].getLocation().toVector();
-			Vector u = p.clone().crossProduct(n).normalize();
-			Vector r = p.clone().add(n.clone().subtract(p).multiply(.5f)).normalize();
+			Vector previous = nodes[i - 1].getLocation().toVector();
+			Vector current = node.getLocation().toVector();
+			Vector next = nodes[i + 1].getLocation().toVector();
+			// make both same distance to current
+			previous = current.clone().add(previous.clone().subtract(current).normalize());
+			next = current.clone().add(next.clone().subtract(current).normalize());
 
-			Vector dir = u.clone().crossProduct(r).normalize();
+			// dir is now independent of the distance to neighbouring points
+			Vector dir = next.clone().subtract(previous).normalize();
 			double tl = path.get(node);
 
-			vectors.add(new BezierVector(PathPlugin.SPLINES.convertToVector(c),
-					PathPlugin.SPLINES.convertToVector(c.clone().add(dir.clone().multiply(-1 * tl))),
-					PathPlugin.SPLINES.convertToVector(c.clone().add(dir.multiply(tl)))));
+			vectors.add(new BezierVector(PathPlugin.SPLINES.convertToVector(current),
+					PathPlugin.SPLINES.convertToVector(current.clone().add(dir.clone().multiply(-1 * tl))),
+					PathPlugin.SPLINES.convertToVector(current.clone().add(dir.multiply(tl)))));
 		}
 
 		Node endNode = nodes[nodes.length - 1];
