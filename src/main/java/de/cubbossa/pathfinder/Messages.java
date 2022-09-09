@@ -344,14 +344,6 @@ public class Messages {
 			<gray>» <yellow>right-click node:</yellow> Add groups</gray>
 			<gray>» <yellow>right-click node:</yellow> Remove groups</gray>""")
 	public static final Message E_MULTI_GROUP_TOOL_L = new Message("editor.toolbar.multi_group_tool.lore");
-	@MessageMeta("<white><u>Curve Tool</u></white>")
-	public static final Message E_CURVE_TOOL_N = new Message("editor.toolbar.curve_tool.name");
-	@MessageMeta("<gray>Sets the curve strength for\n<gray>particle trails that pass\n<gray>this node.")
-	public static final Message E_CURVE_TOOL_L = new Message("editor.toolbar.curve_tool.lore");
-	@MessageMeta("<white><u>Permission Tool</u></white>")
-	public static final Message E_PERM_TOOL_N = new Message("editor.toolbar.permission_tool.name");
-	@MessageMeta("<gray>Sets a permission for the\n<gray>clicked Nodes.")
-	public static final Message E_PERM_TOOL_L = new Message("editor.toolbar.permission_tool.lore");
 	@MessageMeta("<white><u>Teleport Tool</u></white>")
 	public static final Message E_TP_TOOL_N = new Message("editor.toolbar.teleport_tool.name");
 	@MessageMeta("<gray>Teleports you to the\n<gray>nearest node.")

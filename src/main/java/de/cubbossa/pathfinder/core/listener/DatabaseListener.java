@@ -110,8 +110,6 @@ public class DatabaseListener implements Listener {
 	public void onGroupAssign(NodeGroupAssignedEvent event) {
 		event.getGroups().forEach(group -> {
 			data.assignNodesToGroup(group, event.getGroupables().stream()
-					.filter(g -> g instanceof Node)
-					.map(g -> (Node) g)
 					.collect(Collectors.toCollection(NodeSelection::new)));
 		});
 	}
