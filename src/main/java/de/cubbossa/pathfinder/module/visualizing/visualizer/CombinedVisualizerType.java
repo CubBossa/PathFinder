@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
+import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
