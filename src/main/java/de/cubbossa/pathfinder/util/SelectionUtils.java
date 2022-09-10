@@ -41,7 +41,7 @@ public class SelectionUtils {
 		}
 	}
 
-	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_ID = new SelectionParser.Filter<>("id", Pattern.compile("[0-9]"), (elements, context) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_ID = new SelectionParser.Filter<>("id", Pattern.compile("[0-9]+"), (elements, context) -> {
 		try {
 			Integer id = Integer.parseInt(context.value());
 			return elements.stream().filter(node -> node.getNodeId() == id).collect(Collectors.toSet());
@@ -95,7 +95,7 @@ public class SelectionUtils {
 		}).collect(Collectors.toList());
 	}, context -> Lists.newArrayList("..1", "1.5", "2.."));
 
-	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_ROADMAP = new SelectionParser.Filter<>("roadmap", Pattern.compile("[a-z_]+:[a-z_]"), (nodes, context) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_ROADMAP = new SelectionParser.Filter<>("roadmap", Pattern.compile("[a-z0-9_]+:[a-z0-9_]+"), (nodes, context) -> {
 		NamespacedKey key = NamespacedKey.fromString(context.value());
 		if (key == null) {
 			throw new SelectionParser.FilterException("Invalid namespaced key: '" + key + "'.");
@@ -138,7 +138,7 @@ public class SelectionUtils {
 		};
 	}, c -> Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
 
-	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_GROUP = new SelectionParser.Filter<>("group", Pattern.compile("[a-z_]:[a-z_]"), (nodes, playerContext) -> {
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_GROUP = new SelectionParser.Filter<>("group", Pattern.compile("[a-z0-9_]+:[a-z0-9_]+"), (nodes, playerContext) -> {
 		NamespacedKey key = NamespacedKey.fromString(playerContext.value());
 		if (key == null) {
 			throw new SelectionParser.FilterException("Invalid namespaced key: '" + key + "'.");

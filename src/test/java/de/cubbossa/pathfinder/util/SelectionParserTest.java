@@ -41,6 +41,10 @@ public class SelectionParserTest {
 		};
 	}, c -> Lists.newArrayList("letter", "number"));
 
+	public static final SelectionParser.Filter<String, SelectionParser.Context> NAMESPACED_KEY = new SelectionParser.Filter<>("key", Pattern.compile("[a-zA-Z0-9_]+:[a-zA-Z0-9_]+"), (strings, context) -> {
+		return strings;
+	}, c -> Lists.newArrayList("namespace:key"));
+
 	private static final List<String> SCOPE = Lists.newArrayList(
 			"A", "B", "C", "D", "E",
 			"Word", "OtherWord", "XYZ",
@@ -55,6 +59,7 @@ public class SelectionParserTest {
 		parser = new SelectionParser<>(SelectionParser.Context::new, "s");
 		parser.addSelector(LENGTH);
 		parser.addSelector(TYPE);
+		parser.addSelector(NAMESPACED_KEY);
 	}
 
 	@Test
@@ -91,5 +96,12 @@ public class SelectionParserTest {
 		Assertions.assertEquals(
 				Lists.newArrayList("123"),
 				parser.parseSelection(SCOPE, "@s[length=..5,type=number]", ArrayList::new));
+	}
+
+	@Test
+	@SneakyThrows
+	public void testParseNamespacedKey() {
+
+		Assertions.assertDoesNotThrow(() -> parser.parseSelection(SCOPE, "@s[key=namespace:key]", ArrayList::new));
 	}
 }
