@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -67,6 +68,8 @@ public class Messages {
 	public static final Message GEN_NODE_SEL = new Message("general.selection.nodes");
 	@MessageMeta(value = "<white><u><amount> Groups</u></white>", placeholders = "amount")
 	public static final Message GEN_GROUP_SEL = new Message("general.selection.groups");
+	@MessageMeta(value = "<white><u><amount> Groups</u></white>", placeholders = "amount")
+	public static final Message GEN_RM_SEL = new Message("general.selection.roadmaps");
 
 	public static final Message ERROR_PARSE_STRING = new Message("error.parse.string");
 	public static final Message ERROR_PARSE_INTEGER = new Message("error.parse.integer");
@@ -163,13 +166,14 @@ public class Messages {
 	public static final Message CMD_N_MOVED = new Message("commands.node.moved");
 	@MessageMeta(value = """
 			<#7b42f5>Node #<id></7b42f5> <gray>(<roadmap>)</gray>
-			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><permission></#6569eb>
-			<dark_gray>» </dark_gray><gray>Groups: <#6569eb><groups></#6569eb>
 			<dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb> (<world>)
 			<dark_gray>» </dark_gray><gray>Curve-Length: <#6569eb><curve-length></#6569eb>
-			<dark_gray>» </dark_gray><gray>Edge-Count: <#6569eb><edge-count></#6569eb>
-			""", placeholders = {"id", "roadmap", "permission", "groups", "position", "world", "curve-length", "edge-count"})
+			<dark_gray>» </dark_gray><gray>Edges: <edges>
+			<dark_gray>» </dark_gray><gray>Groups: <groups>
+			""", placeholders = {"id", "roadmap", "groups", "position", "world", "curve-length", "edges"})
 	public static final Message CMD_N_INFO = new Message("commands.node.info");
+	@MessageMeta("<red>No nodes found to display. Check your selection query.</red>")
+	public static final Message CMD_N_INFO_NO_SEL = new Message("commands.node.info_no_selection");
 	@MessageMeta(value = "<ins:prefix>Curve-length set to <length> for <selection>.",
 			placeholders = {"selection", "length"})
 	public static final Message CMD_N_SET_TANGENT = new Message("commands.node.set_curve_length");
@@ -394,6 +398,10 @@ public class Messages {
 
 	public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
 		return formatGroupInHover(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
+	}
+
+	public static Component formatRoadmaps(CommandSender sender, Collection<RoadMap> roadMaps) {
+		return formatGroupInHover(sender, GEN_RM_SEL, roadMaps, RoadMap::getDisplayName);
 	}
 
 	public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder, Collection<T> collection, Function<T, ComponentLike> converter) {

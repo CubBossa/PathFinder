@@ -17,6 +17,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -43,13 +44,24 @@ public class WaypointCommand extends CommandTree {
 		);
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_WP_LIST)
-				.then(CustomArgs.roadMapArgument("roadmap")
+				.then(CustomArgs.nodeSelectionArgument("nodes")
 						.executesPlayer((player, objects) -> {
-							onList(player, (RoadMap) objects[0], 1);
+							onList(player, null, (NodeSelection) objects[0], 1);
 						})
 						.then(new IntegerArgument("page", 1)
 								.executesPlayer((player, objects) -> {
-									onList(player, (RoadMap) objects[0], (Integer) objects[1]);
+									onList(player, null, (NodeSelection) objects[0], (Integer) objects[1]);
+								})
+						))
+				.then(CustomArgs.roadMapArgument("roadmap")
+						.executesPlayer((player, objects) -> {
+							RoadMap rm = (RoadMap) objects[0];
+							onList(player, rm, new NodeSelection(rm.getNodes()), 1);
+						})
+						.then(new IntegerArgument("page", 1)
+								.executesPlayer((player, objects) -> {
+									RoadMap rm = (RoadMap) objects[0];
+									onList(player, rm, new NodeSelection(rm.getNodes()), (Integer) objects[1]);
 								})
 						)
 				)
@@ -163,20 +175,24 @@ public class WaypointCommand extends CommandTree {
 
 	public void onInfo(Player player, NodeSelection selection) {
 
+		if (selection.size() == 0) {
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_N_INFO_NO_SEL, player);
+			return;
+		}
 		if (selection.size() > 1) {
-			//TODO selection choice
+			onList(player, null, selection, 1);
 			return;
 		}
 		Node node = selection.get(0);
 		FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
-				.tag("id", Tag.preProcessParsed(node.getNodeId() + ""))
+				.resolver(Formatter.number("id", node.getNodeId()))
 				.tag("roadmap", Messages.formatKey(node.getRoadMapKey()))
-				.tag("groups", node instanceof Groupable groupable ?
-						Tag.inserting(Messages.formatNodeGroups(player, groupable.getGroups())) :
-						Tag.inserting(Component.text("none"))) //TODO as message
 				.resolver(Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
-				.tag("curve-length", Tag.preProcessParsed(node.getCurveLength() + ""))
-				.tag("edge-count", Tag.preProcessParsed(node.getEdges().size() + ""))
+				.resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
+				.resolver(Formatter.number("curve-length", node.getCurveLength() == null ?
+						RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()).getDefaultBezierTangentLength() : node.getCurveLength()))
+				.resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, node.getEdges().stream().map(Edge::getEnd).collect(Collectors.toCollection(NodeSelection::new)))))
+				.resolver(Placeholder.component("groups", Messages.formatNodeGroups(player, node instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, player);
@@ -213,25 +229,49 @@ public class WaypointCommand extends CommandTree {
 	/**
 	 * @param pageInput starts with 1, not 0!
 	 */
-	public void onList(Player player, RoadMap roadMap, int pageInput) {
+	public void onList(Player player, @Nullable RoadMap roadMap, NodeSelection selection, int pageInput) {
 
-		TagResolver resolver = TagResolver.builder()
-				.resolver(Placeholder.parsed("roadmap-key", roadMap.getKey().toString()))
-				.resolver(Placeholder.component("roadmap-name", roadMap.getDisplayName()))
-				.build();
+		TagResolver resolver;
+		if (roadMap != null) {
+			resolver = TagResolver.builder()
+					.resolver(Placeholder.parsed("roadmap-key", roadMap.getKey().toString()))
+					.resolver(Placeholder.component("roadmap-name", roadMap.getDisplayName()))
+					.build();
+		} else {
+			Collection<NamespacedKey> contained = selection.stream().map(Node::getRoadMapKey).collect(Collectors.toSet());
+			if (contained.size() == 0) {
+				resolver = TagResolver.builder()
+						.resolver(Placeholder.parsed("roadmap-key", "none"))
+						.resolver(Placeholder.parsed("roadmap-name", "None"))
+						.build();
+			} else if (contained.size() == 1) {
+				roadMap = RoadMapHandler.getInstance().getRoadMap(contained.stream().findFirst().orElse(null));
+				resolver = TagResolver.builder()
+						.resolver(Placeholder.parsed("roadmap-key", roadMap.getKey().toString()))
+						.resolver(Placeholder.component("roadmap-name", roadMap.getDisplayName()))
+						.build();
+			} else {
+				resolver = TagResolver.builder()
+						.resolver(Placeholder.parsed("roadmap-key", "multiple"))
+						.resolver(Placeholder.component("roadmap-name", Messages.formatRoadmaps(player, contained.stream()
+								.map(key -> RoadMapHandler.getInstance().getRoadMap(key))
+								.collect(Collectors.toSet()))))
+						.build();
+			}
+		}
 
 		CommandUtils.printList(
 				player,
 				pageInput,
 				10,
-				new ArrayList<>(roadMap.getNodes()),
+				new ArrayList<>(selection),
 				n -> {
 					TagResolver r = TagResolver.builder()
 							.tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
 							.resolver(Placeholder.component("position", Messages.formatVector(n.getLocation().toVector())))
 							.resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
 							.resolver(Formatter.number("curve-length", n.getCurveLength() == null ?
-									roadMap.getDefaultBezierTangentLength() : n.getCurveLength()))
+									RoadMapHandler.getInstance().getRoadMap(n.getRoadMapKey()).getDefaultBezierTangentLength() : n.getCurveLength()))
 							.resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, n.getEdges().stream().map(Edge::getEnd).collect(Collectors.toCollection(NodeSelection::new)))))
 							.resolver(Placeholder.component("groups", Messages.formatNodeGroups(player, n instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
 							.build();
