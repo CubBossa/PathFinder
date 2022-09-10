@@ -29,7 +29,6 @@ import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -65,28 +64,30 @@ public class RoadMap implements Keyed, Named {
 		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
-	public void loadNodesAndEdges() {
+	public void loadNodesAndEdges(Map<Integer, ? extends Collection<NamespacedKey>> nodesGroupMapping) {
 		nodes.clear();
 		var map1 = PathPlugin.getInstance().getDatabase().loadNodes(this);
-		var map2 = PathPlugin.getInstance().getDatabase().loadNodeGroupNodes();
-		for (var entry : map1.entrySet()) {
-			nodes.put(entry.getKey(), entry.getValue());
-			PathPlugin.getInstance().getLogger().log(Level.INFO, "" + entry.getKey());
-		}
-		for (var entry : map2.entrySet()) {
-			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(entry.getKey());
-			if (group == null) {
+		nodes.putAll(map1);
+		for (var entry : nodesGroupMapping.entrySet()) {
+			if (!nodes.containsKey(entry.getKey())) {
 				continue;
 			}
-			for (int i : entry.getValue()) {
-				Node node = nodes.get(i);
-				if (node == null) {
-					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null: " + i);
+			Node node = nodes.get(entry.getKey());
+			if (node == null) {
+				PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Tried to map a node that doesn't exist: " + entry.getKey());
+				continue;
+			}
+			if (!(node instanceof Groupable groupable)) {
+				PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Tried to map a node that is not groupable: " + entry.getKey());
+				continue;
+			}
+			for (NamespacedKey key : entry.getValue()) {
+				NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(key);
+				if (group == null) {
+					PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Tried to assign a node to a nodegroup that doesn't exist: " + key);
 					continue;
 				}
-				if(node instanceof Groupable groupable) {
-					group.add(groupable);
-				}
+				group.add(groupable);
 			}
 		}
 

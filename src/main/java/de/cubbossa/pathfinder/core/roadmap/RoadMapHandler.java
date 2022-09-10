@@ -62,10 +62,12 @@ public class RoadMapHandler {
 	}
 
 	public void loadRoadMaps() {
+		var nodesGroupMapping = PathPlugin.getInstance().getDatabase().loadNodeGroupNodes();
+
 		roadMaps.clear();
 		roadMaps.putAll(PathPlugin.getInstance().getDatabase().loadRoadMaps());
 		for (RoadMap map : roadMaps) {
-			map.loadNodesAndEdges();
+			map.loadNodesAndEdges(nodesGroupMapping);
 		}
 		nodeIdCounter = roadMaps.values().stream().flatMap(roadMap -> roadMap.getNodes().stream())
 				.mapToInt(Node::getNodeId)

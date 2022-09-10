@@ -493,17 +493,17 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<NamespacedKey, ? extends Collection<Integer>> loadNodeGroupNodes() {
+	public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups_nodes`")) {
 				try (ResultSet resultSet = stmt.executeQuery()) {
-					Map<NamespacedKey, HashSet<Integer>> registry = new LinkedHashMap<>();
+					Map<Integer, HashSet<NamespacedKey>> registry = new LinkedHashMap<>();
 					while (resultSet.next()) {
 						String keyString = resultSet.getString("group_key");
 						int nodeId = resultSet.getInt("node_id");
 
-						HashSet<Integer> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString), key -> new HashSet<>());
-						l.add(nodeId);
+						HashSet<NamespacedKey> l = registry.computeIfAbsent(nodeId, id -> new HashSet<>());
+						l.add(NamespacedKey.fromString(keyString));
 					}
 					return registry;
 				}

@@ -60,7 +60,7 @@ public interface DataStorage {
 
 	void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection);
 
-	Map<NamespacedKey, ? extends Collection<Integer>> loadNodeGroupNodes();
+	Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
 	HashedRegistry<NodeGroup> loadNodeGroups();
 

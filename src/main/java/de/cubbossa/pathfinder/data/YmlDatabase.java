@@ -246,8 +246,8 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<NamespacedKey, ? extends Collection<Integer>> loadNodeGroupNodes() {
-		Map<NamespacedKey, List<Integer>> map = new HashMap<>();
+	public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
+		Map<Integer, HashSet<NamespacedKey>> map = new HashMap<>();
 		for (File file : Arrays.stream(nodeGroupDir.listFiles())
 				.filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
 				.collect(Collectors.toList())) {
@@ -255,7 +255,10 @@ public class YmlDatabase implements DataStorage {
 				NamespacedKey key = fromFileName(file.getName());
 				YamlConfiguration cfg = nodeGroupHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
 
-				map.put(key, (List<Integer>) cfg.getList("nodes"));
+				List<Integer> nodes = (List<Integer>) cfg.getList("nodes");
+				if (nodes != null) {
+					nodes.forEach(n -> map.computeIfAbsent(n, i -> new HashSet<>()).add(key));
+				}
 			} catch (Throwable t) {
 				//TODO log
 			}
