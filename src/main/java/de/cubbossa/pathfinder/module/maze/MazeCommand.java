@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.maze;
 
-import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
+import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.IntegerArgument;

@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.core.commands;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.commands.argument.CustomArgs;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;

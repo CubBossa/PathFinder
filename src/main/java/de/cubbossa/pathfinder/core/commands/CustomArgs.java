@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.commands.argument;
+package de.cubbossa.pathfinder.core.commands;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
@@ -17,7 +17,6 @@ import de.cubbossa.pathfinder.util.SelectionUtils;
 import de.cubbossa.pathfinder.util.SetArithmeticParser;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
-import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -51,10 +50,25 @@ public class CustomArgs {
 	private static final Pattern MINI_FINISH = Pattern.compile(".*(</?[^<>]*)");
 	private static final Pattern MINI_CLOSE = Pattern.compile(".*<([^/<>:]+)(:[^/<>]+)?>[^/<>]*");
 
+	/**
+	 * Provides a MiniMessage Argument, which autocompletes xml tags and contains all default tags
+	 * that come along with MiniMessage.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a MiniMessage argument instance
+	 */
 	public Argument<String> miniMessageArgument(String nodeName) {
 		return miniMessageArgument(nodeName, suggestionInfo -> new ArrayList<>());
 	}
 
+	/**
+	 * Provides a MiniMessage Argument, which autocompletes xml tags and contains all default tags
+	 * that come along with MiniMessage.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @param supplier Used to insert custom tags into the suggestions
+	 * @return a MiniMessage argument instance
+	 */
 	public Argument<String> miniMessageArgument(String nodeName, Function<SuggestionInfo, Collection<String>> supplier) {
 		return new GreedyStringArgument(nodeName).replaceSuggestions((info, builder) -> {
 
@@ -92,6 +106,13 @@ public class CustomArgs {
 		});
 	}
 
+	/**
+	 * Provides a roadmap argument, which parses the namespaced key of a roadmap and resolves it into
+	 * the actual roadmap instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a roadmap argument instance
+	 */
 	public Argument<RoadMap> roadMapArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
@@ -99,6 +120,13 @@ public class CustomArgs {
 				.map(RoadMap::getKey).collect(Collectors.toList())));
 	}
 
+	/**
+	 * Provides a world argument, which suggests all loaded world names and parses the user input
+	 * into the world instance by resolving it via name.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a roadmap argument instance
+	 */
 	public Argument<World> worldArgument(String nodeName) {
 		return new CustomArgument<>(new StringArgument(nodeName), customArgumentInfo -> {
 			World world = Bukkit.getWorld(customArgumentInfo.currentInput());
@@ -112,6 +140,13 @@ public class CustomArgs {
 		});
 	}
 
+	/**
+	 * Provides a path visualizer argument, which suggests the namespaced keys for all path visualizers and
+	 * resolves the user input into the actual visualizer instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a path visualizer argument instance
+	 */
 	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
@@ -124,6 +159,14 @@ public class CustomArgs {
 		));
 	}
 
+	/**
+	 * Provides a path visualizer argument, which suggests the namespaced keys for all path visualizers of the provided
+	 * visualizer type and resolves the user input into the actual visualizer instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @param type     The type that all suggested and parsed visualizers are required to have
+	 * @return a path visualizer argument instance
+	 */
 	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName, VisualizerType<?> type) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap().get(customArgumentInfo.currentInput());
@@ -146,6 +189,10 @@ public class CustomArgs {
 		Collection<NamespacedKey> apply(CommandSender sender) throws CommandSyntaxException;
 	}
 
+	/**
+	 * @param keysSupplier Converts a command sender into a collection of namespaced keys
+	 * @return the argument suggestions object to insert
+	 */
 	public ArgumentSuggestions suggestNamespacedKeys(NamespacedSuggestions keysSupplier) {
 		return (suggestionInfo, suggestionsBuilder) -> {
 
@@ -168,6 +215,7 @@ public class CustomArgs {
 	public Argument<String> suggestCommaSeparatedList(String node) {
 		return new GreedyStringArgument(node).replaceSuggestions((suggestionInfo, suggestionsBuilder) -> {
 			return suggestionsBuilder.buildFuture();
+			//TODO :S
 			/*StringRange range = StringRange.at(suggestionInfo.currentInput().length());
 			List<Suggestion> suggestions = Lists.newArrayList("abc", "def", "ghi").stream()
 					.map(s -> new Suggestion(range, s))
@@ -188,6 +236,13 @@ public class CustomArgs {
 		};*/
 	}
 
+	/**
+	 * Provides a node type argument, which suggests the keys of all registered node types and resolves the user input
+	 * into the node type instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a node type argument instance
+	 */
 	public <T extends Node> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			NodeType<T> type = NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
@@ -198,6 +253,17 @@ public class CustomArgs {
 		}).includeSuggestions(suggestNamespacedKeys(sender -> NodeTypeHandler.getInstance().getTypes().keySet()));
 	}
 
+	/**
+	 * Provides a node selection argument.
+	 * This comes with a custom syntax that is a copy of the vanilla entity selectors.
+	 * There are a variety of filters to apply to the search, an example user input could be "@n[distance=..10]", which
+	 * returns all nodes within a range of 10 blocks.
+	 * This includes ALL nodes of all roadmaps.
+	 * All filters can be seen in {@link SelectionUtils#SELECTORS}
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a node selection argument instance
+	 */
 	public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
 		return new CustomArgument<>(new TextArgument(nodeName), customArgumentInfo -> {
 			if (customArgumentInfo.sender() instanceof Player player) {
@@ -207,6 +273,13 @@ public class CustomArgs {
 		}).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
 	}
 
+	/**
+	 * Provides a node group argument, which suggests the keys of all node groups and resolves the user input
+	 * into the node group instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a node group argument instance
+	 */
 	public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
 			NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
@@ -301,6 +374,13 @@ public class CustomArgs {
 				});
 	}
 
+	/**
+	 * Provides a visualizer type argument, which suggests the keys of all registered visualizer types and resolves the user input
+	 * into the visualizer type instance.
+	 *
+	 * @param nodeName The name of the command argument in the command structure
+	 * @return a visualizer type argument instance
+	 */
 	public Argument<? extends VisualizerType<?>> visualizerTypeArgument(String nodeName) {
 		return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
