@@ -259,7 +259,7 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Collection<Edge> loadEdges(RoadMap roadMap) {
+	public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope) {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_edges` pe " +
 					"JOIN pathfinder_nodes pn ON pn.id = pe.start_id " +
@@ -652,12 +652,12 @@ public abstract class SqlDatabase implements DataStorage {
 		try (Connection con = getConnection()) {
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_discoverings` " +
 					"(`discover_key`, `player_id`, `date`) VALUES (?, ?, ?)")) {
-				stmt.setString(1, discoverable.getUniqueKey().toString());
+				stmt.setString(1, discoverable.getKey().toString());
 				stmt.setString(2, player.toString());
 				stmt.setTimestamp(3, Timestamp.from(foundDate.toInstant()));
 				stmt.executeUpdate();
 
-				return new DiscoverInfo(player, discoverable.getUniqueKey(), foundDate);
+				return new DiscoverInfo(player, discoverable.getKey(), foundDate);
 			}
 		} catch (Exception e) {
 			throw new DataStorageException("Could not create new discover info.", e);
@@ -665,18 +665,18 @@ public abstract class SqlDatabase implements DataStorage {
 	}
 
 	@Override
-	public Map<UUID, Map<NamespacedKey, DiscoverInfo>> loadDiscoverInfo() {
+	public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
 		try (Connection con = getConnection()) {
-			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_discoverings`")) {
+			try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_discoverings` WHERE `player_id` = ?")) {
+				stmt.setString(1, playerId.toString());
 				try (ResultSet resultSet = stmt.executeQuery()) {
-					Map<UUID, Map<NamespacedKey, DiscoverInfo>> registry = new HashMap<>();
+					Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
 					while (resultSet.next()) {
-						String uuidString = resultSet.getString("player_id");
 						String keyString = resultSet.getString("discover_key");
 						Date date = resultSet.getTimestamp("date");
 
-						DiscoverInfo info = new DiscoverInfo(UUID.fromString(uuidString), NamespacedKey.fromString(keyString), date);
-						registry.computeIfAbsent(info.playerId(), uuid -> new HashMap<>()).put(info.discoverable(), info);
+						DiscoverInfo info = new DiscoverInfo(playerId, NamespacedKey.fromString(keyString), date);
+						registry.put(info.discoverable(), info);
 					}
 					return registry;
 				}

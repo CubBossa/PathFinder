@@ -1,13 +1,40 @@
-<with Sound as de.cubbossa.pathfinder.serializedeffects.effects.SoundPlayer>
-<with EffectPlayer as de.cubbossa.pathfinder.serializedeffects.effects.EffectPlayer>
-<with Title as de.cubbossa.pathfinder.serializedeffects.effects.TitlePlayer>
 <with ActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ActionBarPlayer>
-<with ResetTitle as de.cubbossa.pathfinder.serializedeffects.effects.ResetTitle>
-<with ResetActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ResetActionBar>
 <with Cooldown as de.cubbossa.pathfinder.serializedeffects.effects.Cooldown>
+<with Effect as de.cubbossa.pathfinder.serializedeffects.effects.EffectPlayer>
+<with Message as de.cubbossa.pathfinder.serializedeffects.effects.MessagePlayer>
+<with ParticleLine as de.cubbossa.pathfinder.serializedeffects.effects.ParticleLinePlayer>
+<with Particle as de.cubbossa.pathfinder.serializedeffects.effects.ParticlePlayer>
+<with ResetActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ResetActionBar>
+<with ResetTitle as de.cubbossa.pathfinder.serializedeffects.effects.ResetTitle>
+<with Sound as de.cubbossa.pathfinder.serializedeffects.effects.SoundPlayer>
+<with Title as de.cubbossa.pathfinder.serializedeffects.effects.TitlePlayer>
+<with WorldEffect as de.cubbossa.pathfinder.serializedeffects.effects.WorldEffectPlayer>
+
+# ===================
+#  Effects Explained
+# ===================
+#
+# NBO is a file format like json, which represents a bunch of objects.
+# A detailed guide on how to use the format can be found here:
+# https://github.com/CubBossa/PathFinder/wiki/effects.nbo
+#
+# In this file, all the available effects are already predefined. You can still add as many effects
+# as you want but if you don't reference them, they won't play ingame.
+#
+# All effects that are used ingame are:
+# - 'discover': Whenever a player discovers a nodegroup. Messages are resolved with a <name> tag for the discoverable name.
+# - 'path_started': When a path is started.
+# - 'path_finished': When a path target is reached
+# - 'path_cancelled': When a path is cancelled without reaching the target
+# - 'editor_edge_connect': When two nodes are being connected with the edge tool
+# - 'editor_edge_disconnect': When two nodes are being connected with the edge tool
+#
+# If you don't want an effect to be played, you can simply delete it. Effects that are not present cannot be played.
+#
+# ===================
 
 
-discover := EffectPlayer {
+discover := Effect {
     delay_0: [
         ResetActionBar {},
         ResetTitle {},
@@ -20,3 +47,18 @@ discover := EffectPlayer {
         Cooldown {ticks: 40}
     ]
 }
+
+path_started := Sound { sound: 'minecraft:entity.villager.yes', volume: 1.0f, pitch: 1.0f }
+
+path_cancelled := Message { text: '<msg:commands.cancel_path>' }
+
+path_finished := Effect {
+    delay_0: [
+        Message { text: '<msg:general.target_reached>' },
+        Sound { sound: 'minecraft:entity.villager.celebrate', volume: 1.0f, pitch: 1.0f }
+    ]
+}
+
+editor_edge_connect := Sound { sound: 'minecraft:entity.leash_knot.place', volume: 1.0f, pitch: 1.0f }
+
+editor_edge_disconnect := Sound { sound: 'minecraft:entity.leash_knot.break', volume: 1.0f, pitch: 1.0f }

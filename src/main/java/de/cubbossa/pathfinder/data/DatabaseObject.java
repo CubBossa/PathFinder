@@ -10,5 +10,5 @@ public interface DatabaseObject<K> {
 	/**
 	 * @return The unique key for this object to be identified in the database.
 	 */
-	K getUniqueKey();
+	K getKey();
 }

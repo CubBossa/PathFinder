@@ -231,6 +231,8 @@ public class WaypointCommand extends CommandTree {
 	 */
 	public void onList(Player player, @Nullable RoadMap roadMap, NodeSelection selection, int pageInput) {
 
+		//TODO turn roadmap into "selector", so that pagination can work with select queries
+
 		TagResolver resolver;
 		if (roadMap != null) {
 			resolver = TagResolver.builder()

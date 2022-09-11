@@ -17,7 +17,6 @@ public class CancelPathCommand extends CommandTree {
 
         executesPlayer((player, args) -> {
             FindModule.getInstance().cancelPath(player.getUniqueId());
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_CANCEL, player);
         });
     }
 

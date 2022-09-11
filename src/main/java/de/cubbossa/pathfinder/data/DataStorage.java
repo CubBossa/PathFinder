@@ -31,7 +31,7 @@ public interface DataStorage {
 
 	void saveEdges(Collection<Edge> edges);
 
-	Collection<Edge> loadEdges(RoadMap roadMap);
+	Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope);
 
 	void deleteEdgesFrom(Node start);
 
@@ -80,7 +80,7 @@ public interface DataStorage {
 
 	DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
 
-	Map<UUID, Map<NamespacedKey, DiscoverInfo>> loadDiscoverInfo();
+	Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId);
 
 	void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 

@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.core.menu;
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
-import de.cubbossa.menuframework.inventory.InventoryRow;
 import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
@@ -15,6 +14,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.util.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.EditmodeUtils;
 import de.cubbossa.pathfinder.util.ItemStackUtils;
+import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslatedItem;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
@@ -34,7 +34,6 @@ import org.bukkit.util.Vector;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class EditModeMenu {
@@ -99,7 +98,8 @@ public class EditModeMenu {
 						edgeStart = null;
 					}
 					c.getMenu().refresh(c.getSlot());
-					p.playSound(p.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 1, 1);
+					EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+							"editor_edge_connect", p, p.getLocation());
 				})
 				.withClickHandler(Action.LEFT_CLICK_AIR, context -> {
 					Player player = context.getPlayer();
@@ -114,19 +114,20 @@ public class EditModeMenu {
 					// cancel creation
 					edgeStart = null;
 					TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_CANCELLED, player);
-					player.playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_BREAK, 1, 1);
 					context.getMenu().refresh(context.getSlot());
 
 				})
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
 					Player player = context.getPlayer();
 					roadMap.disconnectNodes(context.getTarget());
-					player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
+					EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+							"editor_edge_disconnect", player, player.getLocation());
 				})
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					Player player = context.getPlayer();
 					roadMap.disconnectNode(context.getTarget());
-					player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_BURN, 1, 1);
+					EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+							"editor_edge_disconnect", player, player.getLocation());
 				}));
 
 

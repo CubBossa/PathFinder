@@ -129,7 +129,7 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
                 PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
                 continue;
             }
-            float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()));
+            float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), node);
             if (node.getLocation().getX() - player.getLocation().getX() > dist) {
                 continue;
             }
@@ -142,7 +142,7 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
     }
 
     @Override
-    public NamespacedKey getUniqueKey() {
+    public NamespacedKey getKey() {
         return key;
     }
 }

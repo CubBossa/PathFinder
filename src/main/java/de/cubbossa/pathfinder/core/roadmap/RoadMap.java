@@ -92,7 +92,7 @@ public class RoadMap implements Keyed, Named {
 		}
 
 		edges.clear();
-		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this));
+		edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this, map1));
 		for (Edge edge : edges) {
 			edge.getStart().getEdges().add(edge);
 		}

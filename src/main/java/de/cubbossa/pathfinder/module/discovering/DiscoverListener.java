@@ -2,17 +2,17 @@ package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Collection;
 import java.util.Date;
 
-public class MoveListener implements Listener {
+public class DiscoverListener implements Listener {
 
 	// prevents discovering twice
 	private Collection<Player> discovering;
@@ -28,5 +28,15 @@ public class MoveListener implements Listener {
 			}
 			DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, new Date());
 		}
+	}
+
+	@EventHandler
+	public void onJoin(PlayerJoinEvent event) {
+		DiscoverHandler.getInstance().cachePlayer(event.getPlayer().getUniqueId());
+	}
+
+	@EventHandler
+	public void onQuit(PlayerQuitEvent event) {
+		DiscoverHandler.getInstance().invalidatePlayerCache(event.getPlayer().getUniqueId());
 	}
 }

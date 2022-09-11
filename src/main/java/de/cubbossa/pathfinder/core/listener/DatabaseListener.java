@@ -160,6 +160,6 @@ public class DatabaseListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onForget(PlayerForgetEvent event) {
-		data.deleteDiscoverInfo(event.getPlayerId(), event.getDiscoverable().getUniqueKey());
+		data.deleteDiscoverInfo(event.getPlayerId(), event.getDiscoverable().getKey());
 	}
 }

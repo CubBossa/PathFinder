@@ -13,6 +13,8 @@ import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChange
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.serializedeffects.EffectHandler;
+import de.cubbossa.serializedeffects.effects.MessagePlayer;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -150,6 +152,7 @@ public class FindModule implements Listener {
 		if (result == NavigateResult.SUCCESS) {
 			// Refresh cancel-path command so that it is visible
 			PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+			EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player, player.getLocation());
 		}
 		return result;
 	}
@@ -159,7 +162,8 @@ public class FindModule implements Listener {
 		PathTargetFoundEvent event = new PathTargetFoundEvent(info.playerId(), info.path());
 		Bukkit.getPluginManager().callEvent(event);
 
-		TranslationHandler.getInstance().sendMessage(Messages.TARGET_FOUND, Bukkit.getPlayer(info.playerId()));
+		Player player = Bukkit.getPlayer(info.playerId());
+		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_finished", player, player.getLocation());
 	}
 
 	public NavigateResult setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target, float distance) {
@@ -191,7 +195,9 @@ public class FindModule implements Listener {
 		activePaths.remove(info.playerId());
 		info.path().cancel();
 
-		PathPlugin.getInstance().getCancelPathCommand().refresh(Bukkit.getPlayer(info.playerId()));
+		Player player = Bukkit.getPlayer(info.playerId());
+		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player, player.getLocation());
 	}
 
 	@EventHandler
