@@ -98,6 +98,7 @@ public class PathFinderCommand extends CommandTree {
 
 							CompletableFuture.runAsync(() -> {
 								try {
+									PathPlugin.getInstance().generateIfAbsent("effects.nbo");
 									EffectHandler.getInstance().clearCache(PathPlugin.getInstance().getEffectsFile());
 								} catch (Throwable t) {
 									throw new RuntimeException(t);

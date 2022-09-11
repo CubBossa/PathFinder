@@ -164,7 +164,6 @@ public class PathPlugin extends JavaPlugin {
 	@Override
 	public void onLoad() {
 
-		generateIfAbsent("config.yml");
 		generateIfAbsent("how-the-hell-do-i-use-it.txt");
 		generateIfAbsent("lang/de_DE.yml");
 
@@ -274,7 +273,7 @@ public class PathPlugin extends JavaPlugin {
 		extensions.add(module);
 	}
 
-	private void generateIfAbsent(String resource) {
+	public void generateIfAbsent(String resource) {
 		if (!new File(getDataFolder(), resource).exists()) {
 			saveResource(resource, false);
 		}
