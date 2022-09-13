@@ -40,18 +40,18 @@ public class RoadMap implements Keyed, Named {
 	private final NamespacedKey key;
 	private String nameFormat;
 	private Component displayName;
-	private double defaultBezierTangentLength;
+	private double defaultCurveLength;
 
 	private final Map<Integer, Node> nodes;
 	private final Collection<Edge> edges;
 
 	private PathVisualizer<?, ?> visualizer;
 
-	public RoadMap(NamespacedKey key, String name, PathVisualizer<?, ?> visualizer, double defaultBezierTangentLength) {
+	public RoadMap(NamespacedKey key, String name, PathVisualizer<?, ?> visualizer, double defaultCurveLength) {
 
 		this.key = key;
 		this.setNameFormat(name);
-		this.defaultBezierTangentLength = defaultBezierTangentLength;
+		this.defaultCurveLength = defaultCurveLength;
 
 		this.nodes = new TreeMap<>();
 		this.edges = new HashSet<>();

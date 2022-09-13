@@ -127,7 +127,7 @@ public class RoadMapCommand extends CommandTree {
 				.resolver(Placeholder.component("name-format", Component.text(roadMap.getNameFormat())))
 				.resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, roadMap.getNodes())))
 				.resolver(Placeholder.component("groups", Messages.formatNodeGroups(sender, NodeGroupHandler.getInstance().getNodeGroups(roadMap))))
-				.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
+				.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultCurveLength() + ""))
 				.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 				.build());
 
@@ -178,7 +178,7 @@ public class RoadMapCommand extends CommandTree {
 					TagResolver r = TagResolver.builder()
 							.tag("key", Messages.formatKey(roadMap.getKey()))
 							.resolver(Placeholder.component("name", roadMap.getDisplayName()))
-							.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultBezierTangentLength() + ""))
+							.resolver(Placeholder.unparsed("curve-length", roadMap.getDefaultCurveLength() + ""))
 							.resolver(Placeholder.component("path-visualizer", roadMap.getVisualizer() == null ? Messages.GEN_NULL.asComponent() : roadMap.getVisualizer().getDisplayName()))
 							.build();
 
@@ -238,7 +238,7 @@ public class RoadMapCommand extends CommandTree {
 	}
 
 	public void onChangeTangentStrength(CommandSender sender, RoadMap roadMap, double strength) throws WrapperCommandSyntaxException {
-		double old = roadMap.getDefaultBezierTangentLength();
+		double old = roadMap.getDefaultCurveLength();
 
 		if (!RoadMapHandler.getInstance().setRoadMapCurveLength(roadMap, strength)) {
 			return;
@@ -248,7 +248,7 @@ public class RoadMapCommand extends CommandTree {
 				.tag("key", Messages.formatKey(roadMap.getKey()))
 				.resolver(Placeholder.component("roadmap", roadMap.getDisplayName()))
 				.resolver(Placeholder.component("old-value", Component.text(old)))
-				.resolver(Placeholder.component("value", Component.text(roadMap.getDefaultBezierTangentLength())))
+				.resolver(Placeholder.component("value", Component.text(roadMap.getDefaultCurveLength())))
 				.build()), sender);
 	}
 }

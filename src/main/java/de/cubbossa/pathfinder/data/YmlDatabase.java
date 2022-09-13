@@ -139,7 +139,7 @@ public class YmlDatabase implements DataStorage {
 		cfg.set("key", roadMap.getKey().toString());
 		cfg.set("name-format", roadMap.getNameFormat());
 		cfg.set("path-visualizer", roadMap.getVisualizer() == null ? null : roadMap.getVisualizer().getKey().toString());
-		cfg.set("curve-length", roadMap.getDefaultBezierTangentLength());
+		cfg.set("curve-length", roadMap.getDefaultCurveLength());
 
 		try {
 			cfg.save(file);

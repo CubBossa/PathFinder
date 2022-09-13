@@ -205,14 +205,14 @@ public abstract class SqlDatabase implements DataStorage {
 				} else {
 					stmt.setString(3, roadMap.getVisualizer().getKey().toString());
 				}
-				stmt.setDouble(4, roadMap.getDefaultBezierTangentLength());
+				stmt.setDouble(4, roadMap.getDefaultCurveLength());
 				stmt.setString(5, roadMap.getNameFormat());
 				if (roadMap.getVisualizer() == null) {
 					stmt.setNull(6, Types.VARCHAR);
 				} else {
 					stmt.setString(6, roadMap.getVisualizer().getKey().toString());
 				}
-				stmt.setDouble(7, roadMap.getDefaultBezierTangentLength());
+				stmt.setDouble(7, roadMap.getDefaultCurveLength());
 				stmt.executeUpdate();
 			}
 		} catch (SQLException e) {
@@ -364,7 +364,7 @@ public abstract class SqlDatabase implements DataStorage {
 						double y = resultSet.getDouble("y");
 						double z = resultSet.getDouble("z");
 						String worldUid = resultSet.getString("world");
-						double curveLength = resultSet.getDouble("path_curve_length");
+						Double curveLength = resultSet.wasNull() ? null : resultSet.getDouble("path_curve_length");
 
 						NodeType<?> nodeType = NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
 						Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(

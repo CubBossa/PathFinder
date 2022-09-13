@@ -5,7 +5,6 @@ import de.bossascrew.splinelib.util.Spline;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +39,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>> ex
 		World world = nodes.get(0).getLocation().getWorld();
 		Spline spline = makeSpline(nodes.stream().collect(Collectors.toMap(
 				o -> o,
-				o -> o.getCurveLength() == null ? RoadMapHandler.getInstance().getRoadMap(o.getRoadMapKey()).getDefaultBezierTangentLength() : o.getCurveLength(),
+				o -> o.getCurveLength() == null ? RoadMapHandler.getInstance().getRoadMap(o.getRoadMapKey()).getDefaultCurveLength() : o.getCurveLength(),
 				(aDouble, aDouble2) -> aDouble,
 				LinkedHashMap::new)));
 		List<Vector> curve = transform(interpolate(spline));
@@ -55,7 +54,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>> ex
 	 * @return a spline object representing the nodes
 	 */
 	private Spline makeSpline(LinkedHashMap<Node, Double> nodes) {
-		return new Spline(NodeUtils.toSpline(nodes));
+		return new Spline(NodeUtils.toSpline(nodes, true));
 	}
 
 	private List<Vector> interpolate(Spline bezierVectors) {

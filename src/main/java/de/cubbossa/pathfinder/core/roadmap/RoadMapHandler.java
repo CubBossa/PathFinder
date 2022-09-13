@@ -135,13 +135,13 @@ public class RoadMapHandler {
 	}
 
 	public boolean setRoadMapCurveLength(RoadMap roadMap, double value) {
-		double old = roadMap.getDefaultBezierTangentLength();
+		double old = roadMap.getDefaultCurveLength();
 		RoadMapSetCurveLengthEvent event = new RoadMapSetCurveLengthEvent(roadMap, value);
-		roadMap.setDefaultBezierTangentLength(event.getValue());
+		roadMap.setDefaultCurveLength(event.getValue());
 
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
-			roadMap.setDefaultBezierTangentLength(old);
+			roadMap.setDefaultCurveLength(old);
 			return false;
 		}
 		return true;
