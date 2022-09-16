@@ -46,6 +46,8 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <minimizeJar>false</minimizeJar>
                     <artifactSet>
                         <includes>
                             <include>net.kyori:**</include>
@@ -61,6 +63,9 @@
                             <include>org.jgrapht:jgrapht-core</include>
                             <include>org.jheaps:jheaps</include>
                             <include>dev.jorel:commandapi-shade</include>
+                            <include>org.openjdk.nashorn:nashorn-core</include>
+                            <include>org.ow2.asm:asm</include>
+                            <include>org.ow2.asm:asm-util</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -157,6 +162,23 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>9.3</version>
+        </dependency>
 
         <dependency>
             <groupId>com.mojang</groupId>

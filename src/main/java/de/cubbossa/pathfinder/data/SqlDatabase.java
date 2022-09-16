@@ -364,7 +364,10 @@ public abstract class SqlDatabase implements DataStorage {
 						double y = resultSet.getDouble("y");
 						double z = resultSet.getDouble("z");
 						String worldUid = resultSet.getString("world");
-						Double curveLength = resultSet.wasNull() ? null : resultSet.getDouble("path_curve_length");
+						Double curveLength = resultSet.getDouble("path_curve_length");
+						if(resultSet.wasNull()) {
+							curveLength = null;
+						}
 
 						NodeType<?> nodeType = NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
 						Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(

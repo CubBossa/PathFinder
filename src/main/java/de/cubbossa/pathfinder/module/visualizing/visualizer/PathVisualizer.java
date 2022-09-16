@@ -14,7 +14,7 @@ public interface PathVisualizer<T extends PathVisualizer<T, D>, D> extends Keyed
 
 	VisualizerType<T> getType();
 
-	D prepare(List<Node> nodes);
+	D prepare(List<Node> nodes, Player player);
 
 	void play(VisualizerContext<D> context);
 

@@ -30,8 +30,8 @@ public class VisualizerPath<D> extends ArrayList<Node> {
         this.visualizer = visualizer;
     }
 
-    public void prepare(List<Node> path) {
-        visualizerData = visualizer.prepare(path);
+    public void prepare(List<Node> path, Player player) {
+        visualizerData = visualizer.prepare(path, player);
     }
 
     public void run() {
@@ -39,7 +39,7 @@ public class VisualizerPath<D> extends ArrayList<Node> {
     }
 
     public void run(UUID uuid) {
-        prepare(this);
+        prepare(this, Bukkit.getPlayer(uuid));
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             cancelSync();
             this.active = true;

@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +46,9 @@ public class CombinedVisualizer extends Visualizer<CombinedVisualizer, CombinedV
 	}
 
 	@Override
-	public CombinedData prepare(List<Node> nodes) {
+	public CombinedData prepare(List<Node> nodes, Player player) {
 		return new CombinedData(visualizers.stream()
-				.collect(Collectors.toMap(Keyed::getKey, v -> v.prepare(nodes))));
+				.collect(Collectors.toMap(Keyed::getKey, v -> v.prepare(nodes, player))));
 	}
 
 	@Override
