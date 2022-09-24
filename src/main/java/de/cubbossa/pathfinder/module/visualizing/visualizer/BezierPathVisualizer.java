@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.bossascrew.splinelib.interpolate.Interpolation;
-import de.bossascrew.splinelib.util.Spline;
+import de.cubbossa.splinelib.interpolate.Interpolation;
+import de.cubbossa.splinelib.util.Spline;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
@@ -17,8 +17,6 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter

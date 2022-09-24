@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.bossascrew.splinelib.util.BezierVector;
+import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import org.bukkit.util.Vector;

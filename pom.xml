@@ -94,7 +94,7 @@
                             <shadedPattern>de.cubbossa.pathfinder.translations</shadedPattern>
                         </relocation>
                         <relocation>
-                            <pattern>de.bossascrew.splinelib</pattern>
+                            <pattern>de.cubbossa.splinelib</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.splinelib</shadedPattern>
                         </relocation>
                         <relocation>
@@ -311,7 +311,7 @@
 
         <dependency>
             <groupId>de.cubbossa</groupId>
-            <artifactId>SplineLib</artifactId>
+            <artifactId>splinelib</artifactId>
             <version>1.0</version>
         </dependency>
 

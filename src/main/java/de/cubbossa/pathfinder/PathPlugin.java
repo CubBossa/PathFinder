@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.bossascrew.splinelib.SplineLib;
-import de.bossascrew.splinelib.util.BezierVector;
+import de.cubbossa.splinelib.SplineLib;
+import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
@@ -106,12 +106,12 @@ public class PathPlugin extends JavaPlugin {
 
 	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
 		@Override
-		public de.bossascrew.splinelib.util.Vector convertToVector(org.bukkit.util.Vector vector) {
-			return new de.bossascrew.splinelib.util.Vector(vector.getX(), vector.getY(), vector.getZ());
+		public de.cubbossa.splinelib.util.Vector convertToVector(org.bukkit.util.Vector vector) {
+			return new de.cubbossa.splinelib.util.Vector(vector.getX(), vector.getY(), vector.getZ());
 		}
 
 		@Override
-		public org.bukkit.util.Vector convertFromVector(de.bossascrew.splinelib.util.Vector vector) {
+		public org.bukkit.util.Vector convertFromVector(de.cubbossa.splinelib.util.Vector vector) {
 			return new Vector(vector.getX(), vector.getY(), vector.getZ());
 		}
 
