@@ -159,6 +159,11 @@
             <id>oss.sonatype.org-snapshot</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
+
+        <repository>
+            <id>cubbossa</id>
+            <url>https://leonardbausenwein.de/repository/maven-public</url>
+        </repository>
     </repositories>
 
     <dependencies>
