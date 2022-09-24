@@ -162,7 +162,7 @@
 
         <repository>
             <id>cubbossa</id>
-            <url>https://leonardbausenwein.de/repository/maven-public</url>
+            <url>https://leonardbausenwein.de/nexus/repository/maven-public</url>
         </repository>
     </repositories>
 
