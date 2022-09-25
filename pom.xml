@@ -53,7 +53,6 @@
                             <include>net.kyori:**</include>
                             <include>org.bstats:bstats-bukkit</include>
                             <include>de.cubbossa:MenuFramework</include>
-                            <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
                             <include>de.cubbossa:Translations</include>
                             <include>de.cubbossa:SplineLib</include>
                             <include>de.cubbossa:NBO-Core</include>
@@ -164,9 +163,27 @@
             <id>cubbossa</id>
             <url>https://leonardbausenwein.de/nexus/repository/maven-public</url>
         </repository>
+
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>de.tr7zw</groupId>
+            <artifactId>item-nbt-api-plugin</artifactId>
+            <version>2.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.comphenix.protocol</groupId>
+            <artifactId>ProtocolLib</artifactId>
+            <version>5.0.0-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
