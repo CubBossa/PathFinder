@@ -1,0 +1,53 @@
+{
+  "pages": [
+    {
+      "name": "getting_started",
+      "label": "Getting Started",
+      "children": [
+        {
+          "name": "installation",
+          "label": "Installation",
+          "markdown": "installation"
+        },
+        {
+          "name": "configuration",
+          "label": "Configuration",
+          "markdown": "configuration"
+        }
+      ]
+    },
+    {
+      "name": "create_a_roadmap",
+      "label": "Creating a Roadmap",
+      "children": [
+        {
+          "name": "what_are_roadmaps",
+          "label": "What are Roadmaps"
+        },
+        {
+          "name": "roadmap_editmode",
+          "label": "Using the Edit Mode"
+        }
+      ]
+    },
+    {
+      "name": "path_visualization",
+      "label": "Path Visualization"
+    },
+    {
+      "name": "misc",
+      "label": "Miscallenaoaus",
+      "children": [
+        {
+          "name": "effects",
+          "label": "effects",
+          "markdown": "effects"
+        }
+      ]
+    },
+    {
+      "name": "api",
+      "label": "Developers API"
+    }
+  ]
+}
