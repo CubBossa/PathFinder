@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.collect.Lists;
+import dev.jorel.commandapi.arguments.CustomArgument;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -103,5 +104,16 @@ public class SelectionParserTest {
 	public void testParseNamespacedKey() {
 
 		Assertions.assertDoesNotThrow(() -> parser.parseSelection(SCOPE, "@s[key=namespace:key]", ArrayList::new));
+	}
+
+	@Test
+	public void testInvalidClassifier() {
+		Assertions.assertThrows(CustomArgument.CustomArgumentException.class, () -> parser.parseSelection(SCOPE, "@invalid", ArrayList::new));
+	}
+
+	@Test
+	@SneakyThrows
+	public void testOnlyClassifier() {
+		Assertions.assertEquals(SCOPE, parser.parseSelection(SCOPE, "@s", ArrayList::new));
 	}
 }
