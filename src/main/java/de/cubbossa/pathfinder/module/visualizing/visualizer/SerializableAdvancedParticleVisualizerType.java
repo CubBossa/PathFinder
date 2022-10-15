@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
@@ -10,6 +11,10 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
+import org.bukkit.util.Vector;
+
+import java.util.Map;
 
 public class SerializableAdvancedParticleVisualizerType extends BezierVisualizerType<SerializableAdvancedParticleVisualizer> {
 
@@ -97,5 +102,69 @@ public class SerializableAdvancedParticleVisualizerType extends BezierVisualizer
 								.executes((commandSender, objects) -> {
 									((SerializableAdvancedParticleVisualizer) objects[0]).setPathOffsetZFunction((String) objects[1]);
 								})));
+	}
+
+	@Override
+	public Map<String, Object> serialize(SerializableAdvancedParticleVisualizer visualizer) {
+		super.serialize(visualizer);
+		return new LinkedHashMapBuilder<String, Object>()
+				.put("particle-steps", visualizer.getSchedulerSteps())
+				.put("particle", visualizer.getParticleFunction())
+				.put("particle-data", visualizer.getParticleDataFunction())
+				.put("speed", visualizer.getSpeedFunction())
+				.put("amount", visualizer.getAmountFunction())
+				.put("offset-x", visualizer.getParticleOffsetXFunction())
+				.put("offset-y", visualizer.getParticleOffsetZFunction())
+				.put("offset-z", visualizer.getParticleOffsetZFunction())
+				.put("path-x", visualizer.getPathOffsetZFunction())
+				.put("path-y", visualizer.getPathOffsetZFunction())
+				.put("path-z", visualizer.getPathOffsetZFunction())
+				.put("sample-rate", visualizer.getBezierSamplingRate())
+				.put("point-distance", visualizer.getPointDistance())
+				.build();
+	}
+
+	@Override
+	public void deserialize(SerializableAdvancedParticleVisualizer visualizer, Map<String, Object> values) {
+		super.deserialize(visualizer, values);
+		if (values.containsKey("particle-steps")) {
+			visualizer.setSchedulerSteps((Integer) values.get("particle-steps"));
+		}
+		if (values.containsKey("particle")) {
+			visualizer.setParticleFunction((String) values.get("particle"));
+		}
+		if (values.containsKey("particle-data")) {
+			visualizer.setParticleDataFunction((String) values.get("particle-data"));
+		}
+		if (values.containsKey("speed")) {
+			visualizer.setSpeedFunction((String) values.get("speed"));
+		}
+		if (values.containsKey("amount")) {
+			visualizer.setAmountFunction((String) values.get("amount"));
+		}
+		if (values.containsKey("offset-x")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("offset-x"));
+		}
+		if (values.containsKey("offset-y")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("offset-y"));
+		}
+		if (values.containsKey("offset-z")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("offset-z"));
+		}
+		if (values.containsKey("path-x")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("path-x"));
+		}
+		if (values.containsKey("path-y")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("path-y"));
+		}
+		if (values.containsKey("path-z")) {
+			visualizer.setParticleOffsetXFunction((String) values.get("path-z"));
+		}
+		if (values.containsKey("sample-rate")) {
+			visualizer.setBezierSamplingRate((Integer) values.get("sample-rate"));
+		}
+		if (values.containsKey("point-distance")) {
+			visualizer.setPointDistance(((Double) values.get("point-distance")).floatValue());
+		}
 	}
 }

@@ -74,7 +74,7 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
 				Context c = new Context(player, point, context.interval(), step, i, context.data().points().size());
 				Particle p = particle.apply(c);
 				Object data = particleData.apply(c);
-				if(!p.getDataType().equals(data.getClass())) {
+				if(data == null || !p.getDataType().equals(data.getClass())) {
 					player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
 							particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
 				} else {

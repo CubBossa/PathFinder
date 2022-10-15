@@ -16,15 +16,15 @@ import java.util.function.Supplier;
 @Setter
 public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisualizer<SerializableAdvancedParticleVisualizer> {
 
-    private String particleFunction = "step % 2 === 0 ? FLAME : SOUL_FIRE_FLAME";
-    private String particleDataFunction = "";
+    private String particleFunction = "REDSTONE";
+    private String particleDataFunction = "var DustOptions = Java.type('org.bukkit.Particle$DustOptions'); new DustOptions(Java.type('org.bukkit.Color').fromRGB(Math.min(playerdistance * 15, 255), 0, Math.max(255 - playerdistance * 15, 0)), 1);";
     private String speedFunction = "0.0001";
     private String amountFunction = "1";
     private String particleOffsetXFunction = "0.0001";
     private String particleOffsetYFunction = "0.0001";
     private String particleOffsetZFunction = "0.0001";
-    private String pathOffsetXFunction = "Math.sin(step)";
-    private String pathOffsetYFunction = "Math.cos(step)";
+    private String pathOffsetXFunction = "Math.sin(index/4)*.5";
+    private String pathOffsetYFunction = "Math.cos(step/4)*.5";
     private String pathOffsetZFunction = "0";
 
     private ScriptEngine engine;
