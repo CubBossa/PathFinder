@@ -8,7 +8,6 @@ import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Server;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -20,7 +19,7 @@ import java.util.stream.Stream;
 public class VisualizerHandler {
 
 	public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE = new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
-	public static final VisualizerType<SerializableAdvancedParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new SerializableAdvancedParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "advanced-particle"));
+	public static final VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new ScriptLineParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
 	public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE = new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
 
 	@Getter
@@ -47,7 +46,7 @@ public class VisualizerHandler {
 		pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
-		this.pathVisualizerMap.put(new SerializableAdvancedParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "advtest"), "lul"));
+		this.pathVisualizerMap.put(new ScriptLineParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "advtest"), "lul"));
 	}
 
 	public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(NamespacedKey key) {

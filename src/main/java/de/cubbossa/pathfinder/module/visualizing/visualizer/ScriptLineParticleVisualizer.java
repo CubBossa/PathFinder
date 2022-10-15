@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 
 @Getter
 @Setter
-public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisualizer<SerializableAdvancedParticleVisualizer> {
+public class ScriptLineParticleVisualizer extends AdvancedParticleVisualizer<ScriptLineParticleVisualizer> {
 
     private String particleFunction = "REDSTONE";
     private String particleDataFunction = "var DustOptions = Java.type('org.bukkit.Particle$DustOptions'); new DustOptions(Java.type('org.bukkit.Color').fromRGB(Math.min(playerdistance * 15, 255), 0, Math.max(255 - playerdistance * 15, 0)), 1);";
@@ -29,7 +29,7 @@ public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisu
 
     private ScriptEngine engine;
 
-    public SerializableAdvancedParticleVisualizer(NamespacedKey key, String nameFormat) {
+    public ScriptLineParticleVisualizer(NamespacedKey key, String nameFormat) {
         super(key, nameFormat);
 
         engine = new NashornScriptEngineFactory().getScriptEngine("JavaScript");
@@ -99,7 +99,7 @@ public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisu
     }
 
     @Override
-    public VisualizerType<SerializableAdvancedParticleVisualizer> getType() {
+    public VisualizerType<ScriptLineParticleVisualizer> getType() {
         return VisualizerHandler.ADV_PARTICLE_VISUALIZER_TYPE;
     }
 }
