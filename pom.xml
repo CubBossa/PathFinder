@@ -54,7 +54,7 @@
                             <include>org.bstats:bstats-bukkit</include>
                             <include>de.cubbossa:MenuFramework</include>
                             <include>de.cubbossa:Translations</include>
-                            <include>de.cubbossa:SplineLib</include>
+                            <include>de.cubbossa:splinelib</include>
                             <include>de.cubbossa:NBO-Core</include>
                             <include>de.cubbossa:SerializedEffects</include>
                             <include>org.bstats</include>
