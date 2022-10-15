@@ -24,6 +24,7 @@
 # All effects that are used ingame are:
 # - 'discover': Whenever a player discovers a nodegroup. Messages are resolved with a <name> tag for the discoverable name.
 # - 'path_started': When a path is started.
+# - 'path_stopped': When a path is stopped, either by cancelling it or by reaching the target.
 # - 'path_finished': When a path target is reached
 # - 'path_cancelled': When a path is cancelled without reaching the target
 # - 'editor_edge_connect': When two nodes are being connected with the edge tool

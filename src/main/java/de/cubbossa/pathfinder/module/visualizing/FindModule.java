@@ -14,7 +14,6 @@ import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChange
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
-import de.cubbossa.serializedeffects.effects.MessagePlayer;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -158,7 +157,7 @@ public class FindModule implements Listener {
 	}
 
 	public void reachTarget(SearchInfo info) {
-		cancelPath(info);
+		unsetPath(info);
 		PathTargetFoundEvent event = new PathTargetFoundEvent(info.playerId(), info.path());
 		Bukkit.getPluginManager().callEvent(event);
 
@@ -185,6 +184,21 @@ public class FindModule implements Listener {
 		return NavigateResult.SUCCESS;
 	}
 
+	public void unsetPath(UUID playerId) {
+		if (activePaths.containsKey(playerId)) {
+			unsetPath(activePaths.get(playerId));
+		}
+	}
+
+	public void unsetPath(SearchInfo info) {
+		activePaths.remove(info.playerId());
+		info.path().cancel();
+
+		Player player = Bukkit.getPlayer(info.playerId());
+		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player, player.getLocation());
+	}
+
 	public void cancelPath(UUID playerId) {
 		if (activePaths.containsKey(playerId)) {
 			cancelPath(activePaths.get(playerId));
@@ -192,11 +206,8 @@ public class FindModule implements Listener {
 	}
 
 	public void cancelPath(SearchInfo info) {
-		activePaths.remove(info.playerId());
-		info.path().cancel();
-
+		unsetPath(info);
 		Player player = Bukkit.getPlayer(info.playerId());
-		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
 		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player, player.getLocation());
 	}
 
