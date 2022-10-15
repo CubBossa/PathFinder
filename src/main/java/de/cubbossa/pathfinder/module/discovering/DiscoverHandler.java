@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.module.discovering;
 
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -75,9 +76,7 @@ public class DiscoverHandler {
 				"discover",
 				player,
 				player.getLocation(),
-				TagResolver.builder()
-						.resolver(Placeholder.component("name", discoverable.getDisplayName())).resolver(Placeholder.component("roadmaps", Component.text("Test, 10%")))
-						.build());
+				Placeholder.component("name", discoverable.getDisplayName()));
 	}
 
 	public CompletableFuture<Map<NamespacedKey, DiscoverInfo>> getPlayerData(UUID player) {
