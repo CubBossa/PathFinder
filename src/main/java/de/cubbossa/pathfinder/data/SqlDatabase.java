@@ -458,7 +458,7 @@ public abstract class SqlDatabase implements DataStorage {
 			con.setAutoCommit(false);
 
 			try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups_nodes` " +
-					"(`group_key`, `node_id`) VALUES (?, ?)")) {
+					"(`group_key`, `node_id`) VALUES (?, ?) ON CONFLICT(`group_key`, `node_id`) DO NOTHING")) {
 				for (Node node : selection) {
 					stmt.setString(1, group.getKey().toString());
 					stmt.setInt(2, node.getNodeId());
