@@ -2,8 +2,9 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.graph.Graph;
+import de.cubbossa.pathfinder.core.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.core.node.*;
-import de.cubbossa.pathfinder.core.node.implementation.EmptyNode;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
@@ -25,10 +26,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.Graphs;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -101,11 +98,6 @@ public class FindModule implements Listener {
 
 	public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
 
-		// Prepare graph:
-		// Every target node will be connected with a new introduced destination node.
-		// All new edges have the same weight. The shortest path can only cross a target node.
-		// Finally, take a sublist of the shortest path to exclude the destination.
-
 		Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
 		Collection<Node> nodes = targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey())).collect(Collectors.toSet());
 
@@ -122,21 +114,15 @@ public class FindModule implements Listener {
 
 		RoadMap firstRoadMap = roadMaps.get(0);
 		PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-		Graph<Node, Edge> graph = firstRoadMap.toGraph(playerNode);
+		Graph<Node> graph = firstRoadMap.toGraph(playerNode);
 
 		for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
-			Graphs.addGraph(graph, roadMap.toGraph(null));
+			graph.merge(roadMap.toGraph(null));
 		}
 
-		EmptyNode destination = new EmptyNode(firstRoadMap, player.getWorld());
-		graph.addVertex(destination);
-		targets.forEach(n -> {
-			Edge e = new Edge(n, destination, 1);
-			graph.addEdge(n, destination, e);
-			graph.setEdgeWeight(e, 1);
-		});
-
-		GraphPath<Node, Edge> path = new DijkstraShortestPath<>(graph).getPath(playerNode, destination);
+		SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);
+		dijkstra.calculate(playerNode);
+		List<Node> path = dijkstra.shortestPathToAny(targets);
 
 		if (path == null) {
 			return NavigateResult.FAIL_BLOCKED;
@@ -144,8 +130,8 @@ public class FindModule implements Listener {
 
 		PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
 		VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
-		visualizerPath.addAll(path.getVertexList().subList(0, path.getVertexList().size() - 1));
-		NavigateResult result = setPath(player.getUniqueId(), visualizerPath, path.getVertexList().get(path.getVertexList().size() - 2).getLocation(),
+		visualizerPath.addAll(path);
+		NavigateResult result = setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
 				NodeGroupHandler.getInstance().getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
 
 		if (result == NavigateResult.SUCCESS) {

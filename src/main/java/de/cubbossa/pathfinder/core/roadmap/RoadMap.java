@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
+import de.cubbossa.pathfinder.core.graph.Graph;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
@@ -16,6 +17,8 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
@@ -23,9 +26,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
-import org.jgrapht.Graph;
-import org.jgrapht.alg.util.Triple;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -98,15 +98,14 @@ public class RoadMap implements Keyed, Named {
 		}
 	}
 
-	public Graph<Node, Edge> toGraph(@Nullable PlayerNode player) {
-		Graph<Node, Edge> graph = new SimpleDirectedWeightedGraph<>(Edge.class);
-		nodes.values().forEach(graph::addVertex);
-		edges.forEach(e -> graph.addEdge(e.getStart(), e.getEnd(), e));
-		edges.forEach(e -> graph.setEdgeWeight(e, e.getWeightedLength()));
+	public Graph<Node> toGraph(@Nullable PlayerNode player) {
+		Graph<Node> graph = new Graph<>();
+		nodes.values().forEach(graph::addNode);
+		edges.forEach(e -> graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength()));
 
-		if(player != null) {
+		if (player != null) {
 			Location playerLocation = player.getLocation();
-			graph.addVertex(player);
+			graph.addNode(player);
 			List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
 					.filter(node -> Objects.equals(node.getLocation().getWorld(), playerLocation.getWorld()))
 					.map(node -> new AbstractMap.SimpleEntry<>(node, node.getLocation().distance(playerLocation)))
@@ -129,19 +128,17 @@ public class RoadMap implements Keyed, Named {
 								count++;
 							}
 						}
-						return new Triple<>(n, length, count);
-					})
-					.collect(Collectors.toList());
+						return Triple.of(n, length, count);
+					}).toList();
 
-			boolean anyNullCount = triples.stream().anyMatch(e -> e.getThird() == 1);
+			boolean anyNullCount = triples.stream().anyMatch(e -> e.getRight() == 1);
 
 			triples.stream()
-					.filter(e -> !anyNullCount || e.getThird() == 1)
+					.filter(e -> !anyNullCount || e.getRight() == 1)
 					.forEach(e -> {
 
-						Edge edge = new Edge(player, e.getFirst(), e.getThird() * 10_000); // prefer paths without interfering blocks
-						graph.addEdge(player, e.getFirst(), edge);
-						graph.setEdgeWeight(edge, e.getSecond() * edge.getWeightModifier());
+						Edge edge = new Edge(player, e.getLeft(), e.getRight() * 10_000); // prefer paths without interfering blocks
+						graph.connect(player, e.getLeft(), e.getMiddle() * edge.getWeightModifier());
 					});
 		}
 
