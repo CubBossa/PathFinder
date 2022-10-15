@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
@@ -7,13 +9,12 @@ import org.bukkit.Particle;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 import javax.script.*;
-import java.lang.ref.Reference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Getter
 @Setter
-public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisualizer {
+public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisualizer<SerializableAdvancedParticleVisualizer> {
 
     private String particleFunction = "step % 2 === 0 ? FLAME : SOUL_FIRE_FLAME";
     private String particleDataFunction = "";
@@ -95,5 +96,10 @@ public class SerializableAdvancedParticleVisualizer extends AdvancedParticleVisu
         bindings.put("step", context.step());
         bindings.put("interval", context.interval());
         return bindings;
+    }
+
+    @Override
+    public VisualizerType<SerializableAdvancedParticleVisualizer> getType() {
+        return VisualizerHandler.ADV_PARTICLE_VISUALIZER_TYPE;
     }
 }

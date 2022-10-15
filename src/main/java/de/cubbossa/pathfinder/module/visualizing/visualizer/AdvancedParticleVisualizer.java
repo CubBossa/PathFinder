@@ -16,11 +16,12 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Getter
 @Setter
-public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedParticleVisualizer> {
+public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisualizer<T>> extends BezierPathVisualizer<T> {
 
 	public record Context(Player player, Location point, int interval, int step, int index, int count) {
 
@@ -40,11 +41,6 @@ public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedPar
 
 	public AdvancedParticleVisualizer(NamespacedKey key, String nameFormat) {
 		super(key, nameFormat);
-	}
-
-	@Override
-	public VisualizerType<AdvancedParticleVisualizer> getType() {
-		return VisualizerHandler.ADV_PARTICLE_VISUALIZER_TYPE;
 	}
 
 	@Override
@@ -76,8 +72,15 @@ public class AdvancedParticleVisualizer extends BezierPathVisualizer<AdvancedPar
 			for (Player player : context.players()) {
 				Location point = context.data().points().get(i);
 				Context c = new Context(player, point, context.interval(), step, i, context.data().points().size());
-				player.spawnParticle(particle.apply(c), point, amount.apply(c), particleOffsetX.apply(c),
-						particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), particleData.apply(c));
+				Particle p = particle.apply(c);
+				Object data = particleData.apply(c);
+				if(!p.getDataType().equals(data.getClass())) {
+					player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+							particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
+				} else {
+					player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+							particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), data);
+				}
 			}
 		}
 	}

@@ -300,17 +300,40 @@ public class Messages {
             "particle", "particle-steps", "amount", "speed", "offset"
     }, value = """
             <#7b42f5>Visualizer:</#7b42f5> <name> <gray>(<key>)</gray>
-            <dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:/pathvisualizer edit particle <key> name ><name-format></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:/pathvisualizer edit particle <key> permission ><permission></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:/pathvisualizer edit particle <key> interval ><interval></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:/pathvisualizer edit particle <key> point-distance ><point-distance></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:/pathvisualizer edit particle <key> particle ><particle></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Particle-Steps: <#6569eb><hover:show_text:"Click to change particle-steps"><click:suggest_command:/pathvisualizer edit particle-steps <key> particle ><particle-steps></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:/pathvisualizer edit particle <key> particle ><amount></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:/pathvisualizer edit particle <key> particle ><speed></click></hover></#6569eb>
-            <dark_gray>» </dark_gray><gray>Offset: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:/pathvisualizer edit particle <key> particle ><offset></click></hover></#6569eb>""")
+            <dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval"><interval></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance"><point-distance></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Particle-Steps: <#6569eb><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><speed></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Offset: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></#6569eb>""")
     public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.particle_visualizer");
 
+    @MessageMeta(placeholders = {
+            "key", "name", "name-format", "type", "permission", "interval", "point-distance",
+            "particle", "particle-steps", "amount", "speed", "offset-x", "offset-y", "offset-z",
+            "path-x", "path-y", "path-z"
+    }, value = """
+            <#7b42f5>Visualizer:</#7b42f5> <name> <gray>(<key>)</gray>
+            <dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance"><point-distance></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><particle></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Particle-Data: <#6569eb><hover:show_text:"Click to change particle-Data"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle-data"><particle-data></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Offset:
+                <dark_gray>» </dark_gray><gray>X: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></#6569eb>
+                <dark_gray>» </dark_gray><gray>Y: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></#6569eb>
+                <dark_gray>» </dark_gray><gray>Z: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></#6569eb>
+            <dark_gray>» </dark_gray><gray>Path Offset (e.g. to make Spirals):
+                <dark_gray>» </dark_gray><gray>X: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></#6569eb>
+                <dark_gray>» </dark_gray><gray>Y: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></#6569eb>
+                <dark_gray>» </dark_gray><gray>Z: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></#6569eb>""")
+    public static final Message CMD_ADV_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.advanced_particle_visualizer");
 
     @MessageMeta(value = "<list>", placeholders = "list")
     public static final Message E_NODE_NAME = new Message("editor.node_name");

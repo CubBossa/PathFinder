@@ -8,6 +8,7 @@ import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Server;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 public class VisualizerHandler {
 
 	public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE = new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
-	public static final VisualizerType<AdvancedParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new AdvancedParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "advanced-particle"));
+	public static final VisualizerType<SerializableAdvancedParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new SerializableAdvancedParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "advanced-particle"));
 	public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE = new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
 
 	@Getter
