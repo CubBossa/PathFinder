@@ -38,7 +38,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 				.resolver(Placeholder.component("particle", Messages.formatParticle(element.getParticle(), element.getParticleData())))
 				.resolver(Placeholder.component("particle-steps", Component.text(element.getSchedulerSteps())))
 				.resolver(Placeholder.component("amount", Component.text(element.getAmount())))
-				.resolver(Placeholder.component("speed", Component.text(element.getSpeed())))
+				.resolver(Formatter.number("speed", element.getSpeed()))
 				.resolver(Placeholder.component("offset", Messages.formatVector(element.getOffset())))
 				.resolver(Formatter.number("point-distance", element.getPointDistance()))
 				.build());
