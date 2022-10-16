@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.lang.annotation.Target;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,7 +61,12 @@ public class SimpleDijkstra<N> {
 		return root;
 	}
 
-	public void calculate(N source) {
+	/**
+	 * Required once before getting the distance from this start node to any other node.
+	 *
+	 * @param source The node to build the graph instance on. Every other node keeps track of its distance to this node.
+	 */
+	public void setStartNode(N source) {
 		Set<Node> unsettled = new HashSet<>();
 		unsettled.add(buildGraph(source));
 
@@ -104,6 +108,13 @@ public class SimpleDijkstra<N> {
 		}
 	}
 
+	/**
+	 * Only returns the data from the already calculated graph. This is a performance-friendly way to get multiple shortest paths
+	 * at once. Call {@code #setStartNode} once to generate the graph and use the shortestPath methods to retrieve the results.
+	 *
+	 * @param target The node to retrieve the shortest path for.
+	 * @return A list of nodes including the target node as last node.
+	 */
 	public List<N> shortestPath(N target) {
 		if (!computedGraph.containsKey(target)) {
 			return new LinkedList<>();
@@ -113,10 +124,24 @@ public class SimpleDijkstra<N> {
 		return result;
 	}
 
+	/**
+	 * Only returns the data from the already calculated graph. This is a performance-friendly way to get multiple shortest paths
+	 * at once. Call {@code #setStartNode} once to generate the graph and use the shortestPath methods to retrieve the results.
+	 *
+	 * @param targets The nodes to retrieve the shortest path for.
+	 * @return A list of nodes to the target with the shortest path, including the target node as last node.
+	 */
 	public List<N> shortestPathToAny(N... targets) {
 		return shortestPathToAny(Lists.newArrayList(targets));
 	}
 
+	/**
+	 * Only returns the data from the already calculated graph. This is a performance-friendly way to get multiple shortest paths
+	 * at once. Call {@code #setStartNode} once to generate the graph and use the shortestPath methods to retrieve the results.
+	 *
+	 * @param targets The nodes to retrieve the shortest path for.
+	 * @return A list of nodes to the target with the shortest path, including the target node as last node.
+	 */
 	public List<N> shortestPathToAny(Collection<N> targets) {
 		if (targets.size() == 0) {
 			throw new IllegalArgumentException("Targets must contain at least 2 elements");
@@ -128,7 +153,7 @@ public class SimpleDijkstra<N> {
 				.map(n -> computedGraph.get(n))
 				.min(Comparator.comparingDouble(Node::getDistance))
 				.orElse(null);
-		if(nearest == null) {
+		if (nearest == null) {
 			return new LinkedList<>();
 		}
 		List<N> path = nearest.path.stream()

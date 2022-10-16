@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -38,7 +37,7 @@ class SimpleDijkstraTest {
 		graph.connect("g", "d", 1);
 
 		dijkstra = new SimpleDijkstra<>(graph);
-		dijkstra.calculate("a");
+		dijkstra.setStartNode("a");
 	}
 
 	@Test

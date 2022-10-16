@@ -28,7 +28,7 @@ class GraphTest {
 	void merge() {
 		a.merge(b);
 		SimpleDijkstra<String> dijkstra = new SimpleDijkstra<>(a);
-		dijkstra.calculate("a");
+		dijkstra.setStartNode("a");
 		Assertions.assertEquals(List.of("a", "b", "c"), dijkstra.shortestPath("c"));
 	}
 }

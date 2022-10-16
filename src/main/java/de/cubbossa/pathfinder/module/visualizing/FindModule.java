@@ -121,7 +121,7 @@ public class FindModule implements Listener {
 		}
 
 		SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);
-		dijkstra.calculate(playerNode);
+		dijkstra.setStartNode(playerNode);
 		List<Node> path = dijkstra.shortestPathToAny(targets);
 
 		if (path == null) {

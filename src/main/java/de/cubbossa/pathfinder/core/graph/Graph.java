@@ -4,9 +4,6 @@ import java.util.*;
 
 public class Graph<N> {
 
-	private record Edge<T>(T node, double weight) {
-	}
-
 	private Map<N, Map<N, Double>> nodes;
 
 	public Graph() {
