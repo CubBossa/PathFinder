@@ -163,7 +163,7 @@ public class Messages {
             placeholders = {"selection", "location"})
     public static final Message CMD_N_MOVED = new Message("commands.node.moved");
     @MessageMeta(value = """
-            <#7b42f5>Node #<id></7b42f5> <gray>(<roadmap>)</gray>
+            <#7b42f5>Node #<id></#7b42f5> <gray>(<roadmap>)</gray>
             <dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb> (<world>)
             <dark_gray>» </dark_gray><gray>Curve-Length: <#6569eb><curve-length></#6569eb>
             <dark_gray>» </dark_gray><gray>Edges: <edges>
@@ -191,7 +191,7 @@ public class Messages {
     @MessageMeta(value = "<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/waypoint info \"@n[id=<id>]\"><gray>#<id> at <position> (<world>)",
             placeholders = {"id", "position", "world", "curve-length", "edges", "groups"})
     public static final Message CMD_N_LIST_ELEMENT = new Message("commands.node.list.element");
-    @MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/waypoint list <roadmap-key> <prev-page>>←</click> <page>/<pages> <click:run_command:/waypoint list <roadmap-key> <next-page>>→</click> </gray>-------------</gradient>",
+    @MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/waypoint list \"<selector>\" <prev-page>>←</click> <page>/<pages> <click:run_command:/waypoint list \"<selector>\" <next-page>>→</click> </gray>-------------</gradient>",
             placeholders = {"roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages"})
     public static final Message CMD_N_LIST_FOOTER = new Message("commands.node.list.footer");
     @MessageMeta(value = "<ins:prefix>Connected <start> to <end>.",

@@ -115,7 +115,18 @@ public class SelectionUtils {
 			(nodes, context) -> {
 				try {
 					int input = Integer.parseInt(context.value());
-					return CommandUtils.subList(new ArrayList<>(nodes), 0, input);
+					return CommandUtils.subListPaginated(new ArrayList<>(nodes), 0, input);
+				} catch (Exception e) {
+					throw new SelectionParser.FilterException("Invalid number input: '" + context.value() + "'");
+				}
+			},
+			context -> IntStream.range(1, 10).mapToObj(i -> "" + i).toList());
+
+	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_OFFSET = new SelectionParser.Filter<>("offset", Pattern.compile("[0-9]+"),
+			(nodes, context) -> {
+				try {
+					int input = Integer.parseInt(context.value());
+					return CommandUtils.subList(new ArrayList<>(nodes), input);
 				} catch (Exception e) {
 					throw new SelectionParser.FilterException("Invalid number input: '" + context.value() + "'");
 				}
@@ -125,7 +136,8 @@ public class SelectionUtils {
 	public static final SelectionParser.Filter<Node, PlayerContext> SELECT_KEY_SORT = new SelectionParser.Filter<>("sort", Pattern.compile("(nearest|furthest|random|arbitrary)"), (nodes, context) -> {
 		Location pLoc = context.getPlayer().getLocation();
 		return switch (context.value()) {
-			case "nearest" -> nodes.stream().sorted(Comparator.comparingDouble(o -> o.getLocation().distance(pLoc))).collect(Collectors.toList());
+			case "nearest" ->
+					nodes.stream().sorted(Comparator.comparingDouble(o -> o.getLocation().distance(pLoc))).collect(Collectors.toList());
 			case "furthest" -> nodes.stream()
 					.sorted((o1, o2) -> Double.compare(o2.getLocation().distance(pLoc), o1.getLocation().distance(pLoc)))
 					.collect(Collectors.toList());
@@ -133,8 +145,10 @@ public class SelectionUtils {
 				Collections.shuffle(n);
 				return n;
 			}));
-			case "arbitrary" -> nodes.stream().sorted(Comparator.comparingInt(Node::getNodeId)).collect(Collectors.toList());
-			default -> throw new SelectionParser.FilterException("Invalid sorting parameter: '" + context.value() + "'.");
+			case "arbitrary" ->
+					nodes.stream().sorted(Comparator.comparingInt(Node::getNodeId)).collect(Collectors.toList());
+			default ->
+					throw new SelectionParser.FilterException("Invalid sorting parameter: '" + context.value() + "'.");
 		};
 	}, c -> Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
 
@@ -153,7 +167,7 @@ public class SelectionUtils {
 	public static final String SELECT_KEY_EDGE = "has_edge";
 
 	public static final ArrayList<SelectionParser.Filter<Node, PlayerContext>> SELECTORS = Lists.newArrayList(
-			SELECT_KEY_ID, SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH,
+			SELECT_KEY_ID, SELECT_KEY_OFFSET, SELECT_KEY_LIMIT, SELECT_KEY_DISTANCE, SELECT_KEY_TANGENT_LENGTH,
 			SELECT_KEY_SORT, SELECT_KEY_WORLD, SELECT_KEY_ROADMAP, SELECT_KEY_GROUP
 	);
 
