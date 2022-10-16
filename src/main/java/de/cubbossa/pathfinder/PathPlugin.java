@@ -165,6 +165,7 @@ public class PathPlugin extends JavaPlugin {
 	public void onLoad() {
 
 		generateIfAbsent("how-the-hell-do-i-use-it.txt");
+		generateIfAbsent("lang/styles.yml");
 		generateIfAbsent("lang/de_DE.yml");
 
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
@@ -190,6 +191,7 @@ public class PathPlugin extends JavaPlugin {
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.setFallbackLanguage(configuration.getFallbackLanguage());
 		translationHandler.setUseClientLanguage(configuration.isClientLanguage());
+		translationHandler.loadStyle();
 		translationHandler.loadLanguages();
 
 		new File(getDataFolder(), "data/").mkdirs();

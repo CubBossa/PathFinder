@@ -44,6 +44,7 @@ public class PathFinderCommand extends CommandTree {
 					CompletableFuture.runAsync(() -> {
 						try {
 							TranslationHandler.getInstance().registerAnnotatedLanguageClass(Messages.class);
+							TranslationHandler.getInstance().loadStyle();
 							TranslationHandler.getInstance().loadLanguages();
 
 							EffectHandler.getInstance().clearCache(PathPlugin.getInstance().getEffectsFile());
@@ -73,6 +74,7 @@ public class PathFinderCommand extends CommandTree {
 							CompletableFuture.runAsync(() -> {
 								try {
 									TranslationHandler.getInstance().registerAnnotatedLanguageClass(Messages.class);
+									TranslationHandler.getInstance().loadStyle();
 									TranslationHandler.getInstance().loadLanguages();
 								} catch (Throwable t) {
 									throw new RuntimeException(t);

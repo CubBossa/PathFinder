@@ -31,28 +31,24 @@ import java.util.stream.Collectors;
 @MessageFile
 public class Messages {
 
-	// #6569eb = default blue
-	// #8f65eb = default purple
-	// #8265eb = roadmap
-
-	@MessageMeta("<#7b42f5>PathFinder</#7b42f5> <dark_gray>»</dark_gray> <gray>")
+	@MessageMeta("<offset>PathFinder</offset> <dark_gray>»</dark_gray> <gray>")
 	public static final Message PREFIX = new Message("prefix");
-	@MessageMeta("<#8f65eb>true</#8f65eb>")
+	@MessageMeta("<offset_light>true</offset_light>")
 	public static final Message GEN_TRUE = new Message("general.true");
-	@MessageMeta("<#8f65eb>false</#8f65eb>")
+	@MessageMeta("<offset_light>false</offset_light>")
 	public static final Message GEN_FALSE = new Message("general.false");
-	@MessageMeta(value = "<#8f65eb><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></#8f65eb>",
+	@MessageMeta(value = "<offset_light><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></offset_light>",
 			placeholders = {"x", "y", "z"},
 			comment = "The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
 	public static final Message GEN_VECTOR = new Message("general.vector");
-	@MessageMeta(value = "<#6569eb><permission></#6569eb>", placeholders = "permission")
+	@MessageMeta(value = "<main><permission></main>", placeholders = "permission")
 	public static final Message GEN_PERMISSION = new Message("general.permission");
-	@MessageMeta(value = "<#6569eb><particle><#/6569eb>", placeholders = {"particle", "meta"})
+	@MessageMeta(value = "<main><particle></main>", placeholders = {"particle", "meta"})
 	public static final Message GEN_PARTICLE = new Message("general.particle");
-	@MessageMeta(value = "<#6569eb><particle> <gray>(<meta>)</gray><#/6569eb>", placeholders = {"particle", "meta"})
+	@MessageMeta(value = "<main><particle> <gray>(<meta>)</gray></main>", placeholders = {"particle", "meta"})
 	public static final Message GEN_PARTICLE_META = new Message("general.particle");
 
-	@MessageMeta(value = "<#6569eb>null</#6569eb>")
+	@MessageMeta(value = "<main>null</main>")
 	public static final Message GEN_NULL = new Message("general.null");
 	@MessageMeta("<green>Accept</green>")
 	public static final Message GEN_GUI_ACCEPT_N = new Message("general.gui.accept.name");
@@ -77,54 +73,54 @@ public class Messages {
 
 	@MessageMeta(placeholders = "error", value = "<red>An error occurred while reloading: <error></red>")
 	public static final Message RELOAD_ERROR = new Message("command.reload.error");
-	@MessageMeta(value = "<ins:prefix>Successfully reloaded in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
+	@MessageMeta(value = "<ins:prefix>Successfully reloaded in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS = new Message("command.reload.success.general");
-	@MessageMeta(value = "<ins:prefix>Successfully reloaded language in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
+	@MessageMeta(value = "<ins:prefix>Successfully reloaded language in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS_LANG = new Message("command.reload.success.language");
-	@MessageMeta(value = "<ins:prefix>Successfully reloaded effects in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
+	@MessageMeta(value = "<ins:prefix>Successfully reloaded effects in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS_FX = new Message("command.reload.success.effects");
-	@MessageMeta(value = "<ins:prefix>Successfully reloaded config files in <#8f65eb><ms></#8f65eb><#7b42f5>ms</#7b42f5>.", placeholders = "ms")
+	@MessageMeta(value = "<ins:prefix>Successfully reloaded config files in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS_CFG = new Message("command.reload.success.config");
 
 	@MessageMeta("""
-			<gradient:black:dark_gray:black>------------ <#8265eb>Pathfinder</#8265eb> ------------</gradient>
+			<gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
 			<gray>See this tutorial for a full description on
 			<gray>On how to get started with the plugin.
 						
 			<white>Commands:</white>
-			<dark_gray>» </dark_gray><gray><#d3c4f5>/roadmap</#d3c4f5> - Edit roadmaps, that group together waypoints
-			<dark_gray>» </dark_gray><gray><#d3c4f5>/nodegroup</#d3c4f5> - Edit nodegroups, that add behaviour to groups of nodes
-			<dark_gray>» </dark_gray><gray><#d3c4f5>/node</#d3c4f5> - Create, edit and delete nodes
-			<dark_gray>» </dark_gray><gray><#d3c4f5>/pathvisualizer</#d3c4f5> - Edit pathvisualizers, to specify particles and more
-			<dark_gray>» </dark_gray><gray><#d3c4f5>/gps</#d3c4f5> - Find the shortest way to a nodegroup
+			<dark_gray>» </dark_gray><gray><warm>/roadmap</warm> - Edit roadmaps, that group together waypoints
+			<dark_gray>» </dark_gray><gray><warm>/nodegroup</warm> - Edit nodegroups, that add behaviour to groups of nodes
+			<dark_gray>» </dark_gray><gray><warm>/node</warm> - Create, edit and delete nodes
+			<dark_gray>» </dark_gray><gray><warm>/pathvisualizer</warm> - Edit pathvisualizers, to specify particles and more
+			<dark_gray>» </dark_gray><gray><warm>/gps</warm> - Find the shortest way to a nodegroup
 			""")
 	public static final Message HELP = new Message("command.help");
 	@MessageMeta(value = """
-			<gradient:black:dark_gray:black>------------ <#8265eb>Pathfinder</#8265eb> ------------</gradient>
-			<dark_gray>» </dark_gray><gray>Authors: <#d3c4f5><authors></#d3c4f5>
-			<dark_gray>» </dark_gray><gray>Current version: <#d3c4f5><version></#d3c4f5>
-			<dark_gray>» </dark_gray><gray>Main Game version: <#d3c4f5><api-version></#d3c4f5>
-			<dark_gray>» </dark_gray><gray>Spigot-Page: <#d3c4f5><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></#d3c4f5>
+			<gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
+			<dark_gray>» </dark_gray><gray>Authors: <warm><authors></warm>
+			<dark_gray>» </dark_gray><gray>Current version: <warm><version></warm>
+			<dark_gray>» </dark_gray><gray>Main Game version: <warm><api-version></warm>
+			<dark_gray>» </dark_gray><gray>Spigot-Page: <warm><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></warm>
 			""", placeholders = {"authors", "version", "api-version"})
 	public static final Message INFO = new Message("command.info");
 
 	@MessageMeta(value = """
-			<#7b42f5>Roadmap:</#7b42f5> <name> <gray>(<key>)</gray>
-			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:'/roadmap edit <key> name <name-format>'><name-format></click></hover></#6569eb>
+			<offset>Roadmap:</offset> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:'/roadmap edit <key> name <name-format>'><name-format></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
 			<dark_gray>» </dark_gray><gray>Groups: <groups></gray>
-			<dark_gray>» </dark_gray><#8265eb>Visualizer:</#8265eb>
-			<dark_gray>  » </dark_gray><gray>Path Visualizer: <#6569eb><hover:show_text:"Click to change path-visualizer"><click:suggest_command:'/roadmap edit <key> visualizer <path-visualizer>'><path-visualizer></click></hover>
-			<dark_gray>  » </dark_gray><gray>Default Curve length: <#6569eb><hover:show_text:"Click to change curve length"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
+			<dark_gray>» </dark_gray><offset>Visualizer:</offset>
+			<dark_gray>  » </dark_gray><gray>Path Visualizer: <main><hover:show_text:"Click to change path-visualizer"><click:suggest_command:'/roadmap edit <key> visualizer <path-visualizer>'><path-visualizer></click></hover>
+			<dark_gray>  » </dark_gray><gray>Default Curve length: <main><hover:show_text:"Click to change curve length"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
 			""", placeholders = {"name", "key", "name-format", "curve-length", "path-visualizer", "nodes", "groups"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
 	@MessageMeta("<red>Could not create Roadmap. Check out console for details.")
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
-	@MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <#8265eb><name></#8265eb>.</gray>", placeholders = "name")
+	@MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <offset><name></offset>.</gray>", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
-	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Roadmap <#8265eb><roadmap></#8265eb>.</gray>", placeholders = "roadmap")
+	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Roadmap <offset><roadmap></offset>.</gray>", placeholders = "roadmap")
 	public static final Message CMD_RM_DELETE = new Message("commands.roadmap.delete");
-	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Roadmaps</#8265eb> ------------</gradient>",
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Roadmaps</offset> ------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
@@ -135,21 +131,21 @@ public class Messages {
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
 	@MessageMeta("<red>Please specify a roadmap: /roadmap editmode <roadmap>")
 	public static final Message CMD_RM_EM_PROVIDE_RM = new Message("commands.roadmap.editmode.specify_roadmap");
-	@MessageMeta(value = "<ins:prefix>Editmode activated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
+	@MessageMeta(value = "<ins:prefix>Editmode activated for <offset><roadmap></offset>.", placeholders = {"roadmap"})
 	public static final Message CMD_RM_EM_ACTIVATED = new Message("commands.roadmap.editmode.activated");
-	@MessageMeta(value = "<ins:prefix>Editmode deactivated for <#8265eb><roadmap></#8265eb>.", placeholders = {"roadmap"})
+	@MessageMeta(value = "<ins:prefix>Editmode deactivated for <offset><roadmap></offset>.", placeholders = {"roadmap"})
 	public static final Message CMD_RM_EM_DEACTIVATED = new Message("commands.roadmap.editmode.activated");
 	@MessageMeta(value = "<ins:prefix>Player <name> discovered <discovery>.", placeholders = {"name", "discovery"})
 	public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
 	@MessageMeta(value = "<ins:prefix>Player <name> forgot about <discovery>.", placeholders = {"name", "discovery"})
 	public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
-	@MessageMeta(value = "<ins:prefix>Successfully set name for <#8265eb><roadmap></#8265eb> to <display-name>. (<pre><name-format></pre>)</gray>",
+	@MessageMeta(value = "<ins:prefix>Successfully set name for <offset><roadmap></offset> to <display-name>. (<pre><name-format></pre>)</gray>",
 			placeholders = {"key", "roadmap", "old-value", "name-format", "value"})
 	public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
-	@MessageMeta(value = "<ins:prefix>Successfully set curve length for <#8265eb><roadmap></#8265eb> to <#8f65eb><value></#8f65eb>",
+	@MessageMeta(value = "<ins:prefix>Successfully set curve length for <offset><roadmap></offset> to <offset_light><value></offset_light>",
 			placeholders = {"key", "roadmap", "old-value", "value"})
 	public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curve_length");
-	@MessageMeta(value = "<ins:prefix>Successfully set visualizer for <#8265eb><roadmap></#8265eb> " +
+	@MessageMeta(value = "<ins:prefix>Successfully set visualizer for <offset><roadmap></offset> " +
 			"from <old-value> to <value>.</gray>",
 			placeholders = {"key", "roadmap", "old-value", "value"})
 	public static final Message CMD_RM_SET_VISUALIZER = new Message("commands.roadmap.set_visualizer");
@@ -163,9 +159,9 @@ public class Messages {
 			placeholders = {"selection", "location"})
 	public static final Message CMD_N_MOVED = new Message("commands.node.moved");
 	@MessageMeta(value = """
-			<#7b42f5>Node #<id></#7b42f5> <gray>(<roadmap>)</gray>
-			<dark_gray>» </dark_gray><gray>Position: <#6569eb><position></#6569eb> (<world>)
-			<dark_gray>» </dark_gray><gray>Curve-Length: <#6569eb><curve-length></#6569eb>
+			<offset>Node #<id></offset> <gray>(<roadmap>)</gray>
+			<dark_gray>» </dark_gray><gray>Position: <main><position></main> (<world>)
+			<dark_gray>» </dark_gray><gray>Curve-Length: <main><curve-length></main>
 			<dark_gray>» </dark_gray><gray>Edges: <edges>
 			<dark_gray>» </dark_gray><gray>Groups: <groups>
 			""", placeholders = {"id", "roadmap", "groups", "position", "world", "curve-length", "edges"})
@@ -185,7 +181,7 @@ public class Messages {
 			placeholders = {"nodes"})
 	public static final Message CMD_N_CLEAR_GROUPS = new Message("commands.node.clear_groups");
 
-	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Waypoints</#8265eb> ------------</gradient>",
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Waypoints</offset> ------------</gradient>",
 			placeholders = {"roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_N_LIST_HEADER = new Message("commands.node.list.header");
 	@MessageMeta(value = "<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/waypoint info \"@n[id=<id>]\"><gray>#<id> at <position> (<world>)",
@@ -216,7 +212,7 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Node group deleted: <name>.</gray>",
 			placeholders = "name")
 	public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
-	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Node-Groups</#8265eb> ------------</gradient>",
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Node-Groups</offset> ------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
@@ -240,12 +236,12 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Find distance set for <key> from <old-value> to <value>.",
 			placeholders = {"key", "name", "old-value", "value"})
 	public static final Message CMD_NG_SET_FIND_DIST = new Message("commands.node_group.set_find_distance");
-	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<dark_gray>» <#8f65eb><values></#8f65eb></dark_gray>",
+	@MessageMeta(value = "<ins:prefix>Search terms for <name>:\n<dark_gray>» <offset_light><values></offset_light></dark_gray>",
 			placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_LIST = new Message("commands.node_group.terms.list");
-	@MessageMeta(value = "<ins:prefix>Successfully added search terms to <name>: <#8f65eb><values></#8f65eb>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully added search terms to <name>: <offset_light><values></offset_light>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_ADD = new Message("commands.node_group.terms.add");
-	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <#8f65eb><values></#8f65eb>", placeholders = {"name", "values"})
+	@MessageMeta(value = "<ins:prefix>Successfully removed search terms from <name>: <offset_light><values></offset_light>", placeholders = {"name", "values"})
 	public static final Message CMD_NG_TERMS_REMOVE = new Message("commands.node_group.terms.remove");
 	@MessageMeta(value = "<ins:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
 	public static final Message CMD_FIND = new Message("commands.find.success");
@@ -259,7 +255,7 @@ public class Messages {
 	public static final Message CMD_CANCEL = new Message("commands.cancel_path");
 
 
-	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <#8265eb>Visualizer</#8265eb> ------------</gradient>",
+	@MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Visualizer</offset> ------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_VIS_LIST_HEADER = new Message("commands.path_visualizer.list.header");
 	@MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
@@ -269,12 +265,12 @@ public class Messages {
 			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_VIS_LIST_FOOTER = new Message("commands.path_visualizer.list.footer");
 
-	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <#8265eb><name></#8265eb> (<name-format>) of type '<type>'.</gray>",
+	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.</gray>",
 			placeholders = {"key", "name", "name-format", "type"})
 	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
 	@MessageMeta("<red>Another visualizer with this name already exists.")
 	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
-	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Visualizer <#8265eb><name></#8265eb>.</gray>", placeholders = "key, name, nameformat")
+	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Visualizer <offset><name></offset>.</gray>", placeholders = "key, name, nameformat")
 	public static final Message CMD_VIS_DELETE_SUCCESS = new Message("commands.path_visualizer.delete.success");
 	@MessageMeta("<red>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
 	public static final Message CMD_VIS_DELETE_ERROR = new Message("commands.path_visualizer.delete.error");
@@ -299,16 +295,16 @@ public class Messages {
 			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
 			"particle", "particle-steps", "amount", "speed", "offset"
 	}, value = """
-			<#7b42f5>Visualizer:</#7b42f5> <name> <gray>(<key>)</gray>
-			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval"><interval></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance"><point-distance></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Particle-Steps: <#6569eb><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><speed></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Offset: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></#6569eb>""")
+			<offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval"><interval></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Point-Distance: <main><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance"><point-distance></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Particle: <main><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Particle-Steps: <main><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><speed></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Offset: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></main>""")
 	public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.particle_visualizer");
 
 	@MessageMeta(placeholders = {
@@ -316,23 +312,23 @@ public class Messages {
 			"particle", "particle-steps", "amount", "speed", "offset-x", "offset-y", "offset-z",
 			"path-x", "path-y", "path-z"
 	}, value = """
-			<#7b42f5>Visualizer:</#7b42f5> <name> <gray>(<key>)</gray>
-			<dark_gray>» </dark_gray><gray>Name: <#6569eb><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Permission: <#6569eb><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Interval: <#6569eb><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Point-Distance: <#6569eb><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance"><point-distance></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Particle: <#6569eb><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><particle></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Particle-Data: <#6569eb><hover:show_text:"Click to change particle-Data"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle-data"><particle-data></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Amount: <#6569eb><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></#6569eb>
-			<dark_gray>» </dark_gray><gray>Speed: <#6569eb><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></#6569eb>
+			<offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Point-Distance: <main><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance"><point-distance></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Particle: <main><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><particle></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Particle-Data: <main><hover:show_text:"Click to change particle-Data"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle-data"><particle-data></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Offset:
-			    <dark_gray>» </dark_gray><gray>X: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></#6569eb>
-			    <dark_gray>» </dark_gray><gray>Y: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></#6569eb>
-			    <dark_gray>» </dark_gray><gray>Z: <#6569eb><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></#6569eb>
+			    <dark_gray>» </dark_gray><gray>X: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></main>
+			    <dark_gray>» </dark_gray><gray>Y: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></main>
+			    <dark_gray>» </dark_gray><gray>Z: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Path Offset (e.g. to make Spirals):
-			    <dark_gray>» </dark_gray><gray>X: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></#6569eb>
-			    <dark_gray>» </dark_gray><gray>Y: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></#6569eb>
-			    <dark_gray>» </dark_gray><gray>Z: <#6569eb><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></#6569eb>""")
+			    <dark_gray>» </dark_gray><gray>X: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></main>
+			    <dark_gray>» </dark_gray><gray>Y: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></main>
+			    <dark_gray>» </dark_gray><gray>Z: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></main>""")
 	public static final Message CMD_ADV_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.advanced_particle_visualizer");
 
 	@MessageMeta(value = "<list>", placeholders = "list")
@@ -353,7 +349,7 @@ public class Messages {
 	public static final Message E_EDGE_TOOL_L = new Message("editor.toolbar.edge_tool.lore");
 	@MessageMeta("<ins:prefix>Node connection mode cancelled")
 	public static final Message E_EDGE_TOOL_CANCELLED = new Message("editor.toolbar.edge_tool.cancelled");
-	@MessageMeta(value = "<ins:prefix>Edges directed: <#6569eb><value><#6569eb>", placeholders = "value")
+	@MessageMeta(value = "<ins:prefix>Edges directed: <main><value><main>", placeholders = "value")
 	public static final Message E_EDGE_TOOL_DIR_TOGGLE = new Message("editor.toolbar.edge_tool.directed");
 	@MessageMeta("<white><u>Assign Group</u></white>")
 	public static final Message E_GROUP_TOOL_N = new Message("editor.toolbar.group_tool.name");
