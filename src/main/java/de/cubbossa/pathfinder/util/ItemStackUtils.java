@@ -146,7 +146,8 @@ public class ItemStackUtils {
 				profileField.setAccessible(true);
 				profileField.set(meta, profile);
 
-			} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException error) {
+			} catch (IllegalArgumentException | NoSuchFieldException | SecurityException |
+					 IllegalAccessException error) {
 				error.printStackTrace();
 			}
 			itemStack.setItemMeta(meta);

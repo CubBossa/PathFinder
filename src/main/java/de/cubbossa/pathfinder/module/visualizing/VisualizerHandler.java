@@ -1,7 +1,5 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
-import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.events.ParticleVisualizerStepsChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.*;

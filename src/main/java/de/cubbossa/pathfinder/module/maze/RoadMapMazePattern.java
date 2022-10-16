@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.module.maze;
 
+import de.cubbossa.menuframework.util.Pair;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.menuframework.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;

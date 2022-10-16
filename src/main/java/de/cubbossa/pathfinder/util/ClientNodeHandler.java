@@ -332,7 +332,7 @@ public class ClientNodeHandler {
 
 	public void renameArmorstand(Player player, Node node, @Nullable Component name) {
 		Integer id = nodeEntityMap.get(node);
-		if(id == null) {
+		if (id == null) {
 			throw new RuntimeException("Trying to update armorstand that was not registered for client side display.");
 		}
 

@@ -12,7 +12,6 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Getter

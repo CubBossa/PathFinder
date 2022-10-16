@@ -7,5 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 public @interface ConfigValue {
 
 	String path();
+
 	String[] comments() default "";
 }

@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import org.bukkit.Keyed;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 

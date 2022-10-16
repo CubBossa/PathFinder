@@ -1,7 +1,5 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import lombok.Getter;
@@ -10,8 +8,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
-import java.util.Map;
 
 @Getter
 @Setter

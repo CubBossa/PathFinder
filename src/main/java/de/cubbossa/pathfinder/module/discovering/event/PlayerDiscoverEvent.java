@@ -1,11 +1,9 @@
 package de.cubbossa.pathfinder.module.discovering.event;
 
 import de.cubbossa.pathfinder.core.node.Discoverable;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.data;
 
-import de.cubbossa.pathfinder.core.node.Discoverable;
 import org.bukkit.NamespacedKey;
 
 import java.util.Date;

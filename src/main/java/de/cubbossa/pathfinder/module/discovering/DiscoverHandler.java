@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module.discovering;
 
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -12,9 +11,7 @@ import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.serializedeffects.EffectHandler;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

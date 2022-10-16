@@ -16,11 +16,14 @@ public class NodeFindEvent extends Event implements Cancellable {
 
 	@Getter
 	private final UUID playerId;
-	@Getter @Setter
+	@Getter
+	@Setter
 	private Waypoint findable;
-	@Getter @Setter
+	@Getter
+	@Setter
 	private Date date;
-	@Getter @Setter
+	@Getter
+	@Setter
 	private boolean cancelled;
 
 	public NodeFindEvent(UUID playerId, Waypoint findable, Date date) {

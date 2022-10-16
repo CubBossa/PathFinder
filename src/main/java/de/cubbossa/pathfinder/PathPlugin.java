@@ -1,7 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
@@ -24,6 +22,8 @@ import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
+import de.cubbossa.splinelib.SplineLib;
+import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
 import de.tr7zw.nbtapi.NBTContainer;

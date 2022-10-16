@@ -35,9 +35,9 @@ public class NodeGroupHandler implements Listener {
 	public void loadGroups() {
 		groups.clear();
 		groups.putAll(PathPlugin.getInstance().getDatabase().loadNodeGroups());
-		for(var entry : PathPlugin.getInstance().getDatabase().loadSearchTerms().entrySet()) {
+		for (var entry : PathPlugin.getInstance().getDatabase().loadSearchTerms().entrySet()) {
 			NodeGroup group = getNodeGroup(entry.getKey());
-			if(group == null) {
+			if (group == null) {
 				continue;
 			}
 			group.addSearchTerms(entry.getValue());
@@ -151,8 +151,10 @@ public class NodeGroupHandler implements Listener {
 			return 1.5f;
 		}
 		return (float) switch (PathPlugin.getInstance().getConfiguration().getFindDistancePolicy()) {
-			case SMALLEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
-			case LARGEST_VALUE -> groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
+			case SMALLEST_VALUE ->
+					groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
+			case LARGEST_VALUE ->
+					groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
 			case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().getFindDistance();
 		};
 	}
@@ -162,9 +164,12 @@ public class NodeGroupHandler implements Listener {
 			return false;
 		}
 		return switch (PathPlugin.getInstance().getConfiguration().getNavigablePolicy()) {
-			case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
-			case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
-			case NATURAL_ORDER -> groupable.getGroups().stream().limit(1).anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+			case SMALLEST_VALUE ->
+					groupable.getGroups().stream().allMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+			case LARGEST_VALUE ->
+					groupable.getGroups().stream().anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+			case NATURAL_ORDER ->
+					groupable.getGroups().stream().limit(1).anyMatch(group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
 		};
 	}
 

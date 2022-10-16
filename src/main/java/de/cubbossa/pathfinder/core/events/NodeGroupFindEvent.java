@@ -14,35 +14,35 @@ import java.util.UUID;
 
 public class NodeGroupFindEvent extends Event implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
+	private static final HandlerList handlers = new HandlerList();
 
-    @Getter
-    private final UUID playerId;
-    @Getter
-    private final Waypoint triggeringFindable;
-    @Getter
-    @Setter
-    private @Nullable
+	@Getter
+	private final UUID playerId;
+	@Getter
+	private final Waypoint triggeringFindable;
+	@Getter
+	@Setter
+	private @Nullable
 	NodeGroup group;
-    @Getter
-    @Setter
-    private Date date;
-    @Getter
-    @Setter
-    private boolean cancelled;
+	@Getter
+	@Setter
+	private Date date;
+	@Getter
+	@Setter
+	private boolean cancelled;
 
-    public NodeGroupFindEvent(UUID playerId, NodeGroup group, Waypoint triggeringFindable, Date date) {
-        this.playerId = playerId;
-        this.group = group;
-        this.triggeringFindable = triggeringFindable;
-        this.date = date;
-    }
+	public NodeGroupFindEvent(UUID playerId, NodeGroup group, Waypoint triggeringFindable, Date date) {
+		this.playerId = playerId;
+		this.group = group;
+		this.triggeringFindable = triggeringFindable;
+		this.date = date;
+	}
 
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+	public HandlerList getHandlers() {
+		return handlers;
+	}
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
 }

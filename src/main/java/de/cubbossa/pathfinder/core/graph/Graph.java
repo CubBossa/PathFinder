@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.core.graph;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Graph<N> {
 
-	private Map<N, Map<N, Double>> nodes;
+	private final Map<N, Map<N, Double>> nodes;
 
 	public Graph() {
 		this(16);
@@ -20,7 +21,7 @@ public class Graph<N> {
 				Map<N, Double> combined = new HashMap<>(nodes.get(entry.getKey()));
 				combined.putAll(entry.getValue());
 				nodes.put(entry.getKey(), combined);
-			} else{
+			} else {
 				nodes.put(entry.getKey(), entry.getValue());
 			}
 		}

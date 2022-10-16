@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.core.events.roadmap;
 
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;

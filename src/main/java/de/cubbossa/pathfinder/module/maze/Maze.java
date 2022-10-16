@@ -112,8 +112,8 @@ public class Maze {
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		for(short[] line : grid) {
-			for(short s : line) {
+		for (short[] line : grid) {
+			for (short s : line) {
 				builder.append(toChar(s));
 			}
 			builder.append("\n");

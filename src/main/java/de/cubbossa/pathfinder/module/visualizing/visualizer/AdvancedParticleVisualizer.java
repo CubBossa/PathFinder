@@ -1,8 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -11,12 +9,8 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 @Getter
@@ -74,7 +68,7 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
 				Context c = new Context(player, point, context.interval(), step, i, context.data().points().size());
 				Particle p = particle.apply(c);
 				Object data = particleData.apply(c);
-				if(data == null || !p.getDataType().equals(data.getClass())) {
+				if (data == null || !p.getDataType().equals(data.getClass())) {
 					player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
 							particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
 				} else {

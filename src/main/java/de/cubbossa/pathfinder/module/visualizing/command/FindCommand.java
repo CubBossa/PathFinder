@@ -24,9 +24,12 @@ public class FindCommand extends CommandTree {
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
 								NodeSelection targets = (NodeSelection) args[0];
 								switch (FindModule.getInstance().findPath(player, targets)) {
-									case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-									case FAIL_BLOCKED -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-									case FAIL_EMPTY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+									case SUCCESS ->
+											TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
+									case FAIL_BLOCKED ->
+											TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+									case FAIL_EMPTY ->
+											TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
 								}
 							});
 						})

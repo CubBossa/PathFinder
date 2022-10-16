@@ -41,7 +41,7 @@ public class EditModeMenu {
 	private final RoadMap roadMap;
 	private Node edgeStart = null;
 	private Boolean undirectedEdges = false;
-	private Collection<NodeGroup> multiTool = new HashSet<>();
+	private final Collection<NodeGroup> multiTool = new HashSet<>();
 	private final Collection<NodeType<?>> types;
 
 	public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
