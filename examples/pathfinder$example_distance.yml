@@ -1,0 +1,17 @@
+type: pathfinder:scriptline
+display-name: example_distance
+particle-steps: 40
+particle: REDSTONE
+particle-data: var DustOptions = Java.type('org.bukkit.Particle$DustOptions'); new
+  DustOptions(Java.type('org.bukkit.Color').fromRGB(Math.min(playerdistance * 15,
+  255), 0, Math.max(255 - playerdistance * 15, 0)), 1);
+speed: '0.0001'
+amount: '1'
+offset-x: '0.0001'
+offset-y: '0.0001'
+offset-z: '0.0001'
+path-x: '0'
+path-y: '0'
+path-z: '0'
+sample-rate: 16
+point-distance: 0.2
