@@ -1,0 +1,13 @@
+type: pathfinder:particle
+display-name: <gray>(Example)</gray> <#7B42F5>Ghosts</#7B42F5>
+particle-steps: 50
+particle: SCULK_SOUL
+speed: 0.01
+amount: 1
+offset:
+  ==: Vector
+  x: 0.001
+  y: 0.001
+  z: 0.001
+sample-rate: 16
+point-distance: 0.2

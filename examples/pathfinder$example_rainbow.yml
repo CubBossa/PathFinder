@@ -1,0 +1,18 @@
+type: pathfinder:scriptline
+display-name: <gray>(Example)</gray> <rainbow>Rainbow</rainbow>
+particle-steps: 5
+interval: 2
+particle: REDSTONE
+particle-data: var DustOptions = Java.type('org.bukkit.Particle$DustOptions'); new
+  DustOptions(Java.type('org.bukkit.Color').fromRGB((Java.type('java.awt.Color').getHSBColor((interval+index
+  % 100) / 100, 1, 1).getRGB() & 0xffffff)), 1)
+speed: '0.0001'
+amount: '1'
+offset-x: '0'
+offset-y: '0.0001'
+offset-z: '0.0001'
+path-x: 'Math.cos(index/5)*Math.cos(index/11)*Math.cos(index/3)*.5'
+path-y: 'Math.sin(index/5)*Math.sin(index/11)*Math.cos(index/3)*.3'
+path-z: '0'
+sample-rate: 16
+point-distance: 0.2
