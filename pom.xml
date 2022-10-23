@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.cubbossa</groupId>
     <artifactId>PathFinder</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -151,7 +151,7 @@
 
         <repository>
             <id>cubbossa</id>
-            <url>https://leonardbausenwein.de/nexus/repository/maven-public</url>
+            <url>https://nexus.leonardbausenwein.de/repository/maven-public</url>
         </repository>
 
         <repository>
