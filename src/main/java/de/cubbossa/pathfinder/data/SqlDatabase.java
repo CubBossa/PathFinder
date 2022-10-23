@@ -4,6 +4,7 @@ import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -733,6 +734,11 @@ public abstract class SqlDatabase implements DataStorage {
 						}
 						visualizer.getType().deserialize(visualizer, cfg.getValues(false));
 						registry.put(visualizer);
+					});
+					registry.values().forEach(visualizer -> {
+						if (visualizer instanceof CombinedVisualizer combined) {
+							combined.resolveReferences(registry.values());
+						}
 					});
 					return registry;
 				}

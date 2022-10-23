@@ -1,16 +1,15 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -32,7 +31,12 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 
 	@Override
 	public Message getInfoMessage(CombinedVisualizer element) {
-		return null;
+		return Messages.CMD_VIS_COMBINED_INFO.format(
+				TagResolver.resolver("entries", Messages.formatList(
+						element.getVisualizers(),
+						v -> v == null ? Component.text("undefined") : v.getDisplayName() != null ? v.getDisplayName() : Component.text(v.getNameFormat()))
+				)
+		);
 	}
 
 	@Override
@@ -52,15 +56,6 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 											Placeholder.component("child", target.getDisplayName())
 									), sender);
 								})))
-				.then(new LiteralArgument("list")
-						.executes((sender, objects) -> {
-							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_LIST.format(
-									TagResolver.resolver("entries", Messages.formatList(
-											((CombinedVisualizer) objects[0]).getVisualizers(),
-											Named::getDisplayName)
-									)
-							), sender);
-						}))
 				.then(new LiteralArgument("remove")
 						.then(CustomArgs.pathVisualizerArgument("child")
 								.executes((sender, objects) -> {
@@ -107,7 +102,6 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 		}
 		val.stream()
 				.map(NamespacedKey::fromString)
-				.map(k -> VisualizerHandler.getInstance().getPathVisualizer(k))
 				.forEach(visualizer::addVisualizer);
 	}
 }

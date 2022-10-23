@@ -23,6 +23,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -288,8 +289,13 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Successfully imported Visualizer: <name>", placeholders = {"key", "name"})
 	public static final Message CMD_VIS_IMPORT_SUCCESS = new Message("commands.path_visualizer.import.successful");
 
-	@MessageMeta(value = "<ins:prefix>All children:<entries:\"\":\"<br><dark_gray>» </dark_gray>\"/>", placeholders = "entries[:<separator>][:<prefix>][:<suffix>]1")
-	public static final Message CMD_VIS_COMBINED_LIST = new Message("commands.path_visualizer.combined.list");
+	@MessageMeta(value = """
+			<offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Children:<entries:"":"<br><dark_gray>  » </dark_gray>"/>""",
+			placeholders = "entries[:<separator>][:<prefix>][:<suffix>]")
+	public static final Message CMD_VIS_COMBINED_INFO = new Message("commands.path_visualizer.combined.info");
 	@MessageMeta(value = "<ins:prefix>Added <child> as child to <visualizer>.", placeholders = {"child", "visualizer"})
 	public static final Message CMD_VIS_COMBINED_ADD = new Message("commands.path_visualizer.combined.add");
 	@MessageMeta(value = "<ins:prefix>Removed <child> from children for <visualizer>.")
@@ -467,13 +473,17 @@ public class Messages {
 	}
 
 	public static <T> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries, Function<T, ComponentLike> formatter) {
-		return formatList(entries.stream().map(formatter).toList());
+		Collection<ComponentLike> componentLikes = new ArrayList<>();
+		for (T entry : entries) {
+			componentLikes.add(formatter.apply(entry));
+		}
+		return formatList(componentLikes);
 	}
 
 	public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries) {
 		return (queue, context) -> {
 			MiniMessage mm = TranslationHandler.getInstance().getMiniMessage();
-			ComponentLike separator = Component.text(", ", NamedTextColor.GRAY), prefix = Component.empty(), suffix = Component.empty();
+			ComponentLike separator = Component.text(", ", NamedTextColor.GRAY), prefix = null, suffix = null;
 			if (queue.hasNext()) {
 				separator = mm.deserialize(queue.pop().value());
 			}
@@ -487,7 +497,15 @@ public class Messages {
 			ComponentLike finalSuffix = suffix;
 			return Tag.selfClosingInserting(Component.join(JoinConfiguration.builder()
 					.separator(separator)
-					.build(), entries.stream().map(c -> Component.empty().append(finalPrefix).append(c).append(finalSuffix)).toList()));
+					.build(), entries.stream().map(c -> {
+				if (finalPrefix == null) {
+					return c;
+				}
+				if (finalSuffix == null) {
+					return Component.empty().append(finalPrefix).append(c);
+				}
+				return Component.empty().append(finalPrefix).append(c).append(finalSuffix);
+			}).collect(Collectors.toList())));
 		};
 	}
 
