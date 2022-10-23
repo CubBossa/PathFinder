@@ -81,9 +81,10 @@ public class YmlDatabase implements DataStorage {
 	}
 
 	@Override
-	public void connect() {
+	public void connect(Runnable initial) {
 		if (!dataDirectory.exists()) {
 			dataDirectory.mkdirs();
+			initial.run();
 		}
 		this.roadMapDir = new File(dataDirectory, DIR_RM);
 		this.roadMapDir.mkdirs();

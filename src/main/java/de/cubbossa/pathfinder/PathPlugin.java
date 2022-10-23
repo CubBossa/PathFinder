@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.menuframework.GUIHandler;
+import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
 import de.cubbossa.pathfinder.core.commands.RoadMapCommand;
@@ -50,6 +51,7 @@ public class PathPlugin extends JavaPlugin {
 
 	public static final String PERM_CMD_PF = "pathfinder.command.pathfinder";
 	public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
+	public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
 	public static final String PERM_CMD_FIND = "pathfinder.command.find";
 	public static final String PERM_CMD_FIND_LOC = "pathfinder.command.find.location";
 	public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
@@ -185,6 +187,7 @@ public class PathPlugin extends JavaPlugin {
 		miniMessage = MiniMessage.miniMessage();
 
 		// Data
+		new ExamplesHandler().fetchExamples();
 
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
 		new PacketTranslationHandler(this);
@@ -201,7 +204,12 @@ public class PathPlugin extends JavaPlugin {
 			default -> new YmlDatabase(new File(getDataFolder(), "data/"));
 		};
 		if (database != null) {
-			database.connect();
+			database.connect(() -> {
+				ExamplesHandler examples = ExamplesHandler.getInstance();
+				examples.afterFetch(() -> {
+					examples.getExamples().forEach(examples::loadVisualizer);
+				});
+			});
 		}
 
 		new FindModule(this);

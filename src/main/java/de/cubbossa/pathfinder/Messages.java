@@ -278,17 +278,23 @@ public class Messages {
 	public static final Message CMD_VIS_SET_NAME = new Message("commands.path_visualizer.set.name");
 	@MessageMeta(value = "<ins:prefix><gray>Changed permission of <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_PERM = new Message("commands.path_visualizer.set.perm");
-	@MessageMeta(value = "<ins:prefix><gray>Changed interval for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
-	public static final Message CMD_VIS_SET_INTERVAL = new Message("commands.path_visualizer.set.interval");
-	@MessageMeta(value = "<ins:prefix><gray>Changed point distance for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
-	public static final Message CMD_VIS_SET_DIST = new Message("commands.path_visualizer.set.distance");
-	@MessageMeta(value = "<ins:prefix><gray>Changed sample rate for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
-	public static final Message CMD_VIS_SET_SAMPLE = new Message("commands.path_visualizer.set.sample_rate");
+	@MessageMeta(value = "<ins:prefix><gray>Changed <property> for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "property", "value", "old-value"})
+	public static final Message CMD_VIS_SET_PROP = new Message("commands.path_visualizer.set.interval");
 
-	//TODO
+	@MessageMeta("<red>Could not import file, another visualizer with this key already exists.</red>")
+	public static final Message CMD_VIS_IMPORT_EXISTS = new Message("commands.path_visualizer.import.already_exists");
+	@MessageMeta("<red>Could not import file, there is no example file with this name.</red>")
+	public static final Message CMD_VIS_IMPORT_NOT_EXISTS = new Message("commands.path_visualizer.import.file_doesnt_exist");
+	@MessageMeta(value = "<ins:prefix>Successfully imported Visualizer: <name>", placeholders = {"key", "name"})
+	public static final Message CMD_VIS_IMPORT_SUCCESS = new Message("commands.path_visualizer.import.successful");
+
+	@MessageMeta(value = "<ins:prefix>All children:<entries:\"\":\"<br><dark_gray>» </dark_gray>\"/>", placeholders = "entries[:<separator>][:<prefix>][:<suffix>]1")
 	public static final Message CMD_VIS_COMBINED_LIST = new Message("commands.path_visualizer.combined.list");
+	@MessageMeta(value = "<ins:prefix>Added <child> as child to <visualizer>.", placeholders = {"child", "visualizer"})
 	public static final Message CMD_VIS_COMBINED_ADD = new Message("commands.path_visualizer.combined.add");
+	@MessageMeta(value = "<ins:prefix>Removed <child> from children for <visualizer>.")
 	public static final Message CMD_VIS_COMBINED_REMOVE = new Message("commands.path_visualizer.combined.remove");
+	@MessageMeta(value = "<ins:prefix>Cleared all children for <visualizer>.")
 	public static final Message CMD_VIS_COMBINED_CLEAR = new Message("commands.path_visualizer.combined.clear");
 
 	@MessageMeta(placeholders = {
@@ -303,7 +309,7 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Particle: <main><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Particle-Steps: <main><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></main>
-			<dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><speed></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed"><speed></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Offset: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></main>""")
 	public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.particle_visualizer");
 
@@ -460,7 +466,11 @@ public class Messages {
 				GEN_PERMISSION.format(TagResolver.resolver("permission", Tag.inserting(Component.text(permission))));
 	}
 
-	public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(Iterable<T> entries) {
+	public static <T> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries, Function<T, ComponentLike> formatter) {
+		return formatList(entries.stream().map(formatter).toList());
+	}
+
+	public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries) {
 		return (queue, context) -> {
 			MiniMessage mm = TranslationHandler.getInstance().getMiniMessage();
 			ComponentLike separator = Component.text(", ", NamedTextColor.GRAY), prefix = Component.empty(), suffix = Component.empty();
@@ -473,9 +483,11 @@ public class Messages {
 			if (queue.hasNext()) {
 				suffix = mm.deserialize(queue.pop().value());
 			}
+			ComponentLike finalPrefix = prefix;
+			ComponentLike finalSuffix = suffix;
 			return Tag.selfClosingInserting(Component.join(JoinConfiguration.builder()
-					.separator(separator).prefix(prefix).suffix(suffix)
-					.build(), entries));
+					.separator(separator)
+					.build(), entries.stream().map(c -> Component.empty().append(finalPrefix).append(c).append(finalSuffix)).toList()));
 		};
 	}
 

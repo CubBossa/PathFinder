@@ -19,6 +19,9 @@ public class NodeSelection extends ArrayList<Node> implements Collection<Node> {
 	@Setter
 	private @Nullable Meta meta = null;
 
+	public NodeSelection() {
+	}
+
 	public NodeSelection(Node... nodes) {
 		super(Arrays.asList(nodes));
 	}

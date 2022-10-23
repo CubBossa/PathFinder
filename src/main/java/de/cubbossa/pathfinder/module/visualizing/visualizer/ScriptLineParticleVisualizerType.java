@@ -2,8 +2,11 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -30,7 +33,7 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 				.resolver(Formatter.number("point-distance", element.getPointDistance()))
 				.resolver(Placeholder.parsed("particle", element.getParticleFunction()))
 				.resolver(Placeholder.parsed("particle-data", element.getParticleDataFunction()))
-				.resolver(Placeholder.parsed("speed", element.getParticleDataFunction()))
+				.resolver(Placeholder.parsed("speed", element.getSpeedFunction()))
 				.resolver(Placeholder.parsed("amount", element.getAmountFunction()))
 				.resolver(Placeholder.parsed("offset-x", element.getParticleOffsetXFunction()))
 				.resolver(Placeholder.parsed("offset-y", element.getParticleOffsetYFunction()))
@@ -43,7 +46,7 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 
 	@Override
 	public String getCommandName() {
-		return "advanced-particle";
+		return "scriptline";
 	}
 
 	@Override
@@ -52,60 +55,90 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 				.then(new LiteralArgument("particle")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setParticleFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "particle-steps", true, vis::getParticleFunction, vis::setParticleFunction);
+									}
 								})))
 				.then(new LiteralArgument("particle-data")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setParticleDataFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "particle-data", true, vis::getParticleDataFunction, vis::setParticleDataFunction);
+									}
+								})))
+				.then(new LiteralArgument("particle-steps")
+						.withPermission(PathPlugin.PERM_CMD_PV_PARTICLE_STEPS)
+						.then(new IntegerArgument("amount", 1)
+								.executes((commandSender, objects) -> {
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (Integer) objects[1], "particle-steps", true, vis::getSchedulerSteps, vis::setSchedulerSteps);
+									}
 								})))
 				.then(new LiteralArgument("amount")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setAmountFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "amount", true, vis::getAmountFunction, vis::setAmountFunction);
+									}
 								})))
 				.then(new LiteralArgument("speed")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setSpeedFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "speed", true, vis::getSpeedFunction, vis::setSpeedFunction);
+									}
 								})))
 				.then(new LiteralArgument("offset-x")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setParticleOffsetXFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "offset-x", true, vis::getParticleOffsetXFunction, vis::setParticleOffsetXFunction);
+									}
 								})))
 				.then(new LiteralArgument("offset-y")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setParticleOffsetYFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "offset-y", true, vis::getParticleOffsetYFunction, vis::setParticleOffsetYFunction);
+									}
 								})))
 				.then(new LiteralArgument("offset-z")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setParticleOffsetZFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "offset-z", true, vis::getParticleOffsetZFunction, vis::setParticleOffsetZFunction);
+									}
 								})))
 				.then(new LiteralArgument("path-x")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setPathOffsetXFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "path-x", true, vis::getPathOffsetXFunction, vis::setPathOffsetXFunction);
+									}
 								})))
 				.then(new LiteralArgument("path-y")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setPathOffsetYFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "path-y", true, vis::getPathOffsetYFunction, vis::setPathOffsetYFunction);
+									}
 								})))
 				.then(new LiteralArgument("path-z")
 						.then(new TextArgument("java-script")
 								.executes((commandSender, objects) -> {
-									((ScriptLineParticleVisualizer) objects[0]).setPathOffsetZFunction((String) objects[1]);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (String) objects[1], "path-z", true, vis::getPathOffsetZFunction, vis::setPathOffsetZFunction);
+									}
 								})));
 	}
+
 
 	@Override
 	public Map<String, Object> serialize(ScriptLineParticleVisualizer visualizer) {
 		super.serialize(visualizer);
 		return new LinkedHashMapBuilder<String, Object>()
 				.put("particle-steps", visualizer.getSchedulerSteps())
+				.put("interval", visualizer.getInterval())
 				.put("particle", visualizer.getParticleFunction())
 				.put("particle-data", visualizer.getParticleDataFunction())
 				.put("speed", visualizer.getSpeedFunction())
@@ -127,6 +160,9 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 		if (values.containsKey("particle-steps")) {
 			visualizer.setSchedulerSteps((Integer) values.get("particle-steps"));
 		}
+		if (values.containsKey("interval")) {
+			visualizer.setInterval((Integer) values.get("interval"));
+		}
 		if (values.containsKey("particle")) {
 			visualizer.setParticleFunction((String) values.get("particle"));
 		}
@@ -143,19 +179,19 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 			visualizer.setParticleOffsetXFunction((String) values.get("offset-x"));
 		}
 		if (values.containsKey("offset-y")) {
-			visualizer.setParticleOffsetXFunction((String) values.get("offset-y"));
+			visualizer.setParticleOffsetYFunction((String) values.get("offset-y"));
 		}
 		if (values.containsKey("offset-z")) {
-			visualizer.setParticleOffsetXFunction((String) values.get("offset-z"));
+			visualizer.setParticleOffsetZFunction((String) values.get("offset-z"));
 		}
 		if (values.containsKey("path-x")) {
-			visualizer.setParticleOffsetXFunction((String) values.get("path-x"));
+			visualizer.setPathOffsetXFunction((String) values.get("path-x"));
 		}
 		if (values.containsKey("path-y")) {
-			visualizer.setParticleOffsetXFunction((String) values.get("path-y"));
+			visualizer.setPathOffsetYFunction((String) values.get("path-y"));
 		}
 		if (values.containsKey("path-z")) {
-			visualizer.setParticleOffsetXFunction((String) values.get("path-z"));
+			visualizer.setPathOffsetZFunction((String) values.get("path-z"));
 		}
 		if (values.containsKey("sample-rate")) {
 			visualizer.setBezierSamplingRate((Integer) values.get("sample-rate"));

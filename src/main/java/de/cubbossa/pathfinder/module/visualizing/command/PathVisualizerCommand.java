@@ -5,9 +5,6 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChangedEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerNameChangedEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPermissionChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.translations.FormattedMessage;
@@ -19,10 +16,9 @@ import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
@@ -32,6 +28,7 @@ public class PathVisualizerCommand extends CommandTree {
 
 	public PathVisualizerCommand() {
 		super("pathvisualizer");
+		withAliases("visualizer");
 		withPermission(PathPlugin.PERM_CMD_PV);
 
 		then(new LiteralArgument("list")
@@ -66,6 +63,8 @@ public class PathVisualizerCommand extends CommandTree {
 						.executes((commandSender, objects) -> {
 							onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
 						})));
+
+		then(new VisualizerImportCommand(new LiteralArgument("import"), 0));
 	}
 
 	@Override
@@ -81,19 +80,28 @@ public class PathVisualizerCommand extends CommandTree {
 					.withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
 					.then(CustomArgs.miniMessageArgument("name")
 							.executes((commandSender, objects) -> {
-								onSetName(commandSender, (PathVisualizer<?, ?>) objects[0], (String) objects[1]);
+								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (String) objects[1], "name", true,
+											visualizer::getNameFormat, visualizer::setNameFormat);
+								}
 							})));
 			typeArg.then(new LiteralArgument("permission")
 					.withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
 					.then(new GreedyStringArgument("permission")
 							.executes((commandSender, objects) -> {
-								onSetPermission(commandSender, (PathVisualizer<?, ?>) objects[0], (String) objects[1]);
+								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (String) objects[1], "permission", true,
+											visualizer::getPermission, visualizer::setPermission, Messages::formatPermission);
+								}
 							})));
 			typeArg.then(new LiteralArgument("interval")
 					.withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
 					.then(new IntegerArgument("ticks", 1)
 							.executes((commandSender, objects) -> {
-								onSetInterval(commandSender, (PathVisualizer<?, ?>) objects[0], (Integer) objects[1]);
+								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (Integer) objects[1], "interval", true,
+											visualizer::getInterval, visualizer::setInterval, Formatter::number);
+								}
 							})));
 
 			lit.then(new LiteralArgument(type.getCommandName()).then(typeArg));
@@ -164,40 +172,5 @@ public class PathVisualizerCommand extends CommandTree {
 				.build());
 
 		TranslationHandler.getInstance().sendMessage(message, sender);
-	}
-
-	public void onSetName(CommandSender sender, PathVisualizer<?, ?> edit, String newName) {
-		String old = edit.getNameFormat();
-		Component oldComp = edit.getDisplayName();
-		edit.setNameFormat(newName);
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_NAME.format(tags(edit,
-				oldComp, edit.getDisplayName())), sender);
-		Bukkit.getPluginManager().callEvent(new VisualizerNameChangedEvent(edit, old, newName));
-	}
-
-	public void onSetPermission(CommandSender sender, PathVisualizer<?, ?> edit, String permission) {
-		String old = edit.getPermission();
-		edit.setPermission(permission);
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_PERM.format(tags(edit,
-				Messages.formatPermission(old), Messages.formatPermission(permission))), sender);
-		Bukkit.getPluginManager().callEvent(new VisualizerPermissionChangedEvent(edit, old, permission));
-	}
-
-	public void onSetInterval(CommandSender sender, PathVisualizer<?, ?> edit, int interval) {
-		int old = edit.getInterval();
-		edit.setInterval(interval);
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_INTERVAL.format(tags(edit,
-				Component.text(old), Component.text(interval))), sender);
-		Bukkit.getPluginManager().callEvent(new VisualizerIntervalChangedEvent(edit, old, interval));
-	}
-
-	public static <V extends ComponentLike> TagResolver tags(PathVisualizer<?, ?> visualizer, V old, V value) {
-		return TagResolver.builder()
-				.tag("key", Messages.formatKey(visualizer.getKey()))
-				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
-				.resolver(Placeholder.component("type", Component.text(visualizer.getType().getCommandName())))
-				.resolver(Placeholder.component("old-value", old))
-				.resolver(Placeholder.component("value", value))
-				.build();
 	}
 }

@@ -1,18 +1,29 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.module.visualizing.events.ParticleVisualizerStepsChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.*;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.StringUtils;
+import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @Getter
@@ -33,7 +44,6 @@ public class VisualizerHandler {
 	private final Map<UUID, Map<NamespacedKey, PathVisualizer<?, ?>>> playerVisualizers;
 	private final Map<Integer, HashedRegistry<PathVisualizer<?, ?>>> roadmapVisualizers;
 
-
 	public VisualizerHandler() {
 		instance = this;
 
@@ -46,7 +56,6 @@ public class VisualizerHandler {
 		pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
 		this.playerVisualizers = new HashMap<>();
 		this.roadmapVisualizers = new HashMap<>();
-		this.pathVisualizerMap.put(new ScriptLineParticleVisualizer(new NamespacedKey(PathPlugin.getInstance(), "advtest"), "lul"));
 	}
 
 	public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(NamespacedKey key) {
@@ -61,14 +70,16 @@ public class VisualizerHandler {
 		visualizerTypes.remove(type.getKey());
 	}
 
-	public void setSteps(ParticleVisualizer visualizer, int value) {
-		int old = visualizer.getSchedulerSteps();
-		visualizer.setSchedulerSteps(value);
-		Bukkit.getPluginManager().callEvent(new ParticleVisualizerStepsChangedEvent(visualizer, old, value));
-	}
-
 	public @Nullable PathVisualizer<?, ?> getPathVisualizer(NamespacedKey key) {
 		return pathVisualizerMap.get(key);
+	}
+
+	public void addPathVisualizer(PathVisualizer<?, ?> visualizer) {
+		if (pathVisualizerMap.containsKey(visualizer.getKey())) {
+			throw new IllegalArgumentException("Could not insert new path visualizer, another visualizer with key '" + visualizer.getKey() + "' already exists.");
+		}
+		PathPlugin.getInstance().getDatabase().updatePathVisualizer((PathVisualizer) visualizer);
+		pathVisualizerMap.put(visualizer);
 	}
 
 	public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type, NamespacedKey key) {
@@ -93,5 +104,27 @@ public class VisualizerHandler {
 
 	public Stream<PathVisualizer<?, ?>> getPathVisualizerStream() {
 		return pathVisualizerMap.values().stream();
+	}
+
+	public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value, String property, boolean visual, Supplier<T> getter, Consumer<T> setter) {
+		setProperty(sender, visualizer, value, property, visual, getter, setter, t -> Component.text(t.toString()));
+	}
+
+	public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value, String property, boolean visual, Supplier<T> getter, Consumer<T> setter, Function<T, ComponentLike> formatter) {
+		setProperty(sender, visualizer, value, property, visual, getter, setter, (s, t) -> Placeholder.component(s, formatter.apply(t)));
+	}
+
+	public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value, String property, boolean visual, Supplier<T> getter, Consumer<T> setter, BiFunction<String, T, TagResolver> formatter) {
+		T old = getter.get();
+		setter.accept(value);
+		Bukkit.getPluginManager().callEvent(new VisualizerPropertyChangedEvent<>(visualizer, property, visual, old, value));
+		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_PROP.format(
+				TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+				Placeholder.component("name", visualizer.getDisplayName()),
+				Placeholder.component("type", Component.text(visualizer.getType().getCommandName())),
+				Placeholder.parsed("property", property),
+				formatter.apply("old-value", old),
+				formatter.apply("value", value)
+		), sender);
 	}
 }

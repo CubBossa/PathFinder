@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
@@ -10,6 +11,8 @@ import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 
@@ -44,11 +47,19 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 									Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
 											Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
 													CombinedVisualizerChangedEvent.Action.ADD, Collections.singleton(target))));
-									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_ADD, sender);
+									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_ADD.format(
+											Placeholder.component("visualizer", vis.getDisplayName()),
+											Placeholder.component("child", target.getDisplayName())
+									), sender);
 								})))
 				.then(new LiteralArgument("list")
 						.executes((sender, objects) -> {
-							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_LIST, sender);
+							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_LIST.format(
+									TagResolver.resolver("entries", Messages.formatList(
+											((CombinedVisualizer) objects[0]).getVisualizers(),
+											Named::getDisplayName)
+									)
+							), sender);
 						}))
 				.then(new LiteralArgument("remove")
 						.then(CustomArgs.pathVisualizerArgument("child")
@@ -59,7 +70,10 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 									Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
 											Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
 													CombinedVisualizerChangedEvent.Action.REMOVE, Collections.singleton(target))));
-									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_REMOVE, sender);
+									TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.format(
+											Placeholder.component("visualizer", vis.getDisplayName()),
+											Placeholder.component("child", target.getDisplayName())
+									), sender);
 								})))
 				.then(new LiteralArgument("clear")
 						.executes((commandSender, objects) -> {
@@ -69,7 +83,9 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
 							Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
 									Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
 											CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
-							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_CLEAR, commandSender);
+							TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.format(
+									Placeholder.component("visualizer", vis.getDisplayName())
+							), commandSender);
 						}));
 	}
 

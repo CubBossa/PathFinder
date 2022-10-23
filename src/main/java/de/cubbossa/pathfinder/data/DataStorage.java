@@ -10,13 +10,26 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.*;
 
 public interface DataStorage {
 
-	void connect();
+	default void connect() throws IOException {
+		connect(() -> {
+		});
+	}
+
+	/**
+	 * Sets up the database files or does nothing if the database is already setup.
+	 * If the database hasn't yet existed, the initial callback will be executed.
+	 *
+	 * @param initial A callback to be executed if the database was initially created
+	 */
+	void connect(Runnable initial) throws IOException;
 
 	void disconnect();
+
 
 	Map<NamespacedKey, RoadMap> loadRoadMaps();
 
@@ -45,6 +58,7 @@ public interface DataStorage {
 
 	void deleteEdge(Node start, Node end);
 
+
 	Map<Integer, Node> loadNodes(RoadMap roadMap);
 
 	void updateNode(Node node);
@@ -62,6 +76,7 @@ public interface DataStorage {
 
 	Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
+
 	HashedRegistry<NodeGroup> loadNodeGroups();
 
 	void updateNodeGroup(NodeGroup group);
@@ -72,11 +87,13 @@ public interface DataStorage {
 
 	void deleteNodeGroup(NamespacedKey key);
 
+
 	Map<NamespacedKey, Collection<String>> loadSearchTerms();
 
 	void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
 	void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
+
 
 	DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
 
@@ -84,15 +101,18 @@ public interface DataStorage {
 
 	void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 
+
 	Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
 
 	<T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 
 	void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
 
+
 	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
 
 	void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
+
 
 	void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers);
 
@@ -101,6 +121,7 @@ public interface DataStorage {
 	void updateVisualizerStyle(ParticleVisualizer visualizer);
 
 	void deleteStyleVisualizer(int visualizerId);
+
 
 	Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(Collection<ParticleVisualizer> visualizers);
 

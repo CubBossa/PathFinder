@@ -9,6 +9,9 @@ import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.Getter;
 import lombok.Setter;
@@ -161,5 +164,15 @@ public class DatabaseListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onForget(PlayerForgetEvent event) {
 		data.deleteDiscoverInfo(event.getPlayerId(), event.getDiscoverable().getKey());
+	}
+
+	@EventHandler
+	public <T> void onPropertyChanged(VisualizerPropertyChangedEvent<T> event) {
+		data.updatePathVisualizer((PathVisualizer) event.getVisualizer());
+	}
+
+	@EventHandler
+	public void onCombinedUpdate(CombinedVisualizerChangedEvent event) {
+		data.updatePathVisualizer(event.getVisualizer());
 	}
 }

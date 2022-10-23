@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.module.visualizing.events.ParticleVisualizerStepsChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.*;
@@ -12,10 +12,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
+import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,22 +52,22 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 						.then(new ParticleArgument("particle")
 								.executes((commandSender, objects) -> {
 									ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-									onSetParticle(visualizer, (ParticleData) objects[argumentOffset], null, null, null);
+									onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset], null, null, null);
 								})
 								.then(new IntegerArgument("amount", 1)
 										.executes((commandSender, objects) -> {
 											ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-											onSetParticle(visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], null, null);
+											onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], null, null);
 										})
 										.then(new FloatArgument("speed", 0)
 												.executes((commandSender, objects) -> {
 													ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-													onSetParticle(visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], (Float) objects[argumentOffset + 2], null);
+													onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], (Float) objects[argumentOffset + 2], null);
 												})
 												.then(new LocationArgument("offset")
 														.executes((commandSender, objects) -> {
 															ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-															onSetParticle(visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], (Float) objects[argumentOffset + 2], ((Location) objects[argumentOffset + 3]).toVector());
+															onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset], (Integer) objects[argumentOffset + 1], (Float) objects[argumentOffset + 2], ((Location) objects[argumentOffset + 3]).toVector());
 														})
 												)
 										)
@@ -77,36 +77,25 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 						.withPermission(PathPlugin.PERM_CMD_PV_PARTICLE_STEPS)
 						.then(new IntegerArgument("amount", 1)
 								.executes((commandSender, objects) -> {
-									ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-									int amount = (int) objects[argumentOffset];
-									onSetSteps(visualizer, amount);
+									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+										VisualizerHandler.getInstance().setProperty(commandSender, vis, (Integer) objects[1], "particle-steps", true, vis::getSchedulerSteps, vis::setSchedulerSteps);
+									}
 								})
 						)
 				);
 	}
 
-
-	private <T> void onSetSteps(ParticleVisualizer visualizer, int amount) {
-		int old = visualizer.getSchedulerSteps();
-		visualizer.setSchedulerSteps(amount);
-		Bukkit.getPluginManager().callEvent(new ParticleVisualizerStepsChangedEvent(visualizer, old, amount));
-	}
-
-	private <T> void onSetParticle(ParticleVisualizer visualizer, ParticleData<T> particle, @Nullable Integer amount, @Nullable Float speed, @Nullable Vector offset) {
-		visualizer.setParticle(particle.particle());
-		if (particle.data() != null) {
-			visualizer.setParticleData(particle.data());
-		} else {
-			visualizer.setParticleData(null);
-		}
+	private <T> void onSetParticle(CommandSender sender, ParticleVisualizer visualizer, ParticleData<T> particle, @Nullable Integer amount, @Nullable Float speed, @Nullable Vector offset) {
+		VisualizerHandler.getInstance().setProperty(sender, visualizer, particle.particle(), "particle", true, visualizer::getParticle, visualizer::setParticle);
+		VisualizerHandler.getInstance().setProperty(sender, visualizer, particle.data(), "particle-data", true, visualizer::getParticleData, visualizer::setParticleData);
 		if (amount != null) {
-			visualizer.setAmount(amount);
+			VisualizerHandler.getInstance().setProperty(sender, visualizer, amount, "amount", true, visualizer::getAmount, visualizer::setAmount);
 		}
 		if (speed != null) {
-			visualizer.setSpeed(speed);
+			VisualizerHandler.getInstance().setProperty(sender, visualizer, speed, "speed", true, visualizer::getSpeed, visualizer::setSpeed);
 		}
 		if (offset != null) {
-			visualizer.setOffset(offset);
+			VisualizerHandler.getInstance().setProperty(sender, visualizer, offset, "speed", true, visualizer::getOffset, visualizer::setOffset);
 		}
 	}
 
@@ -115,6 +104,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 		super.serialize(visualizer);
 		return new LinkedHashMapBuilder<String, Object>()
 				.put("particle-steps", visualizer.getSchedulerSteps())
+				.put("interval", visualizer.getInterval())
 				.put("particle", visualizer.getParticle().toString())
 				.put("particle-data", visualizer.getParticleData())
 				.put("speed", visualizer.getSpeed())
@@ -130,6 +120,9 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 		super.deserialize(visualizer, values);
 		if (values.containsKey("particle-steps")) {
 			visualizer.setSchedulerSteps((Integer) values.get("particle-steps"));
+		}
+		if (values.containsKey("interval")) {
+			visualizer.setInterval((Integer) values.get("interval"));
 		}
 		if (values.containsKey("particle")) {
 			visualizer.setParticle(Particle.valueOf((String) values.get("particle")));

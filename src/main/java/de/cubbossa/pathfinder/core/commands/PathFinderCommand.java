@@ -3,16 +3,24 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.configuration.Configuration;
+import de.cubbossa.pathfinder.data.DataExporter;
+import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.SqliteDatabase;
+import de.cubbossa.pathfinder.data.YmlDatabase;
+import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.LiteralArgument;
+import dev.jorel.commandapi.arguments.TextArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
@@ -34,6 +42,61 @@ public class PathFinderCommand extends CommandTree {
 		then(new LiteralArgument("help").executes((commandSender, objects) -> {
 			TranslationHandler.getInstance().sendMessage(Messages.HELP, commandSender);
 		}));
+
+		then(new LiteralArgument("export")
+				.withPermission("blablabla")
+				.then(new LiteralArgument("sqlite")
+						.then(new TextArgument("filename")
+								.executes((commandSender, objects) -> {
+									PathPlugin pl = PathPlugin.getInstance();
+									long now = System.currentTimeMillis();
+									Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+										String fileName = (String) objects[0];
+										if (!fileName.endsWith(".db")) {
+											fileName = fileName + ".db";
+										}
+										DataStorage storage = new SqliteDatabase(new File(pl.getDataFolder(), "exports/" + fileName));
+										try {
+											storage.connect();
+											DataExporter.all().save(storage);
+										} catch (IOException e) {
+											pl.getLogger().log(Level.SEVERE, e, e::getMessage);
+											commandSender.sendMessage("Complete in " + (System.currentTimeMillis() - now) + "ms.");
+										}
+									});
+								})
+						)
+				)
+				.then(new LiteralArgument("yaml")
+						.then(new TextArgument("directory")
+								.executes((commandSender, objects) -> {
+									PathPlugin pl = PathPlugin.getInstance();
+									long now = System.currentTimeMillis();
+									Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+										String dir = (String) objects[0];
+										if (!dir.startsWith("/")) {
+											dir = "/" + dir;
+										}
+										File directory = new File(pl.getDataFolder(), "exports/" + dir);
+										directory.mkdirs();
+										DataStorage storage = new YmlDatabase(directory);
+										try {
+											storage.connect();
+											DataExporter.all().save(storage);
+											commandSender.sendMessage("Complete in " + (System.currentTimeMillis() - now) + "ms.");
+										} catch (IOException e) {
+											pl.getLogger().log(Level.SEVERE, e, e::getMessage);
+										}
+									});
+								})
+						)
+				)
+		);
+
+		then(new LiteralArgument("import")
+				.withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
+				.then(new VisualizerImportCommand(new LiteralArgument("visualizer"), 0))
+		);
 
 		then(new LiteralArgument("reload")
 				.withPermission(PathPlugin.PERM_CMD_PF_RELOAD)

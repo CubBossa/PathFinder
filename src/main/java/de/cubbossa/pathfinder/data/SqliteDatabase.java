@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.data;
 import lombok.Getter;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -17,7 +18,13 @@ public class SqliteDatabase extends SqlDatabase {
 		this.file = file;
 	}
 
-	public void connect() {
+	public void connect(Runnable initial) throws IOException {
+		if (!file.exists()) {
+			file.mkdirs();
+			file.createNewFile();
+
+			initial.run();
+		}
 		try {
 			String url = "jdbc:sqlite:" + file.getAbsolutePath();
 			connection = DriverManager.getConnection(url);
@@ -25,7 +32,7 @@ public class SqliteDatabase extends SqlDatabase {
 		} catch (SQLException e) {
 			throw new DataStorageException("Could not connect to Sqlite database.", e);
 		}
-		super.connect();
+		super.connect(initial);
 	}
 
 	public void disconnect() {

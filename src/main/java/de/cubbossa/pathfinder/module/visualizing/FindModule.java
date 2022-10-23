@@ -13,8 +13,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerDistanceChangedEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerIntervalChangedEvent;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -201,16 +200,10 @@ public class FindModule implements Listener {
 	}
 
 	@EventHandler
-	public void onDistanceChange(VisualizerDistanceChangedEvent event) {
-		activePaths.forEach((uuid, info) -> {
-			if (info.path().getVisualizer().equals(event.getVisualizer())) {
-				info.path().run();
-			}
-		});
-	}
-
-	@EventHandler
-	public void onDistanceChange(VisualizerIntervalChangedEvent event) {
+	public <T> void onVisualizerChanged(VisualizerPropertyChangedEvent<T> event) {
+		if (!event.isVisual()) {
+			return;
+		}
 		activePaths.forEach((uuid, info) -> {
 			if (info.path().getVisualizer().equals(event.getVisualizer())) {
 				info.path().run();

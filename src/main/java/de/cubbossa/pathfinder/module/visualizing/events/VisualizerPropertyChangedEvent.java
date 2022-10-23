@@ -6,15 +6,17 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-@Getter
 @RequiredArgsConstructor
-public class VisualizerDistanceChangedEvent extends Event {
+@Getter
+public class VisualizerPropertyChangedEvent<T> extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
 	private final PathVisualizer<?, ?> visualizer;
-	private final float oldValue;
-	private final float newValue;
+	private final String field;
+	private final boolean visual;
+	private final T oldValue;
+	private final T newValue;
 
 	public HandlerList getHandlers() {
 		return handlers;

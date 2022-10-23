@@ -16,6 +16,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
@@ -25,7 +26,7 @@ public abstract class SqlDatabase implements DataStorage {
 	abstract Connection getConnection();
 
 	@Override
-	public void connect() {
+	public void connect(Runnable initial) throws IOException {
 		createPathVisualizerTable();
 		createRoadMapTable();
 		createNodeTable();
