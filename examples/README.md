@@ -5,9 +5,9 @@
 Creating PathVisualizers may not be the easiest of tasks. Feel free to have a look at the
 examples on this page. You don't have to use YML as Database Type. You don't even need to download
 anything at all.
-To install one of these Visualizers, simply go on your server and ender:
+To install one of these Visualizers, simply join your server and enter the following command:
 
-``/pathfinder import visualizer <name>|* []``
+``/pathfinder import visualizer <name>|*``
 
 ## Important Note!
 
