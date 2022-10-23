@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
-import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -34,7 +33,7 @@ public class ScriptLineParticleVisualizer extends AdvancedParticleVisualizer<Scr
 	public ScriptLineParticleVisualizer(NamespacedKey key, String nameFormat) {
 		super(key, nameFormat);
 
-		engine = new NashornScriptEngineFactory().getScriptEngine("JavaScript");
+		engine = ((ScriptLineParticleVisualizerType) getType()).getJavaScriptEngine();
 		setParticle(context -> {
 			Bindings bindings = contextBindings(engine, context);
 			for (Particle particle : Particle.values()) {

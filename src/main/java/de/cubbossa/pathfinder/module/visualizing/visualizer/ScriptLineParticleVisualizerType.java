@@ -9,17 +9,24 @@ import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
+import lombok.Getter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
+import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
+import javax.script.ScriptEngine;
 import java.util.Map;
 
 public class ScriptLineParticleVisualizerType extends BezierVisualizerType<ScriptLineParticleVisualizer> {
 
+	@Getter
+	private final ScriptEngine javaScriptEngine;
+
 	public ScriptLineParticleVisualizerType(NamespacedKey key) {
 		super(key);
+		javaScriptEngine = new NashornScriptEngineFactory().getScriptEngine("JavaScript");
 	}
 
 	@Override

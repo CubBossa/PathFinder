@@ -57,7 +57,7 @@ public class ExamplesHandler {
 			Map<String, Object> values = YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
 			VisualizerType<?> type = VisualizerHandler.getInstance().getVisualizerType(NamespacedKey.fromString((String) values.get("type")));
 			if (type == null) {
-				PathPlugin.getInstance().getLogger().log(Level.SEVERE, "An error occured while parsing type: " + values.get("type") + " from " + values);
+				PathPlugin.getInstance().getLogger().log(Level.SEVERE, "An error occurred while parsing type: " + values.get("type") + " from " + values);
 				return null;
 			}
 			return parse(file, type, values);
