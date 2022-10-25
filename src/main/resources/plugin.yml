@@ -2,7 +2,8 @@ name: ${project.name}
 version: ${project.version}
 author: CubBossa
 main: de.cubbossa.pathfinder.PathPlugin
-api-version: 1.19
+# servers only run plugins with the same api-version or higher. Leave to 1.17
+api-version: 1.17
 
 depend:
   - ProtocolLib
