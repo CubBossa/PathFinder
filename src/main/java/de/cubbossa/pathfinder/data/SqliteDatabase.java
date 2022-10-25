@@ -20,7 +20,7 @@ public class SqliteDatabase extends SqlDatabase {
 
 	public void connect(Runnable initial) throws IOException {
 		if (!file.exists()) {
-			file.mkdirs();
+			file.getParentFile().mkdirs();
 			file.createNewFile();
 
 			initial.run();

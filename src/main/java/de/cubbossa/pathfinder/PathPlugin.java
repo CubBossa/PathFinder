@@ -174,7 +174,6 @@ public class PathPlugin extends JavaPlugin {
 
 		CommandAPI.onLoad(new CommandAPIConfig()
 				.verboseOutput(configuration.isVerbose())
-				.useLatestNMSVersion(true)
 				.initializeNBTAPI(NBTContainer.class, NBTContainer::new));
 	}
 
