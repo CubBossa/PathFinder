@@ -106,6 +106,7 @@ public class DatabaseListener implements Listener {
 
 	@EventHandler
 	public void onGroupDeleted(NodeGroupDeletedEvent event) {
+		data.removeSearchTerms(event.getGroup(), event.getGroup().getSearchTerms());
 		data.deleteNodeGroup(event.getGroup().getKey());
 	}
 

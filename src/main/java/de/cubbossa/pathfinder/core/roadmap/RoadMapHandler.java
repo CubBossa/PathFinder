@@ -78,11 +78,11 @@ public class RoadMapHandler {
 		return ++nodeIdCounter;
 	}
 
-	public RoadMap createRoadMap(Plugin plugin, String key) {
+	public RoadMap createRoadMap(Plugin plugin, String key) throws IllegalArgumentException {
 
 		NamespacedKey nKey = new NamespacedKey(plugin, key);
-		if (getRoadMap(nKey) != null) {
-			throw new IllegalStateException("Another roadmap with this key already exists.");
+		if (!isKeyUnique(nKey)) {
+			throw new IllegalArgumentException("Another roadmap with this key already exists.");
 		}
 
 		RoadMap rm = new RoadMap(

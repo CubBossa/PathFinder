@@ -52,11 +52,6 @@ public class NodeGroupHandler implements Listener {
 		return groups.values().stream().filter(nodes -> nodes.stream().anyMatch(node -> node.getRoadMapKey().equals(roadMap.getKey()))).collect(Collectors.toSet());
 	}
 
-	public boolean setGroupFindable(NodeGroup group, boolean findable) {
-		//TODO implement. Refreshes the findable collection.
-		return true;
-	}
-
 	public @Nullable
 	NodeGroup getNodeGroup(NamespacedKey key) {
 		if (key == null) {
@@ -65,18 +60,29 @@ public class NodeGroupHandler implements Listener {
 		return groups.get(key);
 	}
 
-	public void removeNodeGroup(NodeGroup group) {
-		groups.remove(group.getKey());
+	/**
+	 * Creates a new NodeGroup. NodeGroups can be used to apply common behaviour to multiple nodes, like if they can
+	 * be discovered or be navigated to.
+	 * <br>
+	 * <br>
+	 * Invoking this method will
+	 * <br>- create a NodeGroup instance
+	 * <br>- set the key, display name and default properties.
+	 * <br>- call the {@code NodeGroupCreatedEvent}
+	 * <br>- set the key (not including the namespace of &lt;namespace&gt;:&lt;key&gt;) as initial search term
+	 * <br>- call the {@code NodeGroupSearchTermsChangedEvent} for the added search term
+	 * <br>- add the group to the groups collection of this handler
+	 *
+	 * @param key        The unique NodeGroup key. There can only ever be one NodeGroup with this key within this plugin.
+	 * @param nameFormat The MiniMessage format that defines the display name for the NodeGroup
+	 * @return the new instance of the NodeGroup
+	 * @throws IllegalArgumentException If another group with this key already exists.
+	 */
+	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat) throws IllegalArgumentException {
 
-		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
-
-		for (Groupable node : group) {
-			node.removeGroup(group);
+		if (getNodeGroup(key) != null) {
+			throw new IllegalArgumentException("Another nodegroup with this key already exists.");
 		}
-		group.clear();
-	}
-
-	public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat) {
 
 		NodeGroup group = new NodeGroup(key, nameFormat);
 		group.addSearchTerms(Lists.newArrayList(key.getKey()));
@@ -86,6 +92,17 @@ public class NodeGroupHandler implements Listener {
 		));
 		groups.put(group);
 		return group;
+	}
+
+	public void deleteNodeGroup(NodeGroup group) {
+		groups.remove(group.getKey());
+
+		Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
+
+		for (Groupable node : group) {
+			node.removeGroup(group);
+		}
+		group.clear();
 	}
 
 	public void setNodeGroupName(NodeGroup group, String newName) {

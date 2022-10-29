@@ -72,7 +72,7 @@ public class Messages {
 	public static final Message ERROR_PARSE_PERCENT = new Message("error.parse.percent");
 	public static final Message ERROR_PARSE_KEY = new Message("error.parse.namespaced_key");
 
-	@MessageMeta(placeholders = "error", value = "<red>An error occurred while reloading: <error></red>")
+	@MessageMeta(placeholders = "error", value = "<negative>An error occurred while reloading: <error></negative>")
 	public static final Message RELOAD_ERROR = new Message("command.reload.error");
 	@MessageMeta(value = "<ins:prefix>Successfully reloaded in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
 	public static final Message RELOAD_SUCCESS = new Message("command.reload.success.general");
@@ -115,7 +115,9 @@ public class Messages {
 			<dark_gray>  » </dark_gray><gray>Default Curve length: <main><hover:show_text:"Click to change curve length"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
 			""", placeholders = {"name", "key", "name-format", "curve-length", "path-visualizer", "nodes", "groups"})
 	public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
-	@MessageMeta("<red>Could not create Roadmap. Check out console for details.")
+	@MessageMeta("<negative>Could not create Roadmap, another Roadmap with this key already exists.")
+	public static final Message CMD_RM_CREATE_DUPLICATE_KEY = new Message("commands.roadmap.create.success");
+	@MessageMeta("<negative>Could not create Roadmap. Check out console for details.")
 	public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
 	@MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <offset><name></offset>.</gray>", placeholders = "name")
 	public static final Message CMD_RM_CREATE_SUCCESS = new Message("commands.roadmap.create.success");
@@ -130,7 +132,7 @@ public class Messages {
 	@MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
 			placeholders = {"page", "next-page", "prev-page", "pages"})
 	public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
-	@MessageMeta("<red>Please specify a roadmap: /roadmap editmode <roadmap>")
+	@MessageMeta("<negative>Please specify a roadmap: /roadmap editmode <roadmap>")
 	public static final Message CMD_RM_EM_PROVIDE_RM = new Message("commands.roadmap.editmode.specify_roadmap");
 	@MessageMeta(value = "<ins:prefix>Editmode activated for <offset><roadmap></offset>.", placeholders = {"roadmap"})
 	public static final Message CMD_RM_EM_ACTIVATED = new Message("commands.roadmap.editmode.activated");
@@ -167,7 +169,7 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Groups: <groups>
 			""", placeholders = {"id", "roadmap", "groups", "position", "world", "curve-length", "edges"})
 	public static final Message CMD_N_INFO = new Message("commands.node.info");
-	@MessageMeta("<red>No nodes found to display. Check your selection query.</red>")
+	@MessageMeta("<negative>No nodes found to display. Check your selection query.</negative>")
 	public static final Message CMD_N_INFO_NO_SEL = new Message("commands.node.info_no_selection");
 	@MessageMeta(value = "<ins:prefix>Curve-length set to <length> for <selection>.",
 			placeholders = {"selection", "length"})
@@ -194,17 +196,19 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix>Connected <start> to <end>.",
 			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT = new Message("commands.node.connect.success");
-	@MessageMeta(value = "<red>Nodes cannot be connected to themselves: <start>>",
+	@MessageMeta(value = "<negative>Nodes cannot be connected to themselves: <start>>",
 			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT_IDENTICAL = new Message("commands.node.connect.identical");
-	@MessageMeta(value = "<red><start> and <end> are already connected.",
+	@MessageMeta(value = "<negative><start> and <end> are already connected.",
 			placeholders = {"start", "end"})
 	public static final Message CMD_N_CONNECT_ALREADY_CONNECTED = new Message("commands.node.connect.already_connected");
 	@MessageMeta(value = "<ins:prefix>Disconnected <start> from <end>.",
 			placeholders = {"start", "end"})
 	public static final Message CMD_N_DISCONNECT = new Message("commands.node.disconnect.success");
 
-	@MessageMeta(value = "<red>A node group with this namespaced key (<name>) already exists.</red>",
+	@MessageMeta(value = "<negative>Could not create Nodegroup. Check out console for details.")
+	public static final Message CMD_NG_CREATE_FAIL = new Message("commands.node_group.create_fail");
+	@MessageMeta(value = "<negative>A node group with this namespaced key (<name>) already exists.</negative>",
 			placeholders = "name")
 	public static final Message CMD_NG_ALREADY_EXISTS = new Message("commands.node_group.already_exists");
 	@MessageMeta(value = "<ins:prefix><gray>Node group created: <name>.</gray>",
@@ -269,11 +273,11 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.</gray>",
 			placeholders = {"key", "name", "name-format", "type"})
 	public static final Message CMD_VIS_CREATE_SUCCESS = new Message("commands.path_visualizer.create.success");
-	@MessageMeta("<red>Another visualizer with this name already exists.")
+	@MessageMeta("<negative>Another visualizer with this name already exists.")
 	public static final Message CMD_VIS_NAME_EXISTS = new Message("commands.path_visualizer.create.already_exists");
 	@MessageMeta(value = "<ins:prefix><gray>Successfully deleted Visualizer <offset><name></offset>.</gray>", placeholders = "key, name, nameformat")
 	public static final Message CMD_VIS_DELETE_SUCCESS = new Message("commands.path_visualizer.delete.success");
-	@MessageMeta("<red>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
+	@MessageMeta("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
 	public static final Message CMD_VIS_DELETE_ERROR = new Message("commands.path_visualizer.delete.error");
 	@MessageMeta(value = "<ins:prefix><gray>Changed name of <old-value> to <value>.", placeholders = {"key", "name", "type", "value", "old-value"})
 	public static final Message CMD_VIS_SET_NAME = new Message("commands.path_visualizer.set.name");
@@ -282,9 +286,9 @@ public class Messages {
 	@MessageMeta(value = "<ins:prefix><gray>Changed <property> for <name> from <old-value> to <value>.", placeholders = {"key", "name", "type", "property", "value", "old-value"})
 	public static final Message CMD_VIS_SET_PROP = new Message("commands.path_visualizer.set.interval");
 
-	@MessageMeta("<red>Could not import file, another visualizer with this key already exists.</red>")
+	@MessageMeta("<negative>Could not import file, another visualizer with this key already exists.</negative>")
 	public static final Message CMD_VIS_IMPORT_EXISTS = new Message("commands.path_visualizer.import.already_exists");
-	@MessageMeta("<red>Could not import file, there is no example file with this name.</red>")
+	@MessageMeta("<negative>Could not import file, there is no example file with this name.</negative>")
 	public static final Message CMD_VIS_IMPORT_NOT_EXISTS = new Message("commands.path_visualizer.import.file_doesnt_exist");
 	@MessageMeta(value = "<ins:prefix>Successfully imported Visualizer: <name>", placeholders = {"key", "name"})
 	public static final Message CMD_VIS_IMPORT_SUCCESS = new Message("commands.path_visualizer.import.successful");
@@ -387,7 +391,7 @@ public class Messages {
 	public static final Message E_SUB_GROUP_INFO_N = new Message("editor.groups.info.name");
 	@MessageMeta("<gray>Create a new nodegroup with\n<gray>» <yellow>/nodegroup create <key>")
 	public static final Message E_SUB_GROUP_INFO_L = new Message("editor.groups.info.lore");
-	@MessageMeta("<red>Reset Groups</red>")
+	@MessageMeta("<negative>Reset Groups</negative>")
 	public static final Message E_SUB_GROUP_RESET_N = new Message("editor.groups.reset.name");
 	@MessageMeta("<gray>Reset all groups for the\n<gray>selected node.")
 	public static final Message E_SUB_GROUP_RESET_L = new Message("editor.groups.reset.lore");

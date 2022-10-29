@@ -44,7 +44,7 @@ public class RoadMapCommand extends CommandTree {
 		then(new LiteralArgument("create")
 				.withPermission(PathPlugin.PERM_CMD_RM_CREATE)
 				.then(new StringArgument("key")
-						.executesPlayer((player, args) -> {
+						.executes((player, args) -> {
 							onCreate(player, new NamespacedKey(PathPlugin.getInstance(), (String) args[0]));
 						})));
 
@@ -142,6 +142,8 @@ public class RoadMapCommand extends CommandTree {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS
 					.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), sender);
 
+		} catch (IllegalArgumentException e) {
+			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_DUPLICATE_KEY, sender);
 		} catch (Exception e) {
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_FAIL, sender);
 			e.printStackTrace();
