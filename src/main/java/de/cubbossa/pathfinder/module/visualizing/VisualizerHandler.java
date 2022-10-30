@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.module.visualizing.events.VisualizerCreatedEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.*;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -80,6 +81,8 @@ public class VisualizerHandler {
 		}
 		PathPlugin.getInstance().getDatabase().updatePathVisualizer((PathVisualizer) visualizer);
 		pathVisualizerMap.put(visualizer);
+
+		Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
 	}
 
 	public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type, NamespacedKey key) {
@@ -94,6 +97,8 @@ public class VisualizerHandler {
 		T visualizer = type.create(key, nameFormat);
 		PathPlugin.getInstance().getDatabase().updatePathVisualizer(visualizer);
 		pathVisualizerMap.put(visualizer);
+
+		Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
 		return visualizer;
 	}
 

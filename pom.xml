@@ -63,6 +63,7 @@
                             <include>org.openjdk.nashorn:nashorn-core</include>
                             <include>org.ow2.asm:asm</include>
                             <include>org.ow2.asm:asm-util</include>
+                            <include>de.tr7zw:item-nbt-api</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -105,6 +106,10 @@
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.tr7zw.changeme.nbtapi</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.nbtapi</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -164,7 +169,7 @@
 
         <dependency>
             <groupId>de.tr7zw</groupId>
-            <artifactId>item-nbt-api-plugin</artifactId>
+            <artifactId>item-nbt-api</artifactId>
             <version>2.10.0</version>
         </dependency>
 
