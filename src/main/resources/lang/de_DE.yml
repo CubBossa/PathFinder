@@ -56,8 +56,8 @@ general:
     title: ''
     # Valid placeholders: <name>, <roadmaps>
     subtitle: Du hast <name> gefunden
-    # Valid placeholders: <name>, <roadmaps>
-    actionbar: 'Discovered: <roadmaps>'
+    # Valid placeholders: <name>
+    actionbar: 'Discovered: <name>'
 command:
   reload:
     # Valid placeholders: <error>

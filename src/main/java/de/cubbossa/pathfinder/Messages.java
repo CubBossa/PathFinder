@@ -418,7 +418,7 @@ public class Messages {
 	public static final Message LOCATION_FOUND_TITLE_1 = new Message("general.target_discovered.title");
 	@MessageMeta(value = "You found <name>", placeholders = {"name", "roadmaps"})
 	public static final Message LOCATION_FOUND_TITLE_2 = new Message("general.target_discovered.subtitle");
-	@MessageMeta(value = "Discovered: <roadmaps>", placeholders = {"name", "roadmaps"})
+	@MessageMeta(value = "Discovered: <name>", placeholders = {"name"})
 	public static final Message LOCATION_FOUND_AB = new Message("general.target_discovered.actionbar");
 
 	public static Message formatBool(boolean val) {

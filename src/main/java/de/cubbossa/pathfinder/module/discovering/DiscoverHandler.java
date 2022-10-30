@@ -79,16 +79,23 @@ public class DiscoverHandler {
 	public CompletableFuture<Map<NamespacedKey, DiscoverInfo>> getPlayerData(UUID player) {
 		return discovered.containsKey(player) ?
 				CompletableFuture.completedFuture(discovered.get(player)) :
-				CompletableFuture.supplyAsync(() -> PathPlugin.getInstance().getDatabase().loadDiscoverInfo(player));
+				CompletableFuture.supplyAsync(() -> {
+					Map<NamespacedKey, DiscoverInfo> data = PathPlugin.getInstance().getDatabase().loadDiscoverInfo(player);
+					discovered.put(player, data);
+					return data;
+				});
 	}
 
 	public void discover(UUID playerId, Discoverable discoverable, Date date) {
 		getPlayerData(playerId).thenAccept(map -> {
-
 			if (map.containsKey(discoverable.getKey())) {
 				return;
 			}
+
 			Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+				if (map.containsKey(discoverable.getKey())) {
+					return;
+				}
 
 				PlayerDiscoverEvent event = new PlayerDiscoverEvent(playerId, discoverable, date);
 				Bukkit.getPluginManager().callEvent(event);
