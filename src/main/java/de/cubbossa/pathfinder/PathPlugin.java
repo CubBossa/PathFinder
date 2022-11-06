@@ -22,6 +22,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
+import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
@@ -171,6 +172,8 @@ public class PathPlugin extends JavaPlugin {
 		generateIfAbsent("lang/de_DE.yml");
 
 		configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
+
+		YamlUtils.registerClasses();
 
 		CommandAPI.onLoad(new CommandAPIConfig()
 				.verboseOutput(configuration.isVerbose())

@@ -4,6 +4,7 @@ import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.*;
@@ -106,7 +107,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 				.put("particle-steps", visualizer.getSchedulerSteps())
 				.put("interval", visualizer.getInterval())
 				.put("particle", visualizer.getParticle().toString())
-				.put("particle-data", visualizer.getParticleData())
+				.put("particle-data", YamlUtils.wrap(visualizer.getParticleData()))
 				.put("speed", visualizer.getSpeed())
 				.put("amount", visualizer.getAmount())
 				.put("offset", visualizer.getOffset())
@@ -128,7 +129,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 			visualizer.setParticle(Particle.valueOf((String) values.get("particle")));
 		}
 		if (values.containsKey("particle-data")) {
-			visualizer.setParticleData(values.get("particle-data"));
+			visualizer.setParticleData(YamlUtils.unwrap(values.get("particle-data")));
 		}
 		if (values.containsKey("speed")) {
 			visualizer.setSpeed(((Double) values.get("speed")).floatValue());
