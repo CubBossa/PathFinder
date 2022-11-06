@@ -44,4 +44,10 @@ Performance might suffer more from JavaScript based Visualizers than simple Part
 <td><img src="images/example_rainbow.gif"/></td>
 </tr>
 
+<tr>
+<td>example_color_transition<br><a href="pathfinder$example_color_transition.yml">pathfinder$example_color_transition.yml</a></td>
+<td>The color changes, the longer the particle exists. This is made with the color transition particle data.</td>
+<td><img src="images/example_color_transition.gif"/></td>
+</tr>
+
 </table>
