@@ -68,8 +68,8 @@ public class ClientNodeHandler {
 	private ItemStack nodeGroupHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_BLUE);
 	private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
-	private final Map<Pair<Integer, Integer>, Collection<Node>> chunkNodeMap;
-	private final Map<Pair<Integer, Integer>, Collection<Edge>> chunkEdgeMap;
+	private final Map<IntPair, Collection<Node>> chunkNodeMap;
+	private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
 	private final Map<Node, Integer> nodeEntityMap;
 	private final Map<Integer, Node> entityNodeMap;
 	private final Map<Edge, Integer> edgeEntityMap;
@@ -96,7 +96,7 @@ public class ClientNodeHandler {
 				int chunkX = packet.getIntegers().read(0);
 				int chunkY = packet.getIntegers().read(1);
 
-				var key = new Pair<>(chunkX, chunkY);
+				var key = new IntPair(chunkX, chunkY);
 				Collection<Node> nodes = chunkNodeMap.get(key);
 				if (nodes != null) {
 					showNodes(nodes, event.getPlayer());
@@ -162,10 +162,8 @@ public class ClientNodeHandler {
 		nodeEntityMap.put(node, id);
 		entityNodeMap.put(id, node);
 
-		Pair<Integer, Integer> key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
-		Collection<Node> inner = chunkNodeMap.getOrDefault(key, new HashSet<>());
-		inner.add(node);
-		chunkNodeMap.put(key, inner);
+		IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
+		chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(node);
 
 		equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead : nodeSingleHead});
 		updateNodeName(player, node);
@@ -203,10 +201,8 @@ public class ClientNodeHandler {
 		edgeEntityMap.put(edge, id);
 		entityEdgeMap.put(id, edge);
 
-		Pair<Integer, Integer> key = new Pair<>(location.getChunk().getX(), location.getChunk().getZ());
-		Collection<Edge> inner = chunkEdgeMap.getOrDefault(key, new HashSet<>());
-		inner.add(edge);
-		chunkEdgeMap.put(key, inner);
+		IntPair key = locationToChunkIntPair(location);
+		chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
 
 		if (otherDirection != null) {
 			showEdge(otherDirection, null, player);
@@ -218,8 +214,7 @@ public class ClientNodeHandler {
 
 		nodes.forEach(nodeEntityMap::remove);
 		new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodes.contains(e.getValue())).map(Map.Entry::getKey).forEach(entityNodeMap::remove);
-
-		nodes.forEach(node -> chunkNodeMap.remove(new Pair<>((int) node.getLocation().getX() / 16, (int) node.getLocation().getZ() / 16)));
+		nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(node.getLocation())));
 	}
 
 	public void hideEdges(Collection<Edge> edges, Player player) {
@@ -228,7 +223,7 @@ public class ClientNodeHandler {
 		edges.forEach(edge -> {
 			Location pos = edge.getStart().getLocation().clone().add(
 					edge.getEnd().getLocation().clone().subtract(edge.getStart().getLocation()).multiply(.5f));
-			chunkNodeMap.remove(new Pair<>((int) pos.getX() / 16, (int) pos.getZ() / 16));
+			chunkEdgeMap.remove(locationToChunkIntPair(pos));
 		});
 	}
 
@@ -346,5 +341,9 @@ public class ClientNodeHandler {
 				Optional.of(WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(name)).getHandle()));
 		dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE, WrappedDataWatcher.Registry.get(Boolean.class)), true);
 		sendMeta(player, id, dataWatcher);
+	}
+
+	public static IntPair locationToChunkIntPair(Location location) {
+		return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
 	}
 }

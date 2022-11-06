@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
+import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.cubbossa.pathfinder.core.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -297,5 +298,12 @@ public class RoadMapEditor implements Keyed, Listener {
 					});
 			updateEditModeParticles();
 		}, 1);
+	}
+
+	@EventHandler
+	public void onDelete(RoadMapDeletedEvent event) {
+		if (event.getRoadMap().getKey().equals(roadMap.getKey())) {
+			dispose();
+		}
 	}
 }
