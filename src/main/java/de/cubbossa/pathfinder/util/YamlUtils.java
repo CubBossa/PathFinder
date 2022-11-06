@@ -34,6 +34,9 @@ public class YamlUtils {
 	}
 
 	public static <T> Object wrap(T any) {
+		if (any == null) {
+			return null;
+		}
 		Class<? extends SerializationWrapper<?>> wrapper = TYPES.get(any.getClass());
 		if (wrapper == null) {
 			return any;
