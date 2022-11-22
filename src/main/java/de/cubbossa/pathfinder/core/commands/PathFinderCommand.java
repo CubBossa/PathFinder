@@ -44,7 +44,7 @@ public class PathFinderCommand extends CommandTree {
 		}));
 
 		then(new LiteralArgument("export")
-				.withPermission("blablabla")
+				.withPermission(PathPlugin.PERM_CMD_PF_EXPORT)
 				.then(new LiteralArgument("sqlite")
 						.then(new TextArgument("filename")
 								.executes((commandSender, objects) -> {

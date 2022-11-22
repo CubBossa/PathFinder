@@ -52,6 +52,7 @@ public class PathPlugin extends JavaPlugin {
 
 	public static final String PERM_CMD_PF = "pathfinder.command.pathfinder";
 	public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
+	public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
 	public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
 	public static final String PERM_CMD_FIND = "pathfinder.command.find";
 	public static final String PERM_CMD_FIND_LOC = "pathfinder.command.find.location";
