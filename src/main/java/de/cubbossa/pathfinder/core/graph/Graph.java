@@ -56,7 +56,7 @@ public class Graph<N> {
 		connect(start, end, 1);
 	}
 
-	public void connect(N start, N end, double weight) {
+	public void connect(N start, N end, double weight) throws IllegalArgumentException {
 		if (!nodes.containsKey(start) || !nodes.containsKey(end)) {
 			throw new IllegalArgumentException("Node must be in graph.");
 		}

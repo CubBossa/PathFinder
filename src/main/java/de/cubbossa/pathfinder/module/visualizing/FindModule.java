@@ -116,10 +116,10 @@ public class FindModule implements Listener {
 
 		RoadMap firstRoadMap = roadMaps.get(0);
 		PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-		Graph<Node> graph = firstRoadMap.toGraph(playerNode);
+		Graph<Node> graph = firstRoadMap.toGraph(player, playerNode);
 
 		for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
-			graph.merge(roadMap.toGraph(null));
+			graph.merge(roadMap.toGraph(player, null));
 		}
 
 		SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);

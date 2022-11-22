@@ -23,6 +23,7 @@ import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -97,10 +98,19 @@ public class RoadMap implements Keyed, Named {
 		}
 	}
 
-	public Graph<Node> toGraph(@Nullable PlayerNode player) {
+	public Graph<Node> toGraph(Player permissionQuery, @Nullable PlayerNode player) {
 		Graph<Node> graph = new Graph<>();
-		nodes.values().forEach(graph::addNode);
-		edges.forEach(e -> graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength()));
+		nodes.values().stream()
+				.filter(node -> !(node instanceof Groupable groupable) || groupable.getGroups().stream()
+						.allMatch(g -> g.getPermission() == null || permissionQuery.hasPermission(g.getPermission())))
+				.forEach(graph::addNode);
+		edges.forEach(e -> {
+			try {
+				graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength());
+			} catch (IllegalArgumentException ignore) {
+				// we know that the node might not be in the graph due to its permission node.
+			}
+		});
 
 		if (player != null) {
 			Location playerLocation = player.getLocation();
