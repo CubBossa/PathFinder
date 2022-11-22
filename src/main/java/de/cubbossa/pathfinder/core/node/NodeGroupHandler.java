@@ -106,21 +106,21 @@ public class NodeGroupHandler implements Listener {
 	}
 
 	public void setNodeGroupName(NodeGroup group, String newName) {
+		group.setNameFormat(newName);
 		NodeGroupNameChangedEvent event = new NodeGroupNameChangedEvent(group, newName);
 		Bukkit.getPluginManager().callEvent(event);
-		group.setNameFormat(event.getNameFormat());
 	}
 
 	public void setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
+		group.setPermission(permission);
 		NodeGroupPermissionChangedEvent event = new NodeGroupPermissionChangedEvent(group, permission);
 		Bukkit.getPluginManager().callEvent(event);
-		group.setPermission(event.getPermission());
 	}
 
 	public void setNodeGroupDiscoverable(NodeGroup group, boolean value) {
+		group.setDiscoverable(value);
 		NodeGroupDiscoverableChangedEvent event = new NodeGroupDiscoverableChangedEvent(group, value);
 		Bukkit.getPluginManager().callEvent(event);
-		group.setDiscoverable(value);
 	}
 
 	public void setNodeGroupNavigable(NodeGroup group, boolean value) {

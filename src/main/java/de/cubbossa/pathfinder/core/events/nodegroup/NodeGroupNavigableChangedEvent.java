@@ -3,12 +3,10 @@ package de.cubbossa.pathfinder.core.events.nodegroup;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 @Getter
-@Setter
 @AllArgsConstructor
 public class NodeGroupNavigableChangedEvent extends Event {
 
