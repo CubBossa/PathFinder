@@ -33,6 +33,7 @@ public class VisualizerHandler {
 	public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE = new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
 	public static final VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE = new ScriptLineParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
 	public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE = new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
+	public static final VisualizerType<NodeLocationVisualizer> COMPASS_VISUALIZER_TYPE = new CompassVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "compass"));
 
 	@Getter
 	private static VisualizerHandler instance;
@@ -52,6 +53,7 @@ public class VisualizerHandler {
 		visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
 		visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
 		visualizerTypes.put(ADV_PARTICLE_VISUALIZER_TYPE);
+		visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
 
 		this.pathVisualizerMap = new HashedRegistry<>();
 		pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
