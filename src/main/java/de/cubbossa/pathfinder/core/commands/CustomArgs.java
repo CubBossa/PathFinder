@@ -327,9 +327,8 @@ public class CustomArgs {
 				Collection<Node> target = new FindQueryParser().parse(search, scope);
 				return new NodeSelection(target);
 			} catch (Throwable t) {
-				t.printStackTrace();
+				throw new CustomArgument.CustomArgumentException(t.getMessage());
 			}
-			return new NodeSelection();
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
 					if (!(suggestionInfo.sender() instanceof Player player)) {
