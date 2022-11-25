@@ -114,6 +114,22 @@
                     </relocations>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.7.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -166,6 +182,12 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.7.1</version>
+        </dependency>
 
         <dependency>
             <groupId>de.tr7zw</groupId>
@@ -233,7 +255,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.19.1-R0.1-SNAPSHOT</version>
+            <version>1.19.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
