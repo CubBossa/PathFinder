@@ -80,7 +80,7 @@ public interface DataExporter {
 	static DataExporter groupSet(Iterable<NodeGroup> groups) {
 		return storage -> {
 			groups.forEach(storage::updateNodeGroup);
-			groups.forEach(g -> storage.addSearchTerms(g, g.getSearchTerms()));
+			groups.forEach(g -> storage.addSearchTerms(g, g.getSearchTermStrings()));
 		};
 	}
 

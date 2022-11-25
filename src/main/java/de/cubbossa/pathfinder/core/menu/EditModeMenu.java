@@ -212,7 +212,7 @@ public class EditModeMenu {
 					.resolver(Formatter.number("find-distance", group.getFindDistance()))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+							group.getSearchTermStrings().stream().map(Component::text).collect(Collectors.toList())
 					)))
 					.build();
 
@@ -280,7 +280,7 @@ public class EditModeMenu {
 					.resolver(Formatter.number("find-distance", group.getFindDistance()))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+							group.getSearchTermStrings().stream().map(Component::text).collect(Collectors.toList())
 					)))
 					.build();
 

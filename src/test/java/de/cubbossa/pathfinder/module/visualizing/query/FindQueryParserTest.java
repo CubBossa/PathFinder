@@ -13,11 +13,18 @@ import java.util.function.BiFunction;
 
 class FindQueryParserTest {
 
+	private static final SearchTermHolder GROUP_PARKING = new SimpleSearchTermHolder(Sets.newHashSet(
+			new SimpleSearchTerm("parking"),
+			new SimpleSearchTerm("parkinglot"),
+			new SimpleSearchTerm("empty")
+	));
+
 	private static final SearchTermHolder GROUP_CLASSROOM = new SimpleSearchTermHolder(Sets.newHashSet(
 			new SimpleSearchTerm("classroom"),
 			new SimpleSearchTerm("class"),
 			new SimpleSearchTerm("school"),
-			new SimpleSearchTerm("public")
+			new SimpleSearchTerm("public"),
+			new SimpleSearchTerm("empty")
 	));
 
 	private static final SearchTermHolder GROUP_SHOP = new SimpleSearchTermHolder(Sets.newHashSet(
@@ -31,6 +38,7 @@ class FindQueryParserTest {
 	));
 
 	private static final List<SearchTermHolder> scope = List.of(
+			GROUP_PARKING,
 			GROUP_CLASSROOM,
 			GROUP_SHOP
 	);
@@ -41,9 +49,9 @@ class FindQueryParserTest {
 		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("classroom", scope));
 		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("class", scope));
 		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("school", scope));
-		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("!shop", scope));
-		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("!buy", scope));
-		Assertions.assertEquals(Lists.newArrayList(GROUP_CLASSROOM), new FindQueryParser().parse("!sell", scope));
+		Assertions.assertEquals(Lists.newArrayList(GROUP_PARKING, GROUP_CLASSROOM), new FindQueryParser().parse("!shop", scope));
+		Assertions.assertEquals(Lists.newArrayList(GROUP_PARKING, GROUP_CLASSROOM), new FindQueryParser().parse("!buy", scope));
+		Assertions.assertEquals(Lists.newArrayList(GROUP_PARKING, GROUP_CLASSROOM), new FindQueryParser().parse("!sell", scope));
 	}
 
 	@Test
@@ -66,7 +74,7 @@ class FindQueryParserTest {
 				Sets.newHashSet(new FindQueryParser().parse("shop & !school", scope))
 		);
 		Assertions.assertEquals(
-				Sets.newHashSet(GROUP_CLASSROOM, GROUP_SHOP),
+				Sets.newHashSet(GROUP_PARKING, GROUP_CLASSROOM, GROUP_SHOP),
 				Sets.newHashSet(new FindQueryParser().parse("!shop | !school", scope))
 		);
 	}
@@ -93,6 +101,26 @@ class FindQueryParserTest {
 		);
 	}
 
+	@Test
+	void testParse4() {
+		Assertions.assertEquals(
+				Sets.newHashSet(GROUP_SHOP),
+				Sets.newHashSet(new FindQueryParser().parse("(((shop)))", scope))
+		);
+		Assertions.assertEquals(
+				Sets.newHashSet(GROUP_SHOP),
+				Sets.newHashSet(new FindQueryParser().parse("!(!(!(!shop)))", scope))
+		);
+		Assertions.assertEquals(
+				Sets.newHashSet(GROUP_CLASSROOM),
+				Sets.newHashSet(new FindQueryParser().parse("empty & public", scope))
+		);
+		Assertions.assertEquals(
+				Sets.newHashSet(GROUP_SHOP),
+				Sets.newHashSet(new FindQueryParser().parse("(shop | none) & public", scope))
+		);
+	}
+
 
 	@Getter
 	@AllArgsConstructor
@@ -109,6 +137,9 @@ class FindQueryParserTest {
 		public boolean matches(Collection<SearchQueryAttribute> attributes) {
 			return attributes.stream().allMatch(attribute -> {
 				BiFunction<SearchQueryAttribute.Comparator, Object, Boolean> func = attributeHandler.get(attribute.identifier());
+				if (func == null) {
+					throw new FindQueryException("Unknown attribute '" + attribute.identifier() + "'");
+				}
 				return func == null || func.apply(attribute.comparator(), attribute.value());
 			});
 		}

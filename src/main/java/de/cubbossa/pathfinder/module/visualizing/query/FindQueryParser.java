@@ -11,7 +11,7 @@ import java.util.List;
 
 public class FindQueryParser {
 
-	public Collection<SearchTermHolder> parse(String input, List<SearchTermHolder> scope) {
+	public <T extends SearchTermHolder> Collection<T> parse(String input, List<T> scope) {
 
 		CharStream charStream = CharStreams.fromString(input);
 		QueryLanguageLexer lexer = new QueryLanguageLexer(charStream);

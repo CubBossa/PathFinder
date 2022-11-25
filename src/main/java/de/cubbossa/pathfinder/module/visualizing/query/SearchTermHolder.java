@@ -6,11 +6,28 @@ public interface SearchTermHolder {
 
 	Collection<SearchTerm> getSearchTerms();
 
-	boolean matches(SearchTerm searchTerm);
+	default void addSearchTerms(Collection<SearchTerm> searchTerms) {
+	}
 
-	boolean matches(SearchTerm searchTerm, Collection<SearchQueryAttribute> attributes);
+	default void removeSearchTerms(Collection<SearchTerm> searchTerms) {
+	}
 
-	boolean matches(String term);
+	default void clearSearchTerms() {
+	}
 
-	boolean matches(String term, Collection<SearchQueryAttribute> attributes);
+	default boolean matches(SearchTerm searchTerm) {
+		return false;
+	}
+
+	default boolean matches(SearchTerm searchTerm, Collection<SearchQueryAttribute> attributes) {
+		return false;
+	}
+
+	default boolean matches(String term) {
+		return false;
+	}
+
+	default boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
+		return false;
+	}
 }

@@ -64,6 +64,7 @@
                             <include>org.ow2.asm:asm</include>
                             <include>org.ow2.asm:asm-util</include>
                             <include>de.tr7zw:item-nbt-api-plugin</include>
+                            <include>org.antlr:antlr4-runtime</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -110,6 +111,10 @@
                         <relocation>
                             <pattern>de.tr7zw.changeme.nbtapi</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.nbtapi</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.antlr</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.antlr-runtime</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

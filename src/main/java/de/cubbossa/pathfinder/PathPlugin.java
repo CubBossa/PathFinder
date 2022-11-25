@@ -167,7 +167,6 @@ public class PathPlugin extends JavaPlugin {
 	@Override
 	public void onLoad() {
 
-		generateIfAbsent("how-the-hell-do-i-use-it.txt");
 		generateIfAbsent("lang/styles.yml");
 		generateIfAbsent("lang/de_DE.yml");
 

@@ -372,7 +372,7 @@ public class YmlDatabase implements DataStorage {
 				group.setNavigable(cfg.getBoolean("navigable"));
 				group.setDiscoverable(cfg.getBoolean("discoverable"));
 				group.setFindDistance((float) cfg.getDouble("find-distance"));
-				group.setSearchTerms(cfg.getStringList("search-terms"));
+				group.addSearchTermStrings(cfg.getStringList("search-terms"));
 
 				registry.put(group);
 			} catch (Exception e) {

@@ -40,7 +40,7 @@ public class NodeGroupHandler implements Listener {
 			if (group == null) {
 				continue;
 			}
-			group.addSearchTerms(entry.getValue());
+			group.addSearchTermStrings(entry.getValue());
 		}
 	}
 
@@ -85,7 +85,7 @@ public class NodeGroupHandler implements Listener {
 		}
 
 		NodeGroup group = new NodeGroup(key, nameFormat);
-		group.addSearchTerms(Lists.newArrayList(key.getKey()));
+		group.addSearchTermStrings(Lists.newArrayList(key.getKey()));
 		Bukkit.getPluginManager().callEvent(new NodeGroupCreatedEvent(group));
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.ADD, Lists.newArrayList(key.getKey())

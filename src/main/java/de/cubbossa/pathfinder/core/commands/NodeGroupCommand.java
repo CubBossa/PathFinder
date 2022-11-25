@@ -118,7 +118,7 @@ public class NodeGroupCommand extends CommandTree {
 	public void searchTermsList(CommandSender sender, NodeGroup group) {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
 				.resolver(Placeholder.component("name", group.getDisplayName()))
-				.resolver(Placeholder.component("values", toList(group.getSearchTerms())))
+				.resolver(Placeholder.component("values", toList(group.getSearchTermStrings())))
 				.build()), sender);
 	}
 
@@ -127,7 +127,7 @@ public class NodeGroupCommand extends CommandTree {
 				.map(String::trim)
 				.map(String::toLowerCase)
 				.toList();
-		group.getSearchTerms().addAll(toAdd);
+		group.addSearchTermStrings(toAdd);
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.ADD, toAdd
 		));
