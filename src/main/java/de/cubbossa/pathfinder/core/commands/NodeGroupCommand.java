@@ -143,7 +143,7 @@ public class NodeGroupCommand extends CommandTree {
 				.map(String::trim)
 				.map(String::toLowerCase)
 				.toList();
-		group.getSearchTerms().removeAll(toRemove);
+		group.removeSearchTermStrings(toRemove);
 
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.REMOVE, toRemove
