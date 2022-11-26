@@ -278,7 +278,7 @@ public class YmlDatabase implements DataStorage {
 			int id = Integer.parseInt(key);
 			Location location = innerSection.getLocation("location");
 			Waypoint node = RoadMapHandler.WAYPOINT_TYPE.getFactory()
-					.apply(new NodeType.NodeCreationContext(roadMap, id, location));
+					.apply(new NodeType.NodeCreationContext(roadMap, id, location, true));
 			node.setCurveLength(innerSection.getDouble("curve-length"));
 			result.put(id, node);
 		}

@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.listener;
 import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.*;
 import de.cubbossa.pathfinder.core.events.roadmap.*;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
@@ -37,31 +38,49 @@ public class DatabaseListener implements Listener {
 
 	@EventHandler
 	public void onRoadMapCreate(RoadMapCreatedEvent event) {
+		if (!event.getRoadMap().isPersistent()) {
+			return;
+		}
 		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler
 	public void onRoadMapDeleted(RoadMapDeletedEvent event) {
+		if (!event.getRoadMap().isPersistent()) {
+			return;
+		}
 		data.deleteRoadMap(event.getRoadMap().getKey());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onRoadMapUpdate(RoadMapSetNameEvent event) {
+		if (!event.getRoadMap().isPersistent()) {
+			return;
+		}
 		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onRoadMapUpdate(RoadMapSetCurveLengthEvent event) {
+		if (!event.getRoadMap().isPersistent()) {
+			return;
+		}
 		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onRoadMapUpdate(RoadMapSetVisualizerEvent event) {
+		if (!event.getRoadMap().isPersistent()) {
+			return;
+		}
 		data.updateRoadMap(event.getRoadMap());
 	}
 
 	@EventHandler
 	public void onNodeCreatedEvent(NodeCreatedEvent event) {
+		if (!event.getNode().isPersistent()) {
+			return;
+		}
 		data.updateNode(event.getNode());
 	}
 
@@ -69,6 +88,9 @@ public class DatabaseListener implements Listener {
 	public void onNodesDeleted(NodesDeletedEvent event) {
 		Map<NodeGroup, Collection<Groupable>> map = new HashMap<>();
 		for (Node node : event.getNodes()) {
+			if (!node.isPersistent()) {
+				continue;
+			}
 			if (node instanceof Groupable groupable) {
 				groupable.getGroups().forEach(g -> map.computeIfAbsent(g, group -> new HashSet<>()).add(groupable));
 			}
@@ -76,27 +98,31 @@ public class DatabaseListener implements Listener {
 		for (Map.Entry<NodeGroup, Collection<Groupable>> entry : map.entrySet()) {
 			data.removeNodesFromGroup(entry.getKey(), entry.getValue());
 		}
-		data.deleteNodes(event.getNodes().stream().map(Node::getNodeId).collect(Collectors.toSet()));
+		data.deleteNodes(event.getNodes().stream().filter(Node::isPersistent).map(Node::getNodeId).collect(Collectors.toSet()));
 	}
 
 	@EventHandler
 	public void onNodeUpdate(NodeLocationChangedEvent event) {
-		event.getNodes().forEach(data::updateNode);
+		event.getNodes().stream().filter(Node::isPersistent).forEach(data::updateNode);
 	}
 
 	@EventHandler
 	public void onNodeUpdate(NodeCurveLengthChangedEvent event) {
-		event.getNodes().forEach(data::updateNode);
+		event.getNodes().stream().filter(Node::isPersistent).forEach(data::updateNode);
 	}
 
 	@EventHandler
 	public void onEdgesCreated(EdgesCreatedEvent event) {
-		data.saveEdges(event.getEdges());
+		data.saveEdges(event.getEdges().stream()
+				.filter(Edge::isPersistent)
+				.collect(Collectors.toList()));
 	}
 
 	@EventHandler
 	public void onEdgeDeleted(EdgesDeletedEvent event) {
-		data.deleteEdges(event.getEdges());
+		data.deleteEdges(event.getEdges().stream()
+				.filter(Edge::isPersistent)
+				.collect(Collectors.toList()));
 	}
 
 	@EventHandler

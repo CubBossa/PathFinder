@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.roadmap;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PersistencyHolder;
 import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
@@ -35,9 +36,10 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class RoadMap implements Keyed, Named {
+public class RoadMap implements Keyed, Named, PersistencyHolder {
 
 	private final NamespacedKey key;
+	private final boolean persistent;
 	private String nameFormat;
 	private Component displayName;
 	private double defaultCurveLength;
@@ -48,8 +50,13 @@ public class RoadMap implements Keyed, Named {
 	private PathVisualizer<?, ?> visualizer;
 
 	public RoadMap(NamespacedKey key, String name, PathVisualizer<?, ?> visualizer, double defaultCurveLength) {
+		this(key, name, visualizer, defaultCurveLength, true);
+	}
+
+	public RoadMap(NamespacedKey key, String name, PathVisualizer<?, ?> visualizer, double defaultCurveLength, boolean persistent) {
 
 		this.key = key;
+		this.persistent = persistent;
 		this.setNameFormat(name);
 		this.defaultCurveLength = defaultCurveLength;
 
@@ -177,16 +184,37 @@ public class RoadMap implements Keyed, Named {
 				.collect(Collectors.toCollection(NavigateSelection::new));
 	}
 
-	public Waypoint createWaypoint(Location location) {
-		return createNode(RoadMapHandler.WAYPOINT_TYPE, location);
+	/**
+	 * Creates a new node of the given type and adds it to this roadmap.
+	 *
+	 * @param location   The location where the node should be created.
+	 * @param persistent If this node is persistent. If the roadmap is not persistent itself, the node cannot be persistent.
+	 * @return The created node.
+	 */
+	public Waypoint createWaypoint(Location location, boolean persistent) {
+		return createNode(RoadMapHandler.WAYPOINT_TYPE, location, persistent);
 	}
 
-	public <T extends Node> T createNode(NodeType<T> type, Location location, NodeGroup... groups) {
+	/**
+	 * Creates a new node of the given type and adds it to this roadmap.
+	 * If you want to stick with default nodes you may want to prefer {@link #createWaypoint(Location, boolean)}, which
+	 * is an alias for this method with the node type already defined.
+	 *
+	 * @param type       The type of the node. You can use {@link RoadMapHandler#WAYPOINT_TYPE} for a default node or register
+	 *                   your own {@link NodeType} at the {@link NodeTypeHandler}
+	 * @param location   The location where the node should be created.
+	 * @param persistent If this node is persistent. If the roadmap is not persistent itself, the node cannot be persistent.
+	 * @param groups     An optional set of groups to assign to the new node.
+	 * @param <T>        The node implementation class. {@link Waypoint} by default.
+	 * @return The created node.
+	 */
+	public <T extends Node> T createNode(NodeType<T> type, Location location, boolean persistent, NodeGroup... groups) {
 
 		T node = type.getFactory().apply(new NodeType.NodeCreationContext(
 				this,
 				RoadMapHandler.getInstance().requestNodeId(),
-				location
+				location,
+				persistent && this.persistent
 		));
 
 		addNode(node);
@@ -202,6 +230,16 @@ public class RoadMap implements Keyed, Named {
 		return node;
 	}
 
+	/**
+	 * Adds the node instance to this roadmap. This should only be used if you already have a node instance, but it is not
+	 * contained in this roadmap, maybe because you're transferring it from one roadmap to another.
+	 * When using {@link #createNode(NodeType, Location, boolean, NodeGroup...)}, the node is already added to the roadmap.
+	 * <br>
+	 * DO NOT use this method to add nodes that have no type. Nodes should always be created by the roadmap and the given
+	 * type, not by creating an own instance of your node class and adding it via this method!
+	 *
+	 * @param node The node instance to add to this roadmap.
+	 */
 	public void addNode(Node node) {
 		nodes.put(node.getNodeId(), node);
 	}
@@ -210,7 +248,7 @@ public class RoadMap implements Keyed, Named {
 		removeNodes(selection.toArray(Node[]::new));
 	}
 
-	public void removeNodes(int id) {
+	public void removeNode(int id) {
 		Node node = getNode(id);
 		if (node != null) {
 			removeNodes(node);
@@ -247,15 +285,24 @@ public class RoadMap implements Keyed, Named {
 	}
 
 	public Collection<Node> getNodesByGroup(NodeGroup group) {
-		return nodes.values().stream()
-				.filter(node -> node instanceof Groupable groupable && groupable.getGroups().contains(group))
-				.collect(Collectors.toSet());
+		return group.getGroup().stream().filter(node -> node.getRoadMapKey().equals(key)).collect(Collectors.toList());
 	}
 
 	public Edge getEdge(Node start, Node end) {
 		return edges.stream().filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end)).findFirst().orElse(null);
 	}
 
+	/**
+	 * Connects two nodes in both directions.
+	 * <p>
+	 * Alias for {@link #connectNodes(Node, Node, boolean, float, float)}. Uses an undirected edge and an edge modifier
+	 * of 1 for both directions as default. Just a normal edge then.
+	 *
+	 * @param start One of the nodes to connect
+	 * @param end   The other of the nodes to connect
+	 * @return The <b>first</b> edge that was created, from start to end. To get the edge instance of the second edge,
+	 * use {@link #getEdge(Node, Node)} with reversed parameters.
+	 */
 	public Edge connectNodes(Node start, Node end) {
 		return connectNodes(start, end, false, 1, 1);
 	}
@@ -366,10 +413,6 @@ public class RoadMap implements Keyed, Named {
 		edges.remove(edge);
 
 		Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(edge)));
-	}
-
-	public void delete() {
-		PathPlugin.getInstance().getDatabase().deleteRoadMap(this);
 	}
 
 	public Collection<Edge> getEdgesFrom(Node node) {

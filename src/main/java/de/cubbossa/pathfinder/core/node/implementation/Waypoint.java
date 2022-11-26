@@ -26,6 +26,7 @@ public class Waypoint implements Node, Groupable {
 	private final int nodeId;
 	private final NamespacedKey roadMapKey;
 	private final RoadMap roadMap;
+	private final boolean persistent;
 	private final List<Edge> edges;
 	private final Collection<NodeGroup> groups;
 
@@ -33,10 +34,11 @@ public class Waypoint implements Node, Groupable {
 	@Nullable
 	private Double curveLength = null;
 
-	public Waypoint(int databaseId, RoadMap roadMap) {
+	public Waypoint(int databaseId, RoadMap roadMap, boolean persistent) {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapKey = roadMap.getKey();
+		this.persistent = persistent;
 		this.groups = new HashSet<>();
 
 		edges = new ArrayList<>();

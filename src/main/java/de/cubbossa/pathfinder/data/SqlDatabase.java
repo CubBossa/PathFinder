@@ -375,7 +375,8 @@ public abstract class SqlDatabase implements DataStorage {
 						Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(
 								roadMap,
 								id,
-								new Location(Bukkit.getWorld(UUID.fromString(worldUid)), x, y, z)
+								new Location(Bukkit.getWorld(UUID.fromString(worldUid)), x, y, z),
+								true
 						));
 						node.setCurveLength(curveLength);
 						nodes.put(id, node);

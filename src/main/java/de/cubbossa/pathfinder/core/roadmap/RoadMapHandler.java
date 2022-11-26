@@ -25,19 +25,23 @@ import org.bukkit.plugin.Plugin;
 import javax.annotation.Nullable;
 import java.util.stream.Stream;
 
-@Getter
 public class RoadMapHandler {
 
 	public static NodeType<Waypoint> WAYPOINT_TYPE = new NodeType<>(new NamespacedKey(PathPlugin.getInstance(), "waypoint"),
 			"<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), context -> {
-		Waypoint waypoint = new Waypoint(context.id(), context.roadMap());
+		Waypoint waypoint = new Waypoint(context.id(), context.roadMap(), context.persistent());
 		waypoint.setLocation(context.location());
 		return waypoint;
 	});
 
 	@Getter
 	private static RoadMapHandler instance;
+
+	@Getter
 	private final HashedRegistry<RoadMap> roadMaps;
+
+	private final HashedRegistry<RoadMap> roadMapsWithEditModeAccess = new HashedRegistry<>();
+	@Getter
 	private final HashedRegistry<RoadMapEditor> roadMapEditors;
 	private int nodeIdCounter;
 
@@ -46,19 +50,6 @@ public class RoadMapHandler {
 		roadMaps = new HashedRegistry<>();
 		roadMapEditors = new HashedRegistry<>();
 		NodeTypeHandler.getInstance().registerNodeType(WAYPOINT_TYPE);
-	}
-
-	public RoadMapEditor getRoadMapEditor(NamespacedKey key) {
-		RoadMapEditor editor = roadMapEditors.get(key);
-		if (editor == null) {
-			RoadMap roadMap = roadMaps.get(key);
-			if (roadMap == null) {
-				throw new IllegalArgumentException("No roadmap exists with key '" + key + "'. Cannot create editor.");
-			}
-			editor = new RoadMapEditor(roadMap);
-			roadMapEditors.put(editor);
-		}
-		return editor;
 	}
 
 	public void loadRoadMaps() {
@@ -78,10 +69,27 @@ public class RoadMapHandler {
 		return ++nodeIdCounter;
 	}
 
-	public RoadMap createRoadMap(Plugin plugin, String key) throws IllegalArgumentException {
+	public boolean isRoadMapKeyUnique(NamespacedKey key) {
+		return !roadMaps.containsKey(key);
+	}
+
+	/**
+	 * Creates a roadmap and announces the creation. Note, that the created roadmap has no visualizer yet. You may want to
+	 * assign one after calling this method.
+	 *
+	 * @param plugin       An instance of the plugin that is responsible for this RoadMap.
+	 * @param key          A string that represents this roadmap and is unique in combination with the name of the responsible plugin.
+	 * @param persistent   If the roadmap should persist beyond a restart of the server or the PathFinder plugin. Set it to false if
+	 *                     you want to create this roadmap everytime your plugin enables, like for a mini-game. Set it to true if
+	 *                     this roadmap should be created once and persist until someone deletes it manually.
+	 * @param allowEditing If the roadmap can be edited via edit mode / commands. Persistent roadmaps are always editable.
+	 * @return The newly created roadmap.
+	 * @throws IllegalArgumentException If another roadmap with this key already exists.
+	 */
+	public RoadMap createRoadMap(Plugin plugin, String key, boolean persistent, boolean allowEditing) throws IllegalArgumentException {
 
 		NamespacedKey nKey = new NamespacedKey(plugin, key);
-		if (!isKeyUnique(nKey)) {
+		if (!isRoadMapKeyUnique(nKey)) {
 			throw new IllegalArgumentException("Another roadmap with this key already exists.");
 		}
 
@@ -89,9 +97,13 @@ public class RoadMapHandler {
 				nKey,
 				StringUtils.insertInRandomHexString(StringUtils.capizalize(key)),
 				null,
-				1
+				1,
+				persistent
 		);
 		roadMaps.put(rm);
+		if (allowEditing || persistent) {
+			roadMapsWithEditModeAccess.put(rm);
+		}
 		Bukkit.getPluginManager().callEvent(new RoadMapCreatedEvent(rm));
 		return rm;
 	}
@@ -100,9 +112,9 @@ public class RoadMapHandler {
 
 		roadMaps.remove(roadMap.getKey());
 		Bukkit.getPluginManager().callEvent(new RoadMapDeletedEvent(roadMap));
-		//TODO delete all nodes and edges
-		//TODO deselect roadmap for all players
 	}
+
+	// Getters
 
 	public @Nullable
 	RoadMap getRoadMap(NamespacedKey key) {
@@ -113,13 +125,38 @@ public class RoadMapHandler {
 		return roadMaps.values().stream();
 	}
 
-	public boolean isKeyUnique(NamespacedKey key) {
-		return !roadMaps.containsKey(key);
+	// Editing
+
+	public RoadMapEditor getRoadMapEditor(NamespacedKey key) {
+		RoadMapEditor editor = roadMapEditors.get(key);
+		if (editor == null) {
+			RoadMap roadMap = roadMaps.get(key);
+			if (roadMap == null) {
+				throw new IllegalArgumentException("No roadmap exists with key '" + key + "'. Cannot create editor.");
+			}
+			editor = new RoadMapEditor(roadMap);
+			roadMapEditors.put(editor);
+		}
+		return editor;
 	}
 
 	public void cancelAllEditModes() {
 		roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
 	}
+
+	public boolean isPlayerEditingRoadMap(Player player) {
+		return roadMapEditors.values().stream().anyMatch(roadMapEditor -> roadMapEditor.isEditing(player));
+	}
+
+	public @Nullable NamespacedKey getRoadMapEditedBy(Player player) {
+		return roadMapEditors.values().stream()
+				.filter(re -> re.isEditing(player))
+				.map(RoadMapEditor::getKey)
+				.findFirst()
+				.orElse(null);
+	}
+
+	// Setters
 
 	public boolean setRoadMapName(RoadMap roadMap, String nameFormat) {
 		String old = roadMap.getNameFormat();
@@ -189,17 +226,5 @@ public class RoadMapHandler {
 	public void setNodeCurveLength(NodeSelection nodes, Double length) {
 		nodes.forEach(node -> node.setCurveLength(length));
 		Bukkit.getPluginManager().callEvent(new NodeCurveLengthChangedEvent(nodes, length));
-	}
-
-	public boolean isEditing(Player player) {
-		return roadMapEditors.values().stream().anyMatch(roadMapEditor -> roadMapEditor.isEditing(player));
-	}
-
-	public NamespacedKey getEdited(Player player) {
-		return roadMapEditors.values().stream()
-				.filter(re -> re.isEditing(player))
-				.map(RoadMapEditor::getKey)
-				.findFirst()
-				.orElse(null);
 	}
 }

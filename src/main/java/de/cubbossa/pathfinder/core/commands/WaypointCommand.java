@@ -191,7 +191,7 @@ public class WaypointCommand extends CommandTree {
 	}
 
 	public void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node> type, Location location) {
-		Node node = roadMap.createNode(type, location);
+		Node node = roadMap.createNode(type, location, true);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
 				.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);

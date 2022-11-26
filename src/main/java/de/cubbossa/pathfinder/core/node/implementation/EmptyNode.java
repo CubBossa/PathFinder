@@ -32,6 +32,11 @@ public class EmptyNode implements Node {
 	}
 
 	@Override
+	public boolean isPersistent() {
+		return false;
+	}
+
+	@Override
 	public Collection<SearchTerm> getSearchTerms() {
 		return new HashSet<>();
 	}

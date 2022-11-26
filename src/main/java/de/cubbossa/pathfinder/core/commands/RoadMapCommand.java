@@ -138,7 +138,7 @@ public class RoadMapCommand extends CommandTree {
 	public void onCreate(CommandSender sender, NamespacedKey key) {
 
 		try {
-			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(PathPlugin.getInstance(), key.getKey());
+			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(PathPlugin.getInstance(), key.getKey(), true, true);
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS
 					.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), sender);
 
@@ -150,8 +150,8 @@ public class RoadMapCommand extends CommandTree {
 		}
 	}
 
-	public void onDelete(CommandSender sender, RoadMap roadMap) throws WrapperCommandSyntaxException {
-
+	public void onDelete(CommandSender sender, RoadMap roadMap) {
+ 
 		RoadMapHandler.getInstance().deleteRoadMap(roadMap);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DELETE.format(TagResolver.resolver("roadmap", Tag.inserting(roadMap.getDisplayName()))), sender);
 	}

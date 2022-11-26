@@ -32,6 +32,11 @@ public class PlayerNode implements Node {
 	}
 
 	@Override
+	public boolean isPersistent() {
+		return false;
+	}
+
+	@Override
 	public Collection<Node> getGroup() {
 		return new HashSet<>();
 	}

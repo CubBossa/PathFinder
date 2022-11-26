@@ -71,7 +71,8 @@ public class EditModeMenu {
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						roadMap.createNode(type, pos);
+						// roadmap.isPersistent() has same result, because in roadmap it now is 'true && this.isPersistent'
+						roadMap.createNode(type, pos, true);
 					} else {
 						openNodeTypeMenu(context.getPlayer(), pos);
 					}
@@ -337,7 +338,7 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
 					.withClickHandler(Action.RIGHT, c -> {
-						roadMap.createNode(type, location);
+						roadMap.createNode(type, location, true);
 						menu.close(player);
 					}));
 		}
