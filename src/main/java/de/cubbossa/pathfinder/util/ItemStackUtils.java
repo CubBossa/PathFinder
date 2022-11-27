@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.util;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import de.cubbossa.translations.Message;
-import de.cubbossa.translations.TranslatedItem;
 import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
 import lombok.experimental.UtilityClass;
@@ -119,20 +118,8 @@ public class ItemStackUtils {
 		return ItemStackUtils.setCustomModelData(new ItemStack(material), customModelData);
 	}
 
-	public ItemStack createItemStack(Material material, Message name, Message lore) {
-		return createItemStack(new ItemStack(material), name, lore);
-	}
-
-	public static ItemStack createItemStack(ItemStack itemStack, Message name, Message lore) {
-		return new TranslatedItem(itemStack, name, lore).createItem();
-	}
-
 	public ItemStack createCustomHead(String url) {
 		return createCustomHead(new ItemStack(Material.PLAYER_HEAD, 1), url);
-	}
-
-	public ItemStack createCustomHead(String url, Message name, Message lore) {
-		return createCustomHead(createItemStack(Material.PLAYER_HEAD, name, lore), url);
 	}
 
 	public ItemStack createCustomHead(ItemStack itemStack, String url) {
@@ -155,10 +142,6 @@ public class ItemStackUtils {
 			throw new UnsupportedOperationException("Trying to add a skull texture to a non-playerhead item");
 		}
 		return itemStack;
-	}
-
-	public ItemStack createErrorItem(Message errorName, Message errorDescription) {
-		return createCustomHead(HEAD_URL_LETTER_EXCLAMATION, errorName, errorDescription);
 	}
 
 	public ItemStack createInfoItem(Message name, Message lore) {

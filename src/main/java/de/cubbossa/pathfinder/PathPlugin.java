@@ -26,7 +26,6 @@ import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
-import de.cubbossa.translations.PacketTranslationHandler;
 import de.cubbossa.translations.TranslationHandler;
 import de.tr7zw.nbtapi.NBTContainer;
 import dev.jorel.commandapi.CommandAPI;
@@ -191,7 +190,6 @@ public class PathPlugin extends JavaPlugin {
 		new ExamplesHandler().fetchExamples();
 
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
-		new PacketTranslationHandler(this);
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.setFallbackLanguage(configuration.getFallbackLanguage());
 		translationHandler.setUseClientLanguage(configuration.isClientLanguage());
