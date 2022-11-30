@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import dev.jorel.commandapi.ArgumentTree;
@@ -19,7 +18,6 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>> ex
 	public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex, int argumentOffset) {
 		return tree
 				.then(new LiteralArgument("point-distance")
-						.withPermission(PathPlugin.PERM_CMD_PV_POINT_DIST)
 						.then(new FloatArgument("distance", .02f, 100)
 								.executes((commandSender, objects) -> {
 									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -27,7 +25,6 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>> ex
 									}
 								})))
 				.then(new LiteralArgument("sample-rate")
-						.withPermission(PathPlugin.PERM_CMD_PV_SAMPLE_RATE)
 						.then(new IntegerArgument("sample-rate", 1, 64)
 								.executes((commandSender, objects) -> {
 									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {

@@ -29,7 +29,6 @@ public class PathVisualizerCommand extends CommandTree {
 	public PathVisualizerCommand() {
 		super("pathvisualizer");
 		withAliases("visualizer");
-		withPermission(PathPlugin.PERM_CMD_PV);
 
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_PV_LIST)
@@ -106,7 +105,7 @@ public class PathVisualizerCommand extends CommandTree {
 
 			lit.then(new LiteralArgument(type.getCommandName()).then(typeArg));
 		}
-		then(lit);
+		then(lit).withPermission(PathPlugin.PERM_CMD_PV_EDIT);
 		super.register();
 	}
 

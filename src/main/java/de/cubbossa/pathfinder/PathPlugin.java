@@ -11,6 +11,7 @@ import de.cubbossa.pathfinder.core.listener.DatabaseListener;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
@@ -36,6 +37,8 @@ import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.AdvancedPie;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,19 +46,19 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.util.Vector;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Getter
 public class PathPlugin extends JavaPlugin {
 
-	public static final String PERM_CMD_PF = "pathfinder.command.pathfinder";
+	public static final String PERM_CMD_PF_INFO = "pathfinder.command.pathfinder.info";
+	public static final String PERM_CMD_PF_HELP = "pathfinder.command.pathfinder.help";
 	public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
 	public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
 	public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
 	public static final String PERM_CMD_FIND = "pathfinder.command.find";
 	public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
-	public static final String PERM_CMD_RM = "pathfinder.command.roadmap";
 	public static final String PERM_CMD_RM_INFO = "pathfinder.command.roadmap.info";
 	public static final String PERM_CMD_RM_CREATE = "pathfinder.command.roadmap.create";
 	public static final String PERM_CMD_RM_DELETE = "pathfinder.command.roadmap.delete";
@@ -63,13 +66,9 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_RM_LIST = "pathfinder.command.roadmap.list";
 	public static final String PERM_CMD_RM_FORCEFIND = "pathfinder.command.roadmap.forcefind";
 	public static final String PERM_CMD_RM_FORCEFORGET = "pathfinder.command.roadmap.forceforget";
-	public static final String PERM_CMD_RM_SET_VIS = "pathfinder.command.roadmap.set.path-visualizer";
-	public static final String PERM_CMD_RM_SET_NAME = "pathfinder.command.roadmap.set.name";
-	public static final String PERM_CMD_RM_SET_WORLD = "pathfinder.command.roadmap.set.world";
-	public static final String PERM_CMD_RM_SET_FIND_DIST = "pathfinder.command.roadmap.set.find-distance";
-	public static final String PERM_CMD_RM_SET_FINDABLE = "pathfinder.command.roadmap.set.findable";
-	public static final String PERM_CMD_RM_SET_CURVE = "pathfinder.command.roadmap.set.curvelength";
-	public static final String PERM_CMD_NG = "pathfinder.command.nodegroup";
+	public static final String PERM_CMD_RM_SET_VIS = "pathfinder.command.roadmap.set_visualizer";
+	public static final String PERM_CMD_RM_SET_NAME = "pathfinder.command.roadmap.set_name";
+	public static final String PERM_CMD_RM_SET_CURVE = "pathfinder.command.roadmap.set_curvelength";
 	public static final String PERM_CMD_NG_LIST = "pathfinder.command.nodegroup.list";
 	public static final String PERM_CMD_NG_CREATE = "pathfinder.command.nodegroup.create";
 	public static final String PERM_CMD_NG_DELETE = "pathfinder.command.nodegroup.delete";
@@ -81,7 +80,6 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_NG_ST_LIST = "pathfinder.command.nodegroup.searchterms.list";
 	public static final String PERM_CMD_NG_ST_ADD = "pathfinder.command.nodegroup.searchterms.add";
 	public static final String PERM_CMD_NG_ST_REMOVE = "pathfinder.command.nodegroup.searchterms.remove";
-	public static final String PERM_CMD_WP = "pathfinder.command.waypoint";
 	public static final String PERM_CMD_WP_INFO = "pathfinder.command.waypoint.info";
 	public static final String PERM_CMD_WP_LIST = "pathfinder.command.waypoint.list";
 	public static final String PERM_CMD_WP_CREATE = "pathfinder.command.waypoint.create";
@@ -90,9 +88,10 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_WP_TPHERE = "pathfinder.command.waypoint.tphere";
 	public static final String PERM_CMD_WP_CONNECT = "pathfinder.command.waypoint.connect";
 	public static final String PERM_CMD_WP_DISCONNECT = "pathfinder.command.waypoint.disconnect";
-	public static final String PERM_CMD_WP_SET_PERM = "pathfinder.command.waypoint.set_perm";
 	public static final String PERM_CMD_WP_SET_CURVE = "pathfinder.command.waypoint.set_curve_length";
-	public static final String PERM_CMD_PV = "pathfinder.command.visualizer";
+	public static final String PERM_CMD_WP_ADD_GROUP = "pathfinder.command.waypoint.add_group";
+	public static final String PERM_CMD_WP_REMOVE_GROUP = "pathfinder.command.waypoint.remove_group";
+	public static final String PERM_CMD_WP_CLEAR_GROUPS = "pathfinder.command.waypoint.clear_groups";
 	public static final String PERM_CMD_PV_LIST = "pathfinder.command.visualizer.list";
 	public static final String PERM_CMD_PV_CREATE = "pathfinder.command.visualizer.create";
 	public static final String PERM_CMD_PV_DELETE = "pathfinder.command.visualizer.delete";
@@ -100,11 +99,7 @@ public class PathPlugin extends JavaPlugin {
 	public static final String PERM_CMD_PV_SET_NAME = "pathfinder.command.visualizer.set_name";
 	public static final String PERM_CMD_PV_SET_PERMISSION = "pathfinder.command.visualizer.set_permission";
 	public static final String PERM_CMD_PV_INTERVAL = "pathfinder.command.visualizer.set_interval";
-	public static final String PERM_CMD_PV_POINT_DIST = "pathfinder.command.visualizer.set_distance";
-	public static final String PERM_CMD_PV_SAMPLE_RATE = "pathfinder.command.visualizer.set_sample_rate";
-	public static final String PERM_CMD_PV_PARTICLE_STEPS = "pathfinder.command.visualizer.particle.set_particle_steps";
-	public static final String PERM_CMD_PV_PARTICLES = "pathfinder.command.visualizer.particle.set_particle";
-
+	public static final String PERM_CMD_PV_EDIT = "pathfinder.command.visualizer.edit";
 
 	public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
 		@Override
@@ -258,6 +253,38 @@ public class PathPlugin extends JavaPlugin {
 		extensions.forEach(PathPluginExtension::onEnable);
 
 		Metrics metrics = new Metrics(this, 16324);
+
+		metrics.addCustomChart(new SimplePie("roadmap_amount", () -> RoadMapHandler.getInstance().getRoadMaps().size() + ""));
+		metrics.addCustomChart(new SimplePie("group_amount", () -> NodeGroupHandler.getInstance().getNodeGroups().size() + ""));
+		metrics.addCustomChart(new SimplePie("visualizer_amount", () -> VisualizerHandler.getInstance().getRoadmapVisualizers().size() + ""));
+		metrics.addCustomChart(new AdvancedPie("nodes_per_roadmap", () -> {
+			IntStream counts = RoadMapHandler.getInstance().getRoadMapsStream()
+					.map(RoadMap::getNodes)
+					.mapToInt(Collection::size);
+			Map<String, Integer> vals = new HashMap<>();
+			counts.forEach(value -> {
+				if (value < 10) {
+					vals.put("< 10", vals.getOrDefault("< 10", 0) + 1);
+				} else if (value < 30) {
+					vals.put("10-30", vals.getOrDefault("10-30", 0) + 1);
+				} else if (value < 50) {
+					vals.put("30-50", vals.getOrDefault("30-50", 0) + 1);
+				} else if (value < 100) {
+					vals.put("50-100", vals.getOrDefault("50-100", 0) + 1);
+				} else if (value < 150) {
+					vals.put("100-150", vals.getOrDefault("100-150", 0) + 1);
+				} else if (value < 200) {
+					vals.put("150-200", vals.getOrDefault("150-200", 0) + 1);
+				} else if (value < 300) {
+					vals.put("200-300", vals.getOrDefault("200-300", 0) + 1);
+				} else if (value < 500) {
+					vals.put("300-500", vals.getOrDefault("300-500", 0) + 1);
+				} else {
+					vals.put("> 500", vals.getOrDefault("> 500", 0) + 1);
+				}
+			});
+			return vals;
+		}));
 	}
 
 	@SneakyThrows
