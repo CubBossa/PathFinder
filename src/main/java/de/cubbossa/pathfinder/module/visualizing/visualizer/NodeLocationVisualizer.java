@@ -4,7 +4,9 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.util.StringCompass;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -12,9 +14,10 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.CompassMeta;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -23,8 +26,6 @@ import java.util.List;
 @Getter
 @Setter
 public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisualizer, NodeLocationVisualizer.Data> {
-
-	private static final String COMPASS = "----:---- N ----:---- E ----:---- W ----:---- S ";
 
 	private final NamespacedKey key = new NamespacedKey(PathPlugin.getInstance(), "abc");
 	private int interval = 10;
@@ -65,11 +66,13 @@ public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisual
 				prev = node;
 				continue;
 			}
-			edges.add(new Edge(index++, prev.getLocation(), node.getLocation()));
+			edges.add(new Edge(index++, prev.getLocation().clone(), node.getLocation().clone()));
 			prev = node;
 		}
 
 		BossBar bossBar = BossBar.bossBar(Component.text("abc"), 1f, BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_6);
+		TranslationHandler.getInstance().getAudiences().player(player).showBossBar(bossBar);
+
 		return new Data(nodes, edges, bossBar);
 	}
 
@@ -83,33 +86,62 @@ public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisual
 		}
 		context.data().lastPlayerLocation = targetPlayer.getLocation();
 
+		// find nearest edge
+
 		Edge lastEdge = context.data().getLastGuessedEdge();
 		Edge nearest = null;
 		double edgeNearestDist = Double.MAX_VALUE;
 		for (Edge edge : context.data().getEdges()) {
-			double dist = VectorUtils.distancePointToLine(
-					targetPlayer.getLocation().toVector(),
+			double dist = VectorUtils.distancePointToSegment(
+					targetPlayer.getEyeLocation().toVector(),
 					edge.support().toVector(),
 					edge.target().toVector());
-			if (edge.equals(lastEdge)) {
-				dist *= .5f;
-			}
-			if (edge.index > lastEdge.index) {
-				dist -= 5;
-			}
 			if (dist < edgeNearestDist) {
 				nearest = edge;
 				edgeNearestDist = dist;
 			}
 		}
 
-		System.out.println(nearest);
-		Location targetLocation = nearest.target();
-		ItemStack compass = targetPlayer.getInventory().getItemInMainHand();
-		if (compass.getItemMeta() instanceof CompassMeta meta) {
-			meta.setLodestoneTracked(false);
-			meta.setLodestone(targetLocation);
-			compass.setItemMeta(meta);
+
+		if (nearest == null) {
+			throw new RuntimeException("The path does not contain any edges.");
 		}
+
+		// find the closest point on closest edge and move some blocks along in direction of target.
+		Vector closestPoint = VectorUtils.closestPointOnSegment(
+				targetPlayer.getEyeLocation().toVector(),
+				nearest.support().toVector(),
+				nearest.target().toVector()
+		);
+
+		// shift the closest point 5 units towards final target location
+		double unitsToShift = 5;
+		Location currentPoint = closestPoint.toLocation(targetPlayer.getWorld());
+		Edge currentEdge = nearest;
+		while (currentEdge != null && unitsToShift > 0) {
+			double dist = currentPoint.distance(currentEdge.target());
+			if (dist > unitsToShift) {
+				currentPoint.add(currentEdge.target().clone().subtract(currentEdge.support()).toVector().normalize().multiply(unitsToShift));
+				break;
+			}
+			unitsToShift -= dist;
+			currentPoint = currentEdge.target().clone();
+			currentEdge = currentEdge.index() + 1 >= context.data().getEdges().size()
+					? null
+					: context.data().getEdges().get(currentEdge.index() + 1);
+		}
+
+		targetPlayer.spawnParticle(Particle.FLAME, currentPoint, 1, 0, 0, 0, 0);
+		ItemStack hand = targetPlayer.getInventory().getItemInMainHand();
+
+		double angle = VectorUtils.convertDirectionToXZAngle(targetPlayer.getLocation());
+		StringCompass compass = new StringCompass("<gray>" + "  |- · · · -+- · · · -|- · · · -+- · · · -| ".repeat(4), 20, () -> angle);
+		compass.addMarker("N", "<red>N</red>", 0.);
+		compass.addMarker("E", "E", 90.);
+		compass.addMarker("S", "S", 180.);
+		compass.addMarker("W", "W", 270.);
+		double targetAngle = VectorUtils.convertDirectionToXZAngle(currentPoint.clone().subtract(targetPlayer.getLocation()).toVector());
+		compass.addMarker("target", "<green>♦</green>", targetAngle);
+		context.data().bossBar.name(compass.asComponent());
 	}
 }

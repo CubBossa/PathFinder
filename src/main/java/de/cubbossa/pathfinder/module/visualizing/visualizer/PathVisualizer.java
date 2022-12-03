@@ -17,6 +17,10 @@ public interface PathVisualizer<T extends PathVisualizer<T, D>, D> extends Keyed
 
 	void play(VisualizerContext<D> context);
 
+	default void destroy(VisualizerContext<D> context) {
+		
+	}
+
 	record VisualizerContext<D>(List<Player> players, int interval, long time, D data) {
 
 		public Player player() {

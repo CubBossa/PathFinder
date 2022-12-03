@@ -33,4 +33,40 @@ class VectorUtilsTest {
 				new Vector(29, 0, 0)
 		), 0.000001);
 	}
+
+	@Test
+	void distancePointToLine4() {
+		Assertions.assertEquals(70.710, VectorUtils.distancePointToLine(
+				new Vector(100, 13, 100),
+				new Vector(100, 13, 0),
+				new Vector(0, 13, 100)
+		), 0.01);
+	}
+
+	@Test
+	void closestPointOnLine1() {
+		Assertions.assertEquals(new Vector(0, 0, 0), VectorUtils.closestPointOnSegment(
+				new Vector(0, 1, 0),
+				new Vector(-1, 0, 0),
+				new Vector(1, 0, 0)
+		));
+	}
+
+	@Test
+	void closestPointOnLine2() {
+		Assertions.assertEquals(new Vector(-1, 0, 0), VectorUtils.closestPointOnSegment(
+				new Vector(-2, 0, 0),
+				new Vector(-1, 0, 0),
+				new Vector(1, 0, 0)
+		));
+	}
+
+	@Test
+	void closestPointOnLine3() {
+		Assertions.assertEquals(new Vector(1, 0, 0), VectorUtils.closestPointOnSegment(
+				new Vector(2, 0, 0),
+				new Vector(-1, 0, 0),
+				new Vector(1, 0, 0)
+		));
+	}
 }
