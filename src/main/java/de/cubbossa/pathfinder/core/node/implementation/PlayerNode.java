@@ -4,6 +4,7 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -31,13 +32,18 @@ public class PlayerNode implements Node {
 	}
 
 	@Override
-	public Collection<String> getSearchTerms() {
-		return new HashSet<>();
+	public boolean isPersistent() {
+		return false;
 	}
 
 	@Override
 	public Collection<Node> getGroup() {
 		return new HashSet<>();
+	}
+
+	@Override
+	public Collection<SearchTerm> getSearchTerms() {
+		return null;
 	}
 
 	@Override

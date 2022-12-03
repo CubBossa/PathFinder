@@ -12,10 +12,9 @@ import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.util.ClientNodeHandler;
-import de.cubbossa.pathfinder.util.EditmodeUtils;
 import de.cubbossa.pathfinder.util.ItemStackUtils;
+import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.serializedeffects.EffectHandler;
-import de.cubbossa.translations.TranslatedItem;
 import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -49,7 +48,7 @@ public class EditModeMenu {
 		this.types = types;
 	}
 
-	public BottomInventoryMenu createHotbarMenu(RoadMapEditor editor) {
+	public BottomInventoryMenu createHotbarMenu(RoadMapEditor editor, Player editingPlayer) {
 		BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
 		menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
@@ -57,7 +56,7 @@ public class EditModeMenu {
 		});
 
 		menu.setButton(0, Button.builder()
-				.withItemStack(EditmodeUtils.NODE_TOOL)
+				.withItemStack(new LocalizedItem(Material.NETHER_STAR, Messages.E_NODE_TOOL_N, Messages.E_NODE_TOOL_L).createItem(editingPlayer))
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					Player p = context.getPlayer();
 					roadMap.removeNodes(context.getTarget());
@@ -71,7 +70,8 @@ public class EditModeMenu {
 						if (type == null) {
 							throw new IllegalStateException("Could not find any node type to generate node.");
 						}
-						roadMap.createNode(type, pos);
+						// roadmap.isPersistent() has same result, because in roadmap it now is 'true && this.isPersistent'
+						roadMap.createNode(type, pos, true);
 					} else {
 						openNodeTypeMenu(context.getPlayer(), pos);
 					}
@@ -79,7 +79,13 @@ public class EditModeMenu {
 
 
 		menu.setButton(1, Button.builder()
-				.withItemStack(() -> edgeStart == null ? EditmodeUtils.EDGE_TOOL : EditmodeUtils.EDGE_TOOL_GLOW)
+				.withItemStack(() -> {
+					ItemStack stack = new LocalizedItem(Material.STICK, Messages.E_EDGE_TOOL_N, Messages.E_EDGE_TOOL_L).createItem(editingPlayer);
+					if (edgeStart != null) {
+						ItemStackUtils.setGlow(stack);
+					}
+					return stack;
+				})
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
 					Player p = c.getPlayer();
 
@@ -132,7 +138,7 @@ public class EditModeMenu {
 
 
 		menu.setButton(5, Button.builder()
-				.withItemStack(EditmodeUtils.TP_TOOL)
+				.withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N, Messages.E_TP_TOOL_L).createItem(editingPlayer))
 				.withClickHandler(context -> {
 					double dist = -1;
 					Node nearest = null;
@@ -154,7 +160,7 @@ public class EditModeMenu {
 				}, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
 		menu.setButton(3, Button.builder()
-				.withItemStack(EditmodeUtils.GROUP_TOOL)
+				.withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N, Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
 						openGroupMenu(context.getPlayer(), groupable);
@@ -174,7 +180,7 @@ public class EditModeMenu {
 				}));
 
 		menu.setButton(4, Button.builder()
-				.withItemStack(EditmodeUtils.MULTI_GROUP_TOOL)
+				.withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N, Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
 				.withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
 					if (context.getTarget() instanceof Groupable groupable) {
 						Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
@@ -198,7 +204,7 @@ public class EditModeMenu {
 
 	private void openGroupMenu(Player player, Groupable groupable) {
 
-		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asTranslatable(), 4);
+		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
 		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
 		for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
 
@@ -212,16 +218,16 @@ public class EditModeMenu {
 					.resolver(Formatter.number("find-distance", group.getFindDistance()))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+							group.getSearchTermStrings().stream().map(Component::text).collect(Collectors.toList())
 					)))
 					.build();
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
+						ItemStack stack = new LocalizedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
 								.withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
 								.withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
-								.createItem();
+								.createItem(player);
 						if (group.contains(groupable)) {
 							stack = ItemStackUtils.setGlow(stack);
 						}
@@ -249,7 +255,7 @@ public class EditModeMenu {
 					}));
 		}
 		menu.addPreset(presetApplier -> {
-			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+			presetApplier.addItemOnTop(3 * 9 + 8, new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem(player));
 			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
 
 				Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
@@ -259,14 +265,14 @@ public class EditModeMenu {
 				});
 			});
 
-			presetApplier.addItemOnTop(3 * 9 + 4, new TranslatedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem());
+			presetApplier.addItemOnTop(3 * 9 + 4, new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem(player));
 		});
 		menu.open(player);
 	}
 
 	private void openMutliToolMenu(Player player) {
 
-		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asTranslatable(), 4);
+		ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
 		menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
 		for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
 
@@ -280,16 +286,16 @@ public class EditModeMenu {
 					.resolver(Formatter.number("find-distance", group.getFindDistance()))
 					.resolver(Placeholder.component("search-terms", Component.join(
 							JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-							group.getSearchTerms().stream().map(Component::text).collect(Collectors.toList())
+							group.getSearchTermStrings().stream().map(Component::text).collect(Collectors.toList())
 					)))
 					.build();
 
 			menu.addListEntry(Button.builder()
 					.withItemStack(() -> {
-						ItemStack stack = new TranslatedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
+						ItemStack stack = new LocalizedItem.Builder(new ItemStack(group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
 								.withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
 								.withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
-								.createItem();
+								.createItem(player);
 						if (multiTool.contains(group)) {
 							stack = ItemStackUtils.setGlow(stack);
 						}
@@ -317,14 +323,14 @@ public class EditModeMenu {
 					}));
 		}
 		menu.addPreset(presetApplier -> {
-			presetApplier.addItemOnTop(3 * 9 + 8, new TranslatedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem());
+			presetApplier.addItemOnTop(3 * 9 + 8, new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N, Messages.E_SUB_GROUP_RESET_L).createItem(player));
 			presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
 				multiTool.clear();
 				menu.refresh(menu.getListSlots());
 				c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
 			});
 
-			presetApplier.addItemOnTop(3 * 9 + 4, new TranslatedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem());
+			presetApplier.addItemOnTop(3 * 9 + 4, new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N, Messages.E_SUB_GROUP_INFO_L).createItem(player));
 		});
 		menu.open(player);
 	}
@@ -337,7 +343,7 @@ public class EditModeMenu {
 			menu.addListEntry(Button.builder()
 					.withItemStack(type::getDisplayItem)
 					.withClickHandler(Action.RIGHT, c -> {
-						roadMap.createNode(type, location);
+						roadMap.createNode(type, location, true);
 						menu.close(player);
 					}));
 		}

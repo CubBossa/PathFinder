@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
@@ -74,7 +73,6 @@ public class ScriptLineParticleVisualizerType extends BezierVisualizerType<Scrip
 									}
 								})))
 				.then(new LiteralArgument("particle-steps")
-						.withPermission(PathPlugin.PERM_CMD_PV_PARTICLE_STEPS)
 						.then(new IntegerArgument("amount", 1)
 								.executes((commandSender, objects) -> {
 									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {

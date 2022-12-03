@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -24,6 +26,7 @@ public class Waypoint implements Node, Groupable {
 	private final int nodeId;
 	private final NamespacedKey roadMapKey;
 	private final RoadMap roadMap;
+	private final boolean persistent;
 	private final List<Edge> edges;
 	private final Collection<NodeGroup> groups;
 
@@ -31,10 +34,11 @@ public class Waypoint implements Node, Groupable {
 	@Nullable
 	private Double curveLength = null;
 
-	public Waypoint(int databaseId, RoadMap roadMap) {
+	public Waypoint(int databaseId, RoadMap roadMap, boolean persistent) {
 		this.nodeId = databaseId;
 		this.roadMap = roadMap;
 		this.roadMapKey = roadMap.getKey();
+		this.persistent = persistent;
 		this.groups = new HashSet<>();
 
 		edges = new ArrayList<>();
@@ -78,8 +82,28 @@ public class Waypoint implements Node, Groupable {
 	}
 
 	@Override
-	public Collection<String> getSearchTerms() {
+	public Collection<SearchTerm> getSearchTerms() {
 		return groups.stream().flatMap(group -> group.getSearchTerms().stream()).collect(Collectors.toSet());
+	}
+
+	@Override
+	public boolean matches(SearchTerm searchTerm) {
+		return groups.stream().anyMatch(g -> g.matches(searchTerm));
+	}
+
+	@Override
+	public boolean matches(SearchTerm searchTerm, Collection<SearchQueryAttribute> attributes) {
+		return groups.stream().anyMatch(g -> g.matches(searchTerm, attributes));
+	}
+
+	@Override
+	public boolean matches(String term) {
+		return groups.stream().anyMatch(g -> g.matches(term));
+	}
+
+	@Override
+	public boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
+		return groups.stream().anyMatch(g -> g.matches(term, attributes));
 	}
 
 	@Override

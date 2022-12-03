@@ -278,7 +278,7 @@ public class YmlDatabase implements DataStorage {
 			int id = Integer.parseInt(key);
 			Location location = innerSection.getLocation("location");
 			Waypoint node = RoadMapHandler.WAYPOINT_TYPE.getFactory()
-					.apply(new NodeType.NodeCreationContext(roadMap, id, location));
+					.apply(new NodeType.NodeCreationContext(roadMap, id, location, true));
 			node.setCurveLength(innerSection.getDouble("curve-length"));
 			result.put(id, node);
 		}
@@ -372,7 +372,7 @@ public class YmlDatabase implements DataStorage {
 				group.setNavigable(cfg.getBoolean("navigable"));
 				group.setDiscoverable(cfg.getBoolean("discoverable"));
 				group.setFindDistance((float) cfg.getDouble("find-distance"));
-				group.setSearchTerms(cfg.getStringList("search-terms"));
+				group.addSearchTermStrings(cfg.getStringList("search-terms"));
 
 				registry.put(group);
 			} catch (Exception e) {

@@ -106,7 +106,7 @@ public class RoadMapEditor implements Keyed, Listener {
 				startParticleTask();
 			}
 
-			BottomInventoryMenu menu = new EditModeMenu(roadMap, NodeTypeHandler.getInstance().getTypes().values()).createHotbarMenu(this);
+			BottomInventoryMenu menu = new EditModeMenu(roadMap, NodeTypeHandler.getInstance().getTypes().values()).createHotbarMenu(this, player);
 			editingPlayers.put(uuid, menu);
 			menu.openSync(player);
 

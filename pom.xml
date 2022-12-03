@@ -2,9 +2,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>de.cubbossa</groupId>
     <artifactId>PathFinder</artifactId>
-    <version>1.4</version>
+    <version>1.5.2</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -64,6 +65,7 @@
                             <include>org.ow2.asm:asm</include>
                             <include>org.ow2.asm:asm-util</include>
                             <include>de.tr7zw:item-nbt-api-plugin</include>
+                            <include>org.antlr:antlr4-runtime</include>
                         </includes>
                     </artifactSet>
                     <relocations>
@@ -111,7 +113,27 @@
                             <pattern>de.tr7zw.changeme.nbtapi</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.nbtapi</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>org.antlr</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.antlr-runtime</shadedPattern>
+                        </relocation>
                     </relocations>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.7.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
                 </configuration>
             </plugin>
         </plugins>
@@ -166,6 +188,12 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.7.1</version>
+        </dependency>
 
         <dependency>
             <groupId>de.tr7zw</groupId>
@@ -233,7 +261,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.19.1-R0.1-SNAPSHOT</version>
+            <version>1.19.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -276,7 +304,7 @@
         <dependency>
             <groupId>de.cubbossa</groupId>
             <artifactId>Translations</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
 
         <dependency>
@@ -291,28 +319,10 @@
             <version>1.0</version>
         </dependency>
 
-        <!--<dependency>
-            <groupId>com.github.CubBossa.MenuFramework</groupId>
-            <artifactId>MenuFramework</artifactId>
-            <version>v1.1.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.CubBossa.MenuFramework</groupId>
-            <artifactId>MenuFramework-Protocol-Extension</artifactId>
-            <version>v1.1.4</version>
-        </dependency>-->
-
         <dependency>
             <groupId>de.cubbossa</groupId>
             <artifactId>MenuFramework</artifactId>
-            <version>1.1.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.cubbossa</groupId>
-            <artifactId>MenuFramework-Protocol-Extension</artifactId>
-            <version>1.1.5</version>
+            <version>1.2</version>
         </dependency>
 
         <dependency>

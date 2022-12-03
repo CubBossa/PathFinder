@@ -11,10 +11,11 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.query.FindQueryParser;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
-import de.cubbossa.pathfinder.util.SetArithmeticParser;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
@@ -314,16 +315,20 @@ public class CustomArgs {
 				throw new CustomArgument.CustomArgumentException("Only for players");
 			}
 			String search = context.currentInput();
-			SetArithmeticParser<Groupable> parser = new SetArithmeticParser<>(RoadMapHandler.getInstance().getRoadMaps().values().stream()
+			List<Node> scope = RoadMapHandler.getInstance().getRoadMaps().values().stream()
 					.flatMap(roadMap -> roadMap.getNodes().stream()
-							.filter(node -> node instanceof Groupable)
-							.map(node -> (Groupable) node)
 							.filter(node -> {
 								FindModule.NavigationRequestContext c = new FindModule.NavigationRequestContext(player.getUniqueId(), node);
 								return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
 							}))
-					.collect(Collectors.toSet()), Navigable::getSearchTerms);
-			return new NodeSelection(new HashSet<>(parser.parse(search)));
+					.toList();
+
+			try {
+				Collection<Node> target = new FindQueryParser().parse(search, scope);
+				return new NodeSelection(target);
+			} catch (Throwable t) {
+				throw new CustomArgument.CustomArgumentException(t.getMessage());
+			}
 		})
 				.includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
 					if (!(suggestionInfo.sender() instanceof Player player)) {
@@ -351,6 +356,7 @@ public class CustomArgs {
 							.map(FindModule.NavigationRequestContext::navigable)
 							.map(Navigable::getSearchTerms)
 							.flatMap(Collection::stream)
+							.map(SearchTerm::getIdentifier)
 							.collect(Collectors.toSet());
 
 					/*TODO if (!Arrays.stream(suggestionInfo.currentInput().substring(0, lastIndex).split("[!&|()]")).allMatch(allTerms::contains)) {

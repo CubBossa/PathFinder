@@ -28,20 +28,30 @@ public class PathFinderCommand extends CommandTree {
 
 	public PathFinderCommand() {
 		super("pathfinder");
-		withPermission(PathPlugin.PERM_CMD_PF);
+		withRequirement(sender ->
+				sender.hasPermission(PathPlugin.PERM_CMD_PF_HELP) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_PF_INFO) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_PF_IMPORT) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_PF_EXPORT) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_PF_RELOAD)
+		);
 
-		then(new LiteralArgument("info").executes((commandSender, objects) -> {
-			PluginDescriptionFile desc = PathPlugin.getInstance().getDescription();
-			TranslationHandler.getInstance().sendMessage(Messages.INFO.format(TagResolver.builder()
-					.resolver(Placeholder.unparsed("version", desc.getVersion()))
-					.resolver(Placeholder.unparsed("api-version", desc.getAPIVersion() == null ? "none" : desc.getAPIVersion()))
-					.resolver(Placeholder.unparsed("authors", String.join(",", desc.getAuthors())))
-					.build()), commandSender);
-		}));
+		then(new LiteralArgument("info")
+				.withPermission(PathPlugin.PERM_CMD_PF_INFO)
+				.executes((commandSender, objects) -> {
+					PluginDescriptionFile desc = PathPlugin.getInstance().getDescription();
+					TranslationHandler.getInstance().sendMessage(Messages.INFO.format(TagResolver.builder()
+							.resolver(Placeholder.unparsed("version", desc.getVersion()))
+							.resolver(Placeholder.unparsed("api-version", desc.getAPIVersion() == null ? "none" : desc.getAPIVersion()))
+							.resolver(Placeholder.unparsed("authors", String.join(",", desc.getAuthors())))
+							.build()), commandSender);
+				}));
 
-		then(new LiteralArgument("help").executes((commandSender, objects) -> {
-			TranslationHandler.getInstance().sendMessage(Messages.HELP, commandSender);
-		}));
+		then(new LiteralArgument("help")
+				.withPermission(PathPlugin.PERM_CMD_PF_HELP)
+				.executes((commandSender, objects) -> {
+					TranslationHandler.getInstance().sendMessage(Messages.HELP, commandSender);
+				}));
 
 		then(new LiteralArgument("export")
 				.withPermission(PathPlugin.PERM_CMD_PF_EXPORT)

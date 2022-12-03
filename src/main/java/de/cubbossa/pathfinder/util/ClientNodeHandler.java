@@ -174,7 +174,7 @@ public class ClientNodeHandler {
 				player, Messages.E_NODE_NAME, ((Groupable) node).getGroups().stream()
 						.map(NodeGroup::getSearchTerms)
 						.flatMap(Collection::stream).collect(Collectors.toList()),
-				Component::text
+				t -> Component.text(t.getIdentifier())
 		) : null);
 	}
 

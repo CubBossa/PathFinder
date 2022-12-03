@@ -29,9 +29,21 @@ public class WaypointCommand extends CommandTree {
 
 	public WaypointCommand() {
 		super("waypoint");
-		withPermission(PathPlugin.PERM_CMD_WP);
-
 		withAliases("node");
+
+		withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_WP_INFO) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_LIST) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_CREATE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_DELETE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_TPHERE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_TP) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_CONNECT) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_DISCONNECT) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_SET_CURVE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
+		);
 
 		then(new LiteralArgument("info")
 				.withPermission(PathPlugin.PERM_CMD_WP_INFO)
@@ -142,6 +154,7 @@ public class WaypointCommand extends CommandTree {
 									onSetTangent(player, (NodeSelection) objects[0], null);
 								}))
 						.then(new LiteralArgument("addgroup")
+								.withPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP)
 								.then(CustomArgs.nodeGroupArgument("group")
 										.executesPlayer((player, objects) -> {
 											onAddGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
@@ -149,6 +162,7 @@ public class WaypointCommand extends CommandTree {
 								)
 						)
 						.then(new LiteralArgument("removegroup")
+								.withPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP)
 								.then(CustomArgs.nodeGroupArgument("group")
 										.executesPlayer((player, objects) -> {
 											onRemoveGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
@@ -156,6 +170,7 @@ public class WaypointCommand extends CommandTree {
 								)
 						)
 						.then(new LiteralArgument("cleargroups")
+								.withPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
 								.executesPlayer((player, objects) -> {
 									onClearGroups(player, (NodeSelection) objects[0]);
 								})
@@ -191,7 +206,7 @@ public class WaypointCommand extends CommandTree {
 	}
 
 	public void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node> type, Location location) {
-		Node node = roadMap.createNode(type, location);
+		Node node = roadMap.createNode(type, location, true);
 
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
 				.format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))), player);

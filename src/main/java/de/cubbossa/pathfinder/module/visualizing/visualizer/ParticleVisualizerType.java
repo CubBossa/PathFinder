@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.translations.Message;
@@ -49,7 +48,6 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 	public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex, int argumentOffset) {
 		return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
 				.then(new LiteralArgument("particle")
-						.withPermission(PathPlugin.PERM_CMD_PV_PARTICLES)
 						.then(new ParticleArgument("particle")
 								.executes((commandSender, objects) -> {
 									ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
@@ -75,7 +73,6 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 								)
 						))
 				.then(new LiteralArgument("particle-steps")
-						.withPermission(PathPlugin.PERM_CMD_PV_PARTICLE_STEPS)
 						.then(new IntegerArgument("amount", 1)
 								.executes((commandSender, objects) -> {
 									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {

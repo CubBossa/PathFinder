@@ -19,7 +19,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class NodeType<T extends Node> implements Keyed, Named {
 
-	public record NodeCreationContext(RoadMap roadMap, int id, Location location) {
+	public record NodeCreationContext(RoadMap roadMap, int id, Location location, boolean persistent) {
 
 	}
 

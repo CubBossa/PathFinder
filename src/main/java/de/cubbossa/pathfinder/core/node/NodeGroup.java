@@ -4,6 +4,10 @@ import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTermHolder;
+import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -18,7 +22,7 @@ import java.util.logging.Level;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Discoverable, Navigable {
+public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Discoverable, Navigable, SearchTermHolder {
 
 	private final NamespacedKey key;
 	private String nameFormat;
@@ -27,7 +31,7 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
 	private boolean discoverable = true;
 	private boolean navigable = true;
 	private float findDistance = 1.5f;
-	private Collection<String> searchTerms;
+	private Collection<SearchTerm> searchTerms;
 
 	public NodeGroup(NamespacedKey key, String nameFormat) {
 		this(key, nameFormat, new HashSet<>());
@@ -84,18 +88,6 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
 		return new HashSet<>(this);
 	}
 
-	public void removeSearchTerms(Collection<String> terms) {
-		searchTerms.removeAll(terms);
-	}
-
-	public void addSearchTerms(Collection<String> terms) {
-		searchTerms.addAll(terms);
-	}
-
-	public void clearSearchTerms(Collection<String> terms) {
-		searchTerms.clear();
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -143,5 +135,56 @@ public class NodeGroup extends HashSet<Groupable> implements Keyed, Named, Disco
 	@Override
 	public NamespacedKey getKey() {
 		return key;
+	}
+
+	@Override
+	public void addSearchTerms(Collection<SearchTerm> searchTerms) {
+
+	}
+
+	@Override
+	public void removeSearchTerms(Collection<SearchTerm> searchTerms) {
+
+	}
+
+	@Override
+	public void clearSearchTerms() {
+
+	}
+
+	public Collection<String> getSearchTermStrings() {
+		return searchTerms.stream().map(SearchTerm::getIdentifier).toList();
+	}
+
+	public void removeSearchTermStrings(Collection<String> terms) {
+		searchTerms.removeIf(searchTerm -> terms.contains(searchTerm.getIdentifier()));
+	}
+
+	public void addSearchTermStrings(Collection<String> terms) {
+		searchTerms.addAll(terms.stream().map(SimpleSearchTerm::new).toList());
+	}
+
+	public void clearSearchTermStrings() {
+		searchTerms.clear();
+	}
+
+	@Override
+	public boolean matches(SearchTerm searchTerm) {
+		return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(searchTerm.getIdentifier()));
+	}
+
+	@Override
+	public boolean matches(SearchTerm searchTerm, Collection<SearchQueryAttribute> attributes) {
+		return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(searchTerm.getIdentifier()) && t.matches(attributes));
+	}
+
+	@Override
+	public boolean matches(String term) {
+		return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(term));
+	}
+
+	@Override
+	public boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
+		return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(term) && t.matches(attributes));
 	}
 }

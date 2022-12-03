@@ -1,12 +1,13 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.PersistencyHolder;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public interface Node extends Navigable, Comparable<Node> {
+public interface Node extends Navigable, PersistencyHolder, Comparable<Node> {
 
 	int getNodeId();
 

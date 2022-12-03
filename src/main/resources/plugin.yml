@@ -9,9 +9,17 @@ depend:
   - ProtocolLib
 
 permissions:
+  pathfinder.command.pathfinder.info:
+    default: op
+  pathfinder.command.pathfinder.help:
+    default: op
   pathfinder.command.pathfinder.reload:
     default: op
-  pathfinder.command.find.location:
+  pathfinder.command.pathfinder.import:
+    default: op
+  pathfinder.command.pathfinder.export:
+    default: op
+  pathfinder.command.find:
     default: true
   pathfinder.command.cancel_path:
     default: true
@@ -29,33 +37,27 @@ permissions:
     default: op
   pathfinder.command.roadmap.forceforget:
     default: op
-  pathfinder.command.roadmap.set.path-visualizer:
+  pathfinder.command.roadmap.set_visualizer:
     default: op
-  pathfinder.command.roadmap.set.name:
+  pathfinder.command.roadmap.set_name:
     default: op
-  pathfinder.command.roadmap.set.world:
+  pathfinder.command.roadmap.set_curvelength:
     default: op
-  pathfinder.command.roadmap.set.find-distance:
+  pathfinder.command.nodegroup.list:
     default: op
-  pathfinder.command.roadmap.set.findable:
+  pathfinder.command.nodegroup.create:
     default: op
-  pathfinder.command.roadmap.set.curvelength:
+  pathfinder.command.nodegroup.delete:
     default: op
-  pathfinder.nodegroup.list:
+  pathfinder.command.nodegroup.set_name:
     default: op
-  pathfinder.nodegroup.create:
+  pathfinder.command.nodegroup.set_findable:
     default: op
-  pathfinder.nodegroup.delete:
+  pathfinder.command.nodegroup.searchterms.list:
     default: op
-  pathfinder.nodegroup.set_name:
+  pathfinder.command.nodegroup.searchterms.add:
     default: op
-  pathfinder.nodegroup.set_findable:
-    default: op
-  pathfinder.nodegroup.searchterms.list:
-    default: op
-  pathfinder.nodegroup.searchterms.add:
-    default: op
-  pathfinder.nodegroup.searchterms.remove:
+  pathfinder.command.nodegroup.searchterms.remove:
     default: op
   pathfinder.command.waypoint.info:
     default: op
@@ -73,9 +75,13 @@ permissions:
     default: op
   pathfinder.command.waypoint.disconnect:
     default: op
-  pathfinder.command.waypoint.set_perm:
-    default: op
   pathfinder.command.waypoint.set_curve_length:
+    default: op
+  pathfinder.command.waypoint.add_group:
+    default: op
+  pathfinder.command.waypoint.remove_group:
+    default: op
+  pathfinder.command.waypoint.clear_groups:
     default: op
   pathfinder.command.visualizer.list:
     default: op
@@ -91,93 +97,16 @@ permissions:
     default: op
   pathfinder.command.visualizer.set_interval:
     default: op
-  pathfinder.command.visualizer.set_distance:
+  pathfinder.command.visualizer.edit:
     default: op
-  pathfinder.command.visualizer.particle.set_particle_steps:
-    default: op
-  pathfinder.command.visualizer.particle.set_particle:
-    default: op
-
-  pathfinder.command.pathfinder:
-    default: op
-    children:
-      pathfinder.command.pathfinder.reload: true
-
-  pathfinder.command.roadmap:
-    default: op
-    children:
-      pathfinder.command.roadmap.info: true
-      pathfinder.command.roadmap.create: true
-      pathfinder.command.roadmap.delete: true
-      pathfinder.command.roadmap.editmode: true
-      pathfinder.command.roadmap.list: true
-      pathfinder.command.roadmap.forcefind: true
-      pathfinder.command.roadmap.forceforget: true
-      pathfinder.command.roadmap.select: true
-      pathfinder.command.roadmap.deselect: true
-      pathfinder.command.roadmap.set.path-visualizer: true
-      pathfinder.command.roadmap.set.name: true
-      pathfinder.command.roadmap.set.world: true
-      pathfinder.command.roadmap.set.find-distance: true
-      pathfinder.command.roadmap.set.findable: true
-      pathfinder.command.roadmap.set.curvelength: true
-
-  pathfinder.command.find:
-    default: true
-    children:
-      pathfinder.command.find.location: true
-      pathfinder.command.cancel_path: true
-
-  pathfinder.command.nodegroup:
-    default: op
-    children:
-      pathfinder.command.nodegroup.list: true
-      pathfinder.command.nodegroup.create: true
-      pathfinder.command.nodegroup.delete: true
-      pathfinder.command.nodegroup.set_name: true
-      pathfinder.command.nodegroup.set_permission: true
-      pathfinder.command.nodegroup.set_navigable: true
-      pathfinder.command.nodegroup.set_discoverable: true
-      pathfinder.command.nodegroup.set_find_distance: true
-      pathfinder.command.nodegroup.searchterms.list: true
-      pathfinder.command.nodegroup.searchterms.add: true
-      pathfinder.command.nodegroup.searchterms.remove: true
-
-  pathfinder.command.waypoint:
-    default: op
-    children:
-      pathfinder.command.waypoint.info: true
-      pathfinder.command.waypoint.list: true
-      pathfinder.command.waypoint.create: true
-      pathfinder.command.waypoint.delete: true
-      pathfinder.command.waypoint.tp: true
-      pathfinder.command.waypoint.tphere: true
-      pathfinder.command.waypoint.connect: true
-      pathfinder.command.waypoint.disconnect: true
-      pathfinder.command.waypoint.set_perm: true
-      pathfinder.command.waypoint.set_curve_length: true
-
-  pathfinder.command.visualizer:
-    default: op
-    children:
-      pathfinder.command.visualizer.list: true
-      pathfinder.command.visualizer.create: true
-      pathfinder.command.visualizer.delete: true
-      pathfinder.command.visualizer.info: true
-      pathfinder.command.visualizer.set_name: true
-      pathfinder.command.visualizer.set_permission: true
-      pathfinder.command.visualizer.set_interval: true
-      pathfinder.command.visualizer.set_distance: true
-      pathfinder.command.visualizer.particle.set_particle_steps: true
-      pathfinder.command.visualizer.particle.set_particle: true
 
   pathfinder.admin:
     default: op
     children:
-      pathfinder.command.pathfinder: true
-      pathfinder.command.roadmap: true
-      pathfinder.command.nodegroup: true
-      pathfinder.command.waypoint: true
-      pathfinder.command.visualizer: true
+      pathfinder.command.pathfinder.*: true
+      pathfinder.command.roadmap.*: true
+      pathfinder.command.nodegroup.*: true
+      pathfinder.command.waypoint.*: true
+      pathfinder.command.visualizer.*: true
 
 

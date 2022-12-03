@@ -31,7 +31,19 @@ public class NodeGroupCommand extends CommandTree {
 
 	public NodeGroupCommand(int offset) {
 		super("nodegroup");
-		withPermission(PathPlugin.PERM_CMD_NG);
+
+		withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_LIST) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_CREATE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_DELETE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_ADD) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_LIST) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAME) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_PERM) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE) ||
+				sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
+		);
 
 		then(new LiteralArgument("list")
 				.withPermission(PathPlugin.PERM_CMD_NG_LIST)
@@ -58,6 +70,12 @@ public class NodeGroupCommand extends CommandTree {
 						})));
 
 		then(new LiteralArgument("search-terms")
+				.withRequirement(sender ->
+						sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_ADD) ||
+								sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE) ||
+								sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
+				)
+
 				.then(new LiteralArgument("add")
 						.withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
 						.then(CustomArgs.nodeGroupArgument("group")
@@ -79,6 +97,12 @@ public class NodeGroupCommand extends CommandTree {
 									searchTermsList(sender, (NodeGroup) objects[offset]);
 								}))));
 		then(new LiteralArgument("edit")
+				.withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAME) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_PERM) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
+				)
 				.then(CustomArgs.nodeGroupArgument("group")
 						.then(new LiteralArgument("name")
 								.withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
@@ -118,7 +142,7 @@ public class NodeGroupCommand extends CommandTree {
 	public void searchTermsList(CommandSender sender, NodeGroup group) {
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_TERMS_LIST.format(TagResolver.builder()
 				.resolver(Placeholder.component("name", group.getDisplayName()))
-				.resolver(Placeholder.component("values", toList(group.getSearchTerms())))
+				.resolver(Placeholder.component("values", toList(group.getSearchTermStrings())))
 				.build()), sender);
 	}
 
@@ -127,7 +151,7 @@ public class NodeGroupCommand extends CommandTree {
 				.map(String::trim)
 				.map(String::toLowerCase)
 				.toList();
-		group.getSearchTerms().addAll(toAdd);
+		group.addSearchTermStrings(toAdd);
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.ADD, toAdd
 		));
@@ -143,7 +167,7 @@ public class NodeGroupCommand extends CommandTree {
 				.map(String::trim)
 				.map(String::toLowerCase)
 				.toList();
-		group.getSearchTerms().removeAll(toRemove);
+		group.removeSearchTermStrings(toRemove);
 
 		Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
 				group, NodeGroupSearchTermsChangedEvent.Action.REMOVE, toRemove

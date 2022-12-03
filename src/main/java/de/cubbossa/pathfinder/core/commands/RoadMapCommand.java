@@ -30,9 +30,19 @@ public class RoadMapCommand extends CommandTree {
 
 	public RoadMapCommand() {
 		super("roadmap");
-		withPermission(PathPlugin.PERM_CMD_RM);
-
 		withAliases("rm");
+
+		withRequirement(sender ->
+				sender.hasPermission(PathPlugin.PERM_CMD_RM_INFO) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_CREATE) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_DELETE) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_EDITMODE) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_FORCEFIND) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_FORCEFORGET) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_VIS) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_NAME) ||
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
+		);
 
 		then(new LiteralArgument("info")
 				.withPermission(PathPlugin.PERM_CMD_RM_INFO)
@@ -97,6 +107,11 @@ public class RoadMapCommand extends CommandTree {
 										})))));
 
 		then(new LiteralArgument("edit")
+				.withRequirement(sender ->
+						sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_VIS) ||
+								sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_NAME) ||
+								sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
+				)
 				.then(CustomArgs.roadMapArgument("roadmap")
 						.then(new LiteralArgument("visualizer")
 								.withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
@@ -138,7 +153,7 @@ public class RoadMapCommand extends CommandTree {
 	public void onCreate(CommandSender sender, NamespacedKey key) {
 
 		try {
-			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(PathPlugin.getInstance(), key.getKey());
+			RoadMap roadMap = RoadMapHandler.getInstance().createRoadMap(PathPlugin.getInstance(), key.getKey(), true, true);
 			TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_CREATE_SUCCESS
 					.format(TagResolver.resolver("name", Tag.inserting(roadMap.getDisplayName()))), sender);
 
@@ -150,7 +165,7 @@ public class RoadMapCommand extends CommandTree {
 		}
 	}
 
-	public void onDelete(CommandSender sender, RoadMap roadMap) throws WrapperCommandSyntaxException {
+	public void onDelete(CommandSender sender, RoadMap roadMap) {
 
 		RoadMapHandler.getInstance().deleteRoadMap(roadMap);
 		TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_DELETE.format(TagResolver.resolver("roadmap", Tag.inserting(roadMap.getDisplayName()))), sender);

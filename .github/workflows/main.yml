@@ -2,7 +2,7 @@ name: Java with Nexus Repository
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       - name: Nexus Repo Publish
         uses: sonatype-nexus-community/nexus-repo-github-action@master
         with:
-          serverUrl: https://leonardbausenwein.de/nexus
+          serverUrl: https://nexus.leonardbausenwein.de/
           username: admin
           password: ${{ secrets.NEXUS_PASSWORD }}
           format: maven2
