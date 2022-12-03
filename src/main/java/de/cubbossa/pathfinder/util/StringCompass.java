@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.PatternReplacementResult;
@@ -18,11 +20,17 @@ public class StringCompass implements ComponentLike {
 
 	private static final MiniMessage miniMessage = MiniMessage.miniMessage();
 
+	@Getter
+	@Setter
 	private Component background;
 	private int backgroundLength = 8;
+	@Getter
+	@Setter
 	private int radius;
+	@Getter
+	@Setter
 	private Supplier<Double> angle;
-	private Map<String, Marker> markers;
+	private final Map<String, Marker> markers;
 
 	public StringCompass(String background, int radius, Supplier<Double> angle) {
 		this.background = miniMessage.deserialize(background);

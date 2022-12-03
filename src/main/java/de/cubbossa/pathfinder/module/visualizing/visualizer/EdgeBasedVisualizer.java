@@ -1,62 +1,50 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.util.StringCompass;
 import de.cubbossa.pathfinder.util.VectorUtils;
-import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
-public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisualizer, NodeLocationVisualizer.Data> {
+public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D extends EdgeBasedVisualizer.Data> extends Visualizer<T, D> {
 
-	private final NamespacedKey key = new NamespacedKey(PathPlugin.getInstance(), "abc");
 	private int interval = 10;
-	private String nameFormat = "name";
-	private Component displayName = Component.text("name");
 	private @Nullable String permission;
+	/**
+	 * The amount of blocks that the lead point should move ahead of the player.
+	 * The lead point serves as target for visualizers like entities or compasses.
+	 */
+	private double moveAhead = 5;
 
-	@Override
-	public VisualizerType<NodeLocationVisualizer> getType() {
-		return VisualizerHandler.COMPASS_VISUALIZER_TYPE;
+	public EdgeBasedVisualizer(NamespacedKey key, String nameFormat) {
+		super(key, nameFormat);
 	}
 
-	private record Edge(int index, Location support, Location target) {
+	record Edge(int index, Location support, Location target) {
 	}
 
 	@Getter
+	@Setter
 	@RequiredArgsConstructor
 	public static class Data {
 		private final List<Node> nodes;
 		private final List<Edge> edges;
 		private Location lastPlayerLocation;
-		private Edge lastGuessedEdge;
-		private final BossBar bossBar;
-
-		List<Node> getNodes(Player player) {
-			return nodes;
-		}
 	}
 
 	@Override
-	public Data prepare(List<Node> nodes, Player player) {
+	public D prepare(List<Node> nodes, Player player) {
 
 		List<Edge> edges = new ArrayList<>();
 		Node prev = null;
@@ -69,26 +57,22 @@ public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisual
 			edges.add(new Edge(index++, prev.getLocation().clone(), node.getLocation().clone()));
 			prev = node;
 		}
-
-		BossBar bossBar = BossBar.bossBar(Component.text("abc"), 1f, BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_6);
-		TranslationHandler.getInstance().getAudiences().player(player).showBossBar(bossBar);
-
-		return new Data(nodes, edges, bossBar);
+		return newData(player, nodes, edges);
 	}
 
+	public abstract D newData(Player player, List<Node> nodes, List<Edge> edges);
+
 	@Override
-	public void play(VisualizerContext<Data> context) {
+	public void play(VisualizerContext<D> context) {
 		Player targetPlayer = context.player();
 
 		// No need to update, the player has not moved.
 		if (targetPlayer.getLocation().equals(context.data().getLastPlayerLocation())) {
 			return;
 		}
-		context.data().lastPlayerLocation = targetPlayer.getLocation();
+		context.data().setLastPlayerLocation(targetPlayer.getLocation());
 
 		// find nearest edge
-
-		Edge lastEdge = context.data().getLastGuessedEdge();
 		Edge nearest = null;
 		double edgeNearestDist = Double.MAX_VALUE;
 		for (Edge edge : context.data().getEdges()) {
@@ -115,7 +99,7 @@ public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisual
 		);
 
 		// shift the closest point 5 units towards final target location
-		double unitsToShift = 5;
+		double unitsToShift = moveAhead;
 		Location currentPoint = closestPoint.toLocation(targetPlayer.getWorld());
 		Edge currentEdge = nearest;
 		while (currentEdge != null && unitsToShift > 0) {
@@ -131,17 +115,9 @@ public class NodeLocationVisualizer implements PathVisualizer<NodeLocationVisual
 					: context.data().getEdges().get(currentEdge.index() + 1);
 		}
 
-		targetPlayer.spawnParticle(Particle.FLAME, currentPoint, 1, 0, 0, 0, 0);
-		ItemStack hand = targetPlayer.getInventory().getItemInMainHand();
-
-		double angle = VectorUtils.convertDirectionToXZAngle(targetPlayer.getLocation());
-		StringCompass compass = new StringCompass("<gray>" + "  |- · · · -+- · · · -|- · · · -+- · · · -| ".repeat(4), 20, () -> angle);
-		compass.addMarker("N", "<red>N</red>", 0.);
-		compass.addMarker("E", "E", 90.);
-		compass.addMarker("S", "S", 180.);
-		compass.addMarker("W", "W", 270.);
-		double targetAngle = VectorUtils.convertDirectionToXZAngle(currentPoint.clone().subtract(targetPlayer.getLocation()).toVector());
-		compass.addMarker("target", "<green>♦</green>", targetAngle);
-		context.data().bossBar.name(compass.asComponent());
+		// do whatever you want with the retrieved data. Example in CompassVisualizer
+		play(context, closestPoint.toLocation(Objects.requireNonNull(currentPoint.getWorld())), currentPoint, nearest);
 	}
+
+	public abstract void play(VisualizerContext<D> context, Location nearestPoint, Location leadPoint, Edge nearestEdge);
 }
