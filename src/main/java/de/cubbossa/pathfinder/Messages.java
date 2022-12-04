@@ -299,13 +299,13 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Children:<entries:"":"<br><dark_gray>  » </dark_gray>"/>""",
 			placeholders = "entries[:<separator>][:<prefix>][:<suffix>]")
-	public static final Message CMD_VIS_COMBINED_INFO = new Message("commands.path_visualizer.combined.info");
+	public static final Message CMD_VIS_COMBINED_INFO = new Message("commands.path_visualizer.type.combined.info");
 	@MessageMeta(value = "<ins:prefix>Added <child> as child to <visualizer>.", placeholders = {"child", "visualizer"})
-	public static final Message CMD_VIS_COMBINED_ADD = new Message("commands.path_visualizer.combined.add");
+	public static final Message CMD_VIS_COMBINED_ADD = new Message("commands.path_visualizer.type.combined.add");
 	@MessageMeta(value = "<ins:prefix>Removed <child> from children for <visualizer>.")
-	public static final Message CMD_VIS_COMBINED_REMOVE = new Message("commands.path_visualizer.combined.remove");
+	public static final Message CMD_VIS_COMBINED_REMOVE = new Message("commands.path_visualizer.type.combined.remove");
 	@MessageMeta(value = "<ins:prefix>Cleared all children for <visualizer>.")
-	public static final Message CMD_VIS_COMBINED_CLEAR = new Message("commands.path_visualizer.combined.clear");
+	public static final Message CMD_VIS_COMBINED_CLEAR = new Message("commands.path_visualizer.type.combined.clear");
 
 	@MessageMeta(placeholders = {
 			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
@@ -321,7 +321,24 @@ public class Messages {
 			<dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed"><speed></click></hover></main>
 			<dark_gray>» </dark_gray><gray>Offset: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></main>""")
-	public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.particle_visualizer");
+	public static final Message CMD_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.type.particle_visualizer.info");
+
+
+	@MessageMeta(placeholders = {"marker-north", "marker-south", "marker-east", "marker-west", "marker-target", "background", "color", "overlay"}, value = """
+			<offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
+			<dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
+			<dark_gray>» </dark_gray><gray>Marker:
+			    <dark_gray>» </dark_gray><gray>Target: <marker-target>
+			    <dark_gray>» </dark_gray><gray>North: <marker-north>
+			    <dark_gray>» </dark_gray><gray>East: <marker-east>
+			    <dark_gray>» </dark_gray><gray>South: <marker-south>
+			    <dark_gray>» </dark_gray><gray>West: <marker-west>
+			<dark_gray>» </dark_gray><gray>Background: <background>
+			<dark_gray>» </dark_gray><gray>Color: <color>
+			<dark_gray>» </dark_gray><gray>Overlay: <overlay>""")
+	public static final Message CMD_VIS_COMPASS_INFO = new Message("commands.path_visualizer.type.compass.info");
 
 	@MessageMeta(placeholders = {
 			"key", "name", "name-format", "type", "permission", "interval", "point-distance",
@@ -345,7 +362,7 @@ public class Messages {
 			    <dark_gray>» </dark_gray><gray>X: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></main>
 			    <dark_gray>» </dark_gray><gray>Y: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></main>
 			    <dark_gray>» </dark_gray><gray>Z: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></main>""")
-	public static final Message CMD_ADV_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.info.advanced_particle_visualizer");
+	public static final Message CMD_ADV_VIS_INFO_PARTICLES = new Message("commands.path_visualizer.type.advanced_particle_visualizer.info");
 
 	@MessageMeta(value = "<list>", placeholders = "list")
 	public static final Message E_NODE_NAME = new Message("editor.node_name");

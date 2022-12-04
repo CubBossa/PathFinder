@@ -51,6 +51,22 @@ public class CustomArgs {
 	private static final Pattern MINI_FINISH = Pattern.compile(".*(</?[^<>]*)");
 	private static final Pattern MINI_CLOSE = Pattern.compile(".*<([^/<>:]+)(:[^/<>]+)?>[^/<>]*");
 
+	public <E extends Enum<E>> Argument<E> enumArgument(String nodeName, Class<E> scope) {
+		return new CustomArgument<>(new StringArgument(nodeName), info -> {
+			try {
+				return Enum.valueOf(scope, info.input().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw new CustomArgument.CustomArgumentException("Invalid input value: " + info.input());
+			}
+		}).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+			Arrays.stream(scope.getEnumConstants())
+					.map(Enum::toString)
+					.map(String::toLowerCase)
+					.forEach(suggestionsBuilder::suggest);
+			return suggestionsBuilder.buildFuture();
+		});
+	}
+
 	/**
 	 * Provides a MiniMessage Argument, which autocompletes xml tags and contains all default tags
 	 * that come along with MiniMessage.

@@ -72,15 +72,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 										)
 								)
 						))
-				.then(new LiteralArgument("particle-steps")
-						.then(new IntegerArgument("amount", 1)
-								.executes((commandSender, objects) -> {
-									if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
-										VisualizerHandler.getInstance().setProperty(commandSender, vis, (Integer) objects[1], "particle-steps", true, vis::getSchedulerSteps, vis::setSchedulerSteps);
-									}
-								})
-						)
-				);
+				.then(subCommand("particle-steps", new IntegerArgument("amount", 1), ParticleVisualizer.PROP_SCHEDULER_STEPS));
 	}
 
 	private <T> void onSetParticle(CommandSender sender, ParticleVisualizer visualizer, ParticleData<T> particle, @Nullable Integer amount, @Nullable Float speed, @Nullable Vector offset) {
@@ -101,7 +93,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 	public Map<String, Object> serialize(ParticleVisualizer visualizer) {
 		super.serialize(visualizer);
 		return new LinkedHashMapBuilder<String, Object>()
-				.put("particle-steps", visualizer.getSchedulerSteps())
+				.put(ParticleVisualizer.PROP_SCHEDULER_STEPS.getKey(), visualizer.getSchedulerSteps())
 				.put("interval", visualizer.getInterval())
 				.put("particle", visualizer.getParticle().toString())
 				.put("particle-data", YamlUtils.wrap(visualizer.getParticleData()))
@@ -116,9 +108,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 	@Override
 	public void deserialize(ParticleVisualizer visualizer, Map<String, Object> values) {
 		super.deserialize(visualizer, values);
-		if (values.containsKey("particle-steps")) {
-			visualizer.setSchedulerSteps((Integer) values.get("particle-steps"));
-		}
+		loadProperty(values, visualizer, ParticleVisualizer.PROP_SCHEDULER_STEPS);
 		if (values.containsKey("interval")) {
 			visualizer.setInterval((Integer) values.get("interval"));
 		}

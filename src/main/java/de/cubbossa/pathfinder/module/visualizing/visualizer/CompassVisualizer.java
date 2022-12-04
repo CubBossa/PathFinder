@@ -18,6 +18,35 @@ import java.util.List;
 @Setter
 public class CompassVisualizer extends BossBarVisualizer<CompassVisualizer, CompassVisualizer.Data> {
 
+	public static final Property<CompassVisualizer, Integer> PROP_RADIUS =
+			new Property.SimpleProperty<>("radius", Integer.class, true,
+					CompassVisualizer::getRadius, CompassVisualizer::setRadius);
+
+	public static final Property<CompassVisualizer, String> PROP_BACKGROUND =
+			new Property.SimpleProperty<>("background", String.class, true,
+					CompassVisualizer::getBackgroundFormat, CompassVisualizer::setBackgroundFormat);
+
+	public static final Property<CompassVisualizer, String> PROP_NORTH =
+			new Property.SimpleProperty<>("marker-north", String.class, true,
+					CompassVisualizer::getNorth, CompassVisualizer::setNorth);
+
+	public static final Property<CompassVisualizer, String> PROP_EAST =
+			new Property.SimpleProperty<>("marker-east", String.class, true,
+					CompassVisualizer::getEast, CompassVisualizer::setEast);
+
+	public static final Property<CompassVisualizer, String> PROP_SOUTH =
+			new Property.SimpleProperty<>("marker-south", String.class, true,
+					CompassVisualizer::getSouth, CompassVisualizer::setSouth);
+
+	public static final Property<CompassVisualizer, String> PROP_WEST =
+			new Property.SimpleProperty<>("marker-west", String.class, true,
+					CompassVisualizer::getWest, CompassVisualizer::setWest);
+
+	public static final Property<CompassVisualizer, String> PROP_TARGET =
+			new Property.SimpleProperty<>("marker-target", String.class, true,
+					CompassVisualizer::getTarget, CompassVisualizer::setTarget);
+
+
 	@Getter
 	public static class Data extends BossBarVisualizer.Data {
 		private final StringCompass compass;
@@ -35,6 +64,8 @@ public class CompassVisualizer extends BossBarVisualizer<CompassVisualizer, Comp
 	private String west = "<red>W</red>";
 	private String target = "<green>♦</green>";
 	private int radius = 20;
+
+	private Location leadPoint = null;
 
 	public CompassVisualizer(NamespacedKey key, String nameFormat) {
 		super(key, nameFormat);
@@ -62,9 +93,10 @@ public class CompassVisualizer extends BossBarVisualizer<CompassVisualizer, Comp
 				return VectorUtils.convertDirectionToXZAngle(context.player().getLocation());
 			});
 			context.data().getCompass().addMarker("target", target, () -> {
-				return VectorUtils.convertDirectionToXZAngle(leadPoint.clone().subtract(context.player().getLocation()).toVector());
+				return VectorUtils.convertDirectionToXZAngle(this.leadPoint.clone().subtract(context.player().getLocation()).toVector());
 			});
 		}
+		this.leadPoint = leadPoint;
 		context.data().getBossBar().name(context.data().getCompass());
 	}
 }

@@ -13,6 +13,10 @@ import org.bukkit.util.Vector;
 @Setter
 public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer> {
 
+	public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
+			new Property.SimpleProperty<>("particle-steps", Integer.class, true,
+					ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
+
 	private int schedulerSteps = 50;
 	private Particle particle = Particle.SCRAPE;
 	private Object particleData = null;

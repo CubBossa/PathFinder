@@ -15,9 +15,17 @@ import java.util.List;
 @Setter
 public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D extends BossBarVisualizer.Data> extends EdgeBasedVisualizer<T, D> {
 
-	private BossBar.Color color;
-	private BossBar.Overlay overlay;
-	private Double progress;
+	public static final Property<CompassVisualizer, BossBar.Color> PROP_COLOR =
+			new Property.SimpleProperty<>("color", BossBar.Color.class, true,
+					BossBarVisualizer::getColor, BossBarVisualizer::setColor);
+
+	public static final Property<CompassVisualizer, BossBar.Overlay> PROP_OVERLAY =
+			new Property.SimpleProperty<>("overlay", BossBar.Overlay.class, true,
+					BossBarVisualizer::getOverlay, BossBarVisualizer::setOverlay);
+
+	private BossBar.Color color = BossBar.Color.GREEN;
+	private BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
+	private Double progress = 1.;
 
 	@Getter
 	public static class Data extends EdgeBasedVisualizer.Data {

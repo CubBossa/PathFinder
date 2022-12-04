@@ -113,6 +113,10 @@ public class VisualizerHandler {
 		return pathVisualizerMap.values().stream();
 	}
 
+	public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer, PathVisualizer.Property<V, T> prop, T val) {
+		setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(), () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
+	}
+
 	public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value, String property, boolean visual, Supplier<T> getter, Consumer<T> setter) {
 		setProperty(sender, visualizer, value, property, visual, getter, setter, t -> Component.text(t.toString()));
 	}

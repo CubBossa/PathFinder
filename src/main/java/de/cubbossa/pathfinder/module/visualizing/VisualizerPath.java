@@ -67,5 +67,8 @@ public class VisualizerPath<D> extends ArrayList<Node> {
 		}
 		Bukkit.getScheduler().cancelTask(task.getTaskId());
 		this.active = false;
+
+		Player player = Bukkit.getPlayer(playerUuid);
+		visualizer.destruct(player, visualizerData);
 	}
 }
