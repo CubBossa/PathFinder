@@ -16,6 +16,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
 import de.cubbossa.pathfinder.data.YmlDatabase;
+import de.cubbossa.pathfinder.hook.PlaceholderHook;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -144,6 +145,9 @@ public class PathPlugin extends JavaPlugin {
 	private WaypointCommand waypointCommand;
 	private MazeCommand mazeCommand;
 
+	private Set<DependencyLoader> dependencies = Set.of(
+			new DependencyLoader(PlaceholderHook::new)
+	);
 
 	public PathPlugin() {
 		super();
@@ -170,6 +174,7 @@ public class PathPlugin extends JavaPlugin {
 
 		CommandAPI.onLoad(new CommandAPIConfig()
 				.verboseOutput(configuration.isVerbose())
+				.useLatestNMSVersion(true)
 				.initializeNBTAPI(NBTContainer.class, NBTContainer::new));
 	}
 
@@ -250,6 +255,7 @@ public class PathPlugin extends JavaPlugin {
 			Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
 		}
 
+		dependencies.forEach(DependencyLoader::enable);
 		extensions.forEach(PathPluginExtension::onEnable);
 
 		Metrics metrics = new Metrics(this, 16324);
