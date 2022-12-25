@@ -12,17 +12,17 @@ import org.bukkit.event.HandlerList;
 @RequiredArgsConstructor
 public class VisualizerPermissionChangedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final PathVisualizer<?, ?> visualizer;
-	private final String oldPermission;
-	private final String newPermission;
+  private final PathVisualizer<?, ?> visualizer;
+  private final String oldPermission;
+  private final String newPermission;
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

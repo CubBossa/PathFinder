@@ -8,14 +8,14 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface PermissionHolder {
 
-	/**
-	 * @return null, if no permission is set. Null will by default be interpreted as "access".
-	 */
-	@Nullable
-	String getPermission();
+  /**
+   * @return null, if no permission is set. Null will by default be interpreted as "access".
+   */
+  @Nullable
+  String getPermission();
 
-	/**
-	 * @param permission The permission node to restrict this object or null, if unrestricted access.
-	 */
-	void setPermission(@Nullable String permission);
+  /**
+   * @param permission The permission node to restrict this object or null, if unrestricted access.
+   */
+  void setPermission(@Nullable String permission);
 }

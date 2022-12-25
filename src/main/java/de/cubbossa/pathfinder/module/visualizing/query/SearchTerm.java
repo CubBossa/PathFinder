@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface SearchTerm {
 
-	String getIdentifier();
+  String getIdentifier();
 
-	boolean matches(Collection<SearchQueryAttribute> attributes);
+  boolean matches(Collection<SearchQueryAttribute> attributes);
 }

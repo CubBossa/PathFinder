@@ -11,22 +11,22 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class RoadMapSetNameEvent extends Event implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final RoadMap roadMap;
-	private final String nameFormat;
-	private boolean cancelled;
+  private final RoadMap roadMap;
+  private final String nameFormat;
+  private boolean cancelled;
 
-	public RoadMapSetNameEvent(RoadMap roadMap, String nameFormat) {
-		this.roadMap = roadMap;
-		this.nameFormat = nameFormat;
-	}
+  public RoadMapSetNameEvent(RoadMap roadMap, String nameFormat) {
+    this.roadMap = roadMap;
+    this.nameFormat = nameFormat;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

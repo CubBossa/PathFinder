@@ -16,15 +16,15 @@ import org.bukkit.entity.Player;
  */
 public interface Discoverable extends Keyed, DatabaseObject<NamespacedKey>, Named {
 
-	/**
-	 * @return true, if the player fulfills all requirements to discover this {@link Discoverable} instance.
-	 */
-	boolean fulfillsDiscoveringRequirements(Player player);
+  /**
+   * @return true, if the player fulfills all requirements to discover this {@link Discoverable} instance.
+   */
+  boolean fulfillsDiscoveringRequirements(Player player);
 
-	/**
-	 * @return The weight of this discoverable in the calculation of the amount of discovered are.
-	 */
-	default float getDiscoveringWeight() {
-		return 1;
-	}
+  /**
+   * @return The weight of this discoverable in the calculation of the amount of discovered are.
+   */
+  default float getDiscoveringWeight() {
+    return 1;
+  }
 }

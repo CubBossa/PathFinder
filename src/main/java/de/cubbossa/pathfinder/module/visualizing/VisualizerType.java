@@ -16,16 +16,17 @@ import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 
 /**
- * abx.
+ * VisualizerTypes contain multiple methods to manage visualizers with common properties.
+ * This includes the edit command, serialization and deserialization.
  *
- * @param <T> xyz
+ * @param <T> The class of the Visualizer. This can also be a common parent class or interface.
  */
 @Getter
 @Setter
 public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements Keyed {
 
   /**
-   * avc.
+   * The NamespacedKey of this visualizer that is used as type identifier when loading data.
    */
   private final NamespacedKey key;
 
@@ -44,11 +45,11 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
   public abstract ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
                                                  int argumentOffset);
 
-  public Map<String, Object> serialize(T visualizer) {
-    return null;
+  public void deserialize(final T visualizer, Map<String, Object> values) {
   }
 
-  public void deserialize(final T visualizer, Map<String, Object> values) {
+  public Map<String, Object> serialize(T visualizer) {
+    return null;
   }
 
   protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
@@ -89,8 +90,8 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
     Object value = values.get(key);
     if (!value.getClass().equals(expectedType)) {
       throw new DataStorageException(
-          "Data for field '" + key + "' of visualizer is not of expected type: " +
-              expectedType.getSimpleName() + ". Instead: " + value.getClass().getSimpleName());
+          "Data for field '" + key + "' of visualizer is not of expected type: "
+              + expectedType.getSimpleName() + ". Instead: " + value.getClass().getSimpleName());
     }
     loader.accept((A) value);
   }

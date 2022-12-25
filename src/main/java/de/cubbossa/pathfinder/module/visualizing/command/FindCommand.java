@@ -11,24 +11,25 @@ import org.bukkit.Bukkit;
 
 public class FindCommand extends CommandTree {
 
-	public FindCommand() {
-		super("find");
-		withAliases("gps", "navigate");
-		withPermission(PathPlugin.PERM_CMD_FIND);
+  public FindCommand() {
+    super("find");
+    withAliases("gps", "navigate");
+    withPermission(PathPlugin.PERM_CMD_FIND);
 
-		then(CustomArgs.navigateSelectionArgument("selection")
-				.executesPlayer((player, args) -> {
-					Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-						NodeSelection targets = (NodeSelection) args[0];
-						switch (FindModule.getInstance().findPath(player, targets)) {
-							case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-							case FAIL_BLOCKED ->
-									TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-							case FAIL_EMPTY ->
-									TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
-						}
-					});
-				})
-		);
-	}
+    then(CustomArgs.navigateSelectionArgument("selection")
+        .executesPlayer((player, args) -> {
+          Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+            NodeSelection targets = (NodeSelection) args[0];
+            switch (FindModule.getInstance().findPath(player, targets)) {
+              case SUCCESS ->
+                  TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
+              case FAIL_BLOCKED ->
+                  TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+              case FAIL_EMPTY ->
+                  TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+            }
+          });
+        })
+    );
+  }
 }

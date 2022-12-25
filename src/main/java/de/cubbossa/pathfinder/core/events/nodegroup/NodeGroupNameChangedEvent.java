@@ -10,16 +10,16 @@ import org.bukkit.event.HandlerList;
 @AllArgsConstructor
 public class NodeGroupNameChangedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final NodeGroup group;
-	private final String nameFormat;
+  private final NodeGroup group;
+  private final String nameFormat;
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

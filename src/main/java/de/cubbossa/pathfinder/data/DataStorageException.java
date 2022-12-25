@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder.data;
 
 public class DataStorageException extends RuntimeException {
 
-	public DataStorageException(String message) {
-		super(message);
-	}
+  public DataStorageException(String message) {
+    super(message);
+  }
 
-	public DataStorageException(String message, Exception cause) {
-		super(message, cause);
-	}
+  public DataStorageException(String message, Exception cause) {
+    super(message, cause);
+  }
 }

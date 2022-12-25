@@ -12,17 +12,17 @@ import org.bukkit.event.HandlerList;
 @RequiredArgsConstructor
 public class VisualizerNameChangedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final PathVisualizer<?, ?> visualizer;
-	private final String oldNameFormat;
-	private final String newNameFormat;
+  private final PathVisualizer<?, ?> visualizer;
+  private final String oldNameFormat;
+  private final String newNameFormat;
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

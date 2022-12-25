@@ -12,25 +12,25 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class NodeTeleportEvent extends Event implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final NodeSelection nodes;
-	private final Location newPosition;
-	private Location newPositionModified;
-	private boolean cancelled = false;
+  private final NodeSelection nodes;
+  private final Location newPosition;
+  private Location newPositionModified;
+  private boolean cancelled = false;
 
-	public NodeTeleportEvent(NodeSelection nodes, Location newPosition) {
-		this.nodes = nodes;
-		this.newPosition = newPosition;
-		this.newPositionModified = newPosition;
-	}
+  public NodeTeleportEvent(NodeSelection nodes, Location newPosition) {
+    this.nodes = nodes;
+    this.newPosition = newPosition;
+    this.newPositionModified = newPosition;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 
 }

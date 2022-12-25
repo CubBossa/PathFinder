@@ -18,6 +18,16 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,185 +39,195 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 public class FindModule implements Listener {
 
-	public enum NavigateResult {
-		SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED
-	}
+  @Getter
+  private static FindModule instance;
+  private final Map<UUID, SearchInfo> activePaths;
+  private final PathPlugin plugin;
+  private final List<Predicate<NavigationRequestContext>> navigationFilter;
+  private MoveListener listener;
 
-	public record NavigationRequestContext(UUID playerId, Navigable navigable) {
-	}
+  public FindModule(PathPlugin plugin) {
+    instance = this;
 
-	public record SearchInfo(UUID playerId, VisualizerPath path, Location target, float distance) {
-	}
+    this.plugin = plugin;
+    this.activePaths = new HashMap<>();
+    this.navigationFilter = new ArrayList<>();
 
-	@Getter
-	private static FindModule instance;
+    registerFindPredicate(navigationRequestContext -> {
+      if (!(navigationRequestContext.navigable() instanceof Groupable groupable)) {
+        return true;
+      }
+      Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
+      return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance()
+          .hasPermission(player, groupable);
+    });
 
-	private final Map<UUID, SearchInfo> activePaths;
+    registerListener();
+  }
 
-	private final PathPlugin plugin;
-	private MoveListener listener;
-	private final List<Predicate<NavigationRequestContext>> navigationFilter;
+  public void registerListener() {
+    listener = new MoveListener();
+    Bukkit.getPluginManager().registerEvents(listener, plugin);
+    Bukkit.getPluginManager().registerEvents(this, plugin);
+  }
 
-	public FindModule(PathPlugin plugin) {
-		instance = this;
+  public void unregisterListener() {
+    PlayerMoveEvent.getHandlerList().unregister(listener);
+  }
 
-		this.plugin = plugin;
-		this.activePaths = new HashMap<>();
-		this.navigationFilter = new ArrayList<>();
+  public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
+    navigationFilter.add(filter);
+  }
 
-		registerFindPredicate(navigationRequestContext -> {
-			if (!(navigationRequestContext.navigable() instanceof Groupable groupable)) {
-				return true;
-			}
-			Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
-			return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance().hasPermission(player, groupable);
-		});
+  public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
+    return new ArrayList<>(navigationFilter);
+  }
 
-		registerListener();
-	}
+  public @Nullable SearchInfo getActivePath(Player player) {
+    return activePaths.get(player.getUniqueId());
+  }
 
-	public void registerListener() {
-		listener = new MoveListener();
-		Bukkit.getPluginManager().registerEvents(listener, plugin);
-		Bukkit.getPluginManager().registerEvents(this, plugin);
-	}
+  public NavigateResult findPath(Player player, NodeSelection targets) {
+    return findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
+  }
 
-	public void unregisterListener() {
-		PlayerMoveEvent.getHandlerList().unregister(listener);
-	}
+  public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
 
-	public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
-		navigationFilter.add(filter);
-	}
+    Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
+    Collection<Node> nodes =
+        targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey()))
+            .collect(Collectors.toSet());
 
-	public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
-		return new ArrayList<>(navigationFilter);
-	}
+    List<RoadMap> roadMaps = nodes.stream()
+        .map(Node::getRoadMapKey)
+        .distinct()
+        .map(key -> RoadMapHandler.getInstance().getRoadMap(key))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
 
-	public @Nullable SearchInfo getActivePath(Player player) {
-		return activePaths.get(player.getUniqueId());
-	}
+    if (nodes.size() == 0) {
+      return NavigateResult.FAIL_EMPTY;
+    }
 
-	public NavigateResult findPath(Player player, NodeSelection targets) {
-		return findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
-	}
+    RoadMap firstRoadMap = roadMaps.get(0);
+    PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
+    Graph<Node> graph = firstRoadMap.toGraph(player, playerNode);
 
-	public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
+    for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
+      graph.merge(roadMap.toGraph(player, null));
+    }
 
-		Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
-		Collection<Node> nodes = targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey())).collect(Collectors.toSet());
+    SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);
+    dijkstra.setStartNode(playerNode);
+    List<Node> path = dijkstra.shortestPathToAny(targets);
 
-		List<RoadMap> roadMaps = nodes.stream()
-				.map(Node::getRoadMapKey)
-				.distinct()
-				.map(key -> RoadMapHandler.getInstance().getRoadMap(key))
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+    if (path == null) {
+      return NavigateResult.FAIL_BLOCKED;
+    }
 
-		if (nodes.size() == 0) {
-			return NavigateResult.FAIL_EMPTY;
-		}
+    PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
+    VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
+    visualizerPath.addAll(path);
+    NavigateResult result =
+        setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
+            NodeGroupHandler.getInstance()
+                .getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
 
-		RoadMap firstRoadMap = roadMaps.get(0);
-		PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-		Graph<Node> graph = firstRoadMap.toGraph(player, playerNode);
+    if (result == NavigateResult.SUCCESS) {
+      // Refresh cancel-path command so that it is visible
+      PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+      EffectHandler.getInstance()
+          .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
+              player.getLocation());
+    }
+    return result;
+  }
 
-		for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
-			graph.merge(roadMap.toGraph(player, null));
-		}
+  public void reachTarget(SearchInfo info) {
+    unsetPath(info);
+    PathTargetFoundEvent event = new PathTargetFoundEvent(info.playerId(), info.path());
+    Bukkit.getPluginManager().callEvent(event);
 
-		SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);
-		dijkstra.setStartNode(playerNode);
-		List<Node> path = dijkstra.shortestPathToAny(targets);
+    Player player = Bukkit.getPlayer(info.playerId());
+    EffectHandler.getInstance()
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_finished", player,
+            player.getLocation());
+  }
 
-		if (path == null) {
-			return NavigateResult.FAIL_BLOCKED;
-		}
+  public NavigateResult setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target,
+                                float distance) {
+    if (path.getVisualizer() == null) {
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_FIND_NO_VIS, Bukkit.getPlayer(playerId));
+      return NavigateResult.FAIL_NO_VISUALIZER_SELECTED;
+    }
+    PathStartEvent event = new PathStartEvent(playerId, path, target, distance);
+    Bukkit.getPluginManager().callEvent(event);
+    if (event.isCancelled()) {
+      return NavigateResult.FAIL_EVENT_CANCELLED;
+    }
 
-		PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
-		VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
-		visualizerPath.addAll(path);
-		NavigateResult result = setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
-				NodeGroupHandler.getInstance().getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
+    SearchInfo current =
+        activePaths.put(playerId, new SearchInfo(playerId, path, target, distance));
+    if (current != null) {
+      current.path().cancel();
+    }
+    path.run(playerId);
+    return NavigateResult.SUCCESS;
+  }
 
-		if (result == NavigateResult.SUCCESS) {
-			// Refresh cancel-path command so that it is visible
-			PathPlugin.getInstance().getCancelPathCommand().refresh(player);
-			EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player, player.getLocation());
-		}
-		return result;
-	}
+  public void unsetPath(UUID playerId) {
+    if (activePaths.containsKey(playerId)) {
+      unsetPath(activePaths.get(playerId));
+    }
+  }
 
-	public void reachTarget(SearchInfo info) {
-		unsetPath(info);
-		PathTargetFoundEvent event = new PathTargetFoundEvent(info.playerId(), info.path());
-		Bukkit.getPluginManager().callEvent(event);
+  public void unsetPath(SearchInfo info) {
+    activePaths.remove(info.playerId());
+    info.path().cancel();
 
-		Player player = Bukkit.getPlayer(info.playerId());
-		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_finished", player, player.getLocation());
-	}
+    Player player = Bukkit.getPlayer(info.playerId());
+    PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+    EffectHandler.getInstance()
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player,
+            player.getLocation());
+  }
 
-	public NavigateResult setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target, float distance) {
-		if (path.getVisualizer() == null) {
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_NO_VIS, Bukkit.getPlayer(playerId));
-			return NavigateResult.FAIL_NO_VISUALIZER_SELECTED;
-		}
-		PathStartEvent event = new PathStartEvent(playerId, path, target, distance);
-		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) {
-			return NavigateResult.FAIL_EVENT_CANCELLED;
-		}
+  public void cancelPath(UUID playerId) {
+    if (activePaths.containsKey(playerId)) {
+      cancelPath(activePaths.get(playerId));
+    }
+  }
 
-		SearchInfo current = activePaths.put(playerId, new SearchInfo(playerId, path, target, distance));
-		if (current != null) {
-			current.path().cancel();
-		}
-		path.run(playerId);
-		return NavigateResult.SUCCESS;
-	}
+  public void cancelPath(SearchInfo info) {
+    unsetPath(info);
+    Player player = Bukkit.getPlayer(info.playerId());
+    EffectHandler.getInstance()
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player,
+            player.getLocation());
+  }
 
-	public void unsetPath(UUID playerId) {
-		if (activePaths.containsKey(playerId)) {
-			unsetPath(activePaths.get(playerId));
-		}
-	}
+  @EventHandler
+  public <T> void onVisualizerChanged(VisualizerPropertyChangedEvent<T> event) {
+    if (!event.isVisual()) {
+      return;
+    }
+    activePaths.forEach((uuid, info) -> {
+      if (info.path().getVisualizer().equals(event.getVisualizer())) {
+        info.path().run();
+      }
+    });
+  }
 
-	public void unsetPath(SearchInfo info) {
-		activePaths.remove(info.playerId());
-		info.path().cancel();
+  public enum NavigateResult {
+    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED
+  }
 
-		Player player = Bukkit.getPlayer(info.playerId());
-		PathPlugin.getInstance().getCancelPathCommand().refresh(player);
-		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player, player.getLocation());
-	}
+  public record NavigationRequestContext(UUID playerId, Navigable navigable) {
+  }
 
-	public void cancelPath(UUID playerId) {
-		if (activePaths.containsKey(playerId)) {
-			cancelPath(activePaths.get(playerId));
-		}
-	}
-
-	public void cancelPath(SearchInfo info) {
-		unsetPath(info);
-		Player player = Bukkit.getPlayer(info.playerId());
-		EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player, player.getLocation());
-	}
-
-	@EventHandler
-	public <T> void onVisualizerChanged(VisualizerPropertyChangedEvent<T> event) {
-		if (!event.isVisual()) {
-			return;
-		}
-		activePaths.forEach((uuid, info) -> {
-			if (info.path().getVisualizer().equals(event.getVisualizer())) {
-				info.path().run();
-			}
-		});
-	}
+  public record SearchInfo(UUID playerId, VisualizerPath path, Location target, float distance) {
+  }
 }

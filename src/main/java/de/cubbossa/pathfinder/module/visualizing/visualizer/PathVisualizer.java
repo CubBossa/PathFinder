@@ -4,69 +4,69 @@ import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PermissionHolder;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Keyed;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+public interface PathVisualizer<T extends PathVisualizer<T, D>, D>
+    extends Keyed, Named, PermissionHolder {
 
-public interface PathVisualizer<T extends PathVisualizer<T, D>, D> extends Keyed, Named, PermissionHolder {
+  VisualizerType<T> getType();
 
-	VisualizerType<T> getType();
+  D prepare(List<Node> nodes, Player player);
 
-	D prepare(List<Node> nodes, Player player);
+  void play(VisualizerContext<D> context);
 
-	void play(VisualizerContext<D> context);
+  default void destruct(Player player, D data) {
 
-	default void destruct(Player player, D data) {
+  }
 
-	}
+  int getInterval();
 
-	record VisualizerContext<D>(List<Player> players, int interval, long time, D data) {
+  void setInterval(int interval);
 
-		public Player player() {
-			return players.get(0);
-		}
+  interface Property<V extends PathVisualizer<?, ?>, T> {
 
-	}
+    String getKey();
 
-	int getInterval();
+    Class<T> getType();
 
-	void setInterval(int interval);
+    void setValue(V visualizer, T value);
 
-	interface Property<V extends PathVisualizer<?, ?>, T> {
+    T getValue(V visualizer);
 
-		String getKey();
+    boolean isVisible();
 
-		Class<T> getType();
+    @Getter
+    @RequiredArgsConstructor
+    class SimpleProperty<V extends PathVisualizer<?, ?>, T> implements Property<V, T> {
+      private final String key;
+      private final Class<T> type;
+      private final boolean visible;
+      private final Function<V, T> getter;
+      private final BiConsumer<V, T> setter;
 
-		void setValue(V visualizer, T value);
+      @Override
+      public void setValue(V visualizer, T value) {
+        setter.accept(visualizer, value);
+      }
 
-		T getValue(V visualizer);
+      @Override
+      public T getValue(V visualizer) {
+        return getter.apply(visualizer);
+      }
+    }
+  }
 
-		boolean isVisible();
+  record VisualizerContext<D>(List<Player> players, int interval, long time, D data) {
 
-		@Getter
-		@RequiredArgsConstructor
-		class SimpleProperty<V extends PathVisualizer<?, ?>, T> implements Property<V, T> {
-			private final String key;
-			private final Class<T> type;
-			private final boolean visible;
-			private final Function<V, T> getter;
-			private final BiConsumer<V, T> setter;
+    public Player player() {
+      return players.get(0);
+    }
 
-			@Override
-			public void setValue(V visualizer, T value) {
-				setter.accept(visualizer, value);
-			}
-
-			@Override
-			public T getValue(V visualizer) {
-				return getter.apply(visualizer);
-			}
-		}
-	}
+  }
 }

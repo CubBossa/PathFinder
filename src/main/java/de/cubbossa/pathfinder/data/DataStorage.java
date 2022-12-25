@@ -1,131 +1,140 @@
 package de.cubbossa.pathfinder.data;
 
-import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
-
 public interface DataStorage {
 
-	default void connect() throws IOException {
-		connect(() -> {
-		});
-	}
+  default void connect() throws IOException {
+    connect(() -> {
+    });
+  }
 
-	/**
-	 * Sets up the database files or does nothing if the database is already setup.
-	 * If the database hasn't yet existed, the initial callback will be executed.
-	 *
-	 * @param initial A callback to be executed if the database was initially created
-	 */
-	void connect(Runnable initial) throws IOException;
+  /**
+   * Sets up the database files or does nothing if the database is already setup.
+   * If the database hasn't yet existed, the initial callback will be executed.
+   *
+   * @param initial A callback to be executed if the database was initially created
+   */
+  void connect(Runnable initial) throws IOException;
 
-	void disconnect();
-
-
-	Map<NamespacedKey, RoadMap> loadRoadMaps();
-
-	void updateRoadMap(RoadMap roadMap);
-
-	default boolean deleteRoadMap(RoadMap roadMap) {
-		return deleteRoadMap(roadMap.getKey());
-	}
-
-	boolean deleteRoadMap(NamespacedKey key);
+  void disconnect();
 
 
-	void saveEdges(Collection<Edge> edges);
+  Map<NamespacedKey, RoadMap> loadRoadMaps();
 
-	Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope);
+  void updateRoadMap(RoadMap roadMap);
 
-	void deleteEdgesFrom(Node start);
+  default boolean deleteRoadMap(RoadMap roadMap) {
+    return deleteRoadMap(roadMap.getKey());
+  }
 
-	void deleteEdgesTo(Node end);
-
-	void deleteEdges(Collection<Edge> edges);
-
-	default void deleteEdge(Edge edge) {
-		deleteEdge(edge.getStart(), edge.getEnd());
-	}
-
-	void deleteEdge(Node start, Node end);
+  boolean deleteRoadMap(NamespacedKey key);
 
 
-	Map<Integer, Node> loadNodes(RoadMap roadMap);
+  void saveEdges(Collection<Edge> edges);
 
-	void updateNode(Node node);
+  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope);
 
-	default void deleteNodes(Integer... nodeId) {
-		deleteNodes(Arrays.asList(nodeId));
-	}
+  void deleteEdgesFrom(Node start);
 
-	void deleteNodes(Collection<Integer> nodeIds);
+  void deleteEdgesTo(Node end);
 
+  void deleteEdges(Collection<Edge> edges);
 
-	void assignNodesToGroup(NodeGroup group, NodeSelection selection);
+  default void deleteEdge(Edge edge) {
+    deleteEdge(edge.getStart(), edge.getEnd());
+  }
 
-	void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection);
-
-	Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
-
-
-	HashedRegistry<NodeGroup> loadNodeGroups();
-
-	void updateNodeGroup(NodeGroup group);
-
-	default void deleteNodeGroup(NodeGroup group) {
-		deleteNodeGroup(group.getKey());
-	}
-
-	void deleteNodeGroup(NamespacedKey key);
+  void deleteEdge(Node start, Node end);
 
 
-	Map<NamespacedKey, Collection<String>> loadSearchTerms();
+  Map<Integer, Node> loadNodes(RoadMap roadMap);
 
-	void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
+  void updateNode(Node node);
 
-	void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
+  default void deleteNodes(Integer... nodeId) {
+    deleteNodes(Arrays.asList(nodeId));
+  }
 
-
-	DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
-
-	Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId);
-
-	void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
+  void deleteNodes(Collection<Integer> nodeIds);
 
 
-	Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
+  void assignNodesToGroup(NodeGroup group, NodeSelection selection);
 
-	<T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
+  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection);
 
-	void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
-
-
-	Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
-
-	void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
+  Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
 
-	void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers);
+  HashedRegistry<NodeGroup> loadNodeGroups();
 
-	void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission, @Nullable Material iconType, @Nullable String miniDisplayName);
+  void updateNodeGroup(NodeGroup group);
 
-	void updateVisualizerStyle(ParticleVisualizer visualizer);
+  default void deleteNodeGroup(NodeGroup group) {
+    deleteNodeGroup(group.getKey());
+  }
 
-	void deleteStyleVisualizer(int visualizerId);
+  void deleteNodeGroup(NamespacedKey key);
 
 
-	Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(Collection<ParticleVisualizer> visualizers);
+  Map<NamespacedKey, Collection<String>> loadSearchTerms();
 
-	void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
+  void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
-	void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
+  void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
+
+
+  DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
+
+  Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId);
+
+  void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
+
+
+  Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
+
+  <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
+
+  void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
+
+
+  Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
+
+  void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
+
+
+  void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers);
+
+  void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission,
+                          @Nullable Material iconType, @Nullable String miniDisplayName);
+
+  void updateVisualizerStyle(ParticleVisualizer visualizer);
+
+  void deleteStyleVisualizer(int visualizerId);
+
+
+  Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(
+      Collection<ParticleVisualizer> visualizers);
+
+  void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
+
+  void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
 }

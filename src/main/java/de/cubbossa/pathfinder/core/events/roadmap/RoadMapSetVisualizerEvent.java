@@ -12,22 +12,22 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class RoadMapSetVisualizerEvent extends Event implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final RoadMap roadMap;
-	private final PathVisualizer<?, ?> visualizer;
-	private boolean cancelled;
+  private final RoadMap roadMap;
+  private final PathVisualizer<?, ?> visualizer;
+  private boolean cancelled;
 
-	public RoadMapSetVisualizerEvent(RoadMap roadMap, PathVisualizer<?, ?> visualizer) {
-		this.roadMap = roadMap;
-		this.visualizer = visualizer;
-	}
+  public RoadMapSetVisualizerEvent(RoadMap roadMap, PathVisualizer<?, ?> visualizer) {
+    this.roadMap = roadMap;
+    this.visualizer = visualizer;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }
