@@ -16,7 +16,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
 import de.cubbossa.pathfinder.data.YmlDatabase;
-import de.cubbossa.pathfinder.hook.PlaceholderHook;
+import de.cubbossa.pathfinder.hook.PlaceholderHookLoader;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -155,7 +155,7 @@ public class PathPlugin extends JavaPlugin {
   private MazeCommand mazeCommand;
 
   private final Set<DependencyLoader> dependencies = Set.of(
-      new DependencyLoader(PlaceholderHook::new)
+      new DependencyLoader(PlaceholderHookLoader::load)
   );
 
   public PathPlugin() {

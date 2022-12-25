@@ -7,10 +7,13 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.utility.MinecraftVersion;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.Pair;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
@@ -122,6 +125,7 @@ public class ClientNodeHandler {
 
       @Override
       public void onPacketReceiving(PacketEvent event) {
+        System.out.println("here");
         PacketContainer packet = event.getPacket();
         int entityId = packet.getIntegers().read(0);
 
@@ -272,7 +276,20 @@ public class ClientNodeHandler {
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
     PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
     packet.getIntegers().write(0, id);
-    packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+
+    if (MinecraftVersion.getCurrentVersion().isAtLeast(new MinecraftVersion("1.19.3"))) {
+      final List<WrappedDataValue> wrappedDataValueList = Lists.newArrayList();
+      watcher.getWatchableObjects().stream().filter(Objects::nonNull).forEach(entry -> {
+        final WrappedDataWatcher.WrappedDataWatcherObject dataWatcherObject =
+            entry.getWatcherObject();
+        wrappedDataValueList.add(
+            new WrappedDataValue(dataWatcherObject.getIndex(), dataWatcherObject.getSerializer(),
+                entry.getRawValue()));
+      });
+      packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
+    } else {
+      packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+    }
     protocolManager.sendServerPacket(player, packet);
   }
 
