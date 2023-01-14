@@ -316,11 +316,12 @@ public class CustomArgs {
   public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
     return new CustomArgument<>(new TextArgument(nodeName), customArgumentInfo -> {
       if (customArgumentInfo.sender() instanceof Player player) {
-        return SelectionUtils.getNodeSelection(player,
-            customArgumentInfo.input().substring(1, customArgumentInfo.input().length() - 1));
+        return new NodeSelection();
+//        return SelectionUtils.getNodeSelection(player,
+//            customArgumentInfo.input().substring(1, customArgumentInfo.input().length() - 1));
       }
       return new NodeSelection();
-    }).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
+    }); // .includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
   }
 
   /**

@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 public class PlaceholderHook extends PlaceholderExpansion implements Dependency {
 
   public static final VisualizerType<PlaceholderVisualizer> PLACEHOLDER_VISUALIZER_TYPE =
-      new VisualizerType<PlaceholderVisualizer>(
+      new VisualizerType<>(
           new NamespacedKey(PathPlugin.getInstance(), "placeholderapi")
       ) {
         @Override
@@ -78,11 +78,17 @@ public class PlaceholderHook extends PlaceholderExpansion implements Dependency 
     instance = this;
     this.plugin = plugin;
 
+    register();
     VisualizerHandler.getInstance().registerVisualizerType(PLACEHOLDER_VISUALIZER_TYPE);
   }
 
   public void register(String key, OfflinePlayer player, Supplier<String> placeholder) {
     resolvers.computeIfAbsent(key, s -> new HashMap<>()).put(player, placeholder);
+  }
+
+  @Override
+  public boolean canRegister() {
+    return true;
   }
 
   @Override
