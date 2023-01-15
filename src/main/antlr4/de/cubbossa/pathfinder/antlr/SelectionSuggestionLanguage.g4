@@ -1,30 +1,32 @@
-grammar SelectionLanguage;
+grammar SelectionSuggestionLanguage;
 
 program
    : expression EOF
    ;
 
 expression
-   : sel=selector
-   | sel=selector conditions
-   ;
-
-selector
-   : AT IDENTIFIER
+   : AT
+   | AT IDENTIFIER
+   | AT IDENTIFIER conditions
    ;
 
 conditions
-   : COND_OPEN COND_CLOSE
+   : COND_OPEN
+   | COND_OPEN attributelist
+   | COND_OPEN COND_CLOSE
    | COND_OPEN attributelist COND_CLOSE
    ;
 
 attributelist
-   : attributelist COND_DELIMIT attribute
+   : attributelist COND_DELIMIT
+   | attributelist COND_DELIMIT attribute
    | attribute
    ;
 
 attribute
-   : IDENTIFIER COND_EQUALS value
+   : IDENTIFIER
+   | IDENTIFIER COND_EQUALS
+   | IDENTIFIER COND_EQUALS value
    ;
 
 value

@@ -2,17 +2,24 @@ package de.cubbossa.pathfinder.util.selection;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
+import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
+import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -22,6 +29,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.bukkit.entity.Player;
 
 public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>> {
 
@@ -33,11 +41,18 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
   }
 
   @Getter
+  @RequiredArgsConstructor
+  public static class SuggestionContext {
+    private final Player player;
+    private final String input;
+  }
+
+  @Getter
   public static class Argument<S, T, C extends SelectionParser.ArgumentContext<?, T>, A extends Argument<S, T, C, A>> {
 
     private final Function<String, S> parse;
     private Function<C, List<T>> execute;
-    private Function<List<T>, List<String>> suggest;
+    private Function<SuggestionContext, List<Suggestion>> suggest;
 
     public Argument(ArgumentType<S> type) {
       this.parse = s -> {
@@ -54,13 +69,27 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
       return (A) this;
     }
 
-    public A suggest(List<String> suggest) {
-      this.suggest = ts -> suggest;
+    public A suggest(List<Suggestion> suggest) {
+      this.suggest = context -> suggest;
       return (A) this;
     }
 
-    public A suggest(Function<List<T>, List<String>> suggest) {
+    public A suggestStrings(List<String> suggest) {
+      this.suggest = context -> suggest.stream()
+          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
+          .collect(Collectors.toList());
+      return (A) this;
+    }
+
+    public A suggest(Function<SuggestionContext, List<Suggestion>> suggest) {
       this.suggest = suggest;
+      return (A) this;
+    }
+
+    public A suggestStrings(Function<SuggestionContext, List<String>> suggest) {
+      this.suggest = context -> suggest.apply(context).stream()
+          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
+          .collect(Collectors.toList());
       return (A) this;
     }
   }
@@ -114,6 +143,28 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
       }
     }
     return scopeHolder;
+  }
+
+  public CompletableFuture<Suggestions> applySuggestions(
+      Player player,
+      String input
+  ) {
+
+    CharStream charStream = CharStreams.fromString(input);
+    SelectionSuggestionLanguageLexer lexer = new SelectionSuggestionLanguageLexer(charStream);
+    CommonTokenStream tokens = new CommonTokenStream(lexer);
+    SelectionSuggestionLanguageParser parser = new SelectionSuggestionLanguageParser(tokens);
+
+    parser.removeErrorListeners();
+
+    SelectionSuggestionLanguageParser.ProgramContext tree = parser.program();
+    Map<String, Function<SuggestionContext, List<Suggestion>>> map = new HashMap<>();
+    argumentMap.forEach((s, tcArgument) -> map.put(s, tcArgument.suggest));
+
+    List<Suggestion> suggestions =
+        new SelectSuggestionVisitor(identifiers, map, input, null).visit(tree);
+
+    return CompletableFuture.completedFuture(Suggestions.create("", suggestions));
   }
 
   public static class ErrorListener extends BaseErrorListener {

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
 import java.text.ParseException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +63,7 @@ public class SelectionParserTest {
                 .collect(Collectors.toList());
             case MISC -> context.getScope();
           })
-          .suggest(List.of("letter", "number"));
+          .suggestStrings(List.of("letter", "number"));
 
   private static final List<String> SCOPE = Lists.newArrayList(
       "A", "B", "C", "D", "E",
@@ -128,5 +129,18 @@ public class SelectionParserTest {
   @SneakyThrows
   public void testOnlyClassifier() {
     Assertions.assertEquals(SCOPE, parser.parse("@s", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
+  void applySuggestions() throws ExecutionException, InterruptedException {
+
+    System.out.println(parser.applySuggestions(null, "").get());
+    System.out.println(parser.applySuggestions(null, "@").get());
+    System.out.println(parser.applySuggestions(null, "@abc[").get());
+    System.out.println(parser.applySuggestions(null, "@n[le").get());
+    System.out.println(parser.applySuggestions(null, "@n[type=").get());
+    System.out.println(parser.applySuggestions(null, "@n[type=le").get());
+    System.out.println(parser.applySuggestions(null, "@s[]").get());
+    System.out.println(parser.applySuggestions(null, "@n").get());
   }
 }

@@ -1,8 +1,7 @@
-package de.cubbossa.pathfinder.module.visualizing.events.selection;
+package de.cubbossa.pathfinder.util.selection;
 
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
-import de.cubbossa.pathfinder.util.selection.SelectionVisitor;
 import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;

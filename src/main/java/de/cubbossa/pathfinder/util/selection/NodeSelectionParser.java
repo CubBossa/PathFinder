@@ -2,9 +2,11 @@ package de.cubbossa.pathfinder.util.selection;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.core.node.Node;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.command.CommandSender;
@@ -33,6 +35,11 @@ public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionPars
     return super.parse(input, scope, (o, nodes) -> new Context<>(input, scope, player));
   }
 
+  @Override
+  public CompletableFuture<Suggestions> applySuggestions(Player player, String input) {
+    return super.applySuggestions(player, input);
+  }
+
   @Getter
   public class Context<T> extends ArgumentContext<T, Node> {
     private final CommandSender sender;
@@ -42,5 +49,4 @@ public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionPars
       this.sender = sender;
     }
   }
-
 }

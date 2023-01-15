@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.util;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
@@ -11,6 +13,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
+import dev.jorel.commandapi.SuggestionInfo;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -38,7 +42,7 @@ public class SelectionUtils {
           .execute(c -> c.getScope().stream()
               .filter(n -> c.getValue().contains(n.getNodeId()))
               .collect(Collectors.toList()))
-          .suggest(c -> RoadMapHandler.getInstance().getRoadMaps().values().stream()
+          .suggestStrings(c -> RoadMapHandler.getInstance().getRoadMaps().values().stream()
               .map(RoadMap::getNodes)
               .flatMap(Collection::stream)
               .map(Node::getNodeId)
@@ -79,7 +83,7 @@ public class SelectionUtils {
                 .filter(n -> n.getRoadMapKey().equals(roadmapKey))
                 .collect(Collectors.toList());
           })
-          .suggest(RoadMapHandler.getInstance().getRoadMapsStream()
+          .suggestStrings(RoadMapHandler.getInstance().getRoadMapsStream()
               .map(RoadMap::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
@@ -95,7 +99,7 @@ public class SelectionUtils {
       }).execute(c -> c.getScope().stream()
               .filter(node -> Objects.equals(node.getLocation().getWorld(), c.getValue()))
               .collect(Collectors.toList()))
-          .suggest(c -> Bukkit.getWorlds().stream()
+          .suggestStrings(c -> Bukkit.getWorlds().stream()
               .map(World::getName)
               .collect(Collectors.toList()));
 
@@ -136,7 +140,7 @@ public class SelectionUtils {
                   .collect(Collectors.toList());
             };
           })
-          .suggest(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
+          .suggestStrings(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
 
   public static final NodeSelectionParser.Argument<Collection<NodeGroup>> GROUP =
       new NodeSelectionParser.Argument<>(r -> {
@@ -161,7 +165,7 @@ public class SelectionUtils {
               .filter(node -> node instanceof Groupable groupable
                   && groupable.getGroups().containsAll(c.getValue()))
               .collect(Collectors.toList()))
-          .suggest(c -> NodeGroupHandler.getInstance().getNodeGroups().stream()
+          .suggestStrings(c -> NodeGroupHandler.getInstance().getNodeGroups().stream()
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
@@ -193,5 +197,13 @@ public class SelectionUtils {
         RoadMapHandler.getInstance().getRoadMaps().values().stream()
             .flatMap(roadMap -> roadMap.getNodes().stream())
             .collect(Collectors.toList())));
+  }
+
+  public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(
+      SuggestionInfo suggestionInfo, SuggestionsBuilder suggestionsBuilder)
+      throws CommandSyntaxException {
+    return suggestionInfo.sender() instanceof Player player ?
+        parser.applySuggestions(player, suggestionInfo.currentInput()) :
+        suggestionsBuilder.buildFuture();
   }
 }
