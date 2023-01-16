@@ -154,14 +154,15 @@ public class PathPlugin extends JavaPlugin {
   private WaypointCommand waypointCommand;
   private MazeCommand mazeCommand;
 
-  private final Set<DependencyLoader> dependencies = Set.of(
-      new DependencyLoader(PlaceholderHookLoader::load)
-  );
+  private final Set<DependencyLoader> dependencies;
 
   public PathPlugin() {
     super();
     instance = this;
     extensions = new ArrayList<>();
+    dependencies = Set.of(
+        new DependencyLoader(PlaceholderHookLoader::load)
+    );
   }
 
   protected PathPlugin(JavaPluginLoader loader, PluginDescriptionFile descriptionFile,
@@ -169,6 +170,9 @@ public class PathPlugin extends JavaPlugin {
     super(loader, descriptionFile, dataFolder, file);
     instance = this;
     extensions = new ArrayList<>();
+    dependencies = Set.of(
+        new DependencyLoader(PlaceholderHookLoader::load)
+    );
   }
 
   @SneakyThrows

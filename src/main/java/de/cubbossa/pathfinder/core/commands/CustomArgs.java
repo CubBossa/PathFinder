@@ -314,17 +314,17 @@ public class CustomArgs {
    * @return a node selection argument instance
    */
   public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
-    return new CustomArgument<>(new TextArgument(nodeName), customArgumentInfo -> {
-      if (customArgumentInfo.sender() instanceof Player player) {
+    return new CustomArgument<>(new TextArgument(nodeName), info -> {
+      if (info.sender() instanceof Player player) {
         try {
           return SelectionUtils.getNodeSelection(player,
-              customArgumentInfo.input().substring(1, customArgumentInfo.input().length() - 1));
+              info.input().substring(1, info.input().length() - 1));
         } catch (CommandSyntaxException e) {
           throw new CustomArgument.CustomArgumentException(e.getMessage());
         }
       }
       return new NodeSelection();
-    }); // .includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
+    }).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
   }
 
   /**

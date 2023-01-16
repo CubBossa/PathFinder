@@ -147,6 +147,7 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
 
   public CompletableFuture<Suggestions> applySuggestions(
       Player player,
+      String command,
       String input
   ) {
 
@@ -164,7 +165,7 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
     List<Suggestion> suggestions =
         new SelectSuggestionVisitor(identifiers, map, input, null).visit(tree);
 
-    return CompletableFuture.completedFuture(Suggestions.create("", suggestions));
+    return CompletableFuture.completedFuture(Suggestions.create(command, suggestions));
   }
 
   public static class ErrorListener extends BaseErrorListener {

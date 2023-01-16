@@ -134,13 +134,14 @@ public class SelectionParserTest {
   @Test
   void applySuggestions() throws ExecutionException, InterruptedException {
 
-    System.out.println(parser.applySuggestions(null, "").get());
-    System.out.println(parser.applySuggestions(null, "@").get());
-    System.out.println(parser.applySuggestions(null, "@abc[").get());
-    System.out.println(parser.applySuggestions(null, "@n[le").get());
-    System.out.println(parser.applySuggestions(null, "@n[type=").get());
-    System.out.println(parser.applySuggestions(null, "@n[type=le").get());
-    System.out.println(parser.applySuggestions(null, "@s[]").get());
-    System.out.println(parser.applySuggestions(null, "@n").get());
+    System.out.println(parser.applySuggestions(null, "123", "").get());
+    System.out.println(parser.applySuggestions(null, "", "@").get());
+    System.out.println(parser.applySuggestions(null, "", "@abc[").get());
+    System.out.println(parser.applySuggestions(null, "", "@n[le").get());
+    System.out.println(parser.applySuggestions(null, "", "@n[type=").get());
+    System.out.println(parser.applySuggestions(null, "", "@n[type=le").get());
+    System.out.println(parser.applySuggestions(null, "", "@n[type=le,").get());
+    System.out.println(parser.applySuggestions(null, "", "@s[]").get());
+    System.out.println(parser.applySuggestions(null, "", "@n").get());
   }
 }

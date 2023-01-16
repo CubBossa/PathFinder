@@ -200,10 +200,22 @@ public class SelectionUtils {
   }
 
   public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(
-      SuggestionInfo suggestionInfo, SuggestionsBuilder suggestionsBuilder)
-      throws CommandSyntaxException {
-    return suggestionInfo.sender() instanceof Player player ?
-        parser.applySuggestions(player, suggestionInfo.currentInput()) :
-        suggestionsBuilder.buildFuture();
+      SuggestionInfo suggestionInfo, SuggestionsBuilder suggestionsBuilder) {
+    if (!(suggestionInfo.sender() instanceof Player player)) {
+      return suggestionsBuilder.buildFuture();
+    }
+    int offset = suggestionInfo.currentInput().length() - suggestionInfo.currentArg().length();
+
+    return parser
+        // remove quotation from input
+        .applySuggestions(player, suggestionInfo.currentArg(),
+            suggestionInfo.currentArg().length() > 0
+                ? suggestionInfo.currentArg().substring(1)
+                : "")
+        //  add quotations to suggestions
+        .thenApply(s -> CommandUtils.wrapWithQuotation(suggestionInfo.currentArg(), s,
+            suggestionInfo.currentArg().length() == 0))
+        // shift suggestions toward actual command argument offset
+        .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
   }
 }

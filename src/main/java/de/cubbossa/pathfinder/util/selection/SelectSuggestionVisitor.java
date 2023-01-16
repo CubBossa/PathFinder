@@ -94,12 +94,19 @@ public class SelectSuggestionVisitor
   }
 
   private List<Suggestion> suggestValues(String key, String in, int offset) {
-    List<Suggestion> suggestions = arguments.get(key).apply(new SelectionParser.SuggestionContext(
+    var argument = arguments.get(key);
+    if (argument == null) {
+      return new ArrayList<>();
+    }
+    List<Suggestion> suggestions = argument.apply(new SelectionParser.SuggestionContext(
         player,
         in
     ));
     List<Suggestion> transformed = new ArrayList<>();
     suggestions.forEach(suggestion -> {
+      if (in.length() > 0 && !suggestion.getText().toLowerCase().startsWith(in.toLowerCase())) {
+        return;
+      }
       StringRange range = suggestion.getRange();
       Suggestion s = new Suggestion(StringRange.between(
           range.getStart() + offset, range.getEnd() + offset
@@ -111,7 +118,7 @@ public class SelectSuggestionVisitor
 
   private List<Suggestion> suggestArguments(String in, int offset, int length) {
     return arguments.keySet().stream()
-        .filter(s -> s.startsWith(in.toLowerCase()))
+        .filter(s -> s.toLowerCase().startsWith(in.toLowerCase()))
         .map(s -> new Suggestion(StringRange.between(offset, offset + length), s))
         .collect(Collectors.toList());
   }
