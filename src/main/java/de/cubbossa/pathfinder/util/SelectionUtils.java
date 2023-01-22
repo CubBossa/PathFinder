@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -90,7 +91,7 @@ public class SelectionUtils {
 
 
   public static final NodeSelectionParser.Argument<World> WORLD =
-      new NodeSelectionParser.Argument<World>(r -> {
+      new NodeSelectionParser.Argument<>(r -> {
         World world = Bukkit.getWorld(r.getRemaining());
         if (world == null) {
           throw new RuntimeException("'" + r.getRemaining() + "' is not a valid world.");
@@ -104,11 +105,11 @@ public class SelectionUtils {
               .collect(Collectors.toList()));
 
   public static final NodeSelectionParser.Argument<Integer> LIMIT =
-      new NodeSelectionParser.Argument<Integer>(IntegerArgumentType.integer())
+      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
           .execute(c -> CommandUtils.subList(c.getScope(), 0, c.getValue()));
 
   public static final NodeSelectionParser.Argument<Integer> OFFSET =
-      new NodeSelectionParser.Argument<Integer>(IntegerArgumentType.integer())
+      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
           .execute(c -> CommandUtils.subList(c.getScope(), c.getValue()));
 
   private enum SortMethod {
@@ -189,7 +190,7 @@ public class SelectionUtils {
   }
 
   public static NodeSelection getNodeSelection(Player player, String selectString)
-      throws CommandSyntaxException {
+      throws CommandSyntaxException, ParseCancellationException {
 
     return new NodeSelection(parser.parse(
         player,
@@ -214,7 +215,7 @@ public class SelectionUtils {
                 : "")
         //  add quotations to suggestions
         .thenApply(s -> CommandUtils.wrapWithQuotation(suggestionInfo.currentArg(), s,
-            suggestionInfo.currentArg().length() == 0))
+            suggestionInfo.currentArg(), offset))
         // shift suggestions toward actual command argument offset
         .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
   }

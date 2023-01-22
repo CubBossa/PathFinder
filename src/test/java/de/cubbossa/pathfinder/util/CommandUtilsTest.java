@@ -13,18 +13,23 @@ class CommandUtilsTest {
 
   @Test
   void wrapWithQuotation() {
-    Suggestion quotation = new Suggestion(StringRange.at(0), "\"\"");
     Suggestion suggestion = new Suggestion(StringRange.at(0), "a");
-    Suggestion suggestionOffset = new Suggestion(StringRange.at(1), "a");
     Suggestions suggestions = Suggestions.create("abc", List.of(suggestion));
 
+    Suggestion quotation = new Suggestion(StringRange.at(0), "\"\"");
+    assertEquals(
+        Suggestions.create("abc", List.of(quotation)),
+        CommandUtils.wrapWithQuotation("abc", suggestions, "", 0)
+    );
+    Suggestion quotationStart = new Suggestion(StringRange.between(0, 1), "\"");
+    assertEquals(
+        Suggestions.create("abc", List.of(quotationStart)),
+        CommandUtils.wrapWithQuotation("abc", suggestions, "a", 0)
+    );
+    Suggestion suggestionOffset = new Suggestion(StringRange.at(1), "a");
     assertEquals(
         Suggestions.create("abc", List.of(suggestionOffset)),
-        CommandUtils.wrapWithQuotation("abc", suggestions, false)
-    );
-    assertEquals(
-        Suggestions.create("abc", List.of(suggestionOffset, quotation)),
-        CommandUtils.wrapWithQuotation("abc", suggestions, true)
+        CommandUtils.wrapWithQuotation("abc", suggestions, "\"", 0)
     );
   }
 

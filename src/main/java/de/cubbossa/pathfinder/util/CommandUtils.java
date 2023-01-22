@@ -5,6 +5,7 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -16,17 +17,31 @@ import org.bukkit.command.CommandSender;
 @UtilityClass
 public class CommandUtils {
 
-  public Suggestions wrapWithQuotation(String command, Suggestions suggestions, boolean addEmpty) {
-    List<Suggestion> result = suggestions.getList().stream()
-        .map(s -> new Suggestion(StringRange.between(
-            s.getRange().getStart() + 1,
-            s.getRange().getEnd() + 1
-        ), s.getText(), s.getTooltip()))
-        .collect(Collectors.toList());
-    if (addEmpty) {
+  /**
+   * @param command
+   * @param suggestions
+   * @param current
+   * @param offset
+   * @return
+   */
+  public Suggestions wrapWithQuotation(String command, Suggestions suggestions, String current,
+                                       int offset) {
+    List<Suggestion> result = new ArrayList<>();
+    if (current.length() == 0) {
       result.add(new Suggestion(StringRange.at(0), "\"\""));
+    } else {
+      if (!current.startsWith("\"")) {
+        return Suggestions.create(command, List.of(
+            new Suggestion(StringRange.between(offset, offset + current.length()), "\"")
+        ));
+      } else {
+        result.addAll(suggestions.getList().stream()
+            .map(s -> new Suggestion(StringRange.between(
+                s.getRange().getStart() + 1,
+                s.getRange().getEnd() + 1
+            ), s.getText(), s.getTooltip())).toList());
+      }
     }
-
     return Suggestions.create(command, result);
   }
 

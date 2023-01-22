@@ -51,7 +51,7 @@ public class SelectSuggestionVisitor
           .collect(Collectors.toList());
     }
     if (ctx.conditions() == null) {
-      return List.of(new Suggestion(StringRange.at(2), "["));
+      return List.of(new Suggestion(StringRange.at(1 + ctx.IDENTIFIER().getText().length()), "["));
     }
     return visitConditions(ctx.conditions());
   }

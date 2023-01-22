@@ -2,9 +2,12 @@ package de.cubbossa.pathfinder.util.selection;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
@@ -28,6 +31,19 @@ public class SelectionParserTest {
       super(identifier, alias);
     }
   }
+
+  public static final TestParser.Argument<Integer> LETTER_COUNT = new TestParser.Argument<>(
+      IntegerArgumentType.integer(1, 10)
+  ).execute(c -> c.getScope().stream()
+      .filter(s -> {
+        Matcher matcher = Pattern.compile("[a-zA-Z]").matcher(s);
+        int counter = 0;
+        while (matcher.find()) {
+          counter++;
+        }
+        return counter == c.getValue();
+      })
+      .collect(Collectors.toList()));
 
   public static final TestParser.Argument<NumberRange> LENGTH = new TestParser.Argument<>(
       reader -> {
@@ -80,15 +96,25 @@ public class SelectionParserTest {
     parser = new TestParser("s");
     parser.addResolver("length", LENGTH);
     parser.addResolver("type", TYPE);
+    parser.addResolver("lettercount", LETTER_COUNT);
   }
 
   @Test
   @SneakyThrows
-  public void testParseSelection1() {
+  public void testParseSelection1a() {
 
     Assertions.assertEquals(
         Lists.newArrayList("A", "B", "C", "D", "E", " ", ""),
         parser.parse("@s[length=..1]", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
+  @SneakyThrows
+  public void testParseSelection1b() {
+
+    Assertions.assertEquals(
+        Lists.newArrayList("A", "B", "C", "D", "E", " "),
+        parser.parse("@s[length=1]", SCOPE, SelectionParser.ArgumentContext::new));
   }
 
   @Test
@@ -117,6 +143,15 @@ public class SelectionParserTest {
     Assertions.assertEquals(
         Lists.newArrayList("123"),
         parser.parse("@s[length=..5,type=number]", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
+  @SneakyThrows
+  public void testParseSelection5() {
+
+    Assertions.assertEquals(
+        Lists.newArrayList("A", "B", "C", "D", "E"),
+        parser.parse("@s[lettercount=1]", SCOPE, SelectionParser.ArgumentContext::new));
   }
 
   @Test

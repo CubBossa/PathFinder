@@ -31,10 +31,9 @@ value
    : expression
    | QUOTE
    | IDENTIFIER
-   | STRING
+   | STRING+
    ;
 
-DIGIT: [0-9];
 AT: '@';
 COND_OPEN: '[';
 COND_CLOSE: ']';
@@ -43,7 +42,7 @@ COND_EQUALS: '=';
 
 QUOTE  : '"' ( ESC_SEQ | ~('\\'|'"') )* '"' ;
 IDENTIFIER: [a-zA-Z][a-zA-Z0-9_-]*;
-STRING : (~[,=])+?;
+STRING: (~[,=])+?;
 
 fragment
 HEX_DIGIT  : ('0'..'9'|'a'..'f'|'A'..'F') ;

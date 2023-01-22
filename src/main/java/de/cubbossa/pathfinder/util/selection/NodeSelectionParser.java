@@ -30,7 +30,7 @@ public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionPars
 
   public <S> Collection<Node> parse(Player player, String input, List<Node> scope)
       throws ParseCancellationException, CommandSyntaxException {
-    return super.parse(input, scope, (o, nodes) -> new Context<>(input, scope, player));
+    return super.<S>parse(input, scope, (o, nodes) -> new Context<>(o, scope, player));
   }
 
   @Getter

@@ -134,11 +134,9 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
     for (SelectionAttribute a : attributes) {
       if (argumentMap.containsKey(a.identifier())) {
         Argument<S, T, C, ?> argument = (Argument<S, T, C, ?>) argumentMap.get(a.identifier());
+        S value = argument.getParse().apply(a.value());
         scopeHolder = argument.getExecute().apply(
-            context.apply(
-                argument.getParse().apply(a.value()),
-                scope
-            )
+            context.apply(value, scopeHolder)
         );
       }
     }

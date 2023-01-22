@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -319,7 +320,7 @@ public class CustomArgs {
         try {
           return SelectionUtils.getNodeSelection(player,
               info.input().substring(1, info.input().length() - 1));
-        } catch (CommandSyntaxException e) {
+        } catch (CommandSyntaxException | ParseCancellationException e) {
           throw new CustomArgument.CustomArgumentException(e.getMessage());
         }
       }
