@@ -413,6 +413,35 @@ public class Messages {
   public static final Message CMD_ADV_VIS_INFO_PARTICLES =
       new Message("commands.path_visualizer.type.advanced_particle_visualizer.info");
 
+  @MessageMeta(placeholders = {
+      "key", "name", "name-format", "type", "permission", "interval",
+      "format-north",
+      "format-north-east",
+      "format-east",
+      "format-south-east",
+      "format-south",
+      "format-south-west",
+      "format-west",
+      "format-north-west",
+      "format-distance"
+  }, value = """
+      <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
+      <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
+      <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
+      <dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
+      <dark_gray>» </dark_gray><gray>Placeholder:</gray>
+          <dark_gray>» </dark_gray><gray>North: <main><hover:show_text:"Click to change format-north"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-north"><format-north></click></hover></main>
+          <dark_gray>» </dark_gray><gray>North-East: <main><hover:show_text:"Click to change format-northeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northeast"><format-northeast></click></hover></main>
+          <dark_gray>» </dark_gray><gray>East: <main><hover:show_text:"Click to change format-east"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-east"><format-east></click></hover></main>
+          <dark_gray>» </dark_gray><gray>South-East: <main><hover:show_text:"Click to change format-southeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southeast"><format-southeast></click></hover></main>
+          <dark_gray>» </dark_gray><gray>South: <main><hover:show_text:"Click to change format-south"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-south"><format-south></click></hover></main>
+          <dark_gray>» </dark_gray><gray>South-West: <main><hover:show_text:"Click to change format-southwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southwest"><format-southwest></click></hover></main>
+          <dark_gray>» </dark_gray><gray>West: <main><hover:show_text:"Click to change format-west"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-west"><format-west></click></hover></main>
+          <dark_gray>» </dark_gray><gray>North-West: <main><hover:show_text:"Click to change format-northwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northwest"><format-northwest></click></hover></main>
+          <dark_gray>» </dark_gray><gray>Distance: <main><hover:show_text:"Click to change format-distance"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-distance"><format-distance></click></hover></main>""")
+  public static final Message CMD_VIS_PAPI_INFO =
+      new Message("commands.path_visualizer.type.placeholder_api.info");
+
   @MessageMeta(value = "<list>", placeholders = "list")
   public static final Message E_NODE_NAME = new Message("editor.node_name");
   @MessageMeta("<white><u>Node Tool</u></white>")

@@ -18,11 +18,15 @@ import org.bukkit.command.CommandSender;
 public class CommandUtils {
 
   /**
-   * @param command
-   * @param suggestions
-   * @param current
-   * @param offset
-   * @return
+   * Shifts all suggestions one character to the right and adds a "" suggestion if the
+   * current string is empty. If the first string is no quotation mark, it suggests a single
+   * " that overrides the whole input
+   *
+   * @param command     The whole command string including the argument.
+   * @param suggestions The suggestions to wrap with quotations.
+   * @param current     The current argument string.
+   * @param offset      The offset of the current argument.
+   * @return A new instance of Suggestions
    */
   public Suggestions wrapWithQuotation(String command, Suggestions suggestions, String current,
                                        int offset) {

@@ -236,12 +236,19 @@ public class PathPlugin extends JavaPlugin {
         context -> TranslationHandler.getInstance()
             .translateLine(context.text(), context.player(), context.resolver()));
 
-    new NodeGroupHandler().loadGroups();
+    new NodeGroupHandler();
     new VisualizerHandler();
     new NodeTypeHandler();
-    new RoadMapHandler().loadRoadMaps();
+    new RoadMapHandler();
     new DiscoverHandler();
-    new GUIHandler(this).enable();
+    new GUIHandler(this);
+
+    dependencies.forEach(DependencyLoader::enable);
+
+    NodeGroupHandler.getInstance().loadGroups();
+    VisualizerHandler.getInstance().loadVisualizers();
+    RoadMapHandler.getInstance().loadRoadMaps();
+    GUIHandler.getInstance().enable();
 
     // Commands
 
@@ -272,7 +279,6 @@ public class PathPlugin extends JavaPlugin {
       Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
     }
 
-    dependencies.forEach(DependencyLoader::enable);
     extensions.forEach(PathPluginExtension::onEnable);
 
     Metrics metrics = new Metrics(this, 16324);

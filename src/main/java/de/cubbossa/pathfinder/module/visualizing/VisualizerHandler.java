@@ -68,9 +68,13 @@ public class VisualizerHandler {
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
 
     this.pathVisualizerMap = new HashedRegistry<>();
-    pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
     this.playerVisualizers = new HashMap<>();
     this.roadmapVisualizers = new HashMap<>();
+  }
+
+  public void loadVisualizers() {
+    pathVisualizerMap.clear();
+    pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
   }
 
   public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(

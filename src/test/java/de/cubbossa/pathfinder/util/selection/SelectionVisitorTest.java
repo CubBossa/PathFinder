@@ -19,7 +19,6 @@ class SelectionVisitorTest {
     SelectionVisitor visitor = new SelectionVisitor(List.of("e"));
 
     SelectionLanguageParser.ProgramContext tree = parser.program();
-    System.out.println(visitor.visit(tree));
   }
 
 }

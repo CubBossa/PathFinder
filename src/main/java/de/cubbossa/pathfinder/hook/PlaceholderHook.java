@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.hook;
 
 import de.cubbossa.pathfinder.Dependency;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
@@ -18,6 +19,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 import lombok.Getter;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +39,17 @@ public class PlaceholderHook extends PlaceholderExpansion implements Dependency 
 
         @Override
         public Message getInfoMessage(PlaceholderVisualizer element) {
-          return null;
+          return Messages.CMD_VIS_PAPI_INFO.format(TagResolver.builder()
+              .resolver(Placeholder.parsed("format-north", element.getNorth()))
+              .resolver(Placeholder.parsed("format-northeast", element.getNorthEast()))
+              .resolver(Placeholder.parsed("format-east", element.getEast()))
+              .resolver(Placeholder.parsed("format-southeast", element.getSouthEast()))
+              .resolver(Placeholder.parsed("format-south", element.getSouth()))
+              .resolver(Placeholder.parsed("format-southwest", element.getSouthWest()))
+              .resolver(Placeholder.parsed("format-west", element.getWest()))
+              .resolver(Placeholder.parsed("format-northwest", element.getNorthWest()))
+              .resolver(Placeholder.parsed("format-distance", element.getDistanceFormat()))
+              .build());
         }
 
         @Override
@@ -55,7 +68,7 @@ public class PlaceholderHook extends PlaceholderExpansion implements Dependency 
           LinkedHashMap<String, Object> map = new LinkedHashMap<>();
           Arrays.stream(PlaceholderVisualizer.PROPS)
               .forEach(prop -> serialize(map, prop, visualizer));
-          return super.serialize(visualizer);
+          return map;
         }
 
         @Override

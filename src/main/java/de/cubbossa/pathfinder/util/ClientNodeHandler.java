@@ -125,7 +125,6 @@ public class ClientNodeHandler {
 
       @Override
       public void onPacketReceiving(PacketEvent event) {
-        System.out.println("here");
         PacketContainer packet = event.getPacket();
         int entityId = packet.getIntegers().read(0);
 

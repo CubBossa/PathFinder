@@ -100,9 +100,9 @@ public class PlaceholderVisualizer
 
 
     double angle = VectorUtils.convertDirectionToXZAngle(
-        leadPoint.clone().subtract(context.player().getLocation()));
+        leadPoint.clone().subtract(context.player().getLocation()).toVector());
 
-    context.data().direction = directions[(int) ((angle + 22.5) / 45)];
+    context.data().direction = directions[(int) ((angle + 22.5) / 45) % 8];
     context.data().distance = resolveDistance(distance);
   }
 
