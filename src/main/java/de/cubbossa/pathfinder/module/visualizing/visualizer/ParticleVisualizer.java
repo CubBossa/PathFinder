@@ -13,28 +13,34 @@ import org.bukkit.util.Vector;
 @Setter
 public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer> {
 
-	private int schedulerSteps = 50;
-	private Particle particle = Particle.SCRAPE;
-	private Object particleData = null;
-	private float speed = .5f;
-	private int amount = 1;
-	private Vector offset = new Vector(0.02f, 0.02f, 0.02f);
+  public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
+      new Property.SimpleProperty<>("particle-steps", Integer.class, true,
+          ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
 
-	@Override
-	public VisualizerType<ParticleVisualizer> getType() {
-		return VisualizerHandler.PARTICLE_VISUALIZER_TYPE;
-	}
+  private int schedulerSteps = 50;
+  private Particle particle = Particle.SCRAPE;
+  private Object particleData = null;
+  private float speed = .5f;
+  private int amount = 1;
+  private Vector offset = new Vector(0.02f, 0.02f, 0.02f);
 
-	public ParticleVisualizer(NamespacedKey key, String nameFormat) {
-		super(key, nameFormat);
-	}
+  public ParticleVisualizer(NamespacedKey key, String nameFormat) {
+    super(key, nameFormat);
+  }
 
-	@Override
-	public void play(VisualizerContext<BezierData> context) {
-		for (int i = context.interval() % getSchedulerSteps(); i < context.data().points().size(); i += getSchedulerSteps()) {
-			for (Player player : context.players()) {
-				player.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(), offset.getY(), offset.getZ(), speed, particleData);
-			}
-		}
-	}
+  @Override
+  public VisualizerType<ParticleVisualizer> getType() {
+    return VisualizerHandler.PARTICLE_VISUALIZER_TYPE;
+  }
+
+  @Override
+  public void play(VisualizerContext<BezierData> context) {
+    for (int i = context.interval() % getSchedulerSteps(); i < context.data().points().size();
+         i += getSchedulerSteps()) {
+      for (Player player : context.players()) {
+        player.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(),
+            offset.getY(), offset.getZ(), speed, particleData);
+      }
+    }
+  }
 }

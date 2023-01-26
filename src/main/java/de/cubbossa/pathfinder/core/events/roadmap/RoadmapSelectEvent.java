@@ -12,24 +12,24 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class RoadmapSelectEvent extends Event implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final Player player;
-	private final NamespacedKey current;
-	private final NamespacedKey roadMap;
-	private boolean cancelled;
+  private final Player player;
+  private final NamespacedKey current;
+  private final NamespacedKey roadMap;
+  private boolean cancelled;
 
-	public RoadmapSelectEvent(Player player, NamespacedKey current, NamespacedKey roadMap) {
-		this.player = player;
-		this.current = current;
-		this.roadMap = roadMap;
-	}
+  public RoadmapSelectEvent(Player player, NamespacedKey current, NamespacedKey roadMap) {
+    this.player = player;
+    this.current = current;
+    this.roadMap = roadMap;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

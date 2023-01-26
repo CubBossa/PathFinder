@@ -7,12 +7,12 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 public class MoveListener implements Listener {
 
-	@EventHandler
-	public void onMove(PlayerMoveEvent event) {
-		Player p = event.getPlayer();
-		var info = FindModule.getInstance().getActivePath(p);
-		if (info != null && p.getLocation().distance(info.target()) < info.distance()) {
-			FindModule.getInstance().reachTarget(info);
-		}
-	}
+  @EventHandler
+  public void onMove(PlayerMoveEvent event) {
+    Player p = event.getPlayer();
+    var info = FindModule.getInstance().getActivePath(p);
+    if (info != null && p.getLocation().distance(info.target()) < info.distance()) {
+      FindModule.getInstance().reachTarget(info);
+    }
+  }
 }

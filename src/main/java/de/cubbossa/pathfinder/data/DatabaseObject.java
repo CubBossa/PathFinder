@@ -7,8 +7,8 @@ package de.cubbossa.pathfinder.data;
  */
 public interface DatabaseObject<K> {
 
-	/**
-	 * @return The unique key for this object to be identified in the database.
-	 */
-	K getKey();
+  /**
+   * @return The unique key for this object to be identified in the database.
+   */
+  K getKey();
 }

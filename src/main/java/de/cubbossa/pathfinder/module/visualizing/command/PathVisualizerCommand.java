@@ -15,6 +15,7 @@ import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
+import java.util.ArrayList;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -22,154 +23,169 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
-import java.util.ArrayList;
-
 public class PathVisualizerCommand extends CommandTree {
 
-	public PathVisualizerCommand() {
-		super("pathvisualizer");
-		withAliases("visualizer");
+  public PathVisualizerCommand() {
+    super("pathvisualizer");
+    withAliases("visualizer");
 
-		then(new LiteralArgument("list")
-				.withPermission(PathPlugin.PERM_CMD_PV_LIST)
-				.executes((commandSender, objects) -> {
-					onList(commandSender, 1);
-				})
-				.then(new IntegerArgument("page", 1)
-						.executes((commandSender, objects) -> {
-							onList(commandSender, (Integer) objects[0]);
-						})));
+    then(new LiteralArgument("list")
+        .withPermission(PathPlugin.PERM_CMD_PV_LIST)
+        .executes((commandSender, objects) -> {
+          onList(commandSender, 1);
+        })
+        .then(new IntegerArgument("page", 1)
+            .executes((commandSender, objects) -> {
+              onList(commandSender, (Integer) objects[0]);
+            })));
 
-		then(new LiteralArgument("create")
-				.withPermission(PathPlugin.PERM_CMD_PV_CREATE)
-				.then(CustomArgs.visualizerTypeArgument("type")
-						.then(new StringArgument("key")
-								.executes((commandSender, objects) -> {
-									onCreate(commandSender, (VisualizerType<?>) objects[0],
-											new NamespacedKey(PathPlugin.getInstance(), (String) objects[1]));
-								}))));
+    then(new LiteralArgument("create")
+        .withPermission(PathPlugin.PERM_CMD_PV_CREATE)
+        .then(CustomArgs.visualizerTypeArgument("type")
+            .then(new StringArgument("key")
+                .executes((commandSender, objects) -> {
+                  onCreate(commandSender, (VisualizerType<?>) objects[0],
+                      new NamespacedKey(PathPlugin.getInstance(), (String) objects[1]));
+                }))));
 
-		then(new LiteralArgument("delete")
-				.withPermission(PathPlugin.PERM_CMD_PV_DELETE)
-				.then(CustomArgs.pathVisualizerArgument("visualizer")
-						.executes((commandSender, objects) -> {
-							onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
-						})));
+    then(new LiteralArgument("delete")
+        .withPermission(PathPlugin.PERM_CMD_PV_DELETE)
+        .then(CustomArgs.pathVisualizerArgument("visualizer")
+            .executes((commandSender, objects) -> {
+              onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
+            })));
 
-		then(new LiteralArgument("info")
-				.withPermission(PathPlugin.PERM_CMD_PV_INFO)
-				.then(CustomArgs.pathVisualizerArgument("visualizer")
-						.executes((commandSender, objects) -> {
-							onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
-						})));
+    then(new LiteralArgument("info")
+        .withPermission(PathPlugin.PERM_CMD_PV_INFO)
+        .then(CustomArgs.pathVisualizerArgument("visualizer")
+            .executes((commandSender, objects) -> {
+              onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
+            })));
 
-		then(new VisualizerImportCommand(new LiteralArgument("import"), 0));
-	}
+    then(new VisualizerImportCommand(new LiteralArgument("import"), 0));
+  }
 
-	@Override
-	public void register() {
+  @Override
+  public void register() {
 
-		LiteralArgument lit = new LiteralArgument("edit");
-		for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+    LiteralArgument lit = new LiteralArgument("edit");
+    for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
 
-			ArgumentTree typeArg = CustomArgs.pathVisualizerArgument("visualizer", type);
-			type.appendEditCommand(typeArg, 0, 1);
+      ArgumentTree typeArg = CustomArgs.pathVisualizerArgument("visualizer", type);
+      type.appendEditCommand(typeArg, 0, 1);
 
-			typeArg.then(new LiteralArgument("name")
-					.withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
-					.then(CustomArgs.miniMessageArgument("name")
-							.executes((commandSender, objects) -> {
-								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
-									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (String) objects[1], "name", true,
-											visualizer::getNameFormat, visualizer::setNameFormat);
-								}
-							})));
-			typeArg.then(new LiteralArgument("permission")
-					.withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
-					.then(new GreedyStringArgument("permission")
-							.executes((commandSender, objects) -> {
-								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
-									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (String) objects[1], "permission", true,
-											visualizer::getPermission, visualizer::setPermission, Messages::formatPermission);
-								}
-							})));
-			typeArg.then(new LiteralArgument("interval")
-					.withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
-					.then(new IntegerArgument("ticks", 1)
-							.executes((commandSender, objects) -> {
-								if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
-									VisualizerHandler.getInstance().setProperty(commandSender, visualizer, (Integer) objects[1], "interval", true,
-											visualizer::getInterval, visualizer::setInterval, Formatter::number);
-								}
-							})));
+      typeArg.then(new LiteralArgument("name")
+          .withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
+          .then(CustomArgs.miniMessageArgument("name")
+              .executes((commandSender, objects) -> {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                  VisualizerHandler.getInstance()
+                      .setProperty(commandSender, visualizer, (String) objects[1], "name", true,
+                          visualizer::getNameFormat, visualizer::setNameFormat);
+                }
+              })));
+      typeArg.then(new LiteralArgument("permission")
+          .withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
+          .then(new GreedyStringArgument("permission")
+              .executes((commandSender, objects) -> {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                  VisualizerHandler.getInstance()
+                      .setProperty(commandSender, visualizer, (String) objects[1], "permission",
+                          true,
+                          visualizer::getPermission, visualizer::setPermission,
+                          Messages::formatPermission);
+                }
+              })));
+      typeArg.then(new LiteralArgument("interval")
+          .withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
+          .then(new IntegerArgument("ticks", 1)
+              .executes((commandSender, objects) -> {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                  VisualizerHandler.getInstance()
+                      .setProperty(commandSender, visualizer, (Integer) objects[1], "interval",
+                          true,
+                          visualizer::getInterval, visualizer::setInterval, Formatter::number);
+                }
+              })));
 
-			lit.then(new LiteralArgument(type.getCommandName()).then(typeArg));
-		}
-		then(lit).withPermission(PathPlugin.PERM_CMD_PV_EDIT);
-		super.register();
-	}
+      lit.then(new LiteralArgument(type.getCommandName()).then(typeArg));
+    }
+    then(lit).withPermission(PathPlugin.PERM_CMD_PV_EDIT);
+    super.register();
+  }
 
-	/**
-	 * @param page Begins with 1, not 0!
-	 */
-	public void onList(CommandSender sender, int page) {
+  /**
+   * @param page Begins with 1, not 0!
+   */
+  public void onList(CommandSender sender, int page) {
 
-		CommandUtils.printList(sender, page, 10,
-				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().values()),
-				visualizer -> {
-					TagResolver r = TagResolver.builder()
-							.tag("key", Messages.formatKey(visualizer.getKey()))
-							.resolver(Placeholder.component("name", visualizer.getDisplayName()))
-							.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-							.resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
-							.build();
+    CommandUtils.printList(sender, page, 10,
+        new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().values()),
+        visualizer -> {
+          TagResolver r = TagResolver.builder()
+              .tag("key", Messages.formatKey(visualizer.getKey()))
+              .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+              .resolver(
+                  Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+              .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
+              .build();
 
-					TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(r), sender);
-				},
-				Messages.CMD_VIS_LIST_HEADER,
-				Messages.CMD_VIS_LIST_FOOTER);
-	}
+          TranslationHandler.getInstance()
+              .sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(r), sender);
+        },
+        Messages.CMD_VIS_LIST_HEADER,
+        Messages.CMD_VIS_LIST_FOOTER);
+  }
 
-	public void onCreate(CommandSender sender, VisualizerType<?> type, NamespacedKey key) {
+  public void onCreate(CommandSender sender, VisualizerType<?> type, NamespacedKey key) {
 
-		if (VisualizerHandler.getInstance().getPathVisualizer(key) != null) {
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_NAME_EXISTS, sender);
-			return;
-		}
-		PathVisualizer<?, ?> visualizer = VisualizerHandler.getInstance().createPathVisualizer(type, key);
+    if (VisualizerHandler.getInstance().getPathVisualizer(key) != null) {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_NAME_EXISTS, sender);
+      return;
+    }
+    PathVisualizer<?, ?> visualizer =
+        VisualizerHandler.getInstance().createPathVisualizer(type, key);
 
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.format(TagResolver.builder()
-				.tag("key", Messages.formatKey(visualizer.getKey()))
-				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
-				.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-				.resolver(Placeholder.component("type", Component.text(visualizer.getType().getCommandName())))
-				.build()), sender);
-	}
+    TranslationHandler.getInstance()
+        .sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.format(TagResolver.builder()
+            .tag("key", Messages.formatKey(visualizer.getKey()))
+            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+            .resolver(
+                Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+            .resolver(Placeholder.component("type",
+                Component.text(visualizer.getType().getCommandName())))
+            .build()), sender);
+  }
 
-	public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
-		if (!VisualizerHandler.getInstance().deletePathVisualizer(visualizer)) {
-			TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_ERROR, sender);
-			return;
-		}
-		TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
-				.format(TagResolver.builder()
-						.tag("key", Messages.formatKey(visualizer.getKey()))
-						.resolver(Placeholder.component("name", visualizer.getDisplayName()))
-						.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-						.build()), sender);
-	}
+  public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
+    if (!VisualizerHandler.getInstance().deletePathVisualizer(visualizer)) {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_ERROR, sender);
+      return;
+    }
+    TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
+        .format(TagResolver.builder()
+            .tag("key", Messages.formatKey(visualizer.getKey()))
+            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+            .resolver(
+                Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+            .build()), sender);
+  }
 
-	public <T extends PathVisualizer<T, ?>> void onInfo(CommandSender sender, PathVisualizer<T, ?> visualizer) {
+  public <T extends PathVisualizer<T, ?>> void onInfo(CommandSender sender,
+                                                      PathVisualizer<T, ?> visualizer) {
 
-		FormattedMessage message = visualizer.getType().getInfoMessage((T) visualizer).format(TagResolver.builder()
-				.tag("key", Messages.formatKey(visualizer.getKey()))
-				.resolver(Placeholder.component("name", visualizer.getDisplayName()))
-				.resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-				.resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
-				.resolver(Placeholder.component("permission", Messages.formatPermission(visualizer.getPermission())))
-				.resolver(Placeholder.component("interval", Component.text(visualizer.getInterval())))
-				.build());
+    FormattedMessage message =
+        visualizer.getType().getInfoMessage((T) visualizer).format(TagResolver.builder()
+            .tag("key", Messages.formatKey(visualizer.getKey()))
+            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+            .resolver(
+                Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+            .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
+            .resolver(Placeholder.component("permission",
+                Messages.formatPermission(visualizer.getPermission())))
+            .resolver(Placeholder.component("interval", Component.text(visualizer.getInterval())))
+            .build());
 
-		TranslationHandler.getInstance().sendMessage(message, sender);
-	}
+    TranslationHandler.getInstance().sendMessage(message, sender);
+  }
 }

@@ -11,22 +11,22 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class RoadMapSetCurveLengthEvent extends Event implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final RoadMap roadMap;
-	private final double value;
-	private boolean cancelled;
+  private final RoadMap roadMap;
+  private final double value;
+  private boolean cancelled;
 
-	public RoadMapSetCurveLengthEvent(RoadMap roadMap, double value) {
-		this.roadMap = roadMap;
-		this.value = value;
-	}
+  public RoadMapSetCurveLengthEvent(RoadMap roadMap, double value) {
+    this.roadMap = roadMap;
+    this.value = value;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

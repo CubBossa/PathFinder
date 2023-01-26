@@ -10,19 +10,19 @@ import org.bukkit.event.HandlerList;
 @Getter
 public class VisualizerPropertyChangedEvent<T> extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final PathVisualizer<?, ?> visualizer;
-	private final String field;
-	private final boolean visual;
-	private final T oldValue;
-	private final T newValue;
+  private final PathVisualizer<?, ?> visualizer;
+  private final String field;
+  private final boolean visual;
+  private final T oldValue;
+  private final T newValue;
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

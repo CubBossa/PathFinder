@@ -8,19 +8,19 @@ import org.bukkit.event.HandlerList;
 @Getter
 public class RoadMapCreatedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final RoadMap roadMap;
+  private final RoadMap roadMap;
 
-	public RoadMapCreatedEvent(RoadMap roadMap) {
-		this.roadMap = roadMap;
-	}
+  public RoadMapCreatedEvent(RoadMap roadMap) {
+    this.roadMap = roadMap;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

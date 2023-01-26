@@ -13,16 +13,16 @@ import org.bukkit.event.HandlerList;
 @RequiredArgsConstructor
 public class NodeLocationChangedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	private final NodeSelection nodes;
-	private final Location location;
+  private final NodeSelection nodes;
+  private final Location location;
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

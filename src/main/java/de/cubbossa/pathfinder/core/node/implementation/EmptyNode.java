@@ -5,6 +5,8 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import java.util.Collection;
+import java.util.HashSet;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -12,87 +14,84 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 public class EmptyNode implements Node {
 
-	private final RoadMap roadMap;
-	@Getter
-	private final Location location;
+  private final RoadMap roadMap;
+  @Getter
+  private final Location location;
 
-	public EmptyNode(RoadMap roadMap, World world) {
-		this.roadMap = roadMap;
-		this.location = new Location(world, 0, 0, 0);
-	}
+  public EmptyNode(RoadMap roadMap, World world) {
+    this.roadMap = roadMap;
+    this.location = new Location(world, 0, 0, 0);
+  }
 
-	@Override
-	public NodeType<Node> getType() {
-		return null;
-	}
+  @Override
+  public NodeType<Node> getType() {
+    return null;
+  }
 
-	@Override
-	public boolean isPersistent() {
-		return false;
-	}
+  @Override
+  public boolean isPersistent() {
+    return false;
+  }
 
-	@Override
-	public Collection<SearchTerm> getSearchTerms() {
-		return new HashSet<>();
-	}
+  @Override
+  public Collection<SearchTerm> getSearchTerms() {
+    return new HashSet<>();
+  }
 
-	@Override
-	public Collection<Node> getGroup() {
-		return new HashSet<>();
-	}
+  @Override
+  public Collection<Node> getGroup() {
+    return new HashSet<>();
+  }
 
-	@Override
-	public int getNodeId() {
-		return -1;
-	}
+  @Override
+  public int getNodeId() {
+    return -1;
+  }
 
-	@Override
-	public NamespacedKey getRoadMapKey() {
-		return roadMap.getKey();
-	}
+  @Override
+  public NamespacedKey getRoadMapKey() {
+    return roadMap.getKey();
+  }
 
-	@Override
-	public void setLocation(Location location) {
+  @Override
+  public void setLocation(Location location) {
 
-	}
+  }
 
-	@Override
-	public Collection<Edge> getEdges() {
-		return new HashSet<>();
-	}
+  @Override
+  public Collection<Edge> getEdges() {
+    return new HashSet<>();
+  }
 
-	@Override
-	public @Nullable Double getCurveLength() {
-		return null;
-	}
+  @Override
+  public @Nullable Double getCurveLength() {
+    return null;
+  }
 
-	@Override
-	public void setCurveLength(Double value) {
+  @Override
+  public void setCurveLength(Double value) {
 
-	}
+  }
 
-	@Override
-	public Edge connect(Node target) {
-		return null;
-	}
+  @Override
+  public Edge connect(Node target) {
+    return null;
+  }
 
-	@Override
-	public void disconnect(Node target) {
+  @Override
+  public void disconnect(Node target) {
 
-	}
+  }
 
-	@Override
-	public int compareTo(@NotNull Node o) {
-		return 0;
-	}
+  @Override
+  public int compareTo(@NotNull Node o) {
+    return 0;
+  }
 
-	@Override
-	public String toString() {
-		return "EmptyNode{}";
-	}
+  @Override
+  public String toString() {
+    return "EmptyNode{}";
+  }
 }

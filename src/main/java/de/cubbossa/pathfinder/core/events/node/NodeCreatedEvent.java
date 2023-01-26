@@ -10,18 +10,18 @@ import org.bukkit.event.HandlerList;
 @Setter
 public class NodeCreatedEvent extends Event {
 
-	private static final HandlerList handlers = new HandlerList();
-	private final Node node;
+  private static final HandlerList handlers = new HandlerList();
+  private final Node node;
 
-	public NodeCreatedEvent(Node node) {
-		this.node = node;
-	}
+  public NodeCreatedEvent(Node node) {
+    this.node = node;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

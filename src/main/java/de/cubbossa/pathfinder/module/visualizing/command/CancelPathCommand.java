@@ -8,17 +8,18 @@ import org.bukkit.entity.Player;
 
 public class CancelPathCommand extends CommandTree {
 
-	public CancelPathCommand() {
-		super("cancelpath");
-		withPermission(PathPlugin.PERM_CMD_CANCELPATH);
-		withRequirement(sender -> sender instanceof Player player && FindModule.getInstance().getActivePath(player) != null);
+  public CancelPathCommand() {
+    super("cancelpath");
+    withPermission(PathPlugin.PERM_CMD_CANCELPATH);
+    withRequirement(sender -> sender instanceof Player player
+        && FindModule.getInstance().getActivePath(player) != null);
 
-		executesPlayer((player, args) -> {
-			FindModule.getInstance().cancelPath(player.getUniqueId());
-		});
-	}
+    executesPlayer((player, args) -> {
+      FindModule.getInstance().cancelPath(player.getUniqueId());
+    });
+  }
 
-	public void refresh(Player player) {
-		CommandAPI.updateRequirements(player);
-	}
+  public void refresh(Player player) {
+    CommandAPI.updateRequirements(player);
+  }
 }
