@@ -66,7 +66,7 @@ public class SelectionUtils {
   public static final NodeSelectionParser.Argument<NumberRange> DISTANCE =
       new NodeSelectionParser.Argument<>(r -> NumberRange.fromString(r.getRemaining()))
           .execute(c -> {
-            if (c instanceof Player player) {
+            if (c.getSender() instanceof Player player) {
               return c.getScope().stream()
                   .filter(
                       n -> c.getValue().contains(n.getLocation().distance(player.getLocation())))

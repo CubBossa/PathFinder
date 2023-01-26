@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.util.selection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,11 @@ class NumberRangeTest {
   @Test
   void throwOrder() {
     assertThrows(IllegalArgumentException.class, () -> NumberRange.range(3, 1));
+  }
+
+  @Test
+  void contains() {
+    assertTrue(NumberRange.range(1, 3).contains(2));
   }
 
   @Test
