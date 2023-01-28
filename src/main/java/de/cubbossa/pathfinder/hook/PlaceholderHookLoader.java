@@ -8,5 +8,4 @@ public class PlaceholderHookLoader {
   public static Dependency load(PathPlugin plugin) {
     return new PlaceholderHook(plugin);
   }
-
 }
