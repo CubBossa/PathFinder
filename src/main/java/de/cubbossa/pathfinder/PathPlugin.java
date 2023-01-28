@@ -49,9 +49,7 @@ import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.util.Vector;
 
 @Getter
@@ -161,17 +159,7 @@ public class PathPlugin extends JavaPlugin {
     instance = this;
     extensions = new ArrayList<>();
     dependencies = Set.of(
-        new DependencyLoader(PlaceholderHookLoader::load)
-    );
-  }
-
-  protected PathPlugin(JavaPluginLoader loader, PluginDescriptionFile descriptionFile,
-                       File dataFolder, File file) {
-    super(loader, descriptionFile, dataFolder, file);
-    instance = this;
-    extensions = new ArrayList<>();
-    dependencies = Set.of(
-        new DependencyLoader(PlaceholderHookLoader::load)
+        new DependencyLoader("PlaceholderAPI", PlaceholderHookLoader::load, false)
     );
   }
 
@@ -188,7 +176,6 @@ public class PathPlugin extends JavaPlugin {
 
     CommandAPI.onLoad(new CommandAPIConfig()
         .verboseOutput(configuration.isVerbose())
-        .useLatestNMSVersion(true)
         .initializeNBTAPI(NBTContainer.class, NBTContainer::new));
   }
 
