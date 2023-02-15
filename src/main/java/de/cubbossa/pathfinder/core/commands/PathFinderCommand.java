@@ -33,6 +33,8 @@ public class PathFinderCommand extends CommandTree {
    */
   public PathFinderCommand() {
     super("pathfinder");
+    withAliases("pf");
+
     withRequirement(sender ->
         sender.hasPermission(PathPlugin.PERM_CMD_PF_HELP)
             || sender.hasPermission(PathPlugin.PERM_CMD_PF_INFO)
@@ -40,6 +42,12 @@ public class PathFinderCommand extends CommandTree {
             || sender.hasPermission(PathPlugin.PERM_CMD_PF_EXPORT)
             || sender.hasPermission(PathPlugin.PERM_CMD_PF_RELOAD)
     );
+
+    executes((sender, args) -> {
+      TranslationHandler.getInstance().sendMessage(Messages.HELP.format(
+          Placeholder.parsed("version", PathPlugin.getInstance().getDescription().getVersion())
+      ), sender);
+    });
 
     then(new LiteralArgument("info")
         .withPermission(PathPlugin.PERM_CMD_PF_INFO)
@@ -56,7 +64,7 @@ public class PathFinderCommand extends CommandTree {
     then(new LiteralArgument("help")
         .withPermission(PathPlugin.PERM_CMD_PF_HELP)
         .executes((commandSender, objects) -> {
-          TranslationHandler.getInstance().sendMessage(Messages.HELP, commandSender);
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_HELP, commandSender);
         }));
 
     then(new LiteralArgument("export")
