@@ -11,7 +11,6 @@ import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.CommandTree;
-import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +48,7 @@ public class PathFinderCommand extends CommandTree {
       ), sender);
     });
 
-    then(new LiteralArgument("info")
+    then(CustomArgs.literal("info")
         .withPermission(PathPlugin.PERM_CMD_PF_INFO)
         .executes((commandSender, objects) -> {
           PluginDescriptionFile desc = PathPlugin.getInstance().getDescription();
@@ -61,15 +60,15 @@ public class PathFinderCommand extends CommandTree {
               .build()), commandSender);
         }));
 
-    then(new LiteralArgument("help")
+    then(CustomArgs.literal("help")
         .withPermission(PathPlugin.PERM_CMD_PF_HELP)
         .executes((commandSender, objects) -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_HELP, commandSender);
         }));
 
-    then(new LiteralArgument("export")
+    then(CustomArgs.literal("export")
         .withPermission(PathPlugin.PERM_CMD_PF_EXPORT)
-        .then(new LiteralArgument("sqlite")
+        .then(CustomArgs.literal("sqlite")
             .then(new TextArgument("filename")
                 .executes((commandSender, objects) -> {
                   PathPlugin pl = PathPlugin.getInstance();
@@ -93,7 +92,7 @@ public class PathFinderCommand extends CommandTree {
                 })
             )
         )
-        .then(new LiteralArgument("yaml")
+        .then(CustomArgs.literal("yaml")
             .then(new TextArgument("directory")
                 .executes((commandSender, objects) -> {
                   PathPlugin pl = PathPlugin.getInstance();
@@ -120,12 +119,12 @@ public class PathFinderCommand extends CommandTree {
         )
     );
 
-    then(new LiteralArgument("import")
+    then(CustomArgs.literal("import")
         .withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
-        .then(new VisualizerImportCommand(new LiteralArgument("visualizer"), 0))
+        .then(new VisualizerImportCommand(CustomArgs.literal("visualizer"), 0))
     );
 
-    then(new LiteralArgument("reload")
+    then(CustomArgs.literal("reload")
         .withPermission(PathPlugin.PERM_CMD_PF_RELOAD)
 
         .executes((sender, objects) -> {
@@ -161,7 +160,7 @@ public class PathFinderCommand extends CommandTree {
           });
         })
 
-        .then(new LiteralArgument("language")
+        .then(CustomArgs.literal("language")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
 
@@ -194,7 +193,7 @@ public class PathFinderCommand extends CommandTree {
             })
         )
 
-        .then(new LiteralArgument("effects")
+        .then(CustomArgs.literal("effects")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
 
@@ -225,7 +224,7 @@ public class PathFinderCommand extends CommandTree {
               });
             })
         )
-        .then(new LiteralArgument("config")
+        .then(CustomArgs.literal("config")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
 

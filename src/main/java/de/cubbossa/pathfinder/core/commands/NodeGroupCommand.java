@@ -14,7 +14,6 @@ import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +57,7 @@ public class NodeGroupCommand extends CommandTree {
         || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
     );
 
-    then(new LiteralArgument("list")
+    then(CustomArgs.literal("list")
         .withPermission(PathPlugin.PERM_CMD_NG_LIST)
         .executes((sender, objects) -> {
           listGroups(sender, 1);
@@ -68,7 +67,7 @@ public class NodeGroupCommand extends CommandTree {
               listGroups(sender, (int) objects[offset]);
             })));
 
-    then(new LiteralArgument("create")
+    then(CustomArgs.literal("create")
         .withPermission(PathPlugin.PERM_CMD_NG_CREATE)
         .then(new StringArgument("name")
             .executes((sender, args) -> {
@@ -76,21 +75,21 @@ public class NodeGroupCommand extends CommandTree {
                   new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
             })));
 
-    then(new LiteralArgument("delete")
+    then(CustomArgs.literal("delete")
         .withPermission(PathPlugin.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
               deleteGroup(sender, (NodeGroup) objects[offset]);
             })));
 
-    then(new LiteralArgument("search-terms")
+    then(CustomArgs.literal("search-terms")
         .withRequirement(sender ->
             sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
                 || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
                 || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
         )
 
-        .then(new LiteralArgument("add")
+        .then(CustomArgs.literal("add")
             .withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
@@ -98,7 +97,7 @@ public class NodeGroupCommand extends CommandTree {
                       searchTermsAdd(sender, (NodeGroup) objects[offset],
                           (String) objects[offset + 1]);
                     }))))
-        .then(new LiteralArgument("remove")
+        .then(CustomArgs.literal("remove")
             .withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
@@ -106,13 +105,13 @@ public class NodeGroupCommand extends CommandTree {
                       searchTermsRemove(sender, (NodeGroup) objects[offset],
                           (String) objects[offset + 1]);
                     }))))
-        .then(new LiteralArgument("list")
+        .then(CustomArgs.literal("list")
             .withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
             .then(CustomArgs.nodeGroupArgument("group")
                 .executes((sender, objects) -> {
                   searchTermsList(sender, (NodeGroup) objects[offset]);
                 }))));
-    then(new LiteralArgument("edit")
+    then(CustomArgs.literal("edit")
         .withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
@@ -120,7 +119,7 @@ public class NodeGroupCommand extends CommandTree {
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
         )
         .then(CustomArgs.nodeGroupArgument("group")
-            .then(new LiteralArgument("name")
+            .then(CustomArgs.literal("name")
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
                 .then(CustomArgs.miniMessageArgument("name",
                         i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
@@ -129,7 +128,7 @@ public class NodeGroupCommand extends CommandTree {
                           (String) objects[offset + 1]);
                     })
                 ))
-            .then(new LiteralArgument("permission")
+            .then(CustomArgs.literal("permission")
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
                 .then(new GreedyStringArgument("permission")
                     .executes((sender, objects) -> {
@@ -137,7 +136,7 @@ public class NodeGroupCommand extends CommandTree {
                           (String) objects[offset + 1]);
                     })
                 ))
-            .then(new LiteralArgument("navigable")
+            .then(CustomArgs.literal("navigable")
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
@@ -145,14 +144,14 @@ public class NodeGroupCommand extends CommandTree {
                           (Boolean) objects[offset + 1]);
                     })
                 ))
-            .then(new LiteralArgument("discoverable")
+            .then(CustomArgs.literal("discoverable")
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
                       setGroupDiscoverable(sender, (NodeGroup) objects[offset],
                           (Boolean) objects[offset + 1]);
                     })))
-            .then(new LiteralArgument("find-distance")
+            .then(CustomArgs.literal("find-distance")
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
                 .then(new FloatArgument("value", 0.01f)
                     .executes((sender, objects) -> {

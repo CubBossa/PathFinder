@@ -8,7 +8,6 @@ import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChange
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.arguments.LiteralArgument;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -48,7 +47,7 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
   public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
                                         int argumentOffset) {
     return tree
-        .then(new LiteralArgument("add")
+        .then(CustomArgs.literal("add")
             .then(CustomArgs.pathVisualizerArgument("child")
                 .executes((sender, objects) -> {
                   CombinedVisualizer vis = (CombinedVisualizer) objects[0];
@@ -63,7 +62,7 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
                       Placeholder.component("child", target.getDisplayName())
                   ), sender);
                 })))
-        .then(new LiteralArgument("remove")
+        .then(CustomArgs.literal("remove")
             .then(CustomArgs.pathVisualizerArgument("child")
                 .executes((sender, objects) -> {
                   CombinedVisualizer vis = (CombinedVisualizer) objects[0];
@@ -79,7 +78,7 @@ public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
                           Placeholder.component("child", target.getDisplayName())
                       ), sender);
                 })))
-        .then(new LiteralArgument("clear")
+        .then(CustomArgs.literal("clear")
             .executes((commandSender, objects) -> {
               CombinedVisualizer vis = (CombinedVisualizer) objects[0];
               Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();

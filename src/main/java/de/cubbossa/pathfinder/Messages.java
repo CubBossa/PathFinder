@@ -107,6 +107,12 @@ public class Messages {
       <dark_gray>» </dark_gray><gray><warm>/gps</warm> - Find the shortest way to a nodegroup
       """)
   public static final Message CMD_HELP = new Message("command.help");
+
+  @MessageMeta("<red>Your command is incomplete. Use one of the syntaxes below:")
+  public static final Message CMD_INCOMPLETE = new Message("command.error.incomplete.title");
+  @MessageMeta(value = "<dark_gray>» </dark_gray><cmd>", placeholders = "cmd")
+  public static final Message CMD_INCOMPLETE_LINE = new Message("command.error.incomplete.line");
+
   @MessageMeta(value = """
       <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
       <dark_gray>» </dark_gray><gray>Authors: <warm><authors></warm>

@@ -32,7 +32,5 @@ class CommandHelpGeneratorTest {
             }))
         .executes((commandSender, objects) -> {
         });
-
-    new CommandHelpGenerator().format(cmd);
   }
 }

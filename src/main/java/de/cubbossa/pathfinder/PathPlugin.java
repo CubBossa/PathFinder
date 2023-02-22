@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
@@ -154,13 +155,15 @@ public class PathPlugin extends JavaPlugin {
 
   private final Set<DependencyLoader> dependencies;
 
-  public PathPlugin() {
+  public PathPlugin() throws ClassNotFoundException {
     super();
     instance = this;
     extensions = new ArrayList<>();
     dependencies = Set.of(
         new DependencyLoader("PlaceholderAPI", PlaceholderHookLoader::load, false)
     );
+
+    this.getClassLoader().loadClass(RoadMapEditor.class.getName());
   }
 
   @SneakyThrows
@@ -176,6 +179,7 @@ public class PathPlugin extends JavaPlugin {
 
     CommandAPI.onLoad(new CommandAPIConfig()
         .verboseOutput(configuration.isVerbose())
+        .dispatcherFile(new File(getDataFolder(), "tree.gson"))
         .initializeNBTAPI(NBTContainer.class, NBTContainer::new));
   }
 

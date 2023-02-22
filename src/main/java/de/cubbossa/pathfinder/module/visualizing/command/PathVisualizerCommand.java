@@ -11,6 +11,7 @@ import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -29,7 +30,7 @@ public class PathVisualizerCommand extends CommandTree {
     super("pathvisualizer");
     withAliases("visualizer");
 
-    then(new LiteralArgument("list")
+    then(CustomArgs.literal("list")
         .withPermission(PathPlugin.PERM_CMD_PV_LIST)
         .executes((commandSender, objects) -> {
           onList(commandSender, 1);
@@ -39,7 +40,7 @@ public class PathVisualizerCommand extends CommandTree {
               onList(commandSender, (Integer) objects[0]);
             })));
 
-    then(new LiteralArgument("create")
+    then(CustomArgs.literal("create")
         .withPermission(PathPlugin.PERM_CMD_PV_CREATE)
         .then(CustomArgs.visualizerTypeArgument("type")
             .then(new StringArgument("key")
@@ -48,33 +49,33 @@ public class PathVisualizerCommand extends CommandTree {
                       new NamespacedKey(PathPlugin.getInstance(), (String) objects[1]));
                 }))));
 
-    then(new LiteralArgument("delete")
+    then(CustomArgs.literal("delete")
         .withPermission(PathPlugin.PERM_CMD_PV_DELETE)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
               onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
-    then(new LiteralArgument("info")
+    then(CustomArgs.literal("info")
         .withPermission(PathPlugin.PERM_CMD_PV_INFO)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
               onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
-    then(new VisualizerImportCommand(new LiteralArgument("import"), 0));
+    then(new VisualizerImportCommand(CustomArgs.literal("import"), 0));
   }
 
   @Override
   public void register() {
 
-    LiteralArgument lit = new LiteralArgument("edit");
+    Argument<String> lit = CustomArgs.literal("edit");
     for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
 
       ArgumentTree typeArg = CustomArgs.pathVisualizerArgument("visualizer", type);
       type.appendEditCommand(typeArg, 0, 1);
 
-      typeArg.then(new LiteralArgument("name")
+      typeArg.then(CustomArgs.literal("name")
           .withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
           .then(CustomArgs.miniMessageArgument("name")
               .executes((commandSender, objects) -> {
@@ -84,7 +85,7 @@ public class PathVisualizerCommand extends CommandTree {
                           visualizer::getNameFormat, visualizer::setNameFormat);
                 }
               })));
-      typeArg.then(new LiteralArgument("permission")
+      typeArg.then(CustomArgs.literal("permission")
           .withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, objects) -> {
@@ -96,7 +97,7 @@ public class PathVisualizerCommand extends CommandTree {
                           Messages::formatPermission);
                 }
               })));
-      typeArg.then(new LiteralArgument("interval")
+      typeArg.then(CustomArgs.literal("interval")
           .withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
           .then(new IntegerArgument("ticks", 1)
               .executes((commandSender, objects) -> {

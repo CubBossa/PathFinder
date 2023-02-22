@@ -247,7 +247,7 @@
         <dependency>
             <groupId>dev.jorel</groupId>
             <artifactId>commandapi-shade</artifactId>
-            <version>8.7.4</version>
+            <version>8.7.5</version>
         </dependency>
 
         <dependency>

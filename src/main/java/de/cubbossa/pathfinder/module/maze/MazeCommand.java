@@ -4,13 +4,12 @@ import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
 
 public class MazeCommand extends CommandTree {
 
   public MazeCommand() {
     super("maze");
-    then(new LiteralArgument("generate")
+    then(CustomArgs.literal("generate")
         .then(new IntegerArgument("x")
             .then(new IntegerArgument("y")
                 .then(CustomArgs.roadMapArgument("roadmap")

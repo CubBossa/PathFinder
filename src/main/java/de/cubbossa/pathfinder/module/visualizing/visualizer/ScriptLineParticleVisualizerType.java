@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.util.Map;
 import javax.script.ScriptEngine;
@@ -59,7 +59,7 @@ public class ScriptLineParticleVisualizerType
   public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
                                         int argumentOffset) {
     return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
-        .then(new LiteralArgument("particle")
+        .then(CustomArgs.literal("particle")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -68,7 +68,7 @@ public class ScriptLineParticleVisualizerType
                             true, vis::getParticleFunction, vis::setParticleFunction);
                   }
                 })))
-        .then(new LiteralArgument("particle-data")
+        .then(CustomArgs.literal("particle-data")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -77,7 +77,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getParticleDataFunction, vis::setParticleDataFunction);
                   }
                 })))
-        .then(new LiteralArgument("particle-steps")
+        .then(CustomArgs.literal("particle-steps")
             .then(new IntegerArgument("amount", 1)
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -86,7 +86,7 @@ public class ScriptLineParticleVisualizerType
                             true, vis::getSchedulerSteps, vis::setSchedulerSteps);
                   }
                 })))
-        .then(new LiteralArgument("amount")
+        .then(CustomArgs.literal("amount")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -95,7 +95,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getAmountFunction, vis::setAmountFunction);
                   }
                 })))
-        .then(new LiteralArgument("speed")
+        .then(CustomArgs.literal("speed")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -104,7 +104,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getSpeedFunction, vis::setSpeedFunction);
                   }
                 })))
-        .then(new LiteralArgument("offset-x")
+        .then(CustomArgs.literal("offset-x")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -113,7 +113,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getParticleOffsetXFunction, vis::setParticleOffsetXFunction);
                   }
                 })))
-        .then(new LiteralArgument("offset-y")
+        .then(CustomArgs.literal("offset-y")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -122,7 +122,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getParticleOffsetYFunction, vis::setParticleOffsetYFunction);
                   }
                 })))
-        .then(new LiteralArgument("offset-z")
+        .then(CustomArgs.literal("offset-z")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -131,7 +131,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getParticleOffsetZFunction, vis::setParticleOffsetZFunction);
                   }
                 })))
-        .then(new LiteralArgument("path-x")
+        .then(CustomArgs.literal("path-x")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -140,7 +140,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getPathOffsetXFunction, vis::setPathOffsetXFunction);
                   }
                 })))
-        .then(new LiteralArgument("path-y")
+        .then(CustomArgs.literal("path-y")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
@@ -149,7 +149,7 @@ public class ScriptLineParticleVisualizerType
                             vis::getPathOffsetYFunction, vis::setPathOffsetYFunction);
                   }
                 })))
-        .then(new LiteralArgument("path-z")
+        .then(CustomArgs.literal("path-z")
             .then(new TextArgument("java-script")
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
