@@ -14,11 +14,7 @@ import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.DoubleArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
-import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,11 +29,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-public class WaypointCommand extends CommandTree {
+public class WaypointCommand extends Command {
 
   public WaypointCommand() {
     super("waypoint");
     withAliases("node");
+    withGeneratedHelp();
 
     withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_WP_INFO)
         || sender.hasPermission(PathPlugin.PERM_CMD_WP_LIST)
@@ -53,7 +50,7 @@ public class WaypointCommand extends CommandTree {
         || sender.hasPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
     );
 
-    then(new LiteralArgument("info")
+    then(CustomArgs.literal("info")
         .withPermission(PathPlugin.PERM_CMD_WP_INFO)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
@@ -61,26 +58,28 @@ public class WaypointCommand extends CommandTree {
             })
         )
     );
-    then(new LiteralArgument("list")
+    then(CustomArgs.literal("list")
         .withPermission(PathPlugin.PERM_CMD_WP_LIST)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               onList(player, (NodeSelection) objects[0], 1);
             })
-            .then(new IntegerArgument("page", 1)
+            .then(CustomArgs.integer("page", 1)
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onList(player, (NodeSelection) objects[0], (Integer) objects[1]);
                 })
             ))
     );
-    then(new LiteralArgument("create")
+    then(CustomArgs.literal("create")
         .withPermission(PathPlugin.PERM_CMD_WP_CREATE)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executesPlayer((player, objects) -> {
               onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
                   player.getLocation().add(new Vector(0, 1, 0)));
             })
-            .then(new LocationArgument("location")
+            .then(CustomArgs.location("location")
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
                       (Location) objects[1]);
@@ -91,7 +90,7 @@ public class WaypointCommand extends CommandTree {
                   onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
                       player.getLocation().add(new Vector(0, 1, 0)));
                 })
-                .then(new LocationArgument("location")
+                .then(CustomArgs.location("location")
                     .executesPlayer((player, objects) -> {
                       onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
                           (Location) objects[2]);
@@ -100,7 +99,7 @@ public class WaypointCommand extends CommandTree {
             )
         )
     );
-    then(new LiteralArgument("delete")
+    then(CustomArgs.literal("delete")
         .withPermission(PathPlugin.PERM_CMD_WP_DELETE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
@@ -108,7 +107,7 @@ public class WaypointCommand extends CommandTree {
             })
         )
     );
-    then(new LiteralArgument("tphere")
+    then(CustomArgs.literal("tphere")
         .withPermission(PathPlugin.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
@@ -116,17 +115,17 @@ public class WaypointCommand extends CommandTree {
             })
         )
     );
-    then(new LiteralArgument("tp")
+    then(CustomArgs.literal("tp")
         .withPermission(PathPlugin.PERM_CMD_WP_TP)
         .then(CustomArgs.nodeSelectionArgument("nodes")
-            .then(new LocationArgument("location", LocationType.PRECISE_POSITION)
+            .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
                   onTp(player, (NodeSelection) objects[0], (Location) objects[1]);
                 })
             )
         )
     );
-    then(new LiteralArgument("connect")
+    then(CustomArgs.literal("connect")
         .withPermission(PathPlugin.PERM_CMD_WP_CONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .then(CustomArgs.nodeSelectionArgument("end")
@@ -136,13 +135,14 @@ public class WaypointCommand extends CommandTree {
             )
         )
     );
-    then(new LiteralArgument("disconnect")
+    then(CustomArgs.literal("disconnect")
         .withPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .executesPlayer((player, objects) -> {
               onDisconnect(player, (NodeSelection) objects[0], null);
             })
             .then(CustomArgs.nodeSelectionArgument("end")
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onDisconnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })
@@ -150,9 +150,9 @@ public class WaypointCommand extends CommandTree {
         )
 
     );
-    then(new LiteralArgument("edit")
+    then(CustomArgs.literal("edit")
         .then(CustomArgs.nodeSelectionArgument("nodes")
-            .then(new LiteralArgument("curve-length")
+            .then(CustomArgs.literal("curve-length")
                 .withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
                 .then(new DoubleArgument("length", 0.001)
                     .executesPlayer((player, objects) -> {
@@ -160,12 +160,12 @@ public class WaypointCommand extends CommandTree {
                     })
                 )
             )
-            .then(new LiteralArgument("reset-curve-length")
+            .then(CustomArgs.literal("reset-curve-length")
                 .withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
                 .executesPlayer((player, objects) -> {
                   onSetTangent(player, (NodeSelection) objects[0], null);
                 }))
-            .then(new LiteralArgument("addgroup")
+            .then(CustomArgs.literal("addgroup")
                 .withPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
@@ -173,7 +173,7 @@ public class WaypointCommand extends CommandTree {
                     })
                 )
             )
-            .then(new LiteralArgument("removegroup")
+            .then(CustomArgs.literal("removegroup")
                 .withPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
@@ -181,7 +181,7 @@ public class WaypointCommand extends CommandTree {
                     })
                 )
             )
-            .then(new LiteralArgument("cleargroups")
+            .then(CustomArgs.literal("cleargroups")
                 .withPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, objects) -> {
                   onClearGroups(player, (NodeSelection) objects[0]);

@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.core.commands;
 
+import static de.cubbossa.pathfinder.core.commands.CommandArgument.arg;
+
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -27,7 +29,11 @@ import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.CustomArgument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
+import dev.jorel.commandapi.arguments.IntegerArgument;
+import dev.jorel.commandapi.arguments.LocationArgument;
+import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
+import dev.jorel.commandapi.arguments.PlayerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.util.ArrayList;
@@ -46,9 +52,8 @@ import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -74,6 +79,35 @@ public class CustomArgs {
         .map(s -> "<" + s + ">").toList());
   }
 
+  public CommandArgument<Player, PlayerArgument> player(String node) {
+    return new CommandArgument<>(new PlayerArgument(node));
+  }
+
+  public CommandArgument<Location, LocationArgument> location(String node) {
+    return new CommandArgument<>(new LocationArgument(node));
+  }
+
+  public CommandArgument<Location, LocationArgument> location(String node, LocationType type) {
+    return new CommandArgument<>(new LocationArgument(node, type));
+  }
+
+
+  public CustomLiteralArgument literal(String literal) {
+    return new CustomLiteralArgument(literal);
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node) {
+    return new CommandArgument<>(new IntegerArgument(node));
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node, int min) {
+    return new CommandArgument<>(new IntegerArgument(node, min));
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node, int min, int max) {
+    return new CommandArgument<>(new IntegerArgument(node, min, max));
+  }
+
   /**
    * An argument that suggests and resolves enum fields in lower case syntax.
    *
@@ -83,13 +117,13 @@ public class CustomArgs {
    * @return The argument
    */
   public <E extends Enum<E>> Argument<E> enumArgument(String nodeName, Class<E> scope) {
-    return new CustomArgument<>(new StringArgument(nodeName), info -> {
+    return arg(new CustomArgument<>(new StringArgument(nodeName), info -> {
       try {
         return Enum.valueOf(scope, info.input().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new CustomArgument.CustomArgumentException("Invalid input value: " + info.input());
       }
-    }).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+    })).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
       Arrays.stream(scope.getEnumConstants())
           .map(Enum::toString)
           .map(String::toLowerCase)
@@ -121,7 +155,7 @@ public class CustomArgs {
       String nodeName,
       Function<SuggestionInfo, Collection<String>> supplier
   ) {
-    return new GreedyStringArgument(nodeName).replaceSuggestions((info, builder) -> {
+    return arg(new GreedyStringArgument(nodeName)).replaceSuggestions((info, builder) -> {
 
       int offset = builder.getInput().length();
       String[] splits = info.currentInput().split(" ", -1);
@@ -164,32 +198,15 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a roadmap argument instance
    */
-  public Argument<RoadMap> roadMapArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-      return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
-    }).includeSuggestions(
-        suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
-            .map(RoadMap::getKey).collect(Collectors.toList())));
-  }
-
-  /**
-   * Provides a world argument, which suggests all loaded world names and parses the user input
-   * into the world instance by resolving it via name.
-   *
-   * @param nodeName The name of the command argument in the command structure
-   * @return a roadmap argument instance
-   */
-  public Argument<World> worldArgument(String nodeName) {
-    return new CustomArgument<>(new StringArgument(nodeName), customArgumentInfo -> {
-      World world = Bukkit.getWorld(customArgumentInfo.currentInput());
-      if (world == null) {
-        throw new CustomArgument.CustomArgumentException("There is no world with this name.");
-      }
-      return world;
-    }).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
-      Bukkit.getWorlds().stream().map(World::getName).forEach(suggestionsBuilder::suggest);
-      return suggestionsBuilder.buildFuture();
-    });
+  public CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>> roadMapArgument(
+      String nodeName) {
+    return (CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+          return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
+        }))
+        .includeSuggestions(
+            suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
+                .map(RoadMap::getKey).collect(Collectors.toList())));
   }
 
   /**
@@ -200,14 +217,14 @@ public class CustomArgs {
    * @return a path visualizer argument instance
    */
   public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
           .get(customArgumentInfo.currentInput());
       if (vis == null) {
         throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
       }
       return vis;
-    }).includeSuggestions(suggestNamespacedKeys(sender ->
+    })).includeSuggestions(suggestNamespacedKeys(sender ->
         new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().keySet())
     ));
   }
@@ -223,7 +240,7 @@ public class CustomArgs {
    */
   public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName,
                                                                          VisualizerType<?> type) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
           .get(customArgumentInfo.currentInput());
       if (vis == null) {
@@ -235,7 +252,7 @@ public class CustomArgs {
                 + type.getCommandName());
       }
       return vis;
-    }).includeSuggestions(suggestNamespacedKeys(sender ->
+    })).includeSuggestions(suggestNamespacedKeys(sender ->
         new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().entrySet().stream()
             .filter(entry -> entry.getValue().getType().equals(type))
             .map(Map.Entry::getKey)
@@ -291,7 +308,7 @@ public class CustomArgs {
    * @return a node type argument instance
    */
   public <T extends Node> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       NodeType<T> type =
           NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
       if (type == null) {
@@ -299,7 +316,7 @@ public class CustomArgs {
             "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
       }
       return type;
-    }).includeSuggestions(
+    })).includeSuggestions(
         suggestNamespacedKeys(sender -> NodeTypeHandler.getInstance().getTypes().keySet()));
   }
 
@@ -314,18 +331,20 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node selection argument instance
    */
-  public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
-    return new CustomArgument<>(new TextArgument(nodeName), info -> {
-      if (info.sender() instanceof Player player) {
-        try {
-          return SelectionUtils.getNodeSelection(player,
-              info.input().substring(1, info.input().length() - 1));
-        } catch (CommandSyntaxException | ParseCancellationException e) {
-          throw new CustomArgument.CustomArgumentException(e.getMessage());
-        }
-      }
-      return new NodeSelection();
-    }).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
+  public CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>> nodeSelectionArgument(
+      String nodeName) {
+    return (CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>>) arg(
+        new CustomArgument<>(new TextArgument(nodeName), info -> {
+          if (info.sender() instanceof Player player) {
+            try {
+              return SelectionUtils.getNodeSelection(player,
+                  info.input().substring(1, info.input().length() - 1));
+            } catch (CommandSyntaxException | ParseCancellationException e) {
+              throw new CustomArgument.CustomArgumentException(e.getMessage());
+            }
+          }
+          return new NodeSelection();
+        })).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
   }
 
   /**
@@ -335,14 +354,17 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node group argument instance
    */
-  public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-      NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
-      if (group == null) {
-        throw new CustomArgument.CustomArgumentException("There is no nodegroup with this name.");
-      }
-      return group;
-    }).replaceSuggestions(suggestNamespacedKeys((sender -> {
+  public CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>> nodeGroupArgument(
+      String nodeName) {
+    return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
+          NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
+          if (group == null) {
+            throw new CustomArgument.CustomArgumentException(
+                "There is no nodegroup with this name.");
+          }
+          return group;
+        })).replaceSuggestions(suggestNamespacedKeys((sender -> {
       return NodeGroupHandler.getInstance().getNodeGroups().stream()
           .map(NodeGroup::getKey)
           .collect(Collectors.toList());
@@ -355,16 +377,18 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return The CustomArgument instance
    */
-  public Argument<? extends Discoverable> discoverableArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-      NodeGroup group =
-          NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
-      if (group == null) {
-        throw new CustomArgument.CustomArgumentException(
-            "There is no discoverable object with this name.");
-      }
-      return group;
-    }).includeSuggestions(
+  public CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>> discoverableArgument(
+      String nodeName) {
+    return (CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+          NodeGroup group =
+              NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
+          if (group == null) {
+            throw new CustomArgument.CustomArgumentException(
+                "There is no discoverable object with this name.");
+          }
+          return group;
+        })).includeSuggestions(
         suggestNamespacedKeys(sender -> NodeGroupHandler.getInstance().getNodeGroups().stream()
             .map(NodeGroup::getKey).collect(Collectors.toList())));
   }
@@ -376,7 +400,7 @@ public class CustomArgs {
    * @return The CustomArgument instance
    */
   public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
-    return new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
+    return arg(new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
       if (!(context.sender() instanceof Player player)) {
         throw new CustomArgument.CustomArgumentException("Only for players");
       }
@@ -397,7 +421,7 @@ public class CustomArgs {
       } catch (Throwable t) {
         throw new CustomArgument.CustomArgumentException(t.getMessage());
       }
-    })
+    }))
         .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
           if (!(suggestionInfo.sender() instanceof Player player)) {
             return suggestionsBuilder.buildFuture();
@@ -459,7 +483,7 @@ public class CustomArgs {
    * @return a visualizer type argument instance
    */
   public Argument<? extends VisualizerType<?>> visualizerTypeArgument(String nodeName) {
-    return new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
       VisualizerType<?> type =
           VisualizerHandler.getInstance().getVisualizerType(customArgumentInfo.currentInput());
@@ -468,7 +492,7 @@ public class CustomArgs {
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");
       }
       return type;
-    }).includeSuggestions(suggestNamespacedKeys(
+    })).includeSuggestions(suggestNamespacedKeys(
         sender -> VisualizerHandler.getInstance().getVisualizerTypes().keySet()));
   }
 

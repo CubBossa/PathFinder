@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
 
-public class CancelPathCommand extends CommandTree {
+public class CancelPathCommand extends Command {
 
   public CancelPathCommand() {
     super("cancelpath");

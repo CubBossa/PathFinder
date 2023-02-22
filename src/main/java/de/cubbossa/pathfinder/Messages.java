@@ -87,19 +87,32 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix>Successfully reloaded config files in <offset_light><ms></offset_light><offset>ms</offset>.", placeholders = "ms")
   public static final Message RELOAD_SUCCESS_CFG = new Message("command.reload.success.config");
 
+  @MessageMeta(value = """
+      <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
+      <gray>Running <offset>Pathfinder v<version></offset>.
+            
+      <gray>Require help? Checkout the <warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></warm>.
+      <gray>Use <warm>/pf help</warm> to view available commands.
+      """, placeholders = {"version"})
+  public static final Message HELP = new Message("general.help");
   @MessageMeta("""
       <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
-      <gray>See this tutorial for a full description on
-      <gray>On how to get started with the plugin.
+      <gray>Require help? Checkout the <warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></warm>.
       			
       <white>Commands:</white>
-      <dark_gray>» </dark_gray><gray><warm>/roadmap</warm> - Edit roadmaps, that group together waypoints
-      <dark_gray>» </dark_gray><gray><warm>/nodegroup</warm> - Edit nodegroups, that add behaviour to groups of nodes
-      <dark_gray>» </dark_gray><gray><warm>/node</warm> - Create, edit and delete nodes
-      <dark_gray>» </dark_gray><gray><warm>/pathvisualizer</warm> - Edit pathvisualizers, to specify particles and more
+      <dark_gray>» </dark_gray><gray><warm>/roadmap</warm> - Group waypoints in roadmaps
+      <dark_gray>» </dark_gray><gray><warm>/nodegroup</warm> - Add behaviour to multiple waypoints
+      <dark_gray>» </dark_gray><gray><warm>/waypoint</warm> - Create, edit and delete waypoints
+      <dark_gray>» </dark_gray><gray><warm>/pathvisualizer</warm> - Compass, particles, placeholders and more
       <dark_gray>» </dark_gray><gray><warm>/gps</warm> - Find the shortest way to a nodegroup
       """)
-  public static final Message HELP = new Message("command.help");
+  public static final Message CMD_HELP = new Message("command.help");
+
+  @MessageMeta("<red>Your command is incomplete. Use one of the syntaxes below:")
+  public static final Message CMD_INCOMPLETE = new Message("command.error.incomplete.title");
+  @MessageMeta(value = "<dark_gray>» </dark_gray><cmd>", placeholders = "cmd")
+  public static final Message CMD_INCOMPLETE_LINE = new Message("command.error.incomplete.line");
+
   @MessageMeta(value = """
       <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
       <dark_gray>» </dark_gray><gray>Authors: <warm><authors></warm>
