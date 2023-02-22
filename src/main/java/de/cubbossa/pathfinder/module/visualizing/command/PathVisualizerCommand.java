@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -10,10 +11,8 @@ import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import java.util.ArrayList;
@@ -24,23 +23,26 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
-public class PathVisualizerCommand extends CommandTree {
+public class PathVisualizerCommand extends Command {
 
   public PathVisualizerCommand() {
     super("pathvisualizer");
     withAliases("visualizer");
+    withGeneratedHelp();
 
     then(CustomArgs.literal("list")
         .withPermission(PathPlugin.PERM_CMD_PV_LIST)
         .executes((commandSender, objects) -> {
           onList(commandSender, 1);
         })
-        .then(new IntegerArgument("page", 1)
+        .then(CustomArgs.integer("page", 1)
+            .displayAsOptional()
             .executes((commandSender, objects) -> {
               onList(commandSender, (Integer) objects[0]);
             })));
 
     then(CustomArgs.literal("create")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_PV_CREATE)
         .then(CustomArgs.visualizerTypeArgument("type")
             .then(new StringArgument("key")
@@ -50,6 +52,7 @@ public class PathVisualizerCommand extends CommandTree {
                 }))));
 
     then(CustomArgs.literal("delete")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_PV_DELETE)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
@@ -57,13 +60,14 @@ public class PathVisualizerCommand extends CommandTree {
             })));
 
     then(CustomArgs.literal("info")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_PV_INFO)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
               onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
-    then(new VisualizerImportCommand(CustomArgs.literal("import"), 0));
+    then(new VisualizerImportCommand("import", 0));
   }
 
   @Override
@@ -99,7 +103,7 @@ public class PathVisualizerCommand extends CommandTree {
               })));
       typeArg.then(CustomArgs.literal("interval")
           .withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
-          .then(new IntegerArgument("ticks", 1)
+          .then(CustomArgs.integer("ticks", 1)
               .executes((commandSender, objects) -> {
                 if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
                   VisualizerHandler.getInstance()

@@ -30,8 +30,10 @@ import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.CustomArgument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
+import dev.jorel.commandapi.arguments.LocationArgument;
+import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
+import dev.jorel.commandapi.arguments.PlayerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.util.ArrayList;
@@ -50,6 +52,7 @@ import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -76,20 +79,33 @@ public class CustomArgs {
         .map(s -> "<" + s + ">").toList());
   }
 
-  public LiteralArgument literal(String literal) {
-    return new LiteralArgument(literal);
+  public CommandArgument<Player, PlayerArgument> player(String node) {
+    return new CommandArgument<>(new PlayerArgument(node));
   }
 
-  public IntegerArgument integer(String node) {
-    return new IntegerArgument(node);
+  public CommandArgument<Location, LocationArgument> location(String node) {
+    return new CommandArgument<>(new LocationArgument(node));
   }
 
-  public IntegerArgument integer(String node, int min) {
-    return new IntegerArgument(node, min);
+  public CommandArgument<Location, LocationArgument> location(String node, LocationType type) {
+    return new CommandArgument<>(new LocationArgument(node, type));
   }
 
-  public IntegerArgument integer(String node, int min, int max) {
-    return new IntegerArgument(node, min, max);
+
+  public CustomLiteralArgument literal(String literal) {
+    return new CustomLiteralArgument(literal);
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node) {
+    return new CommandArgument<>(new IntegerArgument(node));
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node, int min) {
+    return new CommandArgument<>(new IntegerArgument(node, min));
+  }
+
+  public CommandArgument<Integer, IntegerArgument> integer(String node, int min, int max) {
+    return new CommandArgument<>(new IntegerArgument(node, min, max));
   }
 
   /**
@@ -182,12 +198,15 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a roadmap argument instance
    */
-  public Argument<RoadMap> roadMapArgument(String nodeName) {
-    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-      return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
-    })).includeSuggestions(
-        suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
-            .map(RoadMap::getKey).collect(Collectors.toList())));
+  public CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>> roadMapArgument(
+      String nodeName) {
+    return (CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+          return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
+        }))
+        .includeSuggestions(
+            suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
+                .map(RoadMap::getKey).collect(Collectors.toList())));
   }
 
   /**
@@ -312,18 +331,20 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node selection argument instance
    */
-  public Argument<NodeSelection> nodeSelectionArgument(String nodeName) {
-    return arg(new CustomArgument<>(new TextArgument(nodeName), info -> {
-      if (info.sender() instanceof Player player) {
-        try {
-          return SelectionUtils.getNodeSelection(player,
-              info.input().substring(1, info.input().length() - 1));
-        } catch (CommandSyntaxException | ParseCancellationException e) {
-          throw new CustomArgument.CustomArgumentException(e.getMessage());
-        }
-      }
-      return new NodeSelection();
-    })).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
+  public CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>> nodeSelectionArgument(
+      String nodeName) {
+    return (CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>>) arg(
+        new CustomArgument<>(new TextArgument(nodeName), info -> {
+          if (info.sender() instanceof Player player) {
+            try {
+              return SelectionUtils.getNodeSelection(player,
+                  info.input().substring(1, info.input().length() - 1));
+            } catch (CommandSyntaxException | ParseCancellationException e) {
+              throw new CustomArgument.CustomArgumentException(e.getMessage());
+            }
+          }
+          return new NodeSelection();
+        })).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
   }
 
   /**
@@ -333,14 +354,17 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node group argument instance
    */
-  public Argument<NodeGroup> nodeGroupArgument(String nodeName) {
-    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-      NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
-      if (group == null) {
-        throw new CustomArgument.CustomArgumentException("There is no nodegroup with this name.");
-      }
-      return group;
-    })).replaceSuggestions(suggestNamespacedKeys((sender -> {
+  public CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>> nodeGroupArgument(
+      String nodeName) {
+    return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
+          NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
+          if (group == null) {
+            throw new CustomArgument.CustomArgumentException(
+                "There is no nodegroup with this name.");
+          }
+          return group;
+        })).replaceSuggestions(suggestNamespacedKeys((sender -> {
       return NodeGroupHandler.getInstance().getNodeGroups().stream()
           .map(NodeGroup::getKey)
           .collect(Collectors.toList());
@@ -353,16 +377,18 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return The CustomArgument instance
    */
-  public Argument<? extends Discoverable> discoverableArgument(String nodeName) {
-    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-      NodeGroup group =
-          NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
-      if (group == null) {
-        throw new CustomArgument.CustomArgumentException(
-            "There is no discoverable object with this name.");
-      }
-      return group;
-    })).includeSuggestions(
+  public CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>> discoverableArgument(
+      String nodeName) {
+    return (CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>>) arg(
+        new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
+          NodeGroup group =
+              NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
+          if (group == null) {
+            throw new CustomArgument.CustomArgumentException(
+                "There is no discoverable object with this name.");
+          }
+          return group;
+        })).includeSuggestions(
         suggestNamespacedKeys(sender -> NodeGroupHandler.getInstance().getNodeGroups().stream()
             .map(NodeGroup::getKey).collect(Collectors.toList())));
   }

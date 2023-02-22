@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.util.Map;
 import javax.script.ScriptEngine;
@@ -78,7 +77,7 @@ public class ScriptLineParticleVisualizerType
                   }
                 })))
         .then(CustomArgs.literal("particle-steps")
-            .then(new IntegerArgument("amount", 1)
+            .then(CustomArgs.integer("amount", 1)
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
                     VisualizerHandler.getInstance()

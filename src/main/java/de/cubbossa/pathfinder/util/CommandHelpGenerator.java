@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
+import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CommandArgument;
+import de.cubbossa.pathfinder.core.commands.CustomLiteralArgument;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.ArgumentTreeLike;
 import dev.jorel.commandapi.CommandTree;
@@ -11,14 +13,20 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class CommandHelpGenerator {
+
+  private static PlainTextComponentSerializer TO_PLAIN = PlainTextComponentSerializer.builder()
+      .build();
 
   private static final TextColor[] ARG_COLORS = {
       NamedTextColor.AQUA,
@@ -33,7 +41,7 @@ public class CommandHelpGenerator {
 
   public List<ComponentLike> format(ArgumentTreeLike<?, ?> tree, int depth) {
 
-    List<ComponentLike> components = new ArrayList<>();
+    SortedMap<String, ComponentLike> components = new TreeMap<>();
     List<ArgumentTreeLike<?, ?>> leaves = findLeaves(tree);
 
     for (ArgumentTreeLike<?, ?> leaf : leaves) {
@@ -64,24 +72,22 @@ public class CommandHelpGenerator {
 
       String wiki = getWiki(leaf);
       if (wiki != null) {
-        cmd = cmd
+        cmd = cmd.append(Component.text(" (i)", NamedTextColor.GRAY))
+            .hoverEvent(Component.text("Open WIKI"))
             .clickEvent(ClickEvent.openUrl(wiki));
       }
 
-      String shortDesc = getShortDesc(leaf);
-      if (shortDesc != null) {
-        cmd = cmd.append(Component.text(" - " + shortDesc, NamedTextColor.WHITE));
-      }
-
-      components.add(cmd);
+      components.put(TO_PLAIN.serialize(cmd), cmd);
     }
-    return components;
+    return new ArrayList<>(components.values());
   }
 
   private String getShortDesc(ArgumentTreeLike<?, ?> tree) {
     ArgumentTreeLike<?, ?> current = tree;
     while (current != null) {
       if (current instanceof CommandArgument<?, ?> arg && arg.getDescription() != null) {
+        return arg.getDescription();
+      } else if (current instanceof CustomLiteralArgument arg && arg.getDescription() != null) {
         return arg.getDescription();
       } else if (current instanceof CommandTree cmd && cmd.getShortDescription() != null) {
         return cmd.getShortDescription();
@@ -96,31 +102,60 @@ public class CommandHelpGenerator {
     while (current != null) {
       if (current instanceof CommandArgument<?, ?> arg && arg.getWiki() != null) {
         return arg.getWiki();
+      } else if (current instanceof CustomLiteralArgument arg && arg.getWiki() != null) {
+        return arg.getWiki();
       }
       current = current.getParent();
     }
     return null;
   }
 
+  private boolean executable(ArgumentTreeLike<?, ?> tree) {
+    ArgumentTreeLike<?, ?> current = tree;
+    while (current != null) {
+      if (!(current instanceof LiteralArgument || current instanceof Command)) {
+        return false;
+      }
+      current = current.getParent();
+    }
+    return true;
+  }
+
   private Component formatArgument(ArgumentTreeLike<?, ?> tree, int index) {
+    Component c = null;
+
     if (tree instanceof ArgumentTree arg) {
       Argument<?> o = arg.getArgument();
       String s = o.getNodeName();
       if (o instanceof LiteralArgument l) {
-        return Component.text(l.getLiteral());
+        c = Component.text(l.getLiteral());
       } else if (o instanceof MultiLiteralArgument ml) {
-        return Component.text(String.join("|", ml.getLiterals()));
+        c = Component.text(String.join("|", ml.getLiterals()));
       } else {
-        Component c = Component.text("‹" + s + "›");
+        c = Component.text("‹" + s + "›");
         if (tree instanceof CommandArgument<?, ?> cmdArg && cmdArg.isOptional()) {
           c = Component.text('[')
               .append(c)
               .append(Component.text(']'));
         }
-        return c.color(ARG_COLORS[index % 4]);
+        c = c.color(ARG_COLORS[index % 4]);
       }
     }
-    return Component.text("X", NamedTextColor.RED);
+    if (c == null) {
+      throw new IllegalStateException("Invalid argument, cannot format.");
+    }
+
+    String shortDesc = getShortDesc(tree);
+    if (shortDesc != null) {
+      c = c.hoverEvent(Component.empty()
+          .append(c)
+          .appendNewline()
+          .append(Component.text(shortDesc, NamedTextColor.WHITE))
+          .appendNewline().appendNewline()
+          .append(Component.text("Click to execute command"))
+      );
+    }
+    return c;
   }
 
   private List<ArgumentTreeLike<?, ?>> findLeaves(ArgumentTreeLike<?, ?> tree) {

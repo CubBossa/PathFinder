@@ -14,10 +14,7 @@ import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.DoubleArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,11 +29,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-public class WaypointCommand extends CommandTree {
+public class WaypointCommand extends Command {
 
   public WaypointCommand() {
     super("waypoint");
     withAliases("node");
+    withGeneratedHelp();
 
     withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_WP_INFO)
         || sender.hasPermission(PathPlugin.PERM_CMD_WP_LIST)
@@ -66,7 +64,8 @@ public class WaypointCommand extends CommandTree {
             .executesPlayer((player, objects) -> {
               onList(player, (NodeSelection) objects[0], 1);
             })
-            .then(new IntegerArgument("page", 1)
+            .then(CustomArgs.integer("page", 1)
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onList(player, (NodeSelection) objects[0], (Integer) objects[1]);
                 })
@@ -79,7 +78,8 @@ public class WaypointCommand extends CommandTree {
               onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
                   player.getLocation().add(new Vector(0, 1, 0)));
             })
-            .then(new LocationArgument("location")
+            .then(CustomArgs.location("location")
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
                       (Location) objects[1]);
@@ -90,7 +90,7 @@ public class WaypointCommand extends CommandTree {
                   onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
                       player.getLocation().add(new Vector(0, 1, 0)));
                 })
-                .then(new LocationArgument("location")
+                .then(CustomArgs.location("location")
                     .executesPlayer((player, objects) -> {
                       onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
                           (Location) objects[2]);
@@ -118,7 +118,7 @@ public class WaypointCommand extends CommandTree {
     then(CustomArgs.literal("tp")
         .withPermission(PathPlugin.PERM_CMD_WP_TP)
         .then(CustomArgs.nodeSelectionArgument("nodes")
-            .then(new LocationArgument("location", LocationType.PRECISE_POSITION)
+            .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
                   onTp(player, (NodeSelection) objects[0], (Location) objects[1]);
                 })
@@ -142,6 +142,7 @@ public class WaypointCommand extends CommandTree {
               onDisconnect(player, (NodeSelection) objects[0], null);
             })
             .then(CustomArgs.nodeSelectionArgument("end")
+                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   onDisconnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })

@@ -10,7 +10,7 @@ import dev.jorel.commandapi.nms.NMS;
 
 public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
 
-  public static <S, T extends Argument<S>> CommandArgument<S, T> arg(T argument) {
+  static <S, T extends Argument<S>> CommandArgument<S, T> arg(T argument) {
     return new CommandArgument<>(argument);
   }
 

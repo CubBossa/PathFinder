@@ -5,7 +5,6 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
 import org.bukkit.NamespacedKey;
 
 public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>>
@@ -29,7 +28,7 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>>
                   }
                 })))
         .then(CustomArgs.literal("sample-rate")
-            .then(new IntegerArgument("sample-rate", 1, 64)
+            .then(CustomArgs.integer("sample-rate", 1, 64)
                 .executes((commandSender, objects) -> {
                   if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
                     VisualizerHandler.getInstance()

@@ -179,7 +179,6 @@ public class PathPlugin extends JavaPlugin {
 
     CommandAPI.onLoad(new CommandAPIConfig()
         .verboseOutput(configuration.isVerbose())
-        .dispatcherFile(new File(getDataFolder(), "tree.gson"))
         .initializeNBTAPI(NBTContainer.class, NBTContainer::new));
   }
 
@@ -324,7 +323,10 @@ public class PathPlugin extends JavaPlugin {
     if (configuration.isTesting()) {
       CommandAPI.unregister(mazeCommand.getName());
     }
+    CommandAPI.onDisable();
+
     RoadMapHandler.getInstance().cancelAllEditModes();
+
     GUIHandler.getInstance().disable();
   }
 

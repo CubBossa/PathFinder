@@ -3,20 +3,22 @@ package de.cubbossa.pathfinder.module.visualizing.command;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
+import de.cubbossa.pathfinder.core.commands.CustomLiteralArgument;
 import de.cubbossa.pathfinder.data.ExamplesReader;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 
-public class VisualizerImportCommand extends ArgumentTree {
+public class VisualizerImportCommand extends CustomLiteralArgument {
 
-  public VisualizerImportCommand(Argument<?> argument, int argumentOffset) {
-    super(argument.withPermission(PathPlugin.PERM_CMD_PF_IMPORT));
+  public VisualizerImportCommand(String literal, int argumentOffset) {
+    super(literal);
+    withPermission(PathPlugin.PERM_CMD_PF_IMPORT);
+    withGeneratedHelp();
+
     then(new GreedyStringArgument("name")
         .replaceSuggestions((suggestionInfo, suggestionsBuilder) -> {
           ExamplesHandler.getInstance().getExamples().stream()

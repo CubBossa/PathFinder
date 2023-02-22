@@ -8,8 +8,6 @@ import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
 import java.util.Map;
@@ -60,7 +58,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                   onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset],
                       null, null, null);
                 })
-                .then(new IntegerArgument("amount", 1)
+                .then(CustomArgs.integer("amount", 1)
                     .executes((commandSender, objects) -> {
                       ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
                       onSetParticle(commandSender, visualizer,
@@ -76,7 +74,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                               (Integer) objects[argumentOffset + 1],
                               (Float) objects[argumentOffset + 2], null);
                         })
-                        .then(new LocationArgument("offset")
+                        .then(CustomArgs.location("offset")
                             .executes((commandSender, objects) -> {
                               ParticleVisualizer visualizer =
                                   (ParticleVisualizer) objects[visualizerIndex];
@@ -90,7 +88,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                     )
                 )
             ))
-        .then(subCommand("particle-steps", new IntegerArgument("amount", 1),
+        .then(subCommand("particle-steps", CustomArgs.integer("amount", 1),
             ParticleVisualizer.PROP_SCHEDULER_STEPS));
   }
 

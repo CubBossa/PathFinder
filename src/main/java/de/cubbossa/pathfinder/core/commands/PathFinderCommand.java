@@ -10,7 +10,6 @@ import de.cubbossa.pathfinder.data.YmlDatabase;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 /**
  * The basic command of this plugin, which handles things like reload, export, import, etc.
  */
-public class PathFinderCommand extends CommandTree {
+public class PathFinderCommand extends Command {
 
   /**
    * The basic command of this plugin, which handles things like reload, export, import, etc.
@@ -121,7 +120,7 @@ public class PathFinderCommand extends CommandTree {
 
     then(CustomArgs.literal("import")
         .withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
-        .then(new VisualizerImportCommand(CustomArgs.literal("visualizer"), 0))
+        .then(new VisualizerImportCommand("visualizer", 0))
     );
 
     then(CustomArgs.literal("reload")

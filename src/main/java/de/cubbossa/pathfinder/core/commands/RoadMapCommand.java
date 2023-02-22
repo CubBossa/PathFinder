@@ -12,7 +12,6 @@ import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.DoubleArgument;
-import dev.jorel.commandapi.arguments.PlayerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ public class RoadMapCommand extends Command {
   public RoadMapCommand() {
     super("roadmap");
     withAliases("rm");
+    withGeneratedHelp();
 
     withRequirement(sender ->
         sender.hasPermission(PathPlugin.PERM_CMD_RM_INFO)
@@ -50,7 +50,8 @@ public class RoadMapCommand extends Command {
             || sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
     );
 
-    then(new CommandArgument<>(CustomArgs.literal("info"))
+    then(CustomArgs.literal("info")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_INFO)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executes((commandSender, args) -> {
@@ -58,6 +59,7 @@ public class RoadMapCommand extends Command {
             })));
 
     then(CustomArgs.literal("create")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_CREATE)
         .then(new StringArgument("key")
             .executes((player, args) -> {
@@ -65,6 +67,7 @@ public class RoadMapCommand extends Command {
             })));
 
     then(CustomArgs.literal("delete")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_DELETE)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executes((commandSender, args) -> {
@@ -72,6 +75,7 @@ public class RoadMapCommand extends Command {
             })));
 
     then(CustomArgs.literal("editmode")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_EDITMODE)
         .executesPlayer((player, args) -> {
           if (RoadMapHandler.getInstance().getRoadMaps().size() != 1) {
@@ -91,35 +95,45 @@ public class RoadMapCommand extends Command {
           onList(commandSender, 1);
         })
         .then(CustomArgs.integer("page", 1)
+            .displayAsOptional()
             .executes((commandSender, args) -> {
               onList(commandSender, (Integer) args[0]);
             })));
 
     then(CustomArgs.literal("forcefind")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_FORCEFIND)
         .then(CustomArgs.roadMapArgument("roadmap")
-            .then(new PlayerArgument("player")
+            .then(CustomArgs.player("player")
+                .withGeneratedHelp()
                 .then(CustomArgs.discoverableArgument("discovering")
+                    .withGeneratedHelp()
                     .executes((commandSender, args) -> {
                       onForceFind(commandSender, (Player) args[1], (Discoverable) args[2]);
                     })))));
     then(CustomArgs.literal("forceforget")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_FORCEFORGET)
         .then(CustomArgs.roadMapArgument("roadmap")
-            .then(new PlayerArgument("player")
+            .withGeneratedHelp()
+            .then(CustomArgs.player("player")
+                .withGeneratedHelp()
                 .then(CustomArgs.discoverableArgument("discovering")
                     .executes((commandSender, args) -> {
                       onForceForget(commandSender, (Player) args[1], (Discoverable) args[2]);
                     })))));
 
     then(CustomArgs.literal("edit")
+        .withGeneratedHelp()
         .withRequirement(sender ->
             sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
                 || sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
                 || sender.hasPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
         )
         .then(CustomArgs.roadMapArgument("roadmap")
+            .withGeneratedHelp()
             .then(CustomArgs.literal("visualizer")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
                 .then(CustomArgs.pathVisualizerArgument("visualizer")
                     .executes((commandSender, args) -> {
@@ -127,12 +141,14 @@ public class RoadMapCommand extends Command {
                     })))
 
             .then(CustomArgs.literal("name")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
                 .then(CustomArgs.miniMessageArgument("name")
                     .executes((commandSender, args) -> {
                       onRename(commandSender, (RoadMap) args[0], (String) args[1]);
                     })))
             .then(CustomArgs.literal("curve-length")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
                 .then(new DoubleArgument("curvelength", 0)
                     .executes((commandSender, args) -> {

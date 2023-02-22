@@ -9,11 +9,9 @@ import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +31,7 @@ import org.bukkit.command.CommandSender;
 /**
  * A command to manage NodeGroups.
  */
-public class NodeGroupCommand extends CommandTree {
+public class NodeGroupCommand extends Command {
 
   /**
    * A command to manage NodeGroups.
@@ -43,6 +41,7 @@ public class NodeGroupCommand extends CommandTree {
    */
   public NodeGroupCommand(int offset) {
     super("nodegroup");
+    withGeneratedHelp();
 
     withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_LIST)
         || sender.hasPermission(PathPlugin.PERM_CMD_NG_CREATE)
@@ -62,12 +61,14 @@ public class NodeGroupCommand extends CommandTree {
         .executes((sender, objects) -> {
           listGroups(sender, 1);
         })
-        .then(new IntegerArgument("page", 1)
+        .then(CustomArgs.integer("page", 1)
+            .displayAsOptional()
             .executes((sender, objects) -> {
               listGroups(sender, (int) objects[offset]);
             })));
 
     then(CustomArgs.literal("create")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_NG_CREATE)
         .then(new StringArgument("name")
             .executes((sender, args) -> {
@@ -76,6 +77,7 @@ public class NodeGroupCommand extends CommandTree {
             })));
 
     then(CustomArgs.literal("delete")
+        .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
@@ -83,6 +85,7 @@ public class NodeGroupCommand extends CommandTree {
             })));
 
     then(CustomArgs.literal("search-terms")
+        .withGeneratedHelp()
         .withRequirement(sender ->
             sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
                 || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
@@ -90,6 +93,7 @@ public class NodeGroupCommand extends CommandTree {
         )
 
         .then(CustomArgs.literal("add")
+            .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
@@ -98,6 +102,7 @@ public class NodeGroupCommand extends CommandTree {
                           (String) objects[offset + 1]);
                     }))))
         .then(CustomArgs.literal("remove")
+            .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
@@ -106,12 +111,14 @@ public class NodeGroupCommand extends CommandTree {
                           (String) objects[offset + 1]);
                     }))))
         .then(CustomArgs.literal("list")
+            .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
             .then(CustomArgs.nodeGroupArgument("group")
                 .executes((sender, objects) -> {
                   searchTermsList(sender, (NodeGroup) objects[offset]);
                 }))));
     then(CustomArgs.literal("edit")
+        .withGeneratedHelp()
         .withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
@@ -119,7 +126,9 @@ public class NodeGroupCommand extends CommandTree {
             || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
         )
         .then(CustomArgs.nodeGroupArgument("group")
+            .withGeneratedHelp()
             .then(CustomArgs.literal("name")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
                 .then(CustomArgs.miniMessageArgument("name",
                         i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
@@ -129,6 +138,7 @@ public class NodeGroupCommand extends CommandTree {
                     })
                 ))
             .then(CustomArgs.literal("permission")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
                 .then(new GreedyStringArgument("permission")
                     .executes((sender, objects) -> {
@@ -137,6 +147,7 @@ public class NodeGroupCommand extends CommandTree {
                     })
                 ))
             .then(CustomArgs.literal("navigable")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
@@ -145,6 +156,7 @@ public class NodeGroupCommand extends CommandTree {
                     })
                 ))
             .then(CustomArgs.literal("discoverable")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
@@ -152,6 +164,7 @@ public class NodeGroupCommand extends CommandTree {
                           (Boolean) objects[offset + 1]);
                     })))
             .then(CustomArgs.literal("find-distance")
+                .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
                 .then(new FloatArgument("value", 0.01f)
                     .executes((sender, objects) -> {
