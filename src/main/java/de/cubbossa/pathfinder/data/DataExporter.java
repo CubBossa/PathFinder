@@ -54,18 +54,22 @@ public interface DataExporter {
       }
       storage.updateRoadMap(roadMap);
       Map<NodeGroup, NodeSelection> nodeGroups = new HashMap<>();
-      for (Node node : nodes) {
-        if (node instanceof Groupable groupable) {
+      for (Node<?> node : nodes) {
+        if (node instanceof Groupable<?> groupable) {
           for (NodeGroup group : groupable.getGroups()) {
             nodeGroups.computeIfAbsent(group, g -> new NodeSelection()).add(node);
           }
         }
       }
       nodeGroups.keySet().forEach(storage::updateNodeGroup);
-      nodes.forEach(storage::updateNode);
+      nodes.forEach(DataExporter::updateNode);
       nodeGroups.forEach(storage::assignNodesToGroup);
       nodes.forEach(node -> storage.saveEdges(node.getEdges()));
     };
+  }
+
+  private static <N extends Node<N>> void updateNode(Node<N> node) {
+    node.getType().updateNode((N) node);
   }
 
   static DataExporter visualizers(Collection<PathVisualizer<?, ?>> visualizers) {

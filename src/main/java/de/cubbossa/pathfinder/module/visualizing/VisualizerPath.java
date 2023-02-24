@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 @Getter
-public class VisualizerPath<D> extends ArrayList<Node> {
+public class VisualizerPath<D> extends ArrayList<Node<?>> {
 
   private final UUID playerUuid;
   private final PathVisualizer<?, D> visualizer;
@@ -29,7 +29,7 @@ public class VisualizerPath<D> extends ArrayList<Node> {
     this.visualizer = visualizer;
   }
 
-  public void prepare(List<Node> path, Player player) {
+  public void prepare(List<Node<?>> path, Player player) {
     visualizerData = visualizer.prepare(path, player);
   }
 

@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
@@ -20,7 +21,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 
 public interface DataStorage extends
-    NodeDataStorage<Node> {
+    NodeDataStorage<Waypoint> {
 
   default void connect() throws IOException {
     connect(() -> {
@@ -51,11 +52,11 @@ public interface DataStorage extends
 
   void saveEdges(Collection<Edge> edges);
 
-  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope);
+  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope);
 
-  void deleteEdgesFrom(Node start);
+  void deleteEdgesFrom(Node<?> start);
 
-  void deleteEdgesTo(Node end);
+  void deleteEdgesTo(Node<?> end);
 
   void deleteEdges(Collection<Edge> edges);
 
@@ -63,12 +64,12 @@ public interface DataStorage extends
     deleteEdge(edge.getStart(), edge.getEnd());
   }
 
-  void deleteEdge(Node start, Node end);
+  void deleteEdge(Node<?> start, Node<?> end);
 
 
   void assignNodesToGroup(NodeGroup group, NodeSelection selection);
 
-  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection);
+  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection);
 
   Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 

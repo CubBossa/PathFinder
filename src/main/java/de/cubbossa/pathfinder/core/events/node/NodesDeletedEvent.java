@@ -13,13 +13,13 @@ public class NodesDeletedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Node> nodes;
+  private final Collection<Node<?>> nodes;
 
-  public NodesDeletedEvent(Node node) {
+  public NodesDeletedEvent(Node<?> node) {
     this.nodes = Lists.newArrayList(node);
   }
 
-  public NodesDeletedEvent(Collection<Node> nodes) {
+  public NodesDeletedEvent(Collection<Node<?>> nodes) {
     this.nodes = new ArrayList<>(nodes);
   }
 

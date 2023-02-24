@@ -10,8 +10,7 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -26,7 +25,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -105,7 +103,7 @@ public abstract class SqlDatabase implements DataStorage {
       DSL.field("path_curve_length", DOUBLE.nullable(true));
 
 
-  private final Function<RoadMap, RecordMapper<? super Record, Node>> nodeMapper = roadmap -> {
+  private final Function<RoadMap, RecordMapper<? super Record, Waypoint>> nodeMapper = roadmap -> {
     final RoadMap rm = roadmap;
     return record -> {
       int id = record.get(nodeFieldId);
@@ -116,14 +114,8 @@ public abstract class SqlDatabase implements DataStorage {
       UUID worldUid = record.get(nodeFieldWorld);
       Double curveLength = record.get(nodeFieldCurveLength);
 
-      NodeType<?> nodeType =
-          NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
-      Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(
-          rm,
-          id,
-          new Location(Bukkit.getWorld(worldUid), x, y, z),
-          true
-      ));
+      Waypoint node = new Waypoint(id, rm, true);
+      node.setLocation(new Location(Bukkit.getWorld(worldUid), x, y, z));
       node.setCurveLength(curveLength);
       return node;
     };
@@ -140,14 +132,14 @@ public abstract class SqlDatabase implements DataStorage {
   private final Field<Double> edgeFieldWeight =
       DSL.field("weight_modifier", DOUBLE.notNull().defaultValue(1.));
 
-  private final Function<Map<Integer, Node>, RecordMapper<? super Record, Edge>> edgeMapper =
+  private final Function<Map<Integer, Node<?>>, RecordMapper<? super Record, Edge>> edgeMapper =
       map -> record -> {
         int startId = record.get(edgeFieldStart);
         int endId = record.get(edgeFieldEnd);
         double weight = record.get(edgeFieldWeight);
 
-        Node start = map.get(startId);
-        Node end = map.get(endId);
+        Node<?> start = map.get(startId);
+        Node<?> end = map.get(endId);
 
         if (start == null || end == null) {
           deleteEdge(startId, endId);
@@ -225,6 +217,10 @@ public abstract class SqlDatabase implements DataStorage {
 
   @Override
   public void connect(Runnable initial) throws IOException {
+    create
+        .createDatabaseIfNotExists("pathfinder")
+        .execute();
+
     createPathVisualizerTable();
     createRoadMapTable();
     createNodeTable();
@@ -341,7 +337,7 @@ public abstract class SqlDatabase implements DataStorage {
   public Map<NamespacedKey, RoadMap> loadRoadMaps() {
     HashedRegistry<RoadMap> registry = new HashedRegistry<>();
     create
-        .select(roadmapTable.asterisk())
+        .select()
         .from(roadmapTable)
         .fetch(roadmapMapper)
         .forEach(registry::put);
@@ -388,10 +384,10 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope) {
+  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
     Collection<Integer> ids = scope.keySet();
     return new HashSet<>(create
-        .select(edgeTable.asterisk())
+        .select()
         .from(edgeTable)
         .where(edgeFieldStart.in(ids))
         .or(edgeFieldEnd.in(ids))
@@ -399,20 +395,20 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdgesFrom(Node start) {
+  public void deleteEdgesFrom(Node<?> start) {
     create.deleteFrom(edgeTable)
         .where(edgeFieldStart.eq(start.getNodeId()))
         .execute();
   }
 
   @Override
-  public void deleteEdgesTo(Node end) {
+  public void deleteEdgesTo(Node<?> end) {
     create.deleteFrom(edgeTable)
         .where(edgeFieldEnd.eq(end.getNodeId()))
         .execute();
   }
 
-  public void deleteEdge(Node start, Node end) {
+  public void deleteEdge(Node<?> start, Node<?> end) {
     deleteEdge(start.getNodeId(), end.getNodeId());
   }
 
@@ -437,11 +433,11 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public Map<Integer, Node> loadNodes(RoadMap roadMap) {
+  public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
 
-    Map<Integer, Node> map = new TreeMap<>();
+    Map<Integer, Waypoint> map = new TreeMap<>();
     create
-        .select(nodeTable.asterisk())
+        .select()
         .from(nodeTable)
         .where(roadmapFieldKey.eq(roadMap.getKey().toString()))
         .fetch(nodeMapper.apply(roadMap))
@@ -450,42 +446,26 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public void updateNode(Node node) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodes` " +
-          "(`id`, `type`, `roadmap_key`, `x`, `y`, `z`, `world`, `path_curve_length`) VALUES " +
-          "(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(`id`) DO UPDATE SET " +
-          "`x` = ?, " +
-          "`y` = ?, " +
-          "`z` = ?, " +
-          "`world` = ?, " +
-          "`path_curve_length` = ?")) {
-        stmt.setInt(1, node.getNodeId());
-        stmt.setString(2, node.getType().getKey().toString());
-        stmt.setString(3, node.getRoadMapKey().toString());
-        stmt.setDouble(4, node.getLocation().getX());
-        stmt.setDouble(5, node.getLocation().getY());
-        stmt.setDouble(6, node.getLocation().getZ());
-        stmt.setString(7, node.getLocation().getWorld().getUID().toString());
-        if (node.getCurveLength() == null) {
-          stmt.setNull(8, Types.DOUBLE);
-        } else {
-          stmt.setDouble(8, node.getCurveLength());
-        }
-        stmt.setDouble(9, node.getLocation().getX());
-        stmt.setDouble(10, node.getLocation().getY());
-        stmt.setDouble(11, node.getLocation().getZ());
-        stmt.setString(12, node.getLocation().getWorld().getUID().toString());
-        if (node.getCurveLength() == null) {
-          stmt.setNull(13, Types.DOUBLE);
-        } else {
-          stmt.setDouble(13, node.getCurveLength());
-        }
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not update node.", e);
-    }
+  public void updateNode(Waypoint node) {
+    create
+        .insertInto(nodeTable)
+        .values(
+            node.getNodeId(),
+            node.getType().getKey().toString(),
+            node.getRoadMapKey().toString(),
+            node.getLocation().getX(),
+            node.getLocation().getY(),
+            node.getLocation().getZ(),
+            node.getLocation().getWorld().getUID()
+        )
+        .onDuplicateKeyUpdate()
+        .set(nodeFieldType, node.getType().getKey().toString())
+        .set(nodeFieldRoadMap, node.getRoadMapKey().toString())
+        .set(nodeFieldX, node.getLocation().getX())
+        .set(nodeFieldY, node.getLocation().getY())
+        .set(nodeFieldZ, node.getLocation().getZ())
+        .set(nodeFieldWorld, node.getLocation().getWorld().getUID())
+        .execute();
   }
 
   @Override
@@ -499,7 +479,7 @@ public abstract class SqlDatabase implements DataStorage {
   @Override
   public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
     create.batched(configuration -> {
-      for (Node node : selection) {
+      for (Node<?> node : selection) {
         DSL.using(configuration)
             .insertInto(groupNodesRelation)
             .values(group.getKey(), node.getNodeId())
@@ -510,7 +490,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
+  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection) {
     Collection<Integer> ids = new HashSet<>();
     selection.forEach(g -> ids.add(g.getNodeId()));
 
@@ -525,7 +505,7 @@ public abstract class SqlDatabase implements DataStorage {
   public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
     Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
     create
-        .select(groupNodesRelation.asterisk())
+        .select()
         .from(groupNodesRelation)
         .fetch()
         .forEach(record -> {
@@ -542,7 +522,7 @@ public abstract class SqlDatabase implements DataStorage {
   public HashedRegistry<NodeGroup> loadNodeGroups() {
     HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
     create
-        .select(groupTable.asterisk())
+        .select()
         .from(groupTable)
         .fetch(groupMapper)
         .forEach(registry::put);
@@ -581,69 +561,48 @@ public abstract class SqlDatabase implements DataStorage {
 
   @Override
   public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "SELECT * FROM `pathfinder_search_terms`")) {
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          Map<NamespacedKey, Collection<String>> registry = new HashMap<>();
-          while (resultSet.next()) {
-            String keyString = resultSet.getString("group_key");
-            String searchTerm = resultSet.getString("search_term");
-
-            Collection<String> l = registry.computeIfAbsent(NamespacedKey.fromString(keyString),
-                key -> new HashSet<>());
-            l.add(searchTerm);
-          }
-          return registry;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load search terms.", e);
-    }
+    Map<String, Collection<String>> map = new HashMap<>();
+    create
+        .select()
+        .from(termsTable)
+        .fetch()
+        .forEach(record -> {
+          String keyString = record.get(termsFieldGroup);
+          String searchTerm = record.get(termsFieldTerm);
+          map.computeIfAbsent(keyString, key -> new HashSet<>()).add(searchTerm);
+        });
+    Map<NamespacedKey, Collection<String>> registry = new HashMap<>();
+    map.forEach((s, strings) -> {
+      registry.put(NamespacedKey.fromString(s), strings);
+    });
+    return registry;
   }
 
   @Override
   public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
-
-      try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_search_terms` " +
-          "(`group_key`, `search_term`) VALUES (?, ?)")) {
-        for (String term : searchTerms) {
-          stmt.setString(1, group.getKey().toString());
-          stmt.setString(2, term);
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
+    create.batched(configuration -> {
+      String groupString = group.getKey().toString();
+      for (String searchTerm : searchTerms) {
+        DSL.using(configuration)
+            .insertInto(termsTable)
+            .values(groupString, searchTerm)
+            .execute();
       }
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not add search terms.", e);
-    }
+    });
   }
 
   @Override
   public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_search_terms` WHERE `group_key` = ? AND `search_term` = ?")) {
-
-        for (String term : searchTerms) {
-          stmt.setString(1, group.getKey().toString());
-          stmt.setString(2, term);
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
+    create.batched(configuration -> {
+      String groupString = group.getKey().toString();
+      for (String searchTerm : searchTerms) {
+        DSL.using(configuration)
+            .deleteFrom(termsTable)
+            .where(termsFieldGroup.eq(groupString))
+            .and(termsFieldTerm.eq(searchTerm))
+            .execute();
       }
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not remove search terms.", e);
-    }
+    });
   }
 
   @Override
@@ -660,7 +619,7 @@ public abstract class SqlDatabase implements DataStorage {
   public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
     Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
     create
-        .select(discoveringsTable.asterisk())
+        .select()
         .from(discoveringsTable)
         .where(discoveringsFieldPlayerId.eq(playerId))
         .fetch()

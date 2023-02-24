@@ -18,6 +18,7 @@ public class SimpleDijkstra<N> {
 
   private final Graph<N> graph;
   private final Map<N, Node> computedGraph = new HashMap<>();
+
   public SimpleDijkstra(Graph<N> graph) {
     this.graph = graph;
   }

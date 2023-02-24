@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Setter
-public class NodeGroup extends HashSet<Groupable>
+public class NodeGroup extends HashSet<Groupable<?>>
     implements Keyed, Named, Discoverable, Navigable, SearchTermHolder {
 
   private final NamespacedKey key;
@@ -56,7 +56,7 @@ public class NodeGroup extends HashSet<Groupable>
   }
 
   @Override
-  public boolean addAll(Collection<? extends Groupable> c) {
+  public boolean addAll(Collection<? extends Groupable<?>> c) {
     for (Groupable g : c) {
       g.addGroup(this);
     }
@@ -65,7 +65,7 @@ public class NodeGroup extends HashSet<Groupable>
 
   @Override
   public boolean remove(Object o) {
-    if (o instanceof Groupable groupable) {
+    if (o instanceof Groupable<?> groupable) {
       groupable.removeGroup(this);
       return super.remove(o);
     }
@@ -75,7 +75,7 @@ public class NodeGroup extends HashSet<Groupable>
   @Override
   public boolean removeAll(Collection<?> c) {
     for (Object o : c) {
-      if (o instanceof Groupable groupable) {
+      if (o instanceof Groupable<?> groupable) {
         groupable.removeGroup(this);
         remove(this);
       }
@@ -84,7 +84,7 @@ public class NodeGroup extends HashSet<Groupable>
   }
 
   @Override
-  public Collection<Node> getGroup() {
+  public Collection<Node<?>> getGroup() {
     return new HashSet<>(this);
   }
 
@@ -115,7 +115,7 @@ public class NodeGroup extends HashSet<Groupable>
     if (permission != null && !player.hasPermission(permission)) {
       return false;
     }
-    for (Node node : this) {
+    for (Node<?> node : this) {
       if (node == null) {
         PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
         continue;

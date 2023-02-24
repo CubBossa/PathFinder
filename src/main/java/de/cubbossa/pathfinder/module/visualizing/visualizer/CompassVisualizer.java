@@ -65,7 +65,7 @@ public class CompassVisualizer
   }
 
   @Override
-  public Data newData(Player player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+  public Data newData(Player player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
     compass.addMarker("E", east, 90.);
@@ -94,7 +94,7 @@ public class CompassVisualizer
   public static class Data extends BossBarVisualizer.Data {
     private final StringCompass compass;
 
-    public Data(List<Node> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
+    public Data(List<Node<?>> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
       super(nodes, edges, bossBar);
       this.compass = compass;
     }

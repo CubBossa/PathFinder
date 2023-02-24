@@ -55,7 +55,7 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
 
   private final NamespacedKey key;
   private final boolean persistent;
-  private final Map<Integer, Node> nodes;
+  private final Map<Integer, Node<?>> nodes;
   private final Collection<Edge> edges;
   private String nameFormat;
   private Component displayName;
@@ -89,19 +89,21 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
   public void loadNodesAndEdges(
       Map<Integer, ? extends Collection<NamespacedKey>> nodesGroupMapping) {
     nodes.clear();
-    var map1 = PathPlugin.getInstance().getDatabase().loadNodes(this);
-    nodes.putAll(map1);
+    NodeTypeHandler.getInstance().getTypes().forEach((key1, nodeType) -> {
+      nodes.putAll(nodeType.loadNodes(this));
+    });
+
     for (var entry : nodesGroupMapping.entrySet()) {
       if (!nodes.containsKey(entry.getKey())) {
         continue;
       }
-      Node node = nodes.get(entry.getKey());
+      Node<?> node = nodes.get(entry.getKey());
       if (node == null) {
         PathPlugin.getInstance().getLogger()
             .log(Level.SEVERE, "Tried to map a node that doesn't exist: " + entry.getKey());
         continue;
       }
-      if (!(node instanceof Groupable groupable)) {
+      if (!(node instanceof Groupable<?> groupable)) {
         PathPlugin.getInstance().getLogger()
             .log(Level.SEVERE, "Tried to map a node that is not groupable: " + entry.getKey());
         continue;
@@ -118,16 +120,17 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     }
 
     edges.clear();
-    edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this, map1));
+
+    edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this, nodes));
     for (Edge edge : edges) {
       edge.getStart().getEdges().add(edge);
     }
   }
 
-  public Graph<Node> toGraph(Player permissionQuery, @Nullable PlayerNode player) {
-    Graph<Node> graph = new Graph<>();
+  public Graph<Node<?>> toGraph(Player permissionQuery, @Nullable PlayerNode player) {
+    Graph<Node<?>> graph = new Graph<>();
     nodes.values().stream()
-        .filter(node -> !(node instanceof Groupable groupable) || groupable.getGroups().stream()
+        .filter(node -> !(node instanceof Groupable<?> groupable) || groupable.getGroups().stream()
             .allMatch(
                 g -> g.getPermission() == null || permissionQuery.hasPermission(g.getPermission())))
         .forEach(graph::addNode);
@@ -231,10 +234,10 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
    * @param <T>        The node implementation class. {@link Waypoint} by default.
    * @return The created node.
    */
-  public <T extends Node> T createNode(NodeType<T> type, Location location, boolean persistent,
-                                       NodeGroup... groups) {
+  public <T extends Node<T>> T createNode(NodeType<T> type, Location location, boolean persistent,
+                                          NodeGroup... groups) {
 
-    T node = type.getFactory().apply(new NodeType.NodeCreationContext(
+    T node = type.createNode(new NodeType.NodeCreationContext(
         this,
         RoadMapHandler.getInstance().requestNodeId(),
         location,
@@ -242,14 +245,14 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     ));
 
     addNode(node);
-    if (node instanceof Groupable groupable) {
-      Collection<Groupable> col = Collections.singleton(groupable);
+    if (node instanceof Groupable<?> groupable) {
+      Collection<Groupable<?>> col = Collections.singleton(groupable);
       for (NodeGroup group : groups) {
         NodeGroupHandler.getInstance().addNodes(group, col);
       }
     }
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-      Bukkit.getPluginManager().callEvent(new NodeCreatedEvent(node));
+      Bukkit.getPluginManager().callEvent(new NodeCreatedEvent<>(node));
     });
     return node;
   }
@@ -264,7 +267,7 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
    *
    * @param node The node instance to add to this roadmap.
    */
-  public void addNode(Node node) {
+  public void addNode(Node<?> node) {
     nodes.put(node.getNodeId(), node);
   }
 
@@ -273,17 +276,17 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
   }
 
   public void removeNode(int id) {
-    Node node = getNode(id);
+    Node<?> node = getNode(id);
     if (node != null) {
       removeNodes(node);
     }
   }
 
-  public void removeNodes(Node... nodes) {
+  public void removeNodes(Node<?>... nodes) {
     Collection<Edge> deleteEdges = new HashSet<>();
-    Collection<Node> deleteNodes = Lists.newArrayList(nodes);
+    Collection<Node<?>> deleteNodes = Lists.newArrayList(nodes);
 
-    for (Node node : nodes) {
+    for (Node<?> node : nodes) {
       for (Edge edge : getEdgesAt(node)) {
         edge.getEnd().getEdges().remove(edge);
         edges.remove(edge);
@@ -299,8 +302,8 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
   }
 
   public @Nullable
-  Node getNode(int nodeId) {
-    for (Node node : nodes.values()) {
+  Node<?> getNode(int nodeId) {
+    for (Node<?> node : nodes.values()) {
       if (node.getNodeId() == nodeId) {
         return node;
       }
@@ -308,12 +311,12 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     return null;
   }
 
-  public Collection<Node> getNodesByGroup(NodeGroup group) {
+  public Collection<Node<?>> getNodesByGroup(NodeGroup group) {
     return group.getGroup().stream().filter(node -> node.getRoadMapKey().equals(key))
         .collect(Collectors.toList());
   }
 
-  public Edge getEdge(Node start, Node end) {
+  public Edge getEdge(Node<?> start, Node<?> end) {
     return edges.stream().filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end))
         .findFirst().orElse(null);
   }
@@ -329,7 +332,7 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
    * @return The <b>first</b> edge that was created, from start to end. To get the edge instance of the second edge,
    * use {@link #getEdge(Node, Node)} with reversed parameters.
    */
-  public Edge connectNodes(Node start, Node end) {
+  public Edge connectNodes(Node<?> start, Node<?> end) {
     return connectNodes(start, end, false, 1, 1);
   }
 
@@ -346,7 +349,7 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
    *                 as the edit mode particle setup has to be recalculated for each edge change.
    * @return the created edge from start to end.
    */
-  public Edge connectNodes(Node start, Node end, boolean directed) {
+  public Edge connectNodes(Node<?> start, Node<?> end, boolean directed) {
     if (start.equals(end)) {
       throw new IllegalArgumentException("Cannot connect node with itself.");
     }
@@ -400,7 +403,8 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
    * @param weightBack Same as weight, but for the directed edge in the opposite direction.
    * @return the created edge from start to end.
    */
-  public Edge connectNodes(Node start, Node end, boolean directed, float weight, float weightBack) {
+  public Edge connectNodes(Node<?> start, Node<?> end, boolean directed, float weight,
+                           float weightBack) {
     if (start.equals(end)) {
       throw new IllegalArgumentException("Cannot connect node with itself.");
     }
@@ -426,11 +430,11 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     return edge;
   }
 
-  public void disconnectNodes(Node start, Node end) {
+  public void disconnectNodes(Node<?> start, Node<?> end) {
     disconnectNodes(getEdge(start, end));
   }
 
-  public void disconnectNode(Node node) {
+  public void disconnectNode(Node<?> node) {
     node.getEdges().forEach(this::disconnectNodes);
   }
 
@@ -446,11 +450,11 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
         () -> Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(edge)));
   }
 
-  public Collection<Edge> getEdgesFrom(Node node) {
+  public Collection<Edge> getEdgesFrom(Node<?> node) {
     return node.getEdges();
   }
 
-  public Collection<Edge> getEdgesTo(Node node) {
+  public Collection<Edge> getEdgesTo(Node<?> node) {
     Collection<Edge> ret = new ArrayList<>();
     for (Edge edge : edges) {
       if (edge.getEnd().equals(node)) {
@@ -460,12 +464,12 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     return ret;
   }
 
-  public Collection<Edge> getEdgesAt(Node node) {
+  public Collection<Edge> getEdgesAt(Node<?> node) {
     return edges.stream().filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node))
         .collect(Collectors.toSet());
   }
 
-  public Collection<Node> getNodes() {
+  public Collection<Node<?>> getNodes() {
     return nodes.values();
   }
 
@@ -482,8 +486,8 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
 
     return new RoadMapBatchEditor() {
       @Override
-      public <T extends Node> void createNode(NodeType<T> type, Vector vector, String permission,
-                                              NodeGroup... groups) {
+      public <T extends Node<T>> void createNode(NodeType<T> type, Vector vector, String permission,
+                                                 NodeGroup... groups) {
         if (closed.get()) {
           throw new IllegalStateException("Batch Editor already closed.");
         }
@@ -503,8 +507,8 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
 
   public interface RoadMapBatchEditor {
 
-    <T extends Node> void createNode(NodeType<T> type, Vector vector, String permission,
-                                     NodeGroup... groups);
+    <T extends Node<T>> void createNode(NodeType<T> type, Vector vector, String permission,
+                                        NodeGroup... groups);
 
     void commit();
   }

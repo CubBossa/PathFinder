@@ -11,25 +11,25 @@ import org.jetbrains.annotations.NotNull;
 @Setter
 public class Edge implements Comparable<Edge>, PersistencyHolder {
 
-  private Node start;
-  private Node end;
+  private Node<?> start;
+  private Node<?> end;
   private float weightModifier;
 
   private Location center;
 
-  public Edge(Node start, Node end, float weightModifier) {
+  public Edge(Node<?> start, Node<?> end, float weightModifier) {
     this.start = start;
     this.end = end;
     this.weightModifier = weightModifier;
     refreshCenter();
   }
 
-  public void setStart(Node start) {
+  public void setStart(Node<?> start) {
     this.start = start;
     refreshCenter();
   }
 
-  public void setEnd(Node end) {
+  public void setEnd(Node<?> end) {
     this.end = end;
     refreshCenter();
   }

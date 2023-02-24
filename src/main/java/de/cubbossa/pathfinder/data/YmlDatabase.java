@@ -185,7 +185,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope) {
+  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
     YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to load edges for non existing roadmap");
@@ -213,7 +213,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdgesFrom(Node start) {
+  public void deleteEdgesFrom(Node<?> start) {
     YamlConfiguration cfg = roadmapHandles.get(start.getRoadMapKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to save edge for non existing roadmap");
@@ -223,7 +223,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdgesTo(Node end) {
+  public void deleteEdgesTo(Node<?> end) {
     YamlConfiguration cfg = roadmapHandles.get(end.getRoadMapKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to save edge for non existing roadmap");
@@ -258,7 +258,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdge(Node start, Node end) {
+  public void deleteEdge(Node<?> start, Node<?> end) {
     YamlConfiguration cfg = roadmapHandles.computeIfAbsent(end.getRoadMapKey(), key ->
         YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
     cfg.set("edges." + start.getNodeId() + "." + end.getNodeId(), null);
@@ -266,12 +266,12 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Map<Integer, Node> loadNodes(RoadMap roadMap) {
+  public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
     YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to load nodes for non existing roadmap");
     }
-    Map<Integer, Node> result = new HashMap<>();
+    Map<Integer, Waypoint> result = new HashMap<>();
     ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes");
     if (nodeSection == null) {
       return result;
@@ -284,8 +284,8 @@ public class YmlDatabase implements DataStorage {
       //TODO for now i parse them only to waypoints, but lateron they will have a datastructure like pathvisualizers
       int id = Integer.parseInt(key);
       Location location = innerSection.getLocation("location");
-      Waypoint node = RoadMapHandler.WAYPOINT_TYPE.getFactory()
-          .apply(new NodeType.NodeCreationContext(roadMap, id, location, true));
+      Waypoint node = RoadMapHandler.WAYPOINT_TYPE
+          .createNode(new NodeType.NodeCreationContext(roadMap, id, location, true));
       node.setCurveLength(innerSection.getDouble("curve-length"));
       result.put(id, node);
     }
@@ -293,7 +293,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void updateNode(Node node) {
+  public void updateNode(Waypoint node) {
     YamlConfiguration cfg = roadmapHandles.computeIfAbsent(node.getRoadMapKey(), key ->
         YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
     ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes." + node.getNodeId());
@@ -337,7 +337,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
+  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection) {
     updateNodeGroup(group);
   }
 

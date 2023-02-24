@@ -34,7 +34,7 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
   }
 
   @Override
-  public BezierData prepare(List<Node> nodes, Player player) {
+  public BezierData prepare(List<Node<?>> nodes, Player player) {
     BezierData bezierData = super.prepare(nodes, player);
     List<Location> points = new ArrayList<>();
     for (int i = 1; i < bezierData.points().size() - 1; i++) {

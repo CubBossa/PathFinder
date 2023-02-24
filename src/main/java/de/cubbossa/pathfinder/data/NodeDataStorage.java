@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-public interface NodeDataStorage<N extends Node> {
+public interface NodeDataStorage<N extends Node<N>> {
 
   Map<Integer, N> loadNodes(RoadMap roadMap);
 

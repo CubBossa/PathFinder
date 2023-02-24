@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
-public class PlayerNode implements Node {
+public class PlayerNode implements Node<PlayerNode> {
 
   private final Player player;
   private final RoadMap roadMap;
@@ -26,7 +26,7 @@ public class PlayerNode implements Node {
   }
 
   @Override
-  public NodeType<Node> getType() {
+  public NodeType<PlayerNode> getType() {
     return null;
   }
 
@@ -36,7 +36,7 @@ public class PlayerNode implements Node {
   }
 
   @Override
-  public Collection<Node> getGroup() {
+  public Collection<Node<?>> getGroup() {
     return new HashSet<>();
   }
 
@@ -81,17 +81,17 @@ public class PlayerNode implements Node {
   }
 
   @Override
-  public Edge connect(Node target) {
+  public Edge connect(Node<?> target) {
     return null;
   }
 
   @Override
-  public void disconnect(Node target) {
+  public void disconnect(Node<?> target) {
 
   }
 
   @Override
-  public int compareTo(@NotNull Node o) {
+  public int compareTo(@NotNull Node<?> o) {
     return 0;
   }
 

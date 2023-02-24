@@ -14,7 +14,7 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class EmptyNode implements Node {
+public class EmptyNode implements Node<EmptyNode> {
 
   private final RoadMap roadMap;
   @Getter
@@ -26,7 +26,7 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public NodeType<Node> getType() {
+  public NodeType<EmptyNode> getType() {
     return null;
   }
 
@@ -41,7 +41,7 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public Collection<Node> getGroup() {
+  public Collection<Node<?>> getGroup() {
     return new HashSet<>();
   }
 
@@ -76,12 +76,12 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public Edge connect(Node target) {
+  public Edge connect(Node<?> target) {
     return null;
   }
 
   @Override
-  public void disconnect(Node target) {
+  public void disconnect(Node<?> target) {
 
   }
 

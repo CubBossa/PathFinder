@@ -233,20 +233,18 @@ public class RoadMapEditor implements Keyed, Listener {
   @EventHandler
   public void onNodeGroupAssign(NodeGroupAssignedEvent event) {
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-        event.getGroupables().stream()
-            .map(groupable -> (Node) groupable)
-            .forEach(node -> {
-              armorstandHandler.updateNodeHead(player, node);
-              armorstandHandler.updateNodeName(player, node);
-            }));
+        event.getGroupables().forEach(node -> {
+          armorstandHandler.updateNodeHead(player, node);
+          armorstandHandler.updateNodeName(player, node);
+        }));
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
   public void onNodeGroupRemove(NodeGroupRemovedEvent event) {
-    Collection<Groupable> groupables = event.getGroupables();
+    Collection<Groupable<?>> groupables = event.getGroupables();
     for (UUID uuid : editingPlayers.keySet()) {
       Player player = Bukkit.getPlayer(uuid);
-      for (Groupable node : groupables) {
+      for (Groupable<?> node : groupables) {
         armorstandHandler.updateNodeHead(player, node);
         armorstandHandler.updateNodeName(player, node);
       }
@@ -255,7 +253,7 @@ public class RoadMapEditor implements Keyed, Listener {
 
   @EventHandler
   public void onNodeGroupSeachTermsChanged(NodeGroupSearchTermsChangedEvent event) {
-    Collection<? extends Node> nodes = event.getGroup();
+    Collection<? extends Node<?>> nodes = event.getGroup();
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
         nodes.forEach(node -> armorstandHandler.updateNodeName(player, node)));
   }

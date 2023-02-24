@@ -56,7 +56,7 @@ public class FindModule implements Listener {
     this.navigationFilter = new ArrayList<>();
 
     registerFindPredicate(navigationRequestContext -> {
-      if (!(navigationRequestContext.navigable() instanceof Groupable groupable)) {
+      if (!(navigationRequestContext.navigable() instanceof Groupable<?> groupable)) {
         return true;
       }
       Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
@@ -96,7 +96,7 @@ public class FindModule implements Listener {
   public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
 
     Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
-    Collection<Node> nodes =
+    Collection<Node<?>> nodes =
         targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey()))
             .collect(Collectors.toSet());
 
@@ -113,15 +113,15 @@ public class FindModule implements Listener {
 
     RoadMap firstRoadMap = roadMaps.get(0);
     PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-    Graph<Node> graph = firstRoadMap.toGraph(player, playerNode);
+    Graph<Node<?>> graph = firstRoadMap.toGraph(player, playerNode);
 
     for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
       graph.merge(roadMap.toGraph(player, null));
     }
 
-    SimpleDijkstra<Node> dijkstra = new SimpleDijkstra<>(graph);
+    SimpleDijkstra<Node<?>> dijkstra = new SimpleDijkstra<>(graph);
     dijkstra.setStartNode(playerNode);
-    List<Node> path = dijkstra.shortestPathToAny(targets);
+    List<Node<?>> path = dijkstra.shortestPathToAny(targets);
 
     if (path == null) {
       return NavigateResult.FAIL_BLOCKED;
@@ -133,7 +133,7 @@ public class FindModule implements Listener {
     NavigateResult result =
         setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
             NodeGroupHandler.getInstance()
-                .getFindDistance((Groupable) visualizerPath.get(visualizerPath.size() - 1)));
+                .getFindDistance((Groupable<?>) visualizerPath.get(visualizerPath.size() - 1)));
 
     if (result == NavigateResult.SUCCESS) {
       // Refresh cancel-path command so that it is visible

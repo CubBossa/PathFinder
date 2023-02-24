@@ -12,7 +12,7 @@ import org.bukkit.util.Vector;
 
 public class NodeUtils {
 
-  public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path,
+  public static List<BezierVector> toSpline(LinkedHashMap<Node<?>, Double> path,
                                             boolean shortenIfOverlapping) {
 
     //TODO List<Collection<BezierVector>> für alle Weltsprünge neue splines
@@ -23,21 +23,21 @@ public class NodeUtils {
     List<BezierVector> vectors = new ArrayList<>();
 
 
-    Node first = path.keySet().iterator().next();
+    Node<?> first = path.keySet().iterator().next();
     vectors.add(new BezierVector(
         PathPlugin.SPLINES.convertToVector(first.getLocation().toVector()),
         PathPlugin.SPLINES.convertToVector(first.getLocation().toVector()),
         PathPlugin.SPLINES.convertToVector(first.getLocation().toVector())));
 
-    Node prev = null;
+    Node<?> prev = null;
     double sPrev = 1;
-    Node curr = null;
+    Node<?> curr = null;
     double sCurr = 1;
     Vector vNext = null;
 
 
-    for (Map.Entry<Node, Double> entry : path.entrySet()) {
-      Node next = entry.getKey();
+    for (Map.Entry<Node<?>, Double> entry : path.entrySet()) {
+      Node<?> next = entry.getKey();
       Double sNext = entry.getValue();
       if (prev != null) {
         vectors.add(toBezierVector(prev, curr, next, sPrev, sCurr, sNext, shortenIfOverlapping ?
@@ -57,7 +57,7 @@ public class NodeUtils {
   }
 
   private static BezierVector toBezierVector(
-      Node previous, Node current, Node next,
+      Node<?> previous, Node<?> current, Node<?> next,
       double strengthPrevious, double strengthCurrent, double strengthNext,
       @Nullable TangentModifier tangentModifier) {
     Vector vPrevious = previous.getLocation().toVector();

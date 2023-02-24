@@ -17,14 +17,14 @@ public class NodeGroupAssignedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable> groupables;
+  private final Collection<Groupable<?>> groupables;
   private final Collection<NodeGroup> groups;
 
-  public NodeGroupAssignedEvent(Groupable groupables, NodeGroup groups) {
+  public NodeGroupAssignedEvent(Groupable<?> groupables, NodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupAssignedEvent(Collection<Groupable> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupAssignedEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
   }

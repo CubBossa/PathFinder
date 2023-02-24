@@ -112,7 +112,7 @@ public class NodeGroupHandler implements Listener {
 
     Bukkit.getPluginManager().callEvent(new NodeGroupDeletedEvent(group));
 
-    for (Groupable node : group) {
+    for (Groupable<?> node : group) {
       node.removeGroup(group);
     }
     group.clear();
@@ -148,11 +148,11 @@ public class NodeGroupHandler implements Listener {
     Bukkit.getPluginManager().callEvent(event);
   }
 
-  public void addNodes(NodeGroup group, Collection<Groupable> nodes) {
+  public void addNodes(NodeGroup group, Collection<Groupable<?>> nodes) {
     addNodes(Collections.singleton(group), nodes);
   }
 
-  public void addNodes(Collection<NodeGroup> groups, Collection<Groupable> nodes) {
+  public void addNodes(Collection<NodeGroup> groups, Collection<Groupable<?>> nodes) {
     NodeGroupAssignEvent event = new NodeGroupAssignEvent(nodes, groups);
     Bukkit.getPluginManager().callEvent(event);
     if (event.isCancelled()) {
@@ -163,11 +163,11 @@ public class NodeGroupHandler implements Listener {
         new NodeGroupAssignedEvent(event.getModifiedGroupables(), event.getModifiedGroups()));
   }
 
-  public void removeNodes(NodeGroup group, Collection<Groupable> nodes) {
+  public void removeNodes(NodeGroup group, Collection<Groupable<?>> nodes) {
     removeNodes(Collections.singleton(group), nodes);
   }
 
-  public void removeNodes(Collection<NodeGroup> groups, Collection<Groupable> nodes) {
+  public void removeNodes(Collection<NodeGroup> groups, Collection<Groupable<?>> nodes) {
     NodeGroupRemoveEvent event = new NodeGroupRemoveEvent(nodes, groups);
     Bukkit.getPluginManager().callEvent(event);
     if (event.isCancelled()) {
@@ -178,7 +178,7 @@ public class NodeGroupHandler implements Listener {
         new NodeGroupRemovedEvent(event.getModifiedGroupables(), event.getModifiedGroups()));
   }
 
-  public float getFindDistance(Groupable groupable) {
+  public float getFindDistance(Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return 1.5f;
     }
@@ -191,7 +191,7 @@ public class NodeGroupHandler implements Listener {
     };
   }
 
-  public boolean hasPermission(Player player, Groupable groupable) {
+  public boolean hasPermission(Player player, Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
@@ -205,7 +205,7 @@ public class NodeGroupHandler implements Listener {
     };
   }
 
-  public boolean isNavigable(Groupable groupable) {
+  public boolean isNavigable(Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
@@ -216,7 +216,7 @@ public class NodeGroupHandler implements Listener {
     };
   }
 
-  public boolean isDiscoverable(Groupable groupable) {
+  public boolean isDiscoverable(Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
