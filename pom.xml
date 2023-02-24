@@ -61,7 +61,7 @@
                             <include>de.cubbossa:SerializedEffects</include>
                             <include>org.bstats</include>
                             <include>xyz.xenondevs:particle</include>
-                            <include>dev.jorel:commandapi-shade</include>
+                            <include>de.cubbossa:commandapi-shade</include>
                             <include>org.openjdk.nashorn:nashorn-core</include>
                             <include>org.ow2.asm:asm</include>
                             <include>org.ow2.asm:asm-util</include>
@@ -141,6 +141,12 @@
     </build>
 
     <repositories>
+
+        <repository>
+            <id>cubbossa</id>
+            <url>https://nexus.leonardbausenwein.de/repository/maven-public</url>
+        </repository>
+
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
@@ -175,11 +181,6 @@
         <repository>
             <id>oss.sonatype.org-snapshot</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-
-        <repository>
-            <id>cubbossa</id>
-            <url>https://nexus.leonardbausenwein.de/repository/maven-public</url>
         </repository>
 
         <repository>
@@ -246,7 +247,7 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.jorel</groupId>
+            <groupId>de.cubbossa</groupId>
             <artifactId>commandapi-shade</artifactId>
             <version>8.7.5</version>
         </dependency>
