@@ -1,5 +1,10 @@
 package de.cubbossa.pathfinder.data;
 
+import static org.jooq.impl.SQLDataType.BOOLEAN;
+import static org.jooq.impl.SQLDataType.DOUBLE;
+import static org.jooq.impl.SQLDataType.INTEGER;
+import static org.jooq.impl.SQLDataType.VARCHAR;
+
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
@@ -22,14 +27,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,10 +43,185 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.BatchBindStep;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.RecordMapper;
+import org.jooq.SQLDialect;
+import org.jooq.Table;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 public abstract class SqlDatabase implements DataStorage {
 
   abstract Connection getConnection();
+
+  private static final String PREFIX = "pathfinder_";
+
+  private final DSLContext create;
+
+  // +-----------------------------------------+
+  // |  Roadmap Table                          |
+  // +-----------------------------------------+
+  private static final String RM = PREFIX + "roadmap";
+
+  private Table<Record> roadmapTable;
+  private final Field<String> roadmapFieldKey = DSL.field("key", VARCHAR(64).notNull());
+  private final Field<String> roadmapFieldNameFormat = DSL.field("name_format", VARCHAR.notNull());
+  private final Field<String> roadmapFieldVisualizer =
+      DSL.field("path_visualizer", VARCHAR(64).nullable(true));
+  private final Field<Double> roadmapFieldCurveLength =
+      DSL.field("path_curve_length", DOUBLE.notNull().defaultValue(3.));
+
+  private final RecordMapper<? super Record, RoadMap> roadmapMapper = record -> {
+    String keyString = record.get(roadmapFieldKey);
+    String nameFormat = record.get(roadmapFieldNameFormat);
+    String pathVisualizerKeyString = record.get(roadmapFieldVisualizer);
+    double pathCurveLength = record.get(roadmapFieldCurveLength);
+
+    return new RoadMap(
+        NamespacedKey.fromString(keyString),
+        nameFormat,
+        pathVisualizerKeyString == null ? null : VisualizerHandler.getInstance()
+            .getPathVisualizer(NamespacedKey.fromString(pathVisualizerKeyString)),
+        pathCurveLength);
+  };
+
+  // +-----------------------------------------+
+  // |  Node Table                             |
+  // +-----------------------------------------+
+  private static final String NODE = PREFIX + "nodes";
+
+  private Table<Record> nodeTable;
+  private final Field<Integer> nodeFieldId = DSL.field("id", INTEGER.notNull());
+  private final Field<String> nodeFieldType = DSL.field("type", VARCHAR(64).notNull());
+  private final Field<String> nodeFieldRoadMap = DSL.field("roadmap_key", VARCHAR(64).notNull());
+  private final Field<Double> nodeFieldX = DSL.field("x", DOUBLE.notNull());
+  private final Field<Double> nodeFieldY = DSL.field("y", DOUBLE.notNull());
+  private final Field<Double> nodeFieldZ = DSL.field("z", DOUBLE.notNull());
+  private final Field<UUID> nodeFieldWorld = DSL.field("world", SQLDataType.UUID.notNull());
+  private final Field<Double> nodeFieldCurveLength =
+      DSL.field("path_curve_length", DOUBLE.nullable(true));
+
+
+  private final Function<RoadMap, RecordMapper<? super Record, Node>> nodeMapper = roadmap -> {
+    final RoadMap rm = roadmap;
+    return record -> {
+      int id = record.get(nodeFieldId);
+      String type = record.get(nodeFieldType);
+      double x = record.get(nodeFieldX);
+      double y = record.get(nodeFieldY);
+      double z = record.get(nodeFieldZ);
+      UUID worldUid = record.get(nodeFieldWorld);
+      Double curveLength = record.get(nodeFieldCurveLength);
+
+      NodeType<?> nodeType =
+          NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
+      Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(
+          rm,
+          id,
+          new Location(Bukkit.getWorld(worldUid), x, y, z),
+          true
+      ));
+      node.setCurveLength(curveLength);
+      return node;
+    };
+  };
+
+  // +-----------------------------------------+
+  // |  Edge Table                             |
+  // +-----------------------------------------+
+  private static final String EDGE = PREFIX + "edges";
+
+  private Table<Record> edgeTable;
+  private final Field<Integer> edgeFieldStart = DSL.field("start_id", INTEGER.notNull());
+  private final Field<Integer> edgeFieldEnd = DSL.field("end_id", INTEGER.notNull());
+  private final Field<Double> edgeFieldWeight =
+      DSL.field("weight_modifier", DOUBLE.notNull().defaultValue(1.));
+
+  private final Function<Map<Integer, Node>, RecordMapper<? super Record, Edge>> edgeMapper =
+      map -> record -> {
+        int startId = record.get(edgeFieldStart);
+        int endId = record.get(edgeFieldEnd);
+        double weight = record.get(edgeFieldWeight);
+
+        Node start = map.get(startId);
+        Node end = map.get(endId);
+
+        if (start == null || end == null) {
+          deleteEdge(startId, endId);
+        }
+        return new Edge(start, end, (float) weight);
+      };
+
+  // +-----------------------------------------+
+  // |  Nodegroup Table                        |
+  // +-----------------------------------------+
+  private static final String GROUP = PREFIX + "nodegroups";
+
+  private Table<Record> groupTable;
+  private final Field<String> groupFieldKey = DSL.field("key", VARCHAR(64).notNull());
+  private final Field<String> groupFieldNameFormat = DSL.field("key", VARCHAR.notNull());
+  private final Field<String> groupFieldPermission =
+      DSL.field("permission", VARCHAR.nullable(true));
+  private final Field<Boolean> groupFieldNavigable = DSL.field("navigable", BOOLEAN.notNull());
+  private final Field<Boolean> groupFieldDiscoverable =
+      DSL.field("discoverable", BOOLEAN.notNull());
+  private final Field<Double> groupFieldFindDistance = DSL.field("find_distance", DOUBLE.notNull());
+
+  private final RecordMapper<? super Record, NodeGroup> groupMapper = record -> {
+    String keyString = record.get(groupFieldKey);
+    String nameFormat = record.get(groupFieldNameFormat);
+    String permission = record.get(groupFieldPermission);
+    boolean navigable = record.get(groupFieldNavigable);
+    boolean discoverable = record.get(groupFieldDiscoverable);
+    double findDistance = record.get(groupFieldFindDistance);
+
+    NodeGroup group = new NodeGroup(NamespacedKey.fromString(keyString), nameFormat);
+    group.setPermission(permission);
+    group.setNavigable(navigable);
+    group.setDiscoverable(discoverable);
+    group.setFindDistance((float) findDistance);
+    return group;
+  };
+
+  // +-----------------------------------------+
+  // |  Nodegroup-Node Relation                |
+  // +-----------------------------------------+
+  private static final String GROUP_NODES = PREFIX + "nodegroup_nodes";
+  private Table<Record> groupNodesRelation;
+  private final Field<String> fieldGroupNodesGroupKey =
+      DSL.field("group_key", VARCHAR(64).notNull());
+  private final Field<Integer> fieldGroupNodesNodeId = DSL.field("node_id", INTEGER.notNull());
+
+  // +-----------------------------------------+
+  // |  Discoverings                           |
+  // +-----------------------------------------+
+  private static final String DISCOVERINGS = PREFIX + "discoverings";
+
+  private Table<Record> discoveringsTable;
+  private final Field<String> discoveringsFieldDiscoverKey =
+      DSL.field("discover_key", VARCHAR(64).notNull());
+  private final Field<UUID> discoveringsFieldPlayerId =
+      DSL.field("player_id", SQLDataType.UUID.notNull());
+  private final Field<Timestamp> discoveringsFieldDate =
+      DSL.field("date", SQLDataType.TIMESTAMP.notNull());
+
+  // +-----------------------------------------+
+  // |  Searchterms                            |
+  // +-----------------------------------------+
+  private static final String TERMS = PREFIX + "search_terms";
+
+  private Table<Record> termsTable;
+  private final Field<String> termsFieldGroup =
+      DSL.field("group_key", VARCHAR(64).notNull());
+  private final Field<String> termsFieldTerm =
+      DSL.field("search_term", VARCHAR(64).notNull());
+
+  public SqlDatabase() {
+    create = DSL.using(SQLDialect.SQLITE);
+  }
 
   @Override
   public void connect(Runnable initial) throws IOException {
@@ -55,104 +236,77 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createRoadMapTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_roadmaps` (" +
-              "`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
-              "`name_format` TEXT NOT NULL ," +
-              "`path_visualizer` VARCHAR(64) NULL ," +
-              "`path_curve_length` DOUBLE NOT NULL DEFAULT 3 )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create roadmap table.", e);
-    }
+    DSL.createTableIfNotExists(RM)
+        .column(roadmapFieldKey)
+        .column(roadmapFieldNameFormat)
+        .column(roadmapFieldVisualizer)
+        .column(roadmapFieldCurveLength)
+        .primaryKey(roadmapFieldKey)
+        .execute();
+    roadmapTable = DSL.table(RM);
   }
 
   private void createNodeTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_nodes` (" +
-              "`id` INTEGER PRIMARY KEY AUTOINCREMENT ," +
-              "`type` VARCHAR(64) NOT NULL ," +
-              "`roadmap_key` VARCHAR(64) NOT NULL ," +
-              "`x` DOUBLE NOT NULL ," +
-              "`y` DOUBLE NOT NULL ," +
-              "`z` DOUBLE NOT NULL ," +
-              "`world` VARCHAR(36) NOT NULL ," +
-              "`path_curve_length` DOUBLE NULL ," +
-              "FOREIGN KEY (roadmap_key) REFERENCES pathfinder_roadmaps(key) ON DELETE CASCADE )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create node table.", e);
-    }
+
+    DSL.createTableIfNotExists(RM)
+        .column(nodeFieldId)
+        .column(nodeFieldType)
+        .column(nodeFieldRoadMap)
+        .column(nodeFieldX)
+        .column(nodeFieldY)
+        .column(nodeFieldZ)
+        .column(nodeFieldWorld)
+        .column(nodeFieldCurveLength)
+        .primaryKey(nodeFieldId)
+        .constraint(DSL.foreignKey(nodeFieldRoadMap).references(roadmapTable))
+        .execute();
+    nodeTable = DSL.table(NODE);
   }
 
   private void createEdgeTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_edges` (" +
-              "`start_id` INT NOT NULL ," +
-              "`end_id` INT NOT NULL ," +
-              "`weight_modifier` DOUBLE NOT NULL DEFAULT 1 ," +
-              "FOREIGN KEY (start_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE ," +
-              "FOREIGN KEY (end_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE ," +
-              "PRIMARY KEY (start_id ,end_id) )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create edge mapping.", e);
-    }
+    DSL.createTableIfNotExists(EDGE)
+        .column(edgeFieldStart)
+        .column(edgeFieldEnd)
+        .column(edgeFieldWeight)
+        .primaryKey(edgeFieldStart, edgeFieldEnd)
+        .execute();
+    edgeTable = DSL.table(EDGE);
   }
 
   private void createNodeGroupTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_nodegroups` (" +
-              "`key` VARCHAR(64) NOT NULL PRIMARY KEY ," +
-              "`name_format` TEXT NOT NULL ," +
-              "`permission` VARCHAR(64) NULL ," +
-              "`navigable` BOOLEAN NOT NULL ," +
-              "`discoverable` BOOLEAN NOT NULL ," +
-              "`find_distance` DOUBLE NOT NULL " +
-              ")")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create node group mapping.", e);
-    }
+    DSL.createTableIfNotExists(GROUP)
+        .column(groupFieldKey)
+        .column(groupFieldNameFormat)
+        .column(groupFieldPermission)
+        .column(groupFieldNavigable)
+        .column(groupFieldDiscoverable)
+        .column(groupFieldFindDistance)
+        .primaryKey(groupFieldKey)
+        .execute();
+    groupTable = DSL.table(GROUP);
   }
 
   private void createNodeGroupSearchTermsTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_search_terms` (" +
-              "`group_key` VARCHAR(64) NOT NULL ," +
-              "`search_term` VARCHAR(64) NOT NULL ," +
-              "PRIMARY KEY (group_key, search_term) ," +
-              "FOREIGN KEY (group_key) REFERENCES pathfinder_nodegroups(key) ON DELETE CASCADE )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create \"node group <-> search term\" mapping.", e);
-    }
+    DSL.createTableIfNotExists(TERMS)
+        .column(termsFieldGroup)
+        .column(termsFieldTerm)
+        .primaryKey(termsFieldGroup, termsFieldTerm)
+        .constraint(DSL.foreignKey(termsFieldGroup)
+            .references(groupTable, groupFieldKey)
+            .onDeleteCascade()
+        )
+        .execute();
+    termsTable = DSL.table(TERMS);
   }
 
   private void createNodeGroupNodesTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_nodegroups_nodes` (" +
-              "`group_key` VARCHAR(64) NOT NULL ," +
-              "`node_id` INT NOT NULL ," +
-              "PRIMARY KEY (group_key, node_id) , " +
-              "FOREIGN KEY (group_key) REFERENCES pathfinder_nodegroups(key) ON DELETE CASCADE ," +
-              "FOREIGN KEY (node_id) REFERENCES pathfinder_nodes(id) ON DELETE CASCADE )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create \"node group <-> node\" mapping.", e);
-    }
+    DSL.createTableIfNotExists(GROUP_NODES)
+        .column(fieldGroupNodesGroupKey)
+        .column(fieldGroupNodesNodeId)
+        .primaryKey(fieldGroupNodesGroupKey, fieldGroupNodesNodeId)
+        .constraint(DSL.foreignKey(fieldGroupNodesGroupKey).references(groupTable, groupFieldKey))
+        .execute();
+    groupNodesRelation = DSL.table(GROUP_NODES);
   }
 
   private void createPathVisualizerTable() {
@@ -173,254 +327,126 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createDiscoverInfoTable() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "CREATE TABLE IF NOT EXISTS `pathfinder_discoverings` (" +
-              "`discover_key` VARCHAR(64) NOT NULL ," +
-              "`player_id` VARCHAR(36) NOT NULL ," +
-              "`date` TIMESTAMP NOT NULL ," +
-              "PRIMARY KEY (discover_key, player_id) )")) {
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create discoverings table.", e);
-    }
+    create.createTableIfNotExists(DISCOVERINGS)
+        .column(discoveringsFieldDiscoverKey)
+        .column(discoveringsFieldPlayerId)
+        .column(discoveringsFieldDate)
+        .primaryKey(discoveringsFieldDiscoverKey, discoveringsFieldPlayerId)
+        .execute();
+    discoveringsTable = DSL.table(DISCOVERINGS);
   }
 
 
   @Override
   public Map<NamespacedKey, RoadMap> loadRoadMaps() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_roadmaps`")) {
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          HashedRegistry<RoadMap> registry = new HashedRegistry<>();
-          while (resultSet.next()) {
-            String keyString = resultSet.getString("key");
-            String nameFormat = resultSet.getString("name_format");
-            String pathVisualizerKeyString = resultSet.getString("path_visualizer");
-            double pathCurveLength = resultSet.getDouble("path_curve_length");
-
-            registry.put(new RoadMap(
-                NamespacedKey.fromString(keyString),
-                nameFormat,
-                pathVisualizerKeyString == null ? null : VisualizerHandler.getInstance()
-                    .getPathVisualizer(NamespacedKey.fromString(pathVisualizerKeyString)),
-                pathCurveLength));
-          }
-          return registry;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load roadmaps", e);
-    }
+    HashedRegistry<RoadMap> registry = new HashedRegistry<>();
+    create
+        .select(roadmapTable.asterisk())
+        .from(roadmapTable)
+        .fetch(roadmapMapper)
+        .forEach(registry::put);
+    return registry;
   }
 
   @Override
   public void updateRoadMap(RoadMap roadMap) {
-
-    try (Connection connection = getConnection()) {
-      try (
-          PreparedStatement stmt = connection.prepareStatement("INSERT INTO `pathfinder_roadmaps`" +
-              "(`key`, `name_format`, `path_visualizer`, `path_curve_length`) VALUES (?, ?, ?, ?) "
-              +
-              "ON CONFLICT(`key`) DO UPDATE SET " +
-              "`name_format` = ?, " +
-              "`path_visualizer` = ?, " +
-              "`path_curve_length` = ?")) {
-        stmt.setString(1, roadMap.getKey().toString());
-        stmt.setString(2, roadMap.getNameFormat());
-        if (roadMap.getVisualizer() == null) {
-          stmt.setNull(3, Types.VARCHAR);
-        } else {
-          stmt.setString(3, roadMap.getVisualizer().getKey().toString());
-        }
-        stmt.setDouble(4, roadMap.getDefaultCurveLength());
-        stmt.setString(5, roadMap.getNameFormat());
-        if (roadMap.getVisualizer() == null) {
-          stmt.setNull(6, Types.VARCHAR);
-        } else {
-          stmt.setString(6, roadMap.getVisualizer().getKey().toString());
-        }
-        stmt.setDouble(7, roadMap.getDefaultCurveLength());
-        stmt.executeUpdate();
-      }
-    } catch (SQLException e) {
-      throw new DataStorageException("Could not update roadmap.", e);
-    }
+    create
+        .insertInto(roadmapTable)
+        .values(
+            roadMap.getKey(),
+            roadMap.getNameFormat(),
+            roadMap.getVisualizer() == null ? null : roadMap.getVisualizer()
+                .getKey().toString(),
+            roadMap.getDefaultCurveLength())
+        .onDuplicateKeyUpdate()
+        .set(roadmapFieldNameFormat, roadMap.getNameFormat())
+        .set(roadmapFieldVisualizer, roadMap.getVisualizer() == null ? null : roadMap
+            .getVisualizer().getKey().toString())
+        .set(roadmapFieldCurveLength, roadMap.getDefaultCurveLength())
+        .execute();
   }
 
   @Override
-  public boolean deleteRoadMap(NamespacedKey key) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_roadmaps` WHERE `key` = ?")) {
-        stmt.setString(1, key.toString());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete roadmap.", e);
-    }
-    return true;
+  public void deleteRoadMap(NamespacedKey key) {
+    create
+        .deleteFrom(roadmapTable)
+        .where(roadmapFieldKey.eq(key.toString()))
+        .execute();
   }
 
   @Override
   public void saveEdges(Collection<Edge> edges) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
-
-      try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_edges` " +
-          "(`start_id`, `end_id`, `weight_modifier`) VALUES " +
-          "(?, ?, ?)")) {
-        for (var edge : edges) {
-          stmt.setInt(1, edge.getStart().getNodeId());
-          stmt.setInt(2, edge.getEnd().getNodeId());
-          stmt.setDouble(3, edge.getWeightModifier());
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
-      }
-
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create new edge.", e);
+    BatchBindStep step = create.batch(create
+        .insertInto(edgeTable)
+        .columns(edgeFieldStart, edgeFieldEnd, edgeFieldWeight)
+        .onConflictDoNothing()
+    );
+    for (Edge e : edges) {
+      step = step.bind(e.getStart().getNodeId(), e.getEnd().getNodeId(), e.getWeightModifier());
     }
+    step.execute();
   }
 
   @Override
   public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_edges` pe " +
-          "JOIN pathfinder_nodes pn ON pn.id = pe.start_id " +
-          "WHERE `pn`.`roadmap_key` = ?")) {
-        stmt.setString(1, roadMap.getKey().toString());
-
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          HashSet<Edge> edges = new HashSet<>();
-          while (resultSet.next()) {
-            int startId = resultSet.getInt("start_id");
-            int endId = resultSet.getInt("end_id");
-            double weight = resultSet.getDouble("weight_modifier");
-
-            Node start = roadMap.getNode(startId);
-            Node end = roadMap.getNode(endId);
-
-            if (start == null || end == null) {
-              deleteEdge(start, end);
-            }
-            edges.add(new Edge(start, end, (float) weight));
-          }
-          return edges;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load edges.", e);
-    }
+    Collection<Integer> ids = scope.keySet();
+    return new HashSet<>(create
+        .select(edgeTable.asterisk())
+        .from(edgeTable)
+        .where(edgeFieldStart.in(ids))
+        .or(edgeFieldEnd.in(ids))
+        .fetch(edgeMapper.apply(scope)));
   }
 
   @Override
   public void deleteEdgesFrom(Node start) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_edges` WHERE `start_id` = ?")) {
-        stmt.setInt(1, start.getNodeId());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete edges.", e);
-    }
+    create.deleteFrom(edgeTable)
+        .where(edgeFieldStart.eq(start.getNodeId()))
+        .execute();
   }
 
   @Override
   public void deleteEdgesTo(Node end) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_edges` WHERE `end_id` = ?")) {
-        stmt.setInt(1, end.getNodeId());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete edges.", e);
-    }
+    create.deleteFrom(edgeTable)
+        .where(edgeFieldEnd.eq(end.getNodeId()))
+        .execute();
   }
 
   public void deleteEdge(Node start, Node end) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_edges` WHERE `start_id` = ? AND `end_id` = ?")) {
-        stmt.setInt(1, start.getNodeId());
-        stmt.setInt(2, end.getNodeId());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete edge.", e);
-    }
+    deleteEdge(start.getNodeId(), end.getNodeId());
+  }
+
+  public void deleteEdge(int start, int end) {
+    create.deleteFrom(edgeTable)
+        .where(edgeFieldStart.eq(start))
+        .and(edgeFieldEnd.eq(end))
+        .execute();
   }
 
   @Override
   public void deleteEdges(Collection<Edge> edges) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
-
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_edges` WHERE `start_id` = ? AND `end_id` = ?")) {
-        for (Edge edge : edges) {
-          stmt.setInt(1, edge.getStart().getNodeId());
-          stmt.setInt(2, edge.getEnd().getNodeId());
-          stmt.addBatch();
-        }
-        stmt.executeUpdate();
-
-        stmt.executeBatch();
+    create.batched(configuration -> {
+      for (Edge edge : edges) {
+        DSL.using(configuration)
+            .deleteFrom(edgeTable)
+            .where(edgeFieldStart.eq(edge.getStart().getNodeId()))
+            .and(edgeFieldEnd.eq(edge.getEnd().getNodeId()))
+            .execute();
       }
-
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete edge.", e);
-    }
+    });
   }
 
   @Override
   public Map<Integer, Node> loadNodes(RoadMap roadMap) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "SELECT * FROM `pathfinder_nodes` WHERE `roadmap_key` = ?")) {
-        stmt.setString(1, roadMap.getKey().toString());
 
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          Map<Integer, Node> nodes = new LinkedHashMap<>();
-          while (resultSet.next()) {
-            int id = resultSet.getInt("id");
-            String type = resultSet.getString("type");
-            double x = resultSet.getDouble("x");
-            double y = resultSet.getDouble("y");
-            double z = resultSet.getDouble("z");
-            String worldUid = resultSet.getString("world");
-            Double curveLength = resultSet.getDouble("path_curve_length");
-            if (resultSet.wasNull()) {
-              curveLength = null;
-            }
-
-            NodeType<?> nodeType =
-                NodeTypeHandler.getInstance().getNodeType(NamespacedKey.fromString(type));
-            Node node = nodeType.getFactory().apply(new NodeType.NodeCreationContext(
-                roadMap,
-                id,
-                new Location(Bukkit.getWorld(UUID.fromString(worldUid)), x, y, z),
-                true
-            ));
-            node.setCurveLength(curveLength);
-            nodes.put(id, node);
-          }
-          return nodes;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load nodes.", e);
-    }
+    Map<Integer, Node> map = new TreeMap<>();
+    create
+        .select(nodeTable.asterisk())
+        .from(nodeTable)
+        .where(roadmapFieldKey.eq(roadMap.getKey().toString()))
+        .fetch(nodeMapper.apply(roadMap))
+        .forEach(node -> map.put(node.getNodeId(), node));
+    return map;
   }
 
   @Override
@@ -463,170 +489,94 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteNodes(Integer... nodeIds) {
-    deleteNodes(Arrays.asList(nodeIds));
-  }
-
-  @Override
   public void deleteNodes(Collection<Integer> nodeIds) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
 
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_nodes` WHERE `id` = ?")) {
-        for (int id : nodeIds) {
-          stmt.setInt(1, id);
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
-      }
-
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete node.", e);
-    }
+    create.deleteFrom(nodeTable)
+        .where(nodeFieldId.in(nodeIds))
+        .execute();
   }
 
   @Override
   public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
-
-      try (PreparedStatement stmt = con.prepareStatement(
-          "INSERT INTO `pathfinder_nodegroups_nodes` " +
-              "(`group_key`, `node_id`) VALUES (?, ?) ON CONFLICT(`group_key`, `node_id`) DO NOTHING")) {
-        for (Node node : selection) {
-          stmt.setString(1, group.getKey().toString());
-          stmt.setInt(2, node.getNodeId());
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
+    create.batched(configuration -> {
+      for (Node node : selection) {
+        DSL.using(configuration)
+            .insertInto(groupNodesRelation)
+            .values(group.getKey(), node.getNodeId())
+            .onDuplicateKeyIgnore()
+            .execute();
       }
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not add node to group.", e);
-    }
+    });
   }
 
   @Override
   public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
-    try (Connection con = getConnection()) {
-      boolean wasAuto = con.getAutoCommit();
-      con.setAutoCommit(false);
+    Collection<Integer> ids = new HashSet<>();
+    selection.forEach(g -> ids.add(g.getNodeId()));
 
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_nodegroups_nodes` " +
-              "WHERE `group_key` = ? AND `node_id` = ?")) {
-        for (Node node : selection) {
-          stmt.setString(1, group.getKey().toString());
-          stmt.setInt(2, node.getNodeId());
-          stmt.addBatch();
-        }
-        stmt.executeBatch();
-      }
-      con.commit();
-      con.setAutoCommit(wasAuto);
-    } catch (Exception e) {
-      throw new DataStorageException("Could not add node to group.", e);
-    }
+    create
+        .deleteFrom(groupNodesRelation)
+        .where(fieldGroupNodesGroupKey.eq(group.getKey().toString()))
+        .and(fieldGroupNodesNodeId.in(ids))
+        .execute();
   }
 
   @Override
   public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "SELECT * FROM `pathfinder_nodegroups_nodes`")) {
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          Map<Integer, HashSet<NamespacedKey>> registry = new LinkedHashMap<>();
-          while (resultSet.next()) {
-            String keyString = resultSet.getString("group_key");
-            int nodeId = resultSet.getInt("node_id");
+    Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
+    create
+        .select(groupNodesRelation.asterisk())
+        .from(groupNodesRelation)
+        .fetch()
+        .forEach(record -> {
+          String keyString = record.get(fieldGroupNodesGroupKey);
+          int nodeId = record.get(fieldGroupNodesNodeId);
 
-            HashSet<NamespacedKey> l = registry.computeIfAbsent(nodeId, id -> new HashSet<>());
-            l.add(NamespacedKey.fromString(keyString));
-          }
-          return registry;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load node group nodes.", e);
-    }
+          HashSet<NamespacedKey> l = result.computeIfAbsent(nodeId, id -> new HashSet<>());
+          l.add(NamespacedKey.fromString(keyString));
+        });
+    return result;
   }
 
   @Override
   public HashedRegistry<NodeGroup> loadNodeGroups() {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM `pathfinder_nodegroups`")) {
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
-          while (resultSet.next()) {
-            String keyString = resultSet.getString("key");
-            String nameFormat = resultSet.getString("name_format");
-            String permission = resultSet.getString("permission");
-            boolean navigable = resultSet.getBoolean("navigable");
-            boolean discoverable = resultSet.getBoolean("discoverable");
-            double findDistance = resultSet.getDouble("find_distance");
-
-            NodeGroup group = new NodeGroup(NamespacedKey.fromString(keyString), nameFormat);
-            group.setPermission(permission);
-            group.setNavigable(navigable);
-            group.setDiscoverable(discoverable);
-            group.setFindDistance((float) findDistance);
-            registry.put(group);
-          }
-          return registry;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load node groups.", e);
-    }
+    HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
+    create
+        .select(groupTable.asterisk())
+        .from(groupTable)
+        .fetch(groupMapper)
+        .forEach(registry::put);
+    return registry;
   }
 
   @Override
   public void updateNodeGroup(NodeGroup group) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_nodegroups` " +
-          "(`key`, `name_format`, `permission`, `navigable`, `discoverable`, `find_distance`) VALUES (?, ?, ?, ?, ?, ?)"
-          +
-          "ON CONFLICT(`key`) DO UPDATE SET " +
-          "`name_format` = ?, " +
-          "`permission` = ?, " +
-          "`navigable` = ?, " +
-          "`discoverable` = ?, " +
-          "`find_distance` = ?")) {
-        stmt.setString(1, group.getKey().toString());
-        stmt.setString(2, group.getNameFormat());
-        stmt.setString(3, group.getPermission());
-        stmt.setBoolean(4, group.isNavigable());
-        stmt.setBoolean(5, group.isDiscoverable());
-        stmt.setDouble(6, group.getFindDistance());
-        stmt.setString(7, group.getNameFormat());
-        stmt.setString(8, group.getPermission());
-        stmt.setBoolean(9, group.isNavigable());
-        stmt.setBoolean(10, group.isDiscoverable());
-        stmt.setDouble(11, group.getFindDistance());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not update node group.", e);
-    }
+    create
+        .insertInto(groupTable)
+        .values(
+            group.getKey(),
+            group.getNameFormat(),
+            group.getPermission(),
+            group.isNavigable(),
+            group.isDiscoverable(),
+            group.getFindDistance()
+        )
+        .onDuplicateKeyUpdate()
+        .set(groupFieldKey, group.getKey().toString())
+        .set(groupFieldNameFormat, group.getNameFormat())
+        .set(groupFieldPermission, group.getPermission())
+        .set(groupFieldNavigable, group.isNavigable())
+        .set(groupFieldDiscoverable, group.isDiscoverable())
+        .set(groupFieldFindDistance, group.getFindDistance() * 1.)
+        .execute();
   }
 
   @Override
   public void deleteNodeGroup(NamespacedKey key) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_nodegroups` WHERE `key` = ?")) {
-        stmt.setString(1, key.toString());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete node group.", e);
-    }
+    create
+        .deleteFrom(groupTable)
+        .where(groupFieldKey.eq(key.toString()))
+        .execute();
   }
 
   @Override
@@ -698,57 +648,39 @@ public abstract class SqlDatabase implements DataStorage {
 
   @Override
   public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement("INSERT INTO `pathfinder_discoverings` " +
-          "(`discover_key`, `player_id`, `date`) VALUES (?, ?, ?)")) {
-        stmt.setString(1, discoverable.getKey().toString());
-        stmt.setString(2, player.toString());
-        stmt.setTimestamp(3, Timestamp.from(foundDate.toInstant()));
-        stmt.executeUpdate();
-
-        return new DiscoverInfo(player, discoverable.getKey(), foundDate);
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not create new discover info.", e);
-    }
+    create
+        .insertInto(discoveringsTable)
+        .values(discoverable.getKey().toString(), player, foundDate)
+        .onDuplicateKeyIgnore()
+        .execute();
+    return new DiscoverInfo(player, discoverable.getKey(), foundDate);
   }
 
   @Override
   public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "SELECT * FROM `pathfinder_discoverings` WHERE `player_id` = ?")) {
-        stmt.setString(1, playerId.toString());
-        try (ResultSet resultSet = stmt.executeQuery()) {
-          Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
-          while (resultSet.next()) {
-            String keyString = resultSet.getString("discover_key");
-            Date date = resultSet.getTimestamp("date");
+    Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
+    create
+        .select(discoveringsTable.asterisk())
+        .from(discoveringsTable)
+        .where(discoveringsFieldPlayerId.eq(playerId))
+        .fetch()
+        .forEach(record -> {
+          String keyString = record.get(discoveringsFieldDiscoverKey);
+          Date date = record.get(discoveringsFieldDate);
 
-            DiscoverInfo info =
-                new DiscoverInfo(playerId, NamespacedKey.fromString(keyString), date);
-            registry.put(info.discoverable(), info);
-          }
-          return registry;
-        }
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not load discoverings.", e);
-    }
+          DiscoverInfo info = new DiscoverInfo(playerId, NamespacedKey.fromString(keyString), date);
+          registry.put(info.discoverable(), info);
+        });
+    return registry;
   }
 
   @Override
   public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
-    try (Connection con = getConnection()) {
-      try (PreparedStatement stmt = con.prepareStatement(
-          "DELETE FROM `pathfinder_discoverings` WHERE `player_id` = ? AND `discover_key` = ?")) {
-        stmt.setString(1, playerId.toString());
-        stmt.setString(2, discoverKey.toString());
-        stmt.executeUpdate();
-      }
-    } catch (Exception e) {
-      throw new DataStorageException("Could not delete discovering.", e);
-    }
+    create
+        .deleteFrom(discoveringsTable)
+        .where(discoveringsFieldPlayerId.eq(playerId))
+        .and(discoveringsFieldDiscoverKey.eq(discoverKey.toString()))
+        .execute();
   }
 
   @Override

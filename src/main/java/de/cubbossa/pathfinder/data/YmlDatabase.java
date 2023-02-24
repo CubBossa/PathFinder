@@ -53,6 +53,7 @@ public class YmlDatabase implements DataStorage {
   private File nodeGroupDir;
   private File pathVisualizerDir;
   private File userDir;
+
   public YmlDatabase(File dataDirectory) {
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
@@ -156,12 +157,10 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public boolean deleteRoadMap(NamespacedKey key) {
+  public void deleteRoadMap(NamespacedKey key) {
     roadmapHandles.remove(key);
     File file = new File(roadMapDir, toFileName(key));
-    boolean exists = file.exists();
     file.deleteOnExit();
-    return exists;
   }
 
   @Override

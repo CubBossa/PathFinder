@@ -66,9 +66,14 @@
                             <include>org.ow2.asm:asm-util</include>
                             <include>de.tr7zw:item-nbt-api-plugin</include>
                             <include>org.antlr:antlr4-runtime</include>
+                            <include>org.jooq:jooq</include>
                         </includes>
                     </artifactSet>
                     <relocations>
+                        <relocation>
+                            <pattern>org.jooq</pattern>
+                            <shadedPattern>de.cubbossa.pathfinder.jooq</shadedPattern>
+                        </relocation>
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>de.cubbossa.pathfinder.bstats</shadedPattern>
@@ -193,6 +198,12 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.17.8</version>
+        </dependency>
 
         <dependency>
             <groupId>me.clip</groupId>

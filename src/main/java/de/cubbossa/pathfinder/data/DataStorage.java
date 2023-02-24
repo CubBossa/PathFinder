@@ -11,7 +11,6 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -20,7 +19,8 @@ import javax.annotation.Nullable;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 
-public interface DataStorage {
+public interface DataStorage extends
+    NodeDataStorage<Node> {
 
   default void connect() throws IOException {
     connect(() -> {
@@ -42,11 +42,11 @@ public interface DataStorage {
 
   void updateRoadMap(RoadMap roadMap);
 
-  default boolean deleteRoadMap(RoadMap roadMap) {
-    return deleteRoadMap(roadMap.getKey());
+  default void deleteRoadMap(RoadMap roadMap) {
+    deleteRoadMap(roadMap.getKey());
   }
 
-  boolean deleteRoadMap(NamespacedKey key);
+  void deleteRoadMap(NamespacedKey key);
 
 
   void saveEdges(Collection<Edge> edges);
@@ -64,17 +64,6 @@ public interface DataStorage {
   }
 
   void deleteEdge(Node start, Node end);
-
-
-  Map<Integer, Node> loadNodes(RoadMap roadMap);
-
-  void updateNode(Node node);
-
-  default void deleteNodes(Integer... nodeId) {
-    deleteNodes(Arrays.asList(nodeId));
-  }
-
-  void deleteNodes(Collection<Integer> nodeIds);
 
 
   void assignNodesToGroup(NodeGroup group, NodeSelection selection);
