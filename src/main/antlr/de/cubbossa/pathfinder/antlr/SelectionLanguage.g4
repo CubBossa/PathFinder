@@ -1,5 +1,9 @@
 grammar SelectionLanguage;
 
+@header {
+    package de.cubbossa.pathfinder.antlr;
+}
+
 program
    : expression EOF
    ;

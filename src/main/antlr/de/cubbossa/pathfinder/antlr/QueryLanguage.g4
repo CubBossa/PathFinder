@@ -1,5 +1,9 @@
 grammar QueryLanguage;
 
+@header {
+    package de.cubbossa.pathfinder.antlr;
+}
+
 program
    : expression EOF
    ;

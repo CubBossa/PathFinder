@@ -10,7 +10,7 @@ For more details check the [docs](https://docs.leonardbausenwein.de/getting_star
 
 ## Build
 
-To build the pathfinder, clone the repository and run `maven clean install`
+To build the pathfinder, clone the repository and run `./gradlew build`
 
 ## Depencency
 
@@ -26,4 +26,13 @@ The pathfinder artifact can be found in a nexus repository:
     <artifactId>PathFinder</artifactId>
     <version>[VERSION]</version>
 </dependency>
+```
+```kotlin
+repositories {
+    maven("https://nexus.leonardbausenwein.de/repository/maven-public")
+}
+
+dependencies {
+    implementation("de.cubbossa:PathFinder:[VERSION]")
+}
 ```

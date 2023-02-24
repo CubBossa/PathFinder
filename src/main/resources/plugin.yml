@@ -1,5 +1,5 @@
-name: ${project.name}
-version: ${project.version}
+name: @name@
+version: @version@
 author: CubBossa
 main: de.cubbossa.pathfinder.PathPlugin
 # servers only run plugins with the same api-version or higher. Leave to 1.17

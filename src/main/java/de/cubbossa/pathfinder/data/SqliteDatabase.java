@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import lombok.Getter;
 
 public class SqliteDatabase extends SqlDatabase {
 
   private final File file;
-  @Getter
   private Connection connection;
 
   public SqliteDatabase(File file) {
