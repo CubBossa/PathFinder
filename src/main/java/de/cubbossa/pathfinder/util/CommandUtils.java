@@ -3,19 +3,37 @@ package de.cubbossa.pathfinder.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.ArgumentTreeLike;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 @UtilityClass
 public class CommandUtils {
+
+  private CommandHelpGenerator generator = new CommandHelpGenerator();
+
+  public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree) {
+    sendHelp(sender, tree, -1);
+  }
+
+  public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree, int depth) {
+    Audience audience = TranslationHandler.getInstance().getAudiences().sender(sender);
+    TranslationHandler.getInstance().sendMessage(Messages.CMD_INCOMPLETE, audience);
+    generator
+        .format(tree, depth).stream()
+        .map(c -> Messages.CMD_INCOMPLETE_LINE.format(Placeholder.component("cmd", c)))
+        .forEach(audience::sendMessage);
+  }
 
   /**
    * Shifts all suggestions one character to the right and adds a "" suggestion if the

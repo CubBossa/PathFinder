@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.arguments.IntegerArgument;
 import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -61,7 +60,7 @@ public class CompassVisualizerType extends VisualizerType<CompassVisualizer> {
             CompassVisualizer.PROP_WEST))
         .then(subCommand("target", CustomArgs.miniMessageArgument("value"),
             CompassVisualizer.PROP_TARGET))
-        .then(subCommand("radius", new IntegerArgument("value", 1), CompassVisualizer.PROP_RADIUS));
+        .then(subCommand("radius", CustomArgs.integer("value", 1), CompassVisualizer.PROP_RADIUS));
   }
 
   @Override
