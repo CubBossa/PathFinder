@@ -1,37 +1,22 @@
-name: Java with Nexus Repository
-
+name: Gradle
 on:
   push:
     branches: [ main ]
-
-
+  pull_request:
 jobs:
-  build:
-
+  gradle:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: 17
-      - name: Build with Maven
-        run: mvn package --file pom.xml -DskipTests
-      - name: Set Release version env variable
-        run: |
-          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-          echo "RELEASE_ARTIFACT=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)" >> $GITHUB_ENV
-          echo "RELEASE_GROUP=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)" >> $GITHUB_ENV
-      - name: Nexus Repo Publish
-        uses: sonatype-nexus-community/nexus-repo-github-action@master
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Run Gradle
+        uses: gradle/gradle-build-action@v2
         with:
-          serverUrl: https://nexus.leonardbausenwein.de/
-          username: admin
-          password: ${{ secrets.NEXUS_PASSWORD }}
-          format: maven2
-          repository: maven-releases
-          coordinates: groupId=${{ env.RELEASE_GROUP }} artifactId=${{ env.RELEASE_ARTIFACT }} version=${{ env.RELEASE_VERSION }}
-          assets: extension=jar
-          filename: ./target/${{ env.RELEASE_ARTIFACT }}-${{ env.RELEASE_VERSION }}.jar
+          arguments: publish
+        env:
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}

@@ -135,6 +135,16 @@ sourceSets {
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "Nexus"
+            url = uri("https://nexus.leonardbausenwein.de/repository/maven-public/")
+            credentials {
+                username = "admin"
+                password = System.getenv("NEXUS_PASSWORD")
+            }
+        }
+    }
     publications.create<MavenPublication>("maven") {
         groupId = project.group.toString()
         artifactId = rootProject.name
