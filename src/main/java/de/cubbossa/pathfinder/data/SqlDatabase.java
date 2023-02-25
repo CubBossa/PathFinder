@@ -42,6 +42,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.BatchBindStep;
+import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -55,9 +56,11 @@ public abstract class SqlDatabase implements DataStorage {
 
   abstract Connection getConnection();
 
+  abstract ConnectionProvider getConnectionProvider();
+
   private static final String PREFIX = "pathfinder_";
 
-  private final DSLContext create;
+  private DSLContext create;
 
   // +-----------------------------------------+
   // |  Roadmap Table                          |
@@ -211,15 +214,20 @@ public abstract class SqlDatabase implements DataStorage {
   private final Field<String> termsFieldTerm =
       DSL.field("search_term", VARCHAR(64).notNull());
 
-  public SqlDatabase() {
-    create = DSL.using(SQLDialect.SQLITE);
+
+  private final SQLDialect dialect;
+
+  public SqlDatabase(SQLDialect dialect) {
+    this.dialect = dialect;
   }
 
   @Override
   public void connect(Runnable initial) throws IOException {
-    create
-        .createDatabaseIfNotExists("pathfinder")
-        .execute();
+    create = DSL.using(getConnectionProvider(), dialect);
+
+    // create
+    //     .createDatabaseIfNotExists("pathfinder")
+    //     .execute();
 
     createPathVisualizerTable();
     createRoadMapTable();
@@ -232,7 +240,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createRoadMapTable() {
-    DSL.createTableIfNotExists(RM)
+    create.createTableIfNotExists(RM)
         .column(roadmapFieldKey)
         .column(roadmapFieldNameFormat)
         .column(roadmapFieldVisualizer)
@@ -244,7 +252,7 @@ public abstract class SqlDatabase implements DataStorage {
 
   private void createNodeTable() {
 
-    DSL.createTableIfNotExists(RM)
+    create.createTableIfNotExists(RM)
         .column(nodeFieldId)
         .column(nodeFieldType)
         .column(nodeFieldRoadMap)
@@ -260,7 +268,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createEdgeTable() {
-    DSL.createTableIfNotExists(EDGE)
+    create.createTableIfNotExists(EDGE)
         .column(edgeFieldStart)
         .column(edgeFieldEnd)
         .column(edgeFieldWeight)
@@ -270,7 +278,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createNodeGroupTable() {
-    DSL.createTableIfNotExists(GROUP)
+    create.createTableIfNotExists(GROUP)
         .column(groupFieldKey)
         .column(groupFieldNameFormat)
         .column(groupFieldPermission)
@@ -283,7 +291,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createNodeGroupSearchTermsTable() {
-    DSL.createTableIfNotExists(TERMS)
+    create.createTableIfNotExists(TERMS)
         .column(termsFieldGroup)
         .column(termsFieldTerm)
         .primaryKey(termsFieldGroup, termsFieldTerm)
@@ -296,7 +304,7 @@ public abstract class SqlDatabase implements DataStorage {
   }
 
   private void createNodeGroupNodesTable() {
-    DSL.createTableIfNotExists(GROUP_NODES)
+    create.createTableIfNotExists(GROUP_NODES)
         .column(fieldGroupNodesGroupKey)
         .column(fieldGroupNodesNodeId)
         .primaryKey(fieldGroupNodesGroupKey, fieldGroupNodesNodeId)
@@ -337,7 +345,7 @@ public abstract class SqlDatabase implements DataStorage {
   public Map<NamespacedKey, RoadMap> loadRoadMaps() {
     HashedRegistry<RoadMap> registry = new HashedRegistry<>();
     create
-        .select()
+        .select(roadmapTable.asterisk())
         .from(roadmapTable)
         .fetch(roadmapMapper)
         .forEach(registry::put);
@@ -349,7 +357,7 @@ public abstract class SqlDatabase implements DataStorage {
     create
         .insertInto(roadmapTable)
         .values(
-            roadMap.getKey(),
+            roadMap.getKey().toString(),
             roadMap.getNameFormat(),
             roadMap.getVisualizer() == null ? null : roadMap.getVisualizer()
                 .getKey().toString(),
@@ -439,7 +447,7 @@ public abstract class SqlDatabase implements DataStorage {
     create
         .select()
         .from(nodeTable)
-        .where(roadmapFieldKey.eq(roadMap.getKey().toString()))
+        .where(nodeFieldRoadMap.eq(roadMap.getKey().toString()))
         .fetch(nodeMapper.apply(roadMap))
         .forEach(node -> map.put(node.getNodeId(), node));
     return map;

@@ -6,6 +6,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
+import org.jooq.ConnectionProvider;
+import org.jooq.SQLDialect;
+import org.jooq.exception.DataAccessException;
 
 public class SqliteDatabase extends SqlDatabase {
 
@@ -14,6 +18,7 @@ public class SqliteDatabase extends SqlDatabase {
   private Connection connection;
 
   public SqliteDatabase(File file) {
+    super(SQLDialect.SQLITE);
     this.file = file;
   }
 
@@ -27,11 +32,12 @@ public class SqliteDatabase extends SqlDatabase {
     try {
       String url = "jdbc:sqlite:" + file.getAbsolutePath();
       connection = DriverManager.getConnection(url);
+      connection.setAutoCommit(false);
+      super.connect(initial);
 
     } catch (SQLException e) {
       throw new DataStorageException("Could not connect to Sqlite database.", e);
     }
-    super.connect(initial);
   }
 
   public void disconnect() {
@@ -51,5 +57,29 @@ public class SqliteDatabase extends SqlDatabase {
     } catch (SQLException e) {
       throw new DataStorageException("Could not connect to Sqlite database.", e);
     }
+  }
+
+  public ConnectionProvider getConnectionProvider() {
+    return new ConnectionProvider() {
+      @Override
+      public @Nullable Connection acquire() throws DataAccessException {
+        try {
+          connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+          return connection;
+        } catch (SQLException e) {
+          throw new DataStorageException("Could not connect to Sqlite database.", e);
+        }
+      }
+
+      @Override
+      public void release(Connection connection) throws DataAccessException {
+        try {
+          connection.close();
+        } catch (SQLException e) {
+          throw new DataStorageException("Could not close Sqlite database.", e);
+        }
+      }
+    };
+
   }
 }
