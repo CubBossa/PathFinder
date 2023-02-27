@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -99,7 +100,7 @@ public interface DataStorage extends
   void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 
 
-  Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
+  <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(VisualizerType<T> type);
 
   <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 

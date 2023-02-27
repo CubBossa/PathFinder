@@ -15,8 +15,8 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
-import de.cubbossa.pathfinder.data.SqliteDatabase;
-import de.cubbossa.pathfinder.data.YmlDatabase;
+import de.cubbossa.pathfinder.data.SqliteDataStorage;
+import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.hook.PlaceholderHookLoader;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
@@ -204,8 +204,8 @@ public class PathPlugin extends JavaPlugin {
     new File(getDataFolder(), "data/").mkdirs();
     database = switch (configuration.getDatabaseType()) {
       case IN_MEMORY -> null;
-      case SQLITE -> new SqliteDatabase(new File(getDataFolder() + "/data/", "database.db"));
-      default -> new YmlDatabase(new File(getDataFolder(), "data/"));
+      case SQLITE -> new SqliteDataStorage(new File(getDataFolder() + "/data/", "database.db"));
+      default -> new YmlDataStorage(new File(getDataFolder(), "data/"));
     };
     if (database != null) {
       database.connect(() -> {

@@ -11,13 +11,13 @@ import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 
-public class SqliteDatabase extends SqlDatabase {
+public class SqliteDataStorage extends SqlDataStorage {
 
   private final File file;
   @Getter
   private Connection connection;
 
-  public SqliteDatabase(File file) {
+  public SqliteDataStorage(File file) {
     super(SQLDialect.SQLITE);
     this.file = file;
   }

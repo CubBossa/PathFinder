@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
@@ -9,13 +10,27 @@ import java.util.Collection;
 import java.util.HashSet;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class PlayerNode implements Node<PlayerNode> {
+
+  public static final NodeType<PlayerNode> TYPE = new NodeType<>(
+      new NamespacedKey(PathPlugin.getInstance(), "empty"),
+      "empty",
+      new ItemStack(Material.DIRT)
+  ) {
+    @Override
+    public PlayerNode createNode(NodeCreationContext context) {
+      throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
+          + "must be created from constructor.");
+    }
+  };
 
   private final Player player;
   private final RoadMap roadMap;
@@ -27,7 +42,7 @@ public class PlayerNode implements Node<PlayerNode> {
 
   @Override
   public NodeType<PlayerNode> getType() {
-    return null;
+    return TYPE;
   }
 
   @Override

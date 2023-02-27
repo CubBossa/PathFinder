@@ -83,8 +83,15 @@ public interface DataExporter {
         }
         distinct.add(current);
       }
-      distinct.forEach(v -> storage.updatePathVisualizer((PathVisualizer) v));
+      distinct.forEach(DataExporter::updateVisualizer);
     };
+  }
+
+  static <T extends PathVisualizer<T, ?>> void updateVisualizer(PathVisualizer<T, ?> visualizer) {
+    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
+    if (storage != null) {
+      storage.updatePathVisualizer((T) visualizer);
+    }
   }
 
   static DataExporter groupSet(Iterable<NodeGroup> groups) {

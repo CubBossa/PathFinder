@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 
-public class YmlDatabase implements DataStorage {
+public class YmlDataStorage implements DataStorage {
 
 
   private static final String DIR_RM = "roadmaps";
@@ -54,7 +55,7 @@ public class YmlDatabase implements DataStorage {
   private File pathVisualizerDir;
   private File userDir;
 
-  public YmlDatabase(File dataDirectory) {
+  public YmlDataStorage(File dataDirectory) {
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
@@ -532,16 +533,21 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer() {
-    HashedRegistry<PathVisualizer<?, ?>> registry = new HashedRegistry<>();
+  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(
+      VisualizerType<T> type) {
+    HashedRegistry<T> registry = new HashedRegistry<>();
     for (File file : Arrays.stream(pathVisualizerDir.listFiles())
         .filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
-        .collect(Collectors.toList())) {
+        .toList()
+    ) {
       try {
         NamespacedKey key = fromFileName(file.getName());
         YamlConfiguration cfg =
             visualizerHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-        registry.put(loadVis(key, cfg));
+        if (!Objects.equals(cfg.get("type"), type.getKey().toString())) {
+          continue;
+        }
+        registry.put(loadVis(key, type, cfg));
       } catch (Exception e) {
         throw new DataStorageException("Could not load visualizer: " + file.getName(), e);
       }
@@ -549,10 +555,9 @@ public class YmlDatabase implements DataStorage {
     return registry;
   }
 
-  private <T extends PathVisualizer<T, D>, D> PathVisualizer<T, D> loadVis(NamespacedKey key,
-                                                                           ConfigurationSection cfg) {
-    VisualizerType<T> type = VisualizerHandler.getInstance()
-        .getVisualizerType(NamespacedKey.fromString(cfg.getString("type")));
+  private <T extends PathVisualizer<T, ?>> T loadVis(NamespacedKey key,
+                                                     VisualizerType<T> type,
+                                                     ConfigurationSection cfg) {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
