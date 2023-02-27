@@ -10,9 +10,10 @@ For more details check the [docs](https://docs.leonardbausenwein.de/getting_star
 
 ## Build
 
-To build the pathfinder, clone the repository and run `./gradlew build`
+To build the pathfinder, clone the repository and run `./gradlew build`.
+The plugin can also be run using Gradle with `./gradlew runServer`.
 
-## Depencency
+## Dependency
 
 The pathfinder artifact can be found in a nexus repository:
 ``` xml

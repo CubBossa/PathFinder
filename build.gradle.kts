@@ -5,13 +5,13 @@ plugins {
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.0.0"
     id("io.freefair.lombok") version "6.6.2"
-    id("xyz.jpenilla.run-paper") version "2.0.0"
+    id("xyz.jpenilla.run-paper") version "2.0.1"
 }
 
 group = "de.cubbossa"
 version = "2.1.0"
 
-val minecraftVersion: String by project
+val minecraftVersion = project.property("minecraft_version") as String
 
 repositories {
     mavenCentral()
@@ -88,16 +88,6 @@ tasks {
     generateGrammarSource {
         // Tell ANTLR to generate visitor classes
         arguments.plusAssign("-visitor")
-    }
-    processResources {
-        // Replace tokens in plugin.yml
-        filter(
-            org.apache.tools.ant.filters.ReplaceTokens::class,
-            "tokens" to mapOf(
-                "version" to project.version.toString(),
-                "name" to rootProject.name
-            )
-        )
     }
     runServer {
         minecraftVersion(minecraftVersion)
