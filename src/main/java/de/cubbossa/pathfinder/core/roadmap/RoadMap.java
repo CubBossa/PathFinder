@@ -431,7 +431,9 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
   }
 
   public void disconnectNode(Node node) {
-    node.getEdges().forEach(this::disconnectNodes);
+    for (Edge edge : new ArrayList<>(node.getEdges())) {
+      disconnectNodes(edge);
+    }
   }
 
   public void disconnectNodes(Edge edge) {
