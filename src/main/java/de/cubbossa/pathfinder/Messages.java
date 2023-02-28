@@ -163,7 +163,7 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix>Editmode deactivated for <offset><roadmap></offset>.", placeholders = {
       "roadmap"})
   public static final Message CMD_RM_EM_DEACTIVATED =
-      new Message("commands.roadmap.editmode.activated");
+      new Message("commands.roadmap.editmode.deactivated");
   @MessageMeta(value = "<ins:prefix>Player <name> discovered <discovery>.", placeholders = {"name",
       "discovery"})
   public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
