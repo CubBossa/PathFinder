@@ -202,7 +202,13 @@ public class CustomArgs {
       String nodeName) {
     return (CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>>) arg(
         new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-          return RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
+          RoadMap roadMap =
+              RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
+          if (roadMap == null) {
+            throw new CustomArgument.CustomArgumentException(
+                "Unknown roadmap: '" + customArgumentInfo.currentInput() + "'.");
+          }
+          return roadMap;
         }))
         .includeSuggestions(
             suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
