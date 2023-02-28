@@ -135,7 +135,7 @@ public class Messages {
   public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
   @MessageMeta("<negative>Could not create Roadmap, another Roadmap with this key already exists.")
   public static final Message CMD_RM_CREATE_DUPLICATE_KEY =
-      new Message("commands.roadmap.create.success");
+      new Message("commands.roadmap.create.duplicate_key");
   @MessageMeta("<negative>Could not create Roadmap. Check out console for details.")
   public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
   @MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <offset><name></offset>.</gray>", placeholders = "name")
