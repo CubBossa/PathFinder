@@ -20,7 +20,9 @@ public class CompassVisualizerType extends VisualizerType<CompassVisualizer> {
 
   @Override
   public CompassVisualizer create(NamespacedKey key, String nameFormat) {
-    return new CompassVisualizer(key, nameFormat);
+    CompassVisualizer visualizer = new CompassVisualizer(key, nameFormat);
+    visualizer.setInterval(1);
+    return visualizer;
   }
 
   @Override
