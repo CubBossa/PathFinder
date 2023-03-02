@@ -50,7 +50,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class RoadMapEditor implements Keyed, Listener {
+public class SimpleRoadMapEditor implements Keyed, Listener {
 
   private final NamespacedKey key;
   private final RoadMap roadMap;
@@ -66,7 +66,7 @@ public class RoadMapEditor implements Keyed, Listener {
   private Color colorFrom = new Color(255, 0, 0);
   private Color colorTo = new Color(0, 127, 255);
 
-  public RoadMapEditor(RoadMap roadMap) {
+  public SimpleRoadMapEditor(RoadMap roadMap) {
     this.key = roadMap.getKey();
     this.roadMap = roadMap;
 

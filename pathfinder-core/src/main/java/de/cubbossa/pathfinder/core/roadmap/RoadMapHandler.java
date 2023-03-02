@@ -46,7 +46,7 @@ public class RoadMapHandler {
 
   private final HashedRegistry<RoadMap> roadMapsWithEditModeAccess = new HashedRegistry<>();
   @Getter
-  private final HashedRegistry<RoadMapEditor> roadMapEditors;
+  private final HashedRegistry<SimpleRoadMapEditor> roadMapEditors;
   private int nodeIdCounter;
 
   public RoadMapHandler() {
@@ -132,22 +132,22 @@ public class RoadMapHandler {
 
   // Editing
 
-  public RoadMapEditor getRoadMapEditor(NamespacedKey key) {
-    RoadMapEditor editor = roadMapEditors.get(key);
+  public SimpleRoadMapEditor getRoadMapEditor(NamespacedKey key) {
+    SimpleRoadMapEditor editor = roadMapEditors.get(key);
     if (editor == null) {
       RoadMap roadMap = roadMaps.get(key);
       if (roadMap == null) {
         throw new IllegalArgumentException(
             "No roadmap exists with key '" + key + "'. Cannot create editor.");
       }
-      editor = new RoadMapEditor(roadMap);
+      editor = new SimpleRoadMapEditor(roadMap);
       roadMapEditors.put(editor);
     }
     return editor;
   }
 
   public void cancelAllEditModes() {
-    roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
+    roadMapEditors.values().forEach(SimpleRoadMapEditor::cancelEditModes);
   }
 
   public boolean isPlayerEditingRoadMap(Player player) {
@@ -158,7 +158,7 @@ public class RoadMapHandler {
   public @Nullable NamespacedKey getRoadMapEditedBy(Player player) {
     return roadMapEditors.values().stream()
         .filter(re -> re.isEditing(player))
-        .map(RoadMapEditor::getKey)
+        .map(SimpleRoadMapEditor::getKey)
         .findFirst()
         .orElse(null);
   }

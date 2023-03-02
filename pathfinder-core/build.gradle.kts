@@ -29,6 +29,7 @@ repositories {
 }
 
 dependencies {
+
     // Antlr
     antlr("org.antlr:antlr4:4.12.0")
 
@@ -48,7 +49,7 @@ dependencies {
     implementation("de.tr7zw:item-nbt-api:2.11.1")
 
     // Other
-    implementation("com.google.guava:guava:31.1-jre")
+    compileOnly("com.google.guava:guava:31.1-jre")
 
     // Particles
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
@@ -57,6 +58,7 @@ dependencies {
     implementation("de.cubbossa:SerializedEffects:1.0")
 
     // Plugins
+    runtimeOnly(project(":pathfinder-editmode"))
     implementation(project(":pathfinder-graph"))
     compileOnly("com.comphenix.protocol:ProtocolLib:5.0.0-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.2")
@@ -189,7 +191,7 @@ tasks {
         relocate("de.cubbossa.menuframework", "gui")
         relocate("de.cubbossa.translations", "translations")
         relocate("de.cubbossa.splinelib", "splinelib")
-        relocate("de.cubbossa.particle", "particle")
+        relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
         relocate("org.antlr", "antlr")

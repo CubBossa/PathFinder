@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
+import de.cubbossa.pathfinder.core.roadmap.SimpleRoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
@@ -39,6 +40,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.IntStream;
 import lombok.Getter;
@@ -163,7 +165,7 @@ public class PathPlugin extends JavaPlugin {
         new DependencyLoader("PlaceholderAPI", PlaceholderHookLoader::load, false)
     );
 
-    this.getClassLoader().loadClass(RoadMapEditor.class.getName());
+    this.getClassLoader().loadClass(SimpleRoadMapEditor.class.getName());
   }
 
   @SneakyThrows
@@ -307,6 +309,14 @@ public class PathPlugin extends JavaPlugin {
       });
       return vals;
     }));
+
+
+    System.out.println("Service test".repeat(20));
+
+    ServiceLoader<RoadMapEditor> loader = ServiceLoader.load(RoadMapEditor.class, this.getClassLoader());
+    for (RoadMapEditor service : loader) {
+      service.printTest();
+    }
   }
 
   @SneakyThrows
