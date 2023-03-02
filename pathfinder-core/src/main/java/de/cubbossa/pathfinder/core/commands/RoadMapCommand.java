@@ -202,8 +202,16 @@ public class RoadMapCommand extends Command {
   private void onEdit(Player player, RoadMap roadMap) {
 
     TagResolver r = TagResolver.resolver("roadmap", Tag.inserting(roadMap.getDisplayName()));
-    if (RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey())
-        .toggleEditMode(player.getUniqueId())) {
+    boolean wasEditing;
+    try {
+      wasEditing = RoadMapHandler.getInstance().getRoadMapEditor(roadMap.getKey())
+          .toggleEditMode(player.getUniqueId());
+    } catch (IllegalStateException e) {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_NO_IMPL, player);
+      e.printStackTrace();
+      return;
+    }
+    if (wasEditing) {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_RM_EM_ACTIVATED.format(r), player);
     } else {
       TranslationHandler.getInstance()

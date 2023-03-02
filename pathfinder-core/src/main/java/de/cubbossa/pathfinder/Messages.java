@@ -164,6 +164,8 @@ public class Messages {
       "roadmap"})
   public static final Message CMD_RM_EM_DEACTIVATED =
       new Message("commands.roadmap.editmode.deactivated");
+  @MessageMeta("<red>No editor implementation found.</red>")
+  public static final Message CMD_RM_EM_NO_IMPL = new Message("commands.roadmap.editmode.no_impl");
   @MessageMeta(value = "<ins:prefix>Player <name> discovered <discovery>.", placeholders = {"name",
       "discovery"})
   public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");

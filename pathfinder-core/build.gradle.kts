@@ -45,23 +45,18 @@ dependencies {
     // Commands
     implementation("de.cubbossa:commandapi-shade:8.7.5")
 
-    // NBT
-    implementation("de.tr7zw:item-nbt-api:2.11.1")
-
     // Other
     compileOnly("com.google.guava:guava:31.1-jre")
 
     // Particles
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
-    implementation("xyz.xenondevs:particle:1.8.3")
     implementation("de.cubbossa:splinelib:1.0")
     implementation("de.cubbossa:SerializedEffects:1.0")
 
     // Plugins
+    compileOnly("me.clip:placeholderapi:2.11.2")
     runtimeOnly(project(":pathfinder-editmode"))
     implementation(project(":pathfinder-graph"))
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.0.0-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.2")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")
@@ -71,7 +66,6 @@ dependencies {
     testImplementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
     compileOnly("com.mojang:brigadier:1.0.18")
     testImplementation("com.mojang:brigadier:1.0.18")
-    compileOnly("com.mojang:authlib:1.5.25")
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")

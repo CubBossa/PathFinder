@@ -1,4 +1,6 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.editmode.utils;
+
+import static de.cubbossa.pathfinder.Messages.E_NODE_NAME;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -25,6 +27,8 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.util.IntPair;
+import de.cubbossa.pathfinder.util.LerpUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -191,7 +195,7 @@ public class ClientNodeHandler {
     renameArmorstand(player, node,
         node instanceof Groupable groupable && !groupable.getGroups().isEmpty() ?
             Messages.formatGroupConcat(
-                player, Messages.E_NODE_NAME, ((Groupable) node).getGroups().stream()
+                player, E_NODE_NAME, ((Groupable) node).getGroups().stream()
                     .map(NodeGroup::getSearchTerms)
                     .flatMap(Collection::stream).collect(Collectors.toList()),
                 t -> Component.text(t.getIdentifier())

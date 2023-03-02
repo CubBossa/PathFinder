@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.roadmap;
+package de.cubbossa.pathfinder.editmode;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
@@ -12,12 +12,14 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.menu.EditModeMenu;
+import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
+import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
-import de.cubbossa.pathfinder.util.ClientNodeHandler;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import java.awt.*;
 import java.util.ArrayList;
@@ -35,7 +37,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,7 +51,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class SimpleRoadMapEditor implements Keyed, Listener {
+public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
 
   private final NamespacedKey key;
   private final RoadMap roadMap;
@@ -66,7 +67,7 @@ public class SimpleRoadMapEditor implements Keyed, Listener {
   private Color colorFrom = new Color(255, 0, 0);
   private Color colorTo = new Color(0, 127, 255);
 
-  public SimpleRoadMapEditor(RoadMap roadMap) {
+  public DefaultRoadMapEditor(RoadMap roadMap) {
     this.key = roadMap.getKey();
     this.roadMap = roadMap;
 

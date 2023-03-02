@@ -17,6 +17,8 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.StringUtils;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import lombok.Getter;
@@ -45,8 +47,10 @@ public class RoadMapHandler {
   private final HashedRegistry<RoadMap> roadMaps;
 
   private final HashedRegistry<RoadMap> roadMapsWithEditModeAccess = new HashedRegistry<>();
+
+  private final RoadMapEditorFactory editModeFactory;
   @Getter
-  private final HashedRegistry<SimpleRoadMapEditor> roadMapEditors;
+  private final HashedRegistry<RoadMapEditor> roadMapEditors;
   private int nodeIdCounter;
 
   public RoadMapHandler() {
@@ -54,6 +58,12 @@ public class RoadMapHandler {
     roadMaps = new HashedRegistry<>();
     roadMapEditors = new HashedRegistry<>();
     NodeTypeHandler.getInstance().registerNodeType(WAYPOINT_TYPE);
+
+    ServiceLoader<RoadMapEditorFactory> loader = ServiceLoader.load(RoadMapEditorFactory.class,
+        PathPlugin.getInstance().getClass().getClassLoader());
+    RoadMapEditorFactory factory = loader.findFirst().orElse(null);
+    editModeFactory = Objects.requireNonNullElseGet(factory,
+        () -> rm -> new NoImplRoadMapEditor(rm.getKey()));
   }
 
   public void loadRoadMaps() {
@@ -132,22 +142,22 @@ public class RoadMapHandler {
 
   // Editing
 
-  public SimpleRoadMapEditor getRoadMapEditor(NamespacedKey key) {
-    SimpleRoadMapEditor editor = roadMapEditors.get(key);
+  public RoadMapEditor getRoadMapEditor(NamespacedKey key) {
+    RoadMapEditor editor = roadMapEditors.get(key);
     if (editor == null) {
       RoadMap roadMap = roadMaps.get(key);
       if (roadMap == null) {
         throw new IllegalArgumentException(
             "No roadmap exists with key '" + key + "'. Cannot create editor.");
       }
-      editor = new SimpleRoadMapEditor(roadMap);
+      editor = editModeFactory.apply(roadMap);
       roadMapEditors.put(editor);
     }
     return editor;
   }
 
   public void cancelAllEditModes() {
-    roadMapEditors.values().forEach(SimpleRoadMapEditor::cancelEditModes);
+    roadMapEditors.values().forEach(RoadMapEditor::cancelEditModes);
   }
 
   public boolean isPlayerEditingRoadMap(Player player) {
@@ -158,7 +168,7 @@ public class RoadMapHandler {
   public @Nullable NamespacedKey getRoadMapEditedBy(Player player) {
     return roadMapEditors.values().stream()
         .filter(re -> re.isEditing(player))
-        .map(SimpleRoadMapEditor::getKey)
+        .map(RoadMapEditor::getKey)
         .findFirst()
         .orElse(null);
   }

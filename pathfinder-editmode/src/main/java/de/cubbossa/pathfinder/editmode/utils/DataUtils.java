@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.editmode.utils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

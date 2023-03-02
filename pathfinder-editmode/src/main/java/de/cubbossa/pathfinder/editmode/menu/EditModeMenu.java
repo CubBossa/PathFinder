@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.menu;
+package de.cubbossa.pathfinder.editmode.menu;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
@@ -14,9 +14,9 @@ import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.SimpleRoadMapEditor;
-import de.cubbossa.pathfinder.util.ClientNodeHandler;
-import de.cubbossa.pathfinder.util.ItemStackUtils;
+import de.cubbossa.pathfinder.editmode.DefaultRoadMapEditor;
+import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
+import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
@@ -51,7 +51,7 @@ public class EditModeMenu {
     this.types = types;
   }
 
-  public BottomInventoryMenu createHotbarMenu(SimpleRoadMapEditor editor, Player editingPlayer) {
+  public BottomInventoryMenu createHotbarMenu(DefaultRoadMapEditor editor, Player editingPlayer) {
     BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {

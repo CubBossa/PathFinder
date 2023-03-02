@@ -12,8 +12,6 @@ import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
-import de.cubbossa.pathfinder.core.roadmap.SimpleRoadMapEditor;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDatabase;
@@ -31,7 +29,6 @@ import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
-import de.tr7zw.changeme.nbtapi.NBTContainer;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import java.io.File;
@@ -157,15 +154,13 @@ public class PathPlugin extends JavaPlugin {
 
   private final Set<DependencyLoader> dependencies;
 
-  public PathPlugin() throws ClassNotFoundException {
+  public PathPlugin() {
     super();
     instance = this;
     extensions = new ArrayList<>();
     dependencies = Set.of(
         new DependencyLoader("PlaceholderAPI", PlaceholderHookLoader::load, false)
     );
-
-    this.getClassLoader().loadClass(SimpleRoadMapEditor.class.getName());
   }
 
   @SneakyThrows
@@ -180,8 +175,7 @@ public class PathPlugin extends JavaPlugin {
     YamlUtils.registerClasses();
 
     CommandAPI.onLoad(new CommandAPIConfig()
-        .verboseOutput(configuration.isVerbose())
-        .initializeNBTAPI(NBTContainer.class, NBTContainer::new));
+        .verboseOutput(configuration.isVerbose()));
   }
 
   @SneakyThrows
@@ -309,14 +303,6 @@ public class PathPlugin extends JavaPlugin {
       });
       return vals;
     }));
-
-
-    System.out.println("Service test".repeat(20));
-
-    ServiceLoader<RoadMapEditor> loader = ServiceLoader.load(RoadMapEditor.class, this.getClassLoader());
-    for (RoadMapEditor service : loader) {
-      service.printTest();
-    }
   }
 
   @SneakyThrows

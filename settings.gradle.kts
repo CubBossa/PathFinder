@@ -13,4 +13,3 @@ sequenceOf(
     include(name)
     project(":$name").projectDir = file(name)
 }
-include("pathfinder-editmode")

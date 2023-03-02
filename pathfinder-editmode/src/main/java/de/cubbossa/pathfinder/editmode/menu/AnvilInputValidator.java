@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.menu;
+package de.cubbossa.pathfinder.editmode.menu;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
