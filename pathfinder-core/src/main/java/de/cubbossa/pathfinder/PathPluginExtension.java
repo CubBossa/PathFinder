@@ -13,44 +13,35 @@ import lombok.Getter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 
-@Getter
-public class PathPluginExtension implements Keyed {
+public interface PathPluginExtension extends Keyed {
 
-  private final NamespacedKey key;
+  default void onLoad() {}
 
-  public PathPluginExtension(NamespacedKey key) {
-    this.key = key;
-  }
+  default void onEnable() {}
 
-  public void onEnable() {
+  default void onDisable() {}
 
-  }
-
-  public void onDisable() {
+  default void registerMessages(Consumer<Class<?>> messageClass) {
 
   }
 
-  public void registerMessages(Consumer<Class<?>> messageClass) {
+  default void registerVisualizerType(Consumer<VisualizerType<?>> typeConsumer) {
 
   }
 
-  public void registerVisualizerType(Consumer<VisualizerType<?>> typeConsumer) {
+  default void registerNodeType(Consumer<NodeType<?>> typeConsumer) {
 
   }
 
-  public void registerNodeType(Consumer<NodeType<?>> typeConsumer) {
-
-  }
-
-  public Map<Integer, Node> loadNodes() {
+  default Map<Integer, Node> loadNodes() {
     return new HashMap<>();
   }
 
-  public HashedRegistry<RoadMap> loadRoadMaps() {
+  default HashedRegistry<RoadMap> loadRoadMaps() {
     return new HashedRegistry<>();
   }
 
-  public HashedRegistry<PathVisualizer<?, ?>> loadVisualizer() {
+  default HashedRegistry<PathVisualizer<?, ?>> loadVisualizer() {
     return new HashedRegistry<>();
   }
 }

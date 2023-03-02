@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
@@ -161,6 +160,9 @@ public class PathPlugin extends JavaPlugin {
     dependencies = Set.of(
         new DependencyLoader("PlaceholderAPI", PlaceholderHookLoader::load, false)
     );
+
+    ServiceLoader<PathPluginExtension> loader = ServiceLoader.load(PathPluginExtension.class, this.getClassLoader());
+    loader.forEach(extensions::add);
   }
 
   @SneakyThrows
@@ -176,6 +178,8 @@ public class PathPlugin extends JavaPlugin {
 
     CommandAPI.onLoad(new CommandAPIConfig()
         .verboseOutput(configuration.isVerbose()));
+
+    extensions.forEach(PathPluginExtension::onLoad);
   }
 
   @SneakyThrows
@@ -227,14 +231,12 @@ public class PathPlugin extends JavaPlugin {
     new NodeTypeHandler();
     new RoadMapHandler();
     new DiscoverHandler();
-    new GUIHandler(this);
 
     dependencies.forEach(DependencyLoader::enable);
 
     NodeGroupHandler.getInstance().loadGroups();
     VisualizerHandler.getInstance().loadVisualizers();
     RoadMapHandler.getInstance().loadRoadMaps();
-    GUIHandler.getInstance().enable();
 
     // Commands
 
@@ -323,7 +325,7 @@ public class PathPlugin extends JavaPlugin {
 
     RoadMapHandler.getInstance().cancelAllEditModes();
 
-    GUIHandler.getInstance().disable();
+    extensions.forEach(PathPluginExtension::onDisable);
   }
 
   public void registerExtension(PathPluginExtension module) {

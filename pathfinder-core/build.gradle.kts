@@ -2,7 +2,7 @@ import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
     antlr
-    java
+    `java-library`
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
@@ -34,16 +34,16 @@ dependencies {
     antlr("org.antlr:antlr4:4.12.0")
 
     // Adventure
-    implementation("net.kyori:adventure-api:4.12.0")
-    implementation("net.kyori:adventure-platform-bukkit:4.1.2")
-    implementation("net.kyori:adventure-text-minimessage:4.12.0")
-    implementation("net.kyori:adventure-text-serializer-plain:4.12.0")
+    api("net.kyori:adventure-api:4.12.0")
+    api("net.kyori:adventure-platform-bukkit:4.1.2")
+    api("net.kyori:adventure-text-minimessage:4.12.0")
+    api("net.kyori:adventure-text-serializer-plain:4.12.0")
 
     // Configuration
-    implementation("de.cubbossa:NBO-Core:1.0")
+    api("de.cubbossa:NBO-Core:1.0")
 
     // Commands
-    implementation("de.cubbossa:commandapi-shade:8.7.5")
+    api("de.cubbossa:commandapi-shade:8.7.5")
 
     // Other
     compileOnly("com.google.guava:guava:31.1-jre")
@@ -51,7 +51,7 @@ dependencies {
     // Particles
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("de.cubbossa:splinelib:1.0")
-    implementation("de.cubbossa:SerializedEffects:1.0")
+    api("de.cubbossa:SerializedEffects:1.0")
 
     // Plugins
     compileOnly("me.clip:placeholderapi:2.11.2")
@@ -62,9 +62,9 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:3.0.1")
 
     // Spigot
-    compileOnly("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
+    compileOnlyApi("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
     testImplementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
-    compileOnly("com.mojang:brigadier:1.0.18")
+    compileOnlyApi("com.mojang:brigadier:1.0.18")
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Tests
@@ -73,8 +73,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 
     // UI
-    implementation("de.cubbossa:Translations:1.1")
-    implementation("de.cubbossa:MenuFramework:1.2")
+    api("de.cubbossa:Translations:1.1")
 }
 
 bukkit {

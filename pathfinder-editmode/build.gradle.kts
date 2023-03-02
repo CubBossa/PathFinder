@@ -35,26 +35,13 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 
     // Spigot
-    compileOnly("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
-    testImplementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
     compileOnly("com.mojang:authlib:1.5.25")
 
     // NBT
-    compileOnly("de.tr7zw:item-nbt-api:2.11.1")
-
-    // Adventure
-    compileOnly("net.kyori:adventure-api:4.12.0")
-    compileOnly("net.kyori:adventure-platform-bukkit:4.1.2")
-    compileOnly("net.kyori:adventure-text-minimessage:4.12.0")
-    compileOnly("net.kyori:adventure-text-serializer-plain:4.12.0")
-
-    // Configuration
-    compileOnly("de.cubbossa:NBO-Core:1.0")
-    compileOnly("de.cubbossa:SerializedEffects:1.0")
+    implementation("de.tr7zw:item-nbt-api:2.11.1")
 
     // UI
-    compileOnly("de.cubbossa:Translations:1.1")
-    compileOnly("de.cubbossa:MenuFramework:1.2")
+    implementation("de.cubbossa:MenuFramework:1.2")
 
     // Service
     annotationProcessor("com.google.auto.service:auto-service:1.0-rc5")

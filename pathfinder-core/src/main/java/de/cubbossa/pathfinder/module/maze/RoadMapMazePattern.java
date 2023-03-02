@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module.maze;
 
-import de.cubbossa.menuframework.util.Pair;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import java.util.Collection;
@@ -13,6 +12,9 @@ import org.bukkit.Location;
 @Getter
 @Setter
 public class RoadMapMazePattern extends MazePattern {
+
+  private record Pair<A, B>(A left, B right) {
+  }
 
   private int spacing = 2;
   private RoadMap roadMap;
