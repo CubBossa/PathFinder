@@ -91,6 +91,12 @@ public class FindModule implements Listener {
   }
 
   public NavigateResult findPath(Player player, Location location, double maxDist) {
+
+    // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
+    if (location.toVector().equals(player.getLocation().toVector())) {
+      location = location.add(0, 0.01, 0);
+    }
+
     Collection<Node> nodes = RoadMapHandler.getInstance().getRoadMapsStream()
         .map(RoadMap::getNodes)
         .flatMap(Collection::stream)
