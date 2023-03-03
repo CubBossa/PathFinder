@@ -48,6 +48,11 @@ public class Configuration {
       Make sure to setup nodegroups, the find command relies on the search terms of nodegroups to
       work.""")
   private boolean navigationEnabled = true;
+  @ConfigValue(path = "module.navigation.max_find_location_dist", comments = """
+      The command /findlocation <location> creates a virtual waypoint at the given location
+      and connects it with the nearest waypoint around. The maximum distance can be set to
+      not allow commands with locations far away from the actual roadmap. Default's set to 20.""")
+  private double navigationLocationMaxDist = 20.;
   @ConfigValue(path = "module.discovery.enabled", comments = """
       Allows players to discover nodegroups if the according groups have the feature enabled.
       This will display an effect that can be modified in effects.nbo.""")

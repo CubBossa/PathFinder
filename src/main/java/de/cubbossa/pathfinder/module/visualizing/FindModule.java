@@ -90,6 +90,11 @@ public class FindModule implements Listener {
     return activePaths.get(player.getUniqueId());
   }
 
+  public NavigateResult findPath(Player player, Location location) {
+    double maxDist = PathPlugin.getInstance().getConfiguration().getNavigationLocationMaxDist();
+    return findPath(player, location, maxDist);
+  }
+
   public NavigateResult findPath(Player player, Location location, double maxDist) {
 
     // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
@@ -259,17 +264,19 @@ public class FindModule implements Listener {
 
   public static void printResult(FindModule.NavigateResult result, Player player) {
     switch (result) {
-      case SUCCESS ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
+      case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
       case FAIL_BLOCKED ->
           TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
       case FAIL_EMPTY ->
           TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
     }
   }
 
   public enum NavigateResult {
-    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED, FAIL_TOO_FAR_AWAY;
+    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
+    FAIL_TOO_FAR_AWAY;
   }
 
   public record NavigationRequestContext(UUID playerId, Navigable navigable) {
