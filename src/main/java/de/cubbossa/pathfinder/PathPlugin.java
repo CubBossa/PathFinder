@@ -24,6 +24,7 @@ import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
+import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -245,6 +246,7 @@ public class PathPlugin extends JavaPlugin {
     CommandAPI.onEnable(this);
     findCommand = new FindCommand();
     findCommand.register();
+    new FindLocationCommand().register();
     roadMapCommand = new RoadMapCommand();
     roadMapCommand.register();
     pathFinderCommand = new PathFinderCommand();
