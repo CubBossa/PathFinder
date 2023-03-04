@@ -490,7 +490,8 @@ public abstract class SqlDataStorage implements DataStorage {
             node.getLocation().getX(),
             node.getLocation().getY(),
             node.getLocation().getZ(),
-            node.getLocation().getWorld().getUID()
+            node.getLocation().getWorld().getUID(),
+            node.getCurveLength()
         )
         .onDuplicateKeyUpdate()
         .set(nodeFieldType, node.getType().getKey().toString())
