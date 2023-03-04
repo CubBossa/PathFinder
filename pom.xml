@@ -72,6 +72,7 @@
                             <include>org.reactivestreams:reactive-streams</include>
                             <include>io.r2dbc:r2dbc-spi</include>
                             <include>jakarta.xml.bind:jakarta.xml.bind-api</include>
+                            <include>com.zaxxer:HikariCP</include>
                         </includes>
                     </artifactSet>
                     <relocations>
