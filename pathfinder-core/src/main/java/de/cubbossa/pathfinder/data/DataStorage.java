@@ -13,8 +13,8 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -93,7 +93,7 @@ public interface DataStorage extends
   void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
 
 
-  DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate);
+  DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, LocalDateTime foundDate);
 
   Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId);
 

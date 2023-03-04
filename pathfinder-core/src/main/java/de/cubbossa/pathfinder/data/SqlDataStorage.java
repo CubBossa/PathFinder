@@ -1,9 +1,13 @@
 package de.cubbossa.pathfinder.data;
 
-import static org.jooq.impl.SQLDataType.BOOLEAN;
-import static org.jooq.impl.SQLDataType.DOUBLE;
-import static org.jooq.impl.SQLDataType.INTEGER;
-import static org.jooq.impl.SQLDataType.VARCHAR;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodes.PATHFINDER_NODES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderRoadmaps.PATHFINDER_ROADMAPS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Edge;
@@ -12,6 +16,10 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderRoadmapsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
@@ -19,9 +27,8 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -38,95 +45,49 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.BatchBindStep;
 import org.jooq.ConnectionProvider;
-import org.jooq.Converter;
 import org.jooq.DSLContext;
-import org.jooq.DataType;
-import org.jooq.Field;
-import org.jooq.Name;
-import org.jooq.Record;
 import org.jooq.RecordMapper;
 import org.jooq.SQLDialect;
-import org.jooq.Table;
 import org.jooq.conf.ParamCastMode;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
 
 public abstract class SqlDataStorage implements DataStorage {
 
   abstract ConnectionProvider getConnectionProvider();
 
-  private static final DataType<NamespacedKey> NAMESPACEDKEY1 = VARCHAR(64).asConvertedDataType(
-      NamespacedKey.class, NamespacedKey::fromString, NamespacedKey::toString
-  );
-
-  private static final String PREFIX = "pathfinder_";
-
   private DSLContext create;
-  private static final DataType<String> NAMESPACEDKEY = VARCHAR(64).notNull();
 
   // +-----------------------------------------+
   // |  Roadmap Table                          |
   // +-----------------------------------------+
-  private static final Name RM = DSL.name(PREFIX + "roadmaps");
 
-  private Table<Record> roadmapTable;
-  private final Field<NamespacedKey> roadmapFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY1);
-  private final Field<String> roadmapFieldNameFormat =
-      DSL.field(DSL.name("name_format"), VARCHAR.notNull());
-  private final Field<String> roadmapFieldVisualizer =
-      DSL.field(DSL.name("path_visualizer"), NAMESPACEDKEY.nullable(true));
-  private final Field<Double> roadmapFieldCurveLength =
-      DSL.field(DSL.name("path_curve_length"), DOUBLE.notNull().defaultValue(3.));
-
-  private final RecordMapper<? super Record, RoadMap> roadmapMapper = record -> {
-    NamespacedKey key = record.getValue(roadmapFieldKey.getQualifiedName(), Converter.from(String.class, NamespacedKey.class, NamespacedKey::fromString));
-    String nameFormat = record.get(roadmapFieldNameFormat);
-    String visKeyString = record.get(roadmapFieldVisualizer);
+  private final RecordMapper<? super PathfinderRoadmapsRecord, RoadMap> roadmapMapper = record -> {
+    String visKeyString = record.getPathVisualizer();;
     NamespacedKey visKey = visKeyString == null ? null : NamespacedKey.fromString(visKeyString);
-    double pathCurveLength = record.get(roadmapFieldCurveLength);
 
     return new RoadMap(
-        key,
-        nameFormat,
+        record.getKey(),
+        record.getNameFormat(),
         visKey == null ? null : VisualizerHandler.getInstance().getPathVisualizer(visKey),
-        pathCurveLength);
+        record.getPathCurveLength()
+    );
   };
 
   // +-----------------------------------------+
   // |  Node Table                             |
   // +-----------------------------------------+
-  private static final String NODE = PREFIX + "nodes";
 
-  private Table<Record> nodeTable;
-  private final Field<Integer> nodeFieldId = DSL.field(DSL.name("id"), INTEGER.notNull());
-  private final Field<String> nodeFieldType = DSL.field(DSL.name("type"), NAMESPACEDKEY.notNull());
-  private final Field<String> nodeFieldRoadMap =
-      DSL.field(DSL.name("roadmap_key"), NAMESPACEDKEY.notNull());
-  private final Field<Double> nodeFieldX = DSL.field(DSL.name("x"), DOUBLE.notNull());
-  private final Field<Double> nodeFieldY = DSL.field(DSL.name("y"), DOUBLE.notNull());
-  private final Field<Double> nodeFieldZ = DSL.field(DSL.name("z"), DOUBLE.notNull());
-  private final Field<UUID> nodeFieldWorld =
-      DSL.field(DSL.name("world"), SQLDataType.VARCHAR(36).asConvertedDataType(
-          UUID.class,
-          UUID::fromString,
-          UUID::toString
-      ));
-
-  private final Field<Double> nodeFieldCurveLength =
-      DSL.field(DSL.name("path_curve_length"), DOUBLE.nullable(true));
-
-
-  private final Function<RoadMap, RecordMapper<? super Record, Waypoint>> nodeMapper = roadmap -> {
+  private final Function<RoadMap, RecordMapper<? super PathfinderNodesRecord, Waypoint>> nodeMapper = roadmap -> {
     final RoadMap rm = roadmap;
     return record -> {
-      int id = record.get(nodeFieldId);
-      double x = record.get(nodeFieldX);
-      double y = record.get(nodeFieldY);
-      double z = record.get(nodeFieldZ);
-      UUID worldUid = record.get(nodeFieldWorld);
-      Double curveLength = record.get(nodeFieldCurveLength);
+      int id = record.getId();
+      double x = record.getX();
+      double y = record.getY();
+      double z = record.getZ();
+      UUID worldUid = UUID.fromString(record.getWorld());
+      Double curveLength = record.getPathCurveLength();
 
       Waypoint node = new Waypoint(id, rm, true);
       node.setLocation(new Location(Bukkit.getWorld(worldUid), x, y, z));
@@ -138,19 +99,12 @@ public abstract class SqlDataStorage implements DataStorage {
   // +-----------------------------------------+
   // |  Edge Table                             |
   // +-----------------------------------------+
-  private static final String EDGE = PREFIX + "edges";
 
-  private Table<Record> edgeTable;
-  private final Field<Integer> edgeFieldStart = DSL.field(DSL.name("start_id"), INTEGER.notNull());
-  private final Field<Integer> edgeFieldEnd = DSL.field(DSL.name("end_id"), INTEGER.notNull());
-  private final Field<Double> edgeFieldWeight =
-      DSL.field(DSL.name("weight_modifier"), DOUBLE.notNull().defaultValue(1.));
-
-  private final Function<Map<Integer, Node<?>>, RecordMapper<? super Record, Edge>> edgeMapper =
+  private final Function<Map<Integer, Node<?>>, RecordMapper<? super PathfinderEdgesRecord, Edge>> edgeMapper =
       map -> record -> {
-        int startId = record.get(edgeFieldStart);
-        int endId = record.get(edgeFieldEnd);
-        double weight = record.get(edgeFieldWeight);
+        int startId = record.getStartId();
+        int endId = record.getEndId();
+        double weight = record.getWeightModifier();
 
         Node<?> start = map.get(startId);
         Node<?> end = map.get(endId);
@@ -164,28 +118,14 @@ public abstract class SqlDataStorage implements DataStorage {
   // +-----------------------------------------+
   // |  Nodegroup Table                        |
   // +-----------------------------------------+
-  private static final String GROUP = PREFIX + "nodegroups";
 
-  private Table<Record> groupTable;
-  private final Field<String> groupFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY);
-  private final Field<String> groupFieldNameFormat =
-      DSL.field(DSL.name("name_format"), VARCHAR.notNull());
-  private final Field<String> groupFieldPermission =
-      DSL.field(DSL.name("permission"), VARCHAR.nullable(true));
-  private final Field<Boolean> groupFieldNavigable =
-      DSL.field(DSL.name("navigable"), BOOLEAN.notNull());
-  private final Field<Boolean> groupFieldDiscoverable =
-      DSL.field(DSL.name("discoverable"), BOOLEAN.notNull());
-  private final Field<Double> groupFieldFindDistance =
-      DSL.field(DSL.name("find_distance"), DOUBLE.notNull());
-
-  private final RecordMapper<? super Record, NodeGroup> groupMapper = record -> {
-    NamespacedKey key = NamespacedKey.fromString(record.get(groupFieldKey).toString());
-    String nameFormat = record.get(groupFieldNameFormat);
-    String permission = record.get(groupFieldPermission);
-    boolean navigable = record.get(groupFieldNavigable);
-    boolean discoverable = record.get(groupFieldDiscoverable);
-    double findDistance = record.get(groupFieldFindDistance);
+  private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper = record -> {
+    NamespacedKey key = record.getKey();
+    String nameFormat = record.getNameFormat();
+    String permission = record.getPermission();
+    boolean navigable = record.getNavigable() != 0;
+    boolean discoverable = record.getDiscoverable() != 0;
+    double findDistance = record.getFindDistance();
 
     NodeGroup group = new NodeGroup(key, nameFormat);
     group.setPermission(permission);
@@ -194,56 +134,6 @@ public abstract class SqlDataStorage implements DataStorage {
     group.setFindDistance((float) findDistance);
     return group;
   };
-
-  // +-----------------------------------------+
-  // |  Nodegroup-Node Relation                |
-  // +-----------------------------------------+
-  private static final String GROUP_NODES = PREFIX + "nodegroup_nodes";
-  private Table<Record> groupNodesRelation;
-  private final Field<String> fieldGroupNodesGroupKey =
-      DSL.field(DSL.name("group_key"), NAMESPACEDKEY.notNull());
-  private final Field<Integer> fieldGroupNodesNodeId =
-      DSL.field(DSL.name("node_id"), INTEGER.notNull());
-
-  // +-----------------------------------------+
-  // |  Discoverings                           |
-  // +-----------------------------------------+
-  private static final String DISCOVERINGS = PREFIX + "discoverings";
-
-  private Table<Record> discoveringsTable;
-  private final Field<String> discoveringsFieldDiscoverKey =
-      DSL.field(DSL.name("discover_key"), NAMESPACEDKEY.notNull());
-  private final Field<UUID> discoveringsFieldPlayerId =
-      DSL.field(DSL.name("player_id"), SQLDataType.UUID.notNull());
-  private final Field<Timestamp> discoveringsFieldDate =
-      DSL.field(DSL.name("date"), SQLDataType.TIMESTAMP.notNull());
-
-  // +-----------------------------------------+
-  // |  Searchterms                            |
-  // +-----------------------------------------+
-  private static final String TERMS = PREFIX + "search_terms";
-
-  private Table<Record> termsTable;
-  private final Field<String> termsFieldGroup =
-      DSL.field(DSL.name("group_key"), NAMESPACEDKEY.notNull());
-  private final Field<String> termsFieldTerm =
-      DSL.field(DSL.name("search_term"), VARCHAR(64).notNull());
-
-
-  // +-----------------------------------------+
-  // |  Visualizers                            |
-  // +-----------------------------------------+
-  private static final String VIS = PREFIX + "path_visualizer";
-
-  private Table<Record> visualizerTable;
-  private final Field<String> visFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY.notNull());
-  private final Field<String> visFieldType = DSL.field(DSL.name("type"), NAMESPACEDKEY.notNull());
-  private final Field<String> visFieldName = DSL.field(DSL.name("name_format"), VARCHAR.notNull());
-  private final Field<String> visFieldPerm =
-      DSL.field(DSL.name("permission"), VARCHAR(64).nullable(true));
-  private final Field<Integer> visFieldInterval =
-      DSL.field(DSL.name("interval"), INTEGER.notNull());
-  private final Field<String> visFieldData = DSL.field(DSL.name("data"), VARCHAR.nullable(true));
 
   private final SQLDialect dialect;
 
@@ -268,101 +158,51 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   private void createRoadMapTable() {
-    create.createTableIfNotExists(RM)
-        .column(roadmapFieldKey, NAMESPACEDKEY1)
-        .column(roadmapFieldNameFormat)
-        .column(roadmapFieldVisualizer)
-        .column(roadmapFieldCurveLength)
-        .primaryKey(roadmapFieldKey)
+    create
+        .createTableIfNotExists(PATHFINDER_ROADMAPS)
         .execute();
-    roadmapTable = DSL.table(RM);
-    roadmapTable.fields(roadmapFieldKey, roadmapFieldNameFormat, roadmapFieldVisualizer,
-        roadmapFieldCurveLength);
   }
 
   private void createNodeTable() {
-
-    create.createTableIfNotExists(NODE)
-        .column(nodeFieldId)
-        .column(nodeFieldType)
-        .column(nodeFieldRoadMap)
-        .column(nodeFieldX)
-        .column(nodeFieldY)
-        .column(nodeFieldZ)
-        .column(nodeFieldWorld)
-        .column(nodeFieldCurveLength)
-        .primaryKey(nodeFieldId)
+    create
+        .createTableIfNotExists(PATHFINDER_NODES)
         .execute();
-    nodeTable = DSL.table(NODE);
   }
 
   private void createEdgeTable() {
-    create.createTableIfNotExists(EDGE)
-        .column(edgeFieldStart)
-        .column(edgeFieldEnd)
-        .column(edgeFieldWeight)
-        .primaryKey(edgeFieldStart, edgeFieldEnd)
+    create
+        .createTableIfNotExists(PATHFINDER_EDGES)
         .execute();
-    edgeTable = DSL.table(EDGE);
   }
 
   private void createNodeGroupTable() {
-    create.createTableIfNotExists(GROUP)
-        .column(groupFieldKey)
-        .column(groupFieldNameFormat)
-        .column(groupFieldPermission)
-        .column(groupFieldNavigable)
-        .column(groupFieldDiscoverable)
-        .column(groupFieldFindDistance)
-        .primaryKey(groupFieldKey)
+    create
+        .createTableIfNotExists(PATHFINDER_NODEGROUPS)
         .execute();
-    groupTable = DSL.table(GROUP);
   }
 
   private void createNodeGroupSearchTermsTable() {
-    create.createTableIfNotExists(TERMS)
-        .column(termsFieldGroup)
-        .column(termsFieldTerm)
-        .primaryKey(termsFieldGroup, termsFieldTerm)
-        .constraint(DSL.foreignKey(termsFieldGroup)
-            .references(groupTable, groupFieldKey)
-            .onDeleteCascade()
-        )
+    create
+        .createTableIfNotExists(PATHFINDER_SEARCH_TERMS)
         .execute();
-    termsTable = DSL.table(TERMS);
   }
 
   private void createNodeGroupNodesTable() {
-    create.createTableIfNotExists(GROUP_NODES)
-        .column(fieldGroupNodesGroupKey)
-        .column(fieldGroupNodesNodeId)
-        .primaryKey(fieldGroupNodesGroupKey, fieldGroupNodesNodeId)
-        .constraint(DSL.foreignKey(fieldGroupNodesGroupKey).references(groupTable, groupFieldKey))
+    create
+        .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
         .execute();
-    groupNodesRelation = DSL.table(GROUP_NODES);
   }
 
   private void createPathVisualizerTable() {
-    create.createTableIfNotExists(VIS)
-        .column(visFieldKey)
-        .column(visFieldType)
-        .column(visFieldName)
-        .column(visFieldPerm)
-        .column(visFieldInterval)
-        .column(visFieldData)
-        .primaryKey(visFieldKey)
+    create
+        .createTableIfNotExists(PATHFINDER_PATH_VISUALIZER)
         .execute();
-    visualizerTable = DSL.table(VIS);
   }
 
   private void createDiscoverInfoTable() {
-    create.createTableIfNotExists(DISCOVERINGS)
-        .column(discoveringsFieldDiscoverKey)
-        .column(discoveringsFieldPlayerId)
-        .column(discoveringsFieldDate)
-        .primaryKey(discoveringsFieldDiscoverKey, discoveringsFieldPlayerId)
+    create
+        .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
         .execute();
-    discoveringsTable = DSL.table(DISCOVERINGS);
   }
 
 
@@ -370,8 +210,7 @@ public abstract class SqlDataStorage implements DataStorage {
   public Map<NamespacedKey, RoadMap> loadRoadMaps() {
     HashedRegistry<RoadMap> registry = new HashedRegistry<>();
     create
-        .select(roadmapTable.asterisk())
-        .from(roadmapTable)
+        .selectFrom(PATHFINDER_ROADMAPS)
         .fetch(roadmapMapper)
         .forEach(registry::put);
     return registry;
@@ -379,9 +218,8 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public void updateRoadMap(RoadMap roadMap) {
-    System.out.println("Called");
     create
-        .insertInto(DSL.table(RM), roadmapFieldKey, roadmapFieldNameFormat, roadmapFieldVisualizer, roadmapFieldCurveLength)
+        .insertInto(PATHFINDER_ROADMAPS)
         .values(
             roadMap.getKey(),
             roadMap.getNameFormat(),
@@ -389,26 +227,26 @@ public abstract class SqlDataStorage implements DataStorage {
                 .getKey().toString(),
             roadMap.getDefaultCurveLength())
         .onDuplicateKeyUpdate()
-        .set(roadmapFieldNameFormat, roadMap.getNameFormat())
-        .set(roadmapFieldVisualizer, roadMap.getVisualizer() == null ? null : roadMap
+        .set(PATHFINDER_ROADMAPS.NAME_FORMAT, roadMap.getNameFormat())
+        .set(PATHFINDER_ROADMAPS.PATH_VISUALIZER, roadMap.getVisualizer() == null ? null : roadMap
             .getVisualizer().getKey().toString())
-        .set(roadmapFieldCurveLength, roadMap.getDefaultCurveLength())
+        .set(PATHFINDER_ROADMAPS.PATH_CURVE_LENGTH, roadMap.getDefaultCurveLength())
         .execute();
   }
 
   @Override
   public void deleteRoadMap(NamespacedKey key) {
     create
-        .deleteFrom(roadmapTable)
-        .where(roadmapFieldKey.eq(key))
+        .deleteFrom(PATHFINDER_ROADMAPS)
+        .where(PATHFINDER_ROADMAPS.KEY.eq(key))
         .execute();
   }
 
   @Override
   public void saveEdges(Collection<Edge> edges) {
     BatchBindStep step = create.batch(create
-        .insertInto(edgeTable)
-        .columns(edgeFieldStart, edgeFieldEnd, edgeFieldWeight)
+        .insertInto(PATHFINDER_EDGES)
+        .columns(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID, PATHFINDER_EDGES.WEIGHT_MODIFIER)
         .onConflictDoNothing()
     );
     for (Edge e : edges) {
@@ -421,24 +259,23 @@ public abstract class SqlDataStorage implements DataStorage {
   public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
     Collection<Integer> ids = scope.keySet();
     return new HashSet<>(create
-        .select()
-        .from(edgeTable)
-        .where(edgeFieldStart.in(ids))
-        .or(edgeFieldEnd.in(ids))
+        .selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.in(ids))
+        .or(PATHFINDER_EDGES.END_ID.in(ids))
         .fetch(edgeMapper.apply(scope)));
   }
 
   @Override
   public void deleteEdgesFrom(Node<?> start) {
-    create.deleteFrom(edgeTable)
-        .where(edgeFieldStart.eq(start.getNodeId()))
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.eq(start.getNodeId()))
         .execute();
   }
 
   @Override
   public void deleteEdgesTo(Node<?> end) {
-    create.deleteFrom(edgeTable)
-        .where(edgeFieldEnd.eq(end.getNodeId()))
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.END_ID.eq(end.getNodeId()))
         .execute();
   }
 
@@ -447,9 +284,9 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   public void deleteEdge(int start, int end) {
-    create.deleteFrom(edgeTable)
-        .where(edgeFieldStart.eq(start))
-        .and(edgeFieldEnd.eq(end))
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.eq(start))
+        .and(PATHFINDER_EDGES.END_ID.eq(end))
         .execute();
   }
 
@@ -458,9 +295,9 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (Edge edge : edges) {
         DSL.using(configuration)
-            .deleteFrom(edgeTable)
-            .where(edgeFieldStart.eq(edge.getStart().getNodeId()))
-            .and(edgeFieldEnd.eq(edge.getEnd().getNodeId()))
+            .deleteFrom(PATHFINDER_EDGES)
+            .where(PATHFINDER_EDGES.START_ID.eq(edge.getStart().getNodeId()))
+            .and(PATHFINDER_EDGES.END_ID.eq(edge.getEnd().getNodeId()))
             .execute();
       }
     });
@@ -471,9 +308,8 @@ public abstract class SqlDataStorage implements DataStorage {
 
     Map<Integer, Waypoint> map = new TreeMap<>();
     create
-        .select()
-        .from(nodeTable)
-        .where(nodeFieldRoadMap.eq(roadMap.getKey().toString()))
+        .selectFrom(PATHFINDER_NODES)
+        .where(PATHFINDER_NODES.ROADMAP_KEY.eq(roadMap.getKey()))
         .fetch(nodeMapper.apply(roadMap))
         .forEach(node -> map.put(node.getNodeId(), node));
     return map;
@@ -482,7 +318,7 @@ public abstract class SqlDataStorage implements DataStorage {
   @Override
   public void updateNode(Waypoint node) {
     create
-        .insertInto(nodeTable)
+        .insertInto(PATHFINDER_NODES)
         .values(
             node.getNodeId(),
             node.getType().getKey().toString(),
@@ -490,24 +326,24 @@ public abstract class SqlDataStorage implements DataStorage {
             node.getLocation().getX(),
             node.getLocation().getY(),
             node.getLocation().getZ(),
-            node.getLocation().getWorld().getUID(),
+            node.getLocation().getWorld().getUID().toString(),
             node.getCurveLength()
         )
         .onDuplicateKeyUpdate()
-        .set(nodeFieldType, node.getType().getKey().toString())
-        .set(nodeFieldRoadMap, node.getRoadMapKey().toString())
-        .set(nodeFieldX, node.getLocation().getX())
-        .set(nodeFieldY, node.getLocation().getY())
-        .set(nodeFieldZ, node.getLocation().getZ())
-        .set(nodeFieldWorld, node.getLocation().getWorld().getUID())
+        .set(PATHFINDER_NODES.TYPE, node.getType().getKey())
+        .set(PATHFINDER_NODES.ROADMAP_KEY, node.getRoadMapKey())
+        .set(PATHFINDER_NODES.X, node.getLocation().getX())
+        .set(PATHFINDER_NODES.Y, node.getLocation().getY())
+        .set(PATHFINDER_NODES.Z, node.getLocation().getZ())
+        .set(PATHFINDER_NODES.WORLD, node.getLocation().getWorld().getUID().toString())
         .execute();
   }
 
   @Override
   public void deleteNodes(Collection<Integer> nodeIds) {
-
-    create.deleteFrom(nodeTable)
-        .where(nodeFieldId.in(nodeIds))
+    create
+        .deleteFrom(PATHFINDER_NODES)
+        .where(PATHFINDER_NODES.ID.in(nodeIds))
         .execute();
   }
 
@@ -516,8 +352,8 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (Node<?> node : selection) {
         DSL.using(configuration)
-            .insertInto(groupNodesRelation)
-            .values(group.getKey().toString(), node.getNodeId())
+            .insertInto(PATHFINDER_NODEGROUPS)
+            .values(group.getKey(), node.getNodeId())
             .onDuplicateKeyIgnore()
             .execute();
       }
@@ -530,9 +366,9 @@ public abstract class SqlDataStorage implements DataStorage {
     selection.forEach(g -> ids.add(g.getNodeId()));
 
     create
-        .deleteFrom(groupNodesRelation)
-        .where(fieldGroupNodesGroupKey.eq(group.getKey().toString()))
-        .and(fieldGroupNodesNodeId.in(ids))
+        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
+        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
         .execute();
   }
 
@@ -540,14 +376,10 @@ public abstract class SqlDataStorage implements DataStorage {
   public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
     Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
     create
-        .select()
-        .from(groupNodesRelation)
+        .selectFrom(PATHFINDER_NODEGROUP_NODES)
         .fetch()
         .forEach(record -> {
-          NamespacedKey key = NamespacedKey.fromString(record.get(fieldGroupNodesGroupKey));
-          int nodeId = record.get(fieldGroupNodesNodeId);
-
-          result.computeIfAbsent(nodeId, id -> new HashSet<>()).add(key);
+          result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>()).add(record.getGroupKey());
         });
     return result;
   }
@@ -556,8 +388,7 @@ public abstract class SqlDataStorage implements DataStorage {
   public HashedRegistry<NodeGroup> loadNodeGroups() {
     HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
     create
-        .select()
-        .from(groupTable)
+        .selectFrom(PATHFINDER_NODEGROUPS)
         .fetch(groupMapper)
         .forEach(registry::put);
     return registry;
@@ -566,7 +397,7 @@ public abstract class SqlDataStorage implements DataStorage {
   @Override
   public void updateNodeGroup(NodeGroup group) {
     create
-        .insertInto(groupTable)
+        .insertInto(PATHFINDER_NODEGROUPS)
         .values(
             group.getKey().toString(),
             group.getNameFormat(),
@@ -576,20 +407,20 @@ public abstract class SqlDataStorage implements DataStorage {
             group.getFindDistance()
         )
         .onDuplicateKeyUpdate()
-        .set(groupFieldKey, group.getKey().toString())
-        .set(groupFieldNameFormat, group.getNameFormat())
-        .set(groupFieldPermission, group.getPermission())
-        .set(groupFieldNavigable, group.isNavigable())
-        .set(groupFieldDiscoverable, group.isDiscoverable())
-        .set(groupFieldFindDistance, group.getFindDistance() * 1.)
+        .set(PATHFINDER_NODEGROUPS.KEY, group.getKey())
+        .set(PATHFINDER_NODEGROUPS.NAME_FORMAT, group.getNameFormat())
+        .set(PATHFINDER_NODEGROUPS.PERMISSION, group.getPermission())
+        .set(PATHFINDER_NODEGROUPS.NAVIGABLE, (byte) (group.isNavigable() ? 1 : 0))
+        .set(PATHFINDER_NODEGROUPS.DISCOVERABLE, (byte) (group.isDiscoverable() ? 1 : 0))
+        .set(PATHFINDER_NODEGROUPS.FIND_DISTANCE, group.getFindDistance() * 1.)
         .execute();
   }
 
   @Override
   public void deleteNodeGroup(NamespacedKey key) {
     create
-        .deleteFrom(groupTable)
-        .where(groupFieldKey.eq(key.toString()))
+        .deleteFrom(PATHFINDER_NODEGROUPS)
+        .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .execute();
   }
 
@@ -597,13 +428,10 @@ public abstract class SqlDataStorage implements DataStorage {
   public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
     Map<NamespacedKey, Collection<String>> registry = new HashMap<>();
     create
-        .select()
-        .from(termsTable)
+        .selectFrom(PATHFINDER_SEARCH_TERMS)
         .fetch()
         .forEach(record -> {
-          NamespacedKey key = NamespacedKey.fromString(record.get(termsFieldGroup));
-          String searchTerm = record.get(termsFieldTerm);
-          registry.computeIfAbsent(key, k -> new HashSet<>()).add(searchTerm);
+          registry.computeIfAbsent(record.getGroupKey(), k -> new HashSet<>()).add(record.getSearchTerm());
         });
     return registry;
   }
@@ -613,8 +441,9 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (String searchTerm : searchTerms) {
         DSL.using(configuration)
-            .insertInto(termsTable)
-            .values(group.getKey().toString(), searchTerm)
+            .insertInto(PATHFINDER_SEARCH_TERMS)
+            .columns(PATHFINDER_SEARCH_TERMS.GROUP_KEY, PATHFINDER_SEARCH_TERMS.SEARCH_TERM)
+            .values(group.getKey(), searchTerm)
             .execute();
       }
     });
@@ -625,18 +454,18 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (String searchTerm : searchTerms) {
         DSL.using(configuration)
-            .deleteFrom(termsTable)
-            .where(termsFieldGroup.eq(group.getKey().toString()))
-            .and(termsFieldTerm.eq(searchTerm))
+            .deleteFrom(PATHFINDER_SEARCH_TERMS)
+            .where(PATHFINDER_SEARCH_TERMS.GROUP_KEY.eq(group.getKey()))
+            .and(PATHFINDER_SEARCH_TERMS.SEARCH_TERM.eq(searchTerm))
             .execute();
       }
     });
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, Date foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, LocalDateTime foundDate) {
     create
-        .insertInto(discoveringsTable)
+        .insertInto(PATHFINDER_DISCOVERINGS)
         .values(discoverable.getKey().toString(), player, foundDate)
         .onDuplicateKeyIgnore()
         .execute();
@@ -647,13 +476,11 @@ public abstract class SqlDataStorage implements DataStorage {
   public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
     Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
     create
-        .select()
-        .from(discoveringsTable)
-        .where(discoveringsFieldPlayerId.eq(playerId))
-        .fetch()
+        .selectFrom(PATHFINDER_DISCOVERINGS)
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId.toString()))
         .forEach(record -> {
-          NamespacedKey key = NamespacedKey.fromString(record.get(discoveringsFieldDiscoverKey));
-          Date date = record.get(discoveringsFieldDate);
+          NamespacedKey key = record.getDiscoverKey();
+          LocalDateTime date = record.getDate();
 
           DiscoverInfo info = new DiscoverInfo(playerId, key, date);
           registry.put(info.discoverable(), info);
@@ -664,9 +491,9 @@ public abstract class SqlDataStorage implements DataStorage {
   @Override
   public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
     create
-        .deleteFrom(discoveringsTable)
-        .where(discoveringsFieldPlayerId.eq(playerId))
-        .and(discoveringsFieldDiscoverKey.eq(discoverKey.toString()))
+        .deleteFrom(PATHFINDER_DISCOVERINGS)
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId.toString()))
+        .and(PATHFINDER_DISCOVERINGS.DISCOVER_KEY.eq(discoverKey))
         .execute();
   }
 
@@ -675,21 +502,21 @@ public abstract class SqlDataStorage implements DataStorage {
       VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
-        .selectFrom(visualizerTable)
-        .where(visFieldType.eq(type.getKey().toString()))
+        .selectFrom(PATHFINDER_PATH_VISUALIZER)
+        .where(PATHFINDER_PATH_VISUALIZER.TYPE.eq(type.getKey()))
         .fetch(record -> {
 
           // create visualizer object
-          T visualizer = type.create(NamespacedKey.fromString(visFieldKey.get(record)),
-              visFieldName.get(record));
-          visualizer.setPermission(visFieldPerm.get(record));
-          Integer interval = visFieldInterval.get(record);
+          T visualizer = type.create(record.getType(),
+              record.getNameFormat());
+          visualizer.setPermission(record.getPermission());
+          Integer interval = record.getInterval();
           visualizer.setInterval(interval == null ? 20 : interval);
 
           // inject data from map
           YamlConfiguration cfg = new YamlConfiguration();
           try {
-            cfg.loadFromString(visFieldData.get(record));
+            cfg.loadFromString(record.getData());
           } catch (InvalidConfigurationException e) {
             e.printStackTrace();
           }
@@ -713,29 +540,35 @@ public abstract class SqlDataStorage implements DataStorage {
     String dataString = cfg.saveToString();
 
     create
-        .insertInto(visualizerTable)
-        .columns(visFieldKey, visFieldType, visFieldName, visFieldPerm, visFieldInterval,
-            visFieldData)
+        .insertInto(PATHFINDER_PATH_VISUALIZER)
+        .columns(
+            PATHFINDER_PATH_VISUALIZER.KEY,
+            PATHFINDER_PATH_VISUALIZER.TYPE,
+            PATHFINDER_PATH_VISUALIZER.NAME_FORMAT,
+            PATHFINDER_PATH_VISUALIZER.PERMISSION,
+            PATHFINDER_PATH_VISUALIZER.INTERVAL,
+            PATHFINDER_PATH_VISUALIZER.DATA
+        )
         .values(
-            visualizer.getKey().toString(), visualizer.getType().getKey().toString(),
+            visualizer.getKey(), visualizer.getType().getKey(),
             visualizer.getNameFormat(), visualizer.getPermission(),
             visualizer.getInterval(), dataString
         )
         .onDuplicateKeyUpdate()
-        .set(visFieldKey, visualizer.getKey().toString())
-        .set(visFieldType, visualizer.getType().getKey().toString())
-        .set(visFieldName, visualizer.getNameFormat())
-        .set(visFieldPerm, visualizer.getPermission())
-        .set(visFieldInterval, visualizer.getInterval())
-        .set(visFieldData, dataString)
+        .set(PATHFINDER_PATH_VISUALIZER.KEY, visualizer.getKey())
+        .set(PATHFINDER_PATH_VISUALIZER.TYPE, visualizer.getType().getKey())
+        .set(PATHFINDER_PATH_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
+        .set(PATHFINDER_PATH_VISUALIZER.PERMISSION, visualizer.getPermission())
+        .set(PATHFINDER_PATH_VISUALIZER.INTERVAL, visualizer.getInterval())
+        .set(PATHFINDER_PATH_VISUALIZER.DATA, dataString)
         .execute();
   }
 
   @Override
   public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
     create
-        .delete(visualizerTable)
-        .where(visFieldKey.eq(visualizer.getKey().toString()))
+        .deleteFrom(PATHFINDER_PATH_VISUALIZER)
+        .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))
         .execute();
   }
 

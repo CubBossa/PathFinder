@@ -1,4 +1,6 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+import nu.studer.gradle.jooq.JooqEdition
+import org.jooq.meta.jaxb.ForcedType
 
 plugins {
     antlr
@@ -8,6 +10,7 @@ plugins {
     id("io.freefair.lombok") version "6.6.2"
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
+    id("nu.studer.jooq") version "8.1"
 }
 
 val minecraftVersion = project.property("minecraft_version") as String
@@ -48,6 +51,7 @@ dependencies {
     // Other
     compileOnly("com.google.guava:guava:31.1-jre")
     implementation("org.jooq:jooq:3.17.8")
+    jooqGenerator("mysql:mysql-connector-java:8.0.32")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Particles
@@ -223,5 +227,41 @@ publishing {
         version = project.version.toString()
 
         from(components["java"])
+    }
+}
+
+jooq {
+    version.set("3.17.8")
+    edition.set(JooqEdition.OSS)
+
+    configurations {
+        create("main") {
+            jooqConfiguration.apply {
+                jdbc.apply {
+                    url = "jdbc:mysql://localhost:3306/pathfinder"
+                    user = "root"
+                    password = "test"
+                }
+                generator.apply {
+                    name = "org.jooq.codegen.JavaGenerator"
+                    database.apply {
+                        name = "org.jooq.meta.mysql.MySQLDatabase"
+                        inputSchema = "pathfinder"
+                        forcedTypes = listOf(
+                            ForcedType().apply {
+                                userType = "org.bukkit.NamespacedKey"
+                                converter = "de.cubbossa.pathfinder.data.NamespacedKeyConverter"
+                                includeExpression = ".*key|type"
+                            }
+                        )
+                    }
+                    target.apply {
+                        directory = "src/main/jooq"
+                        packageName = "de.cubbossa.pathfinder.jooq"
+                    }
+                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                }
+            }
+        }
     }
 }

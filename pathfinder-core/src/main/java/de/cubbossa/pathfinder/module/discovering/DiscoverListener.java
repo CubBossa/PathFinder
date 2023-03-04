@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
+import java.time.LocalDateTime;
 import java.util.Date;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +21,7 @@ public class DiscoverListener implements Listener {
       if (!group.fulfillsDiscoveringRequirements(event.getPlayer())) {
         continue;
       }
-      DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, new Date());
+      DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
     }
   }
 

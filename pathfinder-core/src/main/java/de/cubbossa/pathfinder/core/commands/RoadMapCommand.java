@@ -14,6 +14,7 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.DoubleArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import net.kyori.adventure.identity.Identity;
@@ -250,7 +251,7 @@ public class RoadMapCommand extends Command {
 
   private void onForceFind(CommandSender sender, Player target, Discoverable discoverable) {
 
-    DiscoverHandler.getInstance().discover(target.getUniqueId(), discoverable, new Date());
+    DiscoverHandler.getInstance().discover(target.getUniqueId(), discoverable, LocalDateTime.now());
 
     TranslationHandler.getInstance()
         .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()

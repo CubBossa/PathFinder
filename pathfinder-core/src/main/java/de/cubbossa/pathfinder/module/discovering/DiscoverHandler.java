@@ -10,6 +10,7 @@ import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.serializedeffects.EffectHandler;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,7 +87,7 @@ public class DiscoverHandler {
         });
   }
 
-  public void discover(UUID playerId, Discoverable discoverable, Date date) {
+  public void discover(UUID playerId, Discoverable discoverable, LocalDateTime date) {
     getPlayerData(playerId).thenAccept(map -> {
       if (map.containsKey(discoverable.getKey())) {
         return;

@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.discovering.event;
 
 import de.cubbossa.pathfinder.core.node.Discoverable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class PlayerDiscoverEvent extends Event implements Cancellable {
   private static final HandlerList handlers = new HandlerList();
   private final UUID playerId;
   private final Discoverable discoverable;
-  private final Date date;
+  private final LocalDateTime date;
   private boolean cancelled;
 
   public static HandlerList getHandlerList() {

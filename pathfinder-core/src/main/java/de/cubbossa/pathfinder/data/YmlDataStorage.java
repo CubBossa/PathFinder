@@ -18,6 +18,7 @@ import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -444,7 +445,7 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID playerId, Discoverable discoverable, Date foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID playerId, Discoverable discoverable, LocalDateTime foundDate) {
     File file;
     YamlConfiguration config;
     ConfigurationSection cfg;
@@ -497,7 +498,7 @@ public class YmlDataStorage implements DataStorage {
     Map<NamespacedKey, DiscoverInfo> map = new HashMap<>();
     for (String key : discoveries.getKeys(false)) {
       NamespacedKey nkey = NamespacedKey.fromString(key);
-      map.put(nkey, new DiscoverInfo(playerId, nkey, (Date) discoveries.get(key + ".date")));
+      map.put(nkey, new DiscoverInfo(playerId, nkey, (LocalDateTime) discoveries.get(key + ".date")));
     }
     return map;
   }
