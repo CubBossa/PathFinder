@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jooq.SQLDialect;
 
 @Getter
 @Setter
@@ -29,9 +30,29 @@ public class Configuration {
   @ConfigValue(path = "lang.fallback-language", comments = """
       The language that automatically will be used for players with unknown client locale.""")
   private String fallbackLanguage = "en_US";
+
+
   @ConfigValue(path = "data.general.type", comments = """
-      Set the database type to either SQLITE, YML or IN_MEMORY""")
+      Set the database type to either REMOTE_SQL, SQLITE, YML or IN_MEMORY""")
   private DatabaseType databaseType = DatabaseType.SQLITE;
+  @ConfigValue(path = "data.sqlite.file", comments = """
+      Declare a file to be used as sqlite database file.""")
+  private String sqliteFile = "%PLUGIN_DIR%/data/database.db";
+  @ConfigValue(path = "data.remote_sql.username")
+  private String username = "root";
+  @ConfigValue(path = "data.remote_sql.password")
+  private String password = "password";
+  @ConfigValue(path = "data.remote_sql.database")
+  private String databaseName = "pathfinder";
+  @ConfigValue(path = "data.remote_sql.dialect", comments = """
+      The following SQL Dialects are supported:
+      DEFAULT, CUBRID (deprecated), DERBY, FIREBIRD, H2, HSQLDB, IGNITE (deprecated),
+      MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB""")
+  private SQLDialect dialect = SQLDialect.MYSQL;
+  @ConfigValue(path = "data.remote_sql.jdbcUrl", comments = """
+      Setup an SQL Connect String.""")
+  private String jdbcUrl = "jdbc:mysql://localhost:3306/pathfinder?useSSL=false";
+
   @ConfigValue(path = "nodegroups.policies.permission", comments = """
       If one node has multiple node groups, SMALLEST_VALUE will make
       one missing permission dominant, LARGEST_VALUE will require the

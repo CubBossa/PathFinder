@@ -19,7 +19,6 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
@@ -39,19 +38,28 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.BatchBindStep;
 import org.jooq.ConnectionProvider;
+import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
+import org.jooq.conf.ParamCastMode;
+import org.jooq.conf.RenderQuotedNames;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
 public abstract class SqlDataStorage implements DataStorage {
 
   abstract ConnectionProvider getConnectionProvider();
+
+  private static final DataType<NamespacedKey> NAMESPACEDKEY1 = VARCHAR(64).asConvertedDataType(
+      NamespacedKey.class, NamespacedKey::fromString, NamespacedKey::toString
+  );
 
   private static final String PREFIX = "pathfinder_";
 
@@ -61,20 +69,22 @@ public abstract class SqlDataStorage implements DataStorage {
   // +-----------------------------------------+
   // |  Roadmap Table                          |
   // +-----------------------------------------+
-  private static final String RM = PREFIX + "roadmap";
+  private static final Name RM = DSL.name(PREFIX + "roadmaps");
 
   private Table<Record> roadmapTable;
-  private final Field<String> roadmapFieldKey = DSL.field("key", NAMESPACEDKEY);
-  private final Field<String> roadmapFieldNameFormat = DSL.field("name_format", VARCHAR.notNull());
+  private final Field<NamespacedKey> roadmapFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY1);
+  private final Field<String> roadmapFieldNameFormat =
+      DSL.field(DSL.name("name_format"), VARCHAR.notNull());
   private final Field<String> roadmapFieldVisualizer =
-      DSL.field("path_visualizer", NAMESPACEDKEY.nullable(true));
+      DSL.field(DSL.name("path_visualizer"), NAMESPACEDKEY.nullable(true));
   private final Field<Double> roadmapFieldCurveLength =
-      DSL.field("path_curve_length", DOUBLE.notNull().defaultValue(3.));
+      DSL.field(DSL.name("path_curve_length"), DOUBLE.notNull().defaultValue(3.));
 
   private final RecordMapper<? super Record, RoadMap> roadmapMapper = record -> {
-    NamespacedKey key = NamespacedKey.fromString(record.get(roadmapFieldKey));
+    NamespacedKey key = record.getValue(roadmapFieldKey.getQualifiedName(), Converter.from(String.class, NamespacedKey.class, NamespacedKey::fromString));
     String nameFormat = record.get(roadmapFieldNameFormat);
-    NamespacedKey visKey = NamespacedKey.fromString(record.get(roadmapFieldVisualizer));
+    String visKeyString = record.get(roadmapFieldVisualizer);
+    NamespacedKey visKey = visKeyString == null ? null : NamespacedKey.fromString(visKeyString);
     double pathCurveLength = record.get(roadmapFieldCurveLength);
 
     return new RoadMap(
@@ -90,16 +100,22 @@ public abstract class SqlDataStorage implements DataStorage {
   private static final String NODE = PREFIX + "nodes";
 
   private Table<Record> nodeTable;
-  private final Field<Integer> nodeFieldId = DSL.field("id", INTEGER.notNull());
-  private final Field<String> nodeFieldType = DSL.field("type", NAMESPACEDKEY.notNull());
+  private final Field<Integer> nodeFieldId = DSL.field(DSL.name("id"), INTEGER.notNull());
+  private final Field<String> nodeFieldType = DSL.field(DSL.name("type"), NAMESPACEDKEY.notNull());
   private final Field<String> nodeFieldRoadMap =
-      DSL.field("roadmap_key", NAMESPACEDKEY.notNull());
-  private final Field<Double> nodeFieldX = DSL.field("x", DOUBLE.notNull());
-  private final Field<Double> nodeFieldY = DSL.field("y", DOUBLE.notNull());
-  private final Field<Double> nodeFieldZ = DSL.field("z", DOUBLE.notNull());
-  private final Field<UUID> nodeFieldWorld = DSL.field("world", SQLDataType.UUID.notNull());
+      DSL.field(DSL.name("roadmap_key"), NAMESPACEDKEY.notNull());
+  private final Field<Double> nodeFieldX = DSL.field(DSL.name("x"), DOUBLE.notNull());
+  private final Field<Double> nodeFieldY = DSL.field(DSL.name("y"), DOUBLE.notNull());
+  private final Field<Double> nodeFieldZ = DSL.field(DSL.name("z"), DOUBLE.notNull());
+  private final Field<UUID> nodeFieldWorld =
+      DSL.field(DSL.name("world"), SQLDataType.VARCHAR(36).asConvertedDataType(
+          UUID.class,
+          UUID::fromString,
+          UUID::toString
+      ));
+
   private final Field<Double> nodeFieldCurveLength =
-      DSL.field("path_curve_length", DOUBLE.nullable(true));
+      DSL.field(DSL.name("path_curve_length"), DOUBLE.nullable(true));
 
 
   private final Function<RoadMap, RecordMapper<? super Record, Waypoint>> nodeMapper = roadmap -> {
@@ -125,10 +141,10 @@ public abstract class SqlDataStorage implements DataStorage {
   private static final String EDGE = PREFIX + "edges";
 
   private Table<Record> edgeTable;
-  private final Field<Integer> edgeFieldStart = DSL.field("start_id", INTEGER.notNull());
-  private final Field<Integer> edgeFieldEnd = DSL.field("end_id", INTEGER.notNull());
+  private final Field<Integer> edgeFieldStart = DSL.field(DSL.name("start_id"), INTEGER.notNull());
+  private final Field<Integer> edgeFieldEnd = DSL.field(DSL.name("end_id"), INTEGER.notNull());
   private final Field<Double> edgeFieldWeight =
-      DSL.field("weight_modifier", DOUBLE.notNull().defaultValue(1.));
+      DSL.field(DSL.name("weight_modifier"), DOUBLE.notNull().defaultValue(1.));
 
   private final Function<Map<Integer, Node<?>>, RecordMapper<? super Record, Edge>> edgeMapper =
       map -> record -> {
@@ -151,14 +167,17 @@ public abstract class SqlDataStorage implements DataStorage {
   private static final String GROUP = PREFIX + "nodegroups";
 
   private Table<Record> groupTable;
-  private final Field<String> groupFieldKey = DSL.field("key", NAMESPACEDKEY);
-  private final Field<String> groupFieldNameFormat = DSL.field("name_format", VARCHAR.notNull());
+  private final Field<String> groupFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY);
+  private final Field<String> groupFieldNameFormat =
+      DSL.field(DSL.name("name_format"), VARCHAR.notNull());
   private final Field<String> groupFieldPermission =
-      DSL.field("permission", VARCHAR.nullable(true));
-  private final Field<Boolean> groupFieldNavigable = DSL.field("navigable", BOOLEAN.notNull());
+      DSL.field(DSL.name("permission"), VARCHAR.nullable(true));
+  private final Field<Boolean> groupFieldNavigable =
+      DSL.field(DSL.name("navigable"), BOOLEAN.notNull());
   private final Field<Boolean> groupFieldDiscoverable =
-      DSL.field("discoverable", BOOLEAN.notNull());
-  private final Field<Double> groupFieldFindDistance = DSL.field("find_distance", DOUBLE.notNull());
+      DSL.field(DSL.name("discoverable"), BOOLEAN.notNull());
+  private final Field<Double> groupFieldFindDistance =
+      DSL.field(DSL.name("find_distance"), DOUBLE.notNull());
 
   private final RecordMapper<? super Record, NodeGroup> groupMapper = record -> {
     NamespacedKey key = NamespacedKey.fromString(record.get(groupFieldKey).toString());
@@ -182,8 +201,9 @@ public abstract class SqlDataStorage implements DataStorage {
   private static final String GROUP_NODES = PREFIX + "nodegroup_nodes";
   private Table<Record> groupNodesRelation;
   private final Field<String> fieldGroupNodesGroupKey =
-      DSL.field("group_key", NAMESPACEDKEY.notNull());
-  private final Field<Integer> fieldGroupNodesNodeId = DSL.field("node_id", INTEGER.notNull());
+      DSL.field(DSL.name("group_key"), NAMESPACEDKEY.notNull());
+  private final Field<Integer> fieldGroupNodesNodeId =
+      DSL.field(DSL.name("node_id"), INTEGER.notNull());
 
   // +-----------------------------------------+
   // |  Discoverings                           |
@@ -192,11 +212,11 @@ public abstract class SqlDataStorage implements DataStorage {
 
   private Table<Record> discoveringsTable;
   private final Field<String> discoveringsFieldDiscoverKey =
-      DSL.field("discover_key", NAMESPACEDKEY.notNull());
+      DSL.field(DSL.name("discover_key"), NAMESPACEDKEY.notNull());
   private final Field<UUID> discoveringsFieldPlayerId =
-      DSL.field("player_id", SQLDataType.UUID.notNull());
+      DSL.field(DSL.name("player_id"), SQLDataType.UUID.notNull());
   private final Field<Timestamp> discoveringsFieldDate =
-      DSL.field("date", SQLDataType.TIMESTAMP.notNull());
+      DSL.field(DSL.name("date"), SQLDataType.TIMESTAMP.notNull());
 
   // +-----------------------------------------+
   // |  Searchterms                            |
@@ -205,9 +225,9 @@ public abstract class SqlDataStorage implements DataStorage {
 
   private Table<Record> termsTable;
   private final Field<String> termsFieldGroup =
-      DSL.field("group_key", NAMESPACEDKEY.notNull());
+      DSL.field(DSL.name("group_key"), NAMESPACEDKEY.notNull());
   private final Field<String> termsFieldTerm =
-      DSL.field("search_term", VARCHAR(64).notNull());
+      DSL.field(DSL.name("search_term"), VARCHAR(64).notNull());
 
 
   // +-----------------------------------------+
@@ -216,12 +236,14 @@ public abstract class SqlDataStorage implements DataStorage {
   private static final String VIS = PREFIX + "path_visualizer";
 
   private Table<Record> visualizerTable;
-  private final Field<String> visFieldKey = DSL.field("key", NAMESPACEDKEY.notNull());
-  private final Field<String> visFieldType = DSL.field("type", NAMESPACEDKEY.notNull());
-  private final Field<String> visFieldName = DSL.field("name_format", VARCHAR.notNull());
-  private final Field<String> visFieldPerm = DSL.field("permission", VARCHAR(64).nullable(true));
-  private final Field<Integer> visFieldInterval = DSL.field("interval", INTEGER.notNull());
-  private final Field<String> visFieldData = DSL.field("data", VARCHAR.nullable(true));
+  private final Field<String> visFieldKey = DSL.field(DSL.name("key"), NAMESPACEDKEY.notNull());
+  private final Field<String> visFieldType = DSL.field(DSL.name("type"), NAMESPACEDKEY.notNull());
+  private final Field<String> visFieldName = DSL.field(DSL.name("name_format"), VARCHAR.notNull());
+  private final Field<String> visFieldPerm =
+      DSL.field(DSL.name("permission"), VARCHAR(64).nullable(true));
+  private final Field<Integer> visFieldInterval =
+      DSL.field(DSL.name("interval"), INTEGER.notNull());
+  private final Field<String> visFieldData = DSL.field(DSL.name("data"), VARCHAR.nullable(true));
 
   private final SQLDialect dialect;
 
@@ -231,11 +253,9 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public void connect(Runnable initial) throws IOException {
-    create = DSL.using(getConnectionProvider(), dialect);
-
-    // create
-    //     .createDatabaseIfNotExists("pathfinder")
-    //     .execute();
+    create = DSL.using(getConnectionProvider(), dialect, new Settings()
+        .withParamCastMode(ParamCastMode.NEVER)
+        .withRenderQuotedNames(RenderQuotedNames.ALWAYS));
 
     createPathVisualizerTable();
     createRoadMapTable();
@@ -249,18 +269,20 @@ public abstract class SqlDataStorage implements DataStorage {
 
   private void createRoadMapTable() {
     create.createTableIfNotExists(RM)
-        .column(roadmapFieldKey)
+        .column(roadmapFieldKey, NAMESPACEDKEY1)
         .column(roadmapFieldNameFormat)
         .column(roadmapFieldVisualizer)
         .column(roadmapFieldCurveLength)
         .primaryKey(roadmapFieldKey)
         .execute();
     roadmapTable = DSL.table(RM);
+    roadmapTable.fields(roadmapFieldKey, roadmapFieldNameFormat, roadmapFieldVisualizer,
+        roadmapFieldCurveLength);
   }
 
   private void createNodeTable() {
 
-    create.createTableIfNotExists(RM)
+    create.createTableIfNotExists(NODE)
         .column(nodeFieldId)
         .column(nodeFieldType)
         .column(nodeFieldRoadMap)
@@ -270,7 +292,6 @@ public abstract class SqlDataStorage implements DataStorage {
         .column(nodeFieldWorld)
         .column(nodeFieldCurveLength)
         .primaryKey(nodeFieldId)
-        .constraint(DSL.foreignKey(nodeFieldRoadMap).references(roadmapTable))
         .execute();
     nodeTable = DSL.table(NODE);
   }
@@ -358,10 +379,11 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public void updateRoadMap(RoadMap roadMap) {
+    System.out.println("Called");
     create
-        .insertInto(roadmapTable)
+        .insertInto(DSL.table(RM), roadmapFieldKey, roadmapFieldNameFormat, roadmapFieldVisualizer, roadmapFieldCurveLength)
         .values(
-            roadMap.getKey().toString(),
+            roadMap.getKey(),
             roadMap.getNameFormat(),
             roadMap.getVisualizer() == null ? null : roadMap.getVisualizer()
                 .getKey().toString(),
@@ -378,7 +400,7 @@ public abstract class SqlDataStorage implements DataStorage {
   public void deleteRoadMap(NamespacedKey key) {
     create
         .deleteFrom(roadmapTable)
-        .where(roadmapFieldKey.eq(key.toString()))
+        .where(roadmapFieldKey.eq(key))
         .execute();
   }
 

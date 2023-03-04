@@ -9,38 +9,3 @@
 #                        Configuration                          #
 #                                                               #
 #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-
-lang:
-  # If messages should automatically be translated to client language, if a translation file
-  # for the provided client language exists.
-  client-language: false
-  # The language that automatically will be used for players with unknown client locale.
-  fallback-language: en_US
-data:
-  general:
-    #
-    type: sqlite
-nodegroups:
-  policies:
-    #
-    permission: smallest_value
-    #
-    navigable: smallest_value
-    #
-    discoverable: smallest_value
-    #
-    find-distance: largest_value
-module:
-  navigation:
-    #
-    enabled: true
-    # Set this to true, if players have to discover nodegroups first to use the /find location <filter> command.
-    # If set to false, one can always navigate to every group, even if it hasn't been discovered first.
-    requires-location-discovery: true
-  discovery:
-    #
-    enabled: true
-
-
-# Just don't change this, it helps to convert your data to newer database types automatically when updating
-version: v0.4

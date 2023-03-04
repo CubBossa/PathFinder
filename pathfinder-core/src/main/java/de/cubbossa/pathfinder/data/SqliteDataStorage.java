@@ -14,7 +14,6 @@ import org.jooq.exception.DataAccessException;
 public class SqliteDataStorage extends SqlDataStorage {
 
   private final File file;
-  @Getter
   private Connection connection;
 
   public SqliteDataStorage(File file) {
@@ -47,15 +46,6 @@ public class SqliteDataStorage extends SqlDataStorage {
       }
     } catch (SQLException e) {
       throw new DataStorageException("Could not disconnect Sqlite database", e);
-    }
-  }
-
-  public Connection getConnection() {
-    try {
-      connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
-      return connection;
-    } catch (SQLException e) {
-      throw new DataStorageException("Could not connect to Sqlite database.", e);
     }
   }
 

@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.RemoteSqlDataStorage;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
 import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.hook.PlaceholderHookLoader;
@@ -204,7 +205,9 @@ public class PathPlugin extends JavaPlugin {
     new File(getDataFolder(), "data/").mkdirs();
     database = switch (configuration.getDatabaseType()) {
       case IN_MEMORY -> null;
-      case SQLITE -> new SqliteDataStorage(new File(getDataFolder() + "/data/", "database.db"));
+      case SQLITE -> new SqliteDataStorage(new File(configuration.getSqliteFile()
+          .replace("%PLUGIN_DIR%", getDataFolder().getAbsolutePath())));
+      case REMOTE_SQL -> new RemoteSqlDataStorage(configuration);
       default -> new YmlDataStorage(new File(getDataFolder(), "data/"));
     };
     if (database != null) {
