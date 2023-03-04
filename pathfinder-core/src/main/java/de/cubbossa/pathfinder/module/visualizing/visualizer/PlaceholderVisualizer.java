@@ -75,12 +75,12 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public Data newData(Player player, List<Node> nodes, List<Edge> edges) {
+  public Data newData(Player player, List<Node<?>> nodes, List<Edge> edges) {
     return new Data(nodes, edges);
   }
 
   @Override
-  public Data prepare(List<Node> nodes, Player player) {
+  public Data prepare(List<Node<?>> nodes, Player player) {
     Data data = super.prepare(nodes, player);
     PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, player, data::getDirection);
     PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, player, data::getDistance);
@@ -123,7 +123,7 @@ public class PlaceholderVisualizer
 
     private String direction = "", distance = "";
 
-    public Data(List<Node> nodes, List<Edge> edges) {
+    public Data(List<Node<?>> nodes, List<Edge> edges) {
       super(nodes, edges);
     }
   }

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 
-public class YmlDatabase implements DataStorage {
+public class YmlDataStorage implements DataStorage {
 
 
   private static final String DIR_RM = "roadmaps";
@@ -53,7 +54,8 @@ public class YmlDatabase implements DataStorage {
   private File nodeGroupDir;
   private File pathVisualizerDir;
   private File userDir;
-  public YmlDatabase(File dataDirectory) {
+
+  public YmlDataStorage(File dataDirectory) {
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
@@ -156,12 +158,10 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public boolean deleteRoadMap(NamespacedKey key) {
+  public void deleteRoadMap(NamespacedKey key) {
     roadmapHandles.remove(key);
     File file = new File(roadMapDir, toFileName(key));
-    boolean exists = file.exists();
     file.deleteOnExit();
-    return exists;
   }
 
   @Override
@@ -186,7 +186,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope) {
+  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
     YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to load edges for non existing roadmap");
@@ -214,7 +214,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdgesFrom(Node start) {
+  public void deleteEdgesFrom(Node<?> start) {
     YamlConfiguration cfg = roadmapHandles.get(start.getRoadMapKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to save edge for non existing roadmap");
@@ -224,7 +224,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdgesTo(Node end) {
+  public void deleteEdgesTo(Node<?> end) {
     YamlConfiguration cfg = roadmapHandles.get(end.getRoadMapKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to save edge for non existing roadmap");
@@ -259,7 +259,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void deleteEdge(Node start, Node end) {
+  public void deleteEdge(Node<?> start, Node<?> end) {
     YamlConfiguration cfg = roadmapHandles.computeIfAbsent(end.getRoadMapKey(), key ->
         YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
     cfg.set("edges." + start.getNodeId() + "." + end.getNodeId(), null);
@@ -267,12 +267,12 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Map<Integer, Node> loadNodes(RoadMap roadMap) {
+  public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
     YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
     if (cfg == null) {
       throw new DataStorageException("Tried to load nodes for non existing roadmap");
     }
-    Map<Integer, Node> result = new HashMap<>();
+    Map<Integer, Waypoint> result = new HashMap<>();
     ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes");
     if (nodeSection == null) {
       return result;
@@ -285,8 +285,8 @@ public class YmlDatabase implements DataStorage {
       //TODO for now i parse them only to waypoints, but lateron they will have a datastructure like pathvisualizers
       int id = Integer.parseInt(key);
       Location location = innerSection.getLocation("location");
-      Waypoint node = RoadMapHandler.WAYPOINT_TYPE.getFactory()
-          .apply(new NodeType.NodeCreationContext(roadMap, id, location, true));
+      Waypoint node = RoadMapHandler.WAYPOINT_TYPE
+          .createNode(new NodeType.NodeCreationContext(roadMap, id, location, true));
       node.setCurveLength(innerSection.getDouble("curve-length"));
       result.put(id, node);
     }
@@ -294,7 +294,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void updateNode(Node node) {
+  public void updateNode(Waypoint node) {
     YamlConfiguration cfg = roadmapHandles.computeIfAbsent(node.getRoadMapKey(), key ->
         YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
     ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes." + node.getNodeId());
@@ -338,7 +338,7 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection) {
+  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection) {
     updateNodeGroup(group);
   }
 
@@ -533,16 +533,21 @@ public class YmlDatabase implements DataStorage {
   }
 
   @Override
-  public Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer() {
-    HashedRegistry<PathVisualizer<?, ?>> registry = new HashedRegistry<>();
+  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(
+      VisualizerType<T> type) {
+    HashedRegistry<T> registry = new HashedRegistry<>();
     for (File file : Arrays.stream(pathVisualizerDir.listFiles())
         .filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
-        .collect(Collectors.toList())) {
+        .toList()
+    ) {
       try {
         NamespacedKey key = fromFileName(file.getName());
         YamlConfiguration cfg =
             visualizerHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-        registry.put(loadVis(key, cfg));
+        if (!Objects.equals(cfg.get("type"), type.getKey().toString())) {
+          continue;
+        }
+        registry.put(loadVis(key, type, cfg));
       } catch (Exception e) {
         throw new DataStorageException("Could not load visualizer: " + file.getName(), e);
       }
@@ -550,10 +555,9 @@ public class YmlDatabase implements DataStorage {
     return registry;
   }
 
-  private <T extends PathVisualizer<T, D>, D> PathVisualizer<T, D> loadVis(NamespacedKey key,
-                                                                           ConfigurationSection cfg) {
-    VisualizerType<T> type = VisualizerHandler.getInstance()
-        .getVisualizerType(NamespacedKey.fromString(cfg.getString("type")));
+  private <T extends PathVisualizer<T, ?>> T loadVis(NamespacedKey key,
+                                                     VisualizerType<T> type,
+                                                     ConfigurationSection cfg) {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }

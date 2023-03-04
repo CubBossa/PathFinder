@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathfinder.data.DataStorageException;
+import de.cubbossa.pathfinder.data.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
@@ -29,6 +30,7 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
    */
   private final NamespacedKey key;
+  private VisualizerDataStorage<T> storage = null;
 
   public VisualizerType(NamespacedKey key) {
     this.key = key;

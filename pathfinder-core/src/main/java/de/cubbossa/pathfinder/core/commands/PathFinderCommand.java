@@ -5,8 +5,8 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.configuration.Configuration;
 import de.cubbossa.pathfinder.data.DataExporter;
 import de.cubbossa.pathfinder.data.DataStorage;
-import de.cubbossa.pathfinder.data.SqliteDatabase;
-import de.cubbossa.pathfinder.data.YmlDatabase;
+import de.cubbossa.pathfinder.data.SqliteDataStorage;
+import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
@@ -78,7 +78,7 @@ public class PathFinderCommand extends Command {
                       fileName = fileName + ".db";
                     }
                     DataStorage storage =
-                        new SqliteDatabase(new File(pl.getDataFolder(), "exports/" + fileName));
+                        new SqliteDataStorage(new File(pl.getDataFolder(), "exports/" + fileName));
                     try {
                       storage.connect();
                       DataExporter.all().save(storage);
@@ -103,7 +103,7 @@ public class PathFinderCommand extends Command {
                     }
                     File directory = new File(pl.getDataFolder(), "exports/" + dir);
                     directory.mkdirs();
-                    DataStorage storage = new YmlDatabase(directory);
+                    DataStorage storage = new YmlDataStorage(directory);
                     try {
                       storage.connect();
                       DataExporter.all().save(storage);

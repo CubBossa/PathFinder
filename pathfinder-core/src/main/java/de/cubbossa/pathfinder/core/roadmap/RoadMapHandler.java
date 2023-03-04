@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
+import de.cubbossa.pathfinder.core.node.WaypointType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -24,21 +25,13 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 public class RoadMapHandler {
 
-  public static NodeType<Waypoint> WAYPOINT_TYPE =
-      new NodeType<>(new NamespacedKey(PathPlugin.getInstance(), "waypoint"),
-          "<color:#ff0000>Waypoint</color>", new ItemStack(Material.MAP), context -> {
-        Waypoint waypoint = new Waypoint(context.id(), context.roadMap(), context.persistent());
-        waypoint.setLocation(context.location());
-        return waypoint;
-      });
+  public static NodeType<Waypoint> WAYPOINT_TYPE = new WaypointType();
 
   @Getter
   private static RoadMapHandler instance;
@@ -57,6 +50,7 @@ public class RoadMapHandler {
     instance = this;
     roadMaps = new HashedRegistry<>();
     roadMapEditors = new HashedRegistry<>();
+
     NodeTypeHandler.getInstance().registerNodeType(WAYPOINT_TYPE);
 
     ServiceLoader<RoadMapEditorFactory> loader = ServiceLoader.load(RoadMapEditorFactory.class,

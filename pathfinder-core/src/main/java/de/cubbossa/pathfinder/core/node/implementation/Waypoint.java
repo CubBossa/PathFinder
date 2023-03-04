@@ -20,11 +20,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.jetbrains.annotations.NotNull;
 
 @Getter
 @Setter
-public class Waypoint implements Node, Groupable {
+public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final int nodeId;
   private final NamespacedKey roadMapKey;
@@ -70,18 +69,13 @@ public class Waypoint implements Node, Groupable {
   }
 
   @Override
-  public Edge connect(Node target) {
+  public Edge connect(Node<?> target) {
     return roadMap.connectNodes(this, target);
   }
 
   @Override
-  public void disconnect(Node target) {
+  public void disconnect(Node<?> target) {
     roadMap.disconnectNodes(this, target);
-  }
-
-  @Override
-  public int compareTo(@NotNull Node o) {
-    return Integer.compare(nodeId, o.getNodeId());
   }
 
   @Override
@@ -111,7 +105,7 @@ public class Waypoint implements Node, Groupable {
   }
 
   @Override
-  public Collection<Node> getGroup() {
+  public Collection<Node<?>> getGroup() {
     return Lists.newArrayList(this);
   }
 

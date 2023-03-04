@@ -47,6 +47,8 @@ dependencies {
 
     // Other
     compileOnly("com.google.guava:guava:31.1-jre")
+    implementation("org.jooq:jooq:3.17.8")
+    implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Particles
     implementation("org.openjdk.nashorn:nashorn-core:15.4")

@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
-public class NodeSelection extends ArrayList<Node> implements Collection<Node> {
+public class NodeSelection extends ArrayList<Node<?>> implements Collection<Node<?>> {
 
   @Getter
   @Setter
@@ -18,11 +18,11 @@ public class NodeSelection extends ArrayList<Node> implements Collection<Node> {
   public NodeSelection() {
   }
 
-  public NodeSelection(Node... nodes) {
+  public NodeSelection(Node<?>... nodes) {
     super(Arrays.asList(nodes));
   }
 
-  public NodeSelection(Collection<Node> other) {
+  public NodeSelection(Collection<Node<?>> other) {
     super(other);
   }
 

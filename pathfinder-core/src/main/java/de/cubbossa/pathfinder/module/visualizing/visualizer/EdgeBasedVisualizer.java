@@ -32,7 +32,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
   }
 
   @Override
-  public D prepare(List<Node> nodes, Player player) {
+  public D prepare(List<Node<?>> nodes, Player player) {
 
     List<Edge> edges = new ArrayList<>();
     Node prev = null;
@@ -48,7 +48,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
     return newData(player, nodes, edges);
   }
 
-  public abstract D newData(Player player, List<Node> nodes, List<Edge> edges);
+  public abstract D newData(Player player, List<Node<?>> nodes, List<Edge> edges);
 
   @Override
   public void play(VisualizerContext<D> context) {
@@ -120,7 +120,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
   @Setter
   @RequiredArgsConstructor
   public static class Data {
-    private final List<Node> nodes;
+    private final List<Node<?>> nodes;
     private final List<Edge> edges;
     private Location lastPlayerLocation;
   }

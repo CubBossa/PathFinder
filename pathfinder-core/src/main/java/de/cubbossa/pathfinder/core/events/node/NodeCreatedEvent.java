@@ -8,12 +8,12 @@ import org.bukkit.event.HandlerList;
 
 @Getter
 @Setter
-public class NodeCreatedEvent extends Event {
+public class NodeCreatedEvent<N extends Node<N>> extends Event {
 
   private static final HandlerList handlers = new HandlerList();
-  private final Node node;
+  private final N node;
 
-  public NodeCreatedEvent(Node node) {
+  public NodeCreatedEvent(N node) {
     this.node = node;
   }
 

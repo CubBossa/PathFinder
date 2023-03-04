@@ -26,6 +26,8 @@ import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.NodeDataStorage;
+import de.cubbossa.pathfinder.data.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
@@ -94,26 +96,30 @@ public class DatabaseListener implements Listener {
   }
 
   @EventHandler
-  public void onNodeCreatedEvent(NodeCreatedEvent event) {
+  public <N extends Node<N>> void onNodeCreatedEvent(NodeCreatedEvent<N> event) {
     if (!event.getNode().isPersistent()) {
       return;
     }
-    data.updateNode(event.getNode());
+    NodeDataStorage<N> storage = event.getNode().getType().getStorage();
+    if (storage == null) {
+      return;
+    }
+    storage.updateNode(event.getNode());
   }
 
   @EventHandler
   public void onNodesDeleted(NodesDeletedEvent event) {
-    Map<NodeGroup, Collection<Groupable>> map = new HashMap<>();
-    for (Node node : event.getNodes()) {
+    Map<NodeGroup, Collection<Groupable<?>>> map = new HashMap<>();
+    for (Node<?> node : event.getNodes()) {
       if (!node.isPersistent()) {
         continue;
       }
-      if (node instanceof Groupable groupable) {
+      if (node instanceof Groupable<?> groupable) {
         groupable.getGroups()
             .forEach(g -> map.computeIfAbsent(g, group -> new HashSet<>()).add(groupable));
       }
     }
-    for (Map.Entry<NodeGroup, Collection<Groupable>> entry : map.entrySet()) {
+    for (Map.Entry<NodeGroup, Collection<Groupable<?>>> entry : map.entrySet()) {
       data.removeNodesFromGroup(entry.getKey(), entry.getValue());
     }
     data.deleteNodes(event.getNodes().stream().filter(Node::isPersistent).map(Node::getNodeId)
@@ -122,12 +128,20 @@ public class DatabaseListener implements Listener {
 
   @EventHandler
   public void onNodeUpdate(NodeLocationChangedEvent event) {
-    event.getNodes().stream().filter(Node::isPersistent).forEach(data::updateNode);
+    event.getNodes().stream()
+        .filter(Node::isPersistent)
+        .forEach(this::updateNode);
   }
 
   @EventHandler
   public void onNodeUpdate(NodeCurveLengthChangedEvent event) {
-    event.getNodes().stream().filter(Node::isPersistent).forEach(data::updateNode);
+    event.getNodes().stream()
+        .filter(Node::isPersistent)
+        .forEach(this::updateNode);
+  }
+
+  public <N extends Node<N>> void updateNode(Node<N> node) {
+    node.getType().updateNode((N) node);
   }
 
   @EventHandler
@@ -215,11 +229,18 @@ public class DatabaseListener implements Listener {
 
   @EventHandler
   public <T> void onPropertyChanged(VisualizerPropertyChangedEvent<T> event) {
-    data.updatePathVisualizer((PathVisualizer) event.getVisualizer());
+    updateVisualizer(event.getVisualizer());
   }
 
   @EventHandler
   public void onCombinedUpdate(CombinedVisualizerChangedEvent event) {
-    data.updatePathVisualizer(event.getVisualizer());
+    updateVisualizer(event.getVisualizer());
+  }
+
+  private <T extends PathVisualizer<T, D>, D> void updateVisualizer(PathVisualizer<T, D> vis) {
+    VisualizerDataStorage<T> storage = vis.getType().getStorage();
+    if (storage != null) {
+      storage.updatePathVisualizer((T) vis);
+    }
   }
 }

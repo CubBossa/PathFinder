@@ -30,12 +30,12 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   }
 
   @Override
-  public BezierData prepare(List<Node> nodes, Player player) {
+  public BezierData prepare(List<Node<?>> nodes, Player player) {
 
     //TODO has to be rewritten if portals are being introduced
     World world = nodes.get(0).getLocation().getWorld();
-    LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
-    for (Node node : nodes) {
+    LinkedHashMap<Node<?>, Double> path = new LinkedHashMap<>();
+    for (Node<?> node : nodes) {
       path.put(node, node.getCurveLength() == null ?
           RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()).getDefaultCurveLength()
           : node.getCurveLength());
@@ -53,7 +53,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
    * @param nodes A map of nodes with a curve length for each node.
    * @return a spline object representing the nodes
    */
-  private Spline makeSpline(LinkedHashMap<Node, Double> nodes) {
+  private Spline makeSpline(LinkedHashMap<Node<?>, Double> nodes) {
     return new Spline(NodeUtils.toSpline(nodes, true));
   }
 

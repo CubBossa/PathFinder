@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.data.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerCreatedEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
@@ -62,6 +63,7 @@ public class VisualizerHandler {
     instance = this;
 
     this.visualizerTypes = new HashedRegistry<>();
+
     visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
     visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
     visualizerTypes.put(ADV_PARTICLE_VISUALIZER_TYPE);
@@ -74,7 +76,16 @@ public class VisualizerHandler {
 
   public void loadVisualizers() {
     pathVisualizerMap.clear();
-    pathVisualizerMap.putAll(PathPlugin.getInstance().getDatabase().loadPathVisualizer());
+
+    // load all visualizers by their own types.
+    for (VisualizerType<?> visualizerType : visualizerTypes) {
+      // check if it is persistent visualizer type
+      if (visualizerType.getStorage() == null) {
+        continue;
+      }
+      // if persistent, load all visualizers of this type
+      pathVisualizerMap.putAll(visualizerType.getStorage().loadPathVisualizer());
+    }
   }
 
   public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(
@@ -94,13 +105,17 @@ public class VisualizerHandler {
     return pathVisualizerMap.get(key);
   }
 
-  public void addPathVisualizer(PathVisualizer<?, ?> visualizer) {
+  public <T extends PathVisualizer<T, ?>> void addPathVisualizer(PathVisualizer<T, ?> visualizer) {
     if (pathVisualizerMap.containsKey(visualizer.getKey())) {
       throw new IllegalArgumentException(
           "Could not insert new path visualizer, another visualizer with key '"
               + visualizer.getKey() + "' already exists.");
     }
-    PathPlugin.getInstance().getDatabase().updatePathVisualizer((PathVisualizer) visualizer);
+
+    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
+    if (storage != null) {
+      storage.updatePathVisualizer((T) visualizer);
+    }
     pathVisualizerMap.put(visualizer);
 
     Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
@@ -122,15 +137,22 @@ public class VisualizerHandler {
               + "' already exists.");
     }
     T visualizer = type.create(key, nameFormat);
-    PathPlugin.getInstance().getDatabase().updatePathVisualizer(visualizer);
+    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
+    if (storage != null) {
+      storage.updatePathVisualizer(visualizer);
+    }
     pathVisualizerMap.put(visualizer);
 
     Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
     return visualizer;
   }
 
-  public boolean deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
-    PathPlugin.getInstance().getDatabase().deletePathVisualizer(visualizer);
+  public <T extends PathVisualizer<T, D>, D> boolean deletePathVisualizer(
+      PathVisualizer<T, D> visualizer) {
+    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
+    if (storage != null) {
+      storage.deletePathVisualizer((T) visualizer);
+    }
     return pathVisualizerMap.remove(visualizer.getKey()) != null;
   }
 

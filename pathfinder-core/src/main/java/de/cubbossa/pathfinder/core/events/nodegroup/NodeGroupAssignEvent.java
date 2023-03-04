@@ -19,17 +19,17 @@ public class NodeGroupAssignEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable> groupables;
+  private final Collection<Groupable<?>> groupables;
   private final Collection<NodeGroup> groups;
-  private Collection<Groupable> modifiedGroupables;
+  private Collection<Groupable<?>> modifiedGroupables;
   private Collection<NodeGroup> modifiedGroups;
   private boolean cancelled;
 
-  public NodeGroupAssignEvent(Groupable groupables, NodeGroup groups) {
+  public NodeGroupAssignEvent(Groupable<?> groupables, NodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupAssignEvent(Collection<Groupable> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupAssignEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
     this.modifiedGroupables = new ArrayList<>(groupables);

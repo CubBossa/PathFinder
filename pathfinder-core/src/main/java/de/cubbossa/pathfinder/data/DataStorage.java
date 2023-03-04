@@ -5,13 +5,14 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -20,7 +21,8 @@ import javax.annotation.Nullable;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 
-public interface DataStorage {
+public interface DataStorage extends
+    NodeDataStorage<Waypoint> {
 
   default void connect() throws IOException {
     connect(() -> {
@@ -42,20 +44,20 @@ public interface DataStorage {
 
   void updateRoadMap(RoadMap roadMap);
 
-  default boolean deleteRoadMap(RoadMap roadMap) {
-    return deleteRoadMap(roadMap.getKey());
+  default void deleteRoadMap(RoadMap roadMap) {
+    deleteRoadMap(roadMap.getKey());
   }
 
-  boolean deleteRoadMap(NamespacedKey key);
+  void deleteRoadMap(NamespacedKey key);
 
 
   void saveEdges(Collection<Edge> edges);
 
-  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node> scope);
+  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope);
 
-  void deleteEdgesFrom(Node start);
+  void deleteEdgesFrom(Node<?> start);
 
-  void deleteEdgesTo(Node end);
+  void deleteEdgesTo(Node<?> end);
 
   void deleteEdges(Collection<Edge> edges);
 
@@ -63,23 +65,12 @@ public interface DataStorage {
     deleteEdge(edge.getStart(), edge.getEnd());
   }
 
-  void deleteEdge(Node start, Node end);
-
-
-  Map<Integer, Node> loadNodes(RoadMap roadMap);
-
-  void updateNode(Node node);
-
-  default void deleteNodes(Integer... nodeId) {
-    deleteNodes(Arrays.asList(nodeId));
-  }
-
-  void deleteNodes(Collection<Integer> nodeIds);
+  void deleteEdge(Node<?> start, Node<?> end);
 
 
   void assignNodesToGroup(NodeGroup group, NodeSelection selection);
 
-  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable> selection);
+  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection);
 
   Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
@@ -109,7 +100,7 @@ public interface DataStorage {
   void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey);
 
 
-  Map<NamespacedKey, PathVisualizer<?, ?>> loadPathVisualizer();
+  <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(VisualizerType<T> type);
 
   <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 

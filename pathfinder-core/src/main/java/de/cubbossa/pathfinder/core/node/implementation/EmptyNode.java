@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
@@ -9,12 +10,26 @@ import java.util.Collection;
 import java.util.HashSet;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class EmptyNode implements Node {
+public class EmptyNode implements Node<EmptyNode> {
+
+  public static final NodeType<EmptyNode> TYPE = new NodeType<>(
+      new NamespacedKey(PathPlugin.getInstance(), "empty"),
+      "empty",
+      new ItemStack(Material.DIRT)
+  ) {
+    @Override
+    public EmptyNode createNode(NodeCreationContext context) {
+      throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
+          + "must be created from constructor.");
+    }
+  };
 
   private final RoadMap roadMap;
   @Getter
@@ -26,8 +41,8 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public NodeType<Node> getType() {
-    return null;
+  public NodeType<EmptyNode> getType() {
+    return TYPE;
   }
 
   @Override
@@ -41,7 +56,7 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public Collection<Node> getGroup() {
+  public Collection<Node<?>> getGroup() {
     return new HashSet<>();
   }
 
@@ -76,12 +91,12 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public Edge connect(Node target) {
+  public Edge connect(Node<?> target) {
     return null;
   }
 
   @Override
-  public void disconnect(Node target) {
+  public void disconnect(Node<?> target) {
 
   }
 

@@ -202,7 +202,7 @@ public class WaypointCommand extends Command {
       onList(player, selection, 1);
       return;
     }
-    Node node = selection.get(0);
+    Node<?> node = selection.get(0);
     FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
         .resolver(Formatter.number("id", node.getNodeId()))
         .tag("roadmap", Messages.formatKey(node.getRoadMapKey()))
@@ -216,15 +216,15 @@ public class WaypointCommand extends Command {
             node.getEdges().stream().map(Edge::getEnd)
                 .collect(Collectors.toCollection(NodeSelection::new)))))
         .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-            node instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
+            node instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
         .build());
 
     TranslationHandler.getInstance().sendMessage(message, player);
   }
 
-  private void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node> type,
+  private void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node<?>> type,
                         Location location) {
-    Node node = roadMap.createNode(type, location, true);
+    Node<?> node = roadMap.createNode(type, location, true);
 
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
             .format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))),
@@ -289,7 +289,7 @@ public class WaypointCommand extends Command {
                   n.getEdges().stream().map(Edge::getEnd)
                       .collect(Collectors.toCollection(NodeSelection::new)))))
               .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-                  n instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
+                  n instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
               .build();
           TranslationHandler.getInstance()
               .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
@@ -300,8 +300,8 @@ public class WaypointCommand extends Command {
 
   private void onConnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
 
-    for (Node start : startSelection) {
-      for (Node end : endSelection) {
+    for (Node<?> start : startSelection) {
+      for (Node<?> end : endSelection) {
         TagResolver resolver = TagResolver.builder()
             .resolver(Placeholder.component("start", Component.text(start.getNodeId())))
             .resolver(Placeholder.component("end", Component.text(end.getNodeId())))
@@ -327,12 +327,12 @@ public class WaypointCommand extends Command {
   private void onDisconnect(Player player, NodeSelection startSelection,
                             @Nullable NodeSelection endSelection) {
 
-    for (Node start : startSelection) {
+    for (Node<?> start : startSelection) {
       if (endSelection == null) {
         RoadMapHandler.getInstance().getRoadMap(start.getRoadMapKey()).disconnectNode(start);
         continue;
       }
-      for (Node end : endSelection) {
+      for (Node<?> end : endSelection) {
         TagResolver resolver = TagResolver.builder()
             .resolver(Placeholder.component("start", Component.text(start.getNodeId())))
             .resolver(Placeholder.component("end", Component.text(end.getNodeId())))
@@ -361,8 +361,8 @@ public class WaypointCommand extends Command {
 
   private void onAddGroup(Player player, NodeSelection selection, NodeGroup group) {
     NodeGroupHandler.getInstance().addNodes(group, selection.stream()
-        .filter(node -> node instanceof Groupable)
-        .map(n -> (Groupable) n)
+        .filter(node -> node instanceof Groupable<?>)
+        .map(n -> (Groupable<?>) n)
         .collect(Collectors.toSet()));
 
     TranslationHandler.getInstance()
@@ -377,8 +377,8 @@ public class WaypointCommand extends Command {
 
 
     NodeGroupHandler.getInstance().removeNodes(group, selection.stream()
-        .filter(node -> node instanceof Groupable)
-        .map(n -> (Groupable) n)
+        .filter(node -> node instanceof Groupable<?>)
+        .map(n -> (Groupable<?>) n)
         .collect(Collectors.toSet()));
 
     TranslationHandler.getInstance()
@@ -390,9 +390,9 @@ public class WaypointCommand extends Command {
   }
 
   private void onClearGroups(Player player, NodeSelection selection) {
-    Collection<Groupable> groupables = selection.stream()
+    Collection<Groupable<?>> groupables = selection.stream()
         .filter(node -> node instanceof Groupable)
-        .map(n -> (Groupable) n)
+        .map(n -> (Groupable<?>) n)
         .collect(Collectors.toSet());
     NodeGroupHandler.getInstance().removeNodes(
         groupables.stream().flatMap(groupable -> groupable.getGroups().stream())

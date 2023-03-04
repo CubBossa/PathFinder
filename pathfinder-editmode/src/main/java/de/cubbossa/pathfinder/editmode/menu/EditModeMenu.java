@@ -43,7 +43,7 @@ public class EditModeMenu {
   private final RoadMap roadMap;
   private final Collection<NodeGroup> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
-  private Node edgeStart = null;
+  private Node<?> edgeStart = null;
   private Boolean undirectedEdges = false;
 
   public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
@@ -149,9 +149,9 @@ public class EditModeMenu {
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
           double dist = -1;
-          Node nearest = null;
+          Node<?> nearest = null;
           Location pLoc = context.getPlayer().getLocation();
-          for (Node node : roadMap.getNodes()) {
+          for (Node<?> node : roadMap.getNodes()) {
             double d = node.getLocation().distance(pLoc);
             if (dist == -1 || d < dist) {
               nearest = node;
@@ -171,12 +171,12 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N,
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable groupable) {
+          if (context.getTarget() instanceof Groupable<?> groupable) {
             openGroupMenu(context.getPlayer(), groupable);
           }
         })
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable groupable) {
+          if (context.getTarget() instanceof Groupable<?> groupable) {
             if (groupable.getGroups().isEmpty()) {
               return;
             }
@@ -194,7 +194,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable groupable) {
+          if (context.getTarget() instanceof Groupable<?> groupable) {
             Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
               NodeGroupHandler.getInstance().addNodes(multiTool, Lists.newArrayList(groupable));
               context.getPlayer()
@@ -203,7 +203,7 @@ public class EditModeMenu {
           }
         })
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable groupable) {
+          if (context.getTarget() instanceof Groupable<?> groupable) {
             Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
               NodeGroupHandler.getInstance().removeNodes(multiTool, Lists.newArrayList(groupable));
               context.getPlayer().playSound(context.getPlayer().getLocation(),
@@ -217,7 +217,7 @@ public class EditModeMenu {
     return menu;
   }
 
-  private void openGroupMenu(Player player, Groupable groupable) {
+  private void openGroupMenu(Player player, Groupable<?> groupable) {
 
     ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
     menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),

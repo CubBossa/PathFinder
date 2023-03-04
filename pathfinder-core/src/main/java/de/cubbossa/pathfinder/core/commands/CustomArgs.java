@@ -313,7 +313,7 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node type argument instance
    */
-  public <T extends Node> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
+  public <T extends Node<T>> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       NodeType<T> type =
           NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
@@ -411,7 +411,7 @@ public class CustomArgs {
         throw new CustomArgument.CustomArgumentException("Only for players");
       }
       String search = context.currentInput();
-      List<Node> scope = RoadMapHandler.getInstance().getRoadMaps().values().stream()
+      List<Node<?>> scope = RoadMapHandler.getInstance().getRoadMaps().values().stream()
           .flatMap(roadMap -> roadMap.getNodes().stream()
               .filter(node -> {
                 FindModule.NavigationRequestContext c =
@@ -422,7 +422,7 @@ public class CustomArgs {
           .toList();
 
       try {
-        Collection<Node> target = new FindQueryParser().parse(search, scope);
+        Collection<Node<?>> target = new FindQueryParser().parse(search, scope);
         return new NodeSelection(target);
       } catch (Throwable t) {
         throw new CustomArgument.CustomArgumentException(t.getMessage());

@@ -4,15 +4,16 @@ import de.cubbossa.pathfinder.PersistencyHolder;
 import java.util.Collection;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Node extends Navigable, PersistencyHolder, Comparable<Node> {
+public interface Node<N extends Node<N>> extends Navigable, PersistencyHolder, Comparable<Node<?>> {
 
   int getNodeId();
 
   NamespacedKey getRoadMapKey();
 
-  NodeType<? extends Node> getType();
+  NodeType<N> getType();
 
   Location getLocation();
 
@@ -24,7 +25,12 @@ public interface Node extends Navigable, PersistencyHolder, Comparable<Node> {
 
   void setCurveLength(Double value);
 
-  Edge connect(Node target);
+  Edge connect(Node<?> target);
 
-  void disconnect(Node target);
+  void disconnect(Node<?> target);
+
+  @Override
+  default int compareTo(@NotNull Node<?> o) {
+    return Integer.compare(getNodeId(), o.getNodeId());
+  }
 }

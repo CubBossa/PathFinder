@@ -544,7 +544,7 @@ public class Messages {
     return val ? GEN_TRUE : GEN_FALSE;
   }
 
-  public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
+  public static Component formatNodeSelection(CommandSender sender, Collection<Node<?>> nodes) {
     return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
         node -> Component.text("#" + node.getNodeId()));
   }

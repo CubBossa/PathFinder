@@ -67,7 +67,7 @@ public class CombinedVisualizer
   }
 
   @Override
-  public CombinedData prepare(List<Node> nodes, Player player) {
+  public CombinedData prepare(List<Node<?>> nodes, Player player) {
     return new CombinedData(visualizers.stream()
         .collect(Collectors.toMap(Keyed::getKey, v -> v.prepare(nodes, player))));
   }

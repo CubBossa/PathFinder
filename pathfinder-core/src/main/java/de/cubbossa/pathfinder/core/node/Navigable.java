@@ -10,5 +10,5 @@ public interface Navigable extends SearchTermHolder {
    * This might be just one node for single nodes that implement navigable.
    * Group content for groups.
    */
-  Collection<Node> getGroup();
+  Collection<Node<?>> getGroup();
 }

@@ -58,8 +58,8 @@ import org.bukkit.util.Vector;
 @Setter
 public class ClientNodeHandler {
 
-  public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Node<?>>> RIGHT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Node<?>>> LEFT_CLICK_NODE = new Action<>();
   public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
   public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
@@ -78,10 +78,10 @@ public class ClientNodeHandler {
 
   private static int entityId = 10_000;
   private final ProtocolManager protocolManager;
-  private final Map<IntPair, Collection<Node>> chunkNodeMap;
+  private final Map<IntPair, Collection<Node<?>>> chunkNodeMap;
   private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
-  private final Map<Node, Integer> nodeEntityMap;
-  private final Map<Integer, Node> entityNodeMap;
+  private final Map<Node<?>, Integer> nodeEntityMap;
+  private final Map<Integer, Node<?>> entityNodeMap;
   private final Map<Edge, Integer> edgeEntityMap;
   private final Map<Integer, Edge> entityEdgeMap;
   private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
@@ -112,7 +112,7 @@ public class ClientNodeHandler {
         int chunkY = packet.getIntegers().read(1);
 
         var key = new IntPair(chunkX, chunkY);
-        Collection<Node> nodes = chunkNodeMap.get(key);
+        Collection<Node<?>> nodes = chunkNodeMap.get(key);
         if (nodes != null) {
           showNodes(nodes, event.getPlayer());
         }
@@ -135,7 +135,7 @@ public class ClientNodeHandler {
         boolean left = packet.getEnumEntityUseActions().read(0).getAction()
             .equals(EnumWrappers.EntityUseAction.ATTACK);
         if (entityNodeMap.containsKey(entityId)) {
-          Node node = entityNodeMap.get(entityId);
+          Node<?> node = entityNodeMap.get(entityId);
           if (node == null) {
             throw new IllegalStateException("ClientNodeHandler Tables off sync!");
           }
@@ -146,7 +146,7 @@ public class ClientNodeHandler {
             return;
           }
           event.setCancelled(true);
-          Action<TargetContext<Node>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
+          Action<TargetContext<Node<?>>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
         }
         if (entityEdgeMap.containsKey(entityId)) {
@@ -169,13 +169,13 @@ public class ClientNodeHandler {
     return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
   }
 
-  public void showNodes(Collection<Node> nodes, Player player) {
-    for (Node node : nodes) {
+  public void showNodes(Collection<Node<?>> nodes, Player player) {
+    for (Node<?> node : nodes) {
       showNode(node, player);
     }
   }
 
-  public void showNode(Node node, Player player) {
+  public void showNode(Node<?> node, Player player) {
     Location location = node.getLocation();
     int id = spawnArmorstand(player, location, null, false);
 
@@ -186,16 +186,17 @@ public class ClientNodeHandler {
     chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(node);
 
     equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null,
-        node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead :
-            nodeSingleHead});
+        node instanceof Groupable<?> groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead
+            :
+                nodeSingleHead});
     updateNodeName(player, node);
   }
 
-  public void updateNodeName(Player player, Node node) {
+  public void updateNodeName(Player player, Node<?> node) {
     renameArmorstand(player, node,
-        node instanceof Groupable groupable && !groupable.getGroups().isEmpty() ?
+        node instanceof Groupable<?> groupable && !groupable.getGroups().isEmpty() ?
             Messages.formatGroupConcat(
-                player, E_NODE_NAME, ((Groupable) node).getGroups().stream()
+                player, Messages.E_NODE_NAME, ((Groupable<?>) node).getGroups().stream()
                     .map(NodeGroup::getSearchTerms)
                     .flatMap(Collection::stream).collect(Collectors.toList()),
                 t -> Component.text(t.getIdentifier())
@@ -236,7 +237,7 @@ public class ClientNodeHandler {
     }
   }
 
-  public void hideNodes(Collection<Node> nodes, Player player) {
+  public void hideNodes(Collection<Node<?>> nodes, Player player) {
     removeArmorstand(player,
         nodes.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
 
@@ -258,7 +259,8 @@ public class ClientNodeHandler {
     });
   }
 
-  public void updateNodePosition(Node node, Player player, Location location, boolean updateEdges) {
+  public void updateNodePosition(Node<?> node, Player player, Location location,
+                                 boolean updateEdges) {
     teleportArmorstand(player, nodeEntityMap.get(node), location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
       RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey());
@@ -369,18 +371,19 @@ public class ClientNodeHandler {
     protocolManager.sendServerPacket(player, packet);
   }
 
-  public void updateNodeHead(Player player, Node node) {
+  public void updateNodeHead(Player player, Node<?> node) {
     Integer id = nodeEntityMap.get(node);
     if (id == null) {
       throw new RuntimeException(
           "Trying to update armorstand that was not registered for client side display.");
     }
     equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null,
-        node instanceof Groupable groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead :
-            nodeSingleHead});
+        node instanceof Groupable<?> groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead
+            :
+                nodeSingleHead});
   }
 
-  public void renameArmorstand(Player player, Node node, @Nullable Component name) {
+  public void renameArmorstand(Player player, Node<?> node, @Nullable Component name) {
     Integer id = nodeEntityMap.get(node);
     if (id == null) {
       throw new RuntimeException(

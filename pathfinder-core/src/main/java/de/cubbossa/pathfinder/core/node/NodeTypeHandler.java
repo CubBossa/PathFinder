@@ -17,7 +17,7 @@ public class NodeTypeHandler {
     this.types = new HashedRegistry<>();
   }
 
-  public <T extends Node> NodeType<T> getNodeType(NamespacedKey key) {
+  public <T extends Node<T>> NodeType<T> getNodeType(NamespacedKey key) {
     return (NodeType<T>) types.get(key);
   }
 
