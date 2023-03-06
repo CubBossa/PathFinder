@@ -51,7 +51,7 @@ dependencies {
     // Other
     compileOnly("com.google.guava:guava:31.1-jre")
     implementation("org.jooq:jooq:3.17.8")
-    jooqGenerator("mysql:mysql-connector-java:8.0.32")
+    jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Particles
@@ -238,15 +238,12 @@ jooq {
         create("main") {
             jooqConfiguration.apply {
                 jdbc.apply {
-                    url = "jdbc:mysql://localhost:3306/pathfinder"
-                    user = "root"
-                    password = "test"
+                    url = "jdbc:sqlite:src/main/resources/database_template.db"
                 }
                 generator.apply {
                     name = "org.jooq.codegen.JavaGenerator"
                     database.apply {
-                        name = "org.jooq.meta.mysql.MySQLDatabase"
-                        inputSchema = "pathfinder"
+                        name = "org.jooq.meta.sqlite.SQLiteDatabase"
                         forcedTypes = listOf(
                             ForcedType().apply {
                                 userType = "org.bukkit.NamespacedKey"

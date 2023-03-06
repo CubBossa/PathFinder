@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.data;
 
+import de.cubbossa.pathfinder.PathPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -19,6 +20,8 @@ public class SqliteDataStorage extends SqlDataStorage {
   public SqliteDataStorage(File file) {
     super(SQLDialect.SQLITE);
     this.file = file;
+
+    PathPlugin.getInstance().getLogger().info("Setting up SQLITE database: " + file.getAbsolutePath());
   }
 
   public void connect(Runnable initial) throws IOException {

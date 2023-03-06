@@ -48,7 +48,6 @@ import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
 import org.jooq.RecordMapper;
 import org.jooq.SQLDialect;
-import org.jooq.conf.ParamCastMode;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -123,8 +122,8 @@ public abstract class SqlDataStorage implements DataStorage {
     NamespacedKey key = record.getKey();
     String nameFormat = record.getNameFormat();
     String permission = record.getPermission();
-    boolean navigable = record.getNavigable() != 0;
-    boolean discoverable = record.getDiscoverable() != 0;
+    boolean navigable = record.getNavigable();
+    boolean discoverable = record.getDiscoverable();
     double findDistance = record.getFindDistance();
 
     NodeGroup group = new NodeGroup(key, nameFormat);
@@ -144,8 +143,8 @@ public abstract class SqlDataStorage implements DataStorage {
   @Override
   public void connect(Runnable initial) throws IOException {
     create = DSL.using(getConnectionProvider(), dialect, new Settings()
-        .withParamCastMode(ParamCastMode.NEVER)
-        .withRenderQuotedNames(RenderQuotedNames.ALWAYS));
+        .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
+        .withRenderSchema(dialect != SQLDialect.SQLITE));
 
     createPathVisualizerTable();
     createRoadMapTable();
@@ -160,48 +159,56 @@ public abstract class SqlDataStorage implements DataStorage {
   private void createRoadMapTable() {
     create
         .createTableIfNotExists(PATHFINDER_ROADMAPS)
+        .columns(PATHFINDER_ROADMAPS.fields())
         .execute();
   }
 
   private void createNodeTable() {
     create
         .createTableIfNotExists(PATHFINDER_NODES)
+        .columns(PATHFINDER_NODES.fields())
         .execute();
   }
 
   private void createEdgeTable() {
     create
         .createTableIfNotExists(PATHFINDER_EDGES)
+        .columns(PATHFINDER_EDGES.fields())
         .execute();
   }
 
   private void createNodeGroupTable() {
     create
         .createTableIfNotExists(PATHFINDER_NODEGROUPS)
+        .columns(PATHFINDER_NODEGROUPS.fields())
         .execute();
   }
 
   private void createNodeGroupSearchTermsTable() {
     create
         .createTableIfNotExists(PATHFINDER_SEARCH_TERMS)
+        .columns(PATHFINDER_SEARCH_TERMS.fields())
         .execute();
   }
 
   private void createNodeGroupNodesTable() {
     create
         .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
+        .columns(PATHFINDER_NODEGROUP_NODES.fields())
         .execute();
   }
 
   private void createPathVisualizerTable() {
     create
         .createTableIfNotExists(PATHFINDER_PATH_VISUALIZER)
+        .columns(PATHFINDER_PATH_VISUALIZER.fields())
         .execute();
   }
 
   private void createDiscoverInfoTable() {
     create
         .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
+        .columns(PATHFINDER_DISCOVERINGS.fields())
         .execute();
   }
 
@@ -410,8 +417,8 @@ public abstract class SqlDataStorage implements DataStorage {
         .set(PATHFINDER_NODEGROUPS.KEY, group.getKey())
         .set(PATHFINDER_NODEGROUPS.NAME_FORMAT, group.getNameFormat())
         .set(PATHFINDER_NODEGROUPS.PERMISSION, group.getPermission())
-        .set(PATHFINDER_NODEGROUPS.NAVIGABLE, (byte) (group.isNavigable() ? 1 : 0))
-        .set(PATHFINDER_NODEGROUPS.DISCOVERABLE, (byte) (group.isDiscoverable() ? 1 : 0))
+        .set(PATHFINDER_NODEGROUPS.NAVIGABLE, group.isNavigable())
+        .set(PATHFINDER_NODEGROUPS.DISCOVERABLE, group.isDiscoverable())
         .set(PATHFINDER_NODEGROUPS.FIND_DISTANCE, group.getFindDistance() * 1.)
         .execute();
   }
