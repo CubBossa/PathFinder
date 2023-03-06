@@ -142,6 +142,10 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public void connect(Runnable initial) throws IOException {
+
+    System.setProperty("org.jooq.no-logo", "true");
+    System.setProperty("org.jooq.no-tips", "true");
+
     create = DSL.using(getConnectionProvider(), dialect, new Settings()
         .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
         .withRenderSchema(dialect != SQLDialect.SQLITE));
