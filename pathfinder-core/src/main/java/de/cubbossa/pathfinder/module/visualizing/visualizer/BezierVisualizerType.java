@@ -21,7 +21,7 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>>
         .then(CustomArgs.literal("point-distance")
             .then(new FloatArgument("distance", .02f, 100)
                 .executes((commandSender, objects) -> {
-                  if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+                  if (objects[0] instanceof AdvancedParticleVisualizer<?> vis) { //TODO this should be in its own deriving class
                     VisualizerHandler.getInstance()
                         .setProperty(commandSender, vis, (Integer) objects[1], "particle-steps",
                             true, vis::getSchedulerSteps, vis::setSchedulerSteps);
@@ -30,7 +30,7 @@ public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>>
         .then(CustomArgs.literal("sample-rate")
             .then(CustomArgs.integer("sample-rate", 1, 64)
                 .executes((commandSender, objects) -> {
-                  if (objects[0] instanceof ScriptLineParticleVisualizer vis) {
+                  if (objects[0] instanceof BezierPathVisualizer<?> vis) {
                     VisualizerHandler.getInstance()
                         .setProperty(commandSender, vis, (Integer) objects[1], "sample-rate", true,
                             vis::getBezierSamplingRate, vis::setBezierSamplingRate);

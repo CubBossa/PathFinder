@@ -7,7 +7,8 @@ rootProject.name = "pathfinder"
 sequenceOf(
     "core",
     "graph",
-    "editmode"
+    "editmode",
+    "scripted-visualizer"
 ).forEach {
     val name = "${rootProject.name}-$it"
     include(name)

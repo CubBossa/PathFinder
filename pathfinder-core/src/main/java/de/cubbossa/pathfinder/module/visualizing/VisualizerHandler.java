@@ -12,8 +12,6 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.CompassVisualizerTyp
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.ScriptLineParticleVisualizer;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.ScriptLineParticleVisualizerType;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
@@ -40,9 +38,6 @@ public class VisualizerHandler {
 
   public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE =
       new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
-  public static final VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
-      new ScriptLineParticleVisualizerType(
-          new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
   public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE =
       new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
   public static final VisualizerType<CompassVisualizer> COMPASS_VISUALIZER_TYPE =
@@ -66,7 +61,6 @@ public class VisualizerHandler {
 
     visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
     visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
-    visualizerTypes.put(ADV_PARTICLE_VISUALIZER_TYPE);
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
 
     this.pathVisualizerMap = new HashedRegistry<>();

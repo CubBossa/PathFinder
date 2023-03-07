@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -102,6 +101,6 @@ public class ScriptLineParticleVisualizer
 
   @Override
   public VisualizerType<ScriptLineParticleVisualizer> getType() {
-    return VisualizerHandler.ADV_PARTICLE_VISUALIZER_TYPE;
+    return ScriptedVisualizerPathfinderExtension.ADV_PARTICLE_VISUALIZER_TYPE;
   }
 }

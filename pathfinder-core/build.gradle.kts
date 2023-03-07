@@ -55,7 +55,6 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Particles
-    implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("de.cubbossa:splinelib:1.0")
     api("de.cubbossa:SerializedEffects:1.0")
 
