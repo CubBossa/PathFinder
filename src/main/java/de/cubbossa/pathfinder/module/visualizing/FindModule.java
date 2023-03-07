@@ -96,6 +96,9 @@ public class FindModule implements Listener {
   }
 
   public NavigateResult findPath(Player player, Location location, double maxDist) {
+    if (maxDist < 0) {
+      maxDist = Double.MAX_VALUE;
+    }
 
     // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
     if (location.toVector().equals(player.getLocation().toVector())) {

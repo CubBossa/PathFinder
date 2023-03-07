@@ -24,6 +24,8 @@ permissions:
     default: op
   pathfinder.command.find:
     default: true
+  pathfinder.command.findlocation:
+    default: true
   pathfinder.command.cancel_path:
     default: true
   pathfinder.command.roadmap.info:

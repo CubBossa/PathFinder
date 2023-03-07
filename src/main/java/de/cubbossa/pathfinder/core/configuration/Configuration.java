@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.configuration;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.data.DatabaseType;
+import de.cubbossa.pathfinder.util.LocationWeightSolverPreset;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -48,10 +49,36 @@ public class Configuration {
       Make sure to setup nodegroups, the find command relies on the search terms of nodegroups to
       work.""")
   private boolean navigationEnabled = true;
+  @ConfigValue(path = "module.navigation.nearest-node.algorithm", comments = """
+      The nearest-block-algorithm config allows to choose an algorithm that defines, which node is
+      to be declared as nearest to a location, usually the player location when /find is entered.
+      Possible values:
+      - SIMPLE: choose the absolute nearest node by direct distance
+      - RAYCAST: send raycasts to check if blocks obstruct the edge between a location and a node.""")
+  private LocationWeightSolverPreset locationWeightSolverPreset = LocationWeightSolverPreset.SIMPLE;
+  @ConfigValue(path = "module.navigation.nearest-node.data.raycast.count", comments = """
+      The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
+      nodes. Default: 10""")
+  private double raycastCount = 10;
+  @ConfigValue(path = "module.navigation.nearest-node.data.raycast.start-direction-weight", comments = """
+      If nodes in the players view direction should be preferred.
+      1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
+  private double startLocationDirectionWeight = 1;
+  @ConfigValue(path = "module.navigation.nearest-node.data.raycast.scope-direction-weight", comments = """
+      If the node location direction should have an effect on its closeness to the player. Similar
+      to start-direction-weight but for nodes instead of player. Default: 0""")
+  private double scopeLocationDirectionWeight = 0;
+  @ConfigValue(path = "module.navigation.nearest-node.data.raycast.block-weight", comments = """
+      Each block between the player/a node and another node will count as the given amount of
+      distance in blocks. Default of 10.000 means that two blocks between a player and a node
+      will count as a distance of 20.000 blocks. While another node that is further away from the
+      player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
+  private double blockCollisionWeight = 10_000d;
   @ConfigValue(path = "module.navigation.max_find_location_dist", comments = """
       The command /findlocation <location> creates a virtual waypoint at the given location
       and connects it with the nearest waypoint around. The maximum distance can be set to
-      not allow commands with locations far away from the actual roadmap. Default's set to 20.""")
+      not allow commands with locations far away from the actual roadmap. Default's set to 20.
+      -1 can be set to disable a distance check.""")
   private double navigationLocationMaxDist = 20.;
   @ConfigValue(path = "module.discovery.enabled", comments = """
       Allows players to discover nodegroups if the according groups have the feature enabled.

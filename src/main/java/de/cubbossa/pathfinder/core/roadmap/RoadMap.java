@@ -21,7 +21,9 @@ import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.data.DataStorageException;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.util.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.util.RaycastLocationWeightSolver;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -140,45 +142,10 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     });
 
     if (player != null) {
-      Location playerLocation = player.getLocation();
-      graph.addNode(player);
-      List<Triple<Node, Double, Integer>> triples = nodes.values().stream()
-          .filter(node -> Objects.equals(node.getLocation().getWorld(), playerLocation.getWorld()))
-          .map(node -> new AbstractMap.SimpleEntry<>(node,
-              node.getLocation().distance(playerLocation)))
-          .sequential()
-          .sorted(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue))
-          .limit(10)
-          .map(e -> {
-            Node n = e.getKey();
-            Vector dir = n.getLocation().toVector().clone().add(new Vector(0, .5f, 0))
-                .subtract(playerLocation.toVector());
-            double length = dir.length();
-            dir.normalize();
-            Location loc = player.getLocation().setDirection(dir);
-            int count = 1;
+      LocationWeightSolver<Node> solver = new RaycastLocationWeightSolver<>(Node::getLocation);
+      Map<Node, Double> weighted = solver.solve(player, graph);
 
-            BlockIterator iterator = new BlockIterator(loc, 0, (int) length);
-            int cancel = 0; // sometimes the while loop does not cancel without extra counter
-            while (iterator.hasNext() && cancel++ < 100) {
-              Block block = iterator.next();
-              if (block.getType().isBlock() && block.getType().isSolid()) {
-                count++;
-              }
-            }
-            return Triple.of(n, length, count);
-          }).toList();
-
-      boolean anyNullCount = triples.stream().anyMatch(e -> e.getRight() == 1);
-
-      triples.stream()
-          .filter(e -> !anyNullCount || e.getRight() == 1)
-          .forEach(e -> {
-
-            Edge edge = new Edge(player, e.getLeft(),
-                e.getRight() * 10_000); // prefer paths without interfering blocks
-            graph.connect(player, e.getLeft(), e.getMiddle() * edge.getWeightModifier());
-          });
+      weighted.forEach((node, weight) -> graph.connect(player, node, weight));
     }
 
     return graph;
