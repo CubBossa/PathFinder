@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.configuration.Configuration;
 import de.cubbossa.pathfinder.data.DataExporter;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
