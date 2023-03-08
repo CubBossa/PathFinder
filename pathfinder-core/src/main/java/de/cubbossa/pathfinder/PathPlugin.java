@@ -22,6 +22,7 @@ import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
+import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -63,6 +64,7 @@ public class PathPlugin extends JavaPlugin {
   public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
   public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
   public static final String PERM_CMD_FIND = "pathfinder.command.find";
+  public static final String PERM_CMD_FIND_LOCATION = "pathfinder.command.findlocation";
   public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
   public static final String PERM_CMD_RM_INFO = "pathfinder.command.roadmap.info";
   public static final String PERM_CMD_RM_CREATE = "pathfinder.command.roadmap.create";
@@ -245,6 +247,7 @@ public class PathPlugin extends JavaPlugin {
     CommandAPI.onEnable(this);
     findCommand = new FindCommand();
     findCommand.register();
+    new FindLocationCommand().register();
     roadMapCommand = new RoadMapCommand();
     roadMapCommand.register();
     pathFinderCommand = new PathFinderCommand();

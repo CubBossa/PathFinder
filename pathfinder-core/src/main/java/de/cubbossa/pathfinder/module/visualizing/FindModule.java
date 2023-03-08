@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.core.node.Navigable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.graph.Graph;
@@ -91,6 +92,50 @@ public class FindModule implements Listener {
     return activePaths.get(player.getUniqueId());
   }
 
+  public NavigateResult findPath(Player player, Location location) {
+    double maxDist = PathPlugin.getInstance().getConfiguration().getNavigationLocationMaxDist();
+    return findPath(player, location, maxDist);
+  }
+
+  public NavigateResult findPath(Player player, Location location, double maxDist) {
+    if (maxDist < 0) {
+      maxDist = Double.MAX_VALUE;
+    }
+
+    // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
+    if (location.toVector().equals(player.getLocation().toVector())) {
+      location = location.add(0, 0.01, 0);
+    }
+
+    Collection<Node> nodes = RoadMapHandler.getInstance().getRoadMapsStream()
+        .map(RoadMap::getNodes)
+        .flatMap(Collection::stream)
+        .toList();
+
+    Node closest = null;
+    double dist = Double.MAX_VALUE;
+    for (Node node : nodes) {
+      double curDist = node.getLocation().distance(location);
+      if (curDist < dist && curDist < maxDist) {
+        closest = node;
+        dist = curDist;
+      }
+    }
+    if (closest == null) {
+      return NavigateResult.FAIL_TOO_FAR_AWAY;
+    }
+    RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(closest.getRoadMapKey());
+    Waypoint target = roadMap.createNode(RoadMapHandler.WAYPOINT_TYPE, location, false);
+    roadMap.connectNodes(closest, target, false);
+
+    NavigateResult result = findPath(player, new NodeSelection(target));
+
+    roadMap.disconnectNodes(closest, target);
+    roadMap.removeNodes(target);
+
+    return result;
+  }
+
   public NavigateResult findPath(Player player, NodeSelection targets) {
     return findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
   }
@@ -106,8 +151,7 @@ public class FindModule implements Listener {
         .map(Node::getRoadMapKey)
         .distinct()
         .map(key -> RoadMapHandler.getInstance().getRoadMap(key))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .filter(Objects::nonNull).toList();
 
     if (nodes.size() == 0) {
       return NavigateResult.FAIL_EMPTY;
@@ -223,8 +267,21 @@ public class FindModule implements Listener {
     });
   }
 
+  public static void printResult(FindModule.NavigateResult result, Player player) {
+    switch (result) {
+      case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
+      case FAIL_BLOCKED ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+      case FAIL_EMPTY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
+    }
+  }
+
   public enum NavigateResult {
-    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED
+    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
+    FAIL_TOO_FAR_AWAY;
   }
 
   public record NavigationRequestContext(UUID playerId, Navigable navigable) {

@@ -1,9 +1,12 @@
 package de.cubbossa.pathfinder.graph;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
-public class Graph<N> {
+public class Graph<N> implements Iterable<N> {
 
   private final Map<N, Map<N, Double>> nodes;
 
@@ -91,5 +94,11 @@ public class Graph<N> {
       return map.get(end);
     }
     throw new IllegalArgumentException("The end node is not contained in this graph.");
+  }
+
+  @NotNull
+  @Override
+  public Iterator<N> iterator() {
+    return nodes.keySet().iterator();
   }
 }

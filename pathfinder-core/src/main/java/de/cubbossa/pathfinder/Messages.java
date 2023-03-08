@@ -291,6 +291,8 @@ public class Messages {
   public static final Message CMD_FIND = new Message("commands.find.success");
   @MessageMeta(value = "<ins:prefix>No matching waypoints could be found.")
   public static final Message CMD_FIND_EMPTY = new Message("commands.find.no_nodes_found");
+  @MessageMeta(value = "<ins:prefix>The given location is too far away from any waypoint.")
+  public static final Message CMD_FIND_TOO_FAR = new Message("commands.find.too_far_away");
   @MessageMeta(value = "<ins:prefix>No possible way could be found to reach that target.")
   public static final Message CMD_FIND_BLOCKED = new Message("commands.find.no_path_found");
   @MessageMeta(value = "<ins:prefix>No visualizer is set for this roadmap.")
