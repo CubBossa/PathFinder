@@ -106,6 +106,7 @@ bukkit {
         register("pathfinder.command.pathfinder.import")
         register("pathfinder.command.pathfinder.export")
         register("pathfinder.command.find")
+        register("pathfinder.command.findlocation")
         register("pathfinder.command.cancel_path")
         register("pathfinder.command.roadmap.info")
         register("pathfinder.command.roadmap.create")

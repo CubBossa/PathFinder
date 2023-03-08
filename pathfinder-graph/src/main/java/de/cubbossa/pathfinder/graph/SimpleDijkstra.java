@@ -104,7 +104,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
       throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
-    Preconditions.checkState(targets.size() > 1);
+    Preconditions.checkState(targets.size() > 0);
 
     Map<N, Node> computedGraph = setStartNode(graph, start);
 

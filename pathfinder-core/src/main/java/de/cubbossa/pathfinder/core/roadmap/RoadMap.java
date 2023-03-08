@@ -21,19 +21,15 @@ import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.data.DataStorageException;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.util.LocationWeightSolver;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.Triple;
-import de.cubbossa.pathfinder.util.RaycastLocationWeightSolver;
-import java.util.AbstractMap;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
+import de.cubbossa.pathfinder.util.location.RaycastLocationWeightSolver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -46,9 +42,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 @Getter
@@ -145,8 +139,10 @@ public class RoadMap implements Keyed, Named, PersistencyHolder {
     });
 
     if (player != null) {
-      LocationWeightSolver<Node> solver = new RaycastLocationWeightSolver<>(Node::getLocation);
-      Map<Node, Double> weighted = solver.solve(player, graph);
+      graph.addNode(player);
+      LocationWeightSolver<Node<?>> solver = LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
+          .getConfiguration().navigation.nearestLocationSolver);
+      Map<Node<?>, Double> weighted = solver.solve(player, graph);
 
       weighted.forEach((node, weight) -> graph.connect(player, node, weight));
     }

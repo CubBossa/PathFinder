@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.module.visualizing.InternalVisualizerDataStorage;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;

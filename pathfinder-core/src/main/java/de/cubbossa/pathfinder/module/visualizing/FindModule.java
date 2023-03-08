@@ -19,6 +19,7 @@ import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.ArrayList;
@@ -93,7 +94,7 @@ public class FindModule implements Listener {
   }
 
   public NavigateResult findPath(Player player, Location location) {
-    double maxDist = PathPlugin.getInstance().getConfiguration().getNavigationLocationMaxDist();
+    double maxDist = PathPlugin.getInstance().getConfiguration().navigation.findLocation.maxDistance;
     return findPath(player, location, maxDist);
   }
 
@@ -107,14 +108,14 @@ public class FindModule implements Listener {
       location = location.add(0, 0.01, 0);
     }
 
-    Collection<Node> nodes = RoadMapHandler.getInstance().getRoadMapsStream()
+    Collection<Node<?>> nodes = RoadMapHandler.getInstance().getRoadMapsStream()
         .map(RoadMap::getNodes)
         .flatMap(Collection::stream)
         .toList();
 
-    Node closest = null;
+    Node<?> closest = null;
     double dist = Double.MAX_VALUE;
-    for (Node node : nodes) {
+    for (Node<?> node : nodes) {
       double curDist = node.getLocation().distance(location);
       if (curDist < dist && curDist < maxDist) {
         closest = node;

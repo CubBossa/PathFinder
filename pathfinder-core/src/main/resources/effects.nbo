@@ -1,14 +1,14 @@
-<with ActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ActionBarPlayer>
-<with Cooldown as de.cubbossa.pathfinder.serializedeffects.effects.Cooldown>
-<with Effect as de.cubbossa.pathfinder.serializedeffects.effects.EffectPlayer>
-<with Message as de.cubbossa.pathfinder.serializedeffects.effects.MessagePlayer>
-<with ParticleLine as de.cubbossa.pathfinder.serializedeffects.effects.ParticleLinePlayer>
-<with Particle as de.cubbossa.pathfinder.serializedeffects.effects.ParticlePlayer>
-<with ResetActionBar as de.cubbossa.pathfinder.serializedeffects.effects.ResetActionBar>
-<with ResetTitle as de.cubbossa.pathfinder.serializedeffects.effects.ResetTitle>
-<with Sound as de.cubbossa.pathfinder.serializedeffects.effects.SoundPlayer>
-<with Title as de.cubbossa.pathfinder.serializedeffects.effects.TitlePlayer>
-<with WorldEffect as de.cubbossa.pathfinder.serializedeffects.effects.WorldEffectPlayer>
+<with ActionBar as de.cubbossa.pathfinder.lib.serializedeffects.effects.ActionBarPlayer>
+<with Cooldown as de.cubbossa.pathfinder.lib.serializedeffects.effects.Cooldown>
+<with Effect as de.cubbossa.pathfinder.lib.serializedeffects.effects.EffectPlayer>
+<with Message as de.cubbossa.pathfinder.lib.serializedeffects.effects.MessagePlayer>
+<with ParticleLine as de.cubbossa.pathfinder.lib.serializedeffects.effects.ParticleLinePlayer>
+<with Particle as de.cubbossa.pathfinder.lib.serializedeffects.effects.ParticlePlayer>
+<with ResetActionBar as de.cubbossa.pathfinder.lib.serializedeffects.effects.ResetActionBar>
+<with ResetTitle as de.cubbossa.pathfinder.lib.serializedeffects.effects.ResetTitle>
+<with Sound as de.cubbossa.pathfinder.lib.serializedeffects.effects.SoundPlayer>
+<with Title as de.cubbossa.pathfinder.lib.serializedeffects.effects.TitlePlayer>
+<with WorldEffect as de.cubbossa.pathfinder.lib.serializedeffects.effects.WorldEffectPlayer>
 
 # ===================
 #  Effects Explained

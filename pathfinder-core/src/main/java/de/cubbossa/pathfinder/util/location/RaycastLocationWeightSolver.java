@@ -1,5 +1,6 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.util.location;
 
+import de.cubbossa.pathfinder.util.Triple;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -11,7 +12,6 @@ import java.util.stream.StreamSupport;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.util.BlockIterator;

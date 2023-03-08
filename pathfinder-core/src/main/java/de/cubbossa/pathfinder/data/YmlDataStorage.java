@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -110,17 +111,17 @@ public class YmlDataStorage implements DataStorage {
   public Map<NamespacedKey, RoadMap> loadRoadMaps() {
     HashedRegistry<RoadMap> registry = new HashedRegistry<>();
     for (File file : Arrays.stream(roadMapDir.listFiles())
-        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
-        .collect(Collectors.toList())) {
+        .filter(file -> file.getName().matches(FILE_REGEX.pattern())).toList()) {
       try {
         NamespacedKey key = fromFileName(file.getName());
         YamlConfiguration cfg =
             roadmapHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
 
+        String visKeyString = cfg.getString("path-visualizer");
         registry.put(new RoadMap(key,
             cfg.getString("name-format"),
-            VisualizerHandler.getInstance()
-                .getPathVisualizer(NamespacedKey.fromString(cfg.getString("path-visualizer"))),
+            VisualizerHandler.getInstance().getPathVisualizer(visKeyString == null
+                ? null : NamespacedKey.fromString(visKeyString)),
             cfg.getDouble("curve-length")));
 
 
@@ -411,7 +412,7 @@ public class YmlDataStorage implements DataStorage {
     cfg.set("navigable", group.isNavigable());
     cfg.set("discoverable", group.isDiscoverable());
     cfg.set("find-distance", group.getFindDistance());
-    cfg.set("search-terms", new ArrayList<>(group.getSearchTerms()));
+    cfg.set("search-terms", new ArrayList<>(group.getSearchTerms().stream().map(SearchTerm::getIdentifier).toList()));
     cfg.set("nodes", group.stream().map(Groupable::getNodeId).collect(Collectors.toList()));
 
     try {
@@ -538,7 +539,7 @@ public class YmlDataStorage implements DataStorage {
       VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     for (File file : Arrays.stream(pathVisualizerDir.listFiles())
-        .filter(file -> file.getName().matches("\\w+$\\w+\\.yml"))
+        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
         .toList()
     ) {
       try {
@@ -563,7 +564,8 @@ public class YmlDataStorage implements DataStorage {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
     T vis = type.create(key, cfg.getString("display-name"));
-    type.deserialize(vis, (Map<String, Object>) cfg.get("props"));
+    Map<String, Object> values = (Map<String, Object>) cfg.get("props");
+    type.deserialize(vis, values == null ? new HashMap<>() : values);
     return vis;
   }
 

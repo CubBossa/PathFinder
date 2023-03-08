@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.data.DatabaseType;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset.LocationWeightSolverPresetEnum;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import java.io.File;
@@ -55,7 +56,8 @@ public class PathPluginConfig {
       <filter> command. If set to false, one can always navigate to every group, even if it hasn't
       been discovered first.""")
     public boolean requireDiscovery = false;
-
+    public FindLocationCommandConfig findLocation = new FindLocationCommandConfig();
+    public NearestLocationSolverConfig nearestLocationSolver = new NearestLocationSolverConfig();
     @Comment("""
         This setting decides whether a player has to have all permissions of all groups of a node
         or just one matching permission. True means all, so the permission query is linked by AND
@@ -99,6 +101,58 @@ public class PathPluginConfig {
   @Configuration
   public static class SystemConfig {
     public String version = PathPlugin.getInstance().getDescription().getVersion();
+  }
+
+  @Configuration
+  public static class FindLocationCommandConfig {
+    @Comment("""
+      The command /findlocation <location> creates a virtual waypoint at the given location
+      and connects it with the nearest waypoint around. The maximum distance can be set to
+      not allow commands with locations far away from the actual roadmap. Default's set to 20.
+      -1 can be set to disable a distance check.""")
+    public double maxDistance = 20.;
+  }
+
+  @Configuration
+  public static class NearestLocationSolverConfig {
+    @Comment("""
+        Define an algorithm to find the nearest node to a certain location.
+        SIMPLE: Finds the absolute nearest node.
+        RAYCAST: Sends multiple raycasts to find the nearest node that is not obstructed by walls.""")
+    public LocationWeightSolverPresetEnum algorithm = LocationWeightSolverPresetEnum.RAYCAST;
+    public SimpleLocationWeightSolverConfig simpleConfig = new SimpleLocationWeightSolverConfig();
+    public RaycastLocationWeightSolverConfig raycastConfig = new RaycastLocationWeightSolverConfig();
+  }
+
+  @Configuration
+  public static class SimpleLocationWeightSolverConfig {
+    @Comment("""
+        Finds the closest n amount of nodes and connects them to a virtual node at the players position.
+        Default is 1, but it can also be increased to let the pathfinding algorithm find the shortest
+        of the n connections.""")
+    public int connectionCount = 1;
+  }
+
+  @Configuration
+  public static class RaycastLocationWeightSolverConfig {
+    @Comment("""
+      The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
+      nodes. Default: 10""")
+    public int raycastCount = 10;
+    @Comment("""
+      If nodes in the players view direction should be preferred.
+      1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
+    public double startLocationDirectionWeight = 1;
+    @Comment("""
+      If the node location direction should have an effect on its closeness to the player. Similar
+      to start-direction-weight but for nodes instead of player. Default: 0""")
+    public double scopeLocationDirectionWeight = 0;
+    @Comment("""
+      Each block between the player/a node and another node will count as the given amount of
+      distance in blocks. Default of 10.000 means that two blocks between a player and a node
+      will count as a distance of 20.000 blocks. While another node that is further away from the
+      player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
+    public double blockCollisionWeight = 10_000d;
   }
 
   public enum DistancePolicy {

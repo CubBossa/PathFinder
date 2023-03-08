@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.util.location;
 
 import java.util.Map;
 

@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.InternalVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.events.CombinedVisualizerChangedEvent;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
@@ -20,7 +20,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 
-public class CombinedVisualizerType extends VisualizerType<CombinedVisualizer> {
+public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisualizer> {
 
   public CombinedVisualizerType(NamespacedKey key) {
     super(key);
