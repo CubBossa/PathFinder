@@ -95,7 +95,6 @@ bukkit {
     val versionSplit = minecraftVersion.split(".")
     apiVersion = minecraftVersion[0] + "." + 13.coerceAtLeast(versionSplit[1].toInt())
 
-    depend = listOf("ProtocolLib")
     softDepend = listOf("PlaceholderAPI")
 
     defaultPermission = BukkitPluginDescription.Permission.Default.OP
