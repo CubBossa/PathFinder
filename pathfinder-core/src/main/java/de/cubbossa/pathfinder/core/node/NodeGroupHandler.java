@@ -182,12 +182,12 @@ public class NodeGroupHandler implements Listener {
     if (groupable.getGroups().isEmpty()) {
       return 1.5f;
     }
-    return (float) switch (PathPlugin.getInstance().getConfiguration().getFindDistancePolicy()) {
-      case SMALLEST_VALUE ->
+    return (float) switch (PathPlugin.getInstance().getConfiguration().navigation.distancePolicy) {
+      case SMALLEST ->
           groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
-      case LARGEST_VALUE ->
+      case LARGEST ->
           groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
-      case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().getFindDistance();
+      case NATURAL -> groupable.getGroups().stream().findFirst().get().getFindDistance();
     };
   }
 
@@ -195,36 +195,32 @@ public class NodeGroupHandler implements Listener {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
-    return switch (PathPlugin.getInstance().getConfiguration().getNavigablePolicy()) {
-      case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(
+    if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupPermissions) {
+      return groupable.getGroups().stream().allMatch(
           group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
-      case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(
-          group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
-      case NATURAL_ORDER -> groupable.getGroups().stream().limit(1).anyMatch(
-          group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
-    };
+    }
+    return groupable.getGroups().stream().anyMatch(
+        group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
   }
 
   public boolean isNavigable(Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
-    return switch (PathPlugin.getInstance().getConfiguration().getNavigablePolicy()) {
-      case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(NodeGroup::isNavigable);
-      case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(NodeGroup::isNavigable);
-      case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().isNavigable();
-    };
+    if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupsNavigable) {
+      return groupable.getGroups().stream().allMatch(NodeGroup::isNavigable);
+    }
+    return groupable.getGroups().stream().anyMatch(NodeGroup::isNavigable);
   }
 
   public boolean isDiscoverable(Groupable<?> groupable) {
     if (groupable.getGroups().isEmpty()) {
       return false;
     }
-    return switch (PathPlugin.getInstance().getConfiguration().getDiscoverablePolicy()) {
-      case SMALLEST_VALUE -> groupable.getGroups().stream().allMatch(NodeGroup::isDiscoverable);
-      case LARGEST_VALUE -> groupable.getGroups().stream().anyMatch(NodeGroup::isDiscoverable);
-      case NATURAL_ORDER -> groupable.getGroups().stream().findFirst().get().isDiscoverable();
-    };
+    if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupsNavigable) {
+      return groupable.getGroups().stream().allMatch(NodeGroup::isDiscoverable);
+    }
+    return groupable.getGroups().stream().anyMatch(NodeGroup::isDiscoverable);
   }
 
   @EventHandler

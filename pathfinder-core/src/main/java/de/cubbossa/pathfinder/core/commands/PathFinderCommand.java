@@ -229,8 +229,7 @@ public class PathFinderCommand extends Command {
 
               CompletableFuture.runAsync(() -> {
                 try {
-                  PathPlugin.getInstance().setConfiguration(Configuration.loadFromFile(
-                      new File(PathPlugin.getInstance().getDataFolder(), "config.yml")));
+                  PathPlugin.getInstance().loadConfig();
                 } catch (Throwable t) {
                   throw new RuntimeException(t);
                 }

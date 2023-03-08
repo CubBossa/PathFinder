@@ -34,12 +34,12 @@ public class DiscoverHandler {
     instance = this;
 
     discovered = new HashMap<>();
-    if (!PathPlugin.getInstance().getConfiguration().isDiscoveryEnabled()) {
+    if (!PathPlugin.getInstance().getConfiguration().moduleConfig.discoveryModule) {
       return;
     }
     Bukkit.getPluginManager().registerEvents(new DiscoverListener(), PathPlugin.getInstance());
 
-    if (PathPlugin.getInstance().getConfiguration().isFindLocationRequiresDiscovery()) {
+    if (PathPlugin.getInstance().getConfiguration().navigation.requireDiscovery) {
       FindModule.getInstance().registerFindPredicate(context -> {
         if (context.navigable() instanceof Discoverable discoverable) {
           try {

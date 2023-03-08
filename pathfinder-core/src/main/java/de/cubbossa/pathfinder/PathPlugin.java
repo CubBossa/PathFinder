@@ -5,7 +5,6 @@ import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
 import de.cubbossa.pathfinder.core.commands.RoadMapCommand;
 import de.cubbossa.pathfinder.core.commands.WaypointCommand;
-import de.cubbossa.pathfinder.core.configuration.Configuration;
 import de.cubbossa.pathfinder.core.listener.DatabaseListener;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
@@ -29,6 +28,9 @@ import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
+import de.exlll.configlib.NameFormatters;
+import de.exlll.configlib.YamlConfigurationProperties;
+import de.exlll.configlib.YamlConfigurations;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import java.io.File;
@@ -141,7 +143,7 @@ public class PathPlugin extends JavaPlugin {
   private File effectsFile;
   private DataStorage database;
   @Setter
-  private Configuration configuration;
+  private PathPluginConfig configuration;
 
   private FindCommand findCommand;
   private RoadMapCommand roadMapCommand;
@@ -173,12 +175,10 @@ public class PathPlugin extends JavaPlugin {
     generateIfAbsent("lang/styles.yml");
     generateIfAbsent("lang/de_DE.yml");
 
-    configuration = Configuration.loadFromFile(new File(getDataFolder(), "config.yml"));
-
     YamlUtils.registerClasses();
+    loadConfig();
 
-    CommandAPI.onLoad(new CommandAPIConfig()
-        .verboseOutput(configuration.isVerbose()));
+    CommandAPI.onLoad(new CommandAPIConfig());
 
     extensions.forEach(PathPluginExtension::onLoad);
   }
@@ -197,17 +197,16 @@ public class PathPlugin extends JavaPlugin {
     TranslationHandler translationHandler =
         new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"));
     translationHandler.registerAnnotatedLanguageClass(Messages.class);
-    translationHandler.setFallbackLanguage(configuration.getFallbackLanguage());
-    translationHandler.setUseClientLanguage(configuration.isClientLanguage());
+    translationHandler.setFallbackLanguage(configuration.language.fallbackLanguage);
+    translationHandler.setUseClientLanguage(configuration.language.clientLanguage);
     translationHandler.loadStyle();
     translationHandler.loadLanguages();
 
     new File(getDataFolder(), "data/").mkdirs();
-    database = switch (configuration.getDatabaseType()) {
+    database = switch (configuration.database.type) {
       case IN_MEMORY -> null;
-      case SQLITE -> new SqliteDataStorage(new File(configuration.getSqliteFile()
-          .replace("%PLUGIN_DIR%", getDataFolder().getAbsolutePath())));
-      case REMOTE_SQL -> new RemoteSqlDataStorage(configuration);
+      case SQLITE -> new SqliteDataStorage(configuration.database.embeddedSql.file);
+      case REMOTE_SQL -> new RemoteSqlDataStorage(configuration.database.remoteSql);
       default -> new YmlDataStorage(new File(getDataFolder(), "data/"));
     };
     if (database != null) {
@@ -258,10 +257,6 @@ public class PathPlugin extends JavaPlugin {
     pathVisualizerCommand.register();
     waypointCommand = new WaypointCommand();
     waypointCommand.register();
-    if (configuration.isTesting()) {
-      mazeCommand = new MazeCommand();
-      mazeCommand.register();
-    }
 
     // Listeners
 
@@ -321,9 +316,6 @@ public class PathPlugin extends JavaPlugin {
     CommandAPI.unregister(nodeGroupCommand.getName());
     CommandAPI.unregister(pathVisualizerCommand.getName());
     CommandAPI.unregister(waypointCommand.getName());
-    if (configuration.isTesting()) {
-      CommandAPI.unregister(mazeCommand.getName());
-    }
     CommandAPI.onDisable();
 
     RoadMapHandler.getInstance().cancelAllEditModes();
@@ -339,5 +331,20 @@ public class PathPlugin extends JavaPlugin {
     if (!new File(getDataFolder(), resource).exists()) {
       saveResource(resource, false);
     }
+  }
+
+  public void loadConfig () {
+    File configFile = new File(getDataFolder(), "config.yml");
+    YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
+        .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+        .createParentDirectories(true)
+        .build();
+
+    if (!configFile.exists()) {
+      configuration = new PathPluginConfig();
+      YamlConfigurations.save(configFile.toPath(), PathPluginConfig.class, configuration, properties);
+      return;
+    }
+    configuration = YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
   }
 }

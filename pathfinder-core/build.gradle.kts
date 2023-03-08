@@ -44,6 +44,7 @@ dependencies {
 
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
+    api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")
 
     // Commands
     api("de.cubbossa:commandapi-shade:8.7.5")
