@@ -34,7 +34,7 @@ repositories {
 dependencies {
 
     // Antlr
-    antlr("org.antlr:antlr4:4.12.0")
+    antlr("org.antlr:antlr4:4.12.0") { isTransitive = true }
 
     // Adventure
     api("net.kyori:adventure-api:4.12.0")
@@ -50,7 +50,6 @@ dependencies {
     api("de.cubbossa:commandapi-shade:8.7.5")
 
     // Other
-    compileOnly("com.google.guava:guava:31.1-jre")
     implementation("org.jooq:jooq:3.17.8")
     jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
@@ -80,6 +79,8 @@ dependencies {
 
     // UI
     api("de.cubbossa:Translations:1.1")
+
+    implementation(files("generated/plugin-yml/Bukkit/plugin.yml"))
 }
 
 bukkit {
@@ -179,10 +180,33 @@ tasks {
         minecraftVersion(minecraftVersion)
     }
     shadowJar {
+
+        dependencies {
+            include(dependency("net.kyori:.*"))
+            include(dependency("org.bstats:bstats-bukkit:.*"))
+            include(dependency("de.cubbossa:MenuFramework:.*"))
+            include(dependency("de.cubbossa:Translations:.*"))
+            include(dependency("de.cubbossa:splinelib:.*"))
+            include(dependency("de.cubbossa:NBO-Core:.*"))
+            include(dependency("de.cubbossa:SerializedEffects:.*"))
+            include(dependency("org.bstats:.*"))
+            include(dependency("xyz.xenondevs:particle:.*"))
+            include(dependency("de.cubbossa:commandapi-shade:.*"))
+            include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
+            include(dependency("org.ow2.asm:asm:.*"))
+            include(dependency("org.ow2.asm:asm-util:.*"))
+            include(dependency("de.tr7zw:item-nbt-api-plugin:.*"))
+            include(dependency("org.antlr:antlr4-runtime:.*"))
+            include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
+            include(dependency("org.jooq:jooq:.*"))
+            include(dependency("com.zaxxer:HikariCP:.*"))
+        }
+
         fun relocate(from: String, to: String) {
             relocate(from, "de.cubbossa.pathfinder.lib.$to", null)
         }
 
+        relocate("com.zaxxer.hikari", "hikari")
         relocate("org.bstats", "bstats")
         relocate("de.cubbossa.serializedeffects", "serializedeffects")
         relocate("de.cubbossa.nbo", "nbo")
@@ -194,6 +218,8 @@ tasks {
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
         relocate("org.antlr", "antlr")
+        relocate("org.jooq", "jooq")
+        relocate("de.exlll", "exlll")
     }
     test {
         useJUnitPlatform()
@@ -207,6 +233,9 @@ sourceSets {
     main {
         // Include ANTLR generated sources
         java.srcDirs += file("build/generated-src/antlr/main")
+        resources {
+            exclude("*.db")
+        }
     }
 }
 
