@@ -172,7 +172,7 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix>Player <name> forgot about <discovery>.", placeholders = {
       "name", "discovery"})
   public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
-  @MessageMeta(value = "<ins:prefix>Successfully set name for <offset><roadmap></offset> to <display-name>. (<pre><name-format></pre>)</gray>",
+  @MessageMeta(value = "<ins:prefix>Successfully set name for <offset><old-value></offset> to <value>. (<pre><name-format></pre>)</gray>",
       placeholders = {"key", "roadmap", "old-value", "name-format", "value"})
   public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
   @MessageMeta(value = "<ins:prefix>Successfully set curve length for <offset><roadmap></offset> to <offset_light><value></offset_light>",
