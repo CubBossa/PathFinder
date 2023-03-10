@@ -53,6 +53,8 @@ dependencies {
     // Other
     implementation("org.jooq:jooq:3.17.8")
     jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
+    implementation("org.reactivestreams:reactive-streams:1.0.4")
+    implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Particles
@@ -208,6 +210,8 @@ tasks {
             include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
             include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
             include(dependency("org.jooq:jooq:.*"))
+            include(dependency("org.reactivestreams:reactive-streams:.*"))
+            include(dependency("io.r2dbc:r2dbc-spi:.*"))
             include(dependency("com.zaxxer:HikariCP:.*"))
         }
 

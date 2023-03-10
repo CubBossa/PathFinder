@@ -258,6 +258,7 @@ public abstract class SqlDataStorage implements DataStorage {
     BatchBindStep step = create.batch(create
         .insertInto(PATHFINDER_EDGES)
         .columns(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID, PATHFINDER_EDGES.WEIGHT_MODIFIER)
+        .values(1, 1, 1.)
         .onConflictDoNothing()
     );
     for (Edge e : edges) {
@@ -363,7 +364,7 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (Node<?> node : selection) {
         DSL.using(configuration)
-            .insertInto(PATHFINDER_NODEGROUPS)
+            .insertInto(PATHFINDER_NODEGROUP_NODES)
             .values(group.getKey(), node.getNodeId())
             .onDuplicateKeyIgnore()
             .execute();

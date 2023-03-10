@@ -146,9 +146,12 @@ public class DatabaseListener implements Listener {
 
   @EventHandler
   public void onEdgesCreated(EdgesCreatedEvent event) {
-    data.saveEdges(event.getEdges().stream()
+    Collection<Edge> edges = event.getEdges().stream()
         .filter(Edge::isPersistent)
-        .collect(Collectors.toList()));
+        .toList();
+    if (!edges.isEmpty()) {
+      data.saveEdges(edges);
+    }
   }
 
   @EventHandler
