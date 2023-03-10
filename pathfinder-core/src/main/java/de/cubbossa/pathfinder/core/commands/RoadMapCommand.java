@@ -273,8 +273,7 @@ public class RoadMapCommand extends Command {
             .tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
   }
 
-  private void onStyle(CommandSender sender, RoadMap roadMap, PathVisualizer<?, ?> visualizer)
-      throws WrapperCommandSyntaxException {
+  private void onStyle(CommandSender sender, RoadMap roadMap, PathVisualizer<?, ?> visualizer) {
     PathVisualizer<?, ?> old = roadMap.getVisualizer();
 
     if (!RoadMapHandler.getInstance().setRoadMapVisualizer(roadMap, visualizer)) {
@@ -291,8 +290,7 @@ public class RoadMapCommand extends Command {
             .build()), sender);
   }
 
-  private void onRename(CommandSender sender, RoadMap roadMap, String nameNew)
-      throws WrapperCommandSyntaxException {
+  private void onRename(CommandSender sender, RoadMap roadMap, String nameNew) {
     Component old = roadMap.getDisplayName();
 
     if (!RoadMapHandler.getInstance().setRoadMapName(roadMap, nameNew)) {
@@ -309,8 +307,7 @@ public class RoadMapCommand extends Command {
             .build()), sender);
   }
 
-  private void onChangeTangentStrength(CommandSender sender, RoadMap roadMap, double strength)
-      throws WrapperCommandSyntaxException {
+  private void onChangeTangentStrength(CommandSender sender, RoadMap roadMap, double strength) {
     double old = roadMap.getDefaultCurveLength();
 
     if (!RoadMapHandler.getInstance().setRoadMapCurveLength(roadMap, strength)) {
