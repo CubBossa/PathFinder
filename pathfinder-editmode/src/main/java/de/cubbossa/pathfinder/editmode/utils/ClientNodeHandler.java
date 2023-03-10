@@ -12,6 +12,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.Pair;
+import com.comphenix.protocol.wrappers.Vector3F;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
@@ -66,12 +67,13 @@ public class ClientNodeHandler {
   private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
   private static final Vector ARMORSTAND_OFFSET = new Vector(0, -1.75, 0);
-  private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -1, 0);
+  private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
   private static final int META_INDEX_FLAGS = 0;
   private static final int META_INDEX_NAME = 2;
   private static final int META_INDEX_NAME_VISIBLE = 3;
   private static final int META_INDEX_CHILD = 15;
+  private static final int META_INDEX_HEAD_EULER = 16;
   private static final int META_INDEX_NO_GRAVITY = 5;
   private static final byte META_FLAG_INVISIBLE = 0x20;
   private static final byte META_FLAG_SMALL = 0x01;
@@ -225,6 +227,7 @@ public class ClientNodeHandler {
         LerpUtils.lerp(edge.getStart().getLocation(), edge.getEnd().getLocation(), .3f);
     int id = spawnArmorstand(player, location, null, true);
     equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
+    setHeadRotation(player, id, edge.getEnd().getLocation().toVector().subtract(edge.getStart().getLocation().toVector()));
 
     edgeEntityMap.put(edge, id);
     entityEdgeMap.put(id, edge);
@@ -403,6 +406,21 @@ public class ClientNodeHandler {
             .getHandle()));
     dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_NAME_VISIBLE,
         WrappedDataWatcher.Registry.get(Boolean.class)), true);
+    sendMeta(player, id, dataWatcher);
+  }
+
+  public void setHeadRotation(Player player, int id, Vector direction) {
+    Location location = new Location(null, 0, 0, 0);
+    location.setDirection(direction);
+    Vector3F v = new Vector3F(
+        location.getPitch(),
+        location.getYaw(),
+        0
+    );
+
+    WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
+    dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_HEAD_EULER,
+            WrappedDataWatcher.Registry.getVectorSerializer()), v);
     sendMeta(player, id, dataWatcher);
   }
 }
