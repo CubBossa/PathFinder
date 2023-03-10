@@ -45,6 +45,7 @@ dependencies {
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
     api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")
+    runtimeOnly("org.snakeyaml:snakeyaml-engine:2.3")
 
     // Commands
     api("de.cubbossa:commandapi-shade:8.7.5")
@@ -181,7 +182,13 @@ tasks {
     }
     shadowJar {
 
+
+        // "whitelist" approach, only include transitive dependencies that are truly necessary.
+        // otherwise jar grows from ~8mb to ~30mb
         dependencies {
+            include(project(":pathfinder-graph"))
+            include(project(":pathfinder-editmode"))
+            include(project(":pathfinder-scripted-visualizer"))
             include(dependency("net.kyori:.*"))
             include(dependency("org.bstats:bstats-bukkit:.*"))
             include(dependency("de.cubbossa:MenuFramework:.*"))
@@ -198,6 +205,8 @@ tasks {
             include(dependency("de.tr7zw:item-nbt-api-plugin:.*"))
             include(dependency("org.antlr:antlr4-runtime:.*"))
             include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
+            include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
+            include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
             include(dependency("org.jooq:jooq:.*"))
             include(dependency("com.zaxxer:HikariCP:.*"))
         }
