@@ -56,7 +56,7 @@ public class NodeUtils {
     return vectors;
   }
 
-  private static BezierVector toBezierVector(
+  public static BezierVector toBezierVector(
       Node<?> previous, Node<?> current, Node<?> next,
       double strengthPrevious, double strengthCurrent, double strengthNext,
       @Nullable TangentModifier tangentModifier) {
@@ -74,12 +74,12 @@ public class NodeUtils {
     double sCurrentNext = strengthCurrent;
 
     if (tangentModifier != null) {
-      double distPrevious = vCurrent.distance(vPrevious);
+      double distPrevious = vCurrent.distance(previous.getLocation().toVector());
       if (sCurrentPrev + strengthPrevious > distPrevious) {
         sCurrentPrev = distPrevious * sCurrentPrev / (strengthPrevious + sCurrentPrev
             + tangentModifier.staticOffset()) * tangentModifier.relativeOffset();
       }
-      double distNext = vCurrent.distance(vNext);
+      double distNext = vCurrent.distance(next.getLocation().toVector());
       if (sCurrentNext + strengthNext > distNext) {
         sCurrentNext =
             distNext * sCurrentNext / (strengthNext + sCurrentNext + tangentModifier.staticOffset())
@@ -87,12 +87,13 @@ public class NodeUtils {
       }
     }
 
-    return new BezierVector(PathPlugin.SPLINES.convertToVector(vCurrent),
-        PathPlugin.SPLINES.convertToVector(
-            vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
-        PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext))));
+    return new BezierVector(
+        PathPlugin.SPLINES.convertToVector(vCurrent),
+        PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
+        PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
+    );
   }
 
-  private record TangentModifier(double relativeOffset, double staticOffset) {
+  public record TangentModifier(double relativeOffset, double staticOffset) {
   }
 }
