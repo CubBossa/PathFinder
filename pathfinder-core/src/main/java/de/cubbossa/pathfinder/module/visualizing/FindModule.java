@@ -1,7 +1,9 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Navigable;
 import de.cubbossa.pathfinder.core.node.Node;
@@ -14,14 +16,18 @@ import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
+import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
+import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
+import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,21 +49,54 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FindModule implements Listener {
+@AutoService(PathPluginExtension.class)
+public class FindModule implements Listener, PathPluginExtension {
+
+  private FindCommand findCommand;
+  private FindLocationCommand findLocationCommand;
+  private CancelPathCommand cancelPathCommand;
 
   @Getter
   private static FindModule instance;
+
+  @Getter
+  private final NamespacedKey key = new NamespacedKey(PathPlugin.getInstance(), "navigation");
+
   private final Map<UUID, SearchInfo> activePaths;
   private final PathPlugin plugin;
   private final List<Predicate<NavigationRequestContext>> navigationFilter;
   private MoveListener listener;
 
-  public FindModule(PathPlugin plugin) {
+  public FindModule() {
     instance = this;
+    this.plugin = PathPlugin.getInstance();
 
-    this.plugin = plugin;
     this.activePaths = new HashMap<>();
     this.navigationFilter = new ArrayList<>();
+
+
+  }
+
+  @Override
+  public void onLoad() {
+    if (!plugin.getConfiguration().moduleConfig.navigationModule) {
+      PathPlugin.getInstance().unregisterExtension(this);
+    }
+  }
+
+  @Override
+  public void onEnable() {
+    findCommand = new FindCommand();
+    findLocationCommand = new FindLocationCommand();
+    cancelPathCommand = new CancelPathCommand();
+
+    List.of(
+        findCommand,
+        findLocationCommand,
+        cancelPathCommand
+    ).forEach(CommandTree::register);
+
+    registerListener();
 
     registerFindPredicate(navigationRequestContext -> {
       if (!(navigationRequestContext.navigable() instanceof Groupable<?> groupable)) {
@@ -67,8 +106,15 @@ public class FindModule implements Listener {
       return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance()
           .hasPermission(player, groupable);
     });
+  }
 
-    registerListener();
+  @Override
+  public void onDisable() {
+    CommandUtils.unregister(findCommand);
+    CommandUtils.unregister(findLocationCommand);
+    CommandUtils.unregister(cancelPathCommand);
+
+    unregisterListener();
   }
 
   public void registerListener() {
@@ -184,7 +230,7 @@ public class FindModule implements Listener {
 
     if (result == NavigateResult.SUCCESS) {
       // Refresh cancel-path command so that it is visible
-      PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+      cancelPathCommand.refresh(player);
       EffectHandler.getInstance()
           .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
               player.getLocation());
@@ -236,7 +282,7 @@ public class FindModule implements Listener {
     info.path().cancel();
 
     Player player = Bukkit.getPlayer(info.playerId());
-    PathPlugin.getInstance().getCancelPathCommand().refresh(player);
+    cancelPathCommand.refresh(player);
     EffectHandler.getInstance()
         .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player,
             player.getLocation());

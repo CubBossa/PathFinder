@@ -20,18 +20,14 @@ import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.command.CancelPathCommand;
-import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
-import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
+import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
 import de.exlll.configlib.NameFormatters;
-import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import dev.jorel.commandapi.CommandAPI;
@@ -65,6 +61,7 @@ public class PathPlugin extends JavaPlugin {
   public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
   public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
   public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
+  public static final String PERM_CMD_PF_MODULES = "pathfinder.command.pathfinder.modules";
   public static final String PERM_CMD_FIND = "pathfinder.command.find";
   public static final String PERM_CMD_FIND_LOCATION = "pathfinder.command.findlocation";
   public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
@@ -149,10 +146,8 @@ public class PathPlugin extends JavaPlugin {
   @Setter
   private PathPluginConfig configuration;
 
-  private FindCommand findCommand;
   private RoadMapCommand roadMapCommand;
   private PathFinderCommand pathFinderCommand;
-  private CancelPathCommand cancelPathCommand;
   private NodeGroupCommand nodeGroupCommand;
   private PathVisualizerCommand pathVisualizerCommand;
   private WaypointCommand waypointCommand;
@@ -184,7 +179,7 @@ public class PathPlugin extends JavaPlugin {
 
     CommandAPI.onLoad(new CommandAPIConfig());
 
-    extensions.forEach(PathPluginExtension::onLoad);
+    new ArrayList<>(extensions).forEach(PathPluginExtension::onLoad);
   }
 
   @SneakyThrows
@@ -222,8 +217,6 @@ public class PathPlugin extends JavaPlugin {
       });
     }
 
-    new FindModule(this);
-
     if (!effectsFile.exists()) {
       saveResource("effects.nbo", false);
     }
@@ -247,15 +240,10 @@ public class PathPlugin extends JavaPlugin {
     // Commands
 
     CommandAPI.onEnable(this);
-    findCommand = new FindCommand();
-    findCommand.register();
-    new FindLocationCommand().register();
     roadMapCommand = new RoadMapCommand();
     roadMapCommand.register();
     pathFinderCommand = new PathFinderCommand();
     pathFinderCommand.register();
-    cancelPathCommand = new CancelPathCommand();
-    cancelPathCommand.register();
     nodeGroupCommand = new NodeGroupCommand(0);
     nodeGroupCommand.register();
     pathVisualizerCommand = new PathVisualizerCommand();
@@ -270,7 +258,7 @@ public class PathPlugin extends JavaPlugin {
       Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
     }
 
-    extensions.forEach(PathPluginExtension::onEnable);
+    new ArrayList<>(extensions).forEach(PathPluginExtension::onEnable);
 
     Metrics metrics = new Metrics(this, 16324);
 
@@ -314,22 +302,24 @@ public class PathPlugin extends JavaPlugin {
   @Override
   public void onDisable() {
 
-    CommandAPI.unregister(findCommand.getName());
-    CommandAPI.unregister(roadMapCommand.getName());
-    CommandAPI.unregister(pathFinderCommand.getName());
-    CommandAPI.unregister(cancelPathCommand.getName());
-    CommandAPI.unregister(nodeGroupCommand.getName());
-    CommandAPI.unregister(pathVisualizerCommand.getName());
-    CommandAPI.unregister(waypointCommand.getName());
-    CommandAPI.onDisable();
+    CommandUtils.unregister(roadMapCommand);
+    CommandUtils.unregister(pathFinderCommand);
+    CommandUtils.unregister(nodeGroupCommand);
+    CommandUtils.unregister(pathVisualizerCommand);
+    CommandUtils.unregister(waypointCommand);
+
+    new ArrayList<>(extensions).forEach(PathPluginExtension::onDisable);
 
     RoadMapHandler.getInstance().cancelAllEditModes();
-
-    extensions.forEach(PathPluginExtension::onDisable);
+    CommandAPI.onDisable();
   }
 
   public void registerExtension(PathPluginExtension module) {
     extensions.add(module);
+  }
+
+  public void unregisterExtension(PathPluginExtension module) {
+    extensions.remove(module);
   }
 
   public void generateIfAbsent(String resource) {

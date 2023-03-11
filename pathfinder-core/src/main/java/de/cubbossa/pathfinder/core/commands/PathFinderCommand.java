@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.data.DataExporter;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
@@ -12,12 +13,15 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 /**
@@ -55,6 +59,18 @@ public class PathFinderCommand extends Command {
               .resolver(Placeholder.unparsed("api-version",
                   desc.getAPIVersion() == null ? "none" : desc.getAPIVersion()))
               .resolver(Placeholder.unparsed("authors", String.join(",", desc.getAuthors())))
+              .build()), commandSender);
+        }));
+
+    then(CustomArgs.literal("modules")
+        .withPermission(PathPlugin.PERM_CMD_PF_MODULES)
+        .executes((commandSender, args) -> {
+          List<String> list = PathPlugin.getInstance().getExtensions().stream()
+              .map(PathPluginExtension::getKey)
+              .map(NamespacedKey::toString).toList();
+
+          TranslationHandler.getInstance().sendMessage(Messages.MODULES.format(TagResolver.builder()
+              .resolver(TagResolver.resolver("modules", Messages.formatList(list, Component::text)))
               .build()), commandSender);
         }));
 

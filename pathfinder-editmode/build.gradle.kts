@@ -1,5 +1,4 @@
 plugins {
-    java
     id("io.freefair.lombok") version "6.6.2"
     id("com.github.johnrengelman.shadow") version "8.1.0"
 }
@@ -43,10 +42,6 @@ dependencies {
     // UI
     implementation("de.cubbossa:MenuFramework:1.2")
 
-    // Service
-    annotationProcessor("com.google.auto.service:auto-service:1.0-rc5")
-    implementation("com.google.auto.service:auto-service:1.0")
-
     // Precompiled Particles
     implementation("xyz.xenondevs:particle:1.8.3")
 
@@ -69,6 +64,13 @@ tasks {
         )
     }
     shadowJar {
+
+        dependencies {
+            include(dependency("de.cubbossa:MenuFramework:.*"))
+            include(dependency("xyz.xenondevs:particle:.*"))
+            include(dependency("de.tr7zw:item-nbt-api:.*"))
+        }
+
         fun relocate(from: String, to: String) {
             relocate(from, "de.cubbossa.pathfinder.lib.$to", null)
         }

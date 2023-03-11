@@ -64,6 +64,7 @@ dependencies {
     // Plugins
     compileOnly("me.clip:placeholderapi:2.11.2")
     runtimeOnly(project(":pathfinder-editmode"))
+    runtimeOnly(project(":pathfinder-scripted-visualizer"))
     implementation(project(":pathfinder-graph"))
 
     // Statistics
@@ -184,6 +185,7 @@ tasks {
     }
     shadowJar {
 
+        mergeServiceFiles()
 
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
         // otherwise jar grows from ~8mb to ~30mb

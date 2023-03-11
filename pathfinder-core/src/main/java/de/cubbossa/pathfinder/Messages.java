@@ -120,7 +120,12 @@ public class Messages {
       <dark_gray>» </dark_gray><gray>Main Game version: <warm><api-version></warm>
       <dark_gray>» </dark_gray><gray>Spigot-Page: <warm><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></warm>
       """, placeholders = {"authors", "version", "api-version"})
-  public static final Message INFO = new Message("command.info");
+  public static final Message INFO = new Message("commands.info");
+
+  @MessageMeta(value = """
+      <offset>Active Modules:</offset>
+      <modules:"\n":"<dark_gray>» </dark_gray>">""", placeholders = { "modules" })
+  public static final Message MODULES = new Message("commands.modules");
 
   @MessageMeta(value = """
       <offset>Roadmap:</offset> <name> <gray>(<key>)</gray>

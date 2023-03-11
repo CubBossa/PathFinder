@@ -7,6 +7,8 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTreeLike;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,6 +23,12 @@ import org.bukkit.command.CommandSender;
 public class CommandUtils {
 
   private CommandHelpGenerator generator = new CommandHelpGenerator();
+
+  public void unregister(CommandTree tree) {
+    if (tree != null) {
+      CommandAPI.unregister(tree.getName());
+    }
+  }
 
   public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree) {
     sendHelp(sender, tree, -1);
