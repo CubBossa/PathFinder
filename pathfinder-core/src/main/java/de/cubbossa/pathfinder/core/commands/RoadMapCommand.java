@@ -105,10 +105,10 @@ public class RoadMapCommand extends Command {
         .withGeneratedHelp()
         .withPermission(PathPlugin.PERM_CMD_RM_FORCEFIND)
         .then(CustomArgs.roadMapArgument("roadmap")
+            .withGeneratedHelp()
             .then(CustomArgs.player("player")
                 .withGeneratedHelp()
                 .then(CustomArgs.discoverableArgument("discovering")
-                    .withGeneratedHelp()
                     .executes((commandSender, args) -> {
                       onForceFind(commandSender, (Player) args[1], (Discoverable) args[2]);
                     })))));
