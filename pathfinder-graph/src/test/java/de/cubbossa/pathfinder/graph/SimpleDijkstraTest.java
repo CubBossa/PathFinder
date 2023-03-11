@@ -24,6 +24,9 @@ class SimpleDijkstraTest {
     graph.addNode("e");
     graph.addNode("f");
     graph.addNode("g");
+    graph.addNode("h");
+    graph.addNode("i");
+    graph.addNode("j");
     graph.connect("a", "b", 1);
     graph.connect("b", "c", 3);
     graph.connect("b", "d", 2);
@@ -34,6 +37,9 @@ class SimpleDijkstraTest {
     graph.connect("d", "e", 2);
     graph.connect("e", "f", 3);
     graph.connect("g", "d", 1);
+    graph.connect("h", "j", 1);
+    graph.connect("i", "h", 1);
+    graph.connect("j", "i", 1);
 
     dijkstra = new SimpleDijkstra<>();
   }
@@ -57,5 +63,11 @@ class SimpleDijkstraTest {
   void shortestPathAny() throws NoPathFoundException {
     Assertions.assertEquals(List.of("a", "b", "c"),
         dijkstra.solvePath(graph, "a", List.of("c", "f")));
+  }
+
+  @Test
+  void shortestPathAnySeparated() throws NoPathFoundException {
+    Assertions.assertEquals(List.of("a", "b", "c"),
+        dijkstra.solvePath(graph, "a", List.of("c", "i")));
   }
 }
