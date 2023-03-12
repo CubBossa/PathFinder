@@ -185,6 +185,7 @@ tasks {
     }
     shadowJar {
 
+        archiveFileName.set("PathFinder-${parent?.version}.jar")
         mergeServiceFiles()
 
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
