@@ -15,6 +15,7 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -77,6 +78,12 @@ public class VisualizerHandler {
       // if persistent, load all visualizers of this type
       pathVisualizerMap.putAll(visualizerType.getStorage().loadPathVisualizer());
     }
+
+    Collection<PathVisualizer<?, ?>> scope = pathVisualizerMap.values();
+    pathVisualizerMap.values().stream()
+        .filter(v -> v.getType().equals(COMBINED_VISUALIZER_TYPE))
+        .map(v -> (CombinedVisualizer) v)
+        .forEach(v -> v.resolveReferences(scope));
   }
 
   public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(
