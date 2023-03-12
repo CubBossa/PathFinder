@@ -28,6 +28,7 @@ repositories {
 dependencies {
 
     compileOnly(project(":pathfinder-core"))
+    testImplementation(project(":pathfinder-core"))
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
@@ -35,6 +36,7 @@ dependencies {
 
     // Spigot
     compileOnly("com.mojang:authlib:1.5.25")
+    testImplementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
 
     // NBT
     implementation("de.tr7zw:item-nbt-api:2.11.1")

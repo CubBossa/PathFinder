@@ -14,10 +14,12 @@ public class Version implements Comparable<Version> {
    * - v2.1
    * - 2.1-b1
    * - v2.1.19.20-b109
+   * - v2.1.19.20-SNAPSHOT-b109
    */
-  private static final Pattern VERSION_PATTERN = Pattern.compile("v?(\\d+(.\\d+)*)(-b(\\d+))?");
+  private static final Pattern VERSION_PATTERN = Pattern.compile("v?(\\d+(.\\d+)*)(-SNAPSHOT)?(-b(\\d+))?");
 
   private final int[] elements;
+  private final boolean snapshot;
   private final Integer build;
 
   public Version (String versionString) {
@@ -30,12 +32,16 @@ public class Version implements Comparable<Version> {
     elements = Arrays.stream(matcher.group(1).split("\\."))
         .mapToInt(Integer::parseInt)
         .toArray();
-    build = matcher.group(4) == null ? null : Integer.valueOf(matcher.group(4));
+    snapshot = matcher.group(4) != null;
+    build = matcher.group(5) == null ? null : Integer.valueOf(matcher.group(5));
   }
 
   @Override
   public String toString() {
     String version = "v" + Arrays.stream(elements).mapToObj(value -> value + "").collect(Collectors.joining("."));
+    if (snapshot) {
+      version += "-SNAPSHOT";
+    }
     if (build != null) {
       version += "-b" + build;
     }
@@ -44,13 +50,22 @@ public class Version implements Comparable<Version> {
 
   @Override
   public int compareTo(@NotNull Version o) {
+    int base = compareBase(o);
+    if (base == 0) {
+      int snapshot = compareSnapshot(o);
+      if (snapshot == 0) {
+        return compareBuild(o);
+      }
+      return snapshot;
+    }
+    return base;
+  }
+
+  private int compareBase(Version o) {
     int compareIndex = 0;
     while (true) {
       if (o.elements.length == elements.length && o.elements.length <= compareIndex) {
-        if (build != null && o.build != null) {
-          return Integer.compare(build, o.build);
-        }
-        return build != null ? 1 : o.build != null ? -1 : 0;
+        return 0;
       }
       if (o.elements.length <= compareIndex) {
         return 1;
@@ -64,5 +79,13 @@ public class Version implements Comparable<Version> {
       }
       compareIndex++;
     }
+  }
+
+  private int compareSnapshot(Version o) {
+    return Boolean.compare(snapshot, o.snapshot);
+  }
+
+  private int compareBuild(Version o) {
+    return Integer.compare(build == null ? 0 : build, o.build == null ? 0 : o.build);
   }
 }
