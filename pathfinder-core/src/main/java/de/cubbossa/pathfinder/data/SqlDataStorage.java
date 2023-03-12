@@ -519,7 +519,7 @@ public abstract class SqlDataStorage implements DataStorage {
         .fetch(record -> {
 
           // create visualizer object
-          T visualizer = type.create(record.getType(),
+          T visualizer = type.create(record.getKey(),
               record.getNameFormat());
           visualizer.setPermission(record.getPermission());
           Integer interval = record.getInterval();
