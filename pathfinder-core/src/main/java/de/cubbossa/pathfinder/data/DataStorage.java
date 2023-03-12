@@ -105,27 +105,4 @@ public interface DataStorage extends
   <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 
   void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
-
-
-  Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers();
-
-  void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer);
-
-
-  void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers);
-
-  void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission,
-                          @Nullable Material iconType, @Nullable String miniDisplayName);
-
-  void updateVisualizerStyle(ParticleVisualizer visualizer);
-
-  void deleteStyleVisualizer(int visualizerId);
-
-
-  Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(
-      Collection<ParticleVisualizer> visualizers);
-
-  void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
-
-  void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer);
 }

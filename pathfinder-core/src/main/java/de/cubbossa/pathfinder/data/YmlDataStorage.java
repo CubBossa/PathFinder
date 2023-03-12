@@ -601,53 +601,6 @@ public class YmlDataStorage implements DataStorage {
     file.deleteOnExit();
   }
 
-  @Override
-  public Map<Integer, Map<Integer, Integer>> loadPlayerVisualizers() {
-    return null;
-  }
-
-  @Override
-  public void updatePlayerVisualizer(int playerId, RoadMap roadMap, ParticleVisualizer visualizer) {
-
-  }
-
-  @Override
-  public void loadVisualizerStyles(Collection<ParticleVisualizer> visualizers) {
-
-  }
-
-  @Override
-  public void newVisualizerStyle(ParticleVisualizer visualizer, @Nullable String permission,
-                                 @Nullable Material iconType, @Nullable String miniDisplayName) {
-
-  }
-
-  @Override
-  public void updateVisualizerStyle(ParticleVisualizer visualizer) {
-
-  }
-
-  @Override
-  public void deleteStyleVisualizer(int visualizerId) {
-
-  }
-
-  @Override
-  public Map<Integer, Collection<ParticleVisualizer>> loadStyleRoadmapMap(
-      Collection<ParticleVisualizer> visualizers) {
-    return null;
-  }
-
-  @Override
-  public void addStyleToRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
-
-  }
-
-  @Override
-  public void removeStyleFromRoadMap(RoadMap roadMap, ParticleVisualizer ParticleVisualizer) {
-
-  }
-
   public record Meta(
       boolean oneFileForAllUsers
   ) {

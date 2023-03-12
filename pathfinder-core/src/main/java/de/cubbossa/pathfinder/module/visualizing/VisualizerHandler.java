@@ -17,7 +17,6 @@ import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -51,7 +50,6 @@ public class VisualizerHandler {
   private final HashedRegistry<PathVisualizer<?, ?>> pathVisualizerMap;
 
   // Map<Player, Map<RoadMap, PathVisualizer>>
-  private final Map<UUID, Map<NamespacedKey, PathVisualizer<?, ?>>> playerVisualizers;
   private final Map<Integer, HashedRegistry<PathVisualizer<?, ?>>> roadmapVisualizers;
 
   public VisualizerHandler() {
@@ -64,7 +62,6 @@ public class VisualizerHandler {
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
 
     this.pathVisualizerMap = new HashedRegistry<>();
-    this.playerVisualizers = new HashMap<>();
     this.roadmapVisualizers = new HashMap<>();
   }
 
