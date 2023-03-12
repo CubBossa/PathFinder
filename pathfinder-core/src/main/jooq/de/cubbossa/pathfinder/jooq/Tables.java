@@ -6,7 +6,6 @@ package de.cubbossa.pathfinder.jooq;
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodes;
@@ -31,11 +30,6 @@ public class Tables {
      * The table <code>pathfinder_edges</code>.
      */
     public static final PathfinderEdges PATHFINDER_EDGES = PathfinderEdges.PATHFINDER_EDGES;
-
-    /**
-     * The table <code>pathfinder_nodegroup_nodes</code>.
-     */
-    public static final PathfinderNodegroupNodes PATHFINDER_NODEGROUP_NODES = PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
 
     /**
      * The table <code>pathfinder_nodegroups</code>.

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.data;
 
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodes.PATHFINDER_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
@@ -197,8 +197,8 @@ public abstract class SqlDataStorage implements DataStorage {
 
   private void createNodeGroupNodesTable() {
     create
-        .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
-        .columns(PATHFINDER_NODEGROUP_NODES.fields())
+        .createTableIfNotExists(PATHFINDER_NODEGROUPS_NODES)
+        .columns(PATHFINDER_NODEGROUPS_NODES.fields())
         .execute();
   }
 
@@ -364,7 +364,7 @@ public abstract class SqlDataStorage implements DataStorage {
     create.batched(configuration -> {
       for (Node<?> node : selection) {
         DSL.using(configuration)
-            .insertInto(PATHFINDER_NODEGROUP_NODES)
+            .insertInto(PATHFINDER_NODEGROUPS_NODES)
             .values(group.getKey(), node.getNodeId())
             .onDuplicateKeyIgnore()
             .execute();
@@ -378,9 +378,9 @@ public abstract class SqlDataStorage implements DataStorage {
     selection.forEach(g -> ids.add(g.getNodeId()));
 
     create
-        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
-        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
+        .deleteFrom(PATHFINDER_NODEGROUPS_NODES)
+        .where(PATHFINDER_NODEGROUPS_NODES.GROUP_KEY.eq(group.getKey()))
+        .and(PATHFINDER_NODEGROUPS_NODES.NODE_ID.in(ids))
         .execute();
   }
 
@@ -388,7 +388,7 @@ public abstract class SqlDataStorage implements DataStorage {
   public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
     Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
     create
-        .selectFrom(PATHFINDER_NODEGROUP_NODES)
+        .selectFrom(PATHFINDER_NODEGROUPS_NODES)
         .fetch()
         .forEach(record -> {
           result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>()).add(record.getGroupKey());
