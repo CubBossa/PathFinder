@@ -18,10 +18,10 @@ import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.hook.PlaceholderHookLoader;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.maze.MazeCommand;
-import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.pathfinder.util.CommandUtils;
+import de.cubbossa.pathfinder.util.Version;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
@@ -328,11 +328,27 @@ public class PathPlugin extends JavaPlugin {
     }
   }
 
+  public static final Version CONFIG_REGEN_VERSION = new Version("3.0.0");
+
   public void loadConfig () {
     File configFile = new File(getDataFolder(), "config.yml");
     YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
         .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
         .createParentDirectories(true)
+        .header("""
+            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+            #                                                               #
+            #       _____      _   _     ______ _           _               #
+            #      |  __ \\    | | | |   |  ____(_)         | |              #
+            #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
+            #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
+            #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
+            #      |_|   \\__,_|\\__|_| |_|_|    |_|_| |_|\\__,_|\\___|_|       #
+            #                        Configuration                          #
+            #                                                               #
+            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+            
+            """)
         .build();
 
     if (!configFile.exists()) {
@@ -341,5 +357,17 @@ public class PathPlugin extends JavaPlugin {
       return;
     }
     configuration = YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
+
+    if (new Version(configuration.version).compareTo(CONFIG_REGEN_VERSION) < 0) {
+      int test = 1;
+      String base = "config_old";
+      File file = new File(getDataFolder(), base + ".yml");
+      while (file.exists()) {
+        base = "config_old_" + test++;
+        file = new File(getDataFolder(), base + ".yml");
+      }
+      configFile.renameTo(file);
+      loadConfig();
+    }
   }
 }

@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.data.DatabaseType;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset.LocationWeightSolverPresetEnum;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
@@ -15,7 +14,8 @@ public class PathPluginConfig {
   public DatabaseConfig database = new DatabaseConfig();
   public NavigationConfig navigation = new NavigationConfig();
   public ModuleConfig moduleConfig = new ModuleConfig();
-  public SystemConfig system = new SystemConfig();
+  @Comment("Don't change, specifies plugin version while generating config and helps to identify outdated files.")
+  public String version = PathPlugin.getInstance().getDescription().getVersion();
 
   @Configuration
   public static class LanguageConfig {
@@ -44,7 +44,7 @@ public class PathPluginConfig {
         Valid types: IN_MEMORY, YAML, SQLITE, REMOTE_SQL
         
         See also: https://docs.leonardbausenwein.de/configuration/config.html#type""")
-    public DatabaseType type = DatabaseType.YML;
+    public DatabaseType type = DatabaseType.SQLITE;
     public EmbeddedSqlStorageConfig embeddedSql = new EmbeddedSqlStorageConfig();
     public SqlStorageConfig remoteSql = new SqlStorageConfig();
   }
@@ -96,11 +96,6 @@ public class PathPluginConfig {
     public String jdbcUrl = "jdbc:mysql://localhost/";
     public String username = "root";
     public String password = "KeepItSecretKeepItSafe";
-  }
-
-  @Configuration
-  public static class SystemConfig {
-    public String version = PathPlugin.getInstance().getDescription().getVersion();
   }
 
   @Configuration

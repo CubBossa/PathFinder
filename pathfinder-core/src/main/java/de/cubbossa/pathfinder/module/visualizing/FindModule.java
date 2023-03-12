@@ -52,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
 @AutoService(PathPluginExtension.class)
 public class FindModule implements Listener, PathPluginExtension {
 
+  private List<CommandTree> commands;
   private FindCommand findCommand;
   private FindLocationCommand findLocationCommand;
   private CancelPathCommand cancelPathCommand;
@@ -90,11 +91,12 @@ public class FindModule implements Listener, PathPluginExtension {
     findLocationCommand = new FindLocationCommand();
     cancelPathCommand = new CancelPathCommand();
 
-    List.of(
+    commands = List.of(
         findCommand,
         findLocationCommand,
         cancelPathCommand
-    ).forEach(CommandTree::register);
+    );
+    commands.forEach(CommandTree::register);
 
     registerListener();
 
@@ -110,10 +112,7 @@ public class FindModule implements Listener, PathPluginExtension {
 
   @Override
   public void onDisable() {
-    CommandUtils.unregister(findCommand);
-    CommandUtils.unregister(findLocationCommand);
-    CommandUtils.unregister(cancelPathCommand);
-
+    commands.forEach(CommandUtils::unregister);
     unregisterListener();
   }
 
