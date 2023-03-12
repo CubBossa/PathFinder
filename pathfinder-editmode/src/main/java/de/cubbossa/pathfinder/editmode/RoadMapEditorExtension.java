@@ -38,7 +38,7 @@ public class RoadMapEditorExtension implements PathPluginExtension {
     Matcher spigotMatcher = VERSION_PATTERN.matcher(spigotVersion);
     String spigotVersionExtracted = spigotMatcher.find() ? spigotMatcher.group(0) : "";
 
-    checkVersion(protocolLib.getDescription().getVersion(), spigotVersionExtracted);
+    checkVersion(spigotVersionExtracted, protocolLib.getDescription().getVersion());
 
     PathPlugin.getInstance().getLogger().info("Enabling default roadmap editors.");
 
@@ -61,16 +61,19 @@ public class RoadMapEditorExtension implements PathPluginExtension {
     if (spigot.compareTo(new Version("1.19")) >= 0) {
       // require 5.0.0 up to build 606
       if (protocolLib.compareTo(new Version("5")) < 0) {
-        throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19");
+        throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
+            + " Current ProtocolLib: " + new Version(protocolLibVersion));
       }
       if (spigot.compareTo(new Version("1.19.3")) >= 0) {
         // search for build 607+
-        if (protocolLib.compareTo(new Version("v5.0.0-b607")) < 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3.");
+        if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b607")) < 0) {
+          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3."
+          + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       } else {
-        if (protocolLib.compareTo(new Version("v5.0.0-b606")) > 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2.");
+        if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b606")) > 0) {
+          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2."
+              + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       }
     }

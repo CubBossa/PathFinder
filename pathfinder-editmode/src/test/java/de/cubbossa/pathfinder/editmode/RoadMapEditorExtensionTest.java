@@ -24,4 +24,10 @@ class RoadMapEditorExtensionTest {
     RoadMapEditorExtension roadMapEditorExtension = new RoadMapEditorExtension();
     assertThrows(UnknownDependencyException.class, () -> roadMapEditorExtension.checkVersion("1.19.3", "5.0.0-b120"));
   }
+
+  @Test
+  public void checkVersion4() {
+    RoadMapEditorExtension roadMapEditorExtension = new RoadMapEditorExtension();
+    assertDoesNotThrow(() -> roadMapEditorExtension.checkVersion("1.19.3", "5.0.0-SNAPSHOT-b614"));
+  }
 }
