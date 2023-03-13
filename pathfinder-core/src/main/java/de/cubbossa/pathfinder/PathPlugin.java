@@ -359,15 +359,22 @@ public class PathPlugin extends JavaPlugin {
     configuration = YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
 
     if (new Version(configuration.version).compareTo(CONFIG_REGEN_VERSION) < 0) {
-      int test = 1;
-      String base = "config_old";
-      File file = new File(getDataFolder(), base + ".yml");
-      while (file.exists()) {
-        base = "config_old_" + test++;
-        file = new File(getDataFolder(), base + ".yml");
-      }
-      configFile.renameTo(file);
+
+      saveFileAsOld(configFile, "config", ".yml");
+      saveFileAsOld(new File(getDataFolder(), "effects.nbo"), "effects", ".nbo");
       loadConfig();
+      saveResource("effects.nbo", true);
     }
+  }
+
+  private void saveFileAsOld(File file, String base, String suffix) {
+    int test = 1;
+    String b = base + "_old";
+    File f = new File(file.getParentFile(), b + suffix);
+    while (f.exists()) {
+      b = String.format("%s_old_%02d%s", base, test++, suffix);
+      f = new File(file.getParentFile(), b);
+    }
+    file.renameTo(f);
   }
 }
