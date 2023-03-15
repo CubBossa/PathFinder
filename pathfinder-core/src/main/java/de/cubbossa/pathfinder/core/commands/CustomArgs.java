@@ -1,21 +1,14 @@
 package de.cubbossa.pathfinder.core.commands;
 
-import static de.cubbossa.pathfinder.core.commands.CommandArgument.arg;
-
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.core.node.Discoverable;
-import de.cubbossa.pathfinder.core.node.Navigable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -25,29 +18,7 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import dev.jorel.commandapi.SuggestionInfo;
-import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.CustomArgument;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LocationArgument;
-import dev.jorel.commandapi.arguments.LocationType;
-import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
-import dev.jorel.commandapi.arguments.PlayerArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
-import dev.jorel.commandapi.arguments.TextArgument;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -56,6 +27,16 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static de.cubbossa.pathfinder.core.commands.CommandArgument.arg;
 
 /**
  * A collection of custom command arguments for the CommandAPI.
@@ -192,30 +173,6 @@ public class CustomArgs {
   }
 
   /**
-   * Provides a roadmap argument, which parses the namespaced key of a roadmap and resolves it into
-   * the actual roadmap instance.
-   *
-   * @param nodeName The name of the command argument in the command structure
-   * @return a roadmap argument instance
-   */
-  public CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>> roadMapArgument(
-      String nodeName) {
-    return (CommandArgument<RoadMap, CustomArgument<RoadMap, NamespacedKey>>) arg(
-        new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-          RoadMap roadMap =
-              RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
-          if (roadMap == null) {
-            throw new CustomArgument.CustomArgumentException(
-                "Unknown roadmap: '" + customArgumentInfo.currentInput() + "'.");
-          }
-          return roadMap;
-        }))
-        .includeSuggestions(
-            suggestNamespacedKeys(sender -> RoadMapHandler.getInstance().getRoadMapsStream()
-                .map(RoadMap::getKey).collect(Collectors.toList())));
-  }
-
-  /**
    * Provides a path visualizer argument, which suggests the namespaced keys for all path
    * visualizers and resolves the user input into the actual visualizer instance.
    *
@@ -316,14 +273,14 @@ public class CustomArgs {
   public <T extends Node<T>> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       NodeType<T> type =
-          NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
+          NodeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
       if (type == null) {
         throw new CustomArgument.CustomArgumentException(
             "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
       }
       return type;
     })).includeSuggestions(
-        suggestNamespacedKeys(sender -> NodeTypeHandler.getInstance().getTypes().keySet()));
+        suggestNamespacedKeys(sender -> NodeHandler.getInstance().getTypes().keySet()));
   }
 
   /**
@@ -411,14 +368,13 @@ public class CustomArgs {
         throw new CustomArgument.CustomArgumentException("Only for players");
       }
       String search = context.currentInput();
-      List<Node<?>> scope = RoadMapHandler.getInstance().getRoadMaps().values().stream()
-          .flatMap(roadMap -> roadMap.getNodes().stream()
-              .filter(node -> {
-                FindModule.NavigationRequestContext c =
-                    new FindModule.NavigationRequestContext(player.getUniqueId(), node);
-                return FindModule.getInstance().getNavigationFilter().stream()
-                    .allMatch(predicate -> predicate.test(c));
-              }))
+      List<Node<?>> scope = NodeHandler.getInstance().getNodes().stream()
+          .filter(node -> {
+            FindModule.NavigationRequestContext c =
+                new FindModule.NavigationRequestContext(player.getUniqueId(), node);
+            return FindModule.getInstance().getNavigationFilter().stream()
+                .allMatch(predicate -> predicate.test(c));
+          })
           .toList();
 
       try {
@@ -450,7 +406,7 @@ public class CustomArgs {
           StringRange finalRange = range;
           String inRange = finalRange.get(input);
           Collection<String> allTerms = NodeGroupHandler.getInstance().getNodeGroups().stream()
-              .filter(NodeGroup::isNavigable)
+              .filter(ng -> ng.hasModifier(NavigableModifier.class))
               .map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
               .filter(navigable -> FindModule.getInstance().getNavigationFilter().stream()
                   .allMatch(navigablePredicate -> navigablePredicate.test(navigable)))

@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
@@ -309,8 +309,7 @@ public class NodeGroupCommand extends Command {
   private void createGroup(CommandSender sender, NamespacedKey key) {
 
     try {
-      NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key,
-          StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
+      NodeGroup group = NodeGroupHandler.getInstance().createNodeGroup(key);
       TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(
           TagResolver.resolver("name", Tag.inserting(group.getDisplayName()))), sender);
     } catch (IllegalArgumentException e) {

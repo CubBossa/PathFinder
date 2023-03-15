@@ -7,7 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
-public class NoImplRoadMapEditor implements RoadMapEditor {
+public class NoImplNodeGroupEditor implements NodeGroupEditor {
 
   @Getter
   private final NamespacedKey key;

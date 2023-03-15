@@ -2,11 +2,9 @@ package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.data.NodeDataStorage;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import jdk.jshell.spi.ExecutionControl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -16,13 +14,15 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Collection;
+import java.util.Map;
+
 @Getter
 @Setter
 @RequiredArgsConstructor
 public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
 
-  public record NodeCreationContext(RoadMap roadMap, int id, Location location,
-                                    boolean persistent) {
+  public record NodeCreationContext(int id, Location location, boolean persistent) {
   }
 
   private final NamespacedKey key;
@@ -52,11 +52,9 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
 
   public abstract N createNode(NodeCreationContext context);
 
-  public Map<Integer, N> loadNodes(RoadMap roadMap) {
-    if (storage != null) {
-      return storage.loadNodes(roadMap);
-    }
-    return new HashMap<>();
+  @Override
+  public Map<Integer, N> loadNodes(Collection<NodeGroup> groups) {
+    return null;
   }
 
   @Override

@@ -11,8 +11,6 @@ public interface Node<N extends Node<N>> extends Navigable, PersistencyHolder, C
 
   int getNodeId();
 
-  NamespacedKey getRoadMapKey();
-
   NodeType<N> getType();
 
   Location getLocation();

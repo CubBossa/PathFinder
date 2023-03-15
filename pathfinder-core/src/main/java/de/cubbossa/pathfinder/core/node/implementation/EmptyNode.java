@@ -4,7 +4,6 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,12 +30,10 @@ public class EmptyNode implements Node<EmptyNode> {
     }
   };
 
-  private final RoadMap roadMap;
   @Getter
   private final Location location;
 
-  public EmptyNode(RoadMap roadMap, World world) {
-    this.roadMap = roadMap;
+  public EmptyNode(World world) {
     this.location = new Location(world, 0, 0, 0);
   }
 
@@ -63,11 +60,6 @@ public class EmptyNode implements Node<EmptyNode> {
   @Override
   public int getNodeId() {
     return -1;
-  }
-
-  @Override
-  public NamespacedKey getRoadMapKey() {
-    return roadMap.getKey();
   }
 
   @Override

@@ -1,8 +1,13 @@
-package de.cubbossa.pathfinder.core.node;
+package de.cubbossa.pathfinder.core.nodegroup;
 
 import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.core.node.Navigable;
+import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.GroupModifier;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
@@ -11,42 +16,42 @@ import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.logging.Level;
+
+import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
-@Getter
-@Setter
 public class NodeGroup extends HashSet<Groupable<?>>
-    implements Keyed, Named, Discoverable, Navigable, SearchTermHolder {
+    implements Keyed, Discoverable, Navigable, SearchTermHolder {
 
   private final NamespacedKey key;
-  private String nameFormat;
-  private Component displayName;
-  private @Nullable String permission = null;
-  private boolean discoverable = true;
-  private boolean navigable = true;
-  private float findDistance = 1.5f;
-  private Collection<SearchTerm> searchTerms;
+  @Getter
+  private final HashedRegistry<GroupModifier> modifiers;
 
-  public NodeGroup(NamespacedKey key, String nameFormat) {
-    this(key, nameFormat, new HashSet<>());
+  public NodeGroup(NamespacedKey key) {
+    this(key, new HashSet<>());
   }
 
-  public NodeGroup(NamespacedKey key, String nameFormat, Collection<Waypoint> nodes) {
+  public NodeGroup(NamespacedKey key, Collection<Waypoint> nodes) {
     super(nodes);
     this.key = key;
-    this.setNameFormat(nameFormat);
-    this.searchTerms = new HashSet<>();
+    this.modifiers = new HashedRegistry<>();
   }
 
-  public void setNameFormat(String nameFormat) {
-    this.nameFormat = nameFormat;
-    this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
+  public void addModifier(GroupModifier modifier) {
+    this.modifiers.put(modifier);
+  }
+
+  public boolean hasModifier(GroupModifier modifier) {
+    return this.modifiers.containsKey(modifier.getKey());
+  }
+
+  public boolean hasModifier(Class<? extends GroupModifier> modifier) {
+
   }
 
   @Override
@@ -135,58 +140,5 @@ public class NodeGroup extends HashSet<Groupable<?>>
   @Override
   public NamespacedKey getKey() {
     return key;
-  }
-
-  @Override
-  public void addSearchTerms(Collection<SearchTerm> searchTerms) {
-
-  }
-
-  @Override
-  public void removeSearchTerms(Collection<SearchTerm> searchTerms) {
-
-  }
-
-  @Override
-  public void clearSearchTerms() {
-
-  }
-
-  public Collection<String> getSearchTermStrings() {
-    return searchTerms.stream().map(SearchTerm::getIdentifier).toList();
-  }
-
-  public void removeSearchTermStrings(Collection<String> terms) {
-    searchTerms.removeIf(searchTerm -> terms.contains(searchTerm.getIdentifier()));
-  }
-
-  public void addSearchTermStrings(Collection<String> terms) {
-    searchTerms.addAll(terms.stream().map(SimpleSearchTerm::new).toList());
-  }
-
-  public void clearSearchTermStrings() {
-    searchTerms.clear();
-  }
-
-  @Override
-  public boolean matches(SearchTerm searchTerm) {
-    return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(searchTerm.getIdentifier()));
-  }
-
-  @Override
-  public boolean matches(SearchTerm searchTerm, Collection<SearchQueryAttribute> attributes) {
-    return searchTerms.stream().anyMatch(
-        t -> t.getIdentifier().equals(searchTerm.getIdentifier()) && t.matches(attributes));
-  }
-
-  @Override
-  public boolean matches(String term) {
-    return searchTerms.stream().anyMatch(t -> t.getIdentifier().equals(term));
-  }
-
-  @Override
-  public boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
-    return searchTerms.stream()
-        .anyMatch(t -> t.getIdentifier().equals(term) && t.matches(attributes));
   }
 }

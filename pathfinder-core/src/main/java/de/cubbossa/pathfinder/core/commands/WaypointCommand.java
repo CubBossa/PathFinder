@@ -2,13 +2,9 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -73,29 +69,27 @@ public class WaypointCommand extends Command {
     );
     then(CustomArgs.literal("create")
         .withPermission(PathPlugin.PERM_CMD_WP_CREATE)
-        .then(CustomArgs.roadMapArgument("roadmap")
+        .executesPlayer((player, objects) -> {
+          onCreate(player, NodeHandler.WAYPOINT_TYPE,
+              player.getLocation().add(new Vector(0, 1, 0)));
+        })
+        .then(CustomArgs.location("location")
+            .displayAsOptional()
             .executesPlayer((player, objects) -> {
-              onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
+              onCreate(player, NodeHandler.WAYPOINT_TYPE,
+                  (Location) objects[1]);
+            })
+        )
+        .then(CustomArgs.nodeTypeArgument("type")
+            .executesPlayer((player, objects) -> {
+              onCreate(player, (NodeType<? extends Node<?>>) objects[0],
                   player.getLocation().add(new Vector(0, 1, 0)));
             })
             .then(CustomArgs.location("location")
-                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
-                  onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
-                      (Location) objects[1]);
+                  onCreate(player, (NodeType<? extends Node<?>>) objects[0],
+                      (Location) objects[2]);
                 })
-            )
-            .then(CustomArgs.nodeTypeArgument("type")
-                .executesPlayer((player, objects) -> {
-                  onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
-                      player.getLocation().add(new Vector(0, 1, 0)));
-                })
-                .then(CustomArgs.location("location")
-                    .executesPlayer((player, objects) -> {
-                      onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
-                          (Location) objects[2]);
-                    })
-                )
             )
         )
     );
@@ -205,7 +199,6 @@ public class WaypointCommand extends Command {
     Node<?> node = selection.get(0);
     FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
         .resolver(Formatter.number("id", node.getNodeId()))
-        .tag("roadmap", Messages.formatKey(node.getRoadMapKey()))
         .resolver(
             Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
         .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
@@ -222,9 +215,8 @@ public class WaypointCommand extends Command {
     TranslationHandler.getInstance().sendMessage(message, player);
   }
 
-  private void onCreate(Player player, RoadMap roadMap, NodeType<? extends Node<?>> type,
-                        Location location) {
-    Node<?> node = roadMap.createNode(type, location, true);
+  private void onCreate(Player player, NodeType<? extends Node<?>> type, Location location) {
+    Node<?> node = NodeHandler.getInstance().createNode(type, location, true);
 
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
             .format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))),
@@ -232,9 +224,7 @@ public class WaypointCommand extends Command {
   }
 
   private void onDelete(Player player, NodeSelection selection) {
-    for (RoadMap roadMap : RoadMapHandler.getInstance().getRoadMaps()) {
-      roadMap.removeNodes(selection);
-    }
+  NodeHandler.getInstance().deleteNodes(selection);
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE
         .format(TagResolver.resolver("selection",
             Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
@@ -245,7 +235,7 @@ public class WaypointCommand extends Command {
     if (selection.size() == 0) {
       return;
     }
-    RoadMapHandler.getInstance().setNodeLocation(selection, location);
+    NodeHandler.getInstance().setNodeLocation(selection, location);
 
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_MOVED.format(TagResolver.builder()
         .resolver(
@@ -329,7 +319,7 @@ public class WaypointCommand extends Command {
 
     for (Node<?> start : startSelection) {
       if (endSelection == null) {
-        RoadMapHandler.getInstance().getRoadMap(start.getRoadMapKey()).disconnectNode(start);
+        NodeHandler.getInstance().disconnectNode(start);
         continue;
       }
       for (Node<?> end : endSelection) {
@@ -346,7 +336,7 @@ public class WaypointCommand extends Command {
   }
 
   private void onSetTangent(Player player, NodeSelection selection, Double strength) {
-    RoadMapHandler.getInstance().setNodeCurveLength(selection, strength);
+    NodeHandler.getInstance().setNodeCurveLength(selection, strength);
 
     TranslationHandler.getInstance()
         .sendMessage(Messages.CMD_N_SET_TANGENT.format(TagResolver.builder()

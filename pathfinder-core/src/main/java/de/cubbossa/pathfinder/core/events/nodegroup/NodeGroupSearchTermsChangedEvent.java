@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.ArrayList;
 import java.util.Collection;
 import lombok.Getter;

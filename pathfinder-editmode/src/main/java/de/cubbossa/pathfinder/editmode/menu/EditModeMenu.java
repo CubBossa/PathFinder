@@ -10,11 +10,11 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.editmode.DefaultRoadMapEditor;
+import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
@@ -40,18 +40,18 @@ import org.bukkit.util.Vector;
 
 public class EditModeMenu {
 
-  private final RoadMap roadMap;
+  private final NodeGroup group;
   private final Collection<NodeGroup> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
   private Node<?> edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
-    this.roadMap = roadMap;
+  public EditModeMenu(NodeGroup group, Collection<NodeType<?>> types) {
+    this.group = group;
     this.types = types;
   }
 
-  public BottomInventoryMenu createHotbarMenu(DefaultRoadMapEditor editor, Player editingPlayer) {
+  public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
     BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {

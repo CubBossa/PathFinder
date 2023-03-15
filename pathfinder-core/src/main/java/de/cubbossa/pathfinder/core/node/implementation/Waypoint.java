@@ -1,13 +1,8 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.ArrayList;
@@ -19,15 +14,12 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 
 @Getter
 @Setter
 public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final int nodeId;
-  private final NamespacedKey roadMapKey;
-  private final RoadMap roadMap;
   private final boolean persistent;
   private final List<Edge> edges;
   private final Collection<NodeGroup> groups;
@@ -36,10 +28,8 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
   @Nullable
   private Double curveLength = null;
 
-  public Waypoint(int databaseId, RoadMap roadMap, boolean persistent) {
+  public Waypoint(int databaseId, boolean persistent) {
     this.nodeId = databaseId;
-    this.roadMap = roadMap;
-    this.roadMapKey = roadMap.getKey();
     this.persistent = persistent;
     this.groups = new HashSet<>();
 
@@ -60,7 +50,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   @Override
   public NodeType<Waypoint> getType() {
-    return RoadMapHandler.WAYPOINT_TYPE;
+    return NodeHandler.WAYPOINT_TYPE;
   }
 
   @Override
@@ -70,12 +60,12 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   @Override
   public Edge connect(Node<?> target) {
-    return roadMap.connectNodes(this, target);
+    return NodeHandler.getInstance().connectNodes(this, target);
   }
 
   @Override
   public void disconnect(Node<?> target) {
-    roadMap.disconnectNodes(this, target);
+    NodeHandler.getInstance().disconnectNodes(this, target);
   }
 
   @Override
@@ -132,7 +122,6 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
   public String toString() {
     return "Waypoint{" +
         "nodeId=" + nodeId +
-        ", roadMapKey=" + roadMapKey +
         ", location=" + location +
         ", curveLength=" + curveLength +
         '}';

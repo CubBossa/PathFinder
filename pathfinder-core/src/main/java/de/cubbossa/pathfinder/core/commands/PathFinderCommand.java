@@ -3,25 +3,33 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
+import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.data.DataExporter;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
 import de.cubbossa.pathfinder.data.YmlDataStorage;
+import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.TextArgument;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 /**
@@ -270,5 +278,52 @@ public class PathFinderCommand extends Command {
             })
         )
     );
+
+    then(CustomArgs.literal("forcefind")
+            .withGeneratedHelp()
+            .withPermission(PathPlugin.PERM_CMD_PF_FORCEFIND)
+            .then(CustomArgs.roadMapArgument("roadmap")
+                    .withGeneratedHelp()
+                    .then(CustomArgs.player("player")
+                            .withGeneratedHelp()
+                            .then(CustomArgs.discoverableArgument("discovering")
+                                    .executes((commandSender, args) -> {
+                                      onForceFind(commandSender, (Player) args[1], (Discoverable) args[2]);
+                                    })))));
+    then(CustomArgs.literal("forceforget")
+            .withGeneratedHelp()
+            .withPermission(PathPlugin.PERM_CMD_PF_FORCEFORGET)
+            .then(CustomArgs.roadMapArgument("roadmap")
+                    .withGeneratedHelp()
+                    .then(CustomArgs.player("player")
+                            .withGeneratedHelp()
+                            .then(CustomArgs.discoverableArgument("discovering")
+                                    .executes((commandSender, args) -> {
+                                      onForceForget(commandSender, (Player) args[1], (Discoverable) args[2]);
+                                    })))));
+  }
+
+  private void onForceFind(CommandSender sender, Player target, Discoverable discoverable) {
+
+    DiscoverHandler.getInstance().discover(target.getUniqueId(), discoverable, LocalDateTime.now());
+
+    TranslationHandler.getInstance()
+            .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
+                    .resolver(Placeholder.component("name",
+                            PathPlugin.getInstance().getAudiences().player(target)
+                                    .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+                    .tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
+  }
+
+  private void onForceForget(CommandSender sender, Player target, Discoverable discoverable) {
+
+    DiscoverHandler.getInstance().forget(target.getUniqueId(), discoverable);
+
+    TranslationHandler.getInstance()
+            .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
+                    .resolver(Placeholder.component("name",
+                            PathPlugin.getInstance().getAudiences().player(target)
+                                    .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+                    .tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
   }
 }

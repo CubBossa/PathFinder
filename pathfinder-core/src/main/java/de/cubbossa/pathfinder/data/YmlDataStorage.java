@@ -1,19 +1,13 @@
 package de.cubbossa.pathfinder.data;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.Discoverable;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -23,7 +17,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,11 +26,9 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.Nullable;
 
 public class YmlDataStorage implements DataStorage {
 
@@ -287,7 +278,7 @@ public class YmlDataStorage implements DataStorage {
       //TODO for now i parse them only to waypoints, but lateron they will have a datastructure like pathvisualizers
       int id = Integer.parseInt(key);
       Location location = innerSection.getLocation("location");
-      Waypoint node = RoadMapHandler.WAYPOINT_TYPE
+      Waypoint node = NodeHandler.WAYPOINT_TYPE
           .createNode(new NodeType.NodeCreationContext(roadMap, id, location, true));
       node.setCurveLength(innerSection.getDouble("curve-length"));
       result.put(id, node);

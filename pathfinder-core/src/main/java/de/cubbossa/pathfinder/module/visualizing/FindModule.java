@@ -7,7 +7,8 @@ import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Navigable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
@@ -153,10 +154,7 @@ public class FindModule implements Listener, PathPluginExtension {
       location = location.add(0, 0.01, 0);
     }
 
-    Collection<Node<?>> nodes = RoadMapHandler.getInstance().getRoadMapsStream()
-        .map(RoadMap::getNodes)
-        .flatMap(Collection::stream)
-        .toList();
+    Collection<Node<?>> nodes = NodeHandler.getInstance().getNodes();
 
     Node<?> closest = null;
     double dist = Double.MAX_VALUE;
@@ -170,46 +168,28 @@ public class FindModule implements Listener, PathPluginExtension {
     if (closest == null) {
       return NavigateResult.FAIL_TOO_FAR_AWAY;
     }
-    RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(closest.getRoadMapKey());
-    Waypoint target = roadMap.createNode(RoadMapHandler.WAYPOINT_TYPE, location, false);
-    roadMap.connectNodes(closest, target, false);
+    Waypoint target = NodeHandler.getInstance().createNode(NodeHandler.WAYPOINT_TYPE, location, false);
+    NodeHandler.getInstance().connectNodes(closest, target, false);
 
     NavigateResult result = findPath(player, new NodeSelection(target));
 
-    roadMap.disconnectNodes(closest, target);
-    roadMap.removeNodes(target);
+    NodeHandler.getInstance().disconnectNodes(closest, target);
+    NodeHandler.getInstance().removeNodes(target);
 
     return result;
   }
 
   public NavigateResult findPath(Player player, NodeSelection targets) {
-    return findPath(player, targets, RoadMapHandler.getInstance().getRoadMaps().values());
-  }
 
-  public NavigateResult findPath(Player player, NodeSelection targets, Collection<RoadMap> scope) {
-
-    Set<NamespacedKey> scopeKeys = scope.stream().map(RoadMap::getKey).collect(Collectors.toSet());
-    Collection<Node<?>> nodes =
-        targets.stream().filter(node -> scopeKeys.contains(node.getRoadMapKey()))
-            .collect(Collectors.toSet());
-
-    List<RoadMap> roadMaps = nodes.stream()
-        .map(Node::getRoadMapKey)
-        .distinct()
-        .map(key -> RoadMapHandler.getInstance().getRoadMap(key))
-        .filter(Objects::nonNull).toList();
-
+    Collection<Node<?>> nodes = NodeHandler.getInstance().getNodes();
     if (nodes.size() == 0) {
       return NavigateResult.FAIL_EMPTY;
     }
 
-    RoadMap firstRoadMap = roadMaps.get(0);
-    PlayerNode playerNode = new PlayerNode(player, firstRoadMap);
-    Graph<Node<?>> graph = firstRoadMap.toGraph(player, playerNode);
+    PlayerNode playerNode = new PlayerNode(player);
+    Graph<Node<?>> graph = NodeHandler.getInstance().toGraph(player, playerNode);
 
-    for (RoadMap roadMap : roadMaps.subList(1, roadMaps.size())) {
-      graph.merge(roadMap.toGraph(player, null));
-    }
+    NodeHandler.getInstance().toGraph(player, playerNode);
 
     PathSolver<Node<?>> pathSolver = new SimpleDijkstra<>();
     List<Node<?>> path;

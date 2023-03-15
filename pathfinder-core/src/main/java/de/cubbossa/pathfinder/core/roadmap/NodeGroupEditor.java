@@ -4,7 +4,7 @@ import java.util.UUID;
 import org.bukkit.Keyed;
 import org.bukkit.entity.Player;
 
-public interface RoadMapEditor extends Keyed {
+public interface NodeGroupEditor extends Keyed {
 
   public void dispose();
 

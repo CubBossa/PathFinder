@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.node;
+package de.cubbossa.pathfinder.core.nodegroup;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
@@ -15,6 +15,9 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupPermissionChangedEv
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemoveEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
+import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.GroupModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
@@ -33,6 +36,7 @@ public class NodeGroupHandler implements Listener {
   @Getter
   private static NodeGroupHandler instance;
 
+  private final NodeGroup global = new NodeGroup(new NamespacedKey(PathPlugin.getInstance(), "global"));
   private final HashedRegistry<NodeGroup> groups;
 
   public NodeGroupHandler() {
@@ -58,10 +62,10 @@ public class NodeGroupHandler implements Listener {
     return groups.values();
   }
 
-  public Collection<NodeGroup> getNodeGroups(RoadMap roadMap) {
-    return groups.values().stream().filter(
-            nodes -> nodes.stream().anyMatch(node -> node.getRoadMapKey().equals(roadMap.getKey())))
-        .collect(Collectors.toSet());
+  public Collection<NodeGroup> getNodeGroups(Collection<GroupModifier> withModifiers) {
+    return groups.values().stream()
+            .filter(group -> withModifiers.stream().allMatch(group::hasModifier))
+            .collect(Collectors.toList());
   }
 
   public @Nullable
@@ -86,18 +90,17 @@ public class NodeGroupHandler implements Listener {
    * <br>- add the group to the groups collection of this handler
    *
    * @param key        The unique NodeGroup key. There can only ever be one NodeGroup with this key within this plugin.
-   * @param nameFormat The MiniMessage format that defines the display name for the NodeGroup
    * @return the new instance of the NodeGroup
    * @throws IllegalArgumentException If another group with this key already exists.
    */
-  public NodeGroup createNodeGroup(NamespacedKey key, String nameFormat)
+  public NodeGroup createNodeGroup(NamespacedKey key)
       throws IllegalArgumentException {
 
     if (getNodeGroup(key) != null) {
       throw new IllegalArgumentException("Another nodegroup with this key already exists.");
     }
 
-    NodeGroup group = new NodeGroup(key, nameFormat);
+    NodeGroup group = new NodeGroup(key);
     group.addSearchTermStrings(Lists.newArrayList(key.getKey()));
     Bukkit.getPluginManager().callEvent(new NodeGroupCreatedEvent(group));
     Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
@@ -125,7 +128,7 @@ public class NodeGroupHandler implements Listener {
   }
 
   public void setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
-    group.setPermission(permission);
+    group.addModifier(new PermissionModifier(permission));
     NodeGroupPermissionChangedEvent event = new NodeGroupPermissionChangedEvent(group, permission);
     Bukkit.getPluginManager().callEvent(event);
   }

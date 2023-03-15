@@ -12,12 +12,14 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
+import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
@@ -51,10 +53,10 @@ import xyz.xenondevs.particle.task.TaskManager;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
+public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   private final NamespacedKey key;
-  private final RoadMap roadMap;
+  private final NodeGroup nodeGroup;
   private final ClientNodeHandler armorstandHandler;
 
   private final Map<UUID, BottomInventoryMenu> editingPlayers;
@@ -67,9 +69,9 @@ public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
   private Color colorFrom = new Color(255, 0, 0);
   private Color colorTo = new Color(0, 127, 255);
 
-  public DefaultRoadMapEditor(RoadMap roadMap) {
-    this.key = roadMap.getKey();
-    this.roadMap = roadMap;
+  public DefaultNodeGroupEditor(NodeGroup group) {
+    this.key = group.getKey();
+    this.nodeGroup = group;
 
     this.editModeTasks = new HashSet<>();
     this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
@@ -116,8 +118,8 @@ public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
         startParticleTask();
       }
 
-      BottomInventoryMenu menu = new EditModeMenu(roadMap,
-          NodeTypeHandler.getInstance().getTypes().values()).createHotbarMenu(this, player);
+      BottomInventoryMenu menu = new EditModeMenu(nodeGroup,
+          NodeHandler.getInstance().getTypes().values()).createHotbarMenu(this, player);
       editingPlayers.put(uuid, menu);
       menu.openSync(player);
 

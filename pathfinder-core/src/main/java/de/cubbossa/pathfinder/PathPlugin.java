@@ -3,13 +3,11 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
-import de.cubbossa.pathfinder.core.commands.RoadMapCommand;
 import de.cubbossa.pathfinder.core.commands.WaypointCommand;
 import de.cubbossa.pathfinder.core.listener.DatabaseListener;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.RemoteSqlDataStorage;
@@ -32,15 +30,6 @@ import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -53,6 +42,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import java.io.File;
+import java.util.*;
+import java.util.stream.IntStream;
+
 @Getter
 public class PathPlugin extends JavaPlugin {
 
@@ -62,19 +55,11 @@ public class PathPlugin extends JavaPlugin {
   public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
   public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
   public static final String PERM_CMD_PF_MODULES = "pathfinder.command.pathfinder.modules";
+  public static final String PERM_CMD_PF_FORCEFIND = "pathfinder.command.pathfinder.forcefind";
+  public static final String PERM_CMD_PF_FORCEFORGET = "pathfinder.command.pathfinder.forceforget";
   public static final String PERM_CMD_FIND = "pathfinder.command.find";
   public static final String PERM_CMD_FIND_LOCATION = "pathfinder.command.findlocation";
   public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
-  public static final String PERM_CMD_RM_INFO = "pathfinder.command.roadmap.info";
-  public static final String PERM_CMD_RM_CREATE = "pathfinder.command.roadmap.create";
-  public static final String PERM_CMD_RM_DELETE = "pathfinder.command.roadmap.delete";
-  public static final String PERM_CMD_RM_EDITMODE = "pathfinder.command.roadmap.editmode";
-  public static final String PERM_CMD_RM_LIST = "pathfinder.command.roadmap.list";
-  public static final String PERM_CMD_RM_FORCEFIND = "pathfinder.command.roadmap.forcefind";
-  public static final String PERM_CMD_RM_FORCEFORGET = "pathfinder.command.roadmap.forceforget";
-  public static final String PERM_CMD_RM_SET_VIS = "pathfinder.command.roadmap.set_visualizer";
-  public static final String PERM_CMD_RM_SET_NAME = "pathfinder.command.roadmap.set_name";
-  public static final String PERM_CMD_RM_SET_CURVE = "pathfinder.command.roadmap.set_curvelength";
   public static final String PERM_CMD_NG_LIST = "pathfinder.command.nodegroup.list";
   public static final String PERM_CMD_NG_CREATE = "pathfinder.command.nodegroup.create";
   public static final String PERM_CMD_NG_DELETE = "pathfinder.command.nodegroup.delete";
@@ -146,7 +131,6 @@ public class PathPlugin extends JavaPlugin {
   @Setter
   private PathPluginConfig configuration;
 
-  private RoadMapCommand roadMapCommand;
   private PathFinderCommand pathFinderCommand;
   private NodeGroupCommand nodeGroupCommand;
   private PathVisualizerCommand pathVisualizerCommand;
@@ -227,7 +211,7 @@ public class PathPlugin extends JavaPlugin {
 
     new NodeGroupHandler();
     new VisualizerHandler();
-    new NodeTypeHandler();
+    new NodeHandler();
     new RoadMapHandler();
     new DiscoverHandler();
 
@@ -240,8 +224,6 @@ public class PathPlugin extends JavaPlugin {
     // Commands
 
     CommandAPI.onEnable(this);
-    roadMapCommand = new RoadMapCommand();
-    roadMapCommand.register();
     pathFinderCommand = new PathFinderCommand();
     pathFinderCommand.register();
     nodeGroupCommand = new NodeGroupCommand(0);
@@ -268,9 +250,8 @@ public class PathPlugin extends JavaPlugin {
         () -> NodeGroupHandler.getInstance().getNodeGroups().size() + ""));
     metrics.addCustomChart(new SimplePie("visualizer_amount",
         () -> VisualizerHandler.getInstance().getRoadmapVisualizers().size() + ""));
-    metrics.addCustomChart(new AdvancedPie("nodes_per_roadmap", () -> {
-      IntStream counts = RoadMapHandler.getInstance().getRoadMapsStream()
-          .map(RoadMap::getNodes)
+    metrics.addCustomChart(new AdvancedPie("nodes_per_group", () -> {
+      IntStream counts = NodeGroupHandler.getInstance().getNodeGroups().stream()
           .mapToInt(Collection::size);
       Map<String, Integer> vals = new HashMap<>();
       counts.forEach(value -> {
@@ -302,7 +283,6 @@ public class PathPlugin extends JavaPlugin {
   @Override
   public void onDisable() {
 
-    CommandUtils.unregister(roadMapCommand);
     CommandUtils.unregister(pathFinderCommand);
     CommandUtils.unregister(nodeGroupCommand);
     CommandUtils.unregister(pathVisualizerCommand);

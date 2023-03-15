@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;

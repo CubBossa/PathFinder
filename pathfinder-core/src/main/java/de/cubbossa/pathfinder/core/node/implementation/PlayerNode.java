@@ -4,7 +4,6 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
@@ -33,11 +32,9 @@ public class PlayerNode implements Node<PlayerNode> {
   };
 
   private final Player player;
-  private final RoadMap roadMap;
 
-  public PlayerNode(Player player, RoadMap roadMap) {
+  public PlayerNode(Player player) {
     this.player = player;
-    this.roadMap = roadMap;
   }
 
   @Override
@@ -63,11 +60,6 @@ public class PlayerNode implements Node<PlayerNode> {
   @Override
   public int getNodeId() {
     return -1;
-  }
-
-  @Override
-  public NamespacedKey getRoadMapKey() {
-    return roadMap.getKey();
   }
 
   @Override

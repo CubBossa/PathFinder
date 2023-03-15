@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.bukkit.plugin.UnknownDependencyException;
 import org.junit.jupiter.api.Test;
 
-class RoadMapEditorExtensionTest {
+class NodeGroupEditorExtensionTest {
 
   @Test
   public void checkVersion1() {

@@ -16,15 +16,10 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupNavigableChangedEve
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupPermissionChangedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapCreatedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetCurveLengthEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetNameEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapSetVisualizerEvent;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.NodeDataStorage;
 import de.cubbossa.pathfinder.data.VisualizerDataStorage;
@@ -53,46 +48,6 @@ public class DatabaseListener implements Listener {
 
   public DatabaseListener(DataStorage dataStorage) {
     this.data = dataStorage;
-  }
-
-  @EventHandler
-  public void onRoadMapCreate(RoadMapCreatedEvent event) {
-    if (!event.getRoadMap().isPersistent()) {
-      return;
-    }
-    data.updateRoadMap(event.getRoadMap());
-  }
-
-  @EventHandler
-  public void onRoadMapDeleted(RoadMapDeletedEvent event) {
-    if (!event.getRoadMap().isPersistent()) {
-      return;
-    }
-    data.deleteRoadMap(event.getRoadMap().getKey());
-  }
-
-  @EventHandler(priority = EventPriority.MONITOR)
-  public void onRoadMapUpdate(RoadMapSetNameEvent event) {
-    if (!event.getRoadMap().isPersistent()) {
-      return;
-    }
-    data.updateRoadMap(event.getRoadMap());
-  }
-
-  @EventHandler(priority = EventPriority.MONITOR)
-  public void onRoadMapUpdate(RoadMapSetCurveLengthEvent event) {
-    if (!event.getRoadMap().isPersistent()) {
-      return;
-    }
-    data.updateRoadMap(event.getRoadMap());
-  }
-
-  @EventHandler(priority = EventPriority.MONITOR)
-  public void onRoadMapUpdate(RoadMapSetVisualizerEvent event) {
-    if (!event.getRoadMap().isPersistent()) {
-      return;
-    }
-    data.updateRoadMap(event.getRoadMap());
   }
 
   @EventHandler
