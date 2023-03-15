@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -557,11 +556,7 @@ public class Messages {
   }
 
   public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
-  }
-
-  public static Component formatRoadmaps(CommandSender sender, Collection<RoadMap> roadMaps) {
-    return formatGroupInHover(sender, GEN_RM_SEL, roadMaps, RoadMap::getDisplayName);
+    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,

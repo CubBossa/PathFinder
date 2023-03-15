@@ -2,28 +2,46 @@ package de.cubbossa.pathfinder.core.node;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.node.*;
+import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
+import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeCurveLengthChangedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeLocationChangedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
+import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
+import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
+import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
+import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
+import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.DataStorageException;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class NodeHandler {
 
@@ -31,16 +49,27 @@ public class NodeHandler {
   @Getter
   private static NodeHandler instance;
 
+  private final DataStorage dataStorage;
+  private final NodeGroupEditorFactory editModeFactory;
+  @Getter
+  private final HashedRegistry<NodeGroupEditor> editors;
+
   @Getter
   private final HashedRegistry<NodeType<?>> types;
-  private final Map<Integer, Node<?>> nodes;
-  private final Collection<Edge> edges;
 
-  public NodeHandler() {
+  public NodeHandler(DataStorage dataStorage) {
     instance = this;
+    this.dataStorage = dataStorage;
     this.types = new HashedRegistry<>();
-    this.nodes = new TreeMap<>();
-    this.edges = new HashSet<>();
+
+    editors = new HashedRegistry<>();
+    NodeHandler.getInstance().registerNodeType(NodeHandler.WAYPOINT_TYPE);
+
+    ServiceLoader<NodeGroupEditorFactory> loader = ServiceLoader.load(NodeGroupEditorFactory.class,
+        PathPlugin.getInstance().getClass().getClassLoader());
+    NodeGroupEditorFactory factory = loader.findFirst().orElse(null);
+    editModeFactory = Objects.requireNonNullElseGet(factory,
+        () -> g -> new NoImplNodeGroupEditor(g.getKey()));
   }
 
   public <T extends Node<T>> NodeType<T> getNodeType(NamespacedKey key) {
@@ -59,55 +88,13 @@ public class NodeHandler {
     types.remove(key);
   }
 
-
-  public void loadNodesAndEdges(
-          Map<Integer, ? extends Collection<NamespacedKey>> nodesGroupMapping) {
-    nodes.clear();
-    NodeHandler.getInstance().getTypes().forEach((key1, nodeType) -> {
-      nodes.putAll(nodeType.loadNodes(this));
-    });
-
-    for (var entry : nodesGroupMapping.entrySet()) {
-      if (!nodes.containsKey(entry.getKey())) {
-        continue;
-      }
-      Node<?> node = nodes.get(entry.getKey());
-      if (node == null) {
-        PathPlugin.getInstance().getLogger()
-                .log(Level.SEVERE, "Tried to map a node that doesn't exist: " + entry.getKey());
-        continue;
-      }
-      if (!(node instanceof Groupable<?> groupable)) {
-        PathPlugin.getInstance().getLogger()
-                .log(Level.SEVERE, "Tried to map a node that is not groupable: " + entry.getKey());
-        continue;
-      }
-      for (NamespacedKey key : entry.getValue()) {
-        NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(key);
-        if (group == null) {
-          PathPlugin.getInstance().getLogger().log(Level.SEVERE,
-                  "Tried to assign a node to a nodegroup that doesn't exist: " + key);
-          continue;
-        }
-        group.add(groupable);
-      }
-    }
-
-    edges.clear();
-
-    edges.addAll(PathPlugin.getInstance().getDatabase().loadEdges(this, nodes));
-    for (Edge edge : edges) {
-      edge.getStart().getEdges().add(edge);
-    }
-  }
-
   public Graph<Node<?>> toGraph(Player permissionQuery, @Nullable PlayerNode player) {
     Graph<Node<?>> graph = new Graph<>();
     nodes.values().stream()
-            .filter(node -> !(node instanceof Groupable<?> groupable) || groupable.getGroups().stream()
-                    .allMatch( //TODO instead use event and drop nodes while processing
-                            g -> g.getPermission() == null || permissionQuery.hasPermission(g.getPermission())))
-            .forEach(graph::addNode);
+        .filter(node -> !(node instanceof Groupable<?> groupable) || groupable.getGroups().stream()
+            .allMatch( //TODO instead use event and drop nodes while processing
+                g -> g.getPermission() == null || permissionQuery.hasPermission(g.getPermission())))
+        .forEach(graph::addNode);
     edges.forEach(e -> {
       try {
         graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength());
@@ -118,7 +105,8 @@ public class NodeHandler {
 
     if (player != null) {
       graph.addNode(player);
-      LocationWeightSolver<Node<?>> solver = LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
+      LocationWeightSolver<Node<?>> solver =
+          LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
               .getConfiguration().navigation.nearestLocationSolver);
       Map<Node<?>, Double> weighted = solver.solve(player, graph);
 
@@ -130,25 +118,9 @@ public class NodeHandler {
 
   public NavigateSelection getNavigables() {
     return new NavigateSelection(NodeGroupHandler.getInstance().getNodeGroups().stream()
-            .filter(group -> nodes.values().stream().anyMatch(group::contains))
-            .collect(Collectors.toSet()));
-  }
-
-  public NavigateSelection getNavigables(String... keywords) {
-    return getNavigables(Lists.newArrayList(keywords));
-  }
-
-  public NavigateSelection getNavigables(Collection<String> keywords) {
-    return getNavigables().stream()
-            .filter(node -> {
-              for (String keyword : keywords) {
-                if (node.getSearchTerms().contains(keyword)) {
-                  return true;
-                }
-              }
-              return false;
-            })
-            .collect(Collectors.toCollection(NavigateSelection::new));
+        .filter(group -> group.hasModifier(NavigableModifier.class))
+        .flatMap(Collection::stream)
+        .collect(Collectors.toSet()));
   }
 
   /**
@@ -175,11 +147,11 @@ public class NodeHandler {
    * @param <T>        The node implementation class. {@link Waypoint} by default.
    * @return The created node.
    */
-  public <T extends Node<T>> T createNode(NodeType<T> type, Location location, boolean persistent, NodeGroup... groups) {
+  public <T extends Node<T>> T createNode(NodeType<T> type, Location location, boolean persistent,
+                                          NodeGroup... groups) {
     T node = type.createNode(new NodeType.NodeCreationContext(
-            RoadMapHandler.getInstance().requestNodeId(),
-            location,
-            persistent
+        location,
+        persistent
     ));
 
     addNode(node);
@@ -205,8 +177,8 @@ public class NodeHandler {
    *
    * @param node The node instance to add to this roadmap.
    */
-  public void addNode(Node<?> node) {
-    nodes.put(node.getNodeId(), node);
+  public <N extends Node<N>> void addNode(N node) {
+    node.getType().updateNode(node);
   }
 
   public void removeNodes(NodeSelection selection) {
@@ -237,21 +209,6 @@ public class NodeHandler {
       Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(deleteEdges));
       Bukkit.getPluginManager().callEvent(new NodesDeletedEvent(deleteNodes));
     });
-  }
-
-  public @Nullable
-  Node<?> getNode(int nodeId) {
-    for (Node<?> node : nodes.values()) {
-      if (node.getNodeId() == nodeId) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  public Edge getEdge(Node<?> start, Node<?> end) {
-    return edges.stream().filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end))
-            .findFirst().orElse(null);
   }
 
   /**
@@ -291,7 +248,7 @@ public class NodeHandler {
       edge = new Edge(start, end, 1);
     } catch (DataStorageException e) {
       throw new IllegalArgumentException("Error while connecting edges: " + start + " and " + end,
-              e);
+          e);
     }
 
     start.getEdges().add(edge);
@@ -305,7 +262,7 @@ public class NodeHandler {
           other = new Edge(start, end, 1);
         } catch (DataStorageException e) {
           throw new IllegalArgumentException(
-                  "Error while connecting edges: " + start + " and " + end, e);
+              "Error while connecting edges: " + start + " and " + end, e);
         }
         end.getEdges().add(other);
         edges.add(other);
@@ -314,7 +271,7 @@ public class NodeHandler {
 
     Edge finalOther = other;
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(),
-            () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
+        () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
 
     return edge;
   }
@@ -358,7 +315,7 @@ public class NodeHandler {
 
     Edge finalOther = other;
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(),
-            () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
+        () -> Bukkit.getPluginManager().callEvent(new EdgesCreatedEvent(edge, finalOther)));
 
     return edge;
   }
@@ -382,26 +339,12 @@ public class NodeHandler {
     edges.remove(edge);
 
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(),
-            () -> Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(edge)));
-  }
-
-  public Collection<Edge> getEdgesFrom(Node<?> node) {
-    return node.getEdges();
-  }
-
-  public Collection<Edge> getEdgesTo(Node<?> node) {
-    Collection<Edge> ret = new ArrayList<>();
-    for (Edge edge : edges) {
-      if (edge.getEnd().equals(node)) {
-        ret.add(edge);
-      }
-    }
-    return ret;
+        () -> Bukkit.getPluginManager().callEvent(new EdgesDeletedEvent(edge)));
   }
 
   public Collection<Edge> getEdgesAt(Node<?> node) {
     return edges.stream().filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node))
-            .collect(Collectors.toSet());
+        .collect(Collectors.toSet());
   }
 
   public Collection<Node<?>> getNodes() {
@@ -411,9 +354,9 @@ public class NodeHandler {
   public @Nullable
   Edge getEdge(int aId, int bId) {
     return edges.stream()
-            .filter(edge -> edge.getStart().getNodeId() == aId && edge.getEnd().getNodeId() == bId)
-            .findAny()
-            .orElse(null);
+        .filter(edge -> edge.getStart().getNodeId() == aId && edge.getEnd().getNodeId() == bId)
+        .findAny()
+        .orElse(null);
   }
 
   /**
@@ -439,12 +382,45 @@ public class NodeHandler {
       node.setLocation(event.getNewPositionModified());
     }
     Bukkit.getPluginManager()
-            .callEvent(new NodeLocationChangedEvent(nodes, event.getNewPositionModified()));
+        .callEvent(new NodeLocationChangedEvent(nodes, event.getNewPositionModified()));
     return true;
   }
 
   public void setNodeCurveLength(NodeSelection nodes, Double length) {
     nodes.forEach(node -> node.setCurveLength(length));
     Bukkit.getPluginManager().callEvent(new NodeCurveLengthChangedEvent(nodes, length));
+  }
+
+  // Editing
+
+  public NodeGroupEditor getNodeGroupEditor(NamespacedKey key) {
+    NodeGroupEditor editor = editors.get(key);
+    if (editor == null) {
+      NodeGroup group = roadMaps.get(key);
+      if (roadMap == null) {
+        throw new IllegalArgumentException(
+            "No roadmap exists with key '" + key + "'. Cannot create editor.");
+      }
+      editor = editModeFactory.apply(roadMap);
+      editors.put(editor);
+    }
+    return editor;
+  }
+
+  public void cancelAllEditModes() {
+    editors.values().forEach(NodeGroupEditor::cancelEditModes);
+  }
+
+  public boolean isPlayerEditingRoadMap(Player player) {
+    return editors.values().stream()
+        .anyMatch(roadMapEditor -> roadMapEditor.isEditing(player));
+  }
+
+  public @Nullable NamespacedKey getGroupEditedBy(Player player) {
+    return editors.values().stream()
+        .filter(re -> re.isEditing(player))
+        .map(NodeGroupEditor::getKey)
+        .findFirst()
+        .orElse(null);
   }
 }

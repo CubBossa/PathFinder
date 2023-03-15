@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -38,20 +37,9 @@ public interface DataStorage extends
   void disconnect();
 
 
-  Map<NamespacedKey, RoadMap> loadRoadMaps();
-
-  void updateRoadMap(RoadMap roadMap);
-
-  default void deleteRoadMap(RoadMap roadMap) {
-    deleteRoadMap(roadMap.getKey());
-  }
-
-  void deleteRoadMap(NamespacedKey key);
-
-
   void saveEdges(Collection<Edge> edges);
 
-  Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope);
+  Collection<Edge> loadEdges(Map<Integer, Node<?>> scope);
 
   void deleteEdgesFrom(Node<?> start);
 

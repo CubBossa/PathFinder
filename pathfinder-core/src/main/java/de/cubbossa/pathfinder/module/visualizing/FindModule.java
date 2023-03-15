@@ -5,14 +5,12 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Navigable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
@@ -34,11 +32,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -102,12 +97,12 @@ public class FindModule implements Listener, PathPluginExtension {
     registerListener();
 
     registerFindPredicate(navigationRequestContext -> {
-      if (!(navigationRequestContext.navigable() instanceof Groupable<?> groupable)) {
+      if (!(navigationRequestContext.node() instanceof Groupable<?> groupable)) {
         return true;
       }
       Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
-      return NodeGroupHandler.getInstance().isNavigable(groupable) && NodeGroupHandler.getInstance()
-          .hasPermission(player, groupable);
+      return NodeGroupHandler.getInstance().isNavigable(groupable)
+          && NodeGroupHandler.getInstance().hasPermission(player, groupable);
     });
   }
 
@@ -199,6 +194,7 @@ public class FindModule implements Listener, PathPluginExtension {
       return NavigateResult.FAIL_BLOCKED;
     }
 
+    // TODO we don't need 1 but one fore each segment where visualizers change
     PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
     VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
     visualizerPath.addAll(path);
@@ -310,7 +306,7 @@ public class FindModule implements Listener, PathPluginExtension {
     FAIL_TOO_FAR_AWAY;
   }
 
-  public record NavigationRequestContext(UUID playerId, Navigable navigable) {
+  public record NavigationRequestContext(UUID playerId, Node<?> node) {
   }
 
   public record SearchInfo(UUID playerId, VisualizerPath path, Location target, float distance) {

@@ -1,36 +1,22 @@
 package de.cubbossa.pathfinder.core.nodegroup;
 
-import de.cubbossa.pathfinder.Named;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.Modified;
+import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Navigable;
-import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.modifier.GroupModifier;
-import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTermHolder;
-import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.logging.Level;
-
-import de.cubbossa.pathfinder.util.HashedRegistry;
+import java.util.Map;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.entity.Player;
 
-public class NodeGroup extends HashSet<Groupable<?>>
-    implements Keyed, Discoverable, Navigable, SearchTermHolder {
+public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified {
 
   private final NamespacedKey key;
   @Getter
-  private final HashedRegistry<GroupModifier> modifiers;
+  private final Map<Class<? extends Modifier>, Modifier> modifiers;
 
   public NodeGroup(NamespacedKey key) {
     this(key, new HashSet<>());
@@ -39,19 +25,7 @@ public class NodeGroup extends HashSet<Groupable<?>>
   public NodeGroup(NamespacedKey key, Collection<Waypoint> nodes) {
     super(nodes);
     this.key = key;
-    this.modifiers = new HashedRegistry<>();
-  }
-
-  public void addModifier(GroupModifier modifier) {
-    this.modifiers.put(modifier);
-  }
-
-  public boolean hasModifier(GroupModifier modifier) {
-    return this.modifiers.containsKey(modifier.getKey());
-  }
-
-  public boolean hasModifier(Class<? extends GroupModifier> modifier) {
-
+    this.modifiers = new HashMap<>();
   }
 
   @Override
@@ -89,11 +63,6 @@ public class NodeGroup extends HashSet<Groupable<?>>
   }
 
   @Override
-  public Collection<Node<?>> getGroup() {
-    return new HashSet<>(this);
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -113,32 +82,37 @@ public class NodeGroup extends HashSet<Groupable<?>>
   }
 
   @Override
-  public boolean fulfillsDiscoveringRequirements(Player player) {
-    if (!discoverable) {
-      return false;
-    }
-    if (permission != null && !player.hasPermission(permission)) {
-      return false;
-    }
-    for (Node<?> node : this) {
-      if (node == null) {
-        PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
-        continue;
-      }
-      float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), node);
-      if (node.getLocation().getX() - player.getLocation().getX() > dist) {
-        continue;
-      }
-      if (node.getLocation().distance(player.getLocation()) > dist) {
-        continue;
-      }
-      return true;
-    }
-    return false;
+  public NamespacedKey getKey() {
+    return key;
   }
 
   @Override
-  public NamespacedKey getKey() {
-    return key;
+  public <C extends Modifier> boolean hasModifier(Class<C> modifierClass) {
+    return modifiers.containsKey(modifierClass);
+  }
+
+  @Override
+  public void addModifier(Modifier modifier) {
+    modifiers.put(modifier.getClass(), modifier);
+  }
+
+  @Override
+  public <C extends Modifier> C getModifier(Class<C> modifierClass) {
+    return (C) modifiers.get(modifierClass);
+  }
+
+  @Override
+  public <C extends Modifier> C removeModifier(Class<C> modifierClass) {
+    return (C) modifiers.remove(modifierClass);
+  }
+
+  @Override
+  public <C extends Modifier> C removeModifier(C modifier) {
+    return (C) modifiers.remove(modifier.getClass());
+  }
+
+  @Override
+  public void clearModifiers() {
+    modifiers.clear();
   }
 }

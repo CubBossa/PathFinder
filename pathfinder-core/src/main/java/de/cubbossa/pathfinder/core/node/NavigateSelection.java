@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class NavigateSelection extends HashSet<Navigable> {
+public class NavigateSelection extends HashSet<Node<?>> {
 
-  public NavigateSelection(Collection<Navigable> collection) {
+  public NavigateSelection(Collection<Node<?>> collection) {
     super(collection);
   }
 }

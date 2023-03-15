@@ -7,9 +7,10 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.CurveLengthModifier;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
@@ -43,24 +44,9 @@ public class SelectionUtils {
           .execute(c -> c.getScope().stream()
               .filter(n -> c.getValue().contains(n.getNodeId()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> RoadMapHandler.getInstance().getRoadMaps().values().stream()
-              .map(RoadMap::getNodes)
-              .flatMap(Collection::stream)
+          .suggestStrings(c -> NodeHandler.getInstance().getNodes().stream()
               .map(Node::getNodeId)
               .map(integer -> integer + "")
-              .collect(Collectors.toList()));
-
-  public static final NodeSelectionParser.Argument<NumberRange> TANGENT_LENGTH =
-      NodeSelectionParser.argument(r -> NumberRange.fromString(r.getRemaining()))
-          .execute(c -> c.getScope().stream()
-              .filter(n -> {
-                Double curveLength = n.getCurveLength();
-                if (curveLength == null) {
-                  curveLength = RoadMapHandler.getInstance().getRoadMap(n.getRoadMapKey())
-                      .getDefaultCurveLength();
-                }
-                return c.getValue().contains(curveLength);
-              })
               .collect(Collectors.toList()));
 
   public static final NodeSelectionParser.Argument<NumberRange> DISTANCE =
@@ -74,21 +60,6 @@ public class SelectionUtils {
             }
             return Lists.newArrayList();
           });
-
-  public static final NodeSelectionParser.Argument<NamespacedKey> ROADMAP =
-      new NodeSelectionParser.Argument<>(
-          r -> NamespacedKey.fromString(r.getRemaining()))
-          .execute(c -> {
-            NamespacedKey roadmapKey = c.getValue();
-            return c.getScope().stream()
-                .filter(n -> n.getRoadMapKey().equals(roadmapKey))
-                .collect(Collectors.toList());
-          })
-          .suggestStrings(RoadMapHandler.getInstance().getRoadMapsStream()
-              .map(RoadMap::getKey)
-              .map(NamespacedKey::toString)
-              .collect(Collectors.toList()));
-
 
   public static final NodeSelectionParser.Argument<World> WORLD =
       new NodeSelectionParser.Argument<>(r -> {
@@ -176,10 +147,8 @@ public class SelectionUtils {
       "offset", OFFSET,
       "limit", LIMIT,
       "distance", DISTANCE,
-      "curvelength", TANGENT_LENGTH,
       "sort", SORT,
       "world", WORLD,
-      "roadmap", ROADMAP,
       "group", GROUP
   );
 
@@ -192,12 +161,7 @@ public class SelectionUtils {
   public static NodeSelection getNodeSelection(Player player, String selectString)
       throws CommandSyntaxException, ParseCancellationException {
 
-    return new NodeSelection(parser.parse(
-        player,
-        selectString,
-        RoadMapHandler.getInstance().getRoadMaps().values().stream()
-            .flatMap(roadMap -> roadMap.getNodes().stream())
-            .collect(Collectors.toList())));
+    return new NodeSelection(parser.parse(player, selectString, NodeHandler.getInstance().getNodes().stream().toList()));
   }
 
   public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(

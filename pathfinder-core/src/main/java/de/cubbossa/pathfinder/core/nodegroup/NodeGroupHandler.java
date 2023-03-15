@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.nodegroup;
 
-import com.google.common.collect.Lists;
+import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
@@ -9,19 +9,21 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupCreatedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDiscoverableChangedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupFindDistanceChangedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupNameChangedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupNavigableChangedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupPermissionChangedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemoveEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.nodegroup.modifier.GroupModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.Getter;
@@ -54,7 +56,10 @@ public class NodeGroupHandler implements Listener {
       if (group == null) {
         continue;
       }
-      group.addSearchTermStrings(entry.getValue());
+      group.addModifier(new NavigableModifier(entry.getValue().stream()
+          .map(SimpleSearchTerm::new)
+          .toArray(SearchTerm[]::new))
+      );
     }
   }
 
@@ -62,7 +67,7 @@ public class NodeGroupHandler implements Listener {
     return groups.values();
   }
 
-  public Collection<NodeGroup> getNodeGroups(Collection<GroupModifier> withModifiers) {
+  public Collection<NodeGroup> getNodeGroups(Collection<Class<Modifier>> withModifiers) {
     return groups.values().stream()
             .filter(group -> withModifiers.stream().allMatch(group::hasModifier))
             .collect(Collectors.toList());
@@ -101,11 +106,7 @@ public class NodeGroupHandler implements Listener {
     }
 
     NodeGroup group = new NodeGroup(key);
-    group.addSearchTermStrings(Lists.newArrayList(key.getKey()));
     Bukkit.getPluginManager().callEvent(new NodeGroupCreatedEvent(group));
-    Bukkit.getPluginManager().callEvent(new NodeGroupSearchTermsChangedEvent(
-        group, NodeGroupSearchTermsChangedEvent.Action.ADD, Lists.newArrayList(key.getKey())
-    ));
     groups.put(group);
     return group;
   }
@@ -121,12 +122,6 @@ public class NodeGroupHandler implements Listener {
     group.clear();
   }
 
-  public void setNodeGroupName(NodeGroup group, String newName) {
-    group.setNameFormat(newName);
-    NodeGroupNameChangedEvent event = new NodeGroupNameChangedEvent(group, newName);
-    Bukkit.getPluginManager().callEvent(event);
-  }
-
   public void setNodeGroupPermission(NodeGroup group, @Nullable String permission) {
     group.addModifier(new PermissionModifier(permission));
     NodeGroupPermissionChangedEvent event = new NodeGroupPermissionChangedEvent(group, permission);
@@ -134,19 +129,28 @@ public class NodeGroupHandler implements Listener {
   }
 
   public void setNodeGroupDiscoverable(NodeGroup group, boolean value) {
-    group.setDiscoverable(value);
+    if (value) {
+      group.addModifier(new DiscoverableModifier());
+    } else {
+      group.removeModifier(DiscoverableModifier.class);
+    }
+    group.addModifier(new DiscoverableModifier());
     NodeGroupDiscoverableChangedEvent event = new NodeGroupDiscoverableChangedEvent(group, value);
     Bukkit.getPluginManager().callEvent(event);
   }
 
   public void setNodeGroupNavigable(NodeGroup group, boolean value) {
-    group.setNavigable(value);
+    if (value) {
+      group.addModifier(new NavigableModifier());
+    } else {
+      group.removeModifier(NavigableModifier.class);
+    }
     NodeGroupNavigableChangedEvent event = new NodeGroupNavigableChangedEvent(group, value);
     Bukkit.getPluginManager().callEvent(event);
   }
 
   public void setNodeGroupFindDistance(NodeGroup group, float value) {
-    group.setFindDistance(value);
+    group.addModifier(new FindDistanceModifier(value));
     NodeGroupFindDistanceChangedEvent event = new NodeGroupFindDistanceChangedEvent(group, value);
     Bukkit.getPluginManager().callEvent(event);
   }
@@ -185,12 +189,16 @@ public class NodeGroupHandler implements Listener {
     if (groupable.getGroups().isEmpty()) {
       return 1.5f;
     }
+
+    ToDoubleFunction<NodeGroup> doubleExtractor = g -> {
+      FindDistanceModifier mod = g.getModifier(FindDistanceModifier.class);
+      return mod == null ? 1.5f : mod.distance();
+    };
+
     return (float) switch (PathPlugin.getInstance().getConfiguration().navigation.distancePolicy) {
-      case SMALLEST ->
-          groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).min().orElse(1.5);
-      case LARGEST ->
-          groupable.getGroups().stream().mapToDouble(NodeGroup::getFindDistance).max().orElse(1.5);
-      case NATURAL -> groupable.getGroups().stream().findFirst().get().getFindDistance();
+      case SMALLEST -> groupable.getGroups().stream().mapToDouble(doubleExtractor).min().orElse(1.5);
+      case LARGEST -> groupable.getGroups().stream().mapToDouble(doubleExtractor).max().orElse(1.5);
+      case NATURAL -> doubleExtractor.applyAsDouble(groupable.getGroups().stream().findFirst().get());
     };
   }
 
@@ -199,11 +207,15 @@ public class NodeGroupHandler implements Listener {
       return false;
     }
     if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupPermissions) {
-      return groupable.getGroups().stream().allMatch(
-          group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+      return groupable.getGroups().stream().allMatch(group -> {
+        PermissionModifier mod = group.getModifier(PermissionModifier.class);
+        return mod == null || player.hasPermission(mod.permission());
+      });
     }
-    return groupable.getGroups().stream().anyMatch(
-        group -> group.getPermission() == null || player.hasPermission(group.getPermission()));
+    return groupable.getGroups().stream().anyMatch(group -> {
+      PermissionModifier mod = group.getModifier(PermissionModifier.class);
+      return mod == null || player.hasPermission(mod.permission());
+    });
   }
 
   public boolean isNavigable(Groupable<?> groupable) {
@@ -211,9 +223,9 @@ public class NodeGroupHandler implements Listener {
       return false;
     }
     if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupsNavigable) {
-      return groupable.getGroups().stream().allMatch(NodeGroup::isNavigable);
+      return groupable.getGroups().stream().allMatch(g -> g.hasModifier(NavigableModifier.class));
     }
-    return groupable.getGroups().stream().anyMatch(NodeGroup::isNavigable);
+    return groupable.getGroups().stream().anyMatch(g -> g.hasModifier(NavigableModifier.class));
   }
 
   public boolean isDiscoverable(Groupable<?> groupable) {
@@ -221,9 +233,9 @@ public class NodeGroupHandler implements Listener {
       return false;
     }
     if (PathPlugin.getInstance().getConfiguration().navigation.requireAllGroupsNavigable) {
-      return groupable.getGroups().stream().allMatch(NodeGroup::isDiscoverable);
+      return groupable.getGroups().stream().allMatch(g -> g.hasModifier(DiscoverableModifier.class));
     }
-    return groupable.getGroups().stream().anyMatch(NodeGroup::isDiscoverable);
+    return groupable.getGroups().stream().anyMatch(g -> g.hasModifier(DiscoverableModifier.class));
   }
 
   @EventHandler

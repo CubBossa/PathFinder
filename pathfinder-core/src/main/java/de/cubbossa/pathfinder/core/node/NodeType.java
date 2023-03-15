@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
 
-  public record NodeCreationContext(int id, Location location, boolean persistent) {
+  public record NodeCreationContext(Location location, boolean persistent) {
   }
 
   private final NamespacedKey key;

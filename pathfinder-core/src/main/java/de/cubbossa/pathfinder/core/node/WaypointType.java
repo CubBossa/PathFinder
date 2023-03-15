@@ -19,7 +19,7 @@ public class WaypointType extends NodeType<Waypoint> {
 
   @Override
   public Waypoint createNode(NodeCreationContext context) {
-    Waypoint waypoint = new Waypoint(context.id(), context.roadMap(), context.persistent());
+    Waypoint waypoint = new Waypoint(context.id(), context.persistent());
     waypoint.setLocation(context.location());
     return waypoint;
   }

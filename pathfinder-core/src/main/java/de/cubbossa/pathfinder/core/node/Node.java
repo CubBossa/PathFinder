@@ -7,7 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Node<N extends Node<N>> extends Navigable, PersistencyHolder, Comparable<Node<?>> {
+public interface Node<N extends Node<N>> extends PersistencyHolder, Comparable<Node<?>> {
 
   int getNodeId();
 

@@ -15,10 +15,7 @@ public class DiscoverListener implements Listener {
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
     for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
-      if (!group.isDiscoverable()) {
-        continue;
-      }
-      if (!group.fulfillsDiscoveringRequirements(event.getPlayer())) {
+      if (!DiscoverHandler.getInstance().fulfillsDiscoveringRequirements(group, event.getPlayer())) {
         continue;
       }
       DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
