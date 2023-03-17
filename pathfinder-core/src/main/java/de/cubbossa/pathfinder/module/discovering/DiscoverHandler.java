@@ -4,7 +4,6 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.data.DiscoverInfo;

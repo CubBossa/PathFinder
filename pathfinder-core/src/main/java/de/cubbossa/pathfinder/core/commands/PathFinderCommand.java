@@ -5,7 +5,7 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.data.DataExporter;
-import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
 import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -100,7 +99,7 @@ public class PathFinderCommand extends Command {
                     if (!fileName.endsWith(".db")) {
                       fileName = fileName + ".db";
                     }
-                    DataStorage storage =
+                    ApplicationLayer storage =
                         new SqliteDataStorage(new File(pl.getDataFolder(), "exports/" + fileName));
                     try {
                       storage.connect();
@@ -126,7 +125,7 @@ public class PathFinderCommand extends Command {
                     }
                     File directory = new File(pl.getDataFolder(), "exports/" + dir);
                     directory.mkdirs();
-                    DataStorage storage = new YmlDataStorage(directory);
+                    ApplicationLayer storage = new YmlDataStorage(directory);
                     try {
                       storage.connect();
                       DataExporter.all().save(storage);

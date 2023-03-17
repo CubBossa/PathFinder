@@ -6,6 +6,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 public class WaypointType extends NodeType<Waypoint> {
 
   public WaypointType() {
@@ -19,7 +21,7 @@ public class WaypointType extends NodeType<Waypoint> {
 
   @Override
   public Waypoint createNode(NodeCreationContext context) {
-    Waypoint waypoint = new Waypoint(context.id(), context.persistent());
+    Waypoint waypoint = new Waypoint(UUID.randomUUID(), context.persistent());
     waypoint.setLocation(context.location());
     return waypoint;
   }

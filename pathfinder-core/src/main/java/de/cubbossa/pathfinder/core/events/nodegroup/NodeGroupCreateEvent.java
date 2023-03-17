@@ -1,18 +1,21 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.NamespacedKey;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 @Getter
-public class NodeGroupCreatedEvent extends Event {
+public class NodeGroupCreateEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final NodeGroup group;
+  private final NamespacedKey group;
+  @Setter
+  private boolean cancelled;
 
-  public NodeGroupCreatedEvent(NodeGroup group) {
+  public NodeGroupCreateEvent(NamespacedKey group) {
     this.group = group;
   }
 

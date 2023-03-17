@@ -1,18 +1,22 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.NamespacedKey;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 @Getter
-public class NodeGroupDeletedEvent extends Event {
+public class NodeGroupDeleteEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final NodeGroup group;
+  private final NamespacedKey group;
+  @Setter
+  private boolean cancelled = false;
 
-  public NodeGroupDeletedEvent(NodeGroup group) {
+  public NodeGroupDeleteEvent(NamespacedKey group) {
     this.group = group;
   }
 

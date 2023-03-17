@@ -30,7 +30,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class YmlDataStorage implements DataStorage {
+public class YmlDataStorage implements ApplicationLayer {
 
 
   private static final String DIR_RM = "roadmaps";
@@ -437,7 +437,7 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID playerId, Discoverable discoverable, LocalDateTime foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID playerId, NodeGroup discoverable, LocalDateTime foundDate) {
     File file;
     YamlConfiguration config;
     ConfigurationSection cfg;

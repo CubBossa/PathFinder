@@ -12,14 +12,10 @@ import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.data.DataStorageException;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -33,8 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.TreeMap;
-import java.util.logging.Level;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.Getter;
@@ -49,7 +44,7 @@ public class NodeHandler {
   @Getter
   private static NodeHandler instance;
 
-  private final DataStorage dataStorage;
+  private final ApplicationLayer dataStorage;
   private final NodeGroupEditorFactory editModeFactory;
   @Getter
   private final HashedRegistry<NodeGroupEditor> editors;
@@ -57,7 +52,7 @@ public class NodeHandler {
   @Getter
   private final HashedRegistry<NodeType<?>> types;
 
-  public NodeHandler(DataStorage dataStorage) {
+  public NodeHandler(ApplicationLayer dataStorage) {
     instance = this;
     this.dataStorage = dataStorage;
     this.types = new HashedRegistry<>();
@@ -88,39 +83,29 @@ public class NodeHandler {
     types.remove(key);
   }
 
-  public Graph<Node<?>> toGraph(Player permissionQuery, @Nullable PlayerNode player) {
-    Graph<Node<?>> graph = new Graph<>();
-    nodes.values().stream()
-        .filter(node -> !(node instanceof Groupable<?> groupable) || groupable.getGroups().stream()
-            .allMatch( //TODO instead use event and drop nodes while processing
-                g -> g.getPermission() == null || permissionQuery.hasPermission(g.getPermission())))
-        .forEach(graph::addNode);
-    edges.forEach(e -> {
-      try {
-        graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength());
-      } catch (IllegalArgumentException ignore) {
-        // we know that the node might not be in the graph due to its permission node.
-      }
-    });
-
-    if (player != null) {
-      graph.addNode(player);
-      LocationWeightSolver<Node<?>> solver =
-          LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
-              .getConfiguration().navigation.nearestLocationSolver);
-      Map<Node<?>, Double> weighted = solver.solve(player, graph);
-
-      weighted.forEach((node, weight) -> graph.connect(player, node, weight));
-    }
-
-    return graph;
+  public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
+    return createGraph(player, new ArrayList<>());
   }
 
-  public NavigateSelection getNavigables() {
-    return new NavigateSelection(NodeGroupHandler.getInstance().getNodeGroups().stream()
-        .filter(group -> group.hasModifier(NavigableModifier.class))
-        .flatMap(Collection::stream)
-        .collect(Collectors.toSet()));
+  public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player, Collection<NodeGroup> filter) {
+    return dataStorage.getNodesByGroups(filter).thenApply(nodes -> {
+      Graph<Node<?>> graph = new Graph<>();
+      nodes.forEach(graph::addNode);
+      for (Node<?> node : nodes) {
+        node.getEdges().forEach(e -> graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength()));
+      }
+
+      if (player != null) {
+        graph.addNode(player);
+        LocationWeightSolver<Node<?>> solver =
+                LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
+                        .getConfiguration().navigation.nearestLocationSolver);
+        Map<Node<?>, Double> weighted = solver.solve(player, graph);
+
+        weighted.forEach((node, weight) -> graph.connect(player, node, weight));
+      }
+      return graph;
+    });
   }
 
   /**

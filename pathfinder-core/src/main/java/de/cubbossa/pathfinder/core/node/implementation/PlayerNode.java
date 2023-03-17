@@ -7,6 +7,8 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
+
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -38,6 +40,11 @@ public class PlayerNode implements Node<PlayerNode> {
   }
 
   @Override
+  public UUID getNodeId() {
+    return player.getUniqueId();
+  }
+
+  @Override
   public NodeType<PlayerNode> getType() {
     return TYPE;
   }
@@ -45,21 +52,6 @@ public class PlayerNode implements Node<PlayerNode> {
   @Override
   public boolean isPersistent() {
     return false;
-  }
-
-  @Override
-  public Collection<Node<?>> getGroup() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public Collection<SearchTerm> getSearchTerms() {
-    return null;
-  }
-
-  @Override
-  public int getNodeId() {
-    return -1;
   }
 
   @Override

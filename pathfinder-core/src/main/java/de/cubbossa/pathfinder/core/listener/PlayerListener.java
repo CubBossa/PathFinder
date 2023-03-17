@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.core.listener;
 
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

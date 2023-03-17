@@ -17,7 +17,10 @@ public class FindLocationCommand extends Command {
     then(CustomArgs.location("location")
         .executesPlayer((player, args) -> {
           Location target = (Location) args[0];
-          FindModule.printResult(FindModule.getInstance().findPath(player, target), player);
+
+          FindModule.getInstance().findPath(player, target).thenAccept(navigateResult -> {
+            FindModule.printResult(navigateResult, player);
+          });
         })
     );
   }

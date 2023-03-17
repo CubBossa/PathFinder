@@ -49,7 +49,7 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public abstract class SqlDataStorage implements DataStorage {
+public abstract class SqlDataStorage implements ApplicationLayer {
 
   abstract ConnectionProvider getConnectionProvider();
 
@@ -472,7 +472,7 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, LocalDateTime foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable, LocalDateTime foundDate) {
     create
         .insertInto(PATHFINDER_DISCOVERINGS)
         .values(discoverable.getKey().toString(), player, foundDate)

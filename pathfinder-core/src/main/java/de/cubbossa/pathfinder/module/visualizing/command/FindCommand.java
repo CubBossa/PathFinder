@@ -19,7 +19,10 @@ public class FindCommand extends Command {
         .executesPlayer((player, args) -> {
           Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             NodeSelection targets = (NodeSelection) args[0];
-            FindModule.printResult(FindModule.getInstance().findPath(player, targets), player);
+
+              FindModule.getInstance().findPath(player, targets).thenAccept(navigateResult -> {
+                  FindModule.printResult(navigateResult, player);
+              });
           });
         })
     );

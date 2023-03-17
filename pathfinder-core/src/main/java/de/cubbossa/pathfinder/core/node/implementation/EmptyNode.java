@@ -7,6 +7,8 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
+
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,6 +32,7 @@ public class EmptyNode implements Node<EmptyNode> {
     }
   };
 
+  private final UUID uuid = UUID.randomUUID();
   @Getter
   private final Location location;
 
@@ -48,18 +51,8 @@ public class EmptyNode implements Node<EmptyNode> {
   }
 
   @Override
-  public Collection<SearchTerm> getSearchTerms() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public Collection<Node<?>> getGroup() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public int getNodeId() {
-    return -1;
+  public UUID getNodeId() {
+    return uuid;
   }
 
   @Override

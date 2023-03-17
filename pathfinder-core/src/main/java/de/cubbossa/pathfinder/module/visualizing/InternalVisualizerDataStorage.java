@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
-import de.cubbossa.pathfinder.data.DataStorage;
+import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.data.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import java.util.Map;
@@ -12,7 +12,7 @@ public class InternalVisualizerDataStorage<T extends PathVisualizer<T, ?>>
     implements VisualizerDataStorage<T> {
 
   private final VisualizerType<T> type;
-  private final DataStorage storage;
+  private final ApplicationLayer storage;
 
   @Override
   public Map<NamespacedKey, T> loadPathVisualizer() {

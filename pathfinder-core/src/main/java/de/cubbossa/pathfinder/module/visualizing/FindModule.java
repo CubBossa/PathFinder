@@ -9,9 +9,6 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
-import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
@@ -20,8 +17,6 @@ import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -33,13 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
@@ -134,12 +129,12 @@ public class FindModule implements Listener, PathPluginExtension {
     return activePaths.get(player.getUniqueId());
   }
 
-  public NavigateResult findPath(Player player, Location location) {
+  public CompletableFuture<NavigateResult> findPath(Player player, Location location) {
     double maxDist = PathPlugin.getInstance().getConfiguration().navigation.findLocation.maxDistance;
     return findPath(player, location, maxDist);
   }
 
-  public NavigateResult findPath(Player player, Location location, double maxDist) {
+  public CompletableFuture<NavigateResult> findPath(Player player, Location location, double maxDist) {
     if (maxDist < 0) {
       maxDist = Double.MAX_VALUE;
     }
@@ -161,12 +156,12 @@ public class FindModule implements Listener, PathPluginExtension {
       }
     }
     if (closest == null) {
-      return NavigateResult.FAIL_TOO_FAR_AWAY;
+      return CompletableFuture.completedFuture(NavigateResult.FAIL_TOO_FAR_AWAY);
     }
     Waypoint target = NodeHandler.getInstance().createNode(NodeHandler.WAYPOINT_TYPE, location, false);
     NodeHandler.getInstance().connectNodes(closest, target, false);
 
-    NavigateResult result = findPath(player, new NodeSelection(target));
+    CompletableFuture<NavigateResult> result = findPath(player, new NodeSelection(target));
 
     NodeHandler.getInstance().disconnectNodes(closest, target);
     NodeHandler.getInstance().removeNodes(target);
@@ -174,43 +169,40 @@ public class FindModule implements Listener, PathPluginExtension {
     return result;
   }
 
-  public NavigateResult findPath(Player player, NodeSelection targets) {
+  public CompletableFuture<NavigateResult> findPath(Player player, NodeSelection targets) {
 
     Collection<Node<?>> nodes = NodeHandler.getInstance().getNodes();
     if (nodes.size() == 0) {
-      return NavigateResult.FAIL_EMPTY;
+      return CompletableFuture.completedFuture(NavigateResult.FAIL_EMPTY);
     }
 
     PlayerNode playerNode = new PlayerNode(player);
-    Graph<Node<?>> graph = NodeHandler.getInstance().toGraph(player, playerNode);
 
-    NodeHandler.getInstance().toGraph(player, playerNode);
+    return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
+      PathSolver<Node<?>> pathSolver = new SimpleDijkstra<>();
+      List<Node<?>> path;
+      try {
+        path = pathSolver.solvePath(graph, playerNode, targets);
+      } catch (NoPathFoundException e) {
+        return NavigateResult.FAIL_BLOCKED;
+      }
 
-    PathSolver<Node<?>> pathSolver = new SimpleDijkstra<>();
-    List<Node<?>> path;
-    try {
-      path = pathSolver.solvePath(graph, playerNode, targets);
-    } catch (NoPathFoundException e) {
-      return NavigateResult.FAIL_BLOCKED;
-    }
+      VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId());
+      visualizerPath.addAll(path);
+      NavigateResult result =
+              setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
+                      NodeGroupHandler.getInstance()
+                              .getFindDistance((Groupable<?>) visualizerPath.get(visualizerPath.size() - 1)));
 
-    // TODO we don't need 1 but one fore each segment where visualizers change
-    PathVisualizer<?, ?> vis = firstRoadMap.getVisualizer();
-    VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId(), vis);
-    visualizerPath.addAll(path);
-    NavigateResult result =
-        setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
-            NodeGroupHandler.getInstance()
-                .getFindDistance((Groupable<?>) visualizerPath.get(visualizerPath.size() - 1)));
-
-    if (result == NavigateResult.SUCCESS) {
-      // Refresh cancel-path command so that it is visible
-      cancelPathCommand.refresh(player);
-      EffectHandler.getInstance()
-          .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
-              player.getLocation());
-    }
-    return result;
+      if (result == NavigateResult.SUCCESS) {
+        // Refresh cancel-path command so that it is visible
+        cancelPathCommand.refresh(player);
+        EffectHandler.getInstance()
+                .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
+                        player.getLocation());
+      }
+      return result;
+    });
   }
 
   public void reachTarget(SearchInfo info) {
@@ -226,11 +218,6 @@ public class FindModule implements Listener, PathPluginExtension {
 
   public NavigateResult setPath(UUID playerId, @NotNull VisualizerPath<?> path, Location target,
                                 float distance) {
-    if (path.getVisualizer() == null) {
-      TranslationHandler.getInstance()
-          .sendMessage(Messages.CMD_FIND_NO_VIS, Bukkit.getPlayer(playerId));
-      return NavigateResult.FAIL_NO_VISUALIZER_SELECTED;
-    }
     PathStartEvent event = new PathStartEvent(playerId, path, target, distance);
     Bukkit.getPluginManager().callEvent(event);
     if (event.isCancelled()) {
@@ -259,8 +246,7 @@ public class FindModule implements Listener, PathPluginExtension {
     Player player = Bukkit.getPlayer(info.playerId());
     cancelPathCommand.refresh(player);
     EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player,
-            player.getLocation());
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player, player.getLocation());
   }
 
   public void cancelPath(UUID playerId) {
@@ -273,36 +259,20 @@ public class FindModule implements Listener, PathPluginExtension {
     unsetPath(info);
     Player player = Bukkit.getPlayer(info.playerId());
     EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player,
-            player.getLocation());
-  }
-
-  @EventHandler
-  public <T> void onVisualizerChanged(VisualizerPropertyChangedEvent<T> event) {
-    if (!event.isVisual()) {
-      return;
-    }
-    activePaths.forEach((uuid, info) -> {
-      if (info.path().getVisualizer().equals(event.getVisualizer())) {
-        info.path().run();
-      }
-    });
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player, player.getLocation());
   }
 
   public static void printResult(FindModule.NavigateResult result, Player player) {
     switch (result) {
       case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-      case FAIL_BLOCKED ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-      case FAIL_EMPTY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
-      case FAIL_TOO_FAR_AWAY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
+      case FAIL_BLOCKED -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+      case FAIL_EMPTY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
     }
   }
 
   public enum NavigateResult {
-    SUCCESS, FAIL_NO_VISUALIZER_SELECTED, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
+    SUCCESS, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
     FAIL_TOO_FAR_AWAY;
   }
 

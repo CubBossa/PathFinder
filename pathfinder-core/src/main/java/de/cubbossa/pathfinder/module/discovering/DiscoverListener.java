@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
+
 import java.time.LocalDateTime;
 
 import org.bukkit.event.EventHandler;

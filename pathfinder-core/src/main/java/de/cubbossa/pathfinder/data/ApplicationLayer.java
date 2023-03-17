@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.data;
 
-import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
@@ -8,17 +8,19 @@ import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import org.bukkit.NamespacedKey;
 
-public interface DataStorage extends
+public interface ApplicationLayer extends
     NodeDataStorage<Waypoint> {
 
   default void connect() throws IOException {
@@ -36,6 +38,14 @@ public interface DataStorage extends
 
   void disconnect();
 
+
+  // Nodes
+
+  CompletableFuture<Collection<Node<?>>> getNodes();
+
+  CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups);
+
+  CompletableFuture<Collection<Node<?>>> getNodes(Collection<Class<? extends Modifier>> withModifiers);
 
   void saveEdges(Collection<Edge> edges);
 
@@ -61,25 +71,27 @@ public interface DataStorage extends
   Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
 
-  HashedRegistry<NodeGroup> loadNodeGroups();
+  // NodeGroups
 
-  void updateNodeGroup(NodeGroup group);
+  CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet();
 
-  default void deleteNodeGroup(NodeGroup group) {
-    deleteNodeGroup(group.getKey());
-  }
+  CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key);
 
-  void deleteNodeGroup(NamespacedKey key);
+  CompletableFuture<Collection<NodeGroup>> getNodeGroups();
 
+  CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination);
 
-  Map<NamespacedKey, Collection<String>> loadSearchTerms();
+  CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key);
 
-  void addSearchTerms(NodeGroup group, Collection<String> searchTerms);
+  CompletableFuture<Void> deleteNodeGroup(NamespacedKey key);
 
-  void removeSearchTerms(NodeGroup group, Collection<String> searchTerms);
+  CompletableFuture<Void> assignNodeGroupModifier(NamespacedKey group, Modifier modifier);
 
+  CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group, Class<? extends Modifier> modifier);
 
-  DiscoverInfo createDiscoverInfo(UUID player, Discoverable discoverable, LocalDateTime foundDate);
+  // Discovery
+
+  DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable, LocalDateTime foundDate);
 
   Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId);
 
@@ -91,4 +103,10 @@ public interface DataStorage extends
   <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer);
 
   void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
+
+  record Pagination (int offset, int limit) {
+    public static Pagination page(int page, int elements) {
+      return new Pagination(page * elements, elements);
+    }
+  }
 }

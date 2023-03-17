@@ -4,8 +4,6 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
@@ -198,13 +196,10 @@ public class WaypointCommand extends Command {
     }
     Node<?> node = selection.get(0);
     FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
-        .resolver(Formatter.number("id", node.getNodeId()))
+        .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
         .resolver(
             Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
         .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
-        .resolver(Formatter.number("curve-length", node.getCurveLength() == null
-            ? RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey()).getDefaultCurveLength()
-            : node.getCurveLength()))
         .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
             node.getEdges().stream().map(Edge::getEnd)
                 .collect(Collectors.toCollection(NodeSelection::new)))))
@@ -219,12 +214,12 @@ public class WaypointCommand extends Command {
     Node<?> node = NodeHandler.getInstance().createNode(type, location, true);
 
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE
-            .format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId())))),
+            .format(TagResolver.resolver("id", Tag.inserting(Component.text(node.getNodeId().toString())))),
         player);
   }
 
   private void onDelete(Player player, NodeSelection selection) {
-  NodeHandler.getInstance().deleteNodes(selection);
+  NodeHandler.getInstance().removeNodes(selection);
     TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE
         .format(TagResolver.resolver("selection",
             Tag.inserting(Messages.formatNodeSelection(player, selection)))), player);
@@ -271,10 +266,6 @@ public class WaypointCommand extends Command {
               .resolver(Placeholder.component("position",
                   Messages.formatVector(n.getLocation().toVector())))
               .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-              .resolver(Formatter.number("curve-length", n.getCurveLength() == null
-                  ? RoadMapHandler.getInstance().getRoadMap(n.getRoadMapKey())
-                  .getDefaultCurveLength()
-                  : n.getCurveLength()))
               .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
                   n.getEdges().stream().map(Edge::getEnd)
                       .collect(Collectors.toCollection(NodeSelection::new)))))
@@ -293,8 +284,8 @@ public class WaypointCommand extends Command {
     for (Node<?> start : startSelection) {
       for (Node<?> end : endSelection) {
         TagResolver resolver = TagResolver.builder()
-            .resolver(Placeholder.component("start", Component.text(start.getNodeId())))
-            .resolver(Placeholder.component("end", Component.text(end.getNodeId())))
+            .resolver(Placeholder.component("start", Component.text(start.getNodeId().toString())))
+            .resolver(Placeholder.component("end", Component.text(end.getNodeId().toString())))
             .build();
 
         if (start.equals(end)) {
@@ -307,7 +298,7 @@ public class WaypointCommand extends Command {
               .sendMessage(Messages.CMD_N_CONNECT_ALREADY_CONNECTED.format(resolver), player);
           continue;
         }
-        start.connect(end);
+        NodeHandler.getInstance().connectNodes(start, end);
         TranslationHandler.getInstance()
             .sendMessage(Messages.CMD_N_CONNECT.format(resolver), player);
       }
@@ -324,11 +315,11 @@ public class WaypointCommand extends Command {
       }
       for (Node<?> end : endSelection) {
         TagResolver resolver = TagResolver.builder()
-            .resolver(Placeholder.component("start", Component.text(start.getNodeId())))
-            .resolver(Placeholder.component("end", Component.text(end.getNodeId())))
+            .resolver(Placeholder.component("start", Component.text(start.getNodeId().toString())))
+            .resolver(Placeholder.component("end", Component.text(end.getNodeId().toString())))
             .build();
 
-        start.disconnect(end);
+        NodeHandler.getInstance().disconnectNodes(start, end);
         TranslationHandler.getInstance()
             .sendMessage(Messages.CMD_N_DISCONNECT.format(resolver), player);
       }
@@ -350,6 +341,7 @@ public class WaypointCommand extends Command {
   }
 
   private void onAddGroup(Player player, NodeSelection selection, NodeGroup group) {
+    PathPlugin.
     NodeGroupHandler.getInstance().addNodes(group, selection.stream()
         .filter(node -> node instanceof Groupable<?>)
         .map(n -> (Groupable<?>) n)
@@ -357,9 +349,7 @@ public class WaypointCommand extends Command {
 
     TranslationHandler.getInstance()
         .sendMessage(Messages.CMD_N_ADD_GROUP.format(TagResolver.builder()
-            .resolver(
-                Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
-            .resolver(Placeholder.component("group", group.getDisplayName()))
+            .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
             .build()), player);
   }
 
@@ -373,9 +363,7 @@ public class WaypointCommand extends Command {
 
     TranslationHandler.getInstance()
         .sendMessage(Messages.CMD_N_REMOVE_GROUP.format(TagResolver.builder()
-            .resolver(
-                Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
-            .resolver(Placeholder.component("group", group.getDisplayName()))
+            .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(player, selection)))
             .build()), player);
   }
 
