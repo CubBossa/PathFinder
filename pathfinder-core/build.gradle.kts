@@ -294,6 +294,11 @@ jooq {
                                 userType = "org.bukkit.NamespacedKey"
                                 converter = "de.cubbossa.pathfinder.data.NamespacedKeyConverter"
                                 includeExpression = ".*key|type"
+                            },
+                            ForcedType().apply {
+                                userType = "java.util.UUID"
+                                converter = "de.cubbossa.pathfinder.data.UUIDConverter"
+                                includeExpression = "id|.*_id|world"
                             }
                         )
                     }

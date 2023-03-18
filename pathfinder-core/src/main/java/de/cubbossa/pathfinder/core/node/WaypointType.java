@@ -19,14 +19,4 @@ public class WaypointType extends NodeType<Waypoint> {
         PathPlugin.getInstance().getDatabase()
     );
   }
-
-  @Override
-  public CompletableFuture<Waypoint> createNode(NodeCreationContext context) {
-    if (getStorage() != null) {
-      return getStorage().createNode(context);
-    }
-    Waypoint waypoint = new Waypoint(UUID.randomUUID());
-    waypoint.setLocation(context.location());
-    return CompletableFuture.completedFuture(waypoint);
-  }
 }

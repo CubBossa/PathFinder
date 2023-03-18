@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.core.commands.WaypointCommand;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
+import de.cubbossa.pathfinder.data.DataStorage;
 import de.cubbossa.pathfinder.data.RemoteSqlDataStorage;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
 import de.cubbossa.pathfinder.data.YmlDataStorage;
@@ -124,7 +125,7 @@ public class PathPlugin extends JavaPlugin {
   private MiniMessage miniMessage;
 
   private File effectsFile;
-  private ApplicationLayer database;
+  private DataStorage database;
   @Setter
   private PathPluginConfig configuration;
 

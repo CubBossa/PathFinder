@@ -31,6 +31,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -38,14 +39,14 @@ import org.bukkit.util.Vector;
 
 public class EditModeMenu {
 
-  private final NodeGroup group;
+  private final NamespacedKey key;
   private final Collection<NodeGroup> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
   private Node<?> edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(NodeGroup group, Collection<NodeType<?>> types) {
-    this.group = group;
+  public EditModeMenu(NamespacedKey group, Collection<NodeType<?>> types) {
+    this.key = group;
     this.types = types;
   }
 

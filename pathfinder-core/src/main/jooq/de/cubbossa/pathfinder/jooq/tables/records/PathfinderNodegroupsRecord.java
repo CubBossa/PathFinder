@@ -46,7 +46,7 @@ public class PathfinderNodegroupsRecord extends UpdatableRecordImpl<PathfinderNo
     /**
      * Getter for <code>pathfinder_nodegroups.weight</code>.
      */
-    public int getWeight() {
+    public Double getWeight() {
         return (Double) get(1);
     }
 

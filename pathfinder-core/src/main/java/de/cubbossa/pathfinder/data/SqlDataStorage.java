@@ -2,26 +2,22 @@ package de.cubbossa.pathfinder.data;
 
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodes.PATHFINDER_NODES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderRoadmaps.PATHFINDER_ROADMAPS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
-import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodesRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderRoadmapsRecord;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
@@ -32,17 +28,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.jooq.BatchBindStep;
 import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
 import org.jooq.RecordMapper;
@@ -51,7 +46,7 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public abstract class SqlDataStorage implements ApplicationLayer {
+public abstract class SqlDataStorage implements DataStorage {
 
   abstract ConnectionProvider getConnectionProvider();
 
@@ -61,52 +56,42 @@ public abstract class SqlDataStorage implements ApplicationLayer {
   // |  Node Table                             |
   // +-----------------------------------------+
 
-  private final Function<RoadMap, RecordMapper<? super PathfinderNodesRecord, Waypoint>> nodeMapper = roadmap -> {
-    final RoadMap rm = roadmap;
-    return record -> {
-      int id = record.getId();
-      double x = record.getX();
-      double y = record.getY();
-      double z = record.getZ();
-      UUID worldUid = UUID.fromString(record.getWorld());
-      Double curveLength = record.getPathCurveLength();
+  private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper = record -> {
+    UUID id = record.getId();
+    double x = record.getX();
+    double y = record.getY();
+    double z = record.getZ();
+    UUID worldUid = record.getWorld();
 
-      Waypoint node = new Waypoint(id, rm, true);
-      node.setLocation(new Location(Bukkit.getWorld(worldUid), x, y, z));
-      node.setCurveLength(curveLength);
-      return node;
-    };
+    Waypoint node = new Waypoint(id);
+    node.setLocation(new Location(Bukkit.getWorld(worldUid), x, y, z));
+    return node;
   };
 
   // +-----------------------------------------+
   // |  Edge Table                             |
   // +-----------------------------------------+
 
-  private final Function<Map<Integer, Node<?>>, RecordMapper<? super PathfinderEdgesRecord, Edge>> edgeMapper =
-      map -> record -> {
-        int startId = record.getStartId();
-        int endId = record.getEndId();
+  private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
+      record -> {
+        UUID startId = record.getStartId();
+        UUID endId = record.getEndId();
         double weight = record.getWeight();
 
-        Node<?> start = map.get(startId);
-        Node<?> end = map.get(endId);
-
-        if (start == null || end == null) {
-          deleteEdge(startId, endId);
-        }
-        return new Edge(start, end, (float) weight);
+        return new Edge(startId, endId, (float) weight);
       };
 
   // +-----------------------------------------+
   // |  Nodegroup Table                        |
   // +-----------------------------------------+
 
-  private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper = record -> {
-    NamespacedKey key = record.getKey();
-    NodeGroup group = new NodeGroup(key);
-    group.setWeight(record.getWeight());
-    return group;
-  };
+  private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
+      record -> {
+        NamespacedKey key = record.getKey();
+        NodeGroup group = new NodeGroup(key);
+        group.setWeight(record.getWeight());
+        return group;
+      };
 
   private final SQLDialect dialect;
 
@@ -135,8 +120,8 @@ public abstract class SqlDataStorage implements ApplicationLayer {
 
   private void createNodeTable() {
     create
-        .createTableIfNotExists(PATHFINDER_NODES)
-        .columns(PATHFINDER_NODES.fields())
+        .createTableIfNotExists(PATHFINDER_WAYPOINTS)
+        .columns(PATHFINDER_WAYPOINTS.fields())
         .execute();
   }
 
@@ -183,145 +168,182 @@ public abstract class SqlDataStorage implements ApplicationLayer {
   }
 
   @Override
-  public void saveEdges(Collection<Edge> edges) {
-    BatchBindStep step = create.batch(create
+  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
+    return type.createNodeInStorage(new NodeType.NodeCreationContext(location));
+  }
+
+  @Override
+  public CompletableFuture<Waypoint> createNodeInStorage(NodeType.NodeCreationContext context) {
+    create
+        .insertInto(PATHFINDER_WAYPOINTS)
+        .values(
+            UUID.randomUUID(),
+            context.location().getX(),
+            context.location().getY(),
+            context.location().getZ(),
+            context.location().getWorld().getUID()
+        )
+        .execute();
+    Waypoint waypoint = new Waypoint(UUID.randomUUID());
+    waypoint.setLocation(context.location());
+    return CompletableFuture.completedFuture(waypoint);
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNodesInStorage(NodeSelection nodeIds,
+                                                      Consumer<Waypoint> nodeConsumer) {
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    create.batched(configuration -> {
+      NodeHandler.WAYPOINT_TYPE.getNodesFromStorage(nodeIds).thenAccept(nodes -> {
+        DSLContext c = DSL.using(configuration);
+        for (Node<?> node : nodes) {
+          if (!(node instanceof Waypoint waypoint)) {
+            continue;
+          }
+          nodeConsumer.accept(waypoint);
+          c.update(PATHFINDER_WAYPOINTS)
+              .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
+              .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
+              .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
+              .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUID())
+              .execute();
+        }
+        future.complete(null);
+      });
+    });
+    return future;
+  }
+
+  @Override
+  public <N extends Node<N>> CompletableFuture<Void> updateNode(N node) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
+    create
+        .deleteFrom(PATHFINDER_WAYPOINTS)
+        .where(PATHFINDER_WAYPOINTS.ID.in(nodes))
+        .execute();
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
+    return deleteNodes((Collection<UUID>) nodes);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Node<?>>> getNodes() {
+    return NodeHandler.getInstance().getTypes().values().stream()
+        .map(t -> t.getNodesFromStorage());
+  }
+
+  @Override
+  public CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
+    create
         .insertInto(PATHFINDER_EDGES)
-        .columns(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID, PATHFINDER_EDGES.WEIGHT_MODIFIER)
-        .values(1, 1, 1.)
-        .onConflictDoNothing()
-    );
-    for (Edge e : edges) {
-      step = step.bind(e.getStart().getNodeId(), e.getEnd().getNodeId(), e.getWeightModifier());
-    }
-    step.execute();
-  }
-
-  @Override
-  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
-    Collection<Integer> ids = scope.keySet();
-    return new HashSet<>(create
-        .selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.in(ids))
-        .or(PATHFINDER_EDGES.END_ID.in(ids))
-        .fetch(edgeMapper.apply(scope)));
-  }
-
-  @Override
-  public void deleteEdgesFrom(Node<?> start) {
-    create.deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.eq(start.getNodeId()))
+        .values(start, end, weight)
         .execute();
+    return CompletableFuture.completedFuture(new Edge(start, end, (float) weight));
   }
 
   @Override
-  public void deleteEdgesTo(Node<?> end) {
-    create.deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.END_ID.eq(end.getNodeId()))
-        .execute();
+  public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
+    CompletableFuture<Collection<Edge>> future = new CompletableFuture<>()
+    create.batched(configuration -> {
+      Collection<Edge> edges = new HashSet<>();
+      for (UUID startNode : start) {
+        for (UUID endNode : end) {
+          DSL.using(configuration)
+              .insertInto(PATHFINDER_EDGES)
+              .values(startNode, endNode, 1)
+              .execute();
+          edges.add(new Edge(startNode, endNode, 1));
+        }
+      }
+      future.complete(edges);
+    });
+    return future;
   }
 
-  public void deleteEdge(Node<?> start, Node<?> end) {
-    deleteEdge(start.getNodeId(), end.getNodeId());
-  }
-
-  public void deleteEdge(int start, int end) {
-    create.deleteFrom(PATHFINDER_EDGES)
+  @Override
+  public CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
+    create
+        .deleteFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .and(PATHFINDER_EDGES.END_ID.eq(end))
         .execute();
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public void deleteEdges(Collection<Edge> edges) {
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
+    CompletableFuture<Void> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      for (Edge edge : edges) {
-        DSL.using(configuration)
-            .deleteFrom(PATHFINDER_EDGES)
-            .where(PATHFINDER_EDGES.START_ID.eq(edge.getStart().getNodeId()))
-            .and(PATHFINDER_EDGES.END_ID.eq(edge.getEnd().getNodeId()))
-            .execute();
+      for (UUID startNode : start) {
+        for (UUID endNode : end) {
+          DSL.using(configuration)
+              .deleteFrom(PATHFINDER_EDGES)
+              .where(PATHFINDER_EDGES.START_ID.eq(startNode))
+              .and(PATHFINDER_EDGES.END_ID.eq(endNode))
+              .execute();
+        }
       }
+      future.complete(null);
+    });
+    return future;
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNodeInStorage(UUID id, Consumer<Waypoint> consumer) {
+    return NodeHandler.WAYPOINT_TYPE.getNodeFromStorage(id).thenAccept(node -> {
+      consumer.accept(node);
+      create
+          .update(PATHFINDER_WAYPOINTS)
+          .set(PATHFINDER_WAYPOINTS.X, node.getLocation().getX())
+          .set(PATHFINDER_WAYPOINTS.Y, node.getLocation().getY())
+          .set(PATHFINDER_WAYPOINTS.Z, node.getLocation().getZ())
+          .set(PATHFINDER_WAYPOINTS.WORLD, node.getLocation().getWorld().getUID())
+          .execute();
     });
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-    create
-        .insertInto(PATHFINDER_NODES)
-        .values(
-            UUID.randomUUID(),
-            location.getX(),
-            location.getY(),
-            location.getZ(),
-            location.getWorld().getUID().toString()
-        )
-        .execute();
-    return type.createNode(new NodeType.NodeCreationContext(location));
-  }
-
-  @Override
-  public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
-
-    Map<Integer, Waypoint> map = new TreeMap<>();
-    create
-        .selectFrom(PATHFINDER_NODES)
-        .where(PATHFINDER_NODES.ROADMAP_KEY.eq(roadMap.getKey()))
-        .fetch(nodeMapper.apply(roadMap))
-        .forEach(node -> map.put(node.getNodeId(), node));
-    return map;
-  }
-
-  @Override
-  public void updateNode(Waypoint node) {
-    create
-        .insertInto(PATHFINDER_NODES)
-        .values(
-            node.getNodeId(),
-            node.getLocation().getX(),
-            node.getLocation().getY(),
-            node.getLocation().getZ(),
-            node.getLocation().getWorld().getUID().toString(),
-            node.getCurveLength()
-        )
-        .onDuplicateKeyUpdate()
-        .set(PATHFINDER_NODES.X, node.getLocation().getX())
-        .set(PATHFINDER_NODES.Y, node.getLocation().getY())
-        .set(PATHFINDER_NODES.Z, node.getLocation().getZ())
-        .set(PATHFINDER_NODES.WORLD, node.getLocation().getWorld().getUID().toString())
-        .execute();
-  }
-
-  @Override
-  public void deleteNodes(Collection<Integer> nodeIds) {
-    create
-        .deleteFrom(PATHFINDER_NODES)
-        .where(PATHFINDER_NODES.ID.in(nodeIds))
-        .execute();
-  }
-
-  @Override
-  public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
+  public CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {
     create.batched(configuration -> {
-      for (Node<?> node : selection) {
+      for (UUID nodeId : selection) {
         DSL.using(configuration)
             .insertInto(PATHFINDER_NODEGROUPS_NODES)
-            .values(group.getKey(), node.getNodeId())
+            .values(group, nodeId)
             .onDuplicateKeyIgnore()
             .execute();
       }
     });
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection) {
-    Collection<Integer> ids = new HashSet<>();
+  public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey key, NodeSelection selection) {
+    Collection<UUID> ids = new HashSet<>();
     selection.forEach(g -> ids.add(g.getNodeId()));
 
     create
         .deleteFrom(PATHFINDER_NODEGROUPS_NODES)
-        .where(PATHFINDER_NODEGROUPS_NODES.GROUP_KEY.eq(group.getKey()))
+        .where(PATHFINDER_NODEGROUPS_NODES.GROUP_KEY.eq(key))
         .and(PATHFINDER_NODEGROUPS_NODES.NODE_ID.in(ids))
         .execute();
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Void> clearNodeGroups(NodeSelection selection) {
+    return null;
   }
 
   @Override
@@ -331,91 +353,77 @@ public abstract class SqlDataStorage implements ApplicationLayer {
         .selectFrom(PATHFINDER_NODEGROUPS_NODES)
         .fetch()
         .forEach(record -> {
-          result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>()).add(record.getGroupKey());
+          result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>())
+              .add(record.getGroupKey());
         });
     return result;
   }
 
   @Override
-  public HashedRegistry<NodeGroup> loadNodeGroups() {
-    HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
-    create
-        .selectFrom(PATHFINDER_NODEGROUPS)
-        .fetch(groupMapper)
-        .forEach(registry::put);
-    return registry;
+  public CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet() {
+    return null;
   }
 
   @Override
-  public void updateNodeGroup(NodeGroup group) {
+  public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Collection<NodeGroup>> getNodeGroups() {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key) {
     create
         .insertInto(PATHFINDER_NODEGROUPS)
-        .values(
-            group.getKey().toString(),
-            group.getNameFormat(),
-            group.getPermission(),
-            group.isNavigable(),
-            group.isDiscoverable(),
-            group.getFindDistance()
-        )
-        .onDuplicateKeyUpdate()
-        .set(PATHFINDER_NODEGROUPS.KEY, group.getKey())
-        .set(PATHFINDER_NODEGROUPS.NAME_FORMAT, group.getNameFormat())
-        .set(PATHFINDER_NODEGROUPS.PERMISSION, group.getPermission())
-        .set(PATHFINDER_NODEGROUPS.NAVIGABLE, group.isNavigable())
-        .set(PATHFINDER_NODEGROUPS.DISCOVERABLE, group.isDiscoverable())
-        .set(PATHFINDER_NODEGROUPS.FIND_DISTANCE, group.getFindDistance() * 1.)
+        .values(key, 1)
         .execute();
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public void deleteNodeGroup(NamespacedKey key) {
+  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group,
+                                                 Consumer<NodeGroup> modifier) {
+    return getNodeGroup(group).thenAccept(g -> {
+      modifier.accept(g);
+      create
+          .update(PATHFINDER_NODEGROUPS)
+          .set(PATHFINDER_NODEGROUPS.WEIGHT, g.getWeight())
+          .where(PATHFINDER_NODEGROUPS.KEY.eq(group))
+          .execute();
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodeGroup(NamespacedKey key) {
     create
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .execute();
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
-    Map<NamespacedKey, Collection<String>> registry = new HashMap<>();
-    create
-        .selectFrom(PATHFINDER_SEARCH_TERMS)
-        .fetch()
-        .forEach(record -> {
-          registry.computeIfAbsent(record.getGroupKey(), k -> new HashSet<>()).add(record.getSearchTerm());
-        });
-    return registry;
+  public CompletableFuture<Void> assignNodeGroupModifier(NamespacedKey group, Modifier modifier) {
+    return null;
   }
 
   @Override
-  public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    create.batched(configuration -> {
-      for (String searchTerm : searchTerms) {
-        DSL.using(configuration)
-            .insertInto(PATHFINDER_SEARCH_TERMS)
-            .columns(PATHFINDER_SEARCH_TERMS.GROUP_KEY, PATHFINDER_SEARCH_TERMS.SEARCH_TERM)
-            .values(group.getKey(), searchTerm)
-            .execute();
-      }
-    });
+  public CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group,
+                                                           Class<? extends Modifier> modifier) {
+    return null;
   }
 
   @Override
-  public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    create.batched(configuration -> {
-      for (String searchTerm : searchTerms) {
-        DSL.using(configuration)
-            .deleteFrom(PATHFINDER_SEARCH_TERMS)
-            .where(PATHFINDER_SEARCH_TERMS.GROUP_KEY.eq(group.getKey()))
-            .and(PATHFINDER_SEARCH_TERMS.SEARCH_TERM.eq(searchTerm))
-            .execute();
-      }
-    });
-  }
-
-  @Override
-  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable, LocalDateTime foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable,
+                                         LocalDateTime foundDate) {
     create
         .insertInto(PATHFINDER_DISCOVERINGS)
         .values(discoverable.getKey().toString(), player, foundDate)
@@ -429,7 +437,7 @@ public abstract class SqlDataStorage implements ApplicationLayer {
     Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
     create
         .selectFrom(PATHFINDER_DISCOVERINGS)
-        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId.toString()))
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId))
         .forEach(record -> {
           NamespacedKey key = record.getDiscoverKey();
           LocalDateTime date = record.getDate();
@@ -444,7 +452,7 @@ public abstract class SqlDataStorage implements ApplicationLayer {
   public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
     create
         .deleteFrom(PATHFINDER_DISCOVERINGS)
-        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId.toString()))
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId))
         .and(PATHFINDER_DISCOVERINGS.DISCOVER_KEY.eq(discoverKey))
         .execute();
   }

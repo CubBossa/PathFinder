@@ -8,9 +8,9 @@ import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints;
 import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
 
 
@@ -41,11 +41,6 @@ public class Tables {
     public static final PathfinderNodegroupsNodes PATHFINDER_NODEGROUPS_NODES = PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 
     /**
-     * The table <code>pathfinder_nodes</code>.
-     */
-    public static final PathfinderNodes PATHFINDER_NODES = PathfinderNodes.PATHFINDER_NODES;
-
-    /**
      * The table <code>pathfinder_path_visualizer</code>.
      */
     public static final PathfinderPathVisualizer PATHFINDER_PATH_VISUALIZER = PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
@@ -54,6 +49,11 @@ public class Tables {
      * The table <code>pathfinder_search_terms</code>.
      */
     public static final PathfinderSearchTerms PATHFINDER_SEARCH_TERMS = PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
+
+    /**
+     * The table <code>pathfinder_waypoints</code>.
+     */
+    public static final PathfinderWaypoints PATHFINDER_WAYPOINTS = PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
     /**
      * The table <code>sqlite_sequence</code>.

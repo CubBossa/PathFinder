@@ -4,9 +4,11 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
+import de.cubbossa.pathfinder.data.UUIDConverter;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.jooq.Field;
@@ -50,12 +52,12 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     /**
      * The column <code>pathfinder_edges.start_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, byte[]> START_ID = createField(DSL.name("start_id"), SQLDataType.BINARY.nullable(false), this, "");
+    public final TableField<PathfinderEdgesRecord, UUID> START_ID = createField(DSL.name("start_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_edges.end_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, byte[]> END_ID = createField(DSL.name("end_id"), SQLDataType.BINARY.nullable(false), this, "");
+    public final TableField<PathfinderEdgesRecord, UUID> END_ID = createField(DSL.name("end_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_edges.weight</code>.
@@ -144,14 +146,14 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row3<byte[], byte[], Double> fieldsRow() {
+    public Row3<UUID, UUID, Double> fieldsRow() {
         return (Row3) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function3<? super byte[], ? super byte[], ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -159,7 +161,7 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super byte[], ? super byte[], ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

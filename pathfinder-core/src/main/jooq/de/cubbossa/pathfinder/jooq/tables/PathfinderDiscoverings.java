@@ -5,11 +5,13 @@ package de.cubbossa.pathfinder.jooq.tables;
 
 
 import de.cubbossa.pathfinder.data.NamespacedKeyConverter;
+import de.cubbossa.pathfinder.data.UUIDConverter;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderDiscoveringsRecord;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.bukkit.NamespacedKey;
@@ -60,7 +62,7 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
     /**
      * The column <code>pathfinder_discoverings.player_id</code>.
      */
-    public final TableField<PathfinderDiscoveringsRecord, byte[]> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.BINARY.nullable(false), this, "");
+    public final TableField<PathfinderDiscoveringsRecord, UUID> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_discoverings.date</code>.
@@ -154,14 +156,14 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
     // -------------------------------------------------------------------------
 
     @Override
-    public Row3<NamespacedKey, byte[], LocalDateTime> fieldsRow() {
+    public Row3<NamespacedKey, UUID, LocalDateTime> fieldsRow() {
         return (Row3) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function3<? super NamespacedKey, ? super byte[], ? super LocalDateTime, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function3<? super NamespacedKey, ? super UUID, ? super LocalDateTime, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -169,7 +171,7 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super NamespacedKey, ? super byte[], ? super LocalDateTime, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super NamespacedKey, ? super UUID, ? super LocalDateTime, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

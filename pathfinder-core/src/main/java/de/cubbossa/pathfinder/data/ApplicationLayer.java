@@ -2,11 +2,9 @@ package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -56,8 +54,6 @@ public interface ApplicationLayer {
 
   CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups);
 
-  CompletableFuture<Collection<Node<?>>> getNodes(Collection<Class<? extends Modifier>> withModifiers);
-
   default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
     return connectNodes(start, end, 1);
   }
@@ -65,23 +61,10 @@ public interface ApplicationLayer {
   CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight);
 
   CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end);
-  CompletableFuture<Collection<Edge>> disconnectNodes(NodeSelection start, NodeSelection end);
 
-  void saveEdges(Collection<Edge> edges);
+  CompletableFuture<Void> disconnectNodes(UUID start, UUID end);
 
-  Collection<Edge> loadEdges(Map<Integer, Node<?>> scope);
-
-  void deleteEdgesFrom(Node<?> start);
-
-  void deleteEdgesTo(Node<?> end);
-
-  void deleteEdges(Collection<Edge> edges);
-
-  default void deleteEdge(Edge edge) {
-    deleteEdge(edge.getStart(), edge.getEnd());
-  }
-
-  void deleteEdge(Node<?> start, Node<?> end);
+  CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end);
 
 
   CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection);
@@ -89,8 +72,6 @@ public interface ApplicationLayer {
   CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group, NodeSelection selection);
 
   CompletableFuture<Void> clearNodeGroups(NodeSelection selection);
-
-  Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 
 
   // NodeGroups
@@ -104,6 +85,8 @@ public interface ApplicationLayer {
   CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination);
 
   CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key);
+
+  CompletableFuture<Void> updateNodeGroup(NamespacedKey group, Consumer<NodeGroup> modifier);
 
   CompletableFuture<Void> deleteNodeGroup(NamespacedKey key);
 

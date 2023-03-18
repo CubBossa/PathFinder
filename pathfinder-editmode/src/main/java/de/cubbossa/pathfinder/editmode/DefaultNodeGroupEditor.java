@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.editmode;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
@@ -11,16 +12,13 @@ import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
-import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
-import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import java.awt.*;
@@ -56,7 +54,6 @@ import xyz.xenondevs.particle.task.TaskManager;
 public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   private final NamespacedKey key;
-  private final NodeGroup nodeGroup;
   private final ClientNodeHandler armorstandHandler;
 
   private final Map<UUID, BottomInventoryMenu> editingPlayers;
@@ -71,7 +68,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   public DefaultNodeGroupEditor(NodeGroup group) {
     this.key = group.getKey();
-    this.nodeGroup = group;
 
     this.editModeTasks = new HashSet<>();
     this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
@@ -118,7 +114,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
         startParticleTask();
       }
 
-      BottomInventoryMenu menu = new EditModeMenu(nodeGroup,
+      BottomInventoryMenu menu = new EditModeMenu(key,
           NodeHandler.getInstance().getTypes().values()).createHotbarMenu(this, player);
       editingPlayers.put(uuid, menu);
       menu.openSync(player);
@@ -148,6 +144,9 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   public void showArmorStands(Player player) {
+    PathFinderAPI.getInstance().getNodeGroup(key).thenAccept(group -> {
+      armorstandHandler.showNodes(group, player);
+    });
     armorstandHandler.showNodes(roadMap.getNodes(), player);
     armorstandHandler.showEdges(roadMap.getEdges(), player);
   }
