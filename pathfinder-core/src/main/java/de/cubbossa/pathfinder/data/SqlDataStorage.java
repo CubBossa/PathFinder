@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.core.node.Discoverable;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
@@ -34,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -54,22 +56,6 @@ public abstract class SqlDataStorage implements ApplicationLayer {
   abstract ConnectionProvider getConnectionProvider();
 
   private DSLContext create;
-
-  // +-----------------------------------------+
-  // |  Roadmap Table                          |
-  // +-----------------------------------------+
-
-  private final RecordMapper<? super PathfinderRoadmapsRecord, RoadMap> roadmapMapper = record -> {
-    String visKeyString = record.getPathVisualizer();;
-    NamespacedKey visKey = visKeyString == null ? null : NamespacedKey.fromString(visKeyString);
-
-    return new RoadMap(
-        record.getKey(),
-        record.getNameFormat(),
-        visKey == null ? null : VisualizerHandler.getInstance().getPathVisualizer(visKey),
-        record.getPathCurveLength()
-    );
-  };
 
   // +-----------------------------------------+
   // |  Node Table                             |
@@ -100,7 +86,7 @@ public abstract class SqlDataStorage implements ApplicationLayer {
       map -> record -> {
         int startId = record.getStartId();
         int endId = record.getEndId();
-        double weight = record.getWeightModifier();
+        double weight = record.getWeight();
 
         Node<?> start = map.get(startId);
         Node<?> end = map.get(endId);
@@ -117,17 +103,8 @@ public abstract class SqlDataStorage implements ApplicationLayer {
 
   private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper = record -> {
     NamespacedKey key = record.getKey();
-    String nameFormat = record.getNameFormat();
-    String permission = record.getPermission();
-    boolean navigable = record.getNavigable();
-    boolean discoverable = record.getDiscoverable();
-    double findDistance = record.getFindDistance();
-
-    NodeGroup group = new NodeGroup(key, nameFormat);
-    group.setPermission(permission);
-    group.setNavigable(navigable);
-    group.setDiscoverable(discoverable);
-    group.setFindDistance((float) findDistance);
+    NodeGroup group = new NodeGroup(key);
+    group.setWeight(record.getWeight());
     return group;
   };
 
@@ -148,20 +125,12 @@ public abstract class SqlDataStorage implements ApplicationLayer {
         .withRenderSchema(dialect != SQLDialect.SQLITE));
 
     createPathVisualizerTable();
-    createRoadMapTable();
     createNodeTable();
     createNodeGroupTable();
     createNodeGroupSearchTermsTable();
     createNodeGroupNodesTable();
     createEdgeTable();
     createDiscoverInfoTable();
-  }
-
-  private void createRoadMapTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_ROADMAPS)
-        .columns(PATHFINDER_ROADMAPS.fields())
-        .execute();
   }
 
   private void createNodeTable() {
@@ -210,43 +179,6 @@ public abstract class SqlDataStorage implements ApplicationLayer {
     create
         .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
         .columns(PATHFINDER_DISCOVERINGS.fields())
-        .execute();
-  }
-
-
-  @Override
-  public Map<NamespacedKey, RoadMap> loadRoadMaps() {
-    HashedRegistry<RoadMap> registry = new HashedRegistry<>();
-    create
-        .selectFrom(PATHFINDER_ROADMAPS)
-        .fetch(roadmapMapper)
-        .forEach(registry::put);
-    return registry;
-  }
-
-  @Override
-  public void updateRoadMap(RoadMap roadMap) {
-    create
-        .insertInto(PATHFINDER_ROADMAPS)
-        .values(
-            roadMap.getKey(),
-            roadMap.getNameFormat(),
-            roadMap.getVisualizer() == null ? null : roadMap.getVisualizer()
-                .getKey().toString(),
-            roadMap.getDefaultCurveLength())
-        .onDuplicateKeyUpdate()
-        .set(PATHFINDER_ROADMAPS.NAME_FORMAT, roadMap.getNameFormat())
-        .set(PATHFINDER_ROADMAPS.PATH_VISUALIZER, roadMap.getVisualizer() == null ? null : roadMap
-            .getVisualizer().getKey().toString())
-        .set(PATHFINDER_ROADMAPS.PATH_CURVE_LENGTH, roadMap.getDefaultCurveLength())
-        .execute();
-  }
-
-  @Override
-  public void deleteRoadMap(NamespacedKey key) {
-    create
-        .deleteFrom(PATHFINDER_ROADMAPS)
-        .where(PATHFINDER_ROADMAPS.KEY.eq(key))
         .execute();
   }
 
@@ -313,6 +245,21 @@ public abstract class SqlDataStorage implements ApplicationLayer {
   }
 
   @Override
+  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
+    create
+        .insertInto(PATHFINDER_NODES)
+        .values(
+            UUID.randomUUID(),
+            location.getX(),
+            location.getY(),
+            location.getZ(),
+            location.getWorld().getUID().toString()
+        )
+        .execute();
+    return type.createNode(new NodeType.NodeCreationContext(location));
+  }
+
+  @Override
   public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
 
     Map<Integer, Waypoint> map = new TreeMap<>();
@@ -330,8 +277,6 @@ public abstract class SqlDataStorage implements ApplicationLayer {
         .insertInto(PATHFINDER_NODES)
         .values(
             node.getNodeId(),
-            node.getType().getKey().toString(),
-            node.getRoadMapKey().toString(),
             node.getLocation().getX(),
             node.getLocation().getY(),
             node.getLocation().getZ(),
@@ -339,8 +284,6 @@ public abstract class SqlDataStorage implements ApplicationLayer {
             node.getCurveLength()
         )
         .onDuplicateKeyUpdate()
-        .set(PATHFINDER_NODES.TYPE, node.getType().getKey())
-        .set(PATHFINDER_NODES.ROADMAP_KEY, node.getRoadMapKey())
         .set(PATHFINDER_NODES.X, node.getLocation().getX())
         .set(PATHFINDER_NODES.Y, node.getLocation().getY())
         .set(PATHFINDER_NODES.Z, node.getLocation().getZ())

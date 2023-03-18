@@ -4,6 +4,8 @@ import de.cubbossa.pathfinder.Named;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.data.NodeDataStorage;
+import de.cubbossa.pathfinder.util.NodeSelection;
+import java.util.concurrent.CompletableFuture;
 import jdk.jshell.spi.ExecutionControl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
 
-  public record NodeCreationContext(Location location, boolean persistent) {
+  public record NodeCreationContext(Location location) {
   }
 
   private final NamespacedKey key;
@@ -50,23 +52,18 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
     this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(name);
   }
 
-  public abstract N createNode(NodeCreationContext context);
-
   @Override
-  public Map<Integer, N> loadNodes(Collection<NodeGroup> groups) {
-    return null;
+  public CompletableFuture<N> createNode(NodeCreationContext context) {
+    return storage.createNode(context);
   }
 
   @Override
-  public void updateNode(N node) {
-    if (storage != null) {
-      storage.updateNode(node);
-    }
+  public CompletableFuture<Void> updateNode(N node) {
+    return storage.updateNode(node);
   }
 
-  public void deleteNodes(Collection<Integer> nodeIds) {
-    if (storage != null) {
-      storage.deleteNodes(nodeIds);
-    }
+  @Override
+  public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
+    return storage.deleteNodes(nodes);
   }
 }

@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.data;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;

@@ -9,14 +9,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 
-public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified {
+public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified, Comparable<NodeGroup> {
 
   private final NamespacedKey key;
   @Getter
   private final Map<Class<? extends Modifier>, Modifier> modifiers;
+  @Getter
+  @Setter
+  private double weight = 1;
 
   public NodeGroup(NamespacedKey key) {
     this(key, new HashSet<>());
@@ -114,5 +119,10 @@ public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified 
   @Override
   public void clearModifiers() {
     modifiers.clear();
+  }
+
+  @Override
+  public int compareTo(@NotNull NodeGroup o) {
+    return Integer.compare(weight, o.weight);
   }
 }

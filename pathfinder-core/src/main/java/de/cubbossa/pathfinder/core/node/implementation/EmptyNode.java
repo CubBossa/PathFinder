@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -26,7 +27,7 @@ public class EmptyNode implements Node<EmptyNode> {
       new ItemStack(Material.DIRT)
   ) {
     @Override
-    public EmptyNode createNode(NodeCreationContext context) {
+    public CompletableFuture<EmptyNode> createNode(NodeCreationContext context) {
       throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
           + "must be created from constructor.");
     }
@@ -72,16 +73,6 @@ public class EmptyNode implements Node<EmptyNode> {
 
   @Override
   public void setCurveLength(Double value) {
-
-  }
-
-  @Override
-  public Edge connect(Node<?> target) {
-    return null;
-  }
-
-  @Override
-  public void disconnect(Node<?> target) {
 
   }
 

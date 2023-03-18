@@ -193,9 +193,9 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix>Successfully deleted <selection>.",
       placeholders = "selection")
   public static final Message CMD_N_DELETE = new Message("commands.node.delete");
-  @MessageMeta(value = "<ins:prefix><gray>Moved <selection> to <location>.</gray>",
+  @MessageMeta(value = "<ins:prefix><gray>Updated <selection>.</gray>",
       placeholders = {"selection", "location"})
-  public static final Message CMD_N_MOVED = new Message("commands.node.moved");
+  public static final Message CMD_N_UPDATED = new Message("commands.node.moved");
   @MessageMeta(value = """
       <offset>Node #<id></offset> <gray>(<roadmap>)</gray>
       <dark_gray>» </dark_gray><gray>Position: <main><position></main> (<world>)

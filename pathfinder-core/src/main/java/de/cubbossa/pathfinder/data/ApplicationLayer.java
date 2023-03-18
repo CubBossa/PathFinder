@@ -4,6 +4,7 @@ import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -18,10 +19,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 
-public interface ApplicationLayer extends
-    NodeDataStorage<Waypoint> {
+public interface ApplicationLayer {
 
   default void connect() throws IOException {
     connect(() -> {
@@ -41,11 +42,30 @@ public interface ApplicationLayer extends
 
   // Nodes
 
+  <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location);
+
+  CompletableFuture<Void> updateNodes(NodeSelection nodes, Consumer<Node<?>> nodeConsumer);
+
+  <N extends Node<N>> CompletableFuture<Void> updateNode(N node);
+
+  CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
+
+  CompletableFuture<Void> deleteNodes(NodeSelection nodes);
+
   CompletableFuture<Collection<Node<?>>> getNodes();
 
   CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups);
 
   CompletableFuture<Collection<Node<?>>> getNodes(Collection<Class<? extends Modifier>> withModifiers);
+
+  default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
+    return connectNodes(start, end, 1);
+  }
+
+  CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight);
+
+  CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end);
+  CompletableFuture<Collection<Edge>> disconnectNodes(NodeSelection start, NodeSelection end);
 
   void saveEdges(Collection<Edge> edges);
 
@@ -64,9 +84,11 @@ public interface ApplicationLayer extends
   void deleteEdge(Node<?> start, Node<?> end);
 
 
-  void assignNodesToGroup(NodeGroup group, NodeSelection selection);
+  CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection);
 
-  void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection);
+  CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group, NodeSelection selection);
+
+  CompletableFuture<Void> clearNodeGroups(NodeSelection selection);
 
   Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes();
 

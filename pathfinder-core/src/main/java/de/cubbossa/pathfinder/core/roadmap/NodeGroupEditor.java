@@ -6,9 +6,9 @@ import org.bukkit.entity.Player;
 
 public interface NodeGroupEditor extends Keyed {
 
-  public void dispose();
+  void dispose();
 
-  public boolean isEdited();
+  boolean isEdited();
 
   boolean toggleEditMode(UUID uuid);
 
@@ -35,5 +35,5 @@ public interface NodeGroupEditor extends Keyed {
    * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktualisiert werden.
    * Wird asynchron ausgeführt
    */
-  public void updateEditModeParticles();
+  void updateEditModeParticles();
 }

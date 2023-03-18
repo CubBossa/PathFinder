@@ -8,7 +8,7 @@ import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Node<N extends Node<N>> extends PersistencyHolder, Comparable<Node<?>> {
+public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
 
   UUID getNodeId();
 

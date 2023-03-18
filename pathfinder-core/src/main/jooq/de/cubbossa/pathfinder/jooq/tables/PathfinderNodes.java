@@ -4,24 +4,19 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
-import de.cubbossa.pathfinder.data.NamespacedKeyConverter;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodesRecord;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
-import org.bukkit.NamespacedKey;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.Function8;
-import org.jooq.Identity;
+import org.jooq.Function5;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Records;
-import org.jooq.Row8;
+import org.jooq.Row5;
 import org.jooq.Schema;
 import org.jooq.SelectField;
 import org.jooq.Table;
@@ -57,17 +52,12 @@ public class PathfinderNodes extends TableImpl<PathfinderNodesRecord> {
     /**
      * The column <code>pathfinder_nodes.id</code>.
      */
-    public final TableField<PathfinderNodesRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<PathfinderNodesRecord, byte[]> ID = createField(DSL.name("id"), SQLDataType.BINARY.nullable(false), this, "");
 
     /**
-     * The column <code>pathfinder_nodes.type</code>.
+     * The column <code>pathfinder_nodes.world</code>.
      */
-    public final TableField<PathfinderNodesRecord, NamespacedKey> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(64).nullable(false), this, "", new NamespacedKeyConverter());
-
-    /**
-     * The column <code>pathfinder_nodes.roadmap_key</code>.
-     */
-    public final TableField<PathfinderNodesRecord, NamespacedKey> ROADMAP_KEY = createField(DSL.name("roadmap_key"), SQLDataType.VARCHAR(64).nullable(false), this, "", new NamespacedKeyConverter());
+    public final TableField<PathfinderNodesRecord, byte[]> WORLD = createField(DSL.name("world"), SQLDataType.BINARY, this, "");
 
     /**
      * The column <code>pathfinder_nodes.x</code>.
@@ -83,16 +73,6 @@ public class PathfinderNodes extends TableImpl<PathfinderNodesRecord> {
      * The column <code>pathfinder_nodes.z</code>.
      */
     public final TableField<PathfinderNodesRecord, Double> Z = createField(DSL.name("z"), SQLDataType.DOUBLE.nullable(false), this, "");
-
-    /**
-     * The column <code>pathfinder_nodes.world</code>.
-     */
-    public final TableField<PathfinderNodesRecord, String> WORLD = createField(DSL.name("world"), SQLDataType.VARCHAR(36).nullable(false), this, "");
-
-    /**
-     * The column <code>pathfinder_nodes.path_curve_length</code>.
-     */
-    public final TableField<PathfinderNodesRecord, Double> PATH_CURVE_LENGTH = createField(DSL.name("path_curve_length"), SQLDataType.DOUBLE, this, "");
 
     private PathfinderNodes(Name alias, Table<PathfinderNodesRecord> aliased) {
         this(alias, aliased, null);
@@ -133,30 +113,8 @@ public class PathfinderNodes extends TableImpl<PathfinderNodesRecord> {
     }
 
     @Override
-    public Identity<PathfinderNodesRecord, Integer> getIdentity() {
-        return (Identity<PathfinderNodesRecord, Integer>) super.getIdentity();
-    }
-
-    @Override
     public UniqueKey<PathfinderNodesRecord> getPrimaryKey() {
-        return Keys.PATHFINDER_NODES__PK_PATHFINDER_NODES;
-    }
-
-    @Override
-    public List<ForeignKey<PathfinderNodesRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.PATHFINDER_NODES__FK_PATHFINDER_NODES_PK_PATHFINDER_ROADMAPS);
-    }
-
-    private transient PathfinderRoadmaps _pathfinderRoadmaps;
-
-    /**
-     * Get the implicit join path to the <code>pathfinder_roadmaps</code> table.
-     */
-    public PathfinderRoadmaps pathfinderRoadmaps() {
-        if (_pathfinderRoadmaps == null)
-            _pathfinderRoadmaps = new PathfinderRoadmaps(this, Keys.PATHFINDER_NODES__FK_PATHFINDER_NODES_PK_PATHFINDER_ROADMAPS);
-
-        return _pathfinderRoadmaps;
+        return Keys.PATHFINDER_NODES__NEWTABLE_PK;
     }
 
     @Override
@@ -199,18 +157,18 @@ public class PathfinderNodes extends TableImpl<PathfinderNodesRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row5 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<Integer, NamespacedKey, NamespacedKey, Double, Double, Double, String, Double> fieldsRow() {
-        return (Row8) super.fieldsRow();
+    public Row5<byte[], byte[], Double, Double, Double> fieldsRow() {
+        return (Row5) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function8<? super Integer, ? super NamespacedKey, ? super NamespacedKey, ? super Double, ? super Double, ? super Double, ? super String, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function5<? super byte[], ? super byte[], ? super Double, ? super Double, ? super Double, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -218,7 +176,7 @@ public class PathfinderNodes extends TableImpl<PathfinderNodesRecord> {
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function8<? super Integer, ? super NamespacedKey, ? super NamespacedKey, ? super Double, ? super Double, ? super Double, ? super String, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function5<? super byte[], ? super byte[], ? super Double, ? super Double, ? super Double, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

@@ -10,7 +10,6 @@ import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderRoadmaps;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
 import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
 
@@ -50,11 +49,6 @@ public class Tables {
      * The table <code>pathfinder_path_visualizer</code>.
      */
     public static final PathfinderPathVisualizer PATHFINDER_PATH_VISUALIZER = PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
-
-    /**
-     * The table <code>pathfinder_roadmaps</code>.
-     */
-    public static final PathfinderRoadmaps PATHFINDER_ROADMAPS = PathfinderRoadmaps.PATHFINDER_ROADMAPS;
 
     /**
      * The table <code>pathfinder_search_terms</code>.

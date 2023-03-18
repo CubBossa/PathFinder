@@ -108,7 +108,7 @@ public class PathfinderSearchTerms extends TableImpl<PathfinderSearchTermsRecord
 
     @Override
     public List<ForeignKey<PathfinderSearchTermsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PK_PATHFINDER_NODEGROUPS);
+        return Arrays.asList(Keys.PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PATHFINDER_NODEGROUPS__PK);
     }
 
     private transient PathfinderNodegroups _pathfinderNodegroups;
@@ -119,7 +119,7 @@ public class PathfinderSearchTerms extends TableImpl<PathfinderSearchTermsRecord
      */
     public PathfinderNodegroups pathfinderNodegroups() {
         if (_pathfinderNodegroups == null)
-            _pathfinderNodegroups = new PathfinderNodegroups(this, Keys.PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PK_PATHFINDER_NODEGROUPS);
+            _pathfinderNodegroups = new PathfinderNodegroups(this, Keys.PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PATHFINDER_NODEGROUPS__PK);
 
         return _pathfinderNodegroups;
     }

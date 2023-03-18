@@ -5,11 +5,13 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
@@ -19,6 +21,7 @@ import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
+import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
@@ -246,7 +249,7 @@ public class CustomArgs {
 						.map(s -> new Suggestion(range, s))
 						.collect(Collectors.toList());
 
-				return Suggestions.create(suggestionsBuilder.getInput(), suggestions));
+				return Suggestions.create(suggestionsBuilder.getInput(), suggestions);
 			});
 		};
 	}
@@ -320,20 +323,14 @@ public class CustomArgs {
 	 * @param nodeName The name of the command argument in the command structure
 	 * @return The CustomArgument instance
 	 */
-	public CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>> discoverableArgument(
+	public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
 			String nodeName) {
-		return (CommandArgument<? extends Discoverable, CustomArgument<? extends Discoverable, NamespacedKey>>) arg(
-				new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-					NodeGroup group =
-							NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
-					if (group == null) {
-						throw new CustomArgument.CustomArgumentException(
-								"There is no discoverable object with this name.");
-					}
-					return group;
-				})).includeSuggestions(
-				suggestNamespacedKeys(sender -> NodeGroupHandler.getInstance().getNodeGroups().stream()
-						.map(NodeGroup::getKey).collect(Collectors.toList())));
+		return arg(new NamespacedKeyArgument(nodeName).includeSuggestions(
+				suggestNamespacedKeys(sender -> PathFinderAPI.getInstance().getNodeGroups()
+						.thenApply(nodeGroups -> nodeGroups.stream()
+								.filter(g -> g.hasModifier(DiscoverableModifier.class))
+								.map(NodeGroup::getKey)
+								.collect(Collectors.toList())))));
 	}
 
 	/**
@@ -435,6 +432,6 @@ public class CustomArgs {
 			}
 			return type;
 		})).includeSuggestions(suggestNamespacedKeys(
-				sender -> VisualizerHandler.getInstance().getVisualizerTypes().keySet()));
+				sender -> CompletableFuture.completedFuture(VisualizerHandler.getInstance().getVisualizerTypes().keySet())));
 	}
 }

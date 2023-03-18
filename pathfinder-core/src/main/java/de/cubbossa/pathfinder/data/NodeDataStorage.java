@@ -1,20 +1,15 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
+import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.util.NodeSelection;
+import java.util.concurrent.CompletableFuture;
 
 public interface NodeDataStorage<N extends Node<N>> {
 
-  Map<Integer, N> loadNodes(Collection<NodeGroup> withGroups);
+  CompletableFuture<N> createNode(NodeType.NodeCreationContext context);
 
-  void updateNode(N node);
+  CompletableFuture<Void> updateNode(N node);
 
-  default void deleteNodes(Integer... nodeId) {
-    deleteNodes(Arrays.asList(nodeId));
-  }
-
-  void deleteNodes(Collection<Integer> nodeIds);
+  CompletableFuture<Void> deleteNodes(NodeSelection nodes);
 }

@@ -1,15 +1,13 @@
 package de.cubbossa.pathfinder.core.node;
 
-import de.cubbossa.pathfinder.PersistencyHolder;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
 
 @Getter
 @Setter
-public class Edge implements Comparable<Edge>, PersistencyHolder {
+public class Edge {
 
   private Node<?> start;
   private Node<?> end;
@@ -70,26 +68,11 @@ public class Edge implements Comparable<Edge>, PersistencyHolder {
   }
 
   @Override
-  public int compareTo(@NotNull Edge o) {
-    int sA = start.getNodeId();
-    int eA = end.getNodeId();
-    int sB = o.getStart().getNodeId();
-    int eB = o.getEnd().getNodeId();
-    int compareStart = Integer.compare(sA, sB);
-    return compareStart == 0 ? Integer.compare(eA, eB) : compareStart;
-  }
-
-  @Override
   public String toString() {
     return "Edge{" +
         "start=" + start +
         ", end=" + end +
         ", weightModifier=" + weightModifier +
         '}';
-  }
-
-  @Override
-  public boolean isPersistent() {
-    return start.isPersistent() && end.isPersistent();
   }
 }

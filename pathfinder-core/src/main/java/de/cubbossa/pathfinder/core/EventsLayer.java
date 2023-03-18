@@ -12,7 +12,7 @@ import org.bukkit.command.CommandSender;
 import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
-public class EventsLayer implements ApplicationLayer {
+public class EventsLayer extends PassLayer implements ApplicationLayer {
 
 	private final ApplicationLayer subLayer;
 

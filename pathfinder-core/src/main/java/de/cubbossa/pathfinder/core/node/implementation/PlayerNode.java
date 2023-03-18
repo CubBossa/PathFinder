@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,7 +28,7 @@ public class PlayerNode implements Node<PlayerNode> {
       new ItemStack(Material.DIRT)
   ) {
     @Override
-    public PlayerNode createNode(NodeCreationContext context) {
+    public CompletableFuture<PlayerNode> createNode(NodeCreationContext context) {
       throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
           + "must be created from constructor.");
     }
@@ -76,16 +77,6 @@ public class PlayerNode implements Node<PlayerNode> {
 
   @Override
   public void setCurveLength(Double value) {
-
-  }
-
-  @Override
-  public Edge connect(Node<?> target) {
-    return null;
-  }
-
-  @Override
-  public void disconnect(Node<?> target) {
 
   }
 

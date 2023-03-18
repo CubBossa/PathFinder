@@ -4,11 +4,16 @@ import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
@@ -91,13 +96,19 @@ public class FindModule implements Listener, PathPluginExtension {
 
     registerListener();
 
-    registerFindPredicate(navigationRequestContext -> {
-      if (!(navigationRequestContext.node() instanceof Groupable<?> groupable)) {
+    registerFindPredicate(c -> {
+      if (!(c.node() instanceof Groupable<?> groupable)) {
         return true;
       }
-      Player player = Bukkit.getPlayer(navigationRequestContext.playerId());
-      return NodeGroupHandler.getInstance().isNavigable(groupable)
-          && NodeGroupHandler.getInstance().hasPermission(player, groupable);
+      Player player = Bukkit.getPlayer(c.playerId());
+
+      return groupable.getGroups().stream()
+          .allMatch(g -> {
+            PermissionModifier mod = g.getModifier(PermissionModifier.class);
+            return player == null || mod == null || player.hasPermission(mod.permission());
+          })
+          && groupable.getGroups().stream()
+          .anyMatch(g -> g.hasModifier(NavigableModifier.class));
     });
   }
 
@@ -130,11 +141,13 @@ public class FindModule implements Listener, PathPluginExtension {
   }
 
   public CompletableFuture<NavigateResult> findPath(Player player, Location location) {
-    double maxDist = PathPlugin.getInstance().getConfiguration().navigation.findLocation.maxDistance;
+    double maxDist =
+        PathPlugin.getInstance().getConfiguration().navigation.findLocation.maxDistance;
     return findPath(player, location, maxDist);
   }
 
-  public CompletableFuture<NavigateResult> findPath(Player player, Location location, double maxDist) {
+  public CompletableFuture<NavigateResult> findPath(Player player, Location location,
+                                                    double maxDist) {
     if (maxDist < 0) {
       maxDist = Double.MAX_VALUE;
     }
@@ -158,15 +171,13 @@ public class FindModule implements Listener, PathPluginExtension {
     if (closest == null) {
       return CompletableFuture.completedFuture(NavigateResult.FAIL_TOO_FAR_AWAY);
     }
-    Waypoint target = NodeHandler.getInstance().createNode(NodeHandler.WAYPOINT_TYPE, location, false);
-    NodeHandler.getInstance().connectNodes(closest, target, false);
-
-    CompletableFuture<NavigateResult> result = findPath(player, new NodeSelection(target));
-
-    NodeHandler.getInstance().disconnectNodes(closest, target);
-    NodeHandler.getInstance().removeNodes(target);
-
-    return result;
+    final Node<?> fClosest = closest;
+    NodeType.NodeCreationContext c = new NodeType.NodeCreationContext(location);
+    return NodeHandler.WAYPOINT_TYPE.createNode(c).thenApply(target -> {
+      // we can savely add edges because the fClosest object is only a representation of the stored node.
+      fClosest.getEdges().add(new Edge(fClosest, target, 1));
+      return findPath(player, new NodeSelection(target)).join();
+    });
   }
 
   public CompletableFuture<NavigateResult> findPath(Player player, NodeSelection targets) {
@@ -189,17 +200,25 @@ public class FindModule implements Listener, PathPluginExtension {
 
       VisualizerPath<?> visualizerPath = new VisualizerPath<>(player.getUniqueId());
       visualizerPath.addAll(path);
+
+      Groupable<?> last = (Groupable<?>) visualizerPath.get(visualizerPath.size() - 1);
+      NodeGroup highest = last.getGroups().stream()
+          .filter(g -> g.hasModifier(FindDistanceModifier.class))
+          .max(NodeGroup::compareTo).orElse(null);
+
+      double findDist =
+          highest == null ? 1.5 : highest.getModifier(FindDistanceModifier.class).distance();
+
       NavigateResult result =
-              setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
-                      NodeGroupHandler.getInstance()
-                              .getFindDistance((Groupable<?>) visualizerPath.get(visualizerPath.size() - 1)));
+          setPath(player.getUniqueId(), visualizerPath, path.get(path.size() - 1).getLocation(),
+              (float) findDist);
 
       if (result == NavigateResult.SUCCESS) {
         // Refresh cancel-path command so that it is visible
         cancelPathCommand.refresh(player);
         EffectHandler.getInstance()
-                .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
-                        player.getLocation());
+            .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player,
+                player.getLocation());
       }
       return result;
     });
@@ -246,7 +265,8 @@ public class FindModule implements Listener, PathPluginExtension {
     Player player = Bukkit.getPlayer(info.playerId());
     cancelPathCommand.refresh(player);
     EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player, player.getLocation());
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player,
+            player.getLocation());
   }
 
   public void cancelPath(UUID playerId) {
@@ -259,15 +279,19 @@ public class FindModule implements Listener, PathPluginExtension {
     unsetPath(info);
     Player player = Bukkit.getPlayer(info.playerId());
     EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player, player.getLocation());
+        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player,
+            player.getLocation());
   }
 
   public static void printResult(FindModule.NavigateResult result, Player player) {
     switch (result) {
       case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-      case FAIL_BLOCKED -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-      case FAIL_EMPTY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
-      case FAIL_TOO_FAR_AWAY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
+      case FAIL_BLOCKED ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+      case FAIL_EMPTY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
     }
   }
 

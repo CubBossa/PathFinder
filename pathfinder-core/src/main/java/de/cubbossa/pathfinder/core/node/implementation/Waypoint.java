@@ -14,7 +14,6 @@ import java.util.*;
 public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final UUID nodeId;
-  private final boolean persistent;
   private final List<Edge> edges;
   private final Collection<NodeGroup> groups;
 
@@ -22,9 +21,8 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
   @Nullable
   private Double curveLength = null;
 
-  public Waypoint(UUID databaseId, boolean persistent) {
+  public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;
-    this.persistent = persistent;
     this.groups = new HashSet<>();
 
     edges = new ArrayList<>();

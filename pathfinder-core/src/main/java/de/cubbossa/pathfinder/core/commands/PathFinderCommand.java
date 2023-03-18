@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
-import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.data.DataExporter;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.data.SqliteDataStorage;
@@ -80,6 +82,15 @@ public class PathFinderCommand extends Command {
               .resolver(TagResolver.resolver("modules", Messages.formatList(list, Component::text)))
               .build()), commandSender);
         }));
+
+    then(CustomArgs.literal("editmode")
+        .executesPlayer((commandSender, args) -> {
+          NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, NodeHandler.GROUP_GLOBAL);
+        })
+        .then(CustomArgs.nodeGroupArgument("group"))
+            .executesPlayer((commandSender, args) -> {
+              NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, (NamespacedKey) args[0]);
+            }));
 
     then(CustomArgs.literal("help")
         .withPermission(PathPlugin.PERM_CMD_PF_HELP)
@@ -281,48 +292,51 @@ public class PathFinderCommand extends Command {
     then(CustomArgs.literal("forcefind")
             .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_PF_FORCEFIND)
-            .then(CustomArgs.roadMapArgument("roadmap")
-                    .withGeneratedHelp()
                     .then(CustomArgs.player("player")
                             .withGeneratedHelp()
                             .then(CustomArgs.discoverableArgument("discovering")
                                     .executes((commandSender, args) -> {
-                                      onForceFind(commandSender, (Player) args[1], (Discoverable) args[2]);
-                                    })))));
+                                      onForceFind(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                                    }))));
     then(CustomArgs.literal("forceforget")
             .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_PF_FORCEFORGET)
-            .then(CustomArgs.roadMapArgument("roadmap")
-                    .withGeneratedHelp()
                     .then(CustomArgs.player("player")
                             .withGeneratedHelp()
                             .then(CustomArgs.discoverableArgument("discovering")
                                     .executes((commandSender, args) -> {
-                                      onForceForget(commandSender, (Player) args[1], (Discoverable) args[2]);
-                                    })))));
+                                      onForceForget(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                                    }))));
   }
 
-  private void onForceFind(CommandSender sender, Player target, Discoverable discoverable) {
+  private void onForceFind(CommandSender sender, Player target, NamespacedKey discoverable) {
 
-    DiscoverHandler.getInstance().discover(target.getUniqueId(), discoverable, LocalDateTime.now());
+    PathFinderAPI.getInstance().getNodeGroup(discoverable).thenAccept(group -> {
+      DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-    TranslationHandler.getInstance()
-            .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
-                    .resolver(Placeholder.component("name",
-                            PathPlugin.getInstance().getAudiences().player(target)
-                                    .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-                    .tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
+      DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
+
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
+              .resolver(Placeholder.component("name",
+                  PathPlugin.getInstance().getAudiences().player(target)
+                      .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+    });
   }
 
-  private void onForceForget(CommandSender sender, Player target, Discoverable discoverable) {
+  private void onForceForget(CommandSender sender, Player target, NamespacedKey discoverable) {
+    PathFinderAPI.getInstance().getNodeGroup(discoverable).thenAccept(group -> {
+      DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-    DiscoverHandler.getInstance().forget(target.getUniqueId(), discoverable);
+      DiscoverHandler.getInstance().forget(target.getUniqueId(), group);
 
-    TranslationHandler.getInstance()
-            .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
-                    .resolver(Placeholder.component("name",
-                            PathPlugin.getInstance().getAudiences().player(target)
-                                    .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-                    .tag("discovery", Tag.inserting(discoverable.getDisplayName())).build()), sender);
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
+              .resolver(Placeholder.component("name",
+                  PathPlugin.getInstance().getAudiences().player(target)
+                      .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+    });
   }
 }
