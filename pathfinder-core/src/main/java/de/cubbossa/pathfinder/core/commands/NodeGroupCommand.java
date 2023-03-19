@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
 import dev.jorel.commandapi.arguments.StringArgument;
 import org.bukkit.NamespacedKey;
@@ -37,16 +38,16 @@ public class NodeGroupCommand extends Command {
     then(CustomArgs.literal("list")
         .withPermission(PathPlugin.PERM_CMD_NG_LIST)
         .executes((sender, objects) -> {
-          PathFinderAPI.getInstance()
-              .eventLayer()
+          PathFinderAPI.builder()
+              .withEvents().build()
               .messageLayer(sender)
               .getNodeGroups(ApplicationLayer.Pagination.page(1, 10));
         })
         .then(CustomArgs.integer("page", 1)
             .displayAsOptional()
             .executes((sender, args) -> {
-              PathFinderAPI.getInstance()
-                  .eventLayer()
+              PathFinderAPI.builder()
+                  .withEvents().build()
                   .messageLayer(sender)
                   .getNodeGroups(ApplicationLayer.Pagination.page((Integer) args[offset], 10));
             })));
@@ -56,10 +57,11 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_NG_CREATE)
         .then(new StringArgument("name")
             .executes((sender, args) -> {
-              PathFinderAPI.getInstance()
-                  .eventLayer()
+              PathFinderAPI.builder()
+                  .withEvents().build()
                   .messageLayer(sender)
-                  .createNodeGroup(new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
+                  .createNodeGroup(
+                      new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
             })));
 
     then(CustomArgs.literal("delete")
@@ -67,31 +69,44 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
-              PathFinderAPI.getInstance()
-                  .eventLayer()
+              PathFinderAPI.builder()
+                  .withEvents().build()
                   .messageLayer(sender)
                   .deleteNodeGroup((NamespacedKey) objects[offset]);
             })));
 
     CustomLiteralArgument unset = CustomArgs.literal("unset");
 
-
-    then(CustomArgs.literal("unset")
-            .withGeneratedHelp()
-            .then(CustomArgs.literal("permission")
-
-            )
-    );
-    then(CustomArgs.literal("set")
-            .withGeneratedHelp()
-            .then(CustomArgs.literal("permission")
-                .then(new StringArgument("permission-node")
-                    .executes((commandSender, objects) -> {
-
+    then(CustomArgs.literal("edit")
+        .then(CustomArgs.nodeGroupArgument("nodegroup")
+            .then(CustomArgs.literal("unset")
+                .withGeneratedHelp()
+                .then(CustomArgs.literal("permission")
+                    .executes((commandSender, args) -> {
+                      PathFinderAPI.builder()
+                          .withEvents().build()
+                          .messageLayer(commandSender)
+                          .unassignNodeGroupModifier((NamespacedKey) args[0], PermissionModifier.class);
                     })
                 )
             )
-        .then(CustomArgs.literal("curve-length"))
+            .then(CustomArgs.literal("set")
+                .withGeneratedHelp()
+                .then(CustomArgs.literal("permission")
+                    .then(new StringArgument("permission-node")
+                        .executes((commandSender, args) -> {
+                          PathFinderAPI.builder()
+                              .withEvents().build()
+                              .messageLayer(commandSender)
+                              .assignNodeGroupModifier((NamespacedKey) args[0], new PermissionModifier((String) args[1]));
+                        })
+                    )
+                )
+                .then(CustomArgs.literal("curve-length"))
+            )
+        )
     );
+
+
   }
 }

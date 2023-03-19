@@ -16,6 +16,7 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsNodesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -24,15 +25,16 @@ import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -40,6 +42,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
+import org.jooq.Record1;
 import org.jooq.RecordMapper;
 import org.jooq.SQLDialect;
 import org.jooq.conf.RenderQuotedNames;
@@ -215,11 +218,6 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Void> updateNode(N node) {
-    return null;
-  }
-
-  @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
     create
         .deleteFrom(PATHFINDER_WAYPOINTS)
@@ -235,13 +233,16 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Collection<Node<?>>> getNodes() {
-    return NodeHandler.getInstance().getTypes().values().stream()
-        .map(t -> t.getNodesFromStorage());
-  }
-
-  @Override
-  public CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups) {
-    return null;
+    Collection<CompletableFuture<?>> futures = new ArrayList<>();
+    Collection<Node<?>> nodes = new HashSet<>();
+    // for each future add nodes to hashset
+    NodeHandler.getInstance().getTypes().values().stream()
+        .map(NodeDataStorage::getNodesFromStorage)
+        .peek(f -> f.thenAccept(nodes::addAll))
+        .forEach(futures::add);
+    // when all have added nodes to hashset, return hashset as future
+    return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+        .thenApply(unused -> nodes);
   }
 
   @Override
@@ -255,7 +256,7 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
-    CompletableFuture<Collection<Edge>> future = new CompletableFuture<>()
+    CompletableFuture<Collection<Edge>> future = new CompletableFuture<>();
     create.batched(configuration -> {
       Collection<Edge> edges = new HashSet<>();
       for (UUID startNode : start) {
@@ -330,13 +331,10 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey key, NodeSelection selection) {
-    Collection<UUID> ids = new HashSet<>();
-    selection.forEach(g -> ids.add(g.getNodeId()));
-
     create
         .deleteFrom(PATHFINDER_NODEGROUPS_NODES)
         .where(PATHFINDER_NODEGROUPS_NODES.GROUP_KEY.eq(key))
-        .and(PATHFINDER_NODEGROUPS_NODES.NODE_ID.in(ids))
+        .and(PATHFINDER_NODEGROUPS_NODES.NODE_ID.in(selection))
         .execute();
     return CompletableFuture.completedFuture(null);
   }
@@ -347,36 +345,59 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
-  public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
-    Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
+  public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
+    Collection<UUID> nodes = new HashSet<>();
     create
         .selectFrom(PATHFINDER_NODEGROUPS_NODES)
         .fetch()
-        .forEach(record -> {
-          result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>())
-              .add(record.getGroupKey());
-        });
-    return result;
+        .stream()
+        .map(PathfinderNodegroupsNodesRecord::getNodeId)
+        .forEach(nodes::add);
+    return CompletableFuture.completedFuture(nodes);
   }
 
   @Override
   public CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet() {
-    return null;
+    return CompletableFuture.completedFuture(
+        create
+            .select(PATHFINDER_NODEGROUPS.KEY)
+            .from(PATHFINDER_NODEGROUPS)
+            .stream()
+            .map(Record1::value1)
+            .collect(Collectors.toList())
+    );
   }
 
   @Override
   public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
-    return null;
+    return CompletableFuture.completedFuture(
+        create
+            .selectFrom(PATHFINDER_NODEGROUPS)
+            .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
+            .fetch(groupMapper)
+            .stream().findAny()
+            .orElse(null)
+    );
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> getNodeGroups() {
-    return null;
+    return CompletableFuture.completedFuture(
+        create
+            .selectFrom(PATHFINDER_NODEGROUPS)
+            .fetch(groupMapper)
+    );
   }
 
   @Override
   public CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination) {
-    return null;
+    return CompletableFuture.completedFuture(
+        create
+            .selectFrom(PATHFINDER_NODEGROUPS)
+            .offset(pagination.offset())
+            .limit(pagination.limit())
+            .fetch(groupMapper)
+    );
   }
 
   @Override

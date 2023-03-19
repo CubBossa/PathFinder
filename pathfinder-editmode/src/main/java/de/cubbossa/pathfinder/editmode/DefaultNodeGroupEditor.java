@@ -10,6 +10,7 @@ import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
+import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
@@ -144,7 +145,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   public void showArmorStands(Player player) {
-    PathFinderAPI.getInstance().getNodeGroup(key).thenAccept(group -> {
+    PathFinderAPI.builder().getNodeGroup(key).thenAccept(group -> {
       armorstandHandler.showNodes(group, player);
     });
     armorstandHandler.showNodes(roadMap.getNodes(), player);
@@ -317,9 +318,12 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
     }, 1);
   }
 
-  @EventHandler
-  public void onDelete(RoadMapDeletedEvent event) {
-    if (event.getRoadMap().getKey().equals(roadMap.getKey())) {
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onDelete(NodeGroupDeleteEvent event) {
+    if (event.isCancelled()) {
+      return;
+    }
+    if (event.getGroup().equals(key)) {
       dispose();
     }
   }

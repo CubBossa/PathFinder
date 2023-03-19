@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
@@ -30,7 +29,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class YmlDataStorage implements ApplicationLayer {
+public class YmlDataStorage implements DataStorage {
 
 
   private static final String DIR_RM = "roadmaps";
@@ -96,65 +95,6 @@ public class YmlDataStorage implements ApplicationLayer {
 
   @Override
   public void disconnect() {
-  }
-
-  @Override
-  public Map<NamespacedKey, RoadMap> loadRoadMaps() {
-    HashedRegistry<RoadMap> registry = new HashedRegistry<>();
-    for (File file : Arrays.stream(roadMapDir.listFiles())
-        .filter(file -> file.getName().matches(FILE_REGEX.pattern())).toList()) {
-      try {
-        NamespacedKey key = fromFileName(file.getName());
-        YamlConfiguration cfg =
-            roadmapHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-
-        String visKeyString = cfg.getString("path-visualizer");
-        registry.put(new RoadMap(key,
-            cfg.getString("name-format"),
-            VisualizerHandler.getInstance().getPathVisualizer(visKeyString == null
-                ? null : NamespacedKey.fromString(visKeyString)),
-            cfg.getDouble("curve-length")));
-
-
-      } catch (Exception e) {
-        throw new DataStorageException("Could not load roadmap: " + file.getName(), e);
-      }
-    }
-    return registry;
-  }
-
-  @Override
-  public void updateRoadMap(RoadMap roadMap) {
-    File file = new File(roadMapDir, toFileName(roadMap.getKey()));
-    if (!file.exists()) {
-      try {
-        if (!file.createNewFile()) {
-          throw new DataStorageException("Could not create roadmap file.");
-        }
-      } catch (IOException e) {
-        throw new DataStorageException("Could not create roadmap file.", e);
-      }
-    }
-    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-    cfg.set("key", roadMap.getKey().toString());
-    cfg.set("name-format", roadMap.getNameFormat());
-    cfg.set("path-visualizer",
-        roadMap.getVisualizer() == null ? null : roadMap.getVisualizer().getKey().toString());
-    cfg.set("curve-length", roadMap.getDefaultCurveLength());
-
-    try {
-      cfg.save(file);
-    } catch (IOException e) {
-      throw new DataStorageException("Could not save roadmap file.", e);
-    }
-    roadmapHandles.put(roadMap.getKey(), cfg);
-  }
-
-  @Override
-  public void deleteRoadMap(NamespacedKey key) {
-    roadmapHandles.remove(key);
-    File file = new File(roadMapDir, toFileName(key));
-    file.deleteOnExit();
   }
 
   @Override

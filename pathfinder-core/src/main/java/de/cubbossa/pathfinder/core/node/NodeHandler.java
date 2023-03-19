@@ -2,10 +2,8 @@ package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
@@ -14,17 +12,14 @@ import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
@@ -76,17 +71,17 @@ public class NodeHandler {
   }
 
   public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
-    return createGraph(player, new ArrayList<>());
-  }
+    return dataStorage.getNodes().thenApply(nodes -> {
+      Map<UUID, Node<?>> map = new HashMap<>();
+      nodes.forEach(node -> map.put(node.getNodeId(), node));
 
-  public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player,
-                                                       Collection<NodeGroup> filter) {
-    return dataStorage.getNodesByGroups(filter).thenApply(nodes -> {
       Graph<Node<?>> graph = new Graph<>();
       nodes.forEach(graph::addNode);
       for (Node<?> node : nodes) {
-        node.getEdges()
-            .forEach(e -> graph.connect(e.getStart(), e.getEnd(), e.getWeightedLength()));
+        for (Edge e : node.getEdges()) {
+          Node<?> end = map.get(e.getEnd());
+          graph.connect(node, end, node.getLocation().distance(end.getLocation()) * e.getWeightModifier());
+        }
       }
 
       if (player != null) {
@@ -113,7 +108,7 @@ public class NodeHandler {
   public CompletableFuture<NodeGroupEditor> getNodeGroupEditor(NamespacedKey key) {
     NodeGroupEditor editor = editors.get(key);
     if (editor == null) {
-      return PathFinderAPI.getInstance().getNodeGroup(key).thenApply(g -> {
+      return PathFinderAPI.builder().getNodeGroup(key).thenApply(g -> {
         if (g == null) {
           throw new IllegalArgumentException(
               "No group exists with key '" + key + "'. Cannot create editor.");

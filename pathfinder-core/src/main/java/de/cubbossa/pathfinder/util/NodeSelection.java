@@ -27,8 +27,8 @@ public class NodeSelection extends ArrayList<UUID> {
     super(Arrays.stream(nodes).map(Node::getNodeId).toList());
   }
 
-  public NodeSelection(Collection<Node<?>> other) {
-    super(other.stream().map(Node::getNodeId).toList());
+  public NodeSelection(Collection<UUID> other) {
+    super(other);
   }
 
   public record Meta(String selector, Map<String, String> arguments) {

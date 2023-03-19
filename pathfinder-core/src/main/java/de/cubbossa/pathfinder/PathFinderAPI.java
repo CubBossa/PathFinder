@@ -1,38 +1,60 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.core.EventsLayer;
-import de.cubbossa.pathfinder.core.MessageLayer;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
-import lombok.Getter;
-import org.bukkit.NamespacedKey;
+import java.util.logging.Logger;
 import org.bukkit.command.CommandSender;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
+public class PathFinderAPI {
 
-public class PathFinderAPI implements ApplicationLayer {
-
-	@Getter
-	private static PathFinderAPI instance;
-
-	private final ApplicationLayer dataStorage;
-
-	public PathFinderAPI(ApplicationLayer dataStorage) {
-		instance = this;
-
-		this.dataStorage = dataStorage;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	public EventsLayer eventLayer() {
-		return new EventsLayer(this);
+	private static final ApplicationLayer generalAPI = new Builder()
+			.withEvents()
+			.withLogging(PathPlugin.getInstance().getLogger())
+			.withPersistence()
+			.build();
+
+	public static ApplicationLayer generalAPI() {
+		return generalAPI;
 	}
 
-	public MessageLayer messageLayer(CommandSender sender) {
-		return new MessageLayer(sender, this);
-	}
+	public static class Builder {
 
-	@Override
-	public CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet() {
-		return dataStorage.getNodeGroupKeySet();
+		private boolean persistenceLayer;
+		private Logger loggingLayer;
+		private boolean eventsLayer;
+		private CommandSender messageLayer;
+		private CommandSender permissionLayer;
+
+		public Builder withEvents() {
+			eventsLayer = true;
+			return this;
+		}
+
+		public Builder withMessages(CommandSender receiver) {
+			messageLayer = receiver;
+			return this;
+		}
+		public Builder withPersistence() {
+			persistenceLayer = true;
+			return this;
+		}
+
+		public Builder withPermissionChecks(CommandSender sender) {
+			permissionLayer = sender;
+			return this;
+		}
+
+		public Builder withLogging(Logger logger) {
+			loggingLayer = logger;
+			return this;
+		}
+
+		public ApplicationLayer build() {
+			ApplicationLayer layer;
+			// TODO
+		}
 	}
 }

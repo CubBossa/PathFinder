@@ -14,6 +14,8 @@ public interface NodeDataStorage<N extends Node<N>> {
 
   CompletableFuture<N> getNodeFromStorage(UUID id);
 
+  CompletableFuture<Collection<N>> getNodesFromStorage();
+
   CompletableFuture<Collection<N>> getNodesFromStorage(NodeSelection ids);
 
   CompletableFuture<Void> updateNodeInStorage(UUID nodeId, Consumer<N> nodeConsumer);

@@ -7,19 +7,24 @@ import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -40,7 +45,7 @@ import org.bukkit.util.Vector;
 public class EditModeMenu {
 
   private final NamespacedKey key;
-  private final Collection<NodeGroup> multiTool = new HashSet<>();
+  private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
   private Node<?> edgeStart = null;
   private Boolean undirectedEdges = false;
@@ -63,8 +68,10 @@ public class EditModeMenu {
             Messages.E_NODE_TOOL_L).createItem(editingPlayer))
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          roadMap.removeNodes(context.getTarget());
-          p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
+          PathFinderAPI.builder()
+              .withEvents().build()
+              .deleteNodes(List.of(context.getTarget().getNodeId()))
+              .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
         })
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
@@ -74,8 +81,13 @@ public class EditModeMenu {
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
-            // roadmap.isPersistent() has same result, because in roadmap it now is 'true && this.isPersistent'
-            roadMap.createNode(type, pos, true);
+            ApplicationLayer api = PathFinderAPI.builder().withEvents().build();
+
+            api
+                .createNode(type, pos)
+                .thenAccept(node -> {
+                  api.updateNode(node.getNodeId(), n -> n.setLocation(pos));
+                });
           } else {
             openNodeTypeMenu(context.getPlayer(), pos);
           }
@@ -105,8 +117,13 @@ public class EditModeMenu {
               p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
               return;
             }
-            roadMap.connectNodes(edgeStart, c.getTarget(), !undirectedEdges, 1, 1);
-            edgeStart = null;
+
+            ApplicationLayer api = PathFinderAPI.builder().withEvents().build();
+            api.connectNodes(edgeStart.getNodeId(), c.getTarget().getNodeId())
+                .thenRun(() -> edgeStart = null);
+            if (undirectedEdges) {
+              api.connectNodes(c.getTarget().getNodeId(), edgeStart.getNodeId());
+            }
           }
           c.getMenu().refresh(c.getSlot());
           EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
@@ -131,15 +148,24 @@ public class EditModeMenu {
         })
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
           Player player = context.getPlayer();
-          roadMap.disconnectNodes(context.getTarget());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_disconnect", player, player.getLocation());
+          PathFinderAPI.builder().withEvents().build()
+              .disconnectNodes(context.getTarget().getStart(), context.getTarget().getEnd())
+              .thenRun(() -> {
+                EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+                    "editor_edge_disconnect", player, player.getLocation());
+              });
         })
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
           Player player = context.getPlayer();
-          roadMap.disconnectNode(context.getTarget());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_disconnect", player, player.getLocation());
+          NodeSelection start = new NodeSelection(context.getTarget());
+          NodeSelection end = new NodeSelection(context.getTarget().getEdges().stream()
+              .map(Edge::getEnd)
+              .collect(Collectors.toList()));
+
+          PathFinderAPI.builder().withEvents().build().disconnectNodes(start, end).thenRun(() -> {
+            EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+                "editor_edge_disconnect", player, player.getLocation());
+          });
         }));
 
 
@@ -147,23 +173,26 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-          double dist = -1;
-          Node<?> nearest = null;
-          Location pLoc = context.getPlayer().getLocation();
-          for (Node<?> node : roadMap.getNodes()) {
-            double d = node.getLocation().distance(pLoc);
-            if (dist == -1 || d < dist) {
-              nearest = node;
-              dist = d;
+          PathFinderAPI.generalAPI().getNodes().thenAccept(nodes -> {
+
+            double dist = -1;
+            Node<?> nearest = null;
+            Location pLoc = context.getPlayer().getLocation();
+            for (Node<?> node : nodes) {
+              double d = node.getLocation().distance(pLoc);
+              if (dist == -1 || d < dist) {
+                nearest = node;
+                dist = d;
+              }
             }
-          }
-          if (nearest == null) {
-            return;
-          }
-          Player p = context.getPlayer();
-          Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
-          p.teleport(newLoc);
-          p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+            if (nearest == null) {
+              return;
+            }
+            Player p = context.getPlayer();
+            Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
+            p.teleport(newLoc);
+            p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+          });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
     menu.setButton(3, Button.builder()
@@ -181,8 +210,8 @@ public class EditModeMenu {
             }
 
             Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance()
-                  .removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
+              PathFinderAPI.builder().withEvents().build()
+                      .removeNodesFromGroups(groupable.getGroups(), new NodeSelection(groupable));
               context.getPlayer().playSound(context.getPlayer().getLocation(),
                   Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
             });
@@ -195,7 +224,8 @@ public class EditModeMenu {
         .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
           if (context.getTarget() instanceof Groupable<?> groupable) {
             Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance().addNodes(multiTool, Lists.newArrayList(groupable));
+              PathFinderAPI.builder().withEvents().build()
+                      .assignNodesToGroups(multiTool, new NodeSelection(groupable));
               context.getPlayer()
                   .playSound(context.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1, 1);
             });
@@ -204,7 +234,8 @@ public class EditModeMenu {
         .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
           if (context.getTarget() instanceof Groupable<?> groupable) {
             Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance().removeNodes(multiTool, Lists.newArrayList(groupable));
+              PathFinderAPI.builder().withEvents().build()
+                  .removeNodesFromGroups(multiTool, new NodeSelection(groupable));
               context.getPlayer().playSound(context.getPlayer().getLocation(),
                   Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
             });
@@ -254,7 +285,6 @@ public class EditModeMenu {
           })
           .withClickHandler(Action.LEFT, c -> {
             if (!group.contains(groupable)) {
-
               Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
                 NodeGroupHandler.getInstance().addNodes(group, Lists.newArrayList(groupable));
                 c.getPlayer()
@@ -282,8 +312,8 @@ public class EditModeMenu {
       presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
 
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-          NodeGroupHandler.getInstance()
-              .removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
+          PathFinderAPI.builder().withEvents().build()
+              .removeNodesFromGroups(groupable.getGroups(), new NodeSelection(groupable));
           menu.refresh(menu.getListSlots());
           c.getPlayer()
               .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f,

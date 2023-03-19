@@ -54,9 +54,26 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
     this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(name);
   }
 
+  // pass to storage methods.
+
   @Override
   public CompletableFuture<N> createNodeInStorage(NodeCreationContext context) {
     return storage.createNodeInStorage(context);
+  }
+
+  @Override
+  public CompletableFuture<N> getNodeFromStorage(UUID id) {
+    return storage.getNodeFromStorage(id);
+  }
+
+  @Override
+  public CompletableFuture<Collection<N>> getNodesFromStorage(NodeSelection ids) {
+    return storage.getNodesFromStorage(ids);
+  }
+
+  @Override
+  public CompletableFuture<Collection<N>> getNodesFromStorage() {
+    return storage.getNodesFromStorage();
   }
 
   @Override

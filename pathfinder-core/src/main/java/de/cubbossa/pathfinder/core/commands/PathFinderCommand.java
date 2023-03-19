@@ -311,7 +311,7 @@ public class PathFinderCommand extends Command {
 
   private void onForceFind(CommandSender sender, Player target, NamespacedKey discoverable) {
 
-    PathFinderAPI.getInstance().getNodeGroup(discoverable).thenAccept(group -> {
+    PathFinderAPI.builder().getNodeGroup(discoverable).thenAccept(group -> {
       DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
       DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
@@ -326,7 +326,7 @@ public class PathFinderCommand extends Command {
   }
 
   private void onForceForget(CommandSender sender, Player target, NamespacedKey discoverable) {
-    PathFinderAPI.getInstance().getNodeGroup(discoverable).thenAccept(group -> {
+    PathFinderAPI.builder().getNodeGroup(discoverable).thenAccept(group -> {
       DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
       DiscoverHandler.getInstance().forget(target.getUniqueId(), group);

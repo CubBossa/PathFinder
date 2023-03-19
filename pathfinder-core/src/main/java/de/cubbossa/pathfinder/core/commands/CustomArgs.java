@@ -21,7 +21,6 @@ import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
-import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
@@ -326,7 +325,7 @@ public class CustomArgs {
 	public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
 			String nodeName) {
 		return arg(new NamespacedKeyArgument(nodeName).includeSuggestions(
-				suggestNamespacedKeys(sender -> PathFinderAPI.getInstance().getNodeGroups()
+				suggestNamespacedKeys(sender -> PathFinderAPI.builder().getNodeGroups()
 						.thenApply(nodeGroups -> nodeGroups.stream()
 								.filter(g -> g.hasModifier(DiscoverableModifier.class))
 								.map(NodeGroup::getKey)

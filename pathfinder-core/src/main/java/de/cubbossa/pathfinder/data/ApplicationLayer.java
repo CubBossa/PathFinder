@@ -17,42 +17,28 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import java.util.logging.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
 
 public interface ApplicationLayer {
-
-  default void connect() throws IOException {
-    connect(() -> {
-    });
-  }
-
-  /**
-   * Sets up the database files or does nothing if the database is already setup.
-   * If the database hasn't yet existed, the initial callback will be executed.
-   *
-   * @param initial A callback to be executed if the database was initially created
-   */
-  void connect(Runnable initial) throws IOException;
-
-  void disconnect();
-
 
   // Nodes
 
   <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location);
 
-  CompletableFuture<Void> updateNodes(NodeSelection nodes, Consumer<Node<?>> nodeConsumer);
+  CompletableFuture<Void> teleportNode(UUID nodeId, Location location);
 
-  <N extends Node<N>> CompletableFuture<Void> updateNode(N node);
+  CompletableFuture<Void> updateNode(UUID nodeId, Consumer<Node<?>> nodeConsumer);
+
+  CompletableFuture<Void> updateNodes(NodeSelection nodes, Consumer<Node<?>> nodeConsumer);
 
   CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
 
   CompletableFuture<Void> deleteNodes(NodeSelection nodes);
 
   CompletableFuture<Collection<Node<?>>> getNodes();
-
-  CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups);
 
   default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
     return connectNodes(start, end, 1);
@@ -66,10 +52,13 @@ public interface ApplicationLayer {
 
   CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end);
 
+  CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group);
 
   CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection);
+  CompletableFuture<Void> assignNodesToGroups(Collection<NamespacedKey> groups, NodeSelection selection);
 
   CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group, NodeSelection selection);
+  CompletableFuture<Void> removeNodesFromGroups(Collection<NamespacedKey> groups, NodeSelection selection);
 
   CompletableFuture<Void> clearNodeGroups(NodeSelection selection);
 
