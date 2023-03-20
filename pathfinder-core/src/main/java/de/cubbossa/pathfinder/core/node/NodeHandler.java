@@ -31,7 +31,6 @@ public class NodeHandler {
   @Getter
   private static NodeHandler instance;
 
-  private final ApplicationLayer dataStorage;
   private final NodeGroupEditorFactory editModeFactory;
   @Getter
   private final HashedRegistry<NodeGroupEditor> editors;
@@ -39,9 +38,8 @@ public class NodeHandler {
   @Getter
   private final HashedRegistry<NodeType<?>> types;
 
-  public NodeHandler(ApplicationLayer dataStorage) {
+  public NodeHandler() {
     instance = this;
-    this.dataStorage = dataStorage;
     this.types = new HashedRegistry<>();
 
     editors = new HashedRegistry<>();
@@ -71,7 +69,7 @@ public class NodeHandler {
   }
 
   public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
-    return dataStorage.getNodes().thenApply(nodes -> {
+    return PathFinderAPI.get().getNodes().thenApply(nodes -> {
       Map<UUID, Node<?>> map = new HashMap<>();
       nodes.forEach(node -> map.put(node.getNodeId(), node));
 
@@ -108,7 +106,7 @@ public class NodeHandler {
   public CompletableFuture<NodeGroupEditor> getNodeGroupEditor(NamespacedKey key) {
     NodeGroupEditor editor = editors.get(key);
     if (editor == null) {
-      return PathFinderAPI.builder().getNodeGroup(key).thenApply(g -> {
+      return PathFinderAPI.get().getNodeGroup(key).thenApply(g -> {
         if (g == null) {
           throw new IllegalArgumentException(
               "No group exists with key '" + key + "'. Cannot create editor.");

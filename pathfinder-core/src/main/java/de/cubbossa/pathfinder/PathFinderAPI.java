@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.core.MessageLayer;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
 import java.util.logging.Logger;
 import org.bukkit.command.CommandSender;
@@ -16,7 +17,7 @@ public class PathFinderAPI {
 			.withPersistence()
 			.build();
 
-	public static ApplicationLayer generalAPI() {
+	public static ApplicationLayer get() {
 		return generalAPI;
 	}
 
@@ -53,8 +54,15 @@ public class PathFinderAPI {
 		}
 
 		public ApplicationLayer build() {
-			ApplicationLayer layer;
-			// TODO
+			ApplicationLayer layer = PathPlugin.getInstance().getDatabase();
+
+			if (eventsLayer) {
+
+			}
+			if (messageLayer != null) {
+				layer = new MessageLayer(messageLayer, layer);
+			}
+			return layer;
 		}
 	}
 }

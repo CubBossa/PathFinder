@@ -39,16 +39,18 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_NG_LIST)
         .executes((sender, objects) -> {
           PathFinderAPI.builder()
-              .withEvents().build()
-              .messageLayer(sender)
+              .withEvents()
+              .withMessages(sender)
+              .build()
               .getNodeGroups(ApplicationLayer.Pagination.page(1, 10));
         })
         .then(CustomArgs.integer("page", 1)
             .displayAsOptional()
             .executes((sender, args) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(sender)
+                  .withEvents()
+                  .withMessages(sender)
+                  .build()
                   .getNodeGroups(ApplicationLayer.Pagination.page((Integer) args[offset], 10));
             })));
 
@@ -58,8 +60,9 @@ public class NodeGroupCommand extends Command {
         .then(new StringArgument("name")
             .executes((sender, args) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(sender)
+                  .withEvents()
+                  .withMessages(sender)
+                  .build()
                   .createNodeGroup(
                       new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
             })));
@@ -70,8 +73,9 @@ public class NodeGroupCommand extends Command {
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(sender)
+                  .withEvents()
+                  .withMessages(sender)
+                  .build()
                   .deleteNodeGroup((NamespacedKey) objects[offset]);
             })));
 
@@ -84,8 +88,9 @@ public class NodeGroupCommand extends Command {
                 .then(CustomArgs.literal("permission")
                     .executes((commandSender, args) -> {
                       PathFinderAPI.builder()
-                          .withEvents().build()
-                          .messageLayer(commandSender)
+                          .withEvents()
+                          .withMessages(commandSender)
+                          .build()
                           .unassignNodeGroupModifier((NamespacedKey) args[0], PermissionModifier.class);
                     })
                 )
@@ -96,8 +101,9 @@ public class NodeGroupCommand extends Command {
                     .then(new StringArgument("permission-node")
                         .executes((commandSender, args) -> {
                           PathFinderAPI.builder()
-                              .withEvents().build()
-                              .messageLayer(commandSender)
+                              .withEvents()
+                              .withMessages(commandSender)
+                              .build()
                               .assignNodeGroupModifier((NamespacedKey) args[0], new PermissionModifier((String) args[1]));
                         })
                     )

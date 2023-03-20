@@ -4,17 +4,16 @@ import de.cubbossa.pathfinder.Modified;
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+
+import java.util.*;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
-public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified, Comparable<NodeGroup> {
+public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Comparable<NodeGroup> {
 
   private final NamespacedKey key;
   @Getter
@@ -27,44 +26,10 @@ public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified,
     this(key, new HashSet<>());
   }
 
-  public NodeGroup(NamespacedKey key, Collection<Waypoint> nodes) {
+  public NodeGroup(NamespacedKey key, Collection<UUID> nodes) {
     super(nodes);
     this.key = key;
     this.modifiers = new HashMap<>();
-  }
-
-  @Override
-  public boolean add(Groupable node) {
-    node.addGroup(this);
-    return super.add(node);
-  }
-
-  @Override
-  public boolean addAll(Collection<? extends Groupable<?>> c) {
-    for (Groupable g : c) {
-      g.addGroup(this);
-    }
-    return super.addAll(c);
-  }
-
-  @Override
-  public boolean remove(Object o) {
-    if (o instanceof Groupable<?> groupable) {
-      groupable.removeGroup(this);
-      return super.remove(o);
-    }
-    return false;
-  }
-
-  @Override
-  public boolean removeAll(Collection<?> c) {
-    for (Object o : c) {
-      if (o instanceof Groupable<?> groupable) {
-        groupable.removeGroup(this);
-        remove(this);
-      }
-    }
-    return true;
   }
 
   @Override
@@ -123,6 +88,6 @@ public class NodeGroup extends HashSet<Groupable<?>> implements Keyed, Modified,
 
   @Override
   public int compareTo(@NotNull NodeGroup o) {
-    return Integer.compare(weight, o.weight);
+    return Double.compare(weight, o.weight);
   }
 }

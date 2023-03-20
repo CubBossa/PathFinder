@@ -40,6 +40,8 @@ public interface ApplicationLayer {
 
   CompletableFuture<Collection<Node<?>>> getNodes();
 
+  CompletableFuture<Collection<Edge>> getConnections(UUID start);
+
   default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
     return connectNodes(start, end, 1);
   }
@@ -48,8 +50,10 @@ public interface ApplicationLayer {
 
   CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end);
 
+  CompletableFuture<Void> disconnectNodes(UUID start);
   CompletableFuture<Void> disconnectNodes(UUID start, UUID end);
 
+  CompletableFuture<Void> disconnectNodes(NodeSelection start);
   CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end);
 
   CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group);

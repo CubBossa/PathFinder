@@ -71,24 +71,27 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_CREATE)
         .executesPlayer((player, objects) -> {
           PathFinderAPI.builder()
-              .withEvents().build()
-              .messageLayer(player)
+              .withEvents()
+              .withMessages(player)
+              .build()
               .createNode(NodeHandler.WAYPOINT_TYPE, player.getLocation().add(new Vector(0, 1, 0)));
         })
         .then(CustomArgs.location("location")
             .displayAsOptional()
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(player)
+                  .withEvents()
+                  .withMessages(player)
+                  .build()
                   .createNode(NodeHandler.WAYPOINT_TYPE, (Location) objects[1]);
             })
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(player)
+                  .withEvents()
+                  .withMessages(player)
+                  .build()
                   .createNode(
                       (NodeType<? extends Node<?>>) objects[0],
                       player.getLocation().add(new Vector(0, 1, 0))
@@ -97,8 +100,9 @@ public class WaypointCommand extends Command {
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
-                      .withEvents().build()
-                      .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                       .createNode(
                           (NodeType<? extends Node<?>>) objects[0],
                           (Location) objects[2]
@@ -112,8 +116,9 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                   .deleteNodes((NodeSelection) objects[0]);
             })
         )
@@ -123,8 +128,9 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
-                  .withEvents().build()
-                  .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                   .updateNodes((NodeSelection) objects[0], node -> {
                     node.setLocation(player.getLocation());
                   });
@@ -137,8 +143,9 @@ public class WaypointCommand extends Command {
             .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
-                      .withEvents().build()
-                      .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                       .updateNodes((NodeSelection) objects[0], node -> {
                         node.setLocation((Location) objects[1]);
                       });
@@ -152,8 +159,9 @@ public class WaypointCommand extends Command {
             .then(CustomArgs.nodeSelectionArgument("end")
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
-                      .withEvents().build()
-                      .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                       .connectNodes((NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })
             )
@@ -163,14 +171,19 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .executesPlayer((player, objects) -> {
-              onDisconnect(player, (NodeSelection) objects[0], null);
+              PathFinderAPI.builder()
+                  .withEvents()
+                  .withMessages(player)
+                  .build()
+                  .disconnectNodes((NodeSelection) objects[0]);
             })
             .then(CustomArgs.nodeSelectionArgument("end")
                 .displayAsOptional()
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
-                      .withEvents().build()
-                      .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                       .disconnectNodes((NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })
             )
@@ -184,8 +197,9 @@ public class WaypointCommand extends Command {
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
                       PathFinderAPI.builder()
-                          .withEvents().build()
-                          .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                           .removeNodesFromGroup((NamespacedKey) objects[1], (NodeSelection) objects[0]);
                     })
                 )
@@ -195,8 +209,9 @@ public class WaypointCommand extends Command {
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
                       PathFinderAPI.builder()
-                          .withEvents().build()
-                          .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                           .removeNodesFromGroup((NamespacedKey) objects[1], (NodeSelection) objects[0]);
                     })
                 )
@@ -205,8 +220,9 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
-                      .withEvents().build()
-                      .messageLayer(player)
+                      .withEvents()
+                      .withMessages(player)
+                      .build()
                       .clearNodeGroups((NodeSelection) objects[0]);
                 })
             )

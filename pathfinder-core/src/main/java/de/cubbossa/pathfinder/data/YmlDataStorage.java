@@ -1,48 +1,36 @@
 package de.cubbossa.pathfinder.data;
 
-import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.*;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 public class YmlDataStorage implements DataStorage {
 
-
-  private static final String DIR_RM = "roadmaps";
+  private static final String FILE_NODES = "nodes.yml";
+  private static final String FILE_EDGES = "edges.yml";
   private static final String DIR_NG = "nodegroups";
   private static final String DIR_PV = "path_visualizer";
   private static final String DIR_USER = "users";
   private static final Pattern FILE_REGEX = Pattern.compile("[a-zA-Z0-9_]+\\$[a-zA-Z0-9_]+\\.yml");
   private final Meta meta = new Meta(true);
-  private final Map<NamespacedKey, YamlConfiguration> roadmapHandles;
-  private final Map<NamespacedKey, YamlConfiguration> nodeGroupHandles;
   private final Map<NamespacedKey, YamlConfiguration> visualizerHandles;
   private final File dataDirectory;
-  private File roadMapDir;
   private File nodeGroupDir;
   private File pathVisualizerDir;
   private File userDir;
@@ -52,7 +40,6 @@ public class YmlDataStorage implements DataStorage {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
     this.dataDirectory = dataDirectory;
-    this.roadmapHandles = new HashMap<>();
     this.nodeGroupHandles = new HashMap<>();
     this.visualizerHandles = new HashMap<>();
   }
@@ -68,23 +55,12 @@ public class YmlDataStorage implements DataStorage {
     return NamespacedKey.fromString(name.replace('$', ':'));
   }
 
-  private void saveRoadMapFile(NamespacedKey key) {
-    File file = new File(roadMapDir, toFileName(key));
-    try {
-      roadmapHandles.get(key).save(file);
-    } catch (IOException e) {
-      throw new DataStorageException("Could not save roadmap yml-file for " + key);
-    }
-  }
-
   @Override
   public void connect(Runnable initial) {
     if (!dataDirectory.exists()) {
       dataDirectory.mkdirs();
       initial.run();
     }
-    this.roadMapDir = new File(dataDirectory, DIR_RM);
-    this.roadMapDir.mkdirs();
     this.nodeGroupDir = new File(dataDirectory, DIR_NG);
     this.nodeGroupDir.mkdirs();
     this.pathVisualizerDir = new File(dataDirectory, DIR_PV);
@@ -97,283 +73,163 @@ public class YmlDataStorage implements DataStorage {
   public void disconnect() {
   }
 
-  @Override
-  public void saveEdges(Collection<Edge> edges) {
-    Map<NamespacedKey, Collection<Edge>> mappedEdges = new HashMap<>();
-    for (Edge edge : edges) {
-      mappedEdges.computeIfAbsent(edge.getStart().getRoadMapKey(), key -> new HashSet<>())
-          .add(edge);
-    }
-    for (var entry : mappedEdges.entrySet()) {
-      NamespacedKey roadMapKey = entry.getKey();
-      YamlConfiguration cfg = roadmapHandles.get(roadMapKey);
-      if (cfg == null) {
-        throw new DataStorageException("Tried to save edge for not existing roadmap");
-      }
-      for (Edge edge : entry.getValue()) {
-        cfg.set("edges." + edge.getStart().getNodeId() + "." + edge.getEnd().getNodeId(),
-            edge.getWeightModifier());
-      }
-      saveRoadMapFile(roadMapKey);
-    }
+  private CompletableFuture<Void> workOnFile(File file, Consumer<YamlConfiguration> editor) {
+    return workOnFile(file, cfg -> {
+      editor.accept(cfg);
+      return null;
+    });
   }
 
-  @Override
-  public Collection<Edge> loadEdges(RoadMap roadMap, Map<Integer, Node<?>> scope) {
-    YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
-    if (cfg == null) {
-      throw new DataStorageException("Tried to load edges for non existing roadmap");
-    }
-    Collection<Edge> result = new HashSet<>();
-    ConfigurationSection edgeSection = cfg.getConfigurationSection("edges");
-    if (edgeSection == null) {
-      return result;
-    }
-    for (String key : edgeSection.getKeys(false)) {
-      ConfigurationSection innerSection = edgeSection.getConfigurationSection(key);
-      if (innerSection == null) {
-        continue;
-      }
-      int start = Integer.parseInt(key);
-      for (String innerKey : innerSection.getKeys(false)) {
-        double weight = innerSection.getDouble(innerKey);
-        result.add(new Edge(
-            scope.get(start),
-            scope.get(Integer.parseInt(innerKey)),
-            (float) weight));
-      }
-    }
-    return result;
-  }
-
-  @Override
-  public void deleteEdgesFrom(Node<?> start) {
-    YamlConfiguration cfg = roadmapHandles.get(start.getRoadMapKey());
-    if (cfg == null) {
-      throw new DataStorageException("Tried to save edge for non existing roadmap");
-    }
-    cfg.set("edges." + start.getNodeId(), null);
-    saveRoadMapFile(start.getRoadMapKey());
-  }
-
-  @Override
-  public void deleteEdgesTo(Node<?> end) {
-    YamlConfiguration cfg = roadmapHandles.get(end.getRoadMapKey());
-    if (cfg == null) {
-      throw new DataStorageException("Tried to save edge for non existing roadmap");
-    }
-    ConfigurationSection section = cfg.getConfigurationSection("edges");
-    for (String key : section.getKeys(false)) {
-      section.set(key + "." + end.getNodeId(), null);
-    }
-    saveRoadMapFile(end.getRoadMapKey());
-  }
-
-  @Override
-  public void deleteEdges(Collection<Edge> edges) {
-    if (edges.size() == 0) {
-      return;
-    }
-    Map<NamespacedKey, Collection<Edge>> sorted = new HashMap<>();
-    for (Edge edge : edges) {
-      sorted.computeIfAbsent(edge.getStart().getRoadMapKey(), roadMap -> new ArrayList<>())
-          .add(edge);
-    }
-    for (var entry : sorted.entrySet()) {
-      YamlConfiguration cfg = roadmapHandles.get(entry.getKey());
-      if (cfg == null) {
-        throw new DataStorageException("Tried to save edge for not existing roadmap");
-      }
-      for (Edge edge : entry.getValue()) {
-        cfg.set("edges." + edge.getStart().getNodeId() + "." + edge.getEnd().getNodeId(), null);
-      }
-      saveRoadMapFile(entry.getKey());
-    }
-  }
-
-  @Override
-  public void deleteEdge(Node<?> start, Node<?> end) {
-    YamlConfiguration cfg = roadmapHandles.computeIfAbsent(end.getRoadMapKey(), key ->
-        YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
-    cfg.set("edges." + start.getNodeId() + "." + end.getNodeId(), null);
-    saveRoadMapFile(end.getRoadMapKey());
-  }
-
-  @Override
-  public Map<Integer, Waypoint> loadNodes(RoadMap roadMap) {
-    YamlConfiguration cfg = roadmapHandles.get(roadMap.getKey());
-    if (cfg == null) {
-      throw new DataStorageException("Tried to load nodes for non existing roadmap");
-    }
-    Map<Integer, Waypoint> result = new HashMap<>();
-    ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes");
-    if (nodeSection == null) {
-      return result;
-    }
-    for (String key : nodeSection.getKeys(false)) {
-      ConfigurationSection innerSection = nodeSection.getConfigurationSection(key);
-      if (innerSection == null) {
-        continue;
-      }
-      //TODO for now i parse them only to waypoints, but lateron they will have a datastructure like pathvisualizers
-      int id = Integer.parseInt(key);
-      Location location = innerSection.getLocation("location");
-      Waypoint node = NodeHandler.WAYPOINT_TYPE
-          .createNode(new NodeType.NodeCreationContext(roadMap, id, location, true));
-      node.setCurveLength(innerSection.getDouble("curve-length"));
-      result.put(id, node);
-    }
-    return result;
-  }
-
-  @Override
-  public void updateNode(Waypoint node) {
-    YamlConfiguration cfg = roadmapHandles.computeIfAbsent(node.getRoadMapKey(), key ->
-        YamlConfiguration.loadConfiguration(new File(roadMapDir, toFileName(key))));
-    ConfigurationSection nodeSection = cfg.getConfigurationSection("nodes." + node.getNodeId());
-    if (nodeSection == null) {
-      nodeSection = cfg.createSection("nodes." + node.getNodeId());
-    }
-    nodeSection.set("type", node.getType().getKey().toString());
-    nodeSection.set("location", node.getLocation());
-    nodeSection.set("curve-length", node.getCurveLength());
-
-    saveRoadMapFile(node.getRoadMapKey());
-  }
-
-  @Override
-  public void deleteNodes(Integer... nodeId) {
-    deleteNodes(Lists.newArrayList(nodeId));
-  }
-
-  @Override
-  public void deleteNodes(Collection<Integer> nodeIds) {
-    for (File file : Arrays.stream(roadMapDir.listFiles())
-        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
-        .collect(Collectors.toList())) {
-      try {
-        NamespacedKey key = fromFileName(file.getName());
-        YamlConfiguration cfg =
-            roadmapHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-        for (int id : nodeIds) {
-          cfg.set("node." + id, null);
-        }
-        saveRoadMapFile(key);
-      } catch (Exception e) {
-        throw new DataStorageException("Could not delete nodes for roadmap in file " + file, e);
-      }
-    }
-  }
-
-  @Override
-  public void assignNodesToGroup(NodeGroup group, NodeSelection selection) {
-    updateNodeGroup(group);
-  }
-
-  @Override
-  public void removeNodesFromGroup(NodeGroup group, Iterable<Groupable<?>> selection) {
-    updateNodeGroup(group);
-  }
-
-  @Override
-  public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
-    Map<Integer, HashSet<NamespacedKey>> map = new HashMap<>();
-    for (File file : Arrays.stream(nodeGroupDir.listFiles())
-        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
-        .collect(Collectors.toList())) {
-      try {
-        NamespacedKey key = fromFileName(file.getName());
-        YamlConfiguration cfg =
-            nodeGroupHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-
-        List<Integer> nodes = (List<Integer>) cfg.getList("nodes");
-        if (nodes != null) {
-          nodes.forEach(n -> map.computeIfAbsent(n, i -> new HashSet<>()).add(key));
-        }
-      } catch (Exception e) {
-        throw new DataStorageException("Could not load nodegroup: " + file.getName(), e);
-      }
-    }
-    return map;
-  }
-
-  @Override
-  public HashedRegistry<NodeGroup> loadNodeGroups() {
-    HashedRegistry<NodeGroup> registry = new HashedRegistry<>();
-    for (File file : Arrays.stream(nodeGroupDir.listFiles())
-        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
-        .collect(Collectors.toList())) {
-      try {
-        NamespacedKey key = fromFileName(file.getName());
-        YamlConfiguration cfg =
-            nodeGroupHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-
-        String nameFormat = cfg.getString("name-format");
-        NodeGroup group = new NodeGroup(key, nameFormat);
-        group.setPermission(cfg.getString("permission"));
-        group.setNavigable(cfg.getBoolean("navigable"));
-        group.setDiscoverable(cfg.getBoolean("discoverable"));
-        group.setFindDistance((float) cfg.getDouble("find-distance"));
-        group.addSearchTermStrings(cfg.getStringList("search-terms"));
-
-        registry.put(group);
-      } catch (Exception e) {
-        throw new DataStorageException("Could not load nodegroup: " + file.getName(), e);
-      }
-    }
-    return registry;
-  }
-
-  @Override
-  public void updateNodeGroup(NodeGroup group) {
-    File file = new File(nodeGroupDir, toFileName(group.getKey()));
+  private <T> CompletableFuture<T> workOnFile(File file, Function<YamlConfiguration, T> editor) {
     if (!file.exists()) {
       try {
-        if (!file.createNewFile()) {
-          throw new DataStorageException("Could not create nodegroup file.");
-        }
+        file.createNewFile();
       } catch (IOException e) {
-        throw new DataStorageException("Could not create nodegroup file.", e);
+        e.printStackTrace();
       }
     }
     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-    cfg.set("key", group.getKey().toString());
-    cfg.set("name-format", group.getNameFormat());
-    cfg.set("permission", group.getPermission());
-    cfg.set("navigable", group.isNavigable());
-    cfg.set("discoverable", group.isDiscoverable());
-    cfg.set("find-distance", group.getFindDistance());
-    cfg.set("search-terms", new ArrayList<>(group.getSearchTerms().stream().map(SearchTerm::getIdentifier).toList()));
-    cfg.set("nodes", group.stream().map(Groupable::getNodeId).collect(Collectors.toList()));
-
+    T data = editor.apply(cfg);
     try {
       cfg.save(file);
     } catch (IOException e) {
-      throw new DataStorageException("Could not save nodegroup file.", e);
+      return CompletableFuture.failedFuture(e);
     }
-    nodeGroupHandles.put(group.getKey(), cfg);
+    return CompletableFuture.completedFuture(data);
   }
 
   @Override
-  public void deleteNodeGroup(NamespacedKey key) {
-    nodeGroupHandles.remove(key);
-    new File(nodeGroupDir, toFileName(key)).deleteOnExit();
+  public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      cfg.set(start.toString() + "." + end.toString(), weight);
+      return new Edge(start, end, (float) weight);
+    });
   }
 
   @Override
-  public Map<NamespacedKey, Collection<String>> loadSearchTerms() {
-    // already loaded in the load method
-    return new HashMap<>();
+  public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      Collection<Edge> edges = new HashSet<>();
+      for (UUID startId : start) {
+        for (UUID endId : end) {
+          cfg.set(startId.toString() + "." + endId.toString(), 1);
+          edges.add(new Edge(startId, endId, 1));
+        }
+      }
+      return edges;
+    });
   }
 
   @Override
-  public void addSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    updateNodeGroup(group);
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      for (UUID uuid : start) {
+        cfg.set(uuid.toString(), null);
+      }
+    });
   }
 
   @Override
-  public void removeSearchTerms(NodeGroup group, Collection<String> searchTerms) {
-    updateNodeGroup(group);
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      for (UUID startId : start) {
+        for (UUID endId : end) {
+          cfg.set(startId.toString() + "." + endId.toString(), null);
+        }
+      }
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      ConfigurationSection nodeSec = cfg.getConfigurationSection(start.toString());
+      if (nodeSec == null) {
+        return new HashSet<>();
+      }
+      Collection<Edge> edges = new HashSet<>();
+      for (String to : nodeSec.getKeys(false)) {
+        edges.add(new Edge(start, UUID.fromString(to), (float) nodeSec.getDouble(to)));
+      }
+      return edges;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
+    return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
+      return cfg.getStringList("nodes").stream().map(UUID::fromString).toList();
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet() {
+    return CompletableFuture.completedFuture(Arrays.stream(nodeGroupDir.listFiles())
+        .map(File::getName)
+        .map(this::fromFileName)
+        .collect(Collectors.toList()));
+  }
+
+  @Override
+  public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
+    return workOnFile(new File(nodeGroupDir, toFileName(key)), cfg -> {
+      NodeGroup group = new NodeGroup(key);
+      group.setWeight(cfg.getDouble("weight"));
+      cfg.getStringList("nodes").stream()
+          .map(UUID::fromString)
+          .forEach(group::add);
+
+      //TODO assign modifiers
+
+      return group;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<NodeGroup>> getNodeGroups() {
+    return getNodeGroups(new Pagination(0, Integer.MAX_VALUE)).thenApply(n -> n);
+  }
+
+  @Override
+  public CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination) {
+    List<File> fileList = Arrays.asList(nodeGroupDir.listFiles()).subList(pagination.offset(), pagination.offset() + pagination.limit());
+    return CompletableFuture.completedFuture(fileList.stream()
+        .parallel()
+        .map(File::getName)
+        .map(this::fromFileName)
+        .map(this::getNodeGroup)
+        .map(CompletableFuture::join)
+        .collect(Collectors.toList()));
+  }
+
+  @Override
+  public CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key) {
+    File file = new File(nodeGroupDir, toFileName(key));
+    if (file.exists()) {
+      return CompletableFuture.failedFuture(new IllegalArgumentException("Group with this key already exists."));
+    }
+    return workOnFile(file, cfg -> {
+      cfg.set("key", key.toString());
+      cfg.set("weight", 1);
+      return new NodeGroup(key);
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group, Consumer<NodeGroup> modifier) {
+    return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
+      NodeGroup g = getNodeGroup(group).join();
+      modifier.accept(g);
+      cfg.set("weight", g.getWeight());
+      cfg.set("nodes", g.stream().map(UUID::toString).toList());
+      // TODO modifiers
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodeGroup(NamespacedKey key) {
+    new File(nodeGroupDir, toFileName(key)).delete();
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

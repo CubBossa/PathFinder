@@ -6,17 +6,11 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
-import de.cubbossa.pathfinder.data.DataExporter;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
-import de.cubbossa.pathfinder.data.SqliteDataStorage;
-import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.arguments.TextArgument;
-import java.io.File;
-import java.io.IOException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +21,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -97,59 +90,6 @@ public class PathFinderCommand extends Command {
         .executes((commandSender, objects) -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_HELP, commandSender);
         }));
-
-    then(CustomArgs.literal("export")
-        .withPermission(PathPlugin.PERM_CMD_PF_EXPORT)
-        .then(CustomArgs.literal("sqlite")
-            .then(new TextArgument("filename")
-                .executes((commandSender, objects) -> {
-                  PathPlugin pl = PathPlugin.getInstance();
-                  long now = System.currentTimeMillis();
-                  Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String fileName = (String) objects[0];
-                    if (!fileName.endsWith(".db")) {
-                      fileName = fileName + ".db";
-                    }
-                    ApplicationLayer storage =
-                        new SqliteDataStorage(new File(pl.getDataFolder(), "exports/" + fileName));
-                    try {
-                      storage.connect();
-                      DataExporter.all().save(storage);
-                    } catch (IOException e) {
-                      pl.getLogger().log(Level.SEVERE, e, e::getMessage);
-                      commandSender.sendMessage(
-                          "Complete in " + (System.currentTimeMillis() - now) + "ms.");
-                    }
-                  });
-                })
-            )
-        )
-        .then(CustomArgs.literal("yaml")
-            .then(new TextArgument("directory")
-                .executes((commandSender, objects) -> {
-                  PathPlugin pl = PathPlugin.getInstance();
-                  long now = System.currentTimeMillis();
-                  Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String dir = (String) objects[0];
-                    if (!dir.startsWith("/")) {
-                      dir = "/" + dir;
-                    }
-                    File directory = new File(pl.getDataFolder(), "exports/" + dir);
-                    directory.mkdirs();
-                    ApplicationLayer storage = new YmlDataStorage(directory);
-                    try {
-                      storage.connect();
-                      DataExporter.all().save(storage);
-                      commandSender.sendMessage(
-                          "Complete in " + (System.currentTimeMillis() - now) + "ms.");
-                    } catch (IOException e) {
-                      pl.getLogger().log(Level.SEVERE, e, e::getMessage);
-                    }
-                  });
-                })
-            )
-        )
-    );
 
     then(CustomArgs.literal("import")
         .withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
@@ -311,7 +251,7 @@ public class PathFinderCommand extends Command {
 
   private void onForceFind(CommandSender sender, Player target, NamespacedKey discoverable) {
 
-    PathFinderAPI.builder().getNodeGroup(discoverable).thenAccept(group -> {
+    PathFinderAPI.get().getNodeGroup(discoverable).thenAccept(group -> {
       DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
       DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
@@ -326,7 +266,7 @@ public class PathFinderCommand extends Command {
   }
 
   private void onForceForget(CommandSender sender, Player target, NamespacedKey discoverable) {
-    PathFinderAPI.builder().getNodeGroup(discoverable).thenAccept(group -> {
+    PathFinderAPI.get().getNodeGroup(discoverable).thenAccept(group -> {
       DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
       DiscoverHandler.getInstance().forget(target.getUniqueId(), group);

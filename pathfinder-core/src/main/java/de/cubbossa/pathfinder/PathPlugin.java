@@ -13,7 +13,6 @@ import de.cubbossa.pathfinder.data.SqliteDataStorage;
 import de.cubbossa.pathfinder.data.YmlDataStorage;
 import de.cubbossa.pathfinder.hook.PlaceholderHookLoader;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
-import de.cubbossa.pathfinder.module.maze.MazeCommand;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
 import de.cubbossa.pathfinder.util.CommandUtils;
@@ -133,7 +132,6 @@ public class PathPlugin extends JavaPlugin {
   private NodeGroupCommand nodeGroupCommand;
   private PathVisualizerCommand pathVisualizerCommand;
   private WaypointCommand waypointCommand;
-  private MazeCommand mazeCommand;
 
   private final Set<DependencyLoader> dependencies;
 
@@ -207,17 +205,13 @@ public class PathPlugin extends JavaPlugin {
         context -> TranslationHandler.getInstance()
             .translateLine(context.text(), context.player(), context.resolver()));
 
-    new NodeGroupHandler();
     new VisualizerHandler();
     new NodeHandler();
-    new RoadMapHandler();
     new DiscoverHandler();
 
     dependencies.forEach(DependencyLoader::enable);
 
-    NodeGroupHandler.getInstance().loadGroups();
     VisualizerHandler.getInstance().loadVisualizers();
-    RoadMapHandler.getInstance().loadRoadMaps();
 
     // Commands
 
@@ -234,22 +228,17 @@ public class PathPlugin extends JavaPlugin {
     // Listeners
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
-    if (database != null) {
-      Bukkit.getPluginManager().registerEvents(new DatabaseListener(database), this);
-    }
 
     new ArrayList<>(extensions).forEach(PathPluginExtension::onEnable);
 
     Metrics metrics = new Metrics(this, 16324);
 
-    metrics.addCustomChart(new SimplePie("roadmap_amount",
-        () -> RoadMapHandler.getInstance().getRoadMaps().size() + ""));
     metrics.addCustomChart(new SimplePie("group_amount",
-        () -> NodeGroupHandler.getInstance().getNodeGroups().size() + ""));
+        () -> PathFinderAPI.get().getNodeGroupKeySet().join().size() + ""));
     metrics.addCustomChart(new SimplePie("visualizer_amount",
         () -> VisualizerHandler.getInstance().getRoadmapVisualizers().size() + ""));
     metrics.addCustomChart(new AdvancedPie("nodes_per_group", () -> {
-      IntStream counts = NodeGroupHandler.getInstance().getNodeGroups().stream()
+      IntStream counts = PathFinderAPI.get().getNodeGroups().join().stream()
           .mapToInt(Collection::size);
       Map<String, Integer> vals = new HashMap<>();
       counts.forEach(value -> {
@@ -288,7 +277,7 @@ public class PathPlugin extends JavaPlugin {
 
     new ArrayList<>(extensions).forEach(PathPluginExtension::onDisable);
 
-    RoadMapHandler.getInstance().cancelAllEditModes();
+    NodeHandler.getInstance().cancelAllEditModes();
     CommandAPI.onDisable();
   }
 

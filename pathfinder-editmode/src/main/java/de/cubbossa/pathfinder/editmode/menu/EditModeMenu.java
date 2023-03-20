@@ -173,7 +173,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-          PathFinderAPI.generalAPI().getNodes().thenAccept(nodes -> {
+          PathFinderAPI.get().getNodes().thenAccept(nodes -> {
 
             double dist = -1;
             Node<?> nearest = null;
