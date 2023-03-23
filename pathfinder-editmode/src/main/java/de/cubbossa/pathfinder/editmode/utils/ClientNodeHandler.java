@@ -19,12 +19,11 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.util.IntPair;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
@@ -188,18 +186,6 @@ public class ClientNodeHandler {
         node instanceof Groupable<?> groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead
             :
                 nodeSingleHead});
-    updateNodeName(player, node);
-  }
-
-  public void updateNodeName(Player player, Node<?> node) {
-    renameArmorstand(player, node,
-        node instanceof Groupable<?> groupable && !groupable.getGroups().isEmpty() ?
-            Messages.formatGroupConcat(
-                player, Messages.E_NODE_NAME, ((Groupable<?>) node).getGroups().stream()
-                    .map(NodeGroup::getSearchTerms)
-                    .flatMap(Collection::stream).collect(Collectors.toList()),
-                t -> Component.text(t.getIdentifier())
-            ) : null);
   }
 
   public void showEdges(Collection<Edge> edges, Player player) {
@@ -220,21 +206,26 @@ public class ClientNodeHandler {
   }
 
   public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
-    Location location =
-        LerpUtils.lerp(edge.getStart().getLocation(), edge.getEnd().getLocation(), .3f);
-    int id = spawnArmorstand(player, location, null, true);
-    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
-    setHeadRotation(player, id, edge.getEnd().getLocation().toVector().subtract(edge.getStart().getLocation().toVector()));
+    ApplicationLayer api = PathFinderAPI.get();
+    api.getNode(edge.getStart()).thenAccept(start -> {
+      api.getNode(edge.getEnd()).thenAccept(end -> {
+        Location location = LerpUtils.lerp(start.getLocation(), end.getLocation(), .3f);
+        int id = spawnArmorstand(player, location, null, true);
+        equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
+        setHeadRotation(player, id,
+            end.getLocation().toVector().subtract(start.getLocation().toVector()));
 
-    edgeEntityMap.put(edge, id);
-    entityEdgeMap.put(id, edge);
+        edgeEntityMap.put(edge, id);
+        entityEdgeMap.put(id, edge);
 
-    IntPair key = locationToChunkIntPair(location);
-    chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
+        IntPair key = locationToChunkIntPair(location);
+        chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
 
-    if (otherDirection != null) {
-      showEdge(otherDirection, null, player);
-    }
+        if (otherDirection != null) {
+          showEdge(otherDirection, null, player);
+        }
+      });
+    });
   }
 
   public void hideNodes(Collection<Node<?>> nodes, Player player) {
@@ -252,10 +243,14 @@ public class ClientNodeHandler {
         edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
     edges.forEach(edgeEntityMap::remove);
     edges.forEach(edge -> {
-      Location pos = edge.getStart().getLocation().clone().add(
-          edge.getEnd().getLocation().clone().subtract(edge.getStart().getLocation())
-              .multiply(.5f));
-      chunkEdgeMap.remove(locationToChunkIntPair(pos));
+      ApplicationLayer api = PathFinderAPI.get();
+      api.getNode(edge.getStart()).thenAccept(start -> {
+        api.getNode(edge.getEnd()).thenAccept(end -> {
+          Location pos = start.getLocation().clone().add(
+              end.getLocation().clone().subtract(start.getLocation()).multiply(.5f));
+          chunkEdgeMap.remove(locationToChunkIntPair(pos));
+        }).join();
+      }).join();
     });
   }
 
@@ -263,19 +258,27 @@ public class ClientNodeHandler {
                                  boolean updateEdges) {
     teleportArmorstand(player, nodeEntityMap.get(node), location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
-      RoadMap roadMap = RoadMapHandler.getInstance().getRoadMap(node.getRoadMapKey());
-      if (roadMap == null) {
-        throw new RuntimeException("Roadmap unexpectedly null.");
+      for (Edge edge : node.getEdges()) {
+        updateEdgePosition(edge, player);
       }
-      roadMap.getEdges().stream()
-          .filter(edge -> edge.getStart().equals(node) || edge.getEnd().equals(node))
-          .forEach(e -> {
-            teleportArmorstand(player, edgeEntityMap.get(e),
-                LerpUtils.lerp(e.getStart().getLocation(), e.getEnd().getLocation(), 0.3f)
-                    .clone()
-                    .add(ARMORSTAND_CHILD_OFFSET));
-          });
+      PathFinderAPI.get().getConnectionsTo(node.getNodeId()).thenAccept(edges -> {
+        for (Edge e : edges) {
+          updateEdgePosition(e, player);
+        }
+      });
     }
+  }
+
+  private void updateEdgePosition(Edge edge, Player player) {
+    ApplicationLayer api = PathFinderAPI.get();
+    api.getNode(edge.getStart()).thenAccept(start -> {
+      api.getNode(edge.getEnd()).thenAccept(end -> {
+        teleportArmorstand(player, edgeEntityMap.get(edge),
+            LerpUtils.lerp(start.getLocation(), end.getLocation(), 0.3f)
+                .clone()
+                .add(ARMORSTAND_CHILD_OFFSET));
+      });
+    });
   }
 
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
@@ -417,7 +420,7 @@ public class ClientNodeHandler {
 
     WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
     dataWatcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(META_INDEX_HEAD_EULER,
-            WrappedDataWatcher.Registry.getVectorSerializer()), v);
+        WrappedDataWatcher.Registry.getVectorSerializer()), v);
     sendMeta(player, id, dataWatcher);
   }
 }

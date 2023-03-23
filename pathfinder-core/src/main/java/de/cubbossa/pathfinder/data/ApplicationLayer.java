@@ -36,11 +36,12 @@ public interface ApplicationLayer {
 
   CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
 
-  CompletableFuture<Void> deleteNodes(NodeSelection nodes);
+  CompletableFuture<Node<?>> getNode(UUID uuid);
 
   CompletableFuture<Collection<Node<?>>> getNodes();
 
   CompletableFuture<Collection<Edge>> getConnections(UUID start);
+  CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end);
 
   default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
     return connectNodes(start, end, 1);

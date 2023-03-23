@@ -414,7 +414,7 @@ public class EditModeMenu {
       menu.addListEntry(Button.builder()
           .withItemStack(type::getDisplayItem)
           .withClickHandler(Action.RIGHT, c -> {
-            roadMap.createNode(type, location, true);
+            PathFinderAPI.get().createNode(type, location);
             menu.close(player);
           }));
     }

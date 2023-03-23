@@ -173,8 +173,8 @@ public class FindModule implements Listener, PathPluginExtension {
     }
     final Node<?> fClosest = closest;
     NodeType.NodeCreationContext c = new NodeType.NodeCreationContext(location);
-    return NodeHandler.WAYPOINT_TYPE.createNode(c).thenApply(target -> {
-      // we can savely add edges because the fClosest object is only a representation of the stored node.
+    return NodeHandler.WAYPOINT_TYPE.createNodeInStorage(c).thenApply(target -> {
+      // we can savely add edges because the fClosest object is only a representation of the stored node. TODO
       fClosest.getEdges().add(new Edge(fClosest, target, 1));
       return findPath(player, new NodeSelection(target)).join();
     });
@@ -300,7 +300,7 @@ public class FindModule implements Listener, PathPluginExtension {
     FAIL_TOO_FAR_AWAY;
   }
 
-  public record NavigationRequestContext(UUID playerId, Node<?> node) {
+  public record NavigationRequestContext(UUID playerId, NodeGroup group) {
   }
 
   public record SearchInfo(UUID playerId, VisualizerPath path, Location target, float distance) {

@@ -68,10 +68,6 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
     return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
   }
 
-  default CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-    return deleteNodes((Collection<UUID>) nodes);
-  }
-
   default CompletableFuture<Collection<Node<?>>> getNodes() {
     List<Node<?>> nodes = new ArrayList<>();
     for (NodeType<?> nodeType : NodeHandler.getInstance().getTypes().values()) {

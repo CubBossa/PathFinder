@@ -1,28 +1,40 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YmlDataStorage implements DataStorage {
 
-  private static final String FILE_NODES = "nodes.yml";
+  private static final String FILE_TYPES = "node_types.yml";
+  private static final String FILE_NODES = "waypoints.yml";
   private static final String FILE_EDGES = "edges.yml";
   private static final String DIR_NG = "nodegroups";
   private static final String DIR_PV = "path_visualizer";
@@ -40,7 +52,6 @@ public class YmlDataStorage implements DataStorage {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
     this.dataDirectory = dataDirectory;
-    this.nodeGroupHandles = new HashMap<>();
     this.visualizerHandles = new HashMap<>();
   }
 
@@ -96,6 +107,48 @@ public class YmlDataStorage implements DataStorage {
       return CompletableFuture.failedFuture(e);
     }
     return CompletableFuture.completedFuture(data);
+  }
+
+  @Override
+  public CompletableFuture<NodeType<?>> getNodeType(UUID nodeId) {
+    return workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
+      String typeString = cfg.getString(nodeId.toString());
+      if (typeString == null) {
+        throw new IllegalArgumentException("Could not find type for given UUID.");
+      }
+      NamespacedKey typeKey = NamespacedKey.fromString(typeString);
+      NodeType<?> type = NodeHandler.getInstance().getNodeType(typeKey);
+      if (type == null) {
+        throw new IllegalArgumentException("Could not find type for given UUID.");
+      }
+      return type;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Node<?>> getNode(UUID uuid) {
+    return getNodeType(uuid).thenApply(nodeType -> nodeType.getNodeFromStorage(uuid).join());
+  }
+
+  @Override
+  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
+    return DataStorage.super.createNode(type, location).thenApply(n -> {
+      workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
+        cfg.set(n.getNodeId().toString(), n.getType().getKey().toString());
+      }).join();
+      return n;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
+    return DataStorage.super.deleteNodes(nodes).thenRun(() -> {
+      workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
+        for (UUID n : nodes) {
+          cfg.set(n.toString(), null);
+        }
+      }).join();
+    });
   }
 
   @Override
@@ -156,10 +209,30 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
+  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      String idString = end.toString();
+      Collection<Edge> result = new HashSet<>();
+      for (String start : cfg.getKeys(false)) {
+        if (cfg.getConfigurationSection(start) != null && cfg.isSet(start + "." + idString)) {
+          result.add(new Edge(UUID.fromString(start), end,
+              (float) cfg.getDouble(start + "." + idString)));
+        }
+      }
+      return result;
+    });
+  }
+
+  @Override
   public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
     return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
       return cfg.getStringList("nodes").stream().map(UUID::fromString).toList();
     });
+  }
+
+  @Override
+  public CompletableFuture<Void> clearNodeGroups(NodeSelection selection) {
+    return null;
   }
 
   @Override
@@ -192,7 +265,8 @@ public class YmlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination) {
-    List<File> fileList = Arrays.asList(nodeGroupDir.listFiles()).subList(pagination.offset(), pagination.offset() + pagination.limit());
+    List<File> fileList = Arrays.asList(nodeGroupDir.listFiles())
+        .subList(pagination.offset(), pagination.offset() + pagination.limit());
     return CompletableFuture.completedFuture(fileList.stream()
         .parallel()
         .map(File::getName)
@@ -206,7 +280,8 @@ public class YmlDataStorage implements DataStorage {
   public CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key) {
     File file = new File(nodeGroupDir, toFileName(key));
     if (file.exists()) {
-      return CompletableFuture.failedFuture(new IllegalArgumentException("Group with this key already exists."));
+      return CompletableFuture.failedFuture(
+          new IllegalArgumentException("Group with this key already exists."));
     }
     return workOnFile(file, cfg -> {
       cfg.set("key", key.toString());
@@ -216,7 +291,8 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
-  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group, Consumer<NodeGroup> modifier) {
+  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group,
+                                                 Consumer<NodeGroup> modifier) {
     return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
       NodeGroup g = getNodeGroup(group).join();
       modifier.accept(g);
@@ -233,7 +309,8 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID playerId, NodeGroup discoverable, LocalDateTime foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID playerId, NodeGroup discoverable,
+                                         LocalDateTime foundDate) {
     File file;
     YamlConfiguration config;
     ConfigurationSection cfg;
@@ -286,7 +363,8 @@ public class YmlDataStorage implements DataStorage {
     Map<NamespacedKey, DiscoverInfo> map = new HashMap<>();
     for (String key : discoveries.getKeys(false)) {
       NamespacedKey nkey = NamespacedKey.fromString(key);
-      map.put(nkey, new DiscoverInfo(playerId, nkey, (LocalDateTime) discoveries.get(key + ".date")));
+      map.put(nkey,
+          new DiscoverInfo(playerId, nkey, (LocalDateTime) discoveries.get(key + ".date")));
     }
     return map;
   }
@@ -383,9 +461,90 @@ public class YmlDataStorage implements DataStorage {
 
   @Override
   public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
-    roadmapHandles.remove(visualizer.getKey());
-    File file = new File(roadMapDir, toFileName(visualizer.getKey()));
+    File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
     file.deleteOnExit();
+  }
+
+  @Override
+  public CompletableFuture<Waypoint> createNodeInStorage(NodeType.NodeCreationContext context) {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      UUID id = UUID.randomUUID();
+      cfg.set(id + ".location", context.location());
+      Waypoint waypoint = new Waypoint(id);
+      waypoint.setLocation(context.location());
+      return waypoint;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Waypoint> getNodeFromStorage(UUID id) {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      Location location = cfg.getLocation("id.location");
+      Waypoint waypoint = new Waypoint(id);
+      waypoint.setLocation(location);
+      return waypoint;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage() {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      Collection<Waypoint> waypoints = new HashSet<>();
+      for (String idString : cfg.getKeys(false)) {
+        Location location = cfg.getLocation("id.location");
+        Waypoint waypoint = new Waypoint(UUID.fromString(idString));
+        waypoint.setLocation(location);
+      }
+      return waypoints;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage(NodeSelection ids) {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      Collection<String> idStrings = ids.stream().map(Objects::toString).toList();
+      Collection<Waypoint> waypoints = new HashSet<>();
+      for (String idString : cfg.getKeys(false)) {
+        if (!idStrings.contains(idString)) {
+          continue;
+        }
+        Location location = cfg.getLocation("id.location");
+        Waypoint waypoint = new Waypoint(UUID.fromString(idString));
+        waypoint.setLocation(location);
+      }
+      return waypoints;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNodeInStorage(UUID nodeId, Consumer<Waypoint> nodeConsumer) {
+    return getNodeFromStorage(nodeId).thenAccept(waypoint -> {
+      workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+        nodeConsumer.accept(waypoint);
+        cfg.set(nodeId + ".location", waypoint.getLocation());
+      });
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNodesInStorage(NodeSelection nodeIds,
+                                                      Consumer<Waypoint> nodeConsumer) {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      for (UUID nodeId : nodeIds) {
+        Waypoint waypoint = getNodeFromStorage(nodeId).join();
+        nodeConsumer.accept(waypoint);
+        cfg.set(nodeId + ".location", waypoint.getLocation());
+      }
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodesFromStorage(NodeSelection nodes) {
+    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
+      for (UUID node : nodes) {
+        cfg.set(node.toString(), null);
+      }
+    });
   }
 
   public record Meta(

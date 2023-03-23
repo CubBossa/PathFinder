@@ -183,7 +183,7 @@ public class CustomArgs {
 	 * @param nodeName The name of the command argument in the command structure
 	 * @return a path visualizer argument instance
 	 */
-	public Argument<CompletableFuture<? extends PathVisualizer<?, ?>>> pathVisualizerArgument(String nodeName) {
+	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
 		return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
 					.get(customArgumentInfo.currentInput());
@@ -192,7 +192,7 @@ public class CustomArgs {
 			}
 			return vis;
 		})).includeSuggestions(suggestNamespacedKeys(sender ->
-				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().keySet())
+				CompletableFuture.completedFuture(new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().keySet()))
 		));
 	}
 
@@ -205,7 +205,7 @@ public class CustomArgs {
 	 * @param type     The type that all suggested and parsed visualizers are required to have
 	 * @return a path visualizer argument instance
 	 */
-	public Argument<CompletableFuture<? extends PathVisualizer<?, ?>>> pathVisualizerArgument(String nodeName,
+	public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName,
 	                                                                                          VisualizerType<?> type) {
 		return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
@@ -220,10 +220,10 @@ public class CustomArgs {
 			}
 			return vis;
 		})).includeSuggestions(suggestNamespacedKeys(sender ->
-				new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().entrySet().stream()
+				CompletableFuture.completedFuture(new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().entrySet().stream()
 						.filter(entry -> entry.getValue().getType().equals(type))
 						.map(Map.Entry::getKey)
-						.collect(Collectors.toList()))
+						.collect(Collectors.toList())))
 		));
 	}
 
@@ -231,12 +231,11 @@ public class CustomArgs {
 	 * Suggests a set of NamespacedKeys where the completion also includes matches for only the
 	 * key.
 	 *
-	 * @param keysSupplier Converts a command sender into a collection of namespaced keys
 	 * @return the argument suggestions object to insert
 	 */
 	public ArgumentSuggestions suggestNamespacedKeys(Function<CommandSender, CompletableFuture<Collection<NamespacedKey>>> keysSupplierFuture) {
 		return (suggestionInfo, suggestionsBuilder) -> {
-			return keysSupplierFuture.apply(suggestionInfo.sender()).thenAccept(keys -> {
+			return keysSupplierFuture.apply(suggestionInfo.sender()).thenApply(keys -> {
 				String[] splits = suggestionInfo.currentInput().split(" ", -1);
 				String in = splits[splits.length - 1];
 				int len = suggestionInfo.currentInput().length();
@@ -270,7 +269,7 @@ public class CustomArgs {
 			}
 			return type;
 		})).includeSuggestions(
-				suggestNamespacedKeys(sender -> NodeHandler.getInstance().getTypes().keySet()));
+				suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(NodeHandler.getInstance().getTypes().keySet())));
 	}
 
 	/**
@@ -325,7 +324,7 @@ public class CustomArgs {
 	public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
 			String nodeName) {
 		return arg(new NamespacedKeyArgument(nodeName).includeSuggestions(
-				suggestNamespacedKeys(sender -> PathFinderAPI.builder().getNodeGroups()
+				suggestNamespacedKeys(sender -> PathFinderAPI.get().getNodeGroups()
 						.thenApply(nodeGroups -> nodeGroups.stream()
 								.filter(g -> g.hasModifier(DiscoverableModifier.class))
 								.map(NodeGroup::getKey)
@@ -344,7 +343,7 @@ public class CustomArgs {
 				throw new CustomArgument.CustomArgumentException("Only for players");
 			}
 			String search = context.currentInput();
-			List<Node<?>> scope = NodeHandler.getInstance().getNodes().stream()
+			List<Node<?>> scope = PathFinderAPI.get().getNodes().join().stream()
 					.filter(node -> {
 						FindModule.NavigationRequestContext c =
 								new FindModule.NavigationRequestContext(player.getUniqueId(), node);
@@ -381,15 +380,14 @@ public class CustomArgs {
 
 					StringRange finalRange = range;
 					String inRange = finalRange.get(input);
-					Collection<String> allTerms = NodeGroupHandler.getInstance().getNodeGroups().stream()
+					Collection<String> allTerms = PathFinderAPI.get().getNodeGroups().join().stream()
 							.filter(ng -> ng.hasModifier(NavigableModifier.class))
 							.map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
 							.filter(navigable -> FindModule.getInstance().getNavigationFilter().stream()
 									.allMatch(navigablePredicate -> navigablePredicate.test(navigable)))
-							.map(FindModule.NavigationRequestContext::navigable)
-							.map(Navigable::getSearchTerms)
+							.map(FindModule.NavigationRequestContext::group)
+							.map(ng -> ng.getModifier(NavigableModifier.class).getSearchTermStrings())
 							.flatMap(Collection::stream)
-							.map(SearchTerm::getIdentifier)
 							.collect(Collectors.toSet());
 
 					/*TODO if (!Arrays.stream(suggestionInfo.currentInput().substring(0, lastIndex).split("[!&|()]")).allMatch(allTerms::contains)) {
