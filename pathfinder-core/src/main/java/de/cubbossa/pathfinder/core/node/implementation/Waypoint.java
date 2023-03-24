@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -15,7 +16,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final UUID nodeId;
   private final List<Edge> edges;
-  private final Collection<NodeGroup> groups;
+  private final Collection<NamespacedKey> groups;
 
   private Location location;
   @Nullable
@@ -50,17 +51,17 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
     return nodeId.hashCode();
   }
 
-  public Collection<NodeGroup> getGroups() {
+  public Collection<NamespacedKey> getGroups() {
     return new HashSet<>(groups);
   }
 
   @Override
-  public void addGroup(NodeGroup group) {
+  public void addGroup(NamespacedKey group) {
     groups.add(group);
   }
 
   @Override
-  public void removeGroup(NodeGroup group) {
+  public void removeGroup(NamespacedKey group) {
     groups.remove(group);
   }
 

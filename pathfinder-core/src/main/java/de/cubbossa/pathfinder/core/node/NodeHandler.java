@@ -97,6 +97,13 @@ public class NodeHandler {
 
   // Editing
 
+  public @Nullable NamespacedKey getEdited(Player player) {
+    return editors.values().stream()
+        .filter(e -> e.isEditing(player))
+        .map(NodeGroupEditor::getKey)
+        .findFirst().orElse(null);
+  }
+
   public void toggleNodeGroupEditor(Player player, NamespacedKey key) {
     getNodeGroupEditor(key).thenAccept(nodeGroupEditor -> {
       nodeGroupEditor.toggleEditMode(player.getUniqueId());

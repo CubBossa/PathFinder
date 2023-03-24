@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.common.collect.Lists;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
@@ -9,6 +10,7 @@ import de.cubbossa.pathfinder.core.nodegroup.modifier.VisualizerModifier;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -38,18 +40,19 @@ public class VisualizerPath<D> extends ArrayList<Node<?>> {
         // this node cannot be rendered, it cannot be grouped
         continue;
       }
-      for (NodeGroup group : groupable.getGroups()) {
-        // check if groups apply visualizers
-        VisualizerModifier modifier = group.getModifier(VisualizerModifier.class);
-        if (modifier == null) {
-          // group does not apply visualizer to node
-          continue;
-        }
-        nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add(modifier.visualizer());
+      VisualizerModifier mod = groupable.getGroups().stream()
+          .map(k -> PathFinderAPI.get().getNodeGroup(k))
+          .parallel()
+          .map(CompletableFuture::join)
+          .filter(g -> g.hasModifier(VisualizerModifier.class))
+          .sorted()
+          .map(g -> g.getModifier(VisualizerModifier.class))
+          .findFirst().orElse(null);
+      if (mod == null) {
+        continue;
       }
+      nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add(mod.visualizer());
     }
-
-    PathVisualizer<?, ?> current = null;
 
     // create SubPaths from map
     while (!nodeVisualizerMap.isEmpty()) {
@@ -61,6 +64,9 @@ public class VisualizerPath<D> extends ArrayList<Node<?>> {
 
       // follow one visualizer along path
       paths.add(new SubPath<>(null, null, null)); //TODO
+    }
+    for (SubPath<?> subPath : paths) {
+      subPath.visualizer.prepare(subPath.path, player);
     }
   }
 

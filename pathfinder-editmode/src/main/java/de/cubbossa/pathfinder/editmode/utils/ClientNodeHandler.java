@@ -54,8 +54,8 @@ import org.bukkit.util.Vector;
 @Setter
 public class ClientNodeHandler {
 
-  public static final Action<TargetContext<Node<?>>> RIGHT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<Node<?>>> LEFT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<UUID>> RIGHT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<UUID>> LEFT_CLICK_NODE = new Action<>();
   public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
   public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
@@ -77,8 +77,8 @@ public class ClientNodeHandler {
   private final ProtocolManager protocolManager;
   private final Map<IntPair, Collection<Node<?>>> chunkNodeMap;
   private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
-  private final Map<Node<?>, Integer> nodeEntityMap;
-  private final Map<Integer, Node<?>> entityNodeMap;
+  private final Map<UUID, Integer> nodeEntityMap;
+  private final Map<Integer, UUID> entityNodeMap;
   private final Map<Edge, Integer> edgeEntityMap;
   private final Map<Integer, Edge> entityEdgeMap;
   private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
@@ -132,7 +132,7 @@ public class ClientNodeHandler {
         boolean left = packet.getEnumEntityUseActions().read(0).getAction()
             .equals(EnumWrappers.EntityUseAction.ATTACK);
         if (entityNodeMap.containsKey(entityId)) {
-          Node<?> node = entityNodeMap.get(entityId);
+          UUID node = entityNodeMap.get(entityId);
           if (node == null) {
             throw new IllegalStateException("ClientNodeHandler Tables off sync!");
           }
@@ -143,7 +143,7 @@ public class ClientNodeHandler {
             return;
           }
           event.setCancelled(true);
-          Action<TargetContext<Node<?>>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
+          Action<TargetContext<UUID>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
         }
         if (entityEdgeMap.containsKey(entityId)) {
@@ -176,8 +176,8 @@ public class ClientNodeHandler {
     Location location = node.getLocation();
     int id = spawnArmorstand(player, location, null, false);
 
-    nodeEntityMap.put(node, id);
-    entityNodeMap.put(id, node);
+    nodeEntityMap.put(node.getNodeId(), id);
+    entityNodeMap.put(id, node.getNodeId());
 
     IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
     chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(node);
@@ -229,11 +229,12 @@ public class ClientNodeHandler {
   }
 
   public void hideNodes(Collection<Node<?>> nodes, Player player) {
+    Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).toList();
     removeArmorstand(player,
-        nodes.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
+        nodeIds.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
 
-    nodes.forEach(nodeEntityMap::remove);
-    new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodes.contains(e.getValue()))
+    nodeIds.forEach(nodeEntityMap::remove);
+    new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodeIds.contains(e.getValue()))
         .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
     nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(node.getLocation())));
   }
@@ -256,7 +257,7 @@ public class ClientNodeHandler {
 
   public void updateNodePosition(Node<?> node, Player player, Location location,
                                  boolean updateEdges) {
-    teleportArmorstand(player, nodeEntityMap.get(node), location.clone().add(ARMORSTAND_OFFSET));
+    teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()), location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
       for (Edge edge : node.getEdges()) {
         updateEdgePosition(edge, player);
@@ -375,7 +376,7 @@ public class ClientNodeHandler {
   }
 
   public void updateNodeHead(Player player, Node<?> node) {
-    Integer id = nodeEntityMap.get(node);
+    Integer id = nodeEntityMap.get(node.getNodeId());
     if (id == null) {
       throw new RuntimeException(
           "Trying to update armorstand that was not registered for client side display.");
@@ -387,7 +388,7 @@ public class ClientNodeHandler {
   }
 
   public void renameArmorstand(Player player, Node<?> node, @Nullable Component name) {
-    Integer id = nodeEntityMap.get(node);
+    Integer id = nodeEntityMap.get(node.getNodeId());
     if (id == null) {
       throw new RuntimeException(
           "Trying to update armorstand that was not registered for client side display.");

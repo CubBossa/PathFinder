@@ -27,7 +27,7 @@ public class EmptyNode implements Node<EmptyNode> {
       new ItemStack(Material.DIRT)
   ) {
     @Override
-    public CompletableFuture<EmptyNode> createNode(NodeCreationContext context) {
+    public CompletableFuture<EmptyNode> createNodeInStorage(NodeCreationContext context) {
       throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
           + "must be created from constructor.");
     }
@@ -44,11 +44,6 @@ public class EmptyNode implements Node<EmptyNode> {
   @Override
   public NodeType<EmptyNode> getType() {
     return TYPE;
-  }
-
-  @Override
-  public boolean isPersistent() {
-    return false;
   }
 
   @Override

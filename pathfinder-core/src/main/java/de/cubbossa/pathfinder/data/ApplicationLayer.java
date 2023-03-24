@@ -34,7 +34,7 @@ public interface ApplicationLayer {
 
   CompletableFuture<Void> updateNodes(NodeSelection nodes, Consumer<Node<?>> nodeConsumer);
 
-  CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
+  CompletableFuture<Void> deleteNodes(NodeSelection nodes);
 
   CompletableFuture<Node<?>> getNode(UUID uuid);
 
@@ -104,6 +104,11 @@ public interface ApplicationLayer {
   void deletePathVisualizer(PathVisualizer<?, ?> visualizer);
 
   record Pagination (int offset, int limit) {
+
+    int page() {
+      return offset / limit;
+    }
+
     public static Pagination page(int page, int elements) {
       return new Pagination(page * elements, elements);
     }

@@ -28,7 +28,7 @@ public class PlayerNode implements Node<PlayerNode> {
       new ItemStack(Material.DIRT)
   ) {
     @Override
-    public CompletableFuture<PlayerNode> createNode(NodeCreationContext context) {
+    public CompletableFuture<PlayerNode> createNodeInStorage(NodeCreationContext context) {
       throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
           + "must be created from constructor.");
     }
@@ -48,11 +48,6 @@ public class PlayerNode implements Node<PlayerNode> {
   @Override
   public NodeType<PlayerNode> getType() {
     return TYPE;
-  }
-
-  @Override
-  public boolean isPersistent() {
-    return false;
   }
 
   @Override

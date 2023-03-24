@@ -89,30 +89,32 @@ public class CommandUtils {
     return Suggestions.create(command, result);
   }
 
-  public <T> void printList(CommandSender sender, ApplicationLayer.Pagination pagination, Function<ApplicationLayer.Pagination, CompletableFuture<List<T>>> elements,
+  public <T> void printList(CommandSender sender, ApplicationLayer.Pagination pagination, Function<ApplicationLayer.Pagination, CompletableFuture<List<T>>> supplier,
                             Consumer<T> print, Message header, Message footer) {
 
-    int maxPage = (int) Math.ceil(elements.size() / (float) pageSize);
-    if (maxPage == 0) {
-      maxPage = 1;
-    }
-    page = Integer.min(page, maxPage);
-    int prevPage = Integer.max(page - 1, 1);
-    int nextPage = Integer.min(page + 1, maxPage);
+    supplier.apply(pagination).thenAccept(elements -> {
+      int maxPage = (int) Math.ceil(elements.size() / (float));
+      if (maxPage == 0) {
+        maxPage = 1;
+      }
+      page = Integer.min(page, maxPage);
+      int prevPage = Integer.max(page - 1, 1);
+      int nextPage = Integer.min(page + 1, maxPage);
 
-    TagResolver resolver = TagResolver.builder()
-        .resolver(Placeholder.parsed("page", page + ""))
-        .resolver(Placeholder.parsed("prev-page", prevPage + ""))
-        .resolver(Placeholder.parsed("next-page", nextPage + ""))
-        .resolver(Placeholder.parsed("pages", maxPage + ""))
-        .build();
+      TagResolver resolver = TagResolver.builder()
+          .resolver(Placeholder.parsed("page", page + ""))
+          .resolver(Placeholder.parsed("prev-page", prevPage + ""))
+          .resolver(Placeholder.parsed("next-page", nextPage + ""))
+          .resolver(Placeholder.parsed("pages", maxPage + ""))
+          .build();
 
 
-    TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
-    for (T element : CommandUtils.subListPaginated(elements, page - 1, pageSize)) {
-      print.accept(element);
-    }
-    TranslationHandler.getInstance().sendMessage(footer.format(resolver), sender);
+      TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
+      for (T element : CommandUtils.subListPaginated(elements, page - 1, pageSize)) {
+        print.accept(element);
+      }
+      TranslationHandler.getInstance().sendMessage(footer.format(resolver), sender);
+    });
   }
 
   public <T> void printList(CommandSender sender, int page, int pageSize, List<T> elements,

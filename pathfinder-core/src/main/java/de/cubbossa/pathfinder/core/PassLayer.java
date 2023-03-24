@@ -22,18 +22,19 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 
 public class PassLayer implements ApplicationLayer {
-  @Override
-  public void connect(Runnable initial) throws IOException {
-
-  }
-
-  @Override
-  public void disconnect() {
-
-  }
 
   @Override
   public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Void> teleportNode(UUID nodeId, Location location) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Void> updateNode(UUID nodeId, Consumer<Node<?>> nodeConsumer) {
     return null;
   }
 
@@ -43,17 +44,12 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Void> updateNode(N node) {
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
-    return null;
-  }
-
-  @Override
   public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Node<?>> getNode(UUID uuid) {
     return null;
   }
 
@@ -63,13 +59,12 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> getNodesByGroups(Collection<NodeGroup> groups) {
+  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
     return null;
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> getNodes(
-      Collection<Class<? extends Modifier>> withModifiers) {
+  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
     return null;
   }
 
@@ -84,39 +79,28 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public CompletableFuture<Collection<Edge>> disconnectNodes(NodeSelection start,
-                                                             NodeSelection end) {
+  public CompletableFuture<Void> disconnectNodes(UUID start) {
     return null;
   }
 
   @Override
-  public void saveEdges(Collection<Edge> edges) {
-
-  }
-
-  @Override
-  public Collection<Edge> loadEdges(Map<Integer, Node<?>> scope) {
+  public CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
     return null;
   }
 
   @Override
-  public void deleteEdgesFrom(Node<?> start) {
-
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start) {
+    return null;
   }
 
   @Override
-  public void deleteEdgesTo(Node<?> end) {
-
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
+    return null;
   }
 
   @Override
-  public void deleteEdges(Collection<Edge> edges) {
-
-  }
-
-  @Override
-  public void deleteEdge(Node<?> start, Node<?> end) {
-
+  public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
+    return null;
   }
 
   @Override
@@ -125,18 +109,22 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group,
-                                                      NodeSelection selection) {
+  public CompletableFuture<Void> assignNodesToGroups(Collection<NamespacedKey> groups, NodeSelection selection) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group, NodeSelection selection) {
+    return null;
+  }
+
+  @Override
+  public CompletableFuture<Void> removeNodesFromGroups(Collection<NamespacedKey> groups, NodeSelection selection) {
     return null;
   }
 
   @Override
   public CompletableFuture<Void> clearNodeGroups(NodeSelection selection) {
-    return null;
-  }
-
-  @Override
-  public Map<Integer, ? extends Collection<NamespacedKey>> loadNodeGroupNodes() {
     return null;
   }
 
@@ -166,6 +154,11 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
+  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group, Consumer<NodeGroup> modifier) {
+    return null;
+  }
+
+  @Override
   public CompletableFuture<Void> deleteNodeGroup(NamespacedKey key) {
     return null;
   }
@@ -176,14 +169,12 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group,
-                                                           Class<? extends Modifier> modifier) {
+  public CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group, Class<? extends Modifier> modifier) {
     return null;
   }
 
   @Override
-  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable,
-                                         LocalDateTime foundDate) {
+  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable, LocalDateTime foundDate) {
     return null;
   }
 
@@ -198,8 +189,7 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(
-      VisualizerType<T> type) {
+  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(VisualizerType<T> type) {
     return null;
   }
 
