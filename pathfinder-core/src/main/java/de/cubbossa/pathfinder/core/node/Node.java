@@ -20,10 +20,6 @@ public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
 
   Collection<Edge> getEdges();
 
-  @Nullable Double getCurveLength();
-
-  void setCurveLength(Double value);
-
   @Override
   default int compareTo(@NotNull Node<?> o) {
     return getNodeId().compareTo(o.getNodeId());

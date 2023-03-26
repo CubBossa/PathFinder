@@ -67,9 +67,13 @@ public class EditModeMenu {
 				.withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
 					Player p = context.getPlayer();
 					PathFinderAPI.builder()
-							.withEvents().build()
+							.withPersistence().withEvents().build()
 							.deleteNodes(new NodeSelection(context.getTarget()))
-							.thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
+							.thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1))
+							.exceptionally(throwable -> {
+								throwable.printStackTrace();
+								return null;
+							});
 				})
 				.withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
 					Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
@@ -81,11 +85,14 @@ public class EditModeMenu {
 						}
 						ApplicationLayer api = PathFinderAPI.builder().withEvents().build();
 
-						api
-								.createNode(type, pos)
+						api.createNode(type, pos)
+								.exceptionally(throwable -> {
+									throwable.printStackTrace();
+									return null;
+								})
 								.thenAccept(node -> {
-									api.updateNode(node.getNodeId(), n -> n.setLocation(pos));
-								});
+							PathFinderAPI.get().assignNodesToGroup(key, new NodeSelection(node.getNodeId()));
+						});
 					} else {
 						openNodeTypeMenu(context.getPlayer(), pos);
 					}
@@ -107,7 +114,7 @@ public class EditModeMenu {
 					if (edgeStart == null) {
 						edgeStart = c.getTarget();
 					} else {
-						if (edgeStart.equals(c.getTarget())) {
+						/* if (edgeStart.equals(c.getTarget())) {
 							p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 							return;
 						}
@@ -121,7 +128,7 @@ public class EditModeMenu {
 								.thenRun(() -> edgeStart = null);
 						if (undirectedEdges) {
 							api.connectNodes(c.getTarget().getNodeId(), edgeStart.getNodeId());
-						}
+						}*/
 					}
 					c.getMenu().refresh(c.getSlot());
 					EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),

@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.NamespacedKey;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -19,17 +21,17 @@ public class NodeGroupAssignEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable<?>> groupables;
-  private final Collection<NodeGroup> groups;
-  private Collection<Groupable<?>> modifiedGroupables;
-  private Collection<NodeGroup> modifiedGroups;
+  private final Collection<UUID> groupables;
+  private final Collection<NamespacedKey> groups;
+  private Collection<UUID> modifiedGroupables;
+  private Collection<NamespacedKey> modifiedGroups;
   private boolean cancelled;
 
-  public NodeGroupAssignEvent(Groupable<?> groupables, NodeGroup groups) {
-    this(Lists.newArrayList(groupables), List.of(groups));
+  public NodeGroupAssignEvent(UUID groupable, NamespacedKey groups) {
+    this(Lists.newArrayList(groupable), List.of(groups));
   }
 
-  public NodeGroupAssignEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupAssignEvent(Collection<UUID> groupables, Collection<NamespacedKey> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
     this.modifiedGroupables = new ArrayList<>(groupables);

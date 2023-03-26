@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
@@ -8,6 +9,7 @@ import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.TranslationHandler;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -20,11 +22,16 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
-@RequiredArgsConstructor
 public class MessageLayer extends PassLayer implements ApplicationLayer {
 
   private final CommandSender sender;
   private final ApplicationLayer subLayer;
+
+  public MessageLayer(CommandSender sender, ApplicationLayer subLayer) {
+    super(subLayer);
+    this.sender = sender;
+    this.subLayer = subLayer;
+  }
 
   public EventsLayer eventLayer() {
     return new EventsLayer(this);

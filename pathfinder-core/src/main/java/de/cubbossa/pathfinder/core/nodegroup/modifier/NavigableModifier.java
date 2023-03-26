@@ -39,6 +39,10 @@ public class NavigableModifier implements Modifier {
     this.searchTerms.clear();
   }
 
+  public Collection<SearchTerm> getSearchTerms() {
+    return new ArrayList<>(searchTerms);
+  }
+
   public Collection<String> getSearchTermStrings() {
     return searchTerms.stream().map(SearchTerm::getIdentifier).toList();
   }

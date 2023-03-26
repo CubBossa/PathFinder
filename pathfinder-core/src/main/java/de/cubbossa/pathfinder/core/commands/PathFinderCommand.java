@@ -80,10 +80,10 @@ public class PathFinderCommand extends Command {
         .executesPlayer((commandSender, args) -> {
           NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, NodeHandler.GROUP_GLOBAL);
         })
-        .then(CustomArgs.nodeGroupArgument("group"))
+        .then(CustomArgs.nodeGroupArgument("group")
             .executesPlayer((commandSender, args) -> {
               NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, (NamespacedKey) args[0]);
-            }));
+            })));
 
     then(CustomArgs.literal("help")
         .withPermission(PathPlugin.PERM_CMD_PF_HELP)

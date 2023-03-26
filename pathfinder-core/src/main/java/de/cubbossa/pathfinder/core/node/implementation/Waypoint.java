@@ -19,8 +19,6 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
   private final Collection<NamespacedKey> groups;
 
   private Location location;
-  @Nullable
-  private Double curveLength = null;
 
   public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;
@@ -75,7 +73,6 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
     return "Waypoint{" +
         "nodeId=" + nodeId +
         ", location=" + location +
-        ", curveLength=" + curveLength +
         '}';
   }
 }

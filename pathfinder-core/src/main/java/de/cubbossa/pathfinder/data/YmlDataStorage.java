@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.data;
 
+import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
@@ -13,6 +14,7 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -126,8 +128,34 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
+  public CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType) {
+    return workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
+      cfg.set(nodeId.toString(), nodeType.toString());
+    });
+  }
+
+  @Override
   public CompletableFuture<Node<?>> getNode(UUID uuid) {
     return getNodeType(uuid).thenApply(nodeType -> nodeType.getNodeFromStorage(uuid).join());
+  }
+
+  @Override
+  public CompletableFuture<Collection<NamespacedKey>> getNodeGroups(UUID node) {
+    return getNodeGroupKeySet().thenApply(nodeGroups -> {
+      Collection<CompletableFuture<?>> futures = new ArrayList<>();
+      Collection<NamespacedKey> groups = new ArrayList<>();
+      for (NamespacedKey nodeGroup : nodeGroups) {
+        futures.add(workOnFile(new File(dataDirectory, toFileName(nodeGroup)), cfg -> {
+          if (cfg.getStringList("nodes").contains(node.toString())) {
+            groups.add(nodeGroup);
+          }
+        }));
+      }
+      return CompletableFuture
+          .allOf(futures.toArray(CompletableFuture[]::new))
+          .thenApply(u -> groups)
+          .join();
+    });
   }
 
   @Override
@@ -141,7 +169,7 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
-  public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
+  public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
     return DataStorage.super.deleteNodes(nodes).thenRun(() -> {
       workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
         for (UUID n : nodes) {
@@ -224,6 +252,23 @@ public class YmlDataStorage implements DataStorage {
   }
 
   @Override
+  public CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection ends) {
+    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
+      Collection<Edge> result = new HashSet<>();
+      for (String start : cfg.getKeys(false)) {
+        for (UUID end : ends) {
+          String idString = end.toString();
+          if (cfg.getConfigurationSection(start) != null && cfg.isSet(start + "." + idString)) {
+            result.add(new Edge(UUID.fromString(start), end,
+                (float) cfg.getDouble(start + "." + idString)));
+          }
+        }
+      }
+      return result;
+    });
+  }
+
+  @Override
   public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
     return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
       return cfg.getStringList("nodes").stream().map(UUID::fromString).toList();
@@ -261,6 +306,13 @@ public class YmlDataStorage implements DataStorage {
   @Override
   public CompletableFuture<Collection<NodeGroup>> getNodeGroups() {
     return getNodeGroups(new Pagination(0, Integer.MAX_VALUE)).thenApply(n -> n);
+  }
+
+  @Override
+  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(Class<M> modifier) {
+    return getNodeGroups().thenApply(nodeGroups -> {
+      return nodeGroups.stream().filter(g -> g.hasModifier(modifier)).collect(Collectors.toList());
+    });
   }
 
   @Override

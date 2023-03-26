@@ -6,6 +6,7 @@ package de.cubbossa.pathfinder.jooq.tables;
 
 import de.cubbossa.pathfinder.data.UUIDConverter;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
+import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 
 import java.util.UUID;
@@ -23,6 +24,7 @@ import org.jooq.SelectField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
+import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
@@ -52,12 +54,12 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     /**
      * The column <code>pathfinder_edges.start_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, UUID> START_ID = createField(DSL.name("start_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
+    public final TableField<PathfinderEdgesRecord, UUID> START_ID = createField(DSL.name("start_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_edges.end_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, UUID> END_ID = createField(DSL.name("end_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
+    public final TableField<PathfinderEdgesRecord, UUID> END_ID = createField(DSL.name("end_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_edges.weight</code>.
@@ -100,6 +102,11 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     @Override
     public Schema getSchema() {
         return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+    }
+
+    @Override
+    public UniqueKey<PathfinderEdgesRecord> getPrimaryKey() {
+        return Keys.PATHFINDER_EDGES__PATHFINDER_EDGES_PK;
     }
 
     @Override

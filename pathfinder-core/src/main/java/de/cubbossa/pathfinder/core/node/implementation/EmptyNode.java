@@ -62,16 +62,6 @@ public class EmptyNode implements Node<EmptyNode> {
   }
 
   @Override
-  public @Nullable Double getCurveLength() {
-    return null;
-  }
-
-  @Override
-  public void setCurveLength(Double value) {
-
-  }
-
-  @Override
   public int compareTo(@NotNull Node o) {
     return 0;
   }

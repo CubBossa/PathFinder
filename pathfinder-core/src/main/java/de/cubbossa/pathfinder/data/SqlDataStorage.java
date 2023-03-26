@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.data;
 
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_GROUP_MODIFIER_RELATION;
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_NODE_TYPE_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
@@ -16,7 +18,7 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsNodesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupNodesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -119,6 +121,7 @@ public abstract class SqlDataStorage implements DataStorage {
     createNodeGroupNodesTable();
     createEdgeTable();
     createDiscoverInfoTable();
+    createNodeTypeRelation();
   }
 
   private void createNodeTable() {
@@ -151,8 +154,8 @@ public abstract class SqlDataStorage implements DataStorage {
 
   private void createNodeGroupNodesTable() {
     create
-        .createTableIfNotExists(PATHFINDER_NODEGROUPS_NODES)
-        .columns(PATHFINDER_NODEGROUPS_NODES.fields())
+        .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
+        .columns(PATHFINDER_NODEGROUP_NODES.fields())
         .execute();
   }
 
@@ -170,26 +173,88 @@ public abstract class SqlDataStorage implements DataStorage {
         .execute();
   }
 
+
+  private void createNodeTypeRelation() {
+    create
+        .createTableIfNotExists(PATHFINDER_NODE_TYPE_RELATION)
+        .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
+        .execute();
+  }
+
   @Override
-  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-    return type.createNodeInStorage(new NodeType.NodeCreationContext(location));
+  public CompletableFuture<NodeType<?>> getNodeType(UUID nodeId) {
+    NodeType<?> type = create
+        .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
+        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(nodeId))
+        .fetch(t -> NodeHandler.getInstance().getNodeType(t.getNodeType()))
+        .get(0);
+    return CompletableFuture.completedFuture(type);
+  }
+
+  @Override
+  public CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType) {
+    create
+        .insertInto(PATHFINDER_NODE_TYPE_RELATION)
+        .values(nodeId, nodeType)
+        .execute();
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
   public CompletableFuture<Waypoint> createNodeInStorage(NodeType.NodeCreationContext context) {
+    UUID uuid = UUID.randomUUID();
     create
         .insertInto(PATHFINDER_WAYPOINTS)
         .values(
-            UUID.randomUUID(),
+            uuid,
+            context.location().getWorld() == null ? null : context.location().getWorld().getUID(),
             context.location().getX(),
             context.location().getY(),
-            context.location().getZ(),
-            context.location().getWorld().getUID()
+            context.location().getZ()
         )
         .execute();
-    Waypoint waypoint = new Waypoint(UUID.randomUUID());
+    Waypoint waypoint = new Waypoint(uuid);
     waypoint.setLocation(context.location());
     return CompletableFuture.completedFuture(waypoint);
+  }
+
+  private CompletableFuture<Collection<Waypoint>> insertGroups(Collection<Waypoint> waypoints) {
+    Collection<CompletableFuture<?>> futures = new ArrayList<>();
+    for (Waypoint waypoint : waypoints) {
+      futures.add(getNodeGroups(waypoint.getNodeId()).thenAccept(namespacedKeys -> {
+        namespacedKeys.forEach(waypoint::addGroup);
+      }));
+    }
+    return CompletableFuture
+        .allOf(futures.toArray(CompletableFuture[]::new))
+        .thenApply(u -> waypoints);
+  }
+
+  @Override
+  public CompletableFuture<Waypoint> getNodeFromStorage(UUID id) {
+    Waypoint waypoint = create
+        .selectFrom(PATHFINDER_WAYPOINTS)
+        .where(PATHFINDER_WAYPOINTS.ID.eq(id))
+        .fetch(nodeMapper)
+        .get(0);
+    return insertGroups(List.of(waypoint)).thenApply(waypoints -> waypoints.toArray(Waypoint[]::new)[0]);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage() {
+    Collection<Waypoint> waypoints = create
+        .selectFrom(PATHFINDER_WAYPOINTS)
+        .fetch(nodeMapper);
+    return insertGroups(waypoints);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage(NodeSelection ids) {
+    Collection<Waypoint> waypoints = create
+        .selectFrom(PATHFINDER_WAYPOINTS)
+        .where(PATHFINDER_WAYPOINTS.ID.in(ids))
+        .fetch(nodeMapper);
+    return insertGroups(waypoints);
   }
 
   @Override
@@ -218,7 +283,7 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
-  public CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
+  public CompletableFuture<Void> deleteNodesFromStorage(NodeSelection nodes) {
     create
         .deleteFrom(PATHFINDER_WAYPOINTS)
         .where(PATHFINDER_WAYPOINTS.ID.in(nodes))
@@ -228,7 +293,20 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-    return deleteNodes((Collection<UUID>) nodes);
+    create
+        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
+        .execute();
+    create
+        .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
+        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
+        .execute();
+    create
+        .deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.in(nodes))
+        .or(PATHFINDER_EDGES.END_ID.in(nodes))
+        .execute();
+    return DataStorage.super.deleteNodes(nodes);
   }
 
   @Override
@@ -302,6 +380,42 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start) {
+    create
+        .deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.in(start))
+        .execute();
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
+    Collection<Edge> edges = create
+        .selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.eq(start))
+        .fetch(edgeMapper);
+    return CompletableFuture.completedFuture(edges);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
+    Collection<Edge> edges = create
+        .selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.END_ID.eq(end))
+        .fetch(edgeMapper);
+    return CompletableFuture.completedFuture(edges);
+  }
+
+  @Override
+  public CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection end) {
+    Collection<Edge> edges = create
+        .selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.END_ID.in(end))
+        .fetch(edgeMapper);
+    return CompletableFuture.completedFuture(edges);
+  }
+
+  @Override
   public CompletableFuture<Void> updateNodeInStorage(UUID id, Consumer<Waypoint> consumer) {
     return NodeHandler.WAYPOINT_TYPE.getNodeFromStorage(id).thenAccept(node -> {
       consumer.accept(node);
@@ -316,11 +430,39 @@ public abstract class SqlDataStorage implements DataStorage {
   }
 
   @Override
+  public CompletableFuture<Collection<NamespacedKey>> getNodeGroups(UUID node) {
+    return CompletableFuture.completedFuture(create
+        .selectFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.eq(node))
+        .fetch(PathfinderNodegroupNodesRecord::getGroupKey));
+  }
+
+  @Override
+  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(
+      Class<M> modifier) {
+    Collection<NodeGroup> groups = create
+        .select()
+        .from(PATHFINDER_NODEGROUPS)
+        .join(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY))
+        .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))
+        .fetch(r -> {
+          NodeGroup group = new NodeGroup(
+              r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
+          );
+          group.addAll(getNodeGroupNodes(group.getKey()).join());
+          loadModifiers(group.getKey()).join().forEach(group::addModifier);
+          return group;
+        });
+    return CompletableFuture.completedFuture(groups);
+  }
+
+  @Override
   public CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {
     create.batched(configuration -> {
       for (UUID nodeId : selection) {
         DSL.using(configuration)
-            .insertInto(PATHFINDER_NODEGROUPS_NODES)
+            .insertInto(PATHFINDER_NODEGROUP_NODES)
             .values(group, nodeId)
             .onDuplicateKeyIgnore()
             .execute();
@@ -332,9 +474,9 @@ public abstract class SqlDataStorage implements DataStorage {
   @Override
   public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey key, NodeSelection selection) {
     create
-        .deleteFrom(PATHFINDER_NODEGROUPS_NODES)
-        .where(PATHFINDER_NODEGROUPS_NODES.GROUP_KEY.eq(key))
-        .and(PATHFINDER_NODEGROUPS_NODES.NODE_ID.in(selection))
+        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(key))
+        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(selection))
         .execute();
     return CompletableFuture.completedFuture(null);
   }
@@ -348,10 +490,10 @@ public abstract class SqlDataStorage implements DataStorage {
   public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
     Collection<UUID> nodes = new HashSet<>();
     create
-        .selectFrom(PATHFINDER_NODEGROUPS_NODES)
+        .selectFrom(PATHFINDER_NODEGROUP_NODES)
         .fetch()
         .stream()
-        .map(PathfinderNodegroupsNodesRecord::getNodeId)
+        .map(PathfinderNodegroupNodesRecord::getNodeId)
         .forEach(nodes::add);
     return CompletableFuture.completedFuture(nodes);
   }
@@ -370,14 +512,12 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
-    return CompletableFuture.completedFuture(
-        create
-            .selectFrom(PATHFINDER_NODEGROUPS)
-            .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
-            .fetch(groupMapper)
-            .stream().findAny()
-            .orElse(null)
-    );
+    NodeGroup group = create
+        .selectFrom(PATHFINDER_NODEGROUPS)
+        .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
+        .fetch(groupMapper)
+        .get(0);
+    return getNodeGroupNodes(key).thenAccept(group::addAll).thenApply(unused -> group);
   }
 
   @Override
@@ -429,6 +569,10 @@ public abstract class SqlDataStorage implements DataStorage {
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .execute();
     return CompletableFuture.completedFuture(null);
+  }
+
+  public CompletableFuture<Collection<Modifier>> loadModifiers(NamespacedKey group) {
+    return CompletableFuture.completedFuture(new HashSet<>());
   }
 
   @Override

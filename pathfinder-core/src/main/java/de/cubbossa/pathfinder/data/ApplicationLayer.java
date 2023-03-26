@@ -40,8 +40,14 @@ public interface ApplicationLayer {
 
   CompletableFuture<Collection<Node<?>>> getNodes();
 
+  CompletableFuture<Collection<Node<?>>> getNodes(NodeSelection selection);
+
+  <M extends Modifier> CompletableFuture<Map<Node<?>, M>> getNodes(Class<M> modifier);
+
   CompletableFuture<Collection<Edge>> getConnections(UUID start);
+
   CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end);
+  CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection end);
 
   default CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
     return connectNodes(start, end, 1);
@@ -75,6 +81,8 @@ public interface ApplicationLayer {
   CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key);
 
   CompletableFuture<Collection<NodeGroup>> getNodeGroups();
+
+  <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(Class<M> modifier);
 
   CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination);
 

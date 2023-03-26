@@ -92,7 +92,7 @@ public class CommandUtils {
   public <T> void printList(CommandSender sender, ApplicationLayer.Pagination pagination, Function<ApplicationLayer.Pagination, CompletableFuture<List<T>>> supplier,
                             Consumer<T> print, Message header, Message footer) {
 
-    supplier.apply(pagination).thenAccept(elements -> {
+    /*supplier.apply(pagination).thenAccept(elements -> {
       int maxPage = (int) Math.ceil(elements.size() / (float));
       if (maxPage == 0) {
         maxPage = 1;
@@ -114,7 +114,7 @@ public class CommandUtils {
         print.accept(element);
       }
       TranslationHandler.getInstance().sendMessage(footer.format(resolver), sender);
-    });
+    });*/
   }
 
   public <T> void printList(CommandSender sender, int page, int pageSize, List<T> elements,

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.core.EventsLayer;
 import de.cubbossa.pathfinder.core.MessageLayer;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
 import java.util.logging.Logger;
@@ -57,7 +58,7 @@ public class PathFinderAPI {
 			ApplicationLayer layer = PathPlugin.getInstance().getDatabase();
 
 			if (eventsLayer) {
-
+				layer = new EventsLayer(layer);
 			}
 			if (messageLayer != null) {
 				layer = new MessageLayer(messageLayer, layer);

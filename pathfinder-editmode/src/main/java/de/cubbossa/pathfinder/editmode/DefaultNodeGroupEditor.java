@@ -6,23 +6,22 @@ import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
-import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
+import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
-import java.awt.*;
+import de.cubbossa.pathfinder.util.NodeSelection;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,6 +60,9 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   private final Map<UUID, GameMode> preservedGameModes;
 
   private final Collection<Integer> editModeTasks;
+
+  private final Map<UUID, Node<?>> nodes = new HashMap<>();
+  private final Collection<Edge> edges = new HashSet<>();
 
   private float particleDistance = .3f;
   private int tickDelay = 5;
@@ -145,16 +147,37 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   public void showArmorStands(Player player) {
-    PathFinderAPI.builder().getNodeGroup(key).thenAccept(group -> {
-      armorstandHandler.showNodes(group, player);
-    });
-    armorstandHandler.showNodes(roadMap.getNodes(), player);
-    armorstandHandler.showEdges(roadMap.getEdges(), player);
+    PathFinderAPI.get().getNodeGroup(key)
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        })
+        .thenAccept(group -> {
+          PathFinderAPI.get().getNodes(new NodeSelection(group))
+              .thenAccept(nodes -> {
+                armorstandHandler.showNodes(nodes, player);
+                for (Node<?> node : nodes) {
+                  this.nodes.put(node.getNodeId(), node);
+                }
+              }).exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+              });
+          PathFinderAPI.get().getConnectionsTo(new NodeSelection(group)).thenAccept(edges -> {
+            armorstandHandler.showEdges(edges, player);
+            this.edges.addAll(edges);
+          });
+        }).exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        });
   }
 
   public void hideArmorStands(Player player) {
-    armorstandHandler.hideNodes(roadMap.getNodes(), player);
-    armorstandHandler.hideEdges(roadMap.getEdges(), player);
+    armorstandHandler.hideNodes(nodes.values(), player);
+    armorstandHandler.hideEdges(edges, player);
+    nodes.clear();
+    edges.clear();
   }
 
   public boolean isEditing(UUID uuid) {
@@ -186,8 +209,10 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
 
       Map<Edge, Boolean> undirected = new HashMap<>();
-      for (Edge edge : roadMap.getEdges()) {
-        Edge contained = roadMap.getEdge(edge.getEnd(), edge.getStart());
+      for (Edge edge : edges) {
+        Edge contained = edges.stream()
+            .filter(e -> e.getEnd().equals(edge.getStart()) && e.getStart().equals(edge.getEnd()))
+            .findAny().orElse(null);
         if (contained != null && undirected.containsKey(contained)) {
           undirected.put(contained, true);
         } else {
@@ -199,25 +224,36 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       Map<Color, ParticleBuilder> particles = new HashMap<>();
 
       for (var entry : undirected.entrySet()) {
-        if (!Objects.equals(entry.getKey().getStart().getLocation().getWorld(),
-            entry.getKey().getEnd().getLocation().getWorld())) {
-          continue;
-        }
-        boolean directed = !entry.getValue();
+        PathFinderAPI.get()
+            .getNodes(new NodeSelection(entry.getKey().getStart(), entry.getKey().getEnd()))
+            .thenAccept(nodePair -> {
+              Node<?> start = nodePair.stream()
+                  .filter(node -> node.getNodeId().equals(entry.getKey().getStart())).findFirst()
+                  .orElse(null);
+              Node<?> end =
+                  nodePair.stream().filter(node -> node.getNodeId().equals(entry.getKey().getEnd()))
+                      .findFirst().orElse(null);
 
-        Vector a = entry.getKey().getStart().getLocation().toVector();
-        Vector b = entry.getKey().getEnd().getLocation().toVector();
-        double dist = a.distance(b);
+              if (!Objects.equals(start.getLocation().getWorld(),
+                  end.getLocation().getWorld())) {
+                return;
+              }
+              boolean directed = !entry.getValue();
 
-        for (float i = 0; i < dist; i += particleDistance) {
-          Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
+              Vector a = start.getLocation().toVector();
+              Vector b = end.getLocation().toVector();
+              double dist = a.distance(b);
 
-          ParticleBuilder builder = particles.computeIfAbsent(c,
-              k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-          packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
-              LerpUtils.lerp(a, b, i / dist)
-                  .toLocation(entry.getKey().getStart().getLocation().getWorld())).toPacket());
-        }
+              for (float i = 0; i < dist; i += particleDistance) {
+                Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
+
+                ParticleBuilder builder = particles.computeIfAbsent(c,
+                    k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
+                packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
+                    LerpUtils.lerp(a, b, i / dist)
+                        .toLocation(start.getLocation().getWorld())).toPacket());
+              }
+            });
       }
       for (var entry : packets.entrySet()) {
         editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay,
@@ -235,11 +271,17 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   @EventHandler
   public void onNodeGroupAssign(NodeGroupAssignedEvent event) {
-    editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-        event.getGroupables().forEach(node -> {
-          armorstandHandler.updateNodeHead(player, node);
-          armorstandHandler.updateNodeName(player, node);
-        }));
+    PathFinderAPI.get().getNodes(new NodeSelection(event.getGroupables())).thenAccept(nodes -> {
+      nodes.forEach(node -> {
+        editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
+          armorstandHandler.showNode(node, player);
+        });
+        this.nodes.put(node.getNodeId(), node);
+      });
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
@@ -249,31 +291,16 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       Player player = Bukkit.getPlayer(uuid);
       for (Groupable<?> node : groupables) {
         armorstandHandler.updateNodeHead(player, node);
-        armorstandHandler.updateNodeName(player, node);
       }
     }
-  }
-
-  @EventHandler
-  public void onNodeGroupSeachTermsChanged(NodeGroupSearchTermsChangedEvent event) {
-    Collection<? extends Node<?>> nodes = event.getGroup();
-    editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
-        nodes.forEach(node -> armorstandHandler.updateNodeName(player, node)));
-  }
-
-  @EventHandler
-  public void onNodeCreated(NodeCreatedEvent event) {
-    editingPlayers.keySet().stream().map(Bukkit::getPlayer)
-        .forEach(player -> armorstandHandler.showNode(event.getNode(), player));
   }
 
   @EventHandler
   public void onEdgeCreated(EdgesCreatedEvent event) {
     Collection<Edge> edges = new HashSet<>();
     for (Edge edge : event.getEdges()) {
-      Edge otherDirection = roadMap.getEdge(edge.getEnd(), edge.getStart());
-      if (otherDirection != null && !edges.contains(otherDirection)) {
-        edges.add(otherDirection);
+      if (!nodes.containsKey(edge.getEnd())) {
+        continue;
       }
     }
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
@@ -284,10 +311,11 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   @EventHandler
   public void onNodesDeleted(NodesDeletedEvent event) {
-    // No need to remove edges here, they are being removed by the roadmap
-    // beforehand with the according EdgeDeletedEvent
 
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
+      for (Node<?> node : event.getNodes()) {
+        this.nodes.remove(node.getNodeId());
+      }
       armorstandHandler.hideNodes(event.getNodes(), player);
     });
     updateEditModeParticles();
@@ -306,15 +334,22 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       if (event.isCancelled()) {
         return;
       }
-      editingPlayers.keySet().stream()
-          .map(Bukkit::getPlayer)
-          .filter(Objects::nonNull)
-          .forEach(player -> {
-            for (Node node : event.getNodes()) {
+      int updateCount = 0;
+      for (UUID uuid1 : editingPlayers.keySet()) {
+        Player player = Bukkit.getPlayer(uuid1);
+        if (player != null) {
+          for (UUID uuid : event.getNodes()) {
+            Node<?> node = nodes.get(uuid);
+            if (node != null) {
               armorstandHandler.updateNodePosition(node, player, player.getLocation(), true);
+              updateCount++;
             }
-          });
-      updateEditModeParticles();
+          }
+        }
+      }
+      if (updateCount > 0) {
+        updateEditModeParticles();
+      }
     }, 1);
   }
 

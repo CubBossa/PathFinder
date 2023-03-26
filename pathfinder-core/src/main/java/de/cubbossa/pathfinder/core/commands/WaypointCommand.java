@@ -241,20 +241,20 @@ public class WaypointCommand extends Command {
       onList(player, selection, 1);
       return;
     }
-    Node<?> node = selection.get(0);
-    FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
-        .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
-        .resolver(
-            Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
-        .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
-        .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
-            node.getEdges().stream().map(Edge::getEnd)
-                .collect(Collectors.toCollection(NodeSelection::new)))))
-        .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-            node instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
-        .build());
-
-    TranslationHandler.getInstance().sendMessage(message, player);
+    PathFinderAPI.get().getNode(selection.get(0)).thenAccept(node -> {
+      FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
+          .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
+          .resolver(
+              Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
+          .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
+          .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
+              node.getEdges().stream().map(Edge::getEnd)
+                  .collect(Collectors.toCollection(NodeSelection::new)))))
+//          .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
+//              node instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
+          .build());
+      TranslationHandler.getInstance().sendMessage(message, player);
+    });
   }
 
   /**
@@ -278,66 +278,24 @@ public class WaypointCommand extends Command {
         page,
         10,
         new ArrayList<>(selection),
-        n -> {
-          TagResolver r = TagResolver.builder()
-              .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-              .resolver(Placeholder.component("position",
-                  Messages.formatVector(n.getLocation().toVector())))
-              .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-              .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
-                  n.getEdges().stream().map(Edge::getEnd)
-                      .collect(Collectors.toCollection(NodeSelection::new)))))
-              .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-                  n instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
-              .build();
-          TranslationHandler.getInstance()
-              .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
+        uuid -> {
+          PathFinderAPI.get().getNode(uuid).thenAccept(n -> {
+            TagResolver r = TagResolver.builder()
+                .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
+                .resolver(Placeholder.component("position",
+                    Messages.formatVector(n.getLocation().toVector())))
+                .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
+                .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
+                    n.getEdges().stream().map(Edge::getEnd)
+                        .collect(Collectors.toCollection(NodeSelection::new)))))
+//                .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
+//                    n instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
+                .build();
+            TranslationHandler.getInstance()
+                .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
+          });
         },
         Messages.CMD_N_LIST_HEADER.format(resolver),
         Messages.CMD_N_LIST_FOOTER.format(resolver));
-  }
-
-  private void onConnect(Player player, NodeSelection startSelection, NodeSelection endSelection) {
-
-    for (Node<?> start : startSelection) {
-      for (Node<?> end : endSelection) {
-        TagResolver resolver = TagResolver.builder()
-            .resolver(Placeholder.component("start", Component.text(start.getNodeId().toString())))
-            .resolver(Placeholder.component("end", Component.text(end.getNodeId().toString())))
-            .build();
-
-        if (start.equals(end)) {
-          TranslationHandler.getInstance()
-              .sendMessage(Messages.CMD_N_CONNECT_IDENTICAL.format(resolver), player);
-          continue;
-        }
-        if (start.getEdges().stream().anyMatch(edge -> edge.getEnd().equals(end))) {
-          TranslationHandler.getInstance()
-              .sendMessage(Messages.CMD_N_CONNECT_ALREADY_CONNECTED.format(resolver), player);
-          continue;
-        }
-        TranslationHandler.getInstance()
-            .sendMessage(Messages.CMD_N_CONNECT.format(resolver), player);
-      }
-    }
-  }
-
-  private void onDisconnect(Player player, NodeSelection startSelection,
-                            @Nullable NodeSelection endSelection) {
-
-    for (Node<?> start : startSelection) {
-      if (endSelection == null) {
-        continue;
-      }
-      for (Node<?> end : endSelection) {
-        TagResolver resolver = TagResolver.builder()
-            .resolver(Placeholder.component("start", Component.text(start.getNodeId().toString())))
-            .resolver(Placeholder.component("end", Component.text(end.getNodeId().toString())))
-            .build();
-
-        TranslationHandler.getInstance()
-            .sendMessage(Messages.CMD_N_DISCONNECT.format(resolver), player);
-      }
-    }
   }
 }

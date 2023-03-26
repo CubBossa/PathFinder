@@ -62,7 +62,7 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
     /**
      * The column <code>pathfinder_discoverings.player_id</code>.
      */
-    public final TableField<PathfinderDiscoveringsRecord, UUID> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.BINARY.nullable(false), this, "", new UUIDConverter());
+    public final TableField<PathfinderDiscoveringsRecord, UUID> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_discoverings.date</code>.

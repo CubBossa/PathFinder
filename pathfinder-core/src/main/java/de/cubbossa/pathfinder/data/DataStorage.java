@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.Modifier;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -34,9 +36,15 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
 
   CompletableFuture<NodeType<?>> getNodeType(UUID nodeId);
 
+  CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType);
+
   @Override
   default <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-    return type.createNodeInStorage(new NodeType.NodeCreationContext(location));
+    return type.createNodeInStorage(new NodeType.NodeCreationContext(location))
+        .thenApply(n -> {
+          setNodeType(n.getNodeId(), type.getKey()).join();
+          return n;
+        });
   }
 
   @Override
@@ -58,7 +66,7 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
     return CompletableFuture.completedFuture(null);
   }
 
-  default CompletableFuture<Void> deleteNodes(Collection<UUID> nodes) {
+  default CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
     Map<NodeType<?>, NodeSelection> mapping = new HashMap<>();
     for (UUID node : nodes) {
       mapping.computeIfAbsent(getNodeType(node).join(), t -> new NodeSelection()).add(node);
@@ -78,6 +86,42 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
     return CompletableFuture.completedFuture(nodes);
   }
 
+  default CompletableFuture<Collection<Node<?>>> getNodes(NodeSelection nodes) {
+    Map<NodeType<?>, NodeSelection> mapping = new HashMap<>();
+    for (UUID node : nodes) {
+      mapping.computeIfAbsent(getNodeType(node).join(), t -> new NodeSelection()).add(node);
+    }
+    Collection<Node<?>> result = new HashSet<>();
+    List<CompletableFuture<?>> futures = new ArrayList<>();
+    mapping.forEach((nodeType, uuids) -> futures.add(nodeType.getNodesFromStorage(uuids).thenAccept(result::addAll)));
+    return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenApply(unused -> result);
+  }
+
+  @Override
+  default <M extends Modifier> CompletableFuture<Map<Node<?>, M>> getNodes(Class<M> modifier) {
+    return getNodeGroups(modifier).thenApply(nodeGroups -> {
+      Map<UUID, NodeGroup> temp = new HashMap<>();
+      for (NodeGroup nodeGroup : nodeGroups) {
+        for (UUID uuid : nodeGroup) {
+          NodeGroup pres = temp.get(uuid);
+          if (pres == null || nodeGroup.getWeight() > pres.getWeight()) {
+            temp.put(uuid, pres);
+          }
+        }
+      }
+      Map<Node<?>, M> result = new HashMap<>();
+      temp.forEach((uuid, group) -> {
+        result.put(PathFinderAPI.get().getNode(uuid).join(), group.getModifier(modifier));
+      });
+      return result;
+    });
+  }
+
+  @Override
+  default CompletableFuture<Node<?>> getNode(UUID uuid) {
+    return getNodeType(uuid).thenApply(nodeType -> nodeType.getNodeFromStorage(uuid).join());
+  }
+
   @Override
   default CompletableFuture<Void> disconnectNodes(UUID start) {
     return disconnectNodes(new NodeSelection(start));
@@ -87,6 +131,8 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
   default CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
     return disconnectNodes(new NodeSelection(start), new NodeSelection(end));
   }
+
+  CompletableFuture<Collection<NamespacedKey>> getNodeGroups(UUID node);
 
   @Override
   default CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {

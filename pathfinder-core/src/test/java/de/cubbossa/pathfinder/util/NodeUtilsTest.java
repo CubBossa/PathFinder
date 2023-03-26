@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.test.TestNode;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.splinelib.util.Vector;
+import java.util.UUID;
 import org.bukkit.Location;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,9 +16,9 @@ class NodeUtilsTest {
   @Test
   void toBezierVector() {
 
-    TestNode a = new TestNode(1, null);
-    TestNode b = new TestNode(1, null);
-    TestNode c = new TestNode(1, null);
+    TestNode a = new TestNode(UUID.randomUUID());
+    TestNode b = new TestNode(UUID.randomUUID());
+    TestNode c = new TestNode(UUID.randomUUID());
 
     a.setLocation(new Location(null, 0, 0, 0));
     b.setLocation(new Location(null, 2, 0, 0));

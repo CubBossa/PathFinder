@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
@@ -13,12 +14,14 @@ import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -30,18 +33,12 @@ import org.bukkit.entity.Player;
 
 public class SelectionUtils {
 
-  public static final NodeSelectionParser.Argument<NumberRange> ID =
-      new NodeSelectionParser.Argument<NumberRange>(r -> {
-        try {
-          return NumberRange.parse(r.getRemaining());
-        } catch (ParseException e) {
-          throw new RuntimeException(e);
-        }
-      })
+  public static final NodeSelectionParser.Argument<UUID> ID =
+      new NodeSelectionParser.Argument<>(r -> UUID.fromString(r.getRemaining()))
           .execute(c -> c.getScope().stream()
-              .filter(n -> c.getValue().contains(n.getNodeId()))
+              .filter(n -> c.getValue().equals(n.getNodeId()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> NodeHandler.getInstance().getNodes().stream()
+          .suggestStrings(c -> PathFinderAPI.get().getNodes().join().stream()
               .map(Node::getNodeId)
               .map(integer -> integer + "")
               .collect(Collectors.toList()));
@@ -105,7 +102,7 @@ public class SelectionUtils {
                     return n;
                   }));
               case ARBITRARY -> c.getScope().stream()
-                  .sorted(Comparator.comparingInt(Node::getNodeId))
+                  .sorted()
                   .collect(Collectors.toList());
             };
           })
@@ -122,7 +119,7 @@ public class SelectionUtils {
           if (key == null) {
             throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
           }
-          NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(key);
+          NodeGroup group = PathFinderAPI.get().getNodeGroup(key).join();
           if (group == null) {
             throw new IllegalArgumentException("There is no group with the key '" + key + "'");
           }
@@ -131,10 +128,10 @@ public class SelectionUtils {
         return groups;
       })
           .execute(c -> c.getScope().stream()
-              .filter(node -> node instanceof Groupable groupable
-                  && groupable.getGroups().containsAll(c.getValue()))
+              .filter(node -> node instanceof Groupable<?> groupable
+                  && groupable.getGroups().containsAll(c.getValue().stream().map(NodeGroup::getKey).toList()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> NodeGroupHandler.getInstance().getNodeGroups().stream()
+          .suggestStrings(c -> PathFinderAPI.get().getNodeGroups().join().stream()
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
@@ -158,7 +155,8 @@ public class SelectionUtils {
   public static NodeSelection getNodeSelection(Player player, String selectString)
       throws CommandSyntaxException, ParseCancellationException {
 
-    return new NodeSelection(parser.parse(player, selectString, NodeHandler.getInstance().getNodes().stream().toList()));
+    return new NodeSelection(parser.parse(player, selectString, new ArrayList<>(PathFinderAPI.get().getNodes().join()))
+        .stream().map(Node::getNodeId).toList());
   }
 
   public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(

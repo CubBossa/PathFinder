@@ -66,16 +66,6 @@ public class PlayerNode implements Node<PlayerNode> {
   }
 
   @Override
-  public @Nullable Double getCurveLength() {
-    return null;
-  }
-
-  @Override
-  public void setCurveLength(Double value) {
-
-  }
-
-  @Override
   public int compareTo(@NotNull Node<?> o) {
     return 0;
   }

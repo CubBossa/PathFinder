@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -18,15 +19,8 @@ import org.jetbrains.annotations.Nullable;
 @Setter
 public class TestNode implements Node<TestNode> {
 
-  private final int nodeId;
-  private final NamespacedKey roadMapKey;
+  private final UUID nodeId;
   private Location location;
-  private boolean persistent;
-
-  @Override
-  public Collection<Node<?>> getGroup() {
-    return new HashSet<>();
-  }
 
   @Override
   public NodeType<TestNode> getType() {
@@ -35,31 +29,6 @@ public class TestNode implements Node<TestNode> {
 
   @Override
   public Collection<Edge> getEdges() {
-    return null;
-  }
-
-  @Override
-  public @Nullable Double getCurveLength() {
-    return null;
-  }
-
-  @Override
-  public void setCurveLength(Double value) {
-
-  }
-
-  @Override
-  public Edge connect(Node<?> target) {
-    return null;
-  }
-
-  @Override
-  public void disconnect(Node<?> target) {
-
-  }
-
-  @Override
-  public Collection<SearchTerm> getSearchTerms() {
     return null;
   }
 }

@@ -1,17 +1,21 @@
 package de.cubbossa.pathfinder.module.discovering;
 
+import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.data.DiscoverInfo;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +49,13 @@ public class DiscoverHandler {
         if (!(context.node() instanceof Groupable<?> groupable)) {
           return true;
         }
-        for (NodeGroup group : groupable.getGroups()) {
+        Collection<NodeGroup> groups = groupable.getGroups().stream()
+            .map(key -> PathFinderAPI.get().getNodeGroup(key))
+            .parallel()
+            .map(CompletableFuture::join)
+            .toList();
+
+        for (NodeGroup group : groups) {
           if (!group.hasModifier(DiscoverableModifier.class)) {
             continue;
           }
@@ -93,21 +103,23 @@ public class DiscoverHandler {
     if (perm != null && !player.hasPermission(perm.permission())) {
       return false;
     }
-    for (Node<?> node : group) {
-      if (node == null) {
-        PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
-        continue;
+    return PathFinderAPI.get().getNodes(new NodeSelection(group)).thenApply(nodes -> {
+      for (Node<?> node : nodes) {
+        if (node == null) {
+          PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
+          continue;
+        }
+        float dist = getDiscoveryDistance(player.getUniqueId(), node);
+        if (node.getLocation().getX() - player.getLocation().getX() > dist) {
+          continue;
+        }
+        if (node.getLocation().distance(player.getLocation()) > dist) {
+          continue;
+        }
+        return true;
       }
-      float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), node);
-      if (node.getLocation().getX() - player.getLocation().getX() > dist) {
-        continue;
-      }
-      if (node.getLocation().distance(player.getLocation()) > dist) {
-        continue;
-      }
-      return true;
-    }
-    return false;
+      return false;
+    }).join();
   }
 
   public CompletableFuture<Map<NamespacedKey, DiscoverInfo>> getPlayerData(UUID player) {
@@ -174,9 +186,19 @@ public class DiscoverHandler {
     return getPlayerData(playerId).thenApply(map -> map.containsKey(group.getKey()));
   }
 
-  public float getDiscoveryDistance(UUID playerId, Node node) {
-    return node instanceof Groupable groupable ?
-        NodeGroupHandler.getInstance().getFindDistance(groupable) :
-        3f;
+  public float getDiscoveryDistance(UUID playerId, Node<?> node) {
+    if (!(node instanceof Groupable<?> groupable)) {
+      return 1.5f;
+    }
+    FindDistanceModifier mod = groupable.getGroups().stream()
+        .map(key -> PathFinderAPI.get().getNodeGroup(key))
+        .parallel()
+        .map(CompletableFuture::join)
+        .filter(group -> group.hasModifier(FindDistanceModifier.class))
+        .sorted()
+        .findFirst()
+        .map(group -> group.getModifier(FindDistanceModifier.class))
+        .orElse(null);
+    return mod == null ? 1.5f : (float) mod.distance();
   }
 }

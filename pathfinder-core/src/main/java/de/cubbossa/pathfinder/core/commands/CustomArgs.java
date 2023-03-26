@@ -353,8 +353,9 @@ public class CustomArgs {
 					.toList();
 
 			try {
-				Collection<Node<?>> target = new FindQueryParser().parse(search, scope);
-				return new NodeSelection(target);
+				Map<Node<?>, NavigableModifier> map = PathFinderAPI.get().getNodes(NavigableModifier.class).join();
+				Collection<Node<?>> target = new FindQueryParser().parse(search, scope, n -> map.get(n).getSearchTerms());
+				return new NodeSelection(target.stream().map(Node::getNodeId).toList());
 			} catch (Throwable t) {
 				throw new CustomArgument.CustomArgumentException(t.getMessage());
 			}
@@ -380,20 +381,13 @@ public class CustomArgs {
 
 					StringRange finalRange = range;
 					String inRange = finalRange.get(input);
-					Collection<String> allTerms = PathFinderAPI.get().getNodeGroups().join().stream()
-							.filter(ng -> ng.hasModifier(NavigableModifier.class))
-							.map(navigable -> new FindModule.NavigationRequestContext(playerId, navigable))
-							.filter(navigable -> FindModule.getInstance().getNavigationFilter().stream()
-									.allMatch(navigablePredicate -> navigablePredicate.test(navigable)))
-							.map(FindModule.NavigationRequestContext::group)
-							.map(ng -> ng.getModifier(NavigableModifier.class).getSearchTermStrings())
-							.flatMap(Collection::stream)
-							.collect(Collectors.toSet());
 
-					/*TODO if (!Arrays.stream(suggestionInfo.currentInput().substring(0, lastIndex).split("[!&|()]")).allMatch(allTerms::contains)) {
-						throw new CommandSyntaxException(CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(), () -> "At least one of the used search terms is incorrect");
-					}*/
-
+					Collection<String> allTerms = new HashSet<>();
+					PathFinderAPI.get().getNodes(NavigableModifier.class).thenAccept(map -> {
+						map.forEach((node, navigableModifier) -> {
+							allTerms.addAll(navigableModifier.getSearchTermStrings());
+						});
+					}).join();
 
 					allTerms.stream().filter(s -> s.startsWith(inRange))
 							.map(s -> new Suggestion(finalRange, s))
