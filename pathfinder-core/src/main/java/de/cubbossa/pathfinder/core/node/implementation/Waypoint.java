@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import lombok.Getter;
@@ -41,7 +42,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   @Override
   public NodeType<Waypoint> getType() {
-    return NodeHandler.WAYPOINT_TYPE;
+    return PathPlugin.getInstance().getWaypointNodeType();
   }
 
   @Override

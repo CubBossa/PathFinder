@@ -8,17 +8,14 @@ import org.bukkit.Registry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K>
-    implements Registry<K> {
+public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K> implements Iterable<K> {
 
   @Nullable
-  @Override
   public K get(@NotNull NamespacedKey namespacedKey) {
     return super.get(namespacedKey);
   }
 
   @NotNull
-  @Override
   public Iterator<K> iterator() {
     return super.values().iterator();
   }

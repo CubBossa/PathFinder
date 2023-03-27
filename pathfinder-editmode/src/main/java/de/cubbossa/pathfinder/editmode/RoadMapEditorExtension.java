@@ -27,7 +27,7 @@ public class RoadMapEditorExtension implements PathPluginExtension {
   private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
 
   @Override
-  public void onEnable() {
+  public void onEnable(PathPlugin plugin) {
 
     Plugin protocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib");
     if (protocolLib == null) {
@@ -49,7 +49,7 @@ public class RoadMapEditorExtension implements PathPluginExtension {
   }
 
   @Override
-  public void onDisable() {
+  public void onDisable(PathPlugin plugin) {
     PathPlugin.getInstance().getLogger().info("Disabling default roadmap editors.");
     GUIHandler.getInstance().disable();
   }

@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.Modifier;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
@@ -28,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -44,17 +47,20 @@ public class YmlDataStorage implements DataStorage {
   private static final Pattern FILE_REGEX = Pattern.compile("[a-zA-Z0-9_]+\\$[a-zA-Z0-9_]+\\.yml");
   private final Meta meta = new Meta(true);
   private final Map<NamespacedKey, YamlConfiguration> visualizerHandles;
+  @Getter
+  private final NodeTypeRegistry nodeTypeRegistry;
   private final File dataDirectory;
   private File nodeGroupDir;
   private File pathVisualizerDir;
   private File userDir;
 
-  public YmlDataStorage(File dataDirectory) {
+  public YmlDataStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry) {
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
     this.dataDirectory = dataDirectory;
     this.visualizerHandles = new HashMap<>();
+    this.nodeTypeRegistry = nodeTypeRegistry;
   }
 
   public String toFileName(NamespacedKey key) {
@@ -119,7 +125,7 @@ public class YmlDataStorage implements DataStorage {
         throw new IllegalArgumentException("Could not find type for given UUID.");
       }
       NamespacedKey typeKey = NamespacedKey.fromString(typeString);
-      NodeType<?> type = NodeHandler.getInstance().getNodeType(typeKey);
+      NodeType<?> type = nodeTypeRegistry.getNodeType(typeKey);
       if (type == null) {
         throw new IllegalArgumentException("Could not find type for given UUID.");
       }

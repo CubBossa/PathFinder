@@ -24,7 +24,8 @@ public class EmptyNode implements Node<EmptyNode> {
   public static final NodeType<EmptyNode> TYPE = new NodeType<>(
       new NamespacedKey(PathPlugin.getInstance(), "empty"),
       "empty",
-      new ItemStack(Material.DIRT)
+      new ItemStack(Material.DIRT),
+      PathPlugin.getInstance().getMiniMessage()
   ) {
     @Override
     public CompletableFuture<EmptyNode> createNodeInStorage(NodeCreationContext context) {

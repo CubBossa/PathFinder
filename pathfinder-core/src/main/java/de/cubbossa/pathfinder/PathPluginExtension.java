@@ -12,11 +12,11 @@ import org.bukkit.Keyed;
 
 public interface PathPluginExtension extends Keyed {
 
-  default void onLoad() {}
+  default void onLoad(PathPlugin pathPlugin) {}
 
-  default void onEnable() {}
+  default void onEnable(PathPlugin pathPlugin) {}
 
-  default void onDisable() {}
+  default void onDisable(PathPlugin pathPlugin) {}
 
   default void registerMessages(Consumer<Class<?>> messageClass) {
 

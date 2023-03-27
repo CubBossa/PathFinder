@@ -262,14 +262,14 @@ public class CustomArgs {
 	public <T extends Node<T>> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
 		return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 			NodeType<T> type =
-					NodeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
+					PathPlugin.getInstance().getNodeTypeRegistry().getNodeType(customArgumentInfo.currentInput());
 			if (type == null) {
 				throw new CustomArgument.CustomArgumentException(
 						"Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
 			}
 			return type;
 		})).includeSuggestions(
-				suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(NodeHandler.getInstance().getTypes().keySet())));
+				suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(PathPlugin.getInstance().getNodeTypeRegistry().getTypeKeys())));
 	}
 
 	/**

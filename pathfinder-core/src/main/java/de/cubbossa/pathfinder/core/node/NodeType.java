@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -23,7 +24,6 @@ import java.util.Map;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
 public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
 
   public record NodeCreationContext(Location location) {
@@ -31,18 +31,19 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
 
   private final NamespacedKey key;
   private final ItemStack displayItem;
+  private final MiniMessage miniMessage;
   private String nameFormat;
   private Component displayName;
 
   private NodeDataStorage<N> storage;
 
-  public NodeType(NamespacedKey key, String name, ItemStack displayItem) {
-    this(key, name, displayItem, null);
+  public NodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage) {
+    this(key, name, displayItem, miniMessage, null);
   }
 
-  public NodeType(NamespacedKey key, String name, ItemStack displayItem,
-                  NodeDataStorage<N> storage) {
+  public NodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage, NodeDataStorage<N> storage) {
     this.key = key;
+    this.miniMessage = miniMessage;
     this.setNameFormat(name);
     this.displayItem = displayItem;
     this.storage = storage;
@@ -51,7 +52,7 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
   @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
-    this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(name);
+    this.displayName = miniMessage.deserialize(name);
   }
 
   // pass to storage methods.

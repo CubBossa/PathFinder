@@ -113,7 +113,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
   public abstract void play(VisualizerContext<D> context, Location nearestPoint, Location leadPoint,
                             Edge nearestEdge);
 
-  record Edge(int index, Location support, Location target) {
+  protected record Edge(int index, Location support, Location target) {
   }
 
   @Getter

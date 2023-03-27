@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import dev.jorel.commandapi.CommandAPI;
@@ -10,7 +10,7 @@ public class CancelPathCommand extends Command {
 
   public CancelPathCommand() {
     super("cancelpath");
-    withPermission(PathPlugin.PERM_CMD_CANCELPATH);
+    withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
         && FindModule.getInstance().getActivePath(player) != null);
 

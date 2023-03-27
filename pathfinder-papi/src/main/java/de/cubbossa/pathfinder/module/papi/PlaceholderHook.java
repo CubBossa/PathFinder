@@ -1,12 +1,10 @@
-package de.cubbossa.pathfinder.hook;
+package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathfinder.Dependency;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PlaceholderVisualizer;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import java.util.Arrays;
@@ -26,7 +24,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PlaceholderHook extends PlaceholderExpansion implements Dependency {
+public class PlaceholderHook extends PlaceholderExpansion {
 
   public static final VisualizerType<PlaceholderVisualizer> PLACEHOLDER_VISUALIZER_TYPE =
       new VisualizerType<>(

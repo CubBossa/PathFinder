@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolver;
@@ -25,7 +24,6 @@ import org.bukkit.entity.Player;
 
 public class NodeHandler {
 
-  public static final NodeType<Waypoint> WAYPOINT_TYPE = new WaypointType();
   public static final NamespacedKey GROUP_GLOBAL = NamespacedKey.fromString("pathfinder:global");
 
   @Getter
@@ -35,37 +33,16 @@ public class NodeHandler {
   @Getter
   private final HashedRegistry<NodeGroupEditor> editors;
 
-  @Getter
-  private final HashedRegistry<NodeType<?>> types;
-
   public NodeHandler() {
     instance = this;
-    this.types = new HashedRegistry<>();
 
     editors = new HashedRegistry<>();
-    NodeHandler.getInstance().registerNodeType(NodeHandler.WAYPOINT_TYPE);
 
     ServiceLoader<NodeGroupEditorFactory> loader = ServiceLoader.load(NodeGroupEditorFactory.class,
         PathPlugin.getInstance().getClass().getClassLoader());
     NodeGroupEditorFactory factory = loader.findFirst().orElse(null);
     editModeFactory = Objects.requireNonNullElseGet(factory,
         () -> g -> new NoImplNodeGroupEditor(g.getKey()));
-  }
-
-  public <T extends Node<T>> NodeType<T> getNodeType(NamespacedKey key) {
-    return (NodeType<T>) types.get(key);
-  }
-
-  public void registerNodeType(NodeType<?> type) {
-    types.put(type);
-  }
-
-  public void unregisterNodeType(NodeType<?> type) {
-    types.remove(type.getKey());
-  }
-
-  public void unregisterNodeType(NamespacedKey key) {
-    types.remove(key);
   }
 
   public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
@@ -78,7 +55,8 @@ public class NodeHandler {
       for (Node<?> node : nodes) {
         for (Edge e : node.getEdges()) {
           Node<?> end = map.get(e.getEnd());
-          graph.connect(node, end, node.getLocation().distance(end.getLocation()) * e.getWeightModifier());
+          graph.connect(node, end,
+              node.getLocation().distance(end.getLocation()) * e.getWeightModifier());
         }
       }
 

@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
@@ -31,7 +32,7 @@ public class PathVisualizerCommand extends Command {
     withGeneratedHelp();
 
     then(CustomArgs.literal("list")
-        .withPermission(PathPlugin.PERM_CMD_PV_LIST)
+        .withPermission(PathPerms.PERM_CMD_PV_LIST)
         .executes((commandSender, objects) -> {
           onList(commandSender, 1);
         })
@@ -43,7 +44,7 @@ public class PathVisualizerCommand extends Command {
 
     then(CustomArgs.literal("create")
         .withGeneratedHelp()
-        .withPermission(PathPlugin.PERM_CMD_PV_CREATE)
+        .withPermission(PathPerms.PERM_CMD_PV_CREATE)
         .then(CustomArgs.visualizerTypeArgument("type")
             .then(new StringArgument("key")
                 .executes((commandSender, objects) -> {
@@ -53,7 +54,7 @@ public class PathVisualizerCommand extends Command {
 
     then(CustomArgs.literal("delete")
         .withGeneratedHelp()
-        .withPermission(PathPlugin.PERM_CMD_PV_DELETE)
+        .withPermission(PathPerms.PERM_CMD_PV_DELETE)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
               onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
@@ -61,7 +62,7 @@ public class PathVisualizerCommand extends Command {
 
     then(CustomArgs.literal("info")
         .withGeneratedHelp()
-        .withPermission(PathPlugin.PERM_CMD_PV_INFO)
+        .withPermission(PathPerms.PERM_CMD_PV_INFO)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
               onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
@@ -80,7 +81,7 @@ public class PathVisualizerCommand extends Command {
       type.appendEditCommand(typeArg, 0, 1);
 
       typeArg.then(CustomArgs.literal("name")
-          .withPermission(PathPlugin.PERM_CMD_PV_SET_NAME)
+          .withPermission(PathPerms.PERM_CMD_PV_SET_NAME)
           .then(CustomArgs.miniMessageArgument("name")
               .executes((commandSender, objects) -> {
                 if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
@@ -90,7 +91,7 @@ public class PathVisualizerCommand extends Command {
                 }
               })));
       typeArg.then(CustomArgs.literal("permission")
-          .withPermission(PathPlugin.PERM_CMD_PV_SET_PERMISSION)
+          .withPermission(PathPerms.PERM_CMD_PV_SET_PERMISSION)
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, objects) -> {
                 if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
@@ -102,7 +103,7 @@ public class PathVisualizerCommand extends Command {
                 }
               })));
       typeArg.then(CustomArgs.literal("interval")
-          .withPermission(PathPlugin.PERM_CMD_PV_INTERVAL)
+          .withPermission(PathPerms.PERM_CMD_PV_INTERVAL)
           .then(CustomArgs.integer("ticks", 1)
               .executes((commandSender, objects) -> {
                 if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
@@ -115,7 +116,7 @@ public class PathVisualizerCommand extends Command {
 
       lit.then(new LiteralArgument(type.getCommandName()).then(typeArg));
     }
-    then(lit).withPermission(PathPlugin.PERM_CMD_PV_EDIT);
+    then(lit).withPermission(PathPerms.PERM_CMD_PV_EDIT);
     super.register();
   }
 

@@ -27,12 +27,6 @@ public class CommandUtils {
 
   private CommandHelpGenerator generator = new CommandHelpGenerator();
 
-  public void unregister(CommandTree tree) {
-    if (tree != null) {
-      CommandAPI.unregister(tree.getName());
-    }
-  }
-
   public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree) {
     sendHelp(sender, tree, -1);
   }

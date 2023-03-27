@@ -32,19 +32,20 @@ public class DiscoverHandler {
 
   @Getter
   private static DiscoverHandler instance;
-
+  private PathPlugin plugin;
   private final Map<UUID, Map<NamespacedKey, DiscoverInfo>> discovered;
 
-  public DiscoverHandler() {
+  public DiscoverHandler(PathPlugin plugin) {
     instance = this;
-
+    this.plugin = plugin;
+    
     discovered = new HashMap<>();
-    if (!PathPlugin.getInstance().getConfiguration().moduleConfig.discoveryModule) {
+    if (!plugin.getConfiguration().moduleConfig.discoveryModule) {
       return;
     }
-    Bukkit.getPluginManager().registerEvents(new DiscoverListener(), PathPlugin.getInstance());
+    Bukkit.getPluginManager().registerEvents(new DiscoverListener(), plugin);
 
-    if (PathPlugin.getInstance().getConfiguration().navigation.requireDiscovery) {
+    if (plugin.getConfiguration().navigation.requireDiscovery) {
       FindModule.getInstance().registerFindPredicate(context -> {
         if (!(context.node() instanceof Groupable<?> groupable)) {
           return true;
@@ -74,7 +75,7 @@ public class DiscoverHandler {
 
   public void cachePlayer(UUID player) {
     CompletableFuture.runAsync(() -> {
-      discovered.put(player, PathPlugin.getInstance().getDatabase().loadDiscoverInfo(player));
+      discovered.put(player, plugin.getDatabase().loadDiscoverInfo(player));
     });
   }
 
@@ -88,7 +89,7 @@ public class DiscoverHandler {
       throw new IllegalStateException("Player is null");
     }
     EffectHandler.getInstance().playEffect(
-        PathPlugin.getInstance().getEffectsFile(),
+        plugin.getEffectsFile(),
         "discover",
         player,
         player.getLocation(),
@@ -106,7 +107,7 @@ public class DiscoverHandler {
     return PathFinderAPI.get().getNodes(new NodeSelection(group)).thenApply(nodes -> {
       for (Node<?> node : nodes) {
         if (node == null) {
-          PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
+          plugin.getLogger().log(Level.SEVERE, "Node is null");
           continue;
         }
         float dist = getDiscoveryDistance(player.getUniqueId(), node);
@@ -127,7 +128,7 @@ public class DiscoverHandler {
         CompletableFuture.completedFuture(discovered.get(player)) :
         CompletableFuture.supplyAsync(() -> {
           Map<NamespacedKey, DiscoverInfo> data =
-              PathPlugin.getInstance().getDatabase().loadDiscoverInfo(player);
+              plugin.getDatabase().loadDiscoverInfo(player);
           discovered.put(player, data);
           return data;
         });
@@ -143,7 +144,7 @@ public class DiscoverHandler {
         return;
       }
 
-      Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+      Bukkit.getScheduler().runTask(plugin, () -> {
         if (map.containsKey(group.getKey())) {
           return;
         }
@@ -171,7 +172,7 @@ public class DiscoverHandler {
       if (!map.containsKey(group.getKey())) {
         return;
       }
-      Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+      Bukkit.getScheduler().runTask(plugin, () -> {
         PlayerForgetEvent event = new PlayerForgetEvent(playerId, group);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

@@ -118,7 +118,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       }
 
       BottomInventoryMenu menu = new EditModeMenu(key,
-          NodeHandler.getInstance().getTypes().values()).createHotbarMenu(this, player);
+          PathPlugin.getInstance().getNodeTypeRegistry().getTypes()).createHotbarMenu(this, player);
       editingPlayers.put(uuid, menu);
       menu.openSync(player);
 
@@ -278,9 +278,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
         });
         this.nodes.put(node.getNodeId(), node);
       });
-    }).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
     });
   }
 

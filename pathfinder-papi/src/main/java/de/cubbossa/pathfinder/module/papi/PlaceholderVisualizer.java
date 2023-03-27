@@ -1,8 +1,8 @@
-package de.cubbossa.pathfinder.module.visualizing.visualizer;
+package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.hook.PlaceholderHook;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.EdgeBasedVisualizer;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
 import lombok.Getter;

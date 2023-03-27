@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
@@ -39,11 +40,11 @@ public class PathFinderCommand extends Command {
     withAliases("pf");
 
     withRequirement(sender ->
-        sender.hasPermission(PathPlugin.PERM_CMD_PF_HELP)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_INFO)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_IMPORT)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_EXPORT)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_RELOAD)
+        sender.hasPermission(PathPerms.PERM_CMD_PF_HELP)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_INFO)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_IMPORT)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_EXPORT)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_RELOAD)
     );
 
     executes((sender, args) -> {
@@ -53,7 +54,7 @@ public class PathFinderCommand extends Command {
     });
 
     then(CustomArgs.literal("info")
-        .withPermission(PathPlugin.PERM_CMD_PF_INFO)
+        .withPermission(PathPerms.PERM_CMD_PF_INFO)
         .executes((commandSender, objects) -> {
           PluginDescriptionFile desc = PathPlugin.getInstance().getDescription();
           TranslationHandler.getInstance().sendMessage(Messages.INFO.format(TagResolver.builder()
@@ -65,9 +66,9 @@ public class PathFinderCommand extends Command {
         }));
 
     then(CustomArgs.literal("modules")
-        .withPermission(PathPlugin.PERM_CMD_PF_MODULES)
+        .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
-          List<String> list = PathPlugin.getInstance().getExtensions().stream()
+          List<String> list = PathPlugin.getInstance().getExtensionsRegistry().getExtensions().stream()
               .map(PathPluginExtension::getKey)
               .map(NamespacedKey::toString).toList();
 
@@ -86,18 +87,18 @@ public class PathFinderCommand extends Command {
             })));
 
     then(CustomArgs.literal("help")
-        .withPermission(PathPlugin.PERM_CMD_PF_HELP)
+        .withPermission(PathPerms.PERM_CMD_PF_HELP)
         .executes((commandSender, objects) -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_HELP, commandSender);
         }));
 
     then(CustomArgs.literal("import")
-        .withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
+        .withPermission(PathPerms.PERM_CMD_PF_IMPORT)
         .then(new VisualizerImportCommand("visualizer", 0))
     );
 
     then(CustomArgs.literal("reload")
-        .withPermission(PathPlugin.PERM_CMD_PF_RELOAD)
+        .withPermission(PathPerms.PERM_CMD_PF_RELOAD)
 
         .executes((sender, objects) -> {
           long now = System.currentTimeMillis();
@@ -231,7 +232,7 @@ public class PathFinderCommand extends Command {
 
     then(CustomArgs.literal("forcefind")
             .withGeneratedHelp()
-            .withPermission(PathPlugin.PERM_CMD_PF_FORCEFIND)
+            .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
                     .then(CustomArgs.player("player")
                             .withGeneratedHelp()
                             .then(CustomArgs.discoverableArgument("discovering")
@@ -240,7 +241,7 @@ public class PathFinderCommand extends Command {
                                     }))));
     then(CustomArgs.literal("forceforget")
             .withGeneratedHelp()
-            .withPermission(PathPlugin.PERM_CMD_PF_FORCEFORGET)
+            .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
                     .then(CustomArgs.player("player")
                             .withGeneratedHelp()
                             .then(CustomArgs.discoverableArgument("discovering")

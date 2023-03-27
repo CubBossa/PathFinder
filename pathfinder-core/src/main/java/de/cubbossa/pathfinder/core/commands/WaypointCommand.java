@@ -2,9 +2,8 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinderAPI;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
@@ -14,9 +13,8 @@ import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.LocationType;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -27,27 +25,27 @@ import org.bukkit.util.Vector;
 
 public class WaypointCommand extends Command {
 
-  public WaypointCommand() {
+  public WaypointCommand(Supplier<NodeType<?>> fallbackWaypointType) {
     super("waypoint");
     withAliases("node");
     withGeneratedHelp();
 
-    withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_WP_INFO)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_LIST)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_CREATE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_DELETE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_TPHERE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_TP)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_CONNECT)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP)
-        || sender.hasPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
+    withRequirement(sender -> sender.hasPermission(PathPerms.PERM_CMD_WP_INFO)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_LIST)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_CREATE)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_DELETE)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_TPHERE)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_TP)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_CONNECT)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_SET_CURVE)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
+        || sender.hasPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
     );
 
     then(CustomArgs.literal("info")
-        .withPermission(PathPlugin.PERM_CMD_WP_INFO)
+        .withPermission(PathPerms.PERM_CMD_WP_INFO)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               onInfo(player, (NodeSelection) objects[0]);
@@ -55,7 +53,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("list")
-        .withPermission(PathPlugin.PERM_CMD_WP_LIST)
+        .withPermission(PathPerms.PERM_CMD_WP_LIST)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               onList(player, (NodeSelection) objects[0], 1);
@@ -68,13 +66,13 @@ public class WaypointCommand extends Command {
             ))
     );
     then(CustomArgs.literal("create")
-        .withPermission(PathPlugin.PERM_CMD_WP_CREATE)
+        .withPermission(PathPerms.PERM_CMD_WP_CREATE)
         .executesPlayer((player, objects) -> {
           PathFinderAPI.builder()
               .withEvents()
               .withMessages(player)
               .build()
-              .createNode(NodeHandler.WAYPOINT_TYPE, player.getLocation().add(new Vector(0, 1, 0)));
+              .createNode(fallbackWaypointType.get(), player.getLocation().add(new Vector(0, 1, 0)));
         })
         .then(CustomArgs.location("location")
             .displayAsOptional()
@@ -83,7 +81,7 @@ public class WaypointCommand extends Command {
                   .withEvents()
                   .withMessages(player)
                   .build()
-                  .createNode(NodeHandler.WAYPOINT_TYPE, (Location) objects[1]);
+                  .createNode(fallbackWaypointType.get(), (Location) objects[1]);
             })
         )
         .then(CustomArgs.nodeTypeArgument("type")
@@ -112,7 +110,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("delete")
-        .withPermission(PathPlugin.PERM_CMD_WP_DELETE)
+        .withPermission(PathPerms.PERM_CMD_WP_DELETE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
@@ -124,7 +122,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("tphere")
-        .withPermission(PathPlugin.PERM_CMD_WP_TPHERE)
+        .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
@@ -138,7 +136,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("tp")
-        .withPermission(PathPlugin.PERM_CMD_WP_TP)
+        .withPermission(PathPerms.PERM_CMD_WP_TP)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
@@ -154,7 +152,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("connect")
-        .withPermission(PathPlugin.PERM_CMD_WP_CONNECT)
+        .withPermission(PathPerms.PERM_CMD_WP_CONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .then(CustomArgs.nodeSelectionArgument("end")
                 .executesPlayer((player, objects) -> {
@@ -168,7 +166,7 @@ public class WaypointCommand extends Command {
         )
     );
     then(CustomArgs.literal("disconnect")
-        .withPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
+        .withPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .executesPlayer((player, objects) -> {
               PathFinderAPI.builder()
@@ -193,7 +191,7 @@ public class WaypointCommand extends Command {
     then(CustomArgs.literal("group")
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .then(CustomArgs.literal("add")
-                .withPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP)
+                .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
                       PathFinderAPI.builder()
@@ -205,7 +203,7 @@ public class WaypointCommand extends Command {
                 )
             )
             .then(CustomArgs.literal("remove")
-                .withPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP)
+                .withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
                       PathFinderAPI.builder()
@@ -217,7 +215,7 @@ public class WaypointCommand extends Command {
                 )
             )
             .then(CustomArgs.literal("clear")
-                .withPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
+                .withPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, objects) -> {
                   PathFinderAPI.builder()
                       .withEvents()

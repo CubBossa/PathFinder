@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.commands.CustomLiteralArgument;
 import de.cubbossa.pathfinder.data.ExamplesReader;
@@ -16,7 +16,7 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
 
   public VisualizerImportCommand(String literal, int argumentOffset) {
     super(literal);
-    withPermission(PathPlugin.PERM_CMD_PF_IMPORT);
+    withPermission(PathPerms.PERM_CMD_PF_IMPORT);
     withGeneratedHelp();
 
     then(new GreedyStringArgument("name")

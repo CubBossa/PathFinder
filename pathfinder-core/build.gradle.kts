@@ -29,6 +29,7 @@ repositories {
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://repo.dmulloy2.net/repository/public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
@@ -62,7 +63,6 @@ dependencies {
     api("de.cubbossa:SerializedEffects:1.0")
 
     // Plugins
-    compileOnly("me.clip:placeholderapi:2.11.2")
     runtimeOnly(project(":pathfinder-editmode"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
     implementation(project(":pathfinder-graph"))
@@ -80,6 +80,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    testImplementation("com.h2database:h2:2.1.214")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
+    testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 
     // UI
     api("de.cubbossa:Translations:1.1")

@@ -25,7 +25,8 @@ public class PlayerNode implements Node<PlayerNode> {
   public static final NodeType<PlayerNode> TYPE = new NodeType<>(
       new NamespacedKey(PathPlugin.getInstance(), "empty"),
       "empty",
-      new ItemStack(Material.DIRT)
+      new ItemStack(Material.DIRT),
+      PathPlugin.getInstance().getMiniMessage()
   ) {
     @Override
     public CompletableFuture<PlayerNode> createNodeInStorage(NodeCreationContext context) {

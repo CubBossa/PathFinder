@@ -3,17 +3,21 @@ package de.cubbossa.pathfinder.data;
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import de.cubbossa.pathfinder.util.NodeSelection;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 
@@ -37,6 +41,8 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
   CompletableFuture<NodeType<?>> getNodeType(UUID nodeId);
 
   CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType);
+
+  NodeTypeRegistry getNodeTypeRegistry();
 
   @Override
   default <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
@@ -78,7 +84,7 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
 
   default CompletableFuture<Collection<Node<?>>> getNodes() {
     List<Node<?>> nodes = new ArrayList<>();
-    for (NodeType<?> nodeType : NodeHandler.getInstance().getTypes().values()) {
+    for (NodeType<?> nodeType : getNodeTypeRegistry().getTypes()) {
       CompletableFuture<? extends Collection<?>> nodesFromStorage = nodeType.getNodesFromStorage();
       Collection<?> join = nodesFromStorage.join();
       nodes.add((Node<?>) join);

@@ -162,9 +162,8 @@ public class PassLayer implements ApplicationLayer {
   }
 
   @Override
-  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(
-      Class<M> modifier) {
-    return null;
+  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(Class<M> modifier) {
+    return layer.getNodeGroups(modifier);
   }
 
   @Override
@@ -209,7 +208,7 @@ public class PassLayer implements ApplicationLayer {
 
   @Override
   public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
-
+    layer.deleteDiscoverInfo(playerId, discoverKey);
   }
 
   @Override
@@ -219,11 +218,11 @@ public class PassLayer implements ApplicationLayer {
 
   @Override
   public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
-
+    layer.updatePathVisualizer(visualizer);
   }
 
   @Override
   public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
-
+    layer.deletePathVisualizer(visualizer);
   }
 }

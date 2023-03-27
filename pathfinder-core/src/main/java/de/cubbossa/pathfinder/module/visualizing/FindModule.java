@@ -51,7 +51,6 @@ import org.jetbrains.annotations.Nullable;
 @AutoService(PathPluginExtension.class)
 public class FindModule implements Listener, PathPluginExtension {
 
-  private List<CommandTree> commands;
   private FindCommand findCommand;
   private FindLocationCommand findLocationCommand;
   private CancelPathCommand cancelPathCommand;
@@ -73,29 +72,24 @@ public class FindModule implements Listener, PathPluginExtension {
 
     this.activePaths = new HashMap<>();
     this.navigationFilter = new ArrayList<>();
-
-
   }
 
   @Override
-  public void onLoad() {
+  public void onLoad(PathPlugin pathPlugin) {
     if (!plugin.getConfiguration().moduleConfig.navigationModule) {
-      PathPlugin.getInstance().unregisterExtension(this);
+      pathPlugin.getExtensionsRegistry().unregisterExtension(this);
     }
-  }
-
-  @Override
-  public void onEnable() {
     findCommand = new FindCommand();
     findLocationCommand = new FindLocationCommand();
     cancelPathCommand = new CancelPathCommand();
 
-    commands = List.of(
-        findCommand,
-        findLocationCommand,
-        cancelPathCommand
-    );
-    commands.forEach(CommandTree::register);
+    pathPlugin.getCommandRegistry().registerCommand(findCommand);
+    pathPlugin.getCommandRegistry().registerCommand(findLocationCommand);
+    pathPlugin.getCommandRegistry().registerCommand(cancelPathCommand);
+  }
+
+  @Override
+  public void onEnable(PathPlugin pathPlugin) {
 
     registerListener();
 
@@ -122,8 +116,7 @@ public class FindModule implements Listener, PathPluginExtension {
   }
 
   @Override
-  public void onDisable() {
-    commands.forEach(CommandUtils::unregister);
+  public void onDisable(PathPlugin pathPlugin) {
     unregisterListener();
   }
 

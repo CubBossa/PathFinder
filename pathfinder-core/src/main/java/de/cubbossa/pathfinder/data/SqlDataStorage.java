@@ -11,10 +11,12 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDE
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 import de.cubbossa.pathfinder.Modifier;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
@@ -37,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -99,9 +102,12 @@ public abstract class SqlDataStorage implements DataStorage {
       };
 
   private final SQLDialect dialect;
+  @Getter
+  private final NodeTypeRegistry nodeTypeRegistry;
 
-  public SqlDataStorage(SQLDialect dialect) {
+  public SqlDataStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
     this.dialect = dialect;
+    this.nodeTypeRegistry = nodeTypeRegistry;
   }
 
   @Override
@@ -186,7 +192,7 @@ public abstract class SqlDataStorage implements DataStorage {
     NodeType<?> type = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(nodeId))
-        .fetch(t -> NodeHandler.getInstance().getNodeType(t.getNodeType()))
+        .fetch(t -> nodeTypeRegistry.getNodeType(t.getNodeType()))
         .get(0);
     return CompletableFuture.completedFuture(type);
   }
@@ -262,7 +268,7 @@ public abstract class SqlDataStorage implements DataStorage {
                                                       Consumer<Waypoint> nodeConsumer) {
     CompletableFuture<Void> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      NodeHandler.WAYPOINT_TYPE.getNodesFromStorage(nodeIds).thenAccept(nodes -> {
+      PathPlugin.getInstance().getWaypointNodeType().getNodesFromStorage(nodeIds).thenAccept(nodes -> {
         DSLContext c = DSL.using(configuration);
         for (Node<?> node : nodes) {
           if (!(node instanceof Waypoint waypoint)) {
@@ -314,7 +320,7 @@ public abstract class SqlDataStorage implements DataStorage {
     Collection<CompletableFuture<?>> futures = new ArrayList<>();
     Collection<Node<?>> nodes = new HashSet<>();
     // for each future add nodes to hashset
-    NodeHandler.getInstance().getTypes().values().stream()
+    nodeTypeRegistry.getTypes().stream()
         .map(NodeDataStorage::getNodesFromStorage)
         .peek(f -> f.thenAccept(nodes::addAll))
         .forEach(futures::add);
@@ -417,7 +423,7 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Void> updateNodeInStorage(UUID id, Consumer<Waypoint> consumer) {
-    return NodeHandler.WAYPOINT_TYPE.getNodeFromStorage(id).thenAccept(node -> {
+    return PathPlugin.getInstance().getWaypointNodeType().getNodeFromStorage(id).thenAccept(node -> {
       consumer.accept(node);
       create
           .update(PATHFINDER_WAYPOINTS)

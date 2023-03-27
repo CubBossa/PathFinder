@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.data.ApplicationLayer;
@@ -22,21 +23,21 @@ public class NodeGroupCommand extends Command {
     super("nodegroup");
     withGeneratedHelp();
 
-    withRequirement(sender -> sender.hasPermission(PathPlugin.PERM_CMD_NG_LIST)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_CREATE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_DELETE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_ADD)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_REMOVE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
-        || sender.hasPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
+    withRequirement(sender -> sender.hasPermission(PathPerms.PERM_CMD_NG_LIST)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_CREATE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_DELETE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_ST_ADD)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_ST_REMOVE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_ST_LIST)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_NAME)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_PERM)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_NAVIGABLE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_DISCOVERABLE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_DISCOVER_DIST)
     );
 
     then(CustomArgs.literal("list")
-        .withPermission(PathPlugin.PERM_CMD_NG_LIST)
+        .withPermission(PathPerms.PERM_CMD_NG_LIST)
         .executes((sender, objects) -> {
           PathFinderAPI.builder()
               .withEvents()
@@ -56,7 +57,7 @@ public class NodeGroupCommand extends Command {
 
     then(CustomArgs.literal("create")
         .withGeneratedHelp()
-        .withPermission(PathPlugin.PERM_CMD_NG_CREATE)
+        .withPermission(PathPerms.PERM_CMD_NG_CREATE)
         .then(new StringArgument("name")
             .executes((sender, args) -> {
               PathFinderAPI.builder()
@@ -69,7 +70,7 @@ public class NodeGroupCommand extends Command {
 
     then(CustomArgs.literal("delete")
         .withGeneratedHelp()
-        .withPermission(PathPlugin.PERM_CMD_NG_DELETE)
+        .withPermission(PathPerms.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
               PathFinderAPI.builder()
