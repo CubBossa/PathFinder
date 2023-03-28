@@ -11,10 +11,8 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDE
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
@@ -43,6 +41,7 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -72,7 +71,8 @@ public abstract class SqlDataStorage implements DataStorage {
     UUID worldUid = record.getWorld();
 
     Waypoint node = new Waypoint(id);
-    node.setLocation(new Location(Bukkit.getWorld(worldUid), x, y, z));
+    World world = Bukkit.getWorld(worldUid);
+    node.setLocation(new Location(world, x, y, z));
     return node;
   };
 
@@ -268,7 +268,7 @@ public abstract class SqlDataStorage implements DataStorage {
                                                       Consumer<Waypoint> nodeConsumer) {
     CompletableFuture<Void> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      PathPlugin.getInstance().getWaypointNodeType().getNodesFromStorage(nodeIds).thenAccept(nodes -> {
+      nodeTypeRegistry.getWaypointNodeType().getNodesFromStorage(nodeIds).thenAccept(nodes -> {
         DSLContext c = DSL.using(configuration);
         for (Node<?> node : nodes) {
           if (!(node instanceof Waypoint waypoint)) {
@@ -423,7 +423,7 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Void> updateNodeInStorage(UUID id, Consumer<Waypoint> consumer) {
-    return PathPlugin.getInstance().getWaypointNodeType().getNodeFromStorage(id).thenAccept(node -> {
+    return nodeTypeRegistry.getWaypointNodeType().getNodeFromStorage(id).thenAccept(node -> {
       consumer.accept(node);
       create
           .update(PATHFINDER_WAYPOINTS)

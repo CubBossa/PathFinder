@@ -1,12 +1,19 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
+
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.NamespacedKey;
 
 public class NodeTypeRegistry {
 
   private final HashedRegistry<NodeType<?>> types;
+  @Getter
+  @Setter
+  private NodeType<Waypoint> waypointNodeType;
 
   public NodeTypeRegistry() {
     this.types = new HashedRegistry<>();

@@ -179,6 +179,7 @@ public class PathPlugin extends JavaPlugin {
 
   public void setWaypointNodeType(NodeType<Waypoint> nodeType) {
     waypointNodeType = nodeType;
+    nodeTypeRegistry.setWaypointNodeType(nodeType);
     nodeTypeRegistry.registerNodeType(nodeType);
   }
 }

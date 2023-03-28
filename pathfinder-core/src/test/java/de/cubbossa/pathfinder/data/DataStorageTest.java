@@ -1,11 +1,9 @@
 package de.cubbossa.pathfinder.data;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
+import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.WorldMock;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.core.node.WaypointType;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import java.io.IOException;
 import java.util.Collection;
@@ -13,7 +11,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import io.papermc.paper.event.entity.WardenAngerChangeEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -37,8 +38,8 @@ public abstract class DataStorageTest {
   @BeforeAll
   static void beforeAll() {
     miniMessage = MiniMessage.miniMessage();
-    MockBukkit.mock();
-    world = new WorldMock(Material.DIRT, 1);
+    ServerMock mock = MockBukkit.mock();
+    world = mock.addSimpleWorld("test");
   }
 
   @AfterEach
@@ -52,6 +53,7 @@ public abstract class DataStorageTest {
     storage = storage();
     waypointNodeType = new WaypointType(storage, miniMessage);
     nodeTypeRegistry.registerNodeType(waypointNodeType);
+    nodeTypeRegistry.setWaypointNodeType(waypointNodeType);
     storage.connect();
   }
 
@@ -106,7 +108,9 @@ public abstract class DataStorageTest {
   @Test
   void updateNode() throws ExecutionException, InterruptedException, TimeoutException {
     Waypoint waypoint = waypoint();
+		System.out.println(waypoint.getLocation().getWorld().getUID());
     storage.updateNode(waypoint.getNodeId(), node -> {
+	    System.out.println(node.getLocation().getWorld().getUID());
       node.setLocation(waypoint.getLocation().clone().add(0, 2, 0));
     }).get(1, TimeUnit.SECONDS);
 
@@ -114,4 +118,88 @@ public abstract class DataStorageTest {
 
     Assertions.assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
   }
+
+	@Test
+	void teleportNode() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint waypoint = waypoint();
+		storage.teleportNode(
+				waypoint.getNodeId(),
+				waypoint.getLocation().clone().add(0, 2, 0)
+		).get(1, TimeUnit.SECONDS);
+
+		Node<?> after = storage.getNode(waypoint.getNodeId()).get(1, TimeUnit.SECONDS);
+
+		Assertions.assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
+	}
+
+	@Test
+	void connectNodes() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint start = waypoint();
+		Waypoint end = waypoint();
+
+		CompletableFuture<Edge> future = storage.connectNodes(start.getNodeId(), end.getNodeId(), 1.23);
+		Edge edge = future.get(1, TimeUnit.SECONDS);
+
+		Assertions.assertFalse(future.isCompletedExceptionally());
+		Assertions.assertNotNull(edge);
+		Assertions.assertEquals(start.getNodeId(), edge.getStart());
+		Assertions.assertEquals(end.getNodeId(), edge.getEnd());
+		Assertions.assertEquals(1.23, edge.getWeightModifier(), .00001);
+	}
+
+	@Test
+	void updateNodes() {
+	}
+
+	@Test
+	void deleteNodes() {
+	}
+
+	@Test
+	void testGetNodes() {
+	}
+
+	@Test
+	void testGetNodes1() {
+	}
+
+	@Test
+	void getNode() {
+	}
+
+	@Test
+	void disconnectNodes() {
+	}
+
+	@Test
+	void testDisconnectNodes() {
+	}
+
+	@Test
+	void getNodeGroups() {
+	}
+
+	@Test
+	void assignNodesToGroup() {
+	}
+
+	@Test
+	void assignNodesToGroups() {
+	}
+
+	@Test
+	void removeNodesFromGroup() {
+	}
+
+	@Test
+	void removeNodesFromGroups() {
+	}
+
+	@Test
+	void assignNodeGroupModifier() {
+	}
+
+	@Test
+	void unassignNodeGroupModifier() {
+	}
 }
