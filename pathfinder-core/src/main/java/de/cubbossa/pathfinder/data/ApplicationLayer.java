@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.data;
 
 import de.cubbossa.pathfinder.Modifier;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
@@ -23,6 +24,12 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
 public interface ApplicationLayer {
+
+  default Logger getLogger() {
+    return PathPlugin.getInstance() == null
+        ? Logger.getGlobal()
+        : PathPlugin.getInstance().getLogger();
+  }
 
   // Nodes
 

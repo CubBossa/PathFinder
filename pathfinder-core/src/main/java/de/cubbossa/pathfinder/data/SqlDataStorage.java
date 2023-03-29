@@ -189,11 +189,14 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<NodeType<?>> getNodeType(UUID nodeId) {
-    NodeType<?> type = create
+    List<NodeType<?>> resultSet = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(nodeId))
-        .fetch(t -> nodeTypeRegistry.getNodeType(t.getNodeType()))
-        .get(0);
+        .fetch(t -> nodeTypeRegistry.getNodeType(t.getNodeType()));
+    if (resultSet.isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    NodeType<?> type = resultSet.get(0);
     return CompletableFuture.completedFuture(type);
   }
 
@@ -304,15 +307,16 @@ public abstract class SqlDataStorage implements DataStorage {
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
         .execute();
     create
-        .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
-        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
-        .execute();
-    create
         .deleteFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.in(nodes))
         .or(PATHFINDER_EDGES.END_ID.in(nodes))
         .execute();
-    return DataStorage.super.deleteNodes(nodes);
+    return DataStorage.super.deleteNodes(nodes).thenRun(() -> {
+      create
+          .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
+          .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
+          .execute();
+    });
   }
 
   @Override
@@ -518,11 +522,14 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
-    NodeGroup group = create
+    List<NodeGroup> resultSet = create
         .selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
-        .fetch(groupMapper)
-        .get(0);
+        .fetch(groupMapper);
+    if (resultSet.size() == 0) {
+      return CompletableFuture.completedFuture(null);
+    }
+    NodeGroup group = resultSet.get(0);
     return getNodeGroupNodes(key).thenAccept(group::addAll).thenApply(unused -> group);
   }
 
@@ -552,7 +559,7 @@ public abstract class SqlDataStorage implements DataStorage {
         .insertInto(PATHFINDER_NODEGROUPS)
         .values(key, 1)
         .execute();
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.completedFuture(new NodeGroup(key));
   }
 
   @Override

@@ -7,22 +7,21 @@ import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import io.papermc.paper.event.entity.WardenAngerChangeEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.bukkit.*;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class DataStorageTest {
 
@@ -57,55 +56,55 @@ public abstract class DataStorageTest {
     storage.connect();
   }
 
-  private Waypoint waypoint() {
+  private Waypoint waypoint() throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Waypoint> future = storage.createNode(waypointNodeType, new Location(world, 1, 2, 3));
-    Waypoint waypoint = future.join();
+    Waypoint waypoint = future.get(1, TimeUnit.SECONDS);
 
-    Assertions.assertFalse(future.isCompletedExceptionally());
+    assertFalse(future.isCompletedExceptionally());
     Assertions.assertNotNull(waypoint);
 
     return waypoint;
   }
 
-  @Test
+  @Test @Order(1)
   void createNode() throws ExecutionException, InterruptedException, TimeoutException {
 
     CompletableFuture<Waypoint> future = storage.createNode(waypointNodeType, new Location(world, 1, 2, 3));
     Waypoint waypoint = future.get(1, TimeUnit.SECONDS);
 
-    Assertions.assertFalse(future.isCompletedExceptionally());
+    assertFalse(future.isCompletedExceptionally());
     Assertions.assertNotNull(waypoint);
 
     Collection<Node<?>> nodesAfter = storage.getNodes().join();
-    Assertions.assertEquals(1, nodesAfter.size());
+    assertEquals(1, nodesAfter.size());
   }
 
-  @Test
+  @Test @Order(2)
   void getNodes() throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Collection<Node<?>>> future = storage.getNodes();
     Collection<Node<?>> nodes = future.join();
 
-    Assertions.assertFalse(future.isCompletedExceptionally());
-    Assertions.assertEquals(0, nodes.size());
+    assertFalse(future.isCompletedExceptionally());
+    assertEquals(0, nodes.size());
 
     waypoint();
 
     Collection<Node<?>> nodesAfter = storage.getNodes().get(1, TimeUnit.SECONDS);
-    Assertions.assertEquals(1, nodesAfter.size());
+    assertEquals(1, nodesAfter.size());
   }
 
-  @Test
+  @Test @Order(3)
   void getNodeType() throws ExecutionException, InterruptedException, TimeoutException {
 
     CompletableFuture<NodeType<?>> future1 = storage.getNodeType(waypoint().getNodeId());
     NodeType<?> type = future1.get(1, TimeUnit.SECONDS);
 
-    Assertions.assertFalse(future1.isCompletedExceptionally());
+    assertFalse(future1.isCompletedExceptionally());
     Assertions.assertNotNull(type);
-    Assertions.assertEquals(waypointNodeType, type);
+    assertEquals(waypointNodeType, type);
   }
 
-  @Test
+  @Test @Order(4)
   void updateNode() throws ExecutionException, InterruptedException, TimeoutException {
     Waypoint waypoint = waypoint();
 		System.out.println(waypoint.getLocation().getWorld().getUID());
@@ -116,10 +115,10 @@ public abstract class DataStorageTest {
 
     Node<?> after = storage.getNode(waypoint.getNodeId()).get(1, TimeUnit.SECONDS);
 
-    Assertions.assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
+    assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
   }
 
-	@Test
+	@Test @Order(5)
 	void teleportNode() throws ExecutionException, InterruptedException, TimeoutException {
 		Waypoint waypoint = waypoint();
 		storage.teleportNode(
@@ -129,30 +128,213 @@ public abstract class DataStorageTest {
 
 		Node<?> after = storage.getNode(waypoint.getNodeId()).get(1, TimeUnit.SECONDS);
 
-		Assertions.assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
+		assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
 	}
 
-	@Test
-	void connectNodes() throws ExecutionException, InterruptedException, TimeoutException {
-		Waypoint start = waypoint();
-		Waypoint end = waypoint();
-
+	Edge connectNodes(Waypoint start, Waypoint end) throws ExecutionException, InterruptedException, TimeoutException {
 		CompletableFuture<Edge> future = storage.connectNodes(start.getNodeId(), end.getNodeId(), 1.23);
 		Edge edge = future.get(1, TimeUnit.SECONDS);
 
-		Assertions.assertFalse(future.isCompletedExceptionally());
+		assertFalse(future.isCompletedExceptionally());
 		Assertions.assertNotNull(edge);
-		Assertions.assertEquals(start.getNodeId(), edge.getStart());
-		Assertions.assertEquals(end.getNodeId(), edge.getEnd());
-		Assertions.assertEquals(1.23, edge.getWeightModifier(), .00001);
+		assertEquals(start.getNodeId(), edge.getStart());
+		assertEquals(end.getNodeId(), edge.getEnd());
+		assertEquals(1.23, edge.getWeightModifier(), .00001);
+		return edge;
 	}
 
-	@Test
-	void updateNodes() {
+	Edge connectNodes() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint start = waypoint();
+		Waypoint end = waypoint();
+
+		return connectNodes(start, end);
 	}
 
-	@Test
-	void deleteNodes() {
+	@Test @Order(6)
+	void testConnectNodes() throws ExecutionException, InterruptedException, TimeoutException {
+		connectNodes();
+	}
+
+	@Test @Order(7)
+	void disconnectNodes() throws ExecutionException, InterruptedException, TimeoutException {
+		Edge edge = connectNodes();
+
+		CompletableFuture<?> future = storage.disconnectNodes(edge.getStart(), edge.getEnd());
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<Edge>> future1 = storage.getConnections(edge.getStart());
+		Collection<Edge> edges = future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+		assertEquals(0, edges.size());
+	}
+
+	@Test @Order(8)
+	void disconnectNodes3() throws ExecutionException, InterruptedException, TimeoutException {
+		Edge edge = connectNodes();
+
+		CompletableFuture<?> future = storage.disconnectNodes(new NodeSelection(edge.getStart()), new NodeSelection(edge.getEnd()));
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<Edge>> future1 = storage.getConnections(edge.getStart());
+		Collection<Edge> edges = future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+		assertEquals(0, edges.size());
+	}
+
+	@Test @Order(9)
+	void disconnectNodes1() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint a = waypoint();
+		Waypoint b = waypoint();
+		Waypoint c = waypoint();
+
+		Edge ab = connectNodes(a, b);
+		Edge ac = connectNodes(a, c);
+		Edge bc = connectNodes(b, c);
+
+		CompletableFuture<?> future = storage.disconnectNodes(a.getNodeId());
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<Edge>> future1 = storage.getConnections(a.getNodeId());
+		Collection<Edge> edges = future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+		assertEquals(0, edges.size());
+
+		CompletableFuture<Collection<Edge>> future2 = storage.getConnectionsTo(c.getNodeId());
+		Collection<Edge> edges1 = future2.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future2.isCompletedExceptionally());
+		assertEquals(List.of(bc), edges1);
+	}
+
+	@Test @Order(10)
+	void disconnectNodes2() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint a = waypoint();
+		Waypoint b = waypoint();
+		Waypoint c = waypoint();
+
+		Edge ab = connectNodes(a, b);
+		Edge ac = connectNodes(a, c);
+		Edge bc = connectNodes(b, c);
+
+		CompletableFuture<?> future = storage.disconnectNodes(new NodeSelection(a.getNodeId()));
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<Edge>> future1 = storage.getConnections(a.getNodeId());
+		Collection<Edge> edges = future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+		assertEquals(0, edges.size());
+
+		CompletableFuture<Collection<Edge>> future2 = storage.getConnectionsTo(c.getNodeId());
+		Collection<Edge> edges1 = future2.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future2.isCompletedExceptionally());
+		assertEquals(List.of(bc), edges1);
+	}
+
+	NodeGroup nodeGroup(NamespacedKey key) throws ExecutionException, InterruptedException, TimeoutException {
+		CompletableFuture<NodeGroup> future = storage.createNodeGroup(key);
+		NodeGroup group = future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+		Assertions.assertNotNull(group);
+
+		return group;
+	}
+
+	@Test @Order(11)
+	void createGroup() throws ExecutionException, InterruptedException, TimeoutException {
+		nodeGroup(NamespacedKey.fromString("pathfinder:abc"));
+	}
+
+	@Test @Order(12)
+	void deleteGroup() throws ExecutionException, InterruptedException, TimeoutException {
+		NamespacedKey key = NamespacedKey.fromString("pathfinder:abc");
+		nodeGroup(key);
+
+		CompletableFuture<Void> future = storage.deleteNodeGroup(key);
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<NodeGroup> future1 = storage.getNodeGroup(key);
+		NodeGroup group = future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+		Assertions.assertNull(group);
+	}
+
+	@Test @Order(13)
+	void getNodeGroupKeySet() throws ExecutionException, InterruptedException, TimeoutException {
+		NamespacedKey a = NamespacedKey.fromString("pathfinder:a");
+		NamespacedKey b = NamespacedKey.fromString("pathfinder:b");
+
+		nodeGroup(a);
+		nodeGroup(b);
+
+		CompletableFuture<Collection<NamespacedKey>> future = storage.getNodeGroupKeySet();
+		Collection<NamespacedKey> keys = future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+		assertEquals(List.of(a, b), keys);
+	}
+
+	@Test @Order(14)
+	void deleteNodes() throws ExecutionException, InterruptedException, TimeoutException {
+		Waypoint a = waypoint();
+		waypoint();
+		waypoint();
+
+		Collection<Node<?>> nodes = storage.getNodes().get(1, TimeUnit.SECONDS);
+		assertEquals(3, nodes.size());
+
+		CompletableFuture<Void> future = storage.deleteNodes(new NodeSelection(a.getNodeId()));
+		future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+
+		Collection<Node<?>> nodes1 = storage.getNodes().get(1, TimeUnit.SECONDS);
+		assertEquals(2, nodes1.size());
+
+		CompletableFuture<Void> future1 = storage.deleteNodes(new NodeSelection(UUID.randomUUID()));
+		future1.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future1.isCompletedExceptionally());
+
+		Collection<Node<?>> nodes2 = storage.getNodes().get(1, TimeUnit.SECONDS);
+		assertEquals(2, nodes2.size());
+	}
+
+	@Test @Order(15)
+	void assignNodesToGroup() {
+	}
+
+	@Test @Order(16)
+	void deleteNodesWithGroups() throws ExecutionException, InterruptedException, TimeoutException {
+		NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
+		Waypoint a = waypoint();
+		NodeGroup g = nodeGroup(gk);
+
+		storage.assignNodesToGroup(gk, new NodeSelection(a.getNodeId())).get(1, TimeUnit.SECONDS);
+		storage.deleteNodes(new NodeSelection(a.getNodeId())).get(1, TimeUnit.SECONDS);
+
+		CompletableFuture<Collection<UUID>> future = storage.getNodeGroupNodes(gk);
+		Collection<UUID> nodes = future.get(1, TimeUnit.SECONDS);
+
+		assertFalse(future.isCompletedExceptionally());
+		assertNotNull(nodes);
+		assertEquals(0, nodes.size());
 	}
 
 	@Test
@@ -168,19 +350,7 @@ public abstract class DataStorageTest {
 	}
 
 	@Test
-	void disconnectNodes() {
-	}
-
-	@Test
-	void testDisconnectNodes() {
-	}
-
-	@Test
 	void getNodeGroups() {
-	}
-
-	@Test
-	void assignNodesToGroup() {
 	}
 
 	@Test

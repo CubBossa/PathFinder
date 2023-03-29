@@ -75,7 +75,12 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
   default CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
     Map<NodeType<?>, NodeSelection> mapping = new HashMap<>();
     for (UUID node : nodes) {
-      mapping.computeIfAbsent(getNodeType(node).join(), t -> new NodeSelection()).add(node);
+      NodeType<?> type = getNodeType(node).join();
+      if (type == null) {
+        getLogger().warning("Tried to delete node but could not find type mapping.");
+        continue;
+      }
+      mapping.computeIfAbsent(type, t -> new NodeSelection()).add(node);
     }
     List<CompletableFuture<?>> futures = new ArrayList<>();
     mapping.forEach((nodeType, uuids) -> futures.add(nodeType.deleteNodesFromStorage(uuids)));
