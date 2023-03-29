@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.NodeCreateEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
+import de.cubbossa.pathfinder.core.events.node.NodesDeleteEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
@@ -37,18 +38,23 @@ public class EventsLayer extends PassLayer implements ApplicationLayer {
   }
 
   private CompletableFuture<Void> callEvent(Event event) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
+    return callEvent(event, null);
+  }
+
+  private <T> CompletableFuture<T> callEvent(Event event, T data) {
+    CompletableFuture<T> future = new CompletableFuture<>();
     if (Bukkit.isPrimaryThread()) {
       Bukkit.getPluginManager().callEvent(event);
       if (event instanceof Cancellable cancellable && cancellable.isCancelled()) {
         future.completeExceptionally(new RuntimeException("Event cancelled."));
         return future;
       }
-      future.complete(null);
+      future.complete(data);
       return future;
     }
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-      future.thenCombine(callEvent(event), (a, b) -> a);
+      callEvent(event, data).join();
+      future.complete(data);
     });
     return future;
   }
@@ -64,10 +70,7 @@ public class EventsLayer extends PassLayer implements ApplicationLayer {
     NodeCreateEvent<N> event = new NodeCreateEvent<>(type, location);
     return callEvent(event)
         .thenCompose(result -> subLayer.createNode(type, location))
-        .thenApply(n -> {
-          callEvent(new NodeCreatedEvent<>(n));
-          return n;
-        })
+        .thenCompose(n -> callEvent(new NodeCreatedEvent<>(n), n))
         .exceptionally(throwable -> {
           throwable.printStackTrace();
           return null;
@@ -78,11 +81,9 @@ public class EventsLayer extends PassLayer implements ApplicationLayer {
   public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
 
     return getNodes(nodes)
-        .thenAccept(n -> {
-          super.deleteNodes(nodes)
-              .thenCombine(callEvent(new NodesDeletedEvent(n)), (a, b) -> a)
-              .join();
-        });
+        .thenCompose(n -> callEvent(new NodesDeleteEvent(n), n))
+        .thenCombine(subLayer.deleteNodes(nodes), (a, b) -> a)
+        .thenCompose(n -> callEvent(new NodesDeletedEvent(n), null));
   }
 
   @Override

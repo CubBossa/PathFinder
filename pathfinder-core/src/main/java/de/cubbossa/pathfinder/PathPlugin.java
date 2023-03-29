@@ -116,7 +116,6 @@ public class PathPlugin extends JavaPlugin {
     translationHandler.loadStyle();
     translationHandler.loadLanguages();
 
-    commandRegistry.enableCommands(this);
 
     new File(getDataFolder(), "data/").mkdirs();
     database = switch (configuration.database.type) {
@@ -155,6 +154,7 @@ public class PathPlugin extends JavaPlugin {
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 
+    commandRegistry.enableCommands(this);
     extensionsRegistry.enableExtensions(this);
   }
 

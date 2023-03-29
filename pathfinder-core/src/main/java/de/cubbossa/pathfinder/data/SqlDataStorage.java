@@ -211,20 +211,23 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Waypoint> createNodeInStorage(NodeType.NodeCreationContext context) {
-    UUID uuid = UUID.randomUUID();
-    create
-        .insertInto(PATHFINDER_WAYPOINTS)
-        .values(
-            uuid,
-            context.location().getWorld() == null ? null : context.location().getWorld().getUID(),
-            context.location().getX(),
-            context.location().getY(),
-            context.location().getZ()
-        )
-        .execute();
-    Waypoint waypoint = new Waypoint(uuid);
-    waypoint.setLocation(context.location());
-    return CompletableFuture.completedFuture(waypoint);
+    return CompletableFuture.supplyAsync(() -> {
+      UUID uuid = UUID.randomUUID();
+      create
+          .insertInto(PATHFINDER_WAYPOINTS)
+          .values(
+              uuid,
+              context.location().getWorld() == null ? null : context.location().getWorld().getUID(),
+              context.location().getX(),
+              context.location().getY(),
+              context.location().getZ()
+          )
+          .execute();
+      Waypoint waypoint = new Waypoint(uuid);
+      waypoint.setLocation(context.location());
+
+      return waypoint;
+    });
   }
 
   private CompletableFuture<Collection<Waypoint>> insertGroups(Collection<Waypoint> waypoints) {
@@ -246,7 +249,8 @@ public abstract class SqlDataStorage implements DataStorage {
         .where(PATHFINDER_WAYPOINTS.ID.eq(id))
         .fetch(nodeMapper)
         .get(0);
-    return insertGroups(List.of(waypoint)).thenApply(waypoints -> waypoints.toArray(Waypoint[]::new)[0]);
+    return insertGroups(List.of(waypoint)).thenApply(
+        waypoints -> waypoints.toArray(Waypoint[]::new)[0]);
   }
 
   @Override
@@ -293,30 +297,40 @@ public abstract class SqlDataStorage implements DataStorage {
 
   @Override
   public CompletableFuture<Void> deleteNodesFromStorage(NodeSelection nodes) {
-    create
-        .deleteFrom(PATHFINDER_WAYPOINTS)
-        .where(PATHFINDER_WAYPOINTS.ID.in(nodes))
-        .execute();
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.runAsync(() -> {
+      create
+          .deleteFrom(PATHFINDER_WAYPOINTS)
+          .where(PATHFINDER_WAYPOINTS.ID.in(nodes))
+          .execute();
+    });
   }
 
   @Override
   public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-    create
-        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
-        .execute();
-    create
-        .deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.in(nodes))
-        .or(PATHFINDER_EDGES.END_ID.in(nodes))
-        .execute();
-    return DataStorage.super.deleteNodes(nodes).thenRun(() -> {
-      create
-          .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
-          .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
-          .execute();
-    });
+    CompletableFuture<Void> future = CompletableFuture
+        .allOf(
+            CompletableFuture.runAsync(() -> {
+              create
+                  .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+                  .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
+                  .execute();
+            }),
+            CompletableFuture.runAsync(() -> {
+              create
+                  .deleteFrom(PATHFINDER_EDGES)
+                  .where(PATHFINDER_EDGES.START_ID.in(nodes))
+                  .or(PATHFINDER_EDGES.END_ID.in(nodes))
+                  .execute();
+            })
+        )
+        .thenCompose(u -> DataStorage.super.deleteNodes(nodes));
+    future.copy().thenRunAsync(() -> {
+          create
+              .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
+              .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
+              .execute();
+        });
+    return future;
   }
 
   @Override

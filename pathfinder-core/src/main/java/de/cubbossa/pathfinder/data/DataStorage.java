@@ -46,7 +46,8 @@ public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint>
 
   @Override
   default <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-    return type.createNodeInStorage(new NodeType.NodeCreationContext(location))
+    return type
+        .createNodeInStorage(new NodeType.NodeCreationContext(location))
         .thenApply(n -> {
           setNodeType(n.getNodeId(), type.getKey()).join();
           return n;

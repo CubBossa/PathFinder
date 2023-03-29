@@ -107,9 +107,7 @@ public abstract class DataStorageTest {
   @Test @Order(4)
   void updateNode() throws ExecutionException, InterruptedException, TimeoutException {
     Waypoint waypoint = waypoint();
-		System.out.println(waypoint.getLocation().getWorld().getUID());
     storage.updateNode(waypoint.getNodeId(), node -> {
-	    System.out.println(node.getLocation().getWorld().getUID());
       node.setLocation(waypoint.getLocation().clone().add(0, 2, 0));
     }).get(1, TimeUnit.SECONDS);
 

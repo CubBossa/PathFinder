@@ -33,10 +33,6 @@ public class MessageLayer extends PassLayer implements ApplicationLayer {
     this.subLayer = subLayer;
   }
 
-  public EventsLayer eventLayer() {
-    return new EventsLayer(this);
-  }
-
   @Override
   public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
     return subLayer.createNode(type, location).thenApply(n -> {
@@ -49,11 +45,10 @@ public class MessageLayer extends PassLayer implements ApplicationLayer {
 
   @Override
   public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-    return subLayer.deleteNodes(nodes).thenApply(unused -> {
+    return subLayer.deleteNodes(nodes).thenRun(() -> {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE.format(
               Placeholder.component("selection", Messages.formatNodeSelection(sender, nodes))),
           sender);
-      return unused;
     });
   }
 
