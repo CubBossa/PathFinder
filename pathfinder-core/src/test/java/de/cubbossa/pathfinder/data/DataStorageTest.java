@@ -2,9 +2,16 @@ package de.cubbossa.pathfinder.data;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
-import be.seeseemelk.mockbukkit.WorldMock;
 import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.util.NodeSelection;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.junit.jupiter.api.*;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -13,13 +20,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.util.NodeSelection;
-import io.papermc.paper.event.entity.WardenAngerChangeEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.*;
-import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -315,7 +315,38 @@ public abstract class DataStorageTest {
 	}
 
 	@Test @Order(15)
-	void assignNodesToGroup() {
+	void assignNodesToGroup() throws ExecutionException, InterruptedException, TimeoutException {
+		NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
+		Waypoint a = waypoint();
+		NodeGroup g = nodeGroup(gk);
+
+		CompletableFuture<Void> future = storage.assignNodesToGroup(gk, new NodeSelection(a.getNodeId()));
+		future.get(1, TimeUnit.SECONDS);
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<UUID>> future1 = storage.getNodeGroupNodes(gk);
+		Collection<UUID> uuids = future1.get(1, TimeUnit.SECONDS);
+		assertFalse(future1.isCompletedExceptionally());
+		assertTrue(uuids.contains(a.getNodeId()));
+	}
+
+	@Test @Order(16)
+	void unassignNodesToGroup() throws ExecutionException, InterruptedException, TimeoutException {
+		NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
+		Waypoint a = waypoint();
+		Waypoint b = waypoint();
+		NodeGroup g = nodeGroup(gk);
+
+		storage.assignNodesToGroup(gk, new NodeSelection(a.getNodeId(), b.getNodeId())).get(1, TimeUnit.SECONDS);
+		CompletableFuture<Void> future = storage.removeNodesFromGroup(gk, new NodeSelection(a.getNodeId()));
+		future.get(1, TimeUnit.SECONDS);
+		assertFalse(future.isCompletedExceptionally());
+
+		CompletableFuture<Collection<UUID>> future1 = storage.getNodeGroupNodes(gk);
+		Collection<UUID> uuids = future1.get(1, TimeUnit.SECONDS);
+		assertFalse(future1.isCompletedExceptionally());
+		assertFalse(uuids.contains(a.getNodeId()));
+		assertTrue(uuids.contains(b.getNodeId()));
 	}
 
 	@Test @Order(16)
@@ -349,14 +380,6 @@ public abstract class DataStorageTest {
 
 	@Test
 	void getNodeGroups() {
-	}
-
-	@Test
-	void assignNodesToGroups() {
-	}
-
-	@Test
-	void removeNodesFromGroup() {
 	}
 
 	@Test
