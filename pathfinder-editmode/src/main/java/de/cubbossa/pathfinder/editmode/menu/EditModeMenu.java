@@ -25,6 +25,7 @@ import de.cubbossa.translations.TranslationHandler;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -114,26 +115,31 @@ public class EditModeMenu {
 
           if (edgeStart == null) {
             edgeStart = c.getTarget();
+            c.getMenu().refresh(c.getSlot());
           } else {
-						/* if (edgeStart.equals(c.getTarget())) {
-							p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-							return;
-						}
-						if (edgeStart.getEdges().stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
-							p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-							return;
-						}
-
-						ApplicationLayer api = PathFinderAPI.builder().withEvents().build();
-						api.connectNodes(edgeStart.getNodeId(), c.getTarget().getNodeId())
-								.thenRun(() -> edgeStart = null);
-						if (undirectedEdges) {
-							api.connectNodes(c.getTarget().getNodeId(), edgeStart.getNodeId());
-						}*/
+            if (edgeStart.equals(c.getTarget())) {
+              p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+              return;
+            }
+            ApplicationLayer api = PathFinderAPI.builder().withEvents().build();
+            api.getConnections(edgeStart).thenAccept(edges -> {
+              if (edges.stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+              } else {
+                CompletableFuture<?> future = api.connectNodes(edgeStart, c.getTarget());
+                if (undirectedEdges) {
+                  future =
+                      CompletableFuture.allOf(future, api.connectNodes(c.getTarget(), edgeStart));
+                }
+                future.thenRun(() -> {
+                  edgeStart = null;
+                  c.getMenu().refresh(c.getSlot());
+                  EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
+                      "editor_edge_connect", p, p.getLocation());
+                });
+              }
+            });
           }
-          c.getMenu().refresh(c.getSlot());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_connect", p, p.getLocation());
         })
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
           Player player = context.getPlayer();

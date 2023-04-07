@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
-import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.EdgesCreateEvent;
+import de.cubbossa.pathfinder.core.events.node.EdgesDeleteEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
@@ -14,7 +14,6 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
@@ -113,10 +112,10 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       if (player == null) {
         return;
       }
+
       if (!isEdited()) {
         startParticleTask();
       }
-
       BottomInventoryMenu menu = new EditModeMenu(key,
           PathPlugin.getInstance().getNodeTypeRegistry().getTypes()).createHotbarMenu(this, player);
       editingPlayers.put(uuid, menu);
@@ -126,6 +125,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       player.setGameMode(GameMode.CREATIVE);
 
       showArmorStands(player);
+
     } else {
 
       if (player != null) {
@@ -207,6 +207,9 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
       var sched = Bukkit.getScheduler();
       new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
+
+      Collection<UUID> nodes = PathFinderAPI.get().getNodeGroupNodes(key).join();
+      Collection<Edge> edges = PathFinderAPI.get().getConnectionsTo(new NodeSelection(nodes)).join();
 
       Map<Edge, Boolean> undirected = new HashMap<>();
       for (Edge edge : edges) {
@@ -293,13 +296,8 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   @EventHandler
-  public void onEdgeCreated(EdgesCreatedEvent event) {
-    Collection<Edge> edges = new HashSet<>();
-    for (Edge edge : event.getEdges()) {
-      if (!nodes.containsKey(edge.getEnd())) {
-        continue;
-      }
-    }
+  public void onEdgeCreated(EdgesCreateEvent.Post event) {
+    // TODO check if in current group obv
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
       armorstandHandler.showEdges(event.getEdges(), player);
     });
@@ -319,7 +317,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   @EventHandler
-  public void onEdgesDeleted(EdgesDeletedEvent event) {
+  public void onEdgesDeleted(EdgesDeleteEvent.Post event) {
     editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player ->
         armorstandHandler.hideEdges(Lists.newArrayList(event.getEdges()), player));
     updateEditModeParticles();

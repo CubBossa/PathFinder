@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.core;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.core.events.node.EdgesCreateEvent;
+import de.cubbossa.pathfinder.core.events.node.EdgesDeleteEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeCreateEvent;
 import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.core.events.node.NodesDeleteEvent;
@@ -9,6 +11,7 @@ import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupCreateEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
@@ -16,7 +19,10 @@ import de.cubbossa.pathfinder.data.ApplicationLayer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -135,5 +141,40 @@ public class EventsLayer extends PassLayer implements ApplicationLayer {
               new NodeGroupAssignedEvent(sel, event.getModifiedGroups());
           Bukkit.getPluginManager().callEvent(postEvent);
         });
+  }
+
+  @Override
+  public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
+    return callEvent(new EdgesCreateEvent.Pre(start, end))
+        .thenCombine(super.connectNodes(start, end), (a, b) -> b)
+        .thenApply(e -> callEvent(new EdgesCreateEvent.Post(e), e).join());
+  }
+
+  @Override
+  public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
+    return callEvent(new EdgesCreateEvent.Pre(new NodeSelection(start), new NodeSelection(end)))
+        .thenCombine(super.connectNodes(start, end, weight), (a, b) -> b)
+        .thenApply(e -> callEvent(new EdgesCreateEvent.Post(List.of(e)), e).join());
+  }
+
+  @Override
+  public CompletableFuture<Edge> connectNodes(UUID start, UUID end) {
+    return callEvent(new EdgesCreateEvent.Pre(new NodeSelection(start), new NodeSelection(end)))
+        .thenCombine(super.connectNodes(start, end), (a, b) -> b)
+        .thenApply(e -> callEvent(new EdgesCreateEvent.Post(List.of(e)), e).join());
+  }
+
+  @Override
+  public CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
+    return callEvent(new EdgesDeleteEvent.Pre(new NodeSelection(start), new NodeSelection(end)))
+        .thenCompose(u -> super.disconnectNodes(start, end))
+        .thenCompose(u -> callEvent(new EdgesDeleteEvent.Post(new NodeSelection(start), new NodeSelection(end))));
+  }
+
+  @Override
+  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
+    return callEvent(new EdgesDeleteEvent.Pre(start, end))
+        .thenCompose(u -> super.disconnectNodes(start, end))
+        .thenCompose(u -> callEvent(new EdgesDeleteEvent.Post(start, end)));
   }
 }
