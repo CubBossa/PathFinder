@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.PathFinderAPI;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 
-public interface DataStorage extends ApplicationLayer, NodeDataStorage<Waypoint> {
+public interface Storage extends ApplicationLayer, NodeDataStorage<Waypoint> {
 
   default void connect() throws IOException {
     connect(() -> {

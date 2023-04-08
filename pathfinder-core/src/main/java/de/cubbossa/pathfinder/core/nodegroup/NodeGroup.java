@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.nodegroup;
 import de.cubbossa.pathfinder.Modified;
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 
 import java.util.*;
@@ -13,7 +14,7 @@ import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
-public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Comparable<NodeGroup> {
+public class NodeGroup extends HashSet<Node<?>> implements Keyed, Modified, Comparable<NodeGroup> {
 
   private final NamespacedKey key;
   @Getter
@@ -26,7 +27,7 @@ public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Compara
     this(key, new HashSet<>());
   }
 
-  public NodeGroup(NamespacedKey key, Collection<UUID> nodes) {
+  public NodeGroup(NamespacedKey key, Collection<Node<?>> nodes) {
     super(nodes);
     this.key = key;
     this.modifiers = new HashMap<>();

@@ -1,6 +1,5 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage.misc;
 
-import java.nio.ByteBuffer;
 import java.util.UUID;
 import org.jooq.Converter;
 

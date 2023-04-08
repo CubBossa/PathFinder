@@ -1,16 +1,14 @@
 package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.Named;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.data.NodeDataStorage;
+import de.cubbossa.pathfinder.storage.NodeDataStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import jdk.jshell.spi.ExecutionControl;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -20,14 +18,10 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Collection;
-import java.util.Map;
 
 @Getter
 @Setter
 public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
-
-  public record NodeCreationContext(Location location) {
-  }
 
   private final NamespacedKey key;
   private final ItemStack displayItem;
@@ -35,7 +29,7 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
   private String nameFormat;
   private Component displayName;
 
-  private NodeDataStorage<N> storage;
+  private Optional<NodeDataStorage<N>> storage;
 
   public NodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage) {
     this(key, name, displayItem, miniMessage, null);
@@ -46,7 +40,7 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
     this.miniMessage = miniMessage;
     this.setNameFormat(name);
     this.displayItem = displayItem;
-    this.storage = storage;
+    this.storage = storage == null ? Optional.empty() : Optional.of(storage);
   }
 
   @Override
@@ -58,38 +52,27 @@ public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeD
   // pass to storage methods.
 
   @Override
-  public CompletableFuture<N> createNodeInStorage(NodeCreationContext context) {
-    return storage.createNodeInStorage(context);
+  public Optional<N> loadNode(UUID uuid) {
+    return storage.isPresent() ? storage.get().loadNode(uuid) : Optional.empty();
   }
 
   @Override
-  public CompletableFuture<N> getNodeFromStorage(UUID id) {
-    return storage.getNodeFromStorage(id);
+  public Collection<N> loadNodes(Collection<UUID> ids) {
+    return storage.isPresent() ? storage.get().loadNodes(ids) : new HashSet<>();
   }
 
   @Override
-  public CompletableFuture<Collection<N>> getNodesFromStorage(NodeSelection ids) {
-    return storage.getNodesFromStorage(ids);
+  public Collection<N> loadAllNodes() {
+    return storage.isPresent() ? storage.get().loadAllNodes() : new HashSet<>();
   }
 
   @Override
-  public CompletableFuture<Collection<N>> getNodesFromStorage() {
-    return storage.getNodesFromStorage();
+  public void saveNode(N node) {
+    storage.ifPresent(s -> s.saveNode(node));
   }
 
   @Override
-  public CompletableFuture<Void> updateNodeInStorage(UUID id, Consumer<N> nodeConsumer) {
-    return storage.updateNodeInStorage(id, nodeConsumer);
-  }
-
-  @Override
-  public CompletableFuture<Void> updateNodesInStorage(NodeSelection nodeIds,
-                                                      Consumer<N> nodeConsumer) {
-    return storage.updateNodesInStorage(nodeIds, nodeConsumer);
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteNodesFromStorage(NodeSelection nodes) {
-    return storage.deleteNodesFromStorage(nodes);
+  public void deleteNode(N node) {
+    storage.ifPresent(s -> s.deleteNode(node));
   }
 }

@@ -14,7 +14,7 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
+import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
@@ -228,7 +228,7 @@ public class EditModeMenu {
 
               Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
                 PathFinderAPI.builder().withEvents().build()
-                    .removeNodesFromGroups(groupable.getGroups(), new NodeSelection(groupable))
+                    .removeNodesFromGroups(groupable.getGroups().stream().map(NodeGroup::getKey).toList(), new NodeSelection(groupable))
                     .thenRun(() -> {
                       context.getPlayer().playSound(context.getPlayer().getLocation(),
                           Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
@@ -334,7 +334,7 @@ public class EditModeMenu {
 
           Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             PathFinderAPI.builder().withEvents().build()
-                .removeNodesFromGroups(groupable.getGroups(), new NodeSelection(groupable));
+                .removeNodesFromGroups(groupable.getGroups().stream().map(NodeGroup::getKey).toList(), new NodeSelection(groupable));
             menu.refresh(menu.getListSlots());
             c.getPlayer()
                 .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK,

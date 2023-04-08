@@ -4,10 +4,10 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
-import de.cubbossa.pathfinder.data.NamespacedKeyConverter;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderSearchTermsRecord;
+import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
 
 import java.util.Arrays;
 import java.util.List;

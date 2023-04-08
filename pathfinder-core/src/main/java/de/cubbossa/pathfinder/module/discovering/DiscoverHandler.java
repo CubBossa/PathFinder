@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.data.DiscoverInfo;
+import de.cubbossa.pathfinder.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.module.discovering.event.PlayerForgetEvent;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -50,11 +50,7 @@ public class DiscoverHandler {
         if (!(context.node() instanceof Groupable<?> groupable)) {
           return true;
         }
-        Collection<NodeGroup> groups = groupable.getGroups().stream()
-            .map(key -> PathFinderAPI.get().getNodeGroup(key))
-            .parallel()
-            .map(CompletableFuture::join)
-            .toList();
+        Collection<NodeGroup> groups = groupable.getGroups();
 
         for (NodeGroup group : groups) {
           if (!group.hasModifier(DiscoverableModifier.class)) {
@@ -75,7 +71,7 @@ public class DiscoverHandler {
 
   public void cachePlayer(UUID player) {
     CompletableFuture.runAsync(() -> {
-      discovered.put(player, plugin.getDatabase().loadDiscoverInfo(player));
+      discovered.put(player, plugin.getStorage().loadDiscoverInfo(player));
     });
   }
 
@@ -128,7 +124,7 @@ public class DiscoverHandler {
         CompletableFuture.completedFuture(discovered.get(player)) :
         CompletableFuture.supplyAsync(() -> {
           Map<NamespacedKey, DiscoverInfo> data =
-              plugin.getDatabase().loadDiscoverInfo(player);
+              plugin.getStorage().loadDiscoverInfo(player);
           discovered.put(player, data);
           return data;
         });
@@ -192,9 +188,6 @@ public class DiscoverHandler {
       return 1.5f;
     }
     FindDistanceModifier mod = groupable.getGroups().stream()
-        .map(key -> PathFinderAPI.get().getNodeGroup(key))
-        .parallel()
-        .map(CompletableFuture::join)
         .filter(group -> group.hasModifier(FindDistanceModifier.class))
         .sorted()
         .findFirst()

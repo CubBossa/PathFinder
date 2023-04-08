@@ -295,12 +295,12 @@ jooq {
                         forcedTypes = listOf(
                             ForcedType().apply {
                                 userType = "org.bukkit.NamespacedKey"
-                                converter = "de.cubbossa.pathfinder.data.NamespacedKeyConverter"
+                                converter = "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
                                 includeExpression = ".*key|.*type"
                             },
                             ForcedType().apply {
                                 userType = "java.util.UUID"
-                                converter = "de.cubbossa.pathfinder.data.UUIDConverter"
+                                converter = "de.cubbossa.pathfinder.storage.misc.UUIDConverter"
                                 includeExpression = "id|.*_id|world"
                             }
                         )

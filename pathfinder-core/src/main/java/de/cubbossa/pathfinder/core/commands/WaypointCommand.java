@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.node.Edge;
@@ -25,8 +26,8 @@ import org.bukkit.util.Vector;
 
 public class WaypointCommand extends Command {
 
-  public WaypointCommand(Supplier<NodeType<?>> fallbackWaypointType) {
-    super("waypoint");
+  public WaypointCommand(PathFinder pathFinder, Supplier<NodeType<?>> fallbackWaypointType) {
+    super(pathFinder, "waypoint");
     withAliases("node");
     withGeneratedHelp();
 
@@ -125,6 +126,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
+
               PathFinderAPI.builder()
                       .withEvents()
                       .withMessages(player)

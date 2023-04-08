@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.core.commands;
 
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
+import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import dev.jorel.commandapi.arguments.StringArgument;
 import org.bukkit.NamespacedKey;
 
@@ -19,8 +20,8 @@ public class NodeGroupCommand extends Command {
    * @param offset The argument index offset. Increase if this command is also a child of another
    *               command with non-static arguments.
    */
-  public NodeGroupCommand(int offset) {
-    super("nodegroup");
+  public NodeGroupCommand(PathFinder pathFinder, int offset) {
+    super(pathFinder, "nodegroup");
     withGeneratedHelp();
 
     withRequirement(sender -> sender.hasPermission(PathPerms.PERM_CMD_NG_LIST)

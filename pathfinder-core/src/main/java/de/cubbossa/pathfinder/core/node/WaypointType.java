@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.data.NodeDataStorage;
+import de.cubbossa.pathfinder.storage.NodeDataStorage;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -17,5 +17,10 @@ public class WaypointType extends NodeType<Waypoint> {
         miniMessage,
         storage
     );
+  }
+
+  @Override
+  public Waypoint createAndLoadNode(Context context) {
+    return getStorage().orElseThrow().createAndLoadNode(context);
   }
 }

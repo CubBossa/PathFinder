@@ -29,7 +29,7 @@ public class PlayerNode implements Node<PlayerNode> {
       PathPlugin.getInstance().getMiniMessage()
   ) {
     @Override
-    public CompletableFuture<PlayerNode> createNodeInStorage(NodeCreationContext context) {
+    public PlayerNode createAndLoadNode(Context context) {
       throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
           + "must be created from constructor.");
     }

@@ -7,10 +7,10 @@ import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.WaypointType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.data.DataStorage;
-import de.cubbossa.pathfinder.data.RemoteSqlDataStorage;
-import de.cubbossa.pathfinder.data.SqliteDataStorage;
-import de.cubbossa.pathfinder.data.YmlDataStorage;
+import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
+import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.util.YamlUtils;
@@ -30,7 +30,7 @@ import org.bukkit.util.Vector;
 import java.io.File;
 
 @Getter
-public class PathPlugin extends JavaPlugin {
+public class PathPlugin extends JavaPlugin implements PathFinder {
 
   public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
     @Override
@@ -62,7 +62,7 @@ public class PathPlugin extends JavaPlugin {
 
   private File effectsFile;
   private final NodeTypeRegistry nodeTypeRegistry;
-  private DataStorage database;
+  private Storage storage;
   @Setter
   private PathPluginConfig configuration;
   private final ExtensionsRegistry extensionsRegistry;
@@ -78,7 +78,7 @@ public class PathPlugin extends JavaPlugin {
     nodeTypeRegistry = new NodeTypeRegistry();
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     bStatsLoader = new BStatsLoader();
-    commandRegistry = new CommandRegistry();
+    commandRegistry = new CommandRegistry(this);
     extensionsRegistry = new ExtensionsRegistry();
     extensionsRegistry.findServiceExtensions(this.getClassLoader());
   }
@@ -118,14 +118,14 @@ public class PathPlugin extends JavaPlugin {
 
 
     new File(getDataFolder(), "data/").mkdirs();
-    database = switch (configuration.database.type) {
-      case IN_MEMORY -> null;
-      case SQLITE -> new SqliteDataStorage(configuration.database.embeddedSql.file, nodeTypeRegistry);
-      case REMOTE_SQL -> new RemoteSqlDataStorage(configuration.database.remoteSql, nodeTypeRegistry);
-      default -> new YmlDataStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
+    StorageImplementation impl = switch (configuration.database.type) {
+      case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry);
+      case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry);
+      default -> null;
+//      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
-    if (database != null) {
-      database.connect(() -> {
+    if (storage != null) {
+      storage.connect(() -> {
         ExamplesHandler examples = ExamplesHandler.getInstance();
         examples.afterFetch(() -> {
           examples.getExamples().forEach(examples::loadVisualizer);
@@ -134,7 +134,7 @@ public class PathPlugin extends JavaPlugin {
     }
 
     setWaypointNodeType(new WaypointType(
-        database,
+        storage,
         miniMessage
     ));
 

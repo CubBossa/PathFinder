@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.Command;
@@ -26,8 +27,8 @@ import org.bukkit.command.CommandSender;
 
 public class PathVisualizerCommand extends Command {
 
-  public PathVisualizerCommand() {
-    super("pathvisualizer");
+  public PathVisualizerCommand(PathFinder pathFinder) {
+    super(pathFinder, "pathvisualizer");
     withAliases("visualizer");
     withGeneratedHelp();
 

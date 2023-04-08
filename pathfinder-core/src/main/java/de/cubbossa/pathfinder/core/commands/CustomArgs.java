@@ -8,7 +8,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
@@ -17,7 +16,6 @@ import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.query.FindQueryParser;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
@@ -311,7 +309,7 @@ public class CustomArgs {
 		return (CommandArgument<NamespacedKey, Argument<NamespacedKey>>) arg(
 				new NamespacedKeyArgument(nodeName)
 		).replaceSuggestions(suggestNamespacedKeys(
-				sender -> PathPlugin.getInstance().getDatabase().getNodeGroupKeySet()
+				sender -> PathPlugin.getInstance().getStorage().getNodeGroupKeySet()
 		));
 	}
 

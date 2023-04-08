@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
 import java.io.IOException;
 

@@ -7,9 +7,9 @@ import org.bukkit.NamespacedKey;
 
 public interface Groupable<N extends Node<N>> extends Node<N> {
 
-  Collection<NamespacedKey> getGroups();
+  Collection<NodeGroup> getGroups();
 
-  void addGroup(NamespacedKey group);
+  void addGroup(NodeGroup group);
 
   void removeGroup(NamespacedKey group);
 

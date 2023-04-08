@@ -1,7 +1,6 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 import org.bukkit.NamespacedKey;
 

@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
@@ -23,14 +23,14 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class DataStorageTest {
+public abstract class StorageTest {
 
 
-  abstract DataStorage storage();
+  abstract Storage storage();
 
   protected static MiniMessage miniMessage;
   protected static World world;
-  protected DataStorage storage;
+  protected Storage storage;
   protected NodeTypeRegistry nodeTypeRegistry;
   protected NodeType<Waypoint> waypointNodeType;
 

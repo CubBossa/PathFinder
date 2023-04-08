@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.PathPlugin;
@@ -9,7 +9,6 @@ import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -21,7 +20,6 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.command.CommandSender;
 
 public interface ApplicationLayer {
 

@@ -1,5 +1,6 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage;
 
+import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -8,11 +9,11 @@ import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 
-public class SqlDataStorageTest extends DataStorageTest {
+public class SqlStorageTest extends StorageTest {
 
   @Override
-  DataStorage storage() {
-    return new SqlDataStorage(SQLDialect.H2, nodeTypeRegistry) {
+  Storage storage() {
+    return new SqlStorage(SQLDialect.H2, nodeTypeRegistry) {
       @Override
       ConnectionProvider getConnectionProvider() {
         final Connection connection;

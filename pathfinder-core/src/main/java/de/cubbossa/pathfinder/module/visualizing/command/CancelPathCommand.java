@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -8,8 +9,8 @@ import org.bukkit.entity.Player;
 
 public class CancelPathCommand extends Command {
 
-  public CancelPathCommand() {
-    super("cancelpath");
+  public CancelPathCommand(PathFinder pathFinder) {
+    super(pathFinder, "cancelpath");
     withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
         && FindModule.getInstance().getActivePath(player) != null);

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.EventsLayer;
 import de.cubbossa.pathfinder.core.MessageLayer;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
+import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import java.util.logging.Logger;
 import org.bukkit.command.CommandSender;
 
@@ -55,7 +55,7 @@ public class PathFinderAPI {
 		}
 
 		public ApplicationLayer build() {
-			ApplicationLayer layer = PathPlugin.getInstance().getDatabase();
+			ApplicationLayer layer = PathPlugin.getInstance().getStorage();
 
 			if (eventsLayer) {
 				layer = new EventsLayer(layer);

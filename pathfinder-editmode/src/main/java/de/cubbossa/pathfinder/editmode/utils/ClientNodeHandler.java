@@ -23,7 +23,7 @@ import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.data.ApplicationLayer;
+import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import de.cubbossa.pathfinder.util.IntPair;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import java.util.ArrayList;

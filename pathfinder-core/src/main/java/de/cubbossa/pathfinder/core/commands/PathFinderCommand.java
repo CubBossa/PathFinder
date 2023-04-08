@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
@@ -35,8 +36,8 @@ public class PathFinderCommand extends Command {
   /**
    * The basic command of this plugin, which handles things like reload, export, import, etc.
    */
-  public PathFinderCommand() {
-    super("pathfinder");
+  public PathFinderCommand(PathFinder pathFinder) {
+    super(pathFinder, "pathfinder");
     withAliases("pf");
 
     withRequirement(sender ->

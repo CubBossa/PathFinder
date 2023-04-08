@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
-import de.cubbossa.pathfinder.data.ApplicationLayer;
-import de.cubbossa.pathfinder.data.VisualizerDataStorage;
+import de.cubbossa.pathfinder.storage.ApplicationLayer;
+import de.cubbossa.pathfinder.storage.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

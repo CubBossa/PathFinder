@@ -27,8 +27,9 @@ public class EmptyNode implements Node<EmptyNode> {
       new ItemStack(Material.DIRT),
       PathPlugin.getInstance().getMiniMessage()
   ) {
+
     @Override
-    public CompletableFuture<EmptyNode> createNodeInStorage(NodeCreationContext context) {
+    public EmptyNode createAndLoadNode(Context context) {
       throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
           + "must be created from constructor.");
     }

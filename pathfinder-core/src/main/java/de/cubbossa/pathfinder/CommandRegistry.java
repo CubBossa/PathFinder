@@ -9,9 +9,10 @@ import dev.jorel.commandapi.CommandAPIConfig;
 import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class CommandRegistry {
+
+  private final PathFinder pathFinder;
 
   private PathFinderCommand pathFinderCommand;
   private NodeGroupCommand nodeGroupCommand;
@@ -20,7 +21,8 @@ public class CommandRegistry {
 
   private final List<CommandTree> externalCommands;
 
-  public CommandRegistry() {
+  public CommandRegistry(PathFinder pathFinder) {
+    this.pathFinder = pathFinder;
     this.externalCommands = new ArrayList<>();
   }
 
@@ -38,13 +40,13 @@ public class CommandRegistry {
 
   public void enableCommands(PathPlugin plugin) {
     CommandAPI.onEnable(plugin);
-    pathFinderCommand = new PathFinderCommand();
+    pathFinderCommand = new PathFinderCommand(pathFinder);
     pathFinderCommand.register();
-    nodeGroupCommand = new NodeGroupCommand(0);
+    nodeGroupCommand = new NodeGroupCommand(pathFinder, 0);
     nodeGroupCommand.register();
-    pathVisualizerCommand = new PathVisualizerCommand();
+    pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
     pathVisualizerCommand.register();
-    waypointCommand = new WaypointCommand(plugin::getWaypointNodeType);
+    waypointCommand = new WaypointCommand(pathFinder, plugin::getWaypointNodeType);
     waypointCommand.register();
     externalCommands.forEach(CommandTree::register);
   }

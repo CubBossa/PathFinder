@@ -17,13 +17,13 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final UUID nodeId;
   private final List<Edge> edges;
-  private final Collection<NamespacedKey> groups;
+  private final Map<NamespacedKey, NodeGroup> groups;
 
   private Location location;
 
   public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;
-    this.groups = new HashSet<>();
+    this.groups = new HashMap<>();
 
     edges = new ArrayList<>();
   }
@@ -50,13 +50,13 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
     return nodeId.hashCode();
   }
 
-  public Collection<NamespacedKey> getGroups() {
-    return new HashSet<>(groups);
+  public Collection<NodeGroup> getGroups() {
+    return new HashSet<>(groups.values());
   }
 
   @Override
-  public void addGroup(NamespacedKey group) {
-    groups.add(group);
+  public void addGroup(NodeGroup group) {
+    groups.put(group.getKey(), group);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
@@ -8,8 +9,8 @@ import org.bukkit.Location;
 
 public class FindLocationCommand extends Command {
 
-  public FindLocationCommand() {
-    super("findlocation");
+  public FindLocationCommand(PathFinder pathFinder) {
+    super(pathFinder, "findlocation");
     withAliases("gpslocation", "navigatelocation");
     withPermission(PathPerms.PERM_CMD_FIND_LOCATION);
     withGeneratedHelp();

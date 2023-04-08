@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.data;
+package de.cubbossa.pathfinder.storage.misc;
 
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
