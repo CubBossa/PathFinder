@@ -37,21 +37,21 @@ dependencies {
     antlr("org.antlr:antlr4:4.12.0") { isTransitive = true }
 
     // Adventure
-    api("net.kyori:adventure-api:4.12.0")
-    api("net.kyori:adventure-platform-bukkit:4.1.2")
-    api("net.kyori:adventure-text-minimessage:4.12.0")
-    api("net.kyori:adventure-text-serializer-plain:4.12.0")
+    api("net.kyori:adventure-api:4.13.0")
+    api("net.kyori:adventure-platform-bukkit:4.3.0")
+    api("net.kyori:adventure-text-minimessage:4.13.0")
+    api("net.kyori:adventure-text-serializer-plain:4.13.0")
 
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
     api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")
-    runtimeOnly("org.snakeyaml:snakeyaml-engine:2.3")
+    runtimeOnly("org.snakeyaml:snakeyaml-engine:2.4")
 
     // Commands
-    api("de.cubbossa:commandapi-shade:8.7.5")
+    api("de.cubbossa:commandapi-shade:8.8.0")
 
     // Other
-    implementation("org.jooq:jooq:3.17.8")
+    implementation("org.jooq:jooq:3.18.0")
     jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
     implementation("org.reactivestreams:reactive-streams:1.0.4")
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
@@ -77,9 +77,9 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Tests
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 
     // UI
     api("de.cubbossa:Translations:1.1")
