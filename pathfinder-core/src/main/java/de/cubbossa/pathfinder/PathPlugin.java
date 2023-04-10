@@ -1,23 +1,29 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.ExamplesHandler;
+import de.cubbossa.pathfinder.core.events.EventDispatcher;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.WaypointType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.ModifierRegistry;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifierType;
+import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.Storage;
 import de.cubbossa.pathfinder.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
-import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
+import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
+import java.io.File;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -27,32 +33,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-
 @Getter
 public class PathPlugin extends JavaPlugin implements PathFinder {
 
-  public static final SplineLib<Vector> SPLINES = new SplineLib<>() {
-    @Override
-    public de.cubbossa.splinelib.util.Vector convertToVector(org.bukkit.util.Vector vector) {
-      return new de.cubbossa.splinelib.util.Vector(vector.getX(), vector.getY(), vector.getZ());
-    }
-
-    @Override
-    public org.bukkit.util.Vector convertFromVector(de.cubbossa.splinelib.util.Vector vector) {
-      return new Vector(vector.getX(), vector.getY(), vector.getZ());
-    }
-
-    @Override
-    public BezierVector convertToBezierVector(org.bukkit.util.Vector vector) {
-      return new BezierVector(vector.getX(), vector.getY(), vector.getZ(), null, null);
-    }
-
-    @Override
-    public org.bukkit.util.Vector convertFromBezierVector(BezierVector bezierVector) {
-      return new Vector(bezierVector.getX(), bezierVector.getY(), bezierVector.getZ());
-    }
-  };
+  public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
 
   @Getter
   private static PathPlugin instance;
@@ -62,6 +46,8 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
   private File effectsFile;
   private final NodeTypeRegistry nodeTypeRegistry;
+  @Getter
+  private final ModifierRegistry modifierRegistry;
   private Storage storage;
   @Setter
   private PathPluginConfig configuration;
@@ -69,6 +55,8 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private final CommandRegistry commandRegistry;
   private final BStatsLoader bStatsLoader;
   private final ConfigFileLoader configFileLoader;
+  @Getter
+  private EventDispatcher eventDispatcher;
 
   private NodeType<Waypoint> waypointNodeType;
 
@@ -76,6 +64,10 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     instance = this;
 
     nodeTypeRegistry = new NodeTypeRegistry();
+    modifierRegistry = new ModifierRegistry();
+
+    modifierRegistry.registerModifierType(new PermissionModifierType());
+
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     bStatsLoader = new BStatsLoader();
     commandRegistry = new CommandRegistry(this);
@@ -125,16 +117,16 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
     if (storage != null) {
-      storage.connect(() -> {
-        ExamplesHandler examples = ExamplesHandler.getInstance();
-        examples.afterFetch(() -> {
-          examples.getExamples().forEach(examples::loadVisualizer);
-        });
+      storage.init();
+
+      ExamplesHandler examples = ExamplesHandler.getInstance();
+      examples.afterFetch(() -> {
+        examples.getExamples().forEach(examples::loadVisualizer);
       });
     }
 
     setWaypointNodeType(new WaypointType(
-        storage,
+        new WaypointStorage(storage),
         miniMessage
     ));
 
@@ -147,10 +139,8 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
             .translateLine(context.text(), context.player(), context.resolver()));
 
     new VisualizerHandler();
-    new NodeHandler();
+    new NodeHandler(this);
     new DiscoverHandler(this);
-
-    VisualizerHandler.getInstance().loadVisualizers();
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 
@@ -161,9 +151,12 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   @SneakyThrows
   @Override
   public void onDisable() {
+
     NodeHandler.getInstance().cancelAllEditModes();
 
     extensionsRegistry.disableExtensions(this);
+
+    storage.shutdown();
     commandRegistry.unregisterCommands();
   }
 

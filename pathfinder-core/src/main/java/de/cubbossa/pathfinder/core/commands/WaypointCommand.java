@@ -2,27 +2,30 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.LocationType;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
 
 public class WaypointCommand extends Command {
 
@@ -69,43 +72,22 @@ public class WaypointCommand extends Command {
     then(CustomArgs.literal("create")
         .withPermission(PathPerms.PERM_CMD_WP_CREATE)
         .executesPlayer((player, objects) -> {
-          PathFinderAPI.builder()
-              .withEvents()
-              .withMessages(player)
-              .build()
-              .createNode(fallbackWaypointType.get(), player.getLocation().add(new Vector(0, 1, 0)));
+          createNode(player, fallbackWaypointType.get(), player.getLocation());
         })
         .then(CustomArgs.location("location")
             .displayAsOptional()
             .executesPlayer((player, objects) -> {
-              PathFinderAPI.builder()
-                  .withEvents()
-                  .withMessages(player)
-                  .build()
-                  .createNode(fallbackWaypointType.get(), (Location) objects[1]);
+              createNode(player, fallbackWaypointType.get(), (Location) objects[0]);
             })
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
-              PathFinderAPI.builder()
-                  .withEvents()
-                  .withMessages(player)
-                  .build()
-                  .createNode(
-                      (NodeType<? extends Node<?>>) objects[0],
-                      player.getLocation().add(new Vector(0, 1, 0))
-                  );
+              createNode(player, (NodeType<? extends Node<?>>) objects[0], player.getLocation());
             })
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
-                  PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                      .createNode(
-                          (NodeType<? extends Node<?>>) objects[0],
-                          (Location) objects[2]
-                      );
+                  createNode(player, (NodeType<? extends Node<?>>) objects[0],
+                      (Location) objects[1]);
                 })
             )
         )
@@ -114,11 +96,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_WP_DELETE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                  .deleteNodes((NodeSelection) objects[0]);
+              deleteNode(player, (NodeSelection) objects[0]);
             })
         )
     );
@@ -126,14 +104,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-
-              PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                  .updateNodes((NodeSelection) objects[0], node -> {
-                    node.setLocation(player.getLocation());
-                  });
+              teleportNodes(player, (NodeSelection) objects[0], player.getLocation());
             })
         )
     );
@@ -142,13 +113,7 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
-                  PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                      .updateNodes((NodeSelection) objects[0], node -> {
-                        node.setLocation((Location) objects[1]);
-                      });
+                  teleportNodes(player, (NodeSelection) objects[0], (Location) objects[1]);
                 })
             )
         )
@@ -158,11 +123,7 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("start")
             .then(CustomArgs.nodeSelectionArgument("end")
                 .executesPlayer((player, objects) -> {
-                  PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                      .connectNodes((NodeSelection) objects[0], (NodeSelection) objects[1]);
+                  connectNodes(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })
             )
         )
@@ -170,21 +131,9 @@ public class WaypointCommand extends Command {
     then(CustomArgs.literal("disconnect")
         .withPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
-            .executesPlayer((player, objects) -> {
-              PathFinderAPI.builder()
-                  .withEvents()
-                  .withMessages(player)
-                  .build()
-                  .disconnectNodes((NodeSelection) objects[0]);
-            })
             .then(CustomArgs.nodeSelectionArgument("end")
-                .displayAsOptional()
                 .executesPlayer((player, objects) -> {
-                  PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                      .disconnectNodes((NodeSelection) objects[0], (NodeSelection) objects[1]);
+                  disconnectNodes(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
                 })
             )
         )
@@ -196,11 +145,7 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                          .removeNodesFromGroup((NamespacedKey) objects[1], (NodeSelection) objects[0]);
+                      addGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
                     })
                 )
             )
@@ -208,28 +153,131 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                          .removeNodesFromGroup((NamespacedKey) objects[1], (NodeSelection) objects[0]);
+                      removeGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
                     })
                 )
             )
             .then(CustomArgs.literal("clear")
                 .withPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, objects) -> {
-                  PathFinderAPI.builder()
-                      .withEvents()
-                      .withMessages(player)
-                      .build()
-                      .clearNodeGroups((NodeSelection) objects[0]);
+                  clearGroups(player, (NodeSelection) objects[0]);
                 })
             )
         )
     );
   }
 
+  private void addGroup(CommandSender sender, NodeSelection nodes, NodeGroup group) {
+    for (Node<?> node : nodes) {
+      if (!(node instanceof Groupable<?> groupable)) {
+        continue;
+      }
+      groupable.addGroup(group);
+      getPathfinder().getStorage().saveNode(node);
+
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_N_ADD_GROUP.format(TagResolver.builder()
+              .resolver(
+                  Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes)))
+              .build()), sender);
+    }
+  }
+
+  private void removeGroup(CommandSender sender, NodeSelection nodes, NodeGroup group) {
+    for (Node<?> node : nodes) {
+      if (!(node instanceof Groupable<?> groupable)) {
+        continue;
+      }
+      if (!groupable.getGroups().contains(group)) {
+        continue;
+      }
+      groupable.removeGroup(group.getKey());
+      getPathfinder().getStorage().saveNode(node);
+
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_N_REMOVE_GROUP.format(TagResolver.builder()
+              .resolver(
+                  Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes)))
+              .build()), sender);
+    }
+  }
+
+  private void clearGroups(CommandSender sender, NodeSelection nodes) {
+    for (Node<?> node : nodes) {
+      if (!(node instanceof Groupable<?> groupable)) {
+        continue;
+      }
+      if (groupable.getGroups().isEmpty()) {
+        continue;
+      }
+      groupable.clearGroups();
+      getPathfinder().getStorage().saveNode(node);
+
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CLEAR_GROUPS.format(
+          TagResolver.builder()
+              .resolver(
+                  Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes)))
+              .build()), sender);
+    }
+  }
+
+  private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
+    for (Node<?> s : start) {
+      for (Node<?> e : end) {
+        Optional<Edge> edge = s.getEdges().stream()
+            .filter(edge1 -> edge1.getEnd().equals(e.getNodeId()))
+            .findAny();
+        edge.ifPresent(edge1 -> s.getEdges().remove(edge1));
+      }
+    }
+  }
+
+  private void connectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
+    for (Node<?> s : start) {
+      for (Node<?> e : end) {
+        if (s.equals(e)) {
+          continue;
+        }
+        if (s.hasEdgeTo(e)) {
+          continue;
+        }
+        s.getEdges().add(new Edge(s, e, 1));
+        getPathfinder().getStorage().saveNode(s);
+      }
+    }
+  }
+
+  private void createNode(CommandSender sender, NodeType<?> type, Location location) {
+    getPathfinder().getStorage().createAndLoadNode(
+        type,
+        location
+    ).thenAccept(n -> {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_N_CREATE.format(
+          Placeholder.parsed("id", n.getNodeId().toString())
+      ), sender);
+    });
+  }
+
+  private void deleteNode(CommandSender sender, NodeSelection nodes) {
+    getPathfinder().getStorage().deleteNodes(nodes).thenRun(() -> {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_N_DELETE.format(
+          Placeholder.component("selection", Messages.formatNodeSelection(sender, nodes))
+      ), sender);
+    });
+  }
+
+  private void teleportNodes(CommandSender sender, NodeSelection nodes, Location location) {
+    Collection<CompletableFuture<?>> futures = new HashSet<>();
+    for (Node<?> node : nodes) {
+      node.setLocation(location);
+      futures.add(getPathfinder().getStorage().saveNode(node));
+    }
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_N_UPDATED.format(
+          Placeholder.component("selection", Messages.formatNodeSelection(sender, nodes))
+      ), sender);
+    });
+  }
 
   private void onInfo(Player player, NodeSelection selection) {
 
@@ -241,20 +289,24 @@ public class WaypointCommand extends Command {
       onList(player, selection, 1);
       return;
     }
-    PathFinderAPI.get().getNode(selection.get(0)).thenAccept(node -> {
-      FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
-          .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
-          .resolver(
-              Placeholder.component("position", Messages.formatVector(node.getLocation().toVector())))
-          .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
-          .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
-              node.getEdges().stream().map(Edge::getEnd)
-                  .collect(Collectors.toCollection(NodeSelection::new)))))
+    Node<?> node = selection.get(0);
+
+    Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
+    Collection<Node<?>> resolvedNeighbours =
+        getPathfinder().getStorage().loadNodes(neighbours).join();
+
+    FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
+        .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
+        .resolver(
+            Placeholder.component("position",
+                Messages.formatVector(node.getLocation().toVector())))
+        .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
+        .resolver(Placeholder.component("edges",
+            Messages.formatNodeSelection(player, resolvedNeighbours)))
 //          .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
 //              node instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
-          .build());
-      TranslationHandler.getInstance().sendMessage(message, player);
-    });
+        .build());
+    TranslationHandler.getInstance().sendMessage(message, player);
   }
 
   /**
@@ -273,27 +325,29 @@ public class WaypointCommand extends Command {
 
     TagResolver resolver = Placeholder.parsed("selector", selector);
 
+
     CommandUtils.printList(
         player,
         page,
         10,
         new ArrayList<>(selection),
-        uuid -> {
-          PathFinderAPI.get().getNode(uuid).thenAccept(n -> {
-            TagResolver r = TagResolver.builder()
-                .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-                .resolver(Placeholder.component("position",
-                    Messages.formatVector(n.getLocation().toVector())))
-                .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-                .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player,
-                    n.getEdges().stream().map(Edge::getEnd)
-                        .collect(Collectors.toCollection(NodeSelection::new)))))
+        n -> {
+          Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
+          Collection<Node<?>> resolvedNeighbours =
+              getPathfinder().getStorage().loadNodes(neighbours).join();
+
+          TagResolver r = TagResolver.builder()
+              .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
+              .resolver(Placeholder.component("position",
+                  Messages.formatVector(n.getLocation().toVector())))
+              .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
+              .resolver(Placeholder.component("edges",
+                  Messages.formatNodeSelection(player, resolvedNeighbours)))
 //                .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
 //                    n instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
-                .build();
-            TranslationHandler.getInstance()
-                .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
-          });
+              .build();
+          TranslationHandler.getInstance()
+              .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);
         },
         Messages.CMD_N_LIST_HEADER.format(resolver),
         Messages.CMD_N_LIST_FOOTER.format(resolver));

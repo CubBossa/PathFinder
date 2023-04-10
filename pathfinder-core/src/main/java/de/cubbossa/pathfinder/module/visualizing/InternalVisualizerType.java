@@ -8,6 +8,6 @@ public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?>> ext
 
   public InternalVisualizerType(NamespacedKey key) {
     super(key);
-    setStorage(new InternalVisualizerDataStorage<>(this, PathPlugin.getInstance().getStorage()));
+    setStorage(new InternalVisualizerDataStorage<>(this, PathPlugin.getInstance().getStorage().getImplementation()));
   }
 }

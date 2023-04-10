@@ -87,6 +87,8 @@ dependencies {
     // UI
     api("de.cubbossa:Translations:1.1")
 
+    // Utility
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
     implementation(files("generated/plugin-yml/Bukkit/plugin.yml"))
 }
 

@@ -2,8 +2,6 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.storage.VisualizerDataStorage;
-import de.cubbossa.pathfinder.module.visualizing.events.VisualizerCreatedEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizerType;
@@ -13,16 +11,11 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
-import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.translations.TranslationHandler;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -48,11 +41,6 @@ public class VisualizerHandler {
 
   private final HashedRegistry<VisualizerType<?>> visualizerTypes;
 
-  private final HashedRegistry<PathVisualizer<?, ?>> pathVisualizerMap;
-
-  // Map<Player, Map<RoadMap, PathVisualizer>>
-  private final Map<Integer, HashedRegistry<PathVisualizer<?, ?>>> roadmapVisualizers;
-
   public VisualizerHandler() {
     instance = this;
 
@@ -61,29 +49,6 @@ public class VisualizerHandler {
     visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
     visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
-
-    this.pathVisualizerMap = new HashedRegistry<>();
-    this.roadmapVisualizers = new HashMap<>();
-  }
-
-  public void loadVisualizers() {
-    pathVisualizerMap.clear();
-
-    // load all visualizers by their own types.
-    for (VisualizerType<?> visualizerType : visualizerTypes) {
-      // check if it is persistent visualizer type
-      if (visualizerType.getStorage() == null) {
-        continue;
-      }
-      // if persistent, load all visualizers of this type
-      pathVisualizerMap.putAll(visualizerType.getStorage().loadPathVisualizer());
-    }
-
-    Collection<PathVisualizer<?, ?>> scope = pathVisualizerMap.values();
-    pathVisualizerMap.values().stream()
-        .filter(v -> v.getType().equals(COMBINED_VISUALIZER_TYPE))
-        .map(v -> (CombinedVisualizer) v)
-        .forEach(v -> v.resolveReferences(scope));
   }
 
   public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(
@@ -97,65 +62,6 @@ public class VisualizerHandler {
 
   public void unregisterVisualizerType(VisualizerType<?> type) {
     visualizerTypes.remove(type.getKey());
-  }
-
-  public @Nullable PathVisualizer<?, ?> getPathVisualizer(NamespacedKey key) {
-    return pathVisualizerMap.get(key);
-  }
-
-  public <T extends PathVisualizer<T, ?>> void addPathVisualizer(PathVisualizer<T, ?> visualizer) {
-    if (pathVisualizerMap.containsKey(visualizer.getKey())) {
-      throw new IllegalArgumentException(
-          "Could not insert new path visualizer, another visualizer with key '"
-              + visualizer.getKey() + "' already exists.");
-    }
-
-    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
-    if (storage != null) {
-      storage.updatePathVisualizer((T) visualizer);
-    }
-    pathVisualizerMap.put(visualizer);
-
-    Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
-  }
-
-  public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type,
-                                                                 NamespacedKey key) {
-    return createPathVisualizer(type, key,
-        StringUtils.insertInRandomHexString(StringUtils.capizalize(key.getKey())));
-  }
-
-  public <T extends PathVisualizer<T, ?>> T createPathVisualizer(VisualizerType<T> type,
-                                                                 NamespacedKey key,
-                                                                 String nameFormat) {
-
-    if (pathVisualizerMap.containsKey(key)) {
-      throw new IllegalArgumentException(
-          "Could not insert new path visualizer, another visualizer with key '" + key
-              + "' already exists.");
-    }
-    T visualizer = type.create(key, nameFormat);
-    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
-    if (storage != null) {
-      storage.updatePathVisualizer(visualizer);
-    }
-    pathVisualizerMap.put(visualizer);
-
-    Bukkit.getPluginManager().callEvent(new VisualizerCreatedEvent(visualizer));
-    return visualizer;
-  }
-
-  public <T extends PathVisualizer<T, D>, D> boolean deletePathVisualizer(
-      PathVisualizer<T, D> visualizer) {
-    VisualizerDataStorage<T> storage = visualizer.getType().getStorage();
-    if (storage != null) {
-      storage.deletePathVisualizer((T) visualizer);
-    }
-    return pathVisualizerMap.remove(visualizer.getKey()) != null;
-  }
-
-  public Stream<PathVisualizer<?, ?>> getPathVisualizerStream() {
-    return pathVisualizerMap.values().stream();
   }
 
   public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer,

@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -551,7 +550,7 @@ public class Messages {
     return val ? GEN_TRUE : GEN_FALSE;
   }
 
-  public static Component formatNodeSelection(CommandSender sender, NodeSelection nodes) {
+  public static Component formatNodeSelection(CommandSender sender, Collection<Node<?>> nodes) {
     return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
         node -> Component.text("#" + node));
   }

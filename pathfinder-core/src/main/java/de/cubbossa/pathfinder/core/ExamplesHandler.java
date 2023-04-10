@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.core;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.storage.ExamplesReader;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.storage.ExamplesReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,7 +1,11 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -10,6 +14,8 @@ import org.bukkit.Location;
 @Setter
 public class Edge {
 
+  private final PathFinder pathFinder;
+
   private UUID start;
   private UUID end;
   private float weightModifier;
@@ -17,6 +23,7 @@ public class Edge {
   private Location center;
 
   public Edge(UUID start, UUID end, float weightModifier) {
+    this.pathFinder = PathFinderProvider.get();
     this.start = start;
     this.end = end;
     this.weightModifier = weightModifier;
@@ -24,6 +31,14 @@ public class Edge {
 
   public Edge(Node<?> start, Node<?> end, float weightModifier) {
     this(start.getNodeId(), end.getNodeId(), weightModifier);
+  }
+
+  public CompletableFuture<Node<?>> resolveStart() {
+    return pathFinder.getStorage().loadNode(start).thenApply(Optional::orElseThrow);
+  }
+
+  public CompletableFuture<Node<?>> resolveEnd() {
+    return pathFinder.getStorage().loadNode(end).thenApply(Optional::orElseThrow);
   }
 
   @Override

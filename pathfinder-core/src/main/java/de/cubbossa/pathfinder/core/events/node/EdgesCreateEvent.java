@@ -4,14 +4,13 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class EdgesCreateEvent {
+public class  EdgesCreateEvent {
 
   private EdgesCreateEvent() {}
 

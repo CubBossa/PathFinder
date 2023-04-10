@@ -2,7 +2,8 @@ package de.cubbossa.pathfinder.editmode;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
-import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.events.node.EdgesCreateEvent;
 import de.cubbossa.pathfinder.core.events.node.EdgesDeleteEvent;
@@ -19,7 +20,6 @@ import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,6 +52,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 @RequiredArgsConstructor
 public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
+  private final PathFinder pathFinder;
   private final NamespacedKey key;
   private final ClientNodeHandler armorstandHandler;
 
@@ -69,6 +70,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   private Color colorTo = new Color(0, 127, 255);
 
   public DefaultNodeGroupEditor(NodeGroup group) {
+    this.pathFinder = PathFinderProvider.get();
     this.key = group.getKey();
 
     this.editModeTasks = new HashSet<>();
@@ -116,7 +118,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       if (!isEdited()) {
         startParticleTask();
       }
-      BottomInventoryMenu menu = new EditModeMenu(key,
+      BottomInventoryMenu menu = new EditModeMenu(pathFinder, key,
           PathPlugin.getInstance().getNodeTypeRegistry().getTypes()).createHotbarMenu(this, player);
       editingPlayers.put(uuid, menu);
       menu.openSync(player);
@@ -147,30 +149,20 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   }
 
   public void showArmorStands(Player player) {
-    PathFinderAPI.get().getNodeGroup(key)
-        .exceptionally(throwable -> {
-          throwable.printStackTrace();
-          return null;
-        })
-        .thenAccept(group -> {
-          PathFinderAPI.get().getNodes(new NodeSelection(group))
-              .thenAccept(nodes -> {
-                armorstandHandler.showNodes(nodes, player);
-                for (Node<?> node : nodes) {
-                  this.nodes.put(node.getNodeId(), node);
-                }
-              }).exceptionally(throwable -> {
-                throwable.printStackTrace();
-                return null;
-              });
-          PathFinderAPI.get().getConnectionsTo(new NodeSelection(group)).thenAccept(edges -> {
-            armorstandHandler.showEdges(edges, player);
-            this.edges.addAll(edges);
-          });
-        }).exceptionally(throwable -> {
-          throwable.printStackTrace();
-          return null;
-        });
+    pathFinder.getStorage().loadGroup(key).thenAccept(opt -> {
+      if (opt.isEmpty()) {
+        return;
+      }
+      NodeGroup group = opt.get();
+      group.resolve().thenAccept(nodes -> {
+        for (Node<?> node : nodes) {
+          this.nodes.put(node.getNodeId(), node);
+          this.edges.addAll(node.getEdges());
+        }
+        armorstandHandler.showNodes(nodes, player);
+        armorstandHandler.showEdges(edges, player);
+      });
+    });
   }
 
   public void hideArmorStands(Player player) {
@@ -208,9 +200,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       var sched = Bukkit.getScheduler();
       new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
 
-      Collection<UUID> nodes = PathFinderAPI.get().getNodeGroupNodes(key).join();
-      Collection<Edge> edges = PathFinderAPI.get().getConnectionsTo(new NodeSelection(nodes)).join();
-
       Map<Edge, Boolean> undirected = new HashMap<>();
       for (Edge edge : edges) {
         Edge contained = edges.stream()
@@ -227,36 +216,29 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       Map<Color, ParticleBuilder> particles = new HashMap<>();
 
       for (var entry : undirected.entrySet()) {
-        PathFinderAPI.get()
-            .getNodes(new NodeSelection(entry.getKey().getStart(), entry.getKey().getEnd()))
-            .thenAccept(nodePair -> {
-              Node<?> start = nodePair.stream()
-                  .filter(node -> node.getNodeId().equals(entry.getKey().getStart())).findFirst()
-                  .orElse(null);
-              Node<?> end =
-                  nodePair.stream().filter(node -> node.getNodeId().equals(entry.getKey().getEnd()))
-                      .findFirst().orElse(null);
+        entry.getKey().resolveStart().thenAccept(start -> {
+          entry.getKey().resolveEnd().thenAccept(end -> {
+            if (!Objects.equals(start.getLocation().getWorld(),
+                end.getLocation().getWorld())) {
+              return;
+            }
+            boolean directed = !entry.getValue();
 
-              if (!Objects.equals(start.getLocation().getWorld(),
-                  end.getLocation().getWorld())) {
-                return;
-              }
-              boolean directed = !entry.getValue();
+            Vector a = start.getLocation().toVector();
+            Vector b = end.getLocation().toVector();
+            double dist = a.distance(b);
 
-              Vector a = start.getLocation().toVector();
-              Vector b = end.getLocation().toVector();
-              double dist = a.distance(b);
+            for (float i = 0; i < dist; i += particleDistance) {
+              Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
 
-              for (float i = 0; i < dist; i += particleDistance) {
-                Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
-
-                ParticleBuilder builder = particles.computeIfAbsent(c,
-                    k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-                packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
-                    LerpUtils.lerp(a, b, i / dist)
-                        .toLocation(start.getLocation().getWorld())).toPacket());
-              }
-            });
+              ParticleBuilder builder = particles.computeIfAbsent(c,
+                  k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
+              packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
+                  LerpUtils.lerp(a, b, i / dist)
+                      .toLocation(start.getLocation().getWorld())).toPacket());
+            }
+          });
+        });
       }
       for (var entry : packets.entrySet()) {
         editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay,
@@ -274,7 +256,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
 
   @EventHandler
   public void onNodeGroupAssign(NodeGroupAssignedEvent event) {
-    PathFinderAPI.get().getNodes(new NodeSelection(event.getGroupables())).thenAccept(nodes -> {
+    pathFinder.getStorage().loadNodes(event.getGroupables()).thenAccept(nodes -> {
       nodes.forEach(node -> {
         editingPlayers.keySet().stream().map(Bukkit::getPlayer).forEach(player -> {
           armorstandHandler.showNode(node, player);
@@ -332,13 +314,13 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       int updateCount = 0;
       for (UUID uuid1 : editingPlayers.keySet()) {
         Player player = Bukkit.getPlayer(uuid1);
-        if (player != null) {
-          for (UUID uuid : event.getNodes()) {
-            Node<?> node = nodes.get(uuid);
-            if (node != null) {
-              armorstandHandler.updateNodePosition(node, player, player.getLocation(), true);
-              updateCount++;
-            }
+        if (player == null) {
+          continue;
+        }
+        for (Node<?> node : event.getNodes()) {
+          if (node != null) {
+            armorstandHandler.updateNodePosition(node, player, player.getLocation(), true);
+            updateCount++;
           }
         }
       }

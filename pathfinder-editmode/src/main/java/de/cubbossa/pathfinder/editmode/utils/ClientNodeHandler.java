@@ -19,11 +19,10 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import de.cubbossa.pathfinder.util.IntPair;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import java.util.ArrayList;
@@ -206,26 +205,24 @@ public class ClientNodeHandler {
   }
 
   public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
-    ApplicationLayer api = PathFinderAPI.get();
-    api.getNode(edge.getStart()).thenAccept(start -> {
-      api.getNode(edge.getEnd()).thenAccept(end -> {
-        Location location = LerpUtils.lerp(start.getLocation(), end.getLocation(), .3f);
-        int id = spawnArmorstand(player, location, null, true);
-        equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
-        setHeadRotation(player, id,
-            end.getLocation().toVector().subtract(start.getLocation().toVector()));
+    Node<?> start = edge.resolveStart().join();
+    Node<?> end = edge.resolveEnd().join();
 
-        edgeEntityMap.put(edge, id);
-        entityEdgeMap.put(id, edge);
+    Location location = LerpUtils.lerp(start.getLocation(), end.getLocation(), .3f);
+    int id = spawnArmorstand(player, location, null, true);
+    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
+    setHeadRotation(player, id,
+        end.getLocation().toVector().subtract(start.getLocation().toVector()));
 
-        IntPair key = locationToChunkIntPair(location);
-        chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
+    edgeEntityMap.put(edge, id);
+    entityEdgeMap.put(id, edge);
 
-        if (otherDirection != null) {
-          showEdge(otherDirection, null, player);
-        }
-      });
-    });
+    IntPair key = locationToChunkIntPair(location);
+    chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
+
+    if (otherDirection != null) {
+      showEdge(otherDirection, null, player);
+    }
   }
 
   public void hideNodes(Collection<Node<?>> nodes, Player player) {
@@ -244,42 +241,36 @@ public class ClientNodeHandler {
         edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
     edges.forEach(edgeEntityMap::remove);
     edges.forEach(edge -> {
-      ApplicationLayer api = PathFinderAPI.get();
-      api.getNode(edge.getStart()).thenAccept(start -> {
-        api.getNode(edge.getEnd()).thenAccept(end -> {
-          Location pos = start.getLocation().clone().add(
-              end.getLocation().clone().subtract(start.getLocation()).multiply(.5f));
-          chunkEdgeMap.remove(locationToChunkIntPair(pos));
-        }).join();
-      }).join();
+      Node<?> start = edge.resolveStart().join();
+      Node<?> end = edge.resolveEnd().join();
+      Location pos = start.getLocation().clone().add(
+          end.getLocation().clone().subtract(start.getLocation()).multiply(.5f)
+      );
+      chunkEdgeMap.remove(locationToChunkIntPair(pos));
     });
   }
 
   public void updateNodePosition(Node<?> node, Player player, Location location,
                                  boolean updateEdges) {
-    teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()), location.clone().add(ARMORSTAND_OFFSET));
+    teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()),
+        location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
       for (Edge edge : node.getEdges()) {
         updateEdgePosition(edge, player);
       }
-      PathFinderAPI.get().getConnectionsTo(node.getNodeId()).thenAccept(edges -> {
-        for (Edge e : edges) {
-          updateEdgePosition(e, player);
-        }
-      });
+      for (Edge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
+        updateEdgePosition(edge, player);
+      }
     }
   }
 
   private void updateEdgePosition(Edge edge, Player player) {
-    ApplicationLayer api = PathFinderAPI.get();
-    api.getNode(edge.getStart()).thenAccept(start -> {
-      api.getNode(edge.getEnd()).thenAccept(end -> {
-        teleportArmorstand(player, edgeEntityMap.get(edge),
-            LerpUtils.lerp(start.getLocation(), end.getLocation(), 0.3f)
-                .clone()
-                .add(ARMORSTAND_CHILD_OFFSET));
-      });
-    });
+    Node<?> start = edge.resolveStart().join();
+    Node<?> end = edge.resolveEnd().join();
+
+    teleportArmorstand(player, edgeEntityMap.get(edge),
+        LerpUtils.lerp(start.getLocation(), end.getLocation(), 0.3f).clone()
+            .add(ARMORSTAND_CHILD_OFFSET));
   }
 
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {

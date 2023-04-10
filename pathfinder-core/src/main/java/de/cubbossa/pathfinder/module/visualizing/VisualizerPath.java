@@ -1,16 +1,18 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.VisualizerModifier;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +43,6 @@ public class VisualizerPath<D> extends ArrayList<Node<?>> {
         continue;
       }
       VisualizerModifier mod = groupable.getGroups().stream()
-          .map(k -> PathFinderAPI.get().getNodeGroup(k))
-          .parallel()
-          .map(CompletableFuture::join)
           .filter(g -> g.hasModifier(VisualizerModifier.class))
           .sorted()
           .map(g -> g.getModifier(VisualizerModifier.class))

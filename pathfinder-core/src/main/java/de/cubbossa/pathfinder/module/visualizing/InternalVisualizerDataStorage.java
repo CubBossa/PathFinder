@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
-import de.cubbossa.pathfinder.storage.ApplicationLayer;
-import de.cubbossa.pathfinder.storage.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.storage.VisualizerDataStorage;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.NamespacedKey;
 
@@ -12,20 +14,30 @@ public class InternalVisualizerDataStorage<T extends PathVisualizer<T, ?>>
     implements VisualizerDataStorage<T> {
 
   private final VisualizerType<T> type;
-  private final ApplicationLayer storage;
+  private final StorageImplementation storage;
 
   @Override
-  public Map<NamespacedKey, T> loadPathVisualizer() {
-    return storage.loadPathVisualizer(type);
+  public T createAndLoadVisualizer(NamespacedKey key) {
+    return storage.createAndLoadVisualizer(type, key);
   }
 
   @Override
-  public void updatePathVisualizer(T visualizer) {
-    storage.updatePathVisualizer(visualizer);
+  public Map<NamespacedKey, T> loadVisualizers() {
+    return storage.loadVisualizers(type);
   }
 
   @Override
-  public void deletePathVisualizer(T visualizer) {
-    storage.deletePathVisualizer(visualizer);
+  public Optional<T> loadVisualizer(NamespacedKey key) {
+    return storage.loadVisualizer(type, key);
+  }
+
+  @Override
+  public void saveVisualizer(T visualizer) {
+    storage.saveVisualizer(visualizer);
+  }
+
+  @Override
+  public void deleteVisualizer(T visualizer) {
+    storage.deleteVisualizer(visualizer);
   }
 }

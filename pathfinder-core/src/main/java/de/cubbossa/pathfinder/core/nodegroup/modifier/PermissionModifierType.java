@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.core.nodegroup.modifier;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
-import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.core.nodegroup.ModifierType;
-import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
+import dev.jorel.commandapi.executors.CommandExecutor;
 import java.io.IOException;
 import java.util.Map;
-import org.bukkit.NamespacedKey;
+import java.util.function.Function;
 
 public class PermissionModifierType implements ModifierType<PermissionModifier> {
 
@@ -22,17 +22,11 @@ public class PermissionModifierType implements ModifierType<PermissionModifier> 
   }
 
   @Override
-  public CommandTree registerAddCommand(CommandTree tree, int groupIndex) {
-    return tree
-        .then(new StringArgument("permission-node")
-            .executes((commandSender, objects) -> {
-              NamespacedKey group = (NamespacedKey) objects[groupIndex];
-              PathFinderAPI.get().assignNodeGroupModifier(
-                  group,
-                  new PermissionModifier((String) objects[groupIndex + 1])
-              );
-            })
-        );
+  public ArgumentTree registerAddCommand(ArgumentTree tree,
+                                         Function<PermissionModifier, CommandExecutor> consumer) {
+    return tree.then(new StringArgument("node").executes((commandSender, objects) -> {
+      consumer.apply(new PermissionModifier((String) objects[1])).run(commandSender, objects);
+    }));
   }
 
   @Override

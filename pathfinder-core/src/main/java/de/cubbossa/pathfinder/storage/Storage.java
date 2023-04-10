@@ -1,185 +1,358 @@
 package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.util.NodeSelection;
-import java.io.IOException;
-import java.util.ArrayList;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
+import de.cubbossa.pathfinder.storage.cache.EdgeCache;
+import de.cubbossa.pathfinder.storage.cache.GroupCache;
+import de.cubbossa.pathfinder.storage.cache.NodeCache;
+import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
+import de.cubbossa.pathfinder.util.Pagination;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 
-public interface Storage extends ApplicationLayer, NodeDataStorage<Waypoint> {
+@Getter
+@RequiredArgsConstructor
+public class Storage {
 
-  default void connect() throws IOException {
-    connect(() -> {
+  private final PathFinder pathFinder;
+  private final StorageImplementation implementation;
+  private final NodeCache nodeCache = new NodeCache();
+  private final EdgeCache edgeCache = new EdgeCache();
+  private final GroupCache groupCache = new GroupCache();
+  private final VisualizerCache visualizerCache = new VisualizerCache();
+  private final DiscoverInfoCache discoverInfoCache = new DiscoverInfoCache();
+
+  public void init() throws Exception {
+    implementation.init();
+  }
+
+  public void shutdown() {
+    implementation.shutdown();
+  }
+
+  private CompletableFuture<Void> asyncFuture(Runnable runnable) {
+    return CompletableFuture.runAsync(runnable);
+  }
+
+  private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
+    return CompletableFuture.supplyAsync(supplier);
+  }
+
+  // Node Type
+
+  public CompletableFuture<Void> saveNodeType(UUID node, NodeType<?> type) {
+    return asyncFuture(() -> implementation.saveNodeType(node, type));
+  }
+
+  public CompletableFuture<Void> saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
+    return asyncFuture(() -> implementation.saveNodeTypes(typeMapping));
+  }
+
+  public <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node) {
+    return asyncFuture(() -> implementation.loadNodeType(node));
+  }
+
+  public CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(Collection<UUID> nodes) {
+    return asyncFuture(() -> implementation.loadNodeTypes(nodes));
+  }
+
+  // Nodes
+  public <N extends Node<N>> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location) {
+    return asyncFuture(() -> {
+      N node = implementation.createAndLoadNode(type, location);
+      nodeCache.write(node);
+      pathFinder.getEventDispatcher().dispatchNodeCreate(node);
+      return node;
     });
   }
 
-  /**
-   * Sets up the database files or does nothing if the database is already setup.
-   * If the database hasn't yet existed, the initial callback will be executed.
-   *
-   * @param initial A callback to be executed if the database was initially created
-   */
-  void connect(Runnable initial) throws IOException;
-
-  void disconnect();
-
-  CompletableFuture<NodeType<?>> getNodeType(UUID nodeId);
-
-  CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType);
-
-  NodeTypeRegistry getNodeTypeRegistry();
-
-  @Override
-  default <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-    return type
-        .createNodeInStorage(new NodeType.NodeCreationContext(location))
-        .thenApply(n -> {
-          setNodeType(n.getNodeId(), type.getKey()).join();
-          return n;
-        });
+  public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
+    return loadNode(id).thenApply(n -> {
+      updater.accept(n.orElseThrow());
+      return n;
+    }).thenCompose(n -> saveNode(n.orElseThrow()));
   }
 
-  @Override
-  default CompletableFuture<Void> teleportNode(UUID nodeId, Location location) {
-    return updateNode(nodeId, node -> node.setLocation(location));
-  }
-
-  default CompletableFuture<Void> updateNode(UUID nodeId, Consumer<Node<?>> nodeConsumer) {
-    return getNodeType(nodeId).thenAccept(nodeType -> {
-      nodeType.updateNodeInStorage(nodeId, nodeConsumer::accept);
-    });
-  }
-
-  default CompletableFuture<Void> updateNodes(NodeSelection nodes, Consumer<Node<?>> nodeConsumer) {
-    nodes.stream()
-        .parallel()
-        .map(uid -> updateNode(uid, nodeConsumer))
-        .forEach(CompletableFuture::join);
-    return CompletableFuture.completedFuture(null);
-  }
-
-  default CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-    Map<NodeType<?>, NodeSelection> mapping = new HashMap<>();
-    for (UUID node : nodes) {
-      NodeType<?> type = getNodeType(node).join();
-      if (type == null) {
-        getLogger().warning("Tried to delete node but could not find type mapping.");
-        continue;
+  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id) {
+    return asyncFuture(() -> {
+      Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
+      if (opt.isPresent()) {
+        return opt;
       }
-      mapping.computeIfAbsent(type, t -> new NodeSelection()).add(node);
-    }
-    List<CompletableFuture<?>> futures = new ArrayList<>();
-    mapping.forEach((nodeType, uuids) -> futures.add(nodeType.deleteNodesFromStorage(uuids)));
-    return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+      Optional<N> node = implementation.loadNode(id);
+      node.ifPresent(nodeCache::write);
+      return node;
+    });
   }
 
-  default CompletableFuture<Collection<Node<?>>> getNodes() {
-    List<Node<?>> nodes = new ArrayList<>();
-    for (NodeType<?> nodeType : getNodeTypeRegistry().getTypes()) {
-      CompletableFuture<? extends Collection<?>> nodesFromStorage = nodeType.getNodesFromStorage();
-      Collection<?> join = nodesFromStorage.join();
-      nodes.add((Node<?>) join);
-    }
-    return CompletableFuture.completedFuture(nodes);
-  }
-
-  default CompletableFuture<Collection<Node<?>>> getNodes(NodeSelection nodes) {
-    Map<NodeType<?>, NodeSelection> mapping = new HashMap<>();
-    for (UUID node : nodes) {
-      mapping.computeIfAbsent(getNodeType(node).join(), t -> new NodeSelection()).add(node);
-    }
-    Collection<Node<?>> result = new HashSet<>();
-    List<CompletableFuture<?>> futures = new ArrayList<>();
-    mapping.forEach((nodeType, uuids) -> futures.add(nodeType.getNodesFromStorage(uuids).thenAccept(result::addAll)));
-    return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenApply(unused -> result);
-  }
-
-  @Override
-  default <M extends Modifier> CompletableFuture<Map<Node<?>, M>> getNodes(Class<M> modifier) {
-    return getNodeGroups(modifier).thenApply(nodeGroups -> {
-      Map<UUID, NodeGroup> temp = new HashMap<>();
-      for (NodeGroup nodeGroup : nodeGroups) {
-        for (UUID uuid : nodeGroup) {
-          NodeGroup pres = temp.get(uuid);
-          if (pres == null || nodeGroup.getWeight() > pres.getWeight()) {
-            temp.put(uuid, pres);
-          }
-        }
+  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
+    return asyncFuture(() -> {
+      Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
+      if (opt.isPresent()) {
+        return opt;
       }
-      Map<Node<?>, M> result = new HashMap<>();
-      temp.forEach((uuid, group) -> {
-        result.put(PathFinderAPI.get().getNode(uuid).join(), group.getModifier(modifier));
-      });
-      return result;
+      return type.loadNode(id);
     });
   }
 
-  @Override
-  default CompletableFuture<Node<?>> getNode(UUID uuid) {
-    return getNodeType(uuid).thenApply(nodeType -> nodeType.getNodeFromStorage(uuid).join());
+  public CompletableFuture<Collection<Node<?>>> loadNodes() {
+    return asyncFuture(() -> nodeCache.getAllNodes(implementation::loadNodes));
   }
 
-  @Override
-  default CompletableFuture<Void> disconnectNodes(UUID start) {
-    return disconnectNodes(new NodeSelection(start));
+  public CompletableFuture<Collection<Node<?>>> loadNodes(Collection<UUID> ids) {
+    return asyncFuture(() -> nodeCache.getNodes(ids, implementation::loadNodes));
   }
 
-  @Override
-  default CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
-    return disconnectNodes(new NodeSelection(start), new NodeSelection(end));
-  }
-
-  CompletableFuture<Collection<NamespacedKey>> getNodeGroups(UUID node);
-
-  @Override
-  default CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {
-    return updateNodeGroup(group, g -> g.addAll(selection));
-  }
-
-  @Override
-  default CompletableFuture<Void> assignNodesToGroups(Collection<NamespacedKey> groups, NodeSelection selection) {
-    groups.forEach(key -> {
-      updateNodeGroup(key, g -> g.addAll(selection)).join();
+  public CompletableFuture<Void> saveNode(Node<?> node) {
+    return asyncFuture(() -> {
+      implementation.saveNode(node);
+      nodeCache.write(node);
     });
-    return CompletableFuture.completedFuture(null);
   }
 
-  @Override
-  default CompletableFuture<Void> removeNodesFromGroup(NamespacedKey group, NodeSelection selection) {
-    return updateNodeGroup(group, g -> selection.forEach(g::remove));
-  }
-
-
-  @Override
-  default CompletableFuture<Void> removeNodesFromGroups(Collection<NamespacedKey> groups, NodeSelection selection) {
-    groups.forEach(key -> {
-      updateNodeGroup(key, g -> selection.forEach(g::remove)).join();
+  public CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids) {
+    return loadNodes(uuids).thenAccept(nodes -> {
+      implementation.deleteNodes(nodes);
+      uuids.forEach(nodeCache::invalidate);
+      uuids.forEach(edgeCache::invalidate);
+      pathFinder.getEventDispatcher().dispatchNodesDelete(uuids);
     });
-    return CompletableFuture.completedFuture(null);
   }
 
-  @Override
-  default CompletableFuture<Void> assignNodeGroupModifier(NamespacedKey group, Modifier modifier) {
-    return updateNodeGroup(group, g -> g.addModifier(modifier));
+  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) {
+    return deleteNodesById(nodes.stream().map(Node::getNodeId).toList());
   }
 
-  @Override
-  default CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group, Class<? extends Modifier> modifier) {
-    return updateNodeGroup(group, g -> g.removeModifier(modifier));
+  // Edges
+  public CompletableFuture<Edge> createAndLoadEdge(UUID start, UUID end, double weight) {
+    return asyncFuture(() -> {
+      Edge edge = implementation.createAndLoadEdge(start, end, weight);
+      edgeCache.write(edge);
+      return edge;
+    });
+  }
+
+  public CompletableFuture<Collection<Edge>> loadEdgesFrom(UUID start) {
+    return asyncFuture(() -> edgeCache.getEdgesFrom(start));
+  }
+
+  public CompletableFuture<Collection<Edge>> loadEdgesTo(UUID end) {
+    return asyncFuture(() -> edgeCache.getEdgesTo(end));
+  }
+
+  public CompletableFuture<Optional<Edge>> loadEdge(UUID start, UUID end) {
+    return asyncFuture(() -> {
+      return edgeCache.getEdge(start, end, () -> implementation.loadEdge(start, end));
+    });
+  }
+
+  public CompletableFuture<Void> saveEdge(Edge edge) {
+    return asyncFuture(() -> {
+      implementation.saveEdge(edge);
+      edgeCache.write(edge);
+    });
+  }
+
+  public CompletableFuture<Void> deleteEdge(Edge edge) {
+    return asyncFuture(() -> {
+      implementation.deleteEdge(edge);
+      edgeCache.invalidate(edge);
+    });
+  }
+
+  // Waypoint
+  public CompletableFuture<Waypoint> createAndLoadWaypoint(Location location) {
+    return asyncFuture(() -> {
+      Waypoint waypoint = implementation.createAndLoadWaypoint(location);
+      nodeCache.write(waypoint);
+      return waypoint;
+    });
+  }
+
+  public CompletableFuture<Optional<Waypoint>> loadWaypoint(UUID uuid) {
+    return asyncFuture(() -> {
+      Optional<Node<?>> opt = nodeCache.getNode(uuid);
+      if (opt.isEmpty()) {
+        return implementation.loadNode(uuid);
+      }
+      return opt.get() instanceof Waypoint waypoint ? Optional.of(waypoint) : Optional.empty();
+    });
+  }
+
+  public CompletableFuture<Collection<Waypoint>> loadAllWaypoints() {
+    return asyncFuture(() -> {
+      Collection<Waypoint> waypoints = implementation.loadAllWaypoints();
+      waypoints.forEach(nodeCache::write);
+      return waypoints;
+    });
+  }
+
+  public CompletableFuture<Collection<Waypoint>> loadWaypoints(Collection<UUID> uuids) {
+    return asyncFuture(() -> {
+      Collection<Node<?>> present = nodeCache.getNodes(uuids, implementation::loadWaypoints);
+      return present.stream()
+          .filter(node -> node instanceof Waypoint)
+          .map(node -> (Waypoint) node)
+          .toList();
+    });
+  }
+
+  public CompletableFuture<Void> saveWaypoint(Waypoint waypoint) {
+    return asyncFuture(() -> {
+      implementation.saveWaypoint(waypoint);
+      nodeCache.write(waypoint);
+    });
+  }
+
+  public CompletableFuture<Void> deleteWaypoints(Collection<Waypoint> waypoints) {
+    return asyncFuture(() -> {
+      implementation.deleteWaypoints(waypoints);
+      waypoints.stream().map(Node::getNodeId).forEach(nodeCache::invalidate);
+    });
+  }
+
+  // Groups
+  public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
+    return asyncFuture(() -> {
+      NodeGroup group = implementation.createAndLoadGroup(key);
+      groupCache.write(group);
+      return group;
+    });
+  }
+
+  public CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key) {
+    return asyncFuture(() -> groupCache.getGroup(key, k -> implementation.loadGroup(k).orElseThrow()));
+  }
+
+  public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
+    return asyncFuture(() -> groupCache.getGroups(pagination, implementation::loadGroups));
+  }
+
+  public CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys) {
+    return asyncFuture(() -> groupCache.getGroups(keys, implementation::loadGroups));
+  }
+
+  public CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node) {
+    return asyncFuture(() -> groupCache.getGroups(node, implementation::loadGroups));
+  }
+
+  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier) {
+    return asyncFuture(() -> groupCache.getGroups(modifier, implementation::loadGroups));
+  }
+
+  public CompletableFuture<Collection<NodeGroup>> loadAllGroups() {
+    return asyncFuture(() -> groupCache.getGroups(implementation::loadAllGroups));
+  }
+
+  public CompletableFuture<Collection<Node<?>>> loadGroupNodes(NodeGroup group) {
+    return null;
+  }
+
+  public CompletableFuture<Void> saveGroup(NodeGroup group) {
+    return asyncFuture(() -> {
+      implementation.saveGroup(group);
+      groupCache.write(group);
+    });
+  }
+
+  public CompletableFuture<Void> deleteGroup(NodeGroup group) {
+    return asyncFuture(() -> {
+      implementation.deleteGroup(group);
+      groupCache.invalidate(group);
+    });
+  }
+
+  // Find Data
+  public CompletableFuture<DiscoverInfo> createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time) {
+    return asyncFuture(() -> {
+      DiscoverInfo info = implementation.createAndLoadDiscoverinfo(player, key, time);
+      discoverInfoCache.handleNew(info);
+      return info;
+    });
+  }
+  public CompletableFuture<Optional<DiscoverInfo>> loadDiscoverInfo(UUID player, NamespacedKey key) {
+    return asyncFuture(() -> {
+      return discoverInfoCache.getDiscovery(player, key, (uuid, key1) -> implementation.loadDiscoverInfo(uuid, key1).get());
+    });
+  }
+  public CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info) {
+    return asyncFuture(() -> {
+      implementation.deleteDiscoverInfo(info);
+      discoverInfoCache.handleDelete(info);
+    });
+  }
+
+  // Visualizer
+  public <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(PathVisualizer<T, ?> visualizer) {
+    return createAndLoadVisualizer(visualizer.getType(), visualizer.getKey());
+  }
+
+  public <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+    return asyncFuture(() -> {
+      T visualizer = type.getStorage().createAndLoadVisualizer(key);
+      visualizerCache.write(visualizer);
+      return visualizer;
+    });
+  }
+
+  public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
+    return asyncFuture(() -> visualizerCache.getVisualizers(() -> {
+      Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
+      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+        visualizers.addAll(implementation.loadVisualizers(type).values());
+      }
+      return visualizers;
+    }));
+  }
+
+  public <T extends PathVisualizer<T, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(VisualizerType<T> type) {
+    return asyncFuture(() -> visualizerCache.getVisualizers(type, t -> implementation.loadVisualizers(t).values()).stream()
+        .collect(Collectors.toMap(Keyed::getKey, t -> t)));
+  }
+
+  public <T extends PathVisualizer<T, D>, D> CompletableFuture<Optional<T>> loadVisualizer(NamespacedKey key) {
+    return asyncFuture(() -> visualizerCache.getVisualizer(key, k -> {
+      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+        Optional<PathVisualizer<?, ?>> opt = (Optional<PathVisualizer<?, ?>>) type.getStorage().loadVisualizer(key);
+        if (opt.isPresent()) return (T) opt.get();
+      }
+      return null;
+    }));
+  }
+
+  public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
+    return asyncFuture(() -> {
+      implementation.saveVisualizer(visualizer);
+      visualizerCache.write(visualizer);
+    });
+  }
+
+  public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
+    return asyncFuture(() -> {
+      implementation.deleteVisualizer(visualizer);
+      visualizerCache.invalidate(visualizer);
+    });
   }
 }

@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-
 import java.util.Collection;
 import org.bukkit.NamespacedKey;
 

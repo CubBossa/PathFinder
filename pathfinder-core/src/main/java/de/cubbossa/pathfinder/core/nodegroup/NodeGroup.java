@@ -2,20 +2,24 @@ package de.cubbossa.pathfinder.core.nodegroup;
 
 import de.cubbossa.pathfinder.Modified;
 import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-
-import java.util.*;
-
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
-public class NodeGroup extends HashSet<Node<?>> implements Keyed, Modified, Comparable<NodeGroup> {
+public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Comparable<NodeGroup> {
 
+  private final PathFinder pathFinder = PathFinderProvider.get();
   private final NamespacedKey key;
   @Getter
   private final Map<Class<? extends Modifier>, Modifier> modifiers;
@@ -28,9 +32,13 @@ public class NodeGroup extends HashSet<Node<?>> implements Keyed, Modified, Comp
   }
 
   public NodeGroup(NamespacedKey key, Collection<Node<?>> nodes) {
-    super(nodes);
+    super(nodes.stream().map(Node::getNodeId).toList());
     this.key = key;
     this.modifiers = new HashMap<>();
+  }
+
+  public CompletableFuture<Collection<Node<?>>> resolve() {
+    return pathFinder.getStorage().loadNodes(this);
   }
 
   @Override

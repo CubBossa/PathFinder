@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Objects;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;

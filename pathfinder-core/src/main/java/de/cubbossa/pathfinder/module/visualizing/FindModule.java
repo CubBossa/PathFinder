@@ -2,14 +2,12 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
@@ -24,11 +22,9 @@ import de.cubbossa.pathfinder.module.visualizing.command.FindCommand;
 import de.cubbossa.pathfinder.module.visualizing.command.FindLocationCommand;
 import de.cubbossa.pathfinder.module.visualizing.events.PathStartEvent;
 import de.cubbossa.pathfinder.module.visualizing.events.PathTargetFoundEvent;
-import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,15 +47,15 @@ import org.jetbrains.annotations.Nullable;
 @AutoService(PathPluginExtension.class)
 public class FindModule implements Listener, PathPluginExtension {
 
-  private FindCommand findCommand;
-  private FindLocationCommand findLocationCommand;
-  private CancelPathCommand cancelPathCommand;
-
   @Getter
   private static FindModule instance;
 
   @Getter
   private final NamespacedKey key = new NamespacedKey(PathPlugin.getInstance(), "navigation");
+
+  private FindCommand findCommand;
+  private FindLocationCommand findLocationCommand;
+  private CancelPathCommand cancelPathCommand;
 
   private final Map<UUID, SearchInfo> activePaths;
   private final PathPlugin plugin;
@@ -79,9 +75,9 @@ public class FindModule implements Listener, PathPluginExtension {
     if (!plugin.getConfiguration().moduleConfig.navigationModule) {
       pathPlugin.getExtensionsRegistry().unregisterExtension(this);
     }
-    findCommand = new FindCommand();
-    findLocationCommand = new FindLocationCommand();
-    cancelPathCommand = new CancelPathCommand();
+    findCommand = new FindCommand(pathPlugin);
+    findLocationCommand = new FindLocationCommand(pathPlugin);
+    cancelPathCommand = new CancelPathCommand(pathPlugin);
 
     pathPlugin.getCommandRegistry().registerCommand(findCommand);
     pathPlugin.getCommandRegistry().registerCommand(findLocationCommand);
@@ -98,12 +94,7 @@ public class FindModule implements Listener, PathPluginExtension {
         return true;
       }
       Player player = Bukkit.getPlayer(c.playerId());
-
-      Collection<NodeGroup> groups = groupable.getGroups().stream()
-          .map(k -> PathFinderAPI.get().getNodeGroup(k))
-          .parallel()
-          .map(CompletableFuture::join)
-          .toList();
+      Collection<NodeGroup> groups = groupable.getGroups();
 
       return groups.stream()
           .allMatch(g -> {
@@ -150,7 +141,7 @@ public class FindModule implements Listener, PathPluginExtension {
 
   public CompletableFuture<NavigateResult> findPath(Player player, Location location,
                                                     double maxDist) {
-    return PathFinderAPI.get().getNodes().thenApply(nodes -> {
+    return plugin.getStorage().loadNodes().thenApply(nodes -> {
       double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
       // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
       Location _location = location.toVector().equals(player.getLocation().toVector())
@@ -187,7 +178,7 @@ public class FindModule implements Listener, PathPluginExtension {
     PlayerNode playerNode = new PlayerNode(player);
 
     return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
-      return PathFinderAPI.get().getNodes().thenApply(nodes -> {
+      return plugin.getStorage().loadNodes().thenApply(nodes -> {
 
         PathSolver<Node<?>> pathSolver = new SimpleDijkstra<>();
         List<Node<?>> path;
@@ -205,9 +196,6 @@ public class FindModule implements Listener, PathPluginExtension {
 
         Groupable<?> last = (Groupable<?>) visualizerPath.get(visualizerPath.size() - 1);
         NodeGroup highest = last.getGroups().stream()
-            .map(k -> PathFinderAPI.get().getNodeGroup(k))
-            .parallel()
-            .map(CompletableFuture::join)
             .filter(g -> g.hasModifier(FindDistanceModifier.class))
             .max(NodeGroup::compareTo).orElse(null);
 

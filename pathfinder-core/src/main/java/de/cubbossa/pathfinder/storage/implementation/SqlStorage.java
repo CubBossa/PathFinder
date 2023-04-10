@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_GROUP_MODIFIER_RELATION;
-import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_NODE_TYPE_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
@@ -19,6 +19,7 @@ import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
@@ -27,7 +28,7 @@ import de.cubbossa.pathfinder.storage.NodeDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImplementation;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import java.io.IOException;
+import de.cubbossa.pathfinder.util.Pagination;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -101,6 +102,30 @@ public abstract class SqlStorage implements StorageImplementation {
         group.setWeight(record.getWeight());
         return group;
       };
+
+  //
+
+  private <T extends PathVisualizer<T, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(VisualizerType<T> type) {
+    return record -> {
+        // create visualizer object
+        T visualizer = type.create(record.getKey(),
+            record.getNameFormat());
+        visualizer.setPermission(record.getPermission());
+        Integer interval = record.getInterval();
+        visualizer.setInterval(interval == null ? 20 : interval);
+
+        // inject data from map
+        YamlConfiguration cfg = new YamlConfiguration();
+        try {
+          cfg.loadFromString(record.getData());
+        } catch (InvalidConfigurationException e) {
+          e.printStackTrace();
+        }
+        type.deserialize(visualizer, cfg.getValues(false));
+
+        return visualizer;
+      };
+  }
 
   private final SQLDialect dialect;
   @Getter
@@ -222,11 +247,6 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <N extends Node<N>> Optional<N> loadNode(NodeType<N> type, UUID id) {
-    return type.loadNode(id);
-  }
-
-  @Override
   public Collection<Node<?>> loadNodes() {
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadAllNodes().stream())
@@ -241,8 +261,13 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <N extends Node<N>> void saveNode(N node) {
-    node.getType().saveNode(node);
+  public void saveNode(Node<?> node) {
+    saveNodeTyped(node);
+  }
+
+  private <N extends Node<N>> void saveNodeTyped(Node<?> node) {
+    NodeType<N> type = (NodeType<N>) node.getType();
+    type.saveNode((N) node);
   }
 
   @Override
@@ -413,27 +438,30 @@ public abstract class SqlStorage implements StorageImplementation {
   public Optional<NodeGroup> loadGroup(NamespacedKey key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
-        .fetch(groupMapper).stream()
-        .peek(group -> group.addAll(loadGroupNodes(group)))
-        .findAny();
+        .fetch(groupMapper).stream().findAny();
   }
 
   @Override
-  public Collection<Node<?>> loadGroupNodes(NodeGroup group) {
-    Collection<UUID> ids = create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
+  public Collection<UUID> loadGroupNodes(NodeGroup group) {
+    return create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
         .from(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
         .fetch(Record1::value1);
-    return loadNodes(ids);
   }
 
   @Override
   public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
-        .fetch(groupMapper).stream()
-        .peek(group -> group.addAll(loadGroupNodes(group)))
-        .collect(Collectors.toList());
+        .fetch(groupMapper);
+  }
+
+  @Override
+  public List<NodeGroup> loadGroups(Pagination pagination) {
+    return create.selectFrom(PATHFINDER_NODEGROUPS)
+        .offset(pagination.getOffset())
+        .limit(pagination.getLimit())
+        .fetch(groupMapper);
   }
 
   @Override
@@ -481,24 +509,11 @@ public abstract class SqlStorage implements StorageImplementation {
   @Override
   public Collection<NodeGroup> loadAllGroups() {
     Map<NamespacedKey, NodeGroup> groups = new HashMap<>();
-    Collection<UUID> idSet = new HashSet<>();
-    Map<NamespacedKey, Collection<UUID>> ids = new HashMap<>();
 
     create.selectFrom(PATHFINDER_NODEGROUPS)
         .fetch(groupMapper).forEach(group -> groups.put(group.getKey(), group));
     create.selectFrom(PATHFINDER_NODEGROUP_NODES)
-        .forEach(record -> {
-          idSet.add(record.getNodeId());
-          ids.computeIfAbsent(record.getGroupKey(), key -> new HashSet<>()).add(record.getNodeId());
-        });
-    Map<UUID, Node<?>> nodes = new HashMap<>();
-    loadNodes(idSet).forEach(node -> nodes.put(node.getNodeId(), node));
-
-    ids.forEach((key, uuids) -> {
-      Collection<Node<?>> n = new HashSet<>();
-      uuids.forEach(uuid -> n.add(nodes.get(uuid)));
-      groups.get(key).addAll(n);
-    });
+        .forEach(record -> groups.get(record.getGroupKey()).add(record.getNodeId()));
     return groups.values();
   }
 
@@ -521,7 +536,7 @@ public abstract class SqlStorage implements StorageImplementation {
 
   public CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {
     create.batched(configuration -> {
-      for (UUID nodeId : selection) {
+      for (UUID nodeId : selection.stream().map(Node::getNodeId).toList()) {
         DSL.using(configuration)
             .insertInto(PATHFINDER_NODEGROUP_NODES)
             .values(group, nodeId)
@@ -541,6 +556,38 @@ public abstract class SqlStorage implements StorageImplementation {
     return CompletableFuture.completedFuture(null);
   }
 
+  @Override
+  public DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time) {
+    create
+        .insertInto(PATHFINDER_DISCOVERINGS)
+        .values(key, player, time)
+        .onDuplicateKeyIgnore()
+        .execute();
+    return new DiscoverInfo(player, key, time);
+  }
+
+  @Override
+  public Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key) {
+    return create
+        .selectFrom(PATHFINDER_DISCOVERINGS)
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(player))
+        .and(PATHFINDER_DISCOVERINGS.DISCOVER_KEY.eq(key))
+        .fetch(record -> {
+          NamespacedKey k = record.getDiscoverKey();
+          LocalDateTime date = record.getDate();
+          return new DiscoverInfo(player, k, date);
+        }).stream().findAny();
+  }
+
+  @Override
+  public void deleteDiscoverInfo(DiscoverInfo info) {
+    create
+        .deleteFrom(PATHFINDER_DISCOVERINGS)
+        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(info.playerId()))
+        .and(PATHFINDER_DISCOVERINGS.DISCOVER_KEY.eq(info.discoverable()))
+        .execute();
+  }
+
   // ###############################################################################################
 
   public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
@@ -555,13 +602,13 @@ public abstract class SqlStorage implements StorageImplementation {
     CompletableFuture<Collection<Edge>> future = new CompletableFuture<>();
     create.batched(configuration -> {
       Collection<Edge> edges = new HashSet<>();
-      for (UUID startNode : start) {
-        for (UUID endNode : end) {
+      for (Node<?> startNode : start) {
+        for (Node<?> endNode : end) {
           DSL.using(configuration)
               .insertInto(PATHFINDER_EDGES)
-              .values(startNode, endNode, 1)
+              .values(startNode.getNodeId(), endNode.getNodeId(), 1)
               .execute();
-          edges.add(new Edge(startNode, endNode, 1));
+          edges.add(new Edge(startNode.getNodeId(), endNode.getNodeId(), 1));
         }
       }
       future.complete(edges);
@@ -581,12 +628,12 @@ public abstract class SqlStorage implements StorageImplementation {
   public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
     CompletableFuture<Void> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      for (UUID startNode : start) {
-        for (UUID endNode : end) {
+      for (Node<?> startNode : start) {
+        for (Node<?> endNode : end) {
           DSL.using(configuration)
               .deleteFrom(PATHFINDER_EDGES)
-              .where(PATHFINDER_EDGES.START_ID.eq(startNode))
-              .and(PATHFINDER_EDGES.END_ID.eq(endNode))
+              .where(PATHFINDER_EDGES.START_ID.eq(startNode.getNodeId()))
+              .and(PATHFINDER_EDGES.END_ID.eq(endNode.getNodeId()))
               .execute();
         }
       }
@@ -640,72 +687,40 @@ public abstract class SqlStorage implements StorageImplementation {
     return null;
   }
 
-  public DiscoverInfo createDiscoverInfo(UUID player, NodeGroup discoverable,
-                                         LocalDateTime foundDate) {
-    create
-        .insertInto(PATHFINDER_DISCOVERINGS)
-        .values(discoverable.getKey().toString(), player, foundDate)
-        .onDuplicateKeyIgnore()
-        .execute();
-    return new DiscoverInfo(player, discoverable.getKey(), foundDate);
+  @Override
+  public <T extends PathVisualizer<T, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+    return null;
   }
 
-  public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
-    Map<NamespacedKey, DiscoverInfo> registry = new HashMap<>();
-    create
-        .selectFrom(PATHFINDER_DISCOVERINGS)
-        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId))
-        .forEach(record -> {
-          NamespacedKey key = record.getDiscoverKey();
-          LocalDateTime date = record.getDate();
-
-          DiscoverInfo info = new DiscoverInfo(playerId, key, date);
-          registry.put(info.discoverable(), info);
-        });
-    return registry;
+  @Override
+  public <T extends PathVisualizer<T, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+    return create
+        .selectFrom(PATHFINDER_PATH_VISUALIZER)
+        .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(key))
+        .fetch(visualizerMapper(type))
+        .stream().findFirst();
   }
 
-  public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
-    create
-        .deleteFrom(PATHFINDER_DISCOVERINGS)
-        .where(PATHFINDER_DISCOVERINGS.PLAYER_ID.eq(playerId))
-        .and(PATHFINDER_DISCOVERINGS.DISCOVER_KEY.eq(discoverKey))
-        .execute();
-  }
-
-  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(
-      VisualizerType<T> type) {
+  @Override
+  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.TYPE.eq(type.getKey()))
-        .fetch(record -> {
-
-          // create visualizer object
-          T visualizer = type.create(record.getKey(),
-              record.getNameFormat());
-          visualizer.setPermission(record.getPermission());
-          Integer interval = record.getInterval();
-          visualizer.setInterval(interval == null ? 20 : interval);
-
-          // inject data from map
-          YamlConfiguration cfg = new YamlConfiguration();
-          try {
-            cfg.loadFromString(record.getData());
-          } catch (InvalidConfigurationException e) {
-            e.printStackTrace();
-          }
-          type.deserialize(visualizer, cfg.getValues(false));
-
-          return visualizer;
-        })
+        .fetch(visualizerMapper(type))
         .forEach(registry::put);
     return registry;
   }
 
-  public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
 
-    Map<String, Object> data = visualizer.getType().serialize(visualizer);
+  private <T extends PathVisualizer<T, ?>> Map<String, Object> serialize(PathVisualizer<?, ?> pathVisualizer) {
+    VisualizerType<T> type = ((T) pathVisualizer).getType();
+    return type.serialize((T) pathVisualizer);
+  }
+
+  @Override
+  public void saveVisualizer(PathVisualizer<?, ?> visualizer) {
+    Map<String, Object> data = serialize(visualizer);
     if (data == null) {
       return;
     }
@@ -738,7 +753,8 @@ public abstract class SqlStorage implements StorageImplementation {
         .execute();
   }
 
-  public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
+  @Override
+  public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     create
         .deleteFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))

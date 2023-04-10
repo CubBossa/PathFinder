@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.events;
 
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.Date;
 import java.util.UUID;
 import javax.annotation.Nullable;

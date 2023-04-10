@@ -6,7 +6,12 @@ import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.util.Pagination;
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,10 +32,9 @@ public interface StorageImplementation {
   // Nodes
   <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location);
   <N extends Node<N>> Optional<N> loadNode(UUID id);
-  <N extends Node<N>> Optional<N> loadNode(NodeType<N> type, UUID id);
   Collection<Node<?>> loadNodes();
   Collection<Node<?>> loadNodes(Collection<UUID> ids);
-  <N extends Node<N>> void saveNode(N node);
+  void saveNode(Node<?> node);
   void deleteNodes(Collection<Node<?>> node);
 
   // Edges
@@ -53,14 +57,23 @@ public interface StorageImplementation {
   NodeGroup createAndLoadGroup(NamespacedKey key);
   Optional<NodeGroup> loadGroup(NamespacedKey key);
   Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key);
+  List<NodeGroup> loadGroups(Pagination pagination);
   Collection<NodeGroup> loadGroups(UUID node);
   <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier);
   Collection<NodeGroup> loadAllGroups();
-  Collection<Node<?>> loadGroupNodes(NodeGroup group);
+  Collection<UUID> loadGroupNodes(NodeGroup group);
   void saveGroup(NodeGroup group);
   void deleteGroup(NodeGroup group);
 
   // Find Data
+  DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time);
+  Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key);
+  void deleteDiscoverInfo(DiscoverInfo info);
 
   // Visualizer
+  <T extends PathVisualizer<T, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key);
+  <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type);
+  <T extends PathVisualizer<T, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key);
+  void saveVisualizer(PathVisualizer<?, ?> visualizer);
+  void deleteVisualizer(PathVisualizer<?, ?> visualizer);
 }

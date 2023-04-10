@@ -10,6 +10,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.CommandUtils;
+import de.cubbossa.pathfinder.util.Pagination;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
@@ -18,6 +19,8 @@ import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -35,12 +38,12 @@ public class PathVisualizerCommand extends Command {
     then(CustomArgs.literal("list")
         .withPermission(PathPerms.PERM_CMD_PV_LIST)
         .executes((commandSender, objects) -> {
-          onList(commandSender, 1);
+          onList(commandSender, Pagination.page(0, 10));
         })
-        .then(CustomArgs.integer("page", 1)
+        .then(CustomArgs.pagination(10)
             .displayAsOptional()
             .executes((commandSender, objects) -> {
-              onList(commandSender, (Integer) objects[0]);
+              onList(commandSender, (Pagination) objects[0]);
             })));
 
     then(CustomArgs.literal("create")
@@ -69,7 +72,7 @@ public class PathVisualizerCommand extends Command {
               onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
-    then(new VisualizerImportCommand("import", 0));
+    then(new VisualizerImportCommand(pathFinder, "import", 0));
   }
 
   @Override
@@ -121,61 +124,61 @@ public class PathVisualizerCommand extends Command {
     super.register();
   }
 
-  /**
-   * @param page Begins with 1, not 0!
-   */
-  public void onList(CommandSender sender, int page) {
+  public void onList(CommandSender sender, Pagination pagination) {
+    getPathfinder().getStorage().loadVisualizers().thenAccept(pathVisualizers -> {
+      //TODO pagination in load
+      CommandUtils.printList(sender, pagination, pag -> new ArrayList<>(pathVisualizers).subList(pag.getStart(), pag.getEndExclusive()),
+          visualizer -> {
+            TagResolver r = TagResolver.builder()
+                .tag("key", Messages.formatKey(visualizer.getKey()))
+                .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+                .resolver(
+                    Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+                .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
+                .build();
 
-    CommandUtils.printList(sender, page, 10,
-        new ArrayList<>(VisualizerHandler.getInstance().getPathVisualizerMap().values()),
-        visualizer -> {
-          TagResolver r = TagResolver.builder()
-              .tag("key", Messages.formatKey(visualizer.getKey()))
-              .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-              .resolver(
-                  Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-              .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
-              .build();
-
-          TranslationHandler.getInstance()
-              .sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(r), sender);
-        },
-        Messages.CMD_VIS_LIST_HEADER,
-        Messages.CMD_VIS_LIST_FOOTER);
+            TranslationHandler.getInstance()
+                .sendMessage(Messages.CMD_VIS_LIST_ENTRY.format(r), sender);
+          },
+          Messages.CMD_VIS_LIST_HEADER,
+          Messages.CMD_VIS_LIST_FOOTER);
+    });
   }
 
   public void onCreate(CommandSender sender, VisualizerType<?> type, NamespacedKey key) {
 
-    if (VisualizerHandler.getInstance().getPathVisualizer(key) != null) {
+    Optional<?> opt = getPathfinder().getStorage().loadVisualizer(key).join();
+    if (opt.isPresent()) {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_NAME_EXISTS, sender);
       return;
     }
-    PathVisualizer<?, ?> visualizer =
-        VisualizerHandler.getInstance().createPathVisualizer(type, key);
-
-    TranslationHandler.getInstance()
-        .sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.format(TagResolver.builder()
-            .tag("key", Messages.formatKey(visualizer.getKey()))
-            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-            .resolver(
-                Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-            .resolver(Placeholder.component("type",
-                Component.text(visualizer.getType().getCommandName())))
-            .build()), sender);
+    getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.format(TagResolver.builder()
+              .tag("key", Messages.formatKey(visualizer.getKey()))
+              .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+              .resolver(
+                  Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+              .resolver(Placeholder.component("type",
+                  Component.text(visualizer.getType().getCommandName())))
+              .build()), sender);
+    });
   }
 
   public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
-    if (!VisualizerHandler.getInstance().deletePathVisualizer(visualizer)) {
+    getPathfinder().getStorage().deleteVisualizer(visualizer).thenRun(() -> {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
+          .format(TagResolver.builder()
+              .tag("key", Messages.formatKey(visualizer.getKey()))
+              .resolver(Placeholder.component("name", visualizer.getDisplayName()))
+              .resolver(
+                  Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+              .build()), sender);
+    }).exceptionally(throwable -> {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_ERROR, sender);
-      return;
-    }
-    TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
-        .format(TagResolver.builder()
-            .tag("key", Messages.formatKey(visualizer.getKey()))
-            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-            .resolver(
-                Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
-            .build()), sender);
+      getPathfinder().getLogger().log(Level.WARNING, "Could not delete visualizer", throwable);
+      return null;
+    });
   }
 
   public <T extends PathVisualizer<T, ?>> void onInfo(CommandSender sender,

@@ -16,11 +16,11 @@ public class BStatsLoader {
     Metrics metrics = new Metrics(plugin, 16324);
 
     metrics.addCustomChart(new SimplePie("group_amount",
-        () -> PathFinderAPI.get().getNodeGroupKeySet().join().size() + ""));
+        () -> PathPlugin.getInstance().getStorage().loadAllGroups().join().size() + ""));
     metrics.addCustomChart(new SimplePie("visualizer_amount",
-        () -> VisualizerHandler.getInstance().getRoadmapVisualizers().size() + ""));
+        () -> PathPlugin.getInstance().getStorage().loadVisualizers().join().size() + ""));
     metrics.addCustomChart(new AdvancedPie("nodes_per_group", () -> {
-      IntStream counts = PathFinderAPI.get().getNodeGroups().join().stream()
+      IntStream counts = PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
           .mapToInt(Collection::size);
       Map<String, Integer> vals = new HashMap<>();
       counts.forEach(value -> {

@@ -4,13 +4,11 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.storage.ApplicationLayer;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTreeLike;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -81,7 +79,8 @@ public class CommandUtils {
     return Suggestions.create(command, result);
   }
 
-  public <T> void printList(CommandSender sender, ApplicationLayer.Pagination pagination, Function<ApplicationLayer.Pagination, CompletableFuture<List<T>>> supplier,
+  public <T> void printList(CommandSender sender, Pagination pagination,
+                            Function<Pagination, List<T>> supplier,
                             Consumer<T> print, Message header, Message footer) {
 
     /*supplier.apply(pagination).thenAccept(elements -> {

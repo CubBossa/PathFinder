@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.cubbossa.pathfinder.PathPluginConfig;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import org.jooq.ConnectionProvider;
 import org.jooq.impl.DataSourceConnectionProvider;
 

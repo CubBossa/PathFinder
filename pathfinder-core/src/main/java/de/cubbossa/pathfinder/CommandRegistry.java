@@ -42,7 +42,7 @@ public class CommandRegistry {
     CommandAPI.onEnable(plugin);
     pathFinderCommand = new PathFinderCommand(pathFinder);
     pathFinderCommand.register();
-    nodeGroupCommand = new NodeGroupCommand(pathFinder, 0);
+    nodeGroupCommand = new NodeGroupCommand(pathFinder);
     nodeGroupCommand.register();
     pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
     pathVisualizerCommand.register();

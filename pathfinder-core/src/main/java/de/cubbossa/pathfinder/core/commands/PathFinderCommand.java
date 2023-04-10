@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderAPI;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
@@ -12,12 +11,11 @@ import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
-
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -69,9 +67,10 @@ public class PathFinderCommand extends Command {
     then(CustomArgs.literal("modules")
         .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
-          List<String> list = PathPlugin.getInstance().getExtensionsRegistry().getExtensions().stream()
-              .map(PathPluginExtension::getKey)
-              .map(NamespacedKey::toString).toList();
+          List<String> list =
+              PathPlugin.getInstance().getExtensionsRegistry().getExtensions().stream()
+                  .map(PathPluginExtension::getKey)
+                  .map(NamespacedKey::toString).toList();
 
           TranslationHandler.getInstance().sendMessage(Messages.MODULES.format(TagResolver.builder()
               .resolver(TagResolver.resolver("modules", Messages.formatList(list, Component::text)))
@@ -84,7 +83,8 @@ public class PathFinderCommand extends Command {
         })
         .then(CustomArgs.nodeGroupArgument("group")
             .executesPlayer((commandSender, args) -> {
-              NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, (NamespacedKey) args[0]);
+              NodeHandler.getInstance()
+                  .toggleNodeGroupEditor(commandSender, (NamespacedKey) args[0]);
             })));
 
     then(CustomArgs.literal("help")
@@ -95,7 +95,7 @@ public class PathFinderCommand extends Command {
 
     then(CustomArgs.literal("import")
         .withPermission(PathPerms.PERM_CMD_PF_IMPORT)
-        .then(new VisualizerImportCommand("visualizer", 0))
+        .then(new VisualizerImportCommand(pathFinder, "visualizer", 0))
     );
 
     then(CustomArgs.literal("reload")
@@ -232,43 +232,46 @@ public class PathFinderCommand extends Command {
     );
 
     then(CustomArgs.literal("forcefind")
+        .withGeneratedHelp()
+        .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
+        .then(CustomArgs.player("player")
             .withGeneratedHelp()
-            .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
-                    .then(CustomArgs.player("player")
-                            .withGeneratedHelp()
-                            .then(CustomArgs.discoverableArgument("discovering")
-                                    .executes((commandSender, args) -> {
-                                      onForceFind(commandSender, (Player) args[1], (NamespacedKey) args[2]);
-                                    }))));
+            .then(CustomArgs.discoverableArgument("discovering")
+                .executes((commandSender, args) -> {
+                  onForceFind(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                }))));
     then(CustomArgs.literal("forceforget")
+        .withGeneratedHelp()
+        .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
+        .then(CustomArgs.player("player")
             .withGeneratedHelp()
-            .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
-                    .then(CustomArgs.player("player")
-                            .withGeneratedHelp()
-                            .then(CustomArgs.discoverableArgument("discovering")
-                                    .executes((commandSender, args) -> {
-                                      onForceForget(commandSender, (Player) args[1], (NamespacedKey) args[2]);
-                                    }))));
+            .then(CustomArgs.discoverableArgument("discovering")
+                .executes((commandSender, args) -> {
+                  onForceForget(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                }))));
   }
 
   private void onForceFind(CommandSender sender, Player target, NamespacedKey discoverable) {
+    getPathfinder().getStorage().loadGroup(discoverable)
+        .thenApply(Optional::orElseThrow)
+        .thenAccept(group -> {
+          DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-    PathFinderAPI.get().getNodeGroup(discoverable).thenAccept(group -> {
-      DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+          DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
 
-      DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
-
-      TranslationHandler.getInstance()
-          .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
-              .resolver(Placeholder.component("name",
-                  PathPlugin.getInstance().getAudiences().player(target)
-                      .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
-    });
+          TranslationHandler.getInstance()
+              .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
+                  .resolver(Placeholder.component("name",
+                      PathPlugin.getInstance().getAudiences().player(target)
+                          .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+                  .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+        });
   }
 
   private void onForceForget(CommandSender sender, Player target, NamespacedKey discoverable) {
-    PathFinderAPI.get().getNodeGroup(discoverable).thenAccept(group -> {
+    getPathfinder().getStorage().loadGroup(discoverable)
+        .thenApply(Optional::orElseThrow)
+        .thenAccept(group -> {
       DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
       DiscoverHandler.getInstance().forget(target.getUniqueId(), group);

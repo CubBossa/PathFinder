@@ -5,22 +5,22 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -28,6 +28,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -38,7 +39,7 @@ public class SelectionUtils {
           .execute(c -> c.getScope().stream()
               .filter(n -> c.getValue().equals(n.getNodeId()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> PathFinderAPI.get().getNodes().join().stream()
+          .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadNodes().join().stream()
               .map(Node::getNodeId)
               .map(integer -> integer + "")
               .collect(Collectors.toList()));
@@ -112,26 +113,20 @@ public class SelectionUtils {
       new NodeSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
         Collection<NodeGroup> groups = new HashSet<>();
-        if (in.startsWith("@")) {
-          // TODO parse groups
-        } else {
-          NamespacedKey key = NamespacedKey.fromString(in);
-          if (key == null) {
-            throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
-          }
-          NodeGroup group = PathFinderAPI.get().getNodeGroup(key).join();
-          if (group == null) {
-            throw new IllegalArgumentException("There is no group with the key '" + key + "'");
-          }
-          groups.add(group);
+        NamespacedKey key = NamespacedKey.fromString(in);
+        if (key == null) {
+          throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
         }
+        Optional<NodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
+        groups.add(group.orElseThrow(() -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
         return groups;
       })
           .execute(c -> c.getScope().stream()
               .filter(node -> node instanceof Groupable<?> groupable
-                  && groupable.getGroups().containsAll(c.getValue().stream().map(NodeGroup::getKey).toList()))
+                  && groupable.getGroups()
+                  .containsAll(c.getValue()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> PathFinderAPI.get().getNodeGroups().join().stream()
+          .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
@@ -155,8 +150,8 @@ public class SelectionUtils {
   public static NodeSelection getNodeSelection(Player player, String selectString)
       throws CommandSyntaxException, ParseCancellationException {
 
-    return new NodeSelection(parser.parse(player, selectString, new ArrayList<>(PathFinderAPI.get().getNodes().join()))
-        .stream().map(Node::getNodeId).toList());
+    List<Node<?>> nodes = new ArrayList<>(PathPlugin.getInstance().getStorage().loadNodes().join());
+    return new NodeSelection(parser.parse(player, selectString, nodes));
   }
 
   public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(

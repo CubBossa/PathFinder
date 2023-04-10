@@ -1,13 +1,9 @@
 package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import org.bukkit.Location;
 
 public interface NodeDataStorage<N extends Node<N>> {

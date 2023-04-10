@@ -12,21 +12,12 @@ public class PathPerms {
   public static final String PERM_CMD_FIND = "pathfinder.command.find";
   public static final String PERM_CMD_FIND_LOCATION = "pathfinder.command.findlocation";
   public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
+  public static final String PERM_CMD_NG_INFO = "pathfinder.command.nodegroup.info";
   public static final String PERM_CMD_NG_LIST = "pathfinder.command.nodegroup.list";
   public static final String PERM_CMD_NG_CREATE = "pathfinder.command.nodegroup.create";
   public static final String PERM_CMD_NG_DELETE = "pathfinder.command.nodegroup.delete";
-  public static final String PERM_CMD_NG_SET_NAME = "pathfinder.command.nodegroup.set_name";
-  public static final String PERM_CMD_NG_SET_PERM = "pathfinder.command.nodegroup.set_permission";
-  public static final String PERM_CMD_NG_SET_NAVIGABLE =
-      "pathfinder.command.nodegroup.set_navigable";
-  public static final String PERM_CMD_NG_SET_DISCOVERABLE =
-      "pathfinder.command.nodegroup.set_discoverable";
-  public static final String PERM_CMD_NG_SET_DISCOVER_DIST =
-      "pathfinder.command.nodegroup.set_find_distance";
-  public static final String PERM_CMD_NG_ST_LIST = "pathfinder.command.nodegroup.searchterms.list";
-  public static final String PERM_CMD_NG_ST_ADD = "pathfinder.command.nodegroup.searchterms.add";
-  public static final String PERM_CMD_NG_ST_REMOVE =
-      "pathfinder.command.nodegroup.searchterms.remove";
+  public static final String PERM_CMD_NG_SET_MOD = "pathfinder.command.nodegroup.set_mod";
+  public static final String PERM_CMD_NG_UNSET_MOD = "pathfinder.command.nodegroup.unset_mod";
   public static final String PERM_CMD_WP_INFO = "pathfinder.command.waypoint.info";
   public static final String PERM_CMD_WP_LIST = "pathfinder.command.waypoint.list";
   public static final String PERM_CMD_WP_CREATE = "pathfinder.command.waypoint.create";

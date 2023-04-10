@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.core.node;
 
-import de.cubbossa.pathfinder.PathFinderAPI;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
 import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
@@ -29,12 +28,15 @@ public class NodeHandler {
   @Getter
   private static NodeHandler instance;
 
+  private final PathFinder pathFinder;
+
   private final NodeGroupEditorFactory editModeFactory;
   @Getter
   private final HashedRegistry<NodeGroupEditor> editors;
 
-  public NodeHandler() {
+  public NodeHandler(PathFinder pathFinder) {
     instance = this;
+    this.pathFinder = pathFinder;
 
     editors = new HashedRegistry<>();
 
@@ -46,7 +48,7 @@ public class NodeHandler {
   }
 
   public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
-    return PathFinderAPI.get().getNodes().thenApply(nodes -> {
+    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
       Map<UUID, Node<?>> map = new HashMap<>();
       nodes.forEach(node -> map.put(node.getNodeId(), node));
 
@@ -91,12 +93,10 @@ public class NodeHandler {
   public CompletableFuture<NodeGroupEditor> getNodeGroupEditor(NamespacedKey key) {
     NodeGroupEditor editor = editors.get(key);
     if (editor == null) {
-      return PathFinderAPI.get().getNodeGroup(key).thenApply(g -> {
-        if (g == null) {
-          throw new IllegalArgumentException(
-              "No group exists with key '" + key + "'. Cannot create editor.");
-        }
-        NodeGroupEditor e = editModeFactory.apply(g);
+      return pathFinder.getStorage().loadGroup(key).thenApply(g -> {
+        NodeGroupEditor e = editModeFactory.apply(
+            g.orElseThrow(() -> new IllegalArgumentException("No group exists with key '" + key + "'. Cannot create editor."))
+        );
         editors.put(e);
         return e;
       });

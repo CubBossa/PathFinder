@@ -21,6 +21,6 @@ public class WaypointType extends NodeType<Waypoint> {
 
   @Override
   public Waypoint createAndLoadNode(Context context) {
-    return getStorage().orElseThrow().createAndLoadNode(context);
+    return getStorage().createAndLoadNode(context);
   }
 }

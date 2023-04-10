@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.VisualizerDataStorage;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.Argument;
