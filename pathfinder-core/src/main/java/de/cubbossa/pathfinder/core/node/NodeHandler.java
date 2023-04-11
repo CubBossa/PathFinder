@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
@@ -91,17 +92,25 @@ public class NodeHandler {
   }
 
   public CompletableFuture<NodeGroupEditor> getNodeGroupEditor(NamespacedKey key) {
+    CompletableFuture<NodeGroupEditor> future = new CompletableFuture<>();
     NodeGroupEditor editor = editors.get(key);
     if (editor == null) {
-      return pathFinder.getStorage().loadGroup(key).thenApply(g -> {
-        NodeGroupEditor e = editModeFactory.apply(
-            g.orElseThrow(() -> new IllegalArgumentException("No group exists with key '" + key + "'. Cannot create editor."))
-        );
-        editors.put(e);
-        return e;
+      pathFinder.getStorage().loadGroup(key).thenAccept(g -> {
+        Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
+          NodeGroupEditor e = editModeFactory.apply(
+              g.orElseThrow(() -> new IllegalArgumentException("No group exists with key '" + key + "'. Cannot create editor."))
+          );
+          editors.put(e);
+          future.complete(e);
+        });
       });
+    } else {
+      future.complete(editor);
     }
-    return CompletableFuture.completedFuture(editor);
+    return future.exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   public void cancelAllEditModes() {

@@ -221,6 +221,7 @@ tasks {
             include(dependency("org.reactivestreams:reactive-streams:.*"))
             include(dependency("io.r2dbc:r2dbc-spi:.*"))
             include(dependency("com.zaxxer:HikariCP:.*"))
+            include(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
         }
 
         fun relocate(from: String, to: String) {

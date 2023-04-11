@@ -327,10 +327,11 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node group argument instance
    */
-  public CommandArgument<NamespacedKey, Argument<NamespacedKey>> nodeGroupArgument(
+  public CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>> nodeGroupArgument(
       String nodeName) {
-    return (CommandArgument<NamespacedKey, Argument<NamespacedKey>>) arg(
-        new NamespacedKeyArgument(nodeName)
+    return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
+        return PathFinderProvider.get().getStorage().loadGroup(info.currentInput()).join().orElseThrow();
+        })
     ).replaceSuggestions(suggestNamespacedKeys(
         sender -> PathPlugin.getInstance().getStorage().loadAllGroups().thenApply(nodeGroups ->
             nodeGroups.stream().map(NodeGroup::getKey).toList())

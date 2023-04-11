@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.storage;
 import de.cubbossa.pathfinder.Modifier;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
@@ -17,6 +18,7 @@ import de.cubbossa.pathfinder.storage.cache.NodeCache;
 import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
 import de.cubbossa.pathfinder.util.Pagination;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -37,7 +40,8 @@ import org.bukkit.NamespacedKey;
 public class Storage {
 
   private final PathFinder pathFinder;
-  private final StorageImplementation implementation;
+  @Setter
+  private StorageImplementation implementation;
   private final NodeCache nodeCache = new NodeCache();
   private final EdgeCache edgeCache = new EdgeCache();
   private final GroupCache groupCache = new GroupCache();
@@ -90,7 +94,26 @@ public class Storage {
 
   public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
     return loadNode(id).thenApply(n -> {
-      updater.accept(n.orElseThrow());
+      Node<?> node = n.orElseThrow();
+      Collection<NodeGroup> groupsBefore = new HashSet<>();
+      Collection<NodeGroup> groupsAfter = new HashSet<>();
+      if (node instanceof Groupable<?> groupable) {
+        groupsBefore = new ArrayList<>(groupable.getGroups());
+      }
+      updater.accept(node);
+      if (node instanceof Groupable<?> groupable) {
+        groupsAfter = new ArrayList<>(groupable.getGroups());
+      }
+      Collection<NodeGroup> added = new ArrayList<>(groupsAfter);
+      Collection<NodeGroup> removed = new ArrayList<>(groupsBefore);
+      added.removeAll(groupsBefore);
+      removed.removeAll(groupsAfter);
+      if (!added.isEmpty()) {
+        pathFinder.getEventDispatcher().dispatchNodeAssign(node, added);
+      }
+      if (!removed.isEmpty()) {
+        pathFinder.getEventDispatcher().dispatchNodeUnassign(node, removed);
+      }
       return n;
     }).thenCompose(n -> saveNode(n.orElseThrow()));
   }

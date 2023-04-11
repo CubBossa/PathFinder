@@ -13,6 +13,7 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
@@ -74,7 +75,8 @@ public class NodeGroupCommand extends Command {
             })));
 
     ArgumentTree set = CustomArgs.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
-    ArgumentTree unset = CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
+    ArgumentTree unset =
+        CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
     for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getModifiers()) {
       ArgumentTree lit = CustomArgs.literal(modifier.getSubCommandLiteral());
       lit = modifier.registerAddCommand(lit, mod -> (commandSender, objects) -> {
@@ -87,6 +89,12 @@ public class NodeGroupCommand extends Command {
           })
       );
     }
+    then(CustomArgs.literal("modify")
+        .then(CustomArgs.nodeGroupArgument("group")
+            .then(set)
+            .then(unset)
+        )
+    );
   }
 
   private void listGroups(CommandSender sender, Pagination pagination) {
@@ -111,6 +119,11 @@ public class NodeGroupCommand extends Command {
   }
 
   private void showGroup(CommandSender sender, NodeGroup group) {
+    TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_INFO.format(TagResolver.builder()
+        .tag("key", Messages.formatKey(group.getKey()))
+        .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
+        .resolver(Formatter.number("weight", group.getWeight()))
+        .build()), sender);
   }
 
   private void createGroup(CommandSender sender, String name) {
@@ -120,7 +133,8 @@ public class NodeGroupCommand extends Command {
     ), sender);
     TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE_FAIL, sender);
 
-    getPathfinder().getStorage().createAndLoadGroup(new NamespacedKey(PathPlugin.getInstance(), ""))
+    getPathfinder().getStorage()
+        .createAndLoadGroup(new NamespacedKey(PathPlugin.getInstance(), name))
         .thenAccept(group -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(
               Placeholder.parsed("key", group.getKey().toString())
@@ -143,7 +157,8 @@ public class NodeGroupCommand extends Command {
     });
   }
 
-  private void removeModifier(CommandSender sender, NodeGroup group, Class<? extends Modifier> mod) {
+  private void removeModifier(CommandSender sender, NodeGroup group,
+                              Class<? extends Modifier> mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       // TODO message

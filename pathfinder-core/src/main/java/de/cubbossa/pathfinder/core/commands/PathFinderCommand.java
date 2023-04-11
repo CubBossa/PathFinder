@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
@@ -83,8 +84,7 @@ public class PathFinderCommand extends Command {
         })
         .then(CustomArgs.nodeGroupArgument("group")
             .executesPlayer((commandSender, args) -> {
-              NodeHandler.getInstance()
-                  .toggleNodeGroupEditor(commandSender, (NamespacedKey) args[0]);
+              NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, ((NodeGroup) args[0]).getKey());
             })));
 
     then(CustomArgs.literal("help")

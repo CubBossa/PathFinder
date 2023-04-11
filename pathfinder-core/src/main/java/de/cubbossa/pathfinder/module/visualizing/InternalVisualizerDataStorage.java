@@ -14,30 +14,30 @@ public class InternalVisualizerDataStorage<T extends PathVisualizer<T, ?>>
     implements VisualizerDataStorage<T> {
 
   private final VisualizerType<T> type;
-  private final StorageImplementation storage;
+  private final Storage storage;
 
   @Override
   public T createAndLoadVisualizer(NamespacedKey key) {
-    return storage.createAndLoadVisualizer(type, key);
+    return storage.getImplementation().createAndLoadVisualizer(type, key);
   }
 
   @Override
   public Map<NamespacedKey, T> loadVisualizers() {
-    return storage.loadVisualizers(type);
+    return storage.getImplementation().loadVisualizers(type);
   }
 
   @Override
   public Optional<T> loadVisualizer(NamespacedKey key) {
-    return storage.loadVisualizer(type, key);
+    return storage.getImplementation().loadVisualizer(type, key);
   }
 
   @Override
   public void saveVisualizer(T visualizer) {
-    storage.saveVisualizer(visualizer);
+    storage.getImplementation().saveVisualizer(visualizer);
   }
 
   @Override
   public void deleteVisualizer(T visualizer) {
-    storage.deleteVisualizer(visualizer);
+    storage.getImplementation().deleteVisualizer(visualizer);
   }
 }

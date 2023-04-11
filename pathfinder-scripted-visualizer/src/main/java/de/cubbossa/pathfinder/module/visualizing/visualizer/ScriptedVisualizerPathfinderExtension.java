@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class ScriptedVisualizerPathfinderExtension implements PathPluginExtension {
 
   public static final NamespacedKey KEY = new NamespacedKey(PathPlugin.getInstance(), "scriptline-visualizers");
-  public static final VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
+  public static VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
       new ScriptLineParticleVisualizerType(
           new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
 

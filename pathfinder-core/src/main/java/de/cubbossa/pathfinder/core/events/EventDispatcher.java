@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.events;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +52,14 @@ public class EventDispatcher {
   }
 
   public <N extends Node<N>> void dispatchNodesDelete(Collection<UUID> nodes) {
+
+  }
+
+  public void dispatchNodeUnassign(Node<?> node, Collection<NodeGroup> groups) {
+
+  }
+
+  public void dispatchNodeAssign(Node<?> node, Collection<NodeGroup> groups) {
 
   }
 }

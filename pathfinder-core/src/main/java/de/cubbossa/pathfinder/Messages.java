@@ -255,6 +255,13 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix><gray>Node group deleted: <name>.</gray>",
       placeholders = "name")
   public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
+  @MessageMeta(value = """
+      <offset>Group '<key>'</offset>
+      <dark_gray>» </dark_gray><gray>Nodes: <main><nodes></main>
+      <dark_gray>» </dark_gray><gray>Weight: <main><weight></main>
+      <dark_gray>» </dark_gray><gray>Modifiers: <main><curve-length></main>
+      """, placeholders = {"modifiers", "key", "nodes", "weight"})
+  public static final Message CMD_NG_INFO = new Message("commands.node_group.info");
   @MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Node-Groups</offset> ------------</gradient>",
       placeholders = {"page", "next-page", "prev-page", "pages"})
   public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");

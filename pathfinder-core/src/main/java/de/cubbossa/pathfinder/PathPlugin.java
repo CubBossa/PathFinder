@@ -46,7 +46,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
   private File effectsFile;
   private final NodeTypeRegistry nodeTypeRegistry;
-  @Getter
   private final ModifierRegistry modifierRegistry;
   private Storage storage;
   @Setter
@@ -55,13 +54,15 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private final CommandRegistry commandRegistry;
   private final BStatsLoader bStatsLoader;
   private final ConfigFileLoader configFileLoader;
-  @Getter
   private EventDispatcher eventDispatcher;
 
   private NodeType<Waypoint> waypointNodeType;
 
   public PathPlugin() {
     instance = this;
+    PathFinderProvider.setPathFinder(this);
+
+    storage = new Storage(this);
 
     nodeTypeRegistry = new NodeTypeRegistry();
     modifierRegistry = new ModifierRegistry();
@@ -116,14 +117,13 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
       default -> null;
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
-    if (storage != null) {
-      storage.init();
+    storage.setImplementation(impl);
+    storage.init();
 
-      ExamplesHandler examples = ExamplesHandler.getInstance();
-      examples.afterFetch(() -> {
-        examples.getExamples().forEach(examples::loadVisualizer);
-      });
-    }
+    ExamplesHandler examples = ExamplesHandler.getInstance();
+    examples.afterFetch(() -> {
+      examples.getExamples().forEach(examples::loadVisualizer);
+    });
 
     setWaypointNodeType(new WaypointType(
         new WaypointStorage(storage),
