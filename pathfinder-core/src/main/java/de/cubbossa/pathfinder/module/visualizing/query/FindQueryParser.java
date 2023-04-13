@@ -2,6 +2,8 @@ package de.cubbossa.pathfinder.module.visualizing.query;
 
 import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTermHolder;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;

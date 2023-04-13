@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
@@ -9,24 +11,24 @@ import org.bukkit.NamespacedKey;
 
 public class NodeTypeRegistry {
 
-  private final HashedRegistry<NodeType<?>> types;
+  private final HashedRegistry<de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> types;
   @Getter
   @Setter
-  private NodeType<Waypoint> waypointNodeType;
+  private de.cubbossa.pathfinder.api.node.NodeType<Waypoint> waypointNodeType;
 
   public NodeTypeRegistry() {
     this.types = new HashedRegistry<>();
   }
 
-  public <N extends Node<N>> NodeType<N> getNodeType(NamespacedKey key) {
-    return (NodeType<N>) types.get(key);
+  public <N extends Node<N>> de.cubbossa.pathfinder.api.node.NodeType<N> getNodeType(NamespacedKey key) {
+    return types.get(key);
   }
 
   public Collection<NamespacedKey> getTypeKeys() {
     return types.keySet();
   }
 
-  public Collection<NodeType<?>> getTypes() {
+  public Collection<de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> getTypes() {
     return types.values();
   }
 
@@ -34,7 +36,7 @@ public class NodeTypeRegistry {
     this.types.put(type);
   }
 
-  public <N extends Node<N>> void unregister(NodeType<N> type) {
+  public <N extends Node<N>> void unregister(de.cubbossa.pathfinder.api.node.NodeType<N> type) {
     unregister(type.getKey());
   }
 

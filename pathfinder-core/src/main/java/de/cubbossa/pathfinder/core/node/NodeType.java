@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.node;
 
-import de.cubbossa.pathfinder.Named;
-import de.cubbossa.pathfinder.storage.NodeDataStorage;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -10,13 +10,13 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Setter
-public abstract class NodeType<N extends Node<N>> implements Keyed, Named, NodeDataStorage<N> {
+public abstract class NodeType<N extends Node<N>> implements
+    de.cubbossa.pathfinder.api.node.NodeType<N> {
 
   private final NamespacedKey key;
   private final ItemStack displayItem;

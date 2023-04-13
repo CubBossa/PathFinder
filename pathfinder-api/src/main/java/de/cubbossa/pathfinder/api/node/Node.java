@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.node;
+package de.cubbossa.pathfinder.api.node;
 
 import java.util.Collection;
 import java.util.UUID;

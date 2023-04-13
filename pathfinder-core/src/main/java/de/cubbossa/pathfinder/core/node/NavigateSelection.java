@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.HashSet;
 import lombok.Getter;

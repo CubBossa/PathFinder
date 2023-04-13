@@ -10,9 +10,9 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFI
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
-import de.cubbossa.pathfinder.Modifier;
+import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
@@ -22,10 +22,10 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.DiscoverInfo;
-import de.cubbossa.pathfinder.storage.NodeDataStorage;
-import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
+import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.Pagination;
@@ -215,8 +215,8 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
-    List<NodeType<N>> resultSet = create
+  public <N extends Node<N>> Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> loadNodeType(UUID node) {
+    List<de.cubbossa.pathfinder.api.node.NodeType<N>> resultSet = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
         .fetch(t -> nodeTypeRegistry.getNodeType(t.getNodeType()));
@@ -224,8 +224,8 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
-    Map<UUID, NodeType<?>> result = new HashMap<>();
+  public Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
+    Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> result = new HashMap<>();
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
         .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getNodeType(t.getNodeType())));
@@ -233,13 +233,13 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
+  public <N extends Node<N>> N createAndLoadNode(de.cubbossa.pathfinder.api.node.NodeType<N> type, Location location) {
     return type.createAndLoadNode(new NodeDataStorage.Context(location));
   }
 
   @Override
   public <N extends Node<N>> Optional<N> loadNode(UUID id) {
-    Optional<NodeType<N>> type = loadNodeType(id);
+    Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> type = loadNodeType(id);
     if (type.isPresent()) {
       return type.get().loadNode(id);
     }
@@ -271,7 +271,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void saveNodeType(UUID node, NodeType<?> type) {
+  public void saveNodeType(UUID node, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type) {
     create
         .insertInto(PATHFINDER_NODE_TYPE_RELATION)
         .values(node, type)
@@ -279,7 +279,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
+  public void saveNodeTypes(Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> typeMapping) {
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -292,7 +292,7 @@ public abstract class SqlStorage implements StorageImplementation {
   @Override
   public void deleteNodes(Collection<Node<?>> nodes) {
     Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-    Map<UUID, NodeType<?>> types = loadNodeTypes(ids);
+    Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> types = loadNodeTypes(ids);
     create
         .deleteFrom(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))

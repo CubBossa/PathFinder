@@ -9,7 +9,7 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.CompassVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CompassVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.ParticleVisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.function.BiFunction;

@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -29,7 +29,7 @@ import org.bukkit.entity.Player;
 
 public class WaypointCommand extends Command {
 
-  public WaypointCommand(PathFinder pathFinder, Supplier<NodeType<?>> fallbackWaypointType) {
+  public WaypointCommand(PathFinder pathFinder, Supplier<de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> fallbackWaypointType) {
     super(pathFinder, "waypoint");
     withAliases("node");
     withGeneratedHelp();
@@ -82,11 +82,11 @@ public class WaypointCommand extends Command {
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
-              createNode(player, (NodeType<? extends Node<?>>) objects[0], player.getLocation());
+              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0], player.getLocation());
             })
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
-                  createNode(player, (NodeType<? extends Node<?>>) objects[0],
+                  createNode(player, (de.cubbossa.pathfinder.api.node.NodeType<? extends Node<? extends Node<?>>>) objects[0],
                       (Location) objects[1]);
                 })
             )
@@ -247,7 +247,7 @@ public class WaypointCommand extends Command {
     }
   }
 
-  private void createNode(CommandSender sender, NodeType<?> type, Location location) {
+  private void createNode(CommandSender sender, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type, Location location) {
     getPathfinder().getStorage().createAndLoadNode(
         type,
         location

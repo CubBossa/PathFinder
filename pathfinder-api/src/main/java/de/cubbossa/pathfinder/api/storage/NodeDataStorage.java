@@ -1,6 +1,6 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.api.storage;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;

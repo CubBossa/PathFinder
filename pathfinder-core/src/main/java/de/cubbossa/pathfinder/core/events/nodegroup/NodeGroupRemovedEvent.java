@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.Collection;
 import java.util.Collections;

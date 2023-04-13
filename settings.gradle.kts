@@ -5,6 +5,7 @@ plugins {
 rootProject.name = "pathfinder"
 
 sequenceOf(
+    "api",
     "core",
     "graph",
     "editmode",

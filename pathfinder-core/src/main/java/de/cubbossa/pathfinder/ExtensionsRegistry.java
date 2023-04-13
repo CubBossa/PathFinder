@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.api.PathPluginExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;

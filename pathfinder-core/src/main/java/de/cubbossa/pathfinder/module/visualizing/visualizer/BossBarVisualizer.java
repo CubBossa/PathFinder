@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.List;
 import lombok.Getter;

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.events.EventDispatcher;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
@@ -13,7 +14,7 @@ import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.Storage;
-import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -21,7 +22,6 @@ import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.translations.TranslationHandler;
 import java.io.File;
 import lombok.Getter;
@@ -56,7 +56,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private final ConfigFileLoader configFileLoader;
   private EventDispatcher eventDispatcher;
 
-  private NodeType<Waypoint> waypointNodeType;
+  private de.cubbossa.pathfinder.api.node.NodeType<Waypoint> waypointNodeType;
 
   public PathPlugin() {
     instance = this;

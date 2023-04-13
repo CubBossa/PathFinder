@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class PlayerNode implements Node<PlayerNode> {
 
-  public static final NodeType<PlayerNode> TYPE = new NodeType<>(
+  public static final de.cubbossa.pathfinder.api.node.NodeType<PlayerNode> TYPE = new NodeType<>(
       new NamespacedKey(PathPlugin.getInstance(), "empty"),
       "empty",
       new ItemStack(Material.DIRT),
@@ -43,7 +43,7 @@ public class PlayerNode implements Node<PlayerNode> {
   }
 
   @Override
-  public NodeType<PlayerNode> getType() {
+  public de.cubbossa.pathfinder.api.node.NodeType<PlayerNode> getType() {
     return TYPE;
   }
 

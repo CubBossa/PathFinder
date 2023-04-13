@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.core.roadmap;
+package de.cubbossa.pathfinder.api.group;
 
 import java.util.UUID;
 import org.bukkit.Keyed;

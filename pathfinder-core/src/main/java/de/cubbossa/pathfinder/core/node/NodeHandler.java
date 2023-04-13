@@ -1,11 +1,12 @@
 package de.cubbossa.pathfinder.core.node;
 
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
-import de.cubbossa.pathfinder.core.roadmap.NoImplNodeGroupEditor;
-import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
-import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditorFactory;
+import de.cubbossa.pathfinder.core.nodegroup.NoImplNodeGroupEditor;
+import de.cubbossa.pathfinder.api.group.NodeGroupEditor;
+import de.cubbossa.pathfinder.api.group.NodeGroupEditorFactory;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolver;

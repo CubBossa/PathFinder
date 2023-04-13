@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;

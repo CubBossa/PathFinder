@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.events;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.Collection;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.storage.cache;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

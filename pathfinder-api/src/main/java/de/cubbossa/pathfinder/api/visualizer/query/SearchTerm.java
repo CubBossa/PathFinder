@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module.visualizing.query;
+package de.cubbossa.pathfinder.api.visualizer.query;
 
 import java.util.Collection;
 

@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.core.nodegroup.modifier;
 
-import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
 import java.util.ArrayList;
 import java.util.Arrays;

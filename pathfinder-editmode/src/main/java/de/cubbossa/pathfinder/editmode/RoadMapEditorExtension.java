@@ -5,7 +5,6 @@ import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.util.Version;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.bukkit.Bukkit;

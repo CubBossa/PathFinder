@@ -2,10 +2,10 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.VisualizerModifier;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

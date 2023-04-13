@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.CurveLengthModifier;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;

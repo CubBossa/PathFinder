@@ -2,8 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.util.Pagination;
 import java.util.Collection;

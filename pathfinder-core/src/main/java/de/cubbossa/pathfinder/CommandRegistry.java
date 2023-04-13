@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
 import de.cubbossa.pathfinder.core.commands.WaypointCommand;

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.commands;
 
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import dev.jorel.commandapi.CommandTree;
 

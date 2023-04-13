@@ -16,7 +16,7 @@ import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.NodeGroupEditor;
+import de.cubbossa.pathfinder.core.nodegroup.NodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;

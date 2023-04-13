@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.events.node;
 
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -20,7 +20,7 @@ public class NodeCreateEvent<N extends Node<N>> extends Event implements Cancell
   private Location location;
   private boolean cancelled;
 
-  public NodeCreateEvent(NodeType<N> type, Location location) {
+  public NodeCreateEvent(de.cubbossa.pathfinder.api.node.NodeType<N> type, Location location) {
     this.nodeType = type;
     this.location = location;
   }

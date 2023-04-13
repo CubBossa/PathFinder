@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.util.location;
 import de.cubbossa.pathfinder.PathPluginConfig.NearestLocationSolverConfig;
 import de.cubbossa.pathfinder.PathPluginConfig.RaycastLocationWeightSolverConfig;
 import de.cubbossa.pathfinder.PathPluginConfig.SimpleLocationWeightSolverConfig;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

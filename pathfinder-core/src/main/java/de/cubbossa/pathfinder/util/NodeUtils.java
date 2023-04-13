@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.splinelib.util.BezierVector;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

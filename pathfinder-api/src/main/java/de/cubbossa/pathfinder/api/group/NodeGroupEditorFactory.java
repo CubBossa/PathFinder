@@ -1,6 +1,5 @@
-package de.cubbossa.pathfinder.core.roadmap;
+package de.cubbossa.pathfinder.api.group;
 
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.function.Function;
 
 public interface NodeGroupEditorFactory extends Function<NodeGroup, NodeGroupEditor> {

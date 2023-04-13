@@ -1,13 +1,13 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.api.storage;
 
-import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.node.NodeType;
+import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.Pagination;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -24,13 +24,13 @@ public interface StorageImplementation {
   void shutdown();
 
   // Node Type
-  void saveNodeType(UUID node, NodeType<?> type);
-  void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping);
-  <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node);
-  Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
+  void saveNodeType(UUID node, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type);
+  void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping);
+  <N extends Node<N>> Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> loadNodeType(UUID node);
+  Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
-  <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location);
+  <N extends Node<N>> N createAndLoadNode(de.cubbossa.pathfinder.api.node.NodeType<N> type, Location location);
   <N extends Node<N>> Optional<N> loadNode(UUID id);
   Collection<Node<?>> loadNodes();
   Collection<Node<?>> loadNodes(Collection<UUID> ids);

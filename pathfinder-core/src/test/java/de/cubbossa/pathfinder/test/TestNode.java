@@ -1,18 +1,14 @@
 package de.cubbossa.pathfinder.test;
 
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.jetbrains.annotations.Nullable;
 
 @RequiredArgsConstructor
 @Getter
@@ -23,7 +19,7 @@ public class TestNode implements Node<TestNode> {
   private Location location;
 
   @Override
-  public NodeType<TestNode> getType() {
+  public NodeType<de.cubbossa.pathfinder.test.TestNode> getType() {
     return null;
   }
 

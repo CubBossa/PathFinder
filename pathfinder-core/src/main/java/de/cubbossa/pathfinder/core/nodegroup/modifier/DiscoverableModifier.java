@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.nodegroup.modifier;
 
-import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.Named;
+import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.Named;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;

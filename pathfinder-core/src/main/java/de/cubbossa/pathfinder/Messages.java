@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;

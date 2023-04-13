@@ -1,9 +1,10 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.api;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.NodeType;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,8 +1,8 @@
-package de.cubbossa.pathfinder.module.visualizing.visualizer;
+package de.cubbossa.pathfinder.api.visualizer;
 
-import de.cubbossa.pathfinder.Named;
+import de.cubbossa.pathfinder.api.Named;
 import de.cubbossa.pathfinder.PermissionHolder;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import java.util.List;
 import java.util.function.BiConsumer;

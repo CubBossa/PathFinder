@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;

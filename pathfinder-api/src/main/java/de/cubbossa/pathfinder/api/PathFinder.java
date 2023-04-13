@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.api;
 
 import de.cubbossa.pathfinder.core.events.EventDispatcher;
 import de.cubbossa.pathfinder.core.nodegroup.ModifierRegistry;
@@ -14,8 +14,5 @@ public interface PathFinder {
 
   EventDispatcher getEventDispatcher();
 
-  PathPluginConfig getConfiguration();
-
   ModifierRegistry getModifierRegistry();
-
 }

@@ -1,14 +1,14 @@
 //package de.cubbossa.pathfinder.storage.implementation;
 //
-//import de.cubbossa.pathfinder.Modifier;
+//import de.cubbossa.pathfinder.api.group.Modifier;
 //import de.cubbossa.pathfinder.core.node.Edge;
-//import de.cubbossa.pathfinder.core.node.Node;
+//import de.cubbossa.pathfinder.api.node.Node;
 //import de.cubbossa.pathfinder.core.node.NodeType;
 //import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 //import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 //import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 //import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-//import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+//import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 //import de.cubbossa.pathfinder.storage.DataStorageException;
 //import de.cubbossa.pathfinder.storage.DiscoverInfo;
 //import de.cubbossa.pathfinder.storage.Storage;

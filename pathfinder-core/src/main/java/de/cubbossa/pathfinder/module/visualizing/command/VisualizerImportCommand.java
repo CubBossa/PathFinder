@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.commands.CustomLiteralArgument;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.nodegroup.modifier;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
-import de.cubbossa.pathfinder.core.nodegroup.ModifierType;
+import de.cubbossa.pathfinder.api.group.ModifierType;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;

@@ -1,5 +1,6 @@
-package de.cubbossa.pathfinder.core.roadmap;
+package de.cubbossa.pathfinder.core.nodegroup;
 
+import de.cubbossa.pathfinder.api.group.NodeGroupEditor;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

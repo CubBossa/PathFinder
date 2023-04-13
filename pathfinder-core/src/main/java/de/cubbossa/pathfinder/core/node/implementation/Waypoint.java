@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.ArrayList;
 import java.util.Collection;

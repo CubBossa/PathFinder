@@ -7,11 +7,10 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
@@ -19,7 +18,7 @@ import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.query.FindQueryParser;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.StorageAssistant;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.Pagination;
@@ -278,7 +277,7 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node type argument instance
    */
-  public <T extends Node<T>> Argument<NodeType<T>> nodeTypeArgument(String nodeName) {
+  public <T extends Node<T>> Argument<de.cubbossa.pathfinder.api.node.NodeType<T>> nodeTypeArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       NodeType<T> type =
           PathPlugin.getInstance().getNodeTypeRegistry()

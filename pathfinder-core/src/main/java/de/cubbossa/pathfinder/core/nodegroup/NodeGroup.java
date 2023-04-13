@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.core.nodegroup;
 
-import de.cubbossa.pathfinder.Modified;
-import de.cubbossa.pathfinder.Modifier;
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.group.Modified;
+import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

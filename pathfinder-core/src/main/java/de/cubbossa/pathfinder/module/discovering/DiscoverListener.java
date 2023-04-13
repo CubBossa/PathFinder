@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.discovering;
 
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;

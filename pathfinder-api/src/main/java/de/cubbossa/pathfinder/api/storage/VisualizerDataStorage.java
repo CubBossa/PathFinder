@@ -1,7 +1,6 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.api.storage;
 
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import java.util.Map;
 import java.util.Optional;
 import org.bukkit.NamespacedKey;

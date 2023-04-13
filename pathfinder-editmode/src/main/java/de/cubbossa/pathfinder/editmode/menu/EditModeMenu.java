@@ -18,7 +18,6 @@ import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.Collection;
@@ -43,11 +42,11 @@ public class EditModeMenu {
   private final PathFinder pathFinder;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
-  private final Collection<NodeType<?>> types;
+  private final Collection<NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types;
   private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<NodeType<?>> types) {
+  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types) {
     this.pathFinder = pathFinder;
     this.key = group;
     this.types = types;
@@ -73,7 +72,8 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-            NodeType<?> type = types.stream().findAny().orElse(null);
+            NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>
+                type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }

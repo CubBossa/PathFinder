@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.util.selection;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.List;
 import lombok.Getter;

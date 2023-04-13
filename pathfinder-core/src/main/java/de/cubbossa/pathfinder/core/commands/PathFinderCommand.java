@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.PathPluginExtension;
+import de.cubbossa.pathfinder.api.PathPluginExtension;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;

@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.api.group;
 
 public interface Modified {
 
