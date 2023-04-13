@@ -11,18 +11,18 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDE
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
 import de.cubbossa.pathfinder.api.storage.StorageImplementation;
@@ -82,30 +82,30 @@ public abstract class SqlStorage implements StorageImplementation {
   // |  Edge Table                             |
   // +-----------------------------------------+
 
-  private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
+  private final RecordMapper<? super PathfinderEdgesRecord, SimpleEdge> edgeMapper =
       record -> {
         UUID startId = record.getStartId();
         UUID endId = record.getEndId();
         double weight = record.getWeight();
 
-        return new Edge(startId, endId, (float) weight);
+        return new SimpleEdge(startId, endId, (float) weight);
       };
 
   // +-----------------------------------------+
   // |  Nodegroup Table                        |
   // +-----------------------------------------+
 
-  private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
+  private final RecordMapper<? super PathfinderNodegroupsRecord, SimpleNodeGroup> groupMapper =
       record -> {
         NamespacedKey key = record.getKey();
-        NodeGroup group = new NodeGroup(key);
+        SimpleNodeGroup group = new SimpleNodeGroup(key);
         group.setWeight(record.getWeight());
         return group;
       };
 
   //
 
-  private <T extends PathVisualizer<T, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(VisualizerType<T> type) {
+  private <T extends PathVisualizer<T, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> type) {
     return record -> {
         // create visualizer object
         T visualizer = type.create(record.getKey(),
@@ -266,7 +266,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   private <N extends Node<N>> void saveNodeTyped(Node<?> node) {
-    NodeType<N> type = (NodeType<N>) node.getType();
+    AbstractNodeType<N> type = (AbstractNodeType<N>) node.getType();
     type.saveNode((N) node);
   }
 
@@ -312,29 +312,29 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
+  public SimpleEdge createAndLoadEdge(UUID start, UUID end, double weight) {
     create.insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)
         .execute();
-    return new Edge(start, end, (float) weight);
+    return new SimpleEdge(start, end, (float) weight);
   }
 
   @Override
-  public Collection<Edge> loadEdgesFrom(UUID start) {
+  public Collection<SimpleEdge> loadEdgesFrom(UUID start) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .fetch(edgeMapper);
   }
 
   @Override
-  public Collection<Edge> loadEdgesTo(UUID end) {
+  public Collection<SimpleEdge> loadEdgesTo(UUID end) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .fetch(edgeMapper);
   }
 
   @Override
-  public Optional<Edge> loadEdge(UUID start, UUID end) {
+  public Optional<SimpleEdge> loadEdge(UUID start, UUID end) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .and(PATHFINDER_EDGES.START_ID.eq(start))
@@ -342,7 +342,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void saveEdge(Edge edge) {
+  public void saveEdge(SimpleEdge edge) {
     create.update(PATHFINDER_EDGES)
         .set(PATHFINDER_EDGES.WEIGHT, (double) edge.getWeightModifier())
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
@@ -351,14 +351,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void deleteEdge(Edge edge) {
+  public void deleteEdge(SimpleEdge edge) {
     create.deleteFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
   }
 
-  private void deleteNode(Node node, NodeType type) {
+  private void deleteNode(Node node, AbstractNodeType type) {
     type.deleteNode(node);
   }
 
@@ -426,23 +426,23 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public NodeGroup createAndLoadGroup(NamespacedKey key) {
+  public SimpleNodeGroup createAndLoadGroup(NamespacedKey key) {
     create
         .insertInto(PATHFINDER_NODEGROUPS)
         .values(key, 1)
         .execute();
-    return new NodeGroup(key);
+    return new SimpleNodeGroup(key);
   }
 
   @Override
-  public Optional<NodeGroup> loadGroup(NamespacedKey key) {
+  public Optional<SimpleNodeGroup> loadGroup(NamespacedKey key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .fetch(groupMapper).stream().findAny();
   }
 
   @Override
-  public Collection<UUID> loadGroupNodes(NodeGroup group) {
+  public Collection<UUID> loadGroupNodes(SimpleNodeGroup group) {
     return create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
         .from(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
@@ -450,14 +450,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
+  public Collection<SimpleNodeGroup> loadGroups(Collection<NamespacedKey> key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);
   }
 
   @Override
-  public List<NodeGroup> loadGroups(Pagination pagination) {
+  public List<SimpleNodeGroup> loadGroups(Pagination pagination) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .offset(pagination.getOffset())
         .limit(pagination.getLimit())
@@ -465,13 +465,13 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(UUID node) {
+  public Collection<SimpleNodeGroup> loadGroups(UUID node) {
     return create.select().from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_NODEGROUP_NODES)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.eq(node))
         .fetch(record -> {
-          NodeGroup group = new NodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
+          SimpleNodeGroup group = new SimpleNodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
           group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT));
           group.addAll(loadGroupNodes(group));
           return group;
@@ -489,7 +489,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
+  public <M extends Modifier> Collection<SimpleNodeGroup> loadGroups(Class<M> modifier) {
     return create
         .select()
         .from(PATHFINDER_NODEGROUPS)
@@ -497,7 +497,7 @@ public abstract class SqlStorage implements StorageImplementation {
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY))
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))
         .fetch(r -> {
-          NodeGroup group = new NodeGroup(
+          SimpleNodeGroup group = new SimpleNodeGroup(
               r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
           );
           group.addAll(loadGroupNodes(group));
@@ -507,8 +507,8 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<NodeGroup> loadAllGroups() {
-    Map<NamespacedKey, NodeGroup> groups = new HashMap<>();
+  public Collection<SimpleNodeGroup> loadAllGroups() {
+    Map<NamespacedKey, SimpleNodeGroup> groups = new HashMap<>();
 
     create.selectFrom(PATHFINDER_NODEGROUPS)
         .fetch(groupMapper).forEach(group -> groups.put(group.getKey(), group));
@@ -518,7 +518,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void saveGroup(NodeGroup group) {
+  public void saveGroup(SimpleNodeGroup group) {
     create
         .update(PATHFINDER_NODEGROUPS)
         .set(PATHFINDER_NODEGROUPS.WEIGHT, group.getWeight())
@@ -527,7 +527,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void deleteGroup(NodeGroup group) {
+  public void deleteGroup(SimpleNodeGroup group) {
     create
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
@@ -590,25 +590,25 @@ public abstract class SqlStorage implements StorageImplementation {
 
   // ###############################################################################################
 
-  public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
+  public CompletableFuture<SimpleEdge> connectNodes(UUID start, UUID end, double weight) {
     create
         .insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)
         .execute();
-    return CompletableFuture.completedFuture(new Edge(start, end, (float) weight));
+    return CompletableFuture.completedFuture(new SimpleEdge(start, end, (float) weight));
   }
 
-  public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
-    CompletableFuture<Collection<Edge>> future = new CompletableFuture<>();
+  public CompletableFuture<Collection<SimpleEdge>> connectNodes(NodeSelection start, NodeSelection end) {
+    CompletableFuture<Collection<SimpleEdge>> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      Collection<Edge> edges = new HashSet<>();
+      Collection<SimpleEdge> edges = new HashSet<>();
       for (Node<?> startNode : start) {
         for (Node<?> endNode : end) {
           DSL.using(configuration)
               .insertInto(PATHFINDER_EDGES)
               .values(startNode.getNodeId(), endNode.getNodeId(), 1)
               .execute();
-          edges.add(new Edge(startNode.getNodeId(), endNode.getNodeId(), 1));
+          edges.add(new SimpleEdge(startNode.getNodeId(), endNode.getNodeId(), 1));
         }
       }
       future.complete(edges);
@@ -650,24 +650,24 @@ public abstract class SqlStorage implements StorageImplementation {
     return CompletableFuture.completedFuture(null);
   }
 
-  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
-    Collection<Edge> edges = create
+  public CompletableFuture<Collection<SimpleEdge>> getConnections(UUID start) {
+    Collection<SimpleEdge> edges = create
         .selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .fetch(edgeMapper);
     return CompletableFuture.completedFuture(edges);
   }
 
-  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
-    Collection<Edge> edges = create
+  public CompletableFuture<Collection<SimpleEdge>> getConnectionsTo(UUID end) {
+    Collection<SimpleEdge> edges = create
         .selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .fetch(edgeMapper);
     return CompletableFuture.completedFuture(edges);
   }
 
-  public CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection end) {
-    Collection<Edge> edges = create
+  public CompletableFuture<Collection<SimpleEdge>> getConnectionsTo(NodeSelection end) {
+    Collection<SimpleEdge> edges = create
         .selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.in(end))
         .fetch(edgeMapper);
@@ -693,7 +693,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+  public <T extends PathVisualizer<T, ?>> Optional<T> loadVisualizer(de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> type, NamespacedKey key) {
     return create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(key))
@@ -702,7 +702,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type) {
+  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadVisualizers(de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
@@ -714,7 +714,7 @@ public abstract class SqlStorage implements StorageImplementation {
 
 
   private <T extends PathVisualizer<T, ?>> Map<String, Object> serialize(PathVisualizer<?, ?> pathVisualizer) {
-    VisualizerType<T> type = ((T) pathVisualizer).getType();
+    de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> type = ((T) pathVisualizer).getType();
     return type.serialize((T) pathVisualizer);
   }
 

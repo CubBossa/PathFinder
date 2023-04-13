@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.Storage;
 import de.cubbossa.pathfinder.api.storage.VisualizerDataStorage;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.NamespacedKey;
 
 @RequiredArgsConstructor
 public class InternalVisualizerDataStorage<T extends PathVisualizer<T, ?>>

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -562,7 +562,7 @@ public class Messages {
         node -> Component.text("#" + node));
   }
 
-  public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
+  public static Component formatNodeGroups(CommandSender sender, Collection<SimpleNodeGroup> groups) {
     return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
   }
 

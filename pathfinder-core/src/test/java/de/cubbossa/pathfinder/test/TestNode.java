@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.test;
 
 import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class TestNode implements Node<TestNode> {
   }
 
   @Override
-  public Collection<Edge> getEdges() {
+  public Collection<SimpleEdge> getEdges() {
     return null;
   }
 }

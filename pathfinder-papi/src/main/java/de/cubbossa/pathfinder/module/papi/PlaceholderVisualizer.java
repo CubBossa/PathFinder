@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.EdgeBasedVisualizer;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
@@ -13,6 +13,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.w3c.dom.Node;
 
 @Getter
 @Setter
@@ -113,7 +114,7 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public VisualizerType<PlaceholderVisualizer> getType() {
+  public VisualizerTypex<de.cubbossa.pathfinder.module.papi.PlaceholderVisualizer> getType() {
     return PlaceholderHook.PLACEHOLDER_VISUALIZER_TYPE;
   }
 

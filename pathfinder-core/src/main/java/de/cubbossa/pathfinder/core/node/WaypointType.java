@@ -7,7 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
-public class WaypointType extends NodeType<Waypoint> {
+public class WaypointType extends AbstractNodeType<Waypoint> {
 
   public WaypointType(NodeDataStorage<Waypoint> storage, MiniMessage miniMessage) {
     super(

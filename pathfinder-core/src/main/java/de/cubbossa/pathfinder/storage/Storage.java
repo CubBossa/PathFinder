@@ -10,8 +10,8 @@ import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
 import de.cubbossa.pathfinder.storage.cache.EdgeCache;
 import de.cubbossa.pathfinder.storage.cache.GroupCache;
@@ -396,7 +396,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
     return asyncFuture(() -> visualizerCache.getVisualizers(() -> {
       Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
-      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+      for (de.cubbossa.pathfinder.module.visualizing.VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
       }
       return visualizers;
@@ -414,7 +414,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public <T extends PathVisualizer<T, D>, D> CompletableFuture<Optional<T>> loadVisualizer(
       NamespacedKey key) {
     return asyncFuture(() -> visualizerCache.getVisualizer(key, k -> {
-      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+      for (VisualizerType<? extends PathVisualizer<?,?>> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         Optional<PathVisualizer<?, ?>> opt = (Optional<PathVisualizer<?, ?>>) type.getStorage().loadVisualizer(key);
         if (opt.isPresent()) return (T) opt.get();
       }

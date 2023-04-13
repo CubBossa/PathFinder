@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.nodegroup.NoImplNodeGroupEditor;
@@ -34,7 +35,7 @@ public class NodeHandler {
 
   private final NodeGroupEditorFactory editModeFactory;
   @Getter
-  private final HashedRegistry<NodeGroupEditor> editors;
+  private final KeyedRegistry<NodeGroupEditor> editors;
 
   public NodeHandler(PathFinder pathFinder) {
     instance = this;
@@ -57,7 +58,7 @@ public class NodeHandler {
       Graph<Node<?>> graph = new Graph<>();
       nodes.forEach(graph::addNode);
       for (Node<?> node : nodes) {
-        for (Edge e : node.getEdges()) {
+        for (SimpleEdge e : node.getEdges()) {
           Node<?> end = map.get(e.getEnd());
           graph.connect(node, end,
               node.getLocation().distance(end.getLocation()) * e.getWeightModifier());

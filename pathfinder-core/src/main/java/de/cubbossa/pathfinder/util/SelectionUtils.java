@@ -8,7 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
@@ -108,15 +108,15 @@ public class SelectionUtils {
           })
           .suggestStrings(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
 
-  public static final NodeSelectionParser.Argument<Collection<NodeGroup>> GROUP =
+  public static final NodeSelectionParser.Argument<Collection<SimpleNodeGroup>> GROUP =
       new NodeSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
-        Collection<NodeGroup> groups = new HashSet<>();
+        Collection<SimpleNodeGroup> groups = new HashSet<>();
         NamespacedKey key = NamespacedKey.fromString(in);
         if (key == null) {
           throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
         }
-        Optional<NodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
+        Optional<SimpleNodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
         groups.add(group.orElseThrow(() -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
         return groups;
       })
@@ -126,7 +126,7 @@ public class SelectionUtils {
                   .containsAll(c.getValue()))
               .collect(Collectors.toList()))
           .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
-              .map(NodeGroup::getKey)
+              .map(SimpleNodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
 

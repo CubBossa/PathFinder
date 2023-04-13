@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;

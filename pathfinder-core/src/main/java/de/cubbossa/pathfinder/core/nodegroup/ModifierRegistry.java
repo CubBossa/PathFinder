@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ModifierRegistry implements de.cubbossa.pathfinder.api.ModifierRegistry {
+public class ModifierRegistry implements de.cubbossa.pathfinder.api.group.ModifierRegistry {
 
   private final Map<Class<? extends Modifier>, ModifierType<?>> modifiers;
 

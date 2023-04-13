@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
@@ -17,7 +17,7 @@ public class DiscoverListener implements Listener {
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
-      for (NodeGroup group : nodeGroups) {
+      for (SimpleNodeGroup group : nodeGroups) {
         if (!DiscoverHandler.getInstance().fulfillsDiscoveringRequirements(group, event.getPlayer())) {
           continue;
         }

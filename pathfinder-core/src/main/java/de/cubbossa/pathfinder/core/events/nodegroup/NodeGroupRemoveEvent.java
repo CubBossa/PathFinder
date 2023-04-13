@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.core.events.nodegroup;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,16 +20,16 @@ public class NodeGroupRemoveEvent extends Event implements Cancellable {
   private static final HandlerList handlers = new HandlerList();
 
   private final Collection<Groupable<?>> groupables;
-  private final Collection<NodeGroup> groups;
+  private final Collection<SimpleNodeGroup> groups;
   private Collection<Groupable<?>> modifiedGroupables;
-  private Collection<NodeGroup> modifiedGroups;
+  private Collection<SimpleNodeGroup> modifiedGroups;
   private boolean cancelled;
 
-  public NodeGroupRemoveEvent(Groupable<?> groupables, NodeGroup groups) {
+  public NodeGroupRemoveEvent(Groupable<?> groupables, SimpleNodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupRemoveEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupRemoveEvent(Collection<Groupable<?>> groupables, Collection<SimpleNodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
     this.modifiedGroupables = new ArrayList<>(groupables);

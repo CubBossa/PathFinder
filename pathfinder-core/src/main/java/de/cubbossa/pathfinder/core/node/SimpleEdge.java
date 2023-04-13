@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,7 +13,7 @@ import org.bukkit.Location;
 
 @Getter
 @Setter
-public class Edge {
+public class SimpleEdge {
 
   private final PathFinder pathFinder;
 
@@ -23,14 +23,14 @@ public class Edge {
 
   private Location center;
 
-  public Edge(UUID start, UUID end, float weightModifier) {
+  public SimpleEdge(UUID start, UUID end, float weightModifier) {
     this.pathFinder = PathFinderProvider.get();
     this.start = start;
     this.end = end;
     this.weightModifier = weightModifier;
   }
 
-  public Edge(Node<?> start, Node<?> end, float weightModifier) {
+  public SimpleEdge(Node<?> start, Node<?> end, float weightModifier) {
     this(start.getNodeId(), end.getNodeId(), weightModifier);
   }
 
@@ -47,7 +47,7 @@ public class Edge {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof Edge edge)) {
+    if (!(o instanceof SimpleEdge edge)) {
       return false;
     }
 

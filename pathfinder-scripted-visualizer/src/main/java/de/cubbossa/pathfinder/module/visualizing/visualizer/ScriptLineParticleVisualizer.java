@@ -1,11 +1,12 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+
+import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
@@ -100,7 +101,7 @@ public class ScriptLineParticleVisualizer
   }
 
   @Override
-  public VisualizerType<ScriptLineParticleVisualizer> getType() {
+  public VisualizerTypex<de.cubbossa.pathfinder.module.visualizing.visualizer.ScriptLineParticleVisualizer> getType() {
     return ScriptedVisualizerPathfinderExtension.ADV_PARTICLE_VISUALIZER_TYPE;
   }
 }

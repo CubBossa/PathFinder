@@ -2,7 +2,8 @@ package de.cubbossa.pathfinder.api.node;
 
 import java.util.Collection;
 import java.util.UUID;
-import org.bukkit.Location;
+
+import de.cubbossa.pathfinder.api.misc.WorldLocation;
 import org.jetbrains.annotations.NotNull;
 
 public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
@@ -11,9 +12,9 @@ public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
 
   NodeType<N> getType();
 
-  Location getLocation();
+  WorldLocation getLocation();
 
-  void setLocation(Location location);
+  void setLocation(WorldLocation location);
 
   Collection<Edge> getEdges();
 

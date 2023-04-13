@@ -7,16 +7,16 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.query.FindQueryParser;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.StorageAssistant;
@@ -326,14 +326,14 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node group argument instance
    */
-  public CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>> nodeGroupArgument(
+  public CommandArgument<SimpleNodeGroup, CustomArgument<SimpleNodeGroup, NamespacedKey>> nodeGroupArgument(
       String nodeName) {
-    return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
+    return (CommandArgument<SimpleNodeGroup, CustomArgument<SimpleNodeGroup, NamespacedKey>>) arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
         return PathFinderProvider.get().getStorage().loadGroup(info.currentInput()).join().orElseThrow();
         })
     ).replaceSuggestions(suggestNamespacedKeys(
         sender -> PathPlugin.getInstance().getStorage().loadAllGroups().thenApply(nodeGroups ->
-            nodeGroups.stream().map(NodeGroup::getKey).toList())
+            nodeGroups.stream().map(SimpleNodeGroup::getKey).toList())
     ));
   }
 
@@ -349,7 +349,7 @@ public class CustomArgs {
         suggestNamespacedKeys(sender -> PathPlugin.getInstance().getStorage().loadAllGroups()
             .thenApply(nodeGroups -> nodeGroups.stream()
                 .filter(g -> g.hasModifier(DiscoverableModifier.class))
-                .map(NodeGroup::getKey)
+                .map(SimpleNodeGroup::getKey)
                 .collect(Collectors.toList())))));
   }
 
@@ -436,10 +436,10 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a visualizer type argument instance
    */
-  public Argument<? extends VisualizerType<?>> visualizerTypeArgument(String nodeName) {
+  public Argument<? extends VisualizerType<? extends PathVisualizer<?,?>>> visualizerTypeArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
-      VisualizerType<?> type =
+      VisualizerType<? extends PathVisualizer<?,?>> type =
           VisualizerHandler.getInstance().getVisualizerType(customArgumentInfo.currentInput());
       if (type == null) {
         throw new CustomArgument.CustomArgumentException(

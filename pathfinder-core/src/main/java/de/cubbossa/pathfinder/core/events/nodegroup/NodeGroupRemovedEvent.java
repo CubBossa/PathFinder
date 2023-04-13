@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.core.events.nodegroup;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -18,13 +18,13 @@ public class NodeGroupRemovedEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
 
   private final Collection<Groupable<?>> groupables;
-  private final Collection<NodeGroup> groups;
+  private final Collection<SimpleNodeGroup> groups;
 
-  public NodeGroupRemovedEvent(Groupable<?> groupables, NodeGroup groups) {
+  public NodeGroupRemovedEvent(Groupable<?> groupables, SimpleNodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupRemovedEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupRemovedEvent(Collection<Groupable<?>> groupables, Collection<SimpleNodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
   }

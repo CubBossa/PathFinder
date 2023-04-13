@@ -2,13 +2,14 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import org.bukkit.NamespacedKey;
 
 public class VisualizerCache {

@@ -4,10 +4,10 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.translations.FormattedMessage;
@@ -145,7 +145,7 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      addGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+                      addGroup(player, (NodeSelection) objects[0], (SimpleNodeGroup) objects[1]);
                     })
                 )
             )
@@ -153,7 +153,7 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      removeGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+                      removeGroup(player, (NodeSelection) objects[0], (SimpleNodeGroup) objects[1]);
                     })
                 )
             )
@@ -167,7 +167,7 @@ public class WaypointCommand extends Command {
     );
   }
 
-  private void addGroup(CommandSender sender, NodeSelection nodes, NodeGroup group) {
+  private void addGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
     for (Node<?> node : nodes) {
       if (!(node instanceof Groupable<?> groupable)) {
         continue;
@@ -183,7 +183,7 @@ public class WaypointCommand extends Command {
     }
   }
 
-  private void removeGroup(CommandSender sender, NodeSelection nodes, NodeGroup group) {
+  private void removeGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
     for (Node<?> node : nodes) {
       if (!(node instanceof Groupable<?> groupable)) {
         continue;
@@ -224,7 +224,7 @@ public class WaypointCommand extends Command {
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
     for (Node<?> s : start) {
       for (Node<?> e : end) {
-        Optional<Edge> edge = s.getEdges().stream()
+        Optional<SimpleEdge> edge = s.getEdges().stream()
             .filter(edge1 -> edge1.getEnd().equals(e.getNodeId()))
             .findAny();
         edge.ifPresent(edge1 -> s.getEdges().remove(edge1));
@@ -241,7 +241,7 @@ public class WaypointCommand extends Command {
         if (s.hasEdgeTo(e)) {
           continue;
         }
-        s.getEdges().add(new Edge(s, e, 1));
+        s.getEdges().add(new SimpleEdge(s, e, 1));
         getPathfinder().getStorage().saveNode(s);
       }
     }
@@ -291,7 +291,7 @@ public class WaypointCommand extends Command {
     }
     Node<?> node = selection.get(0);
 
-    Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
+    Collection<UUID> neighbours = node.getEdges().stream().map(SimpleEdge::getEnd).toList();
     Collection<Node<?>> resolvedNeighbours =
         getPathfinder().getStorage().loadNodes(neighbours).join();
 
@@ -332,7 +332,7 @@ public class WaypointCommand extends Command {
         10,
         new ArrayList<>(selection),
         n -> {
-          Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
+          Collection<UUID> neighbours = n.getEdges().stream().map(SimpleEdge::getEnd).toList();
           Collection<Node<?>> resolvedNeighbours =
               getPathfinder().getStorage().loadNodes(neighbours).join();
 

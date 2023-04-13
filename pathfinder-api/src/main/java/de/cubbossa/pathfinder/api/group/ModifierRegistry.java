@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.api;
+package de.cubbossa.pathfinder.api.group;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.ModifierType;

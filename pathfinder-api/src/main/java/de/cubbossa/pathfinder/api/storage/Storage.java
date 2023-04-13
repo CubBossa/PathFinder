@@ -18,8 +18,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 
 public interface Storage {
   void init() throws Exception;

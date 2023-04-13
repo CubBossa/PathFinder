@@ -3,18 +3,20 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
 public class CombinedVisualizer
-    extends Visualizer<CombinedVisualizer, CombinedVisualizer.CombinedData> {
+		implements PathVisualizer<CombinedVisualizer, CombinedVisualizer.CombinedData> {
 
   private final List<NamespacedKey> visualizerKeys;
   private final List<PathVisualizer<?, ?>> visualizers;

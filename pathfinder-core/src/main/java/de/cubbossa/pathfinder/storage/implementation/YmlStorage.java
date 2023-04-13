@@ -4,7 +4,7 @@
 //import de.cubbossa.pathfinder.core.node.Edge;
 //import de.cubbossa.pathfinder.api.node.Node;
 //import de.cubbossa.pathfinder.core.node.NodeType;
-//import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
+//import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
 //import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 //import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 //import de.cubbossa.pathfinder.module.visualizing.VisualizerType;

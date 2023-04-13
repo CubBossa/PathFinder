@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class PlaceholderHook extends PlaceholderExpansion {
 
-  public static final VisualizerType<PlaceholderVisualizer> PLACEHOLDER_VISUALIZER_TYPE =
+  public static final VisualizerTypex<de.cubbossa.pathfinder.module.papi.PlaceholderVisualizer> PLACEHOLDER_VISUALIZER_TYPE =
       new VisualizerType<>(
           new NamespacedKey(PathPlugin.getInstance(), "placeholderapi")
       ) {

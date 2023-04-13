@@ -7,8 +7,8 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.Pagination;
 import de.cubbossa.translations.FormattedMessage;
@@ -52,7 +52,7 @@ public class PathVisualizerCommand extends Command {
         .then(CustomArgs.visualizerTypeArgument("type")
             .then(new StringArgument("key")
                 .executes((commandSender, objects) -> {
-                  onCreate(commandSender, (VisualizerType<?>) objects[0],
+                  onCreate(commandSender, (VisualizerType<? extends PathVisualizer<?,?>>) objects[0],
                       new NamespacedKey(PathPlugin.getInstance(), (String) objects[1]));
                 }))));
 
@@ -79,7 +79,7 @@ public class PathVisualizerCommand extends Command {
   public void register() {
 
     Argument<String> lit = CustomArgs.literal("edit");
-    for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+    for (VisualizerType<? extends PathVisualizer<?,?>> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
 
       ArgumentTree typeArg = CustomArgs.pathVisualizerArgument("visualizer", type);
       type.appendEditCommand(typeArg, 0, 1);
@@ -145,7 +145,7 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public void onCreate(CommandSender sender, VisualizerType<?> type, NamespacedKey key) {
+  public void onCreate(CommandSender sender, VisualizerType<? extends PathVisualizer<?,?>> type, NamespacedKey key) {
 
     Optional<?> opt = getPathfinder().getStorage().loadVisualizer(key).join();
     if (opt.isPresent()) {

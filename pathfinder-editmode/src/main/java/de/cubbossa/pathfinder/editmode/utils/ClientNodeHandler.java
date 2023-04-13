@@ -20,7 +20,7 @@ import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.util.IntPair;
@@ -55,8 +55,8 @@ public class ClientNodeHandler {
 
   public static final Action<TargetContext<UUID>> RIGHT_CLICK_NODE = new Action<>();
   public static final Action<TargetContext<UUID>> LEFT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
+  public static final Action<TargetContext<SimpleEdge>> RIGHT_CLICK_EDGE = new Action<>();
+  public static final Action<TargetContext<SimpleEdge>> LEFT_CLICK_EDGE = new Action<>();
 
   private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
@@ -75,11 +75,11 @@ public class ClientNodeHandler {
   private static int entityId = 10_000;
   private final ProtocolManager protocolManager;
   private final Map<IntPair, Collection<Node<?>>> chunkNodeMap;
-  private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
+  private final Map<IntPair, Collection<SimpleEdge>> chunkEdgeMap;
   private final Map<UUID, Integer> nodeEntityMap;
   private final Map<Integer, UUID> entityNodeMap;
-  private final Map<Edge, Integer> edgeEntityMap;
-  private final Map<Integer, Edge> entityEdgeMap;
+  private final Map<SimpleEdge, Integer> edgeEntityMap;
+  private final Map<Integer, SimpleEdge> entityEdgeMap;
   private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
   private ItemStack nodeGroupHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_BLUE);
   private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
@@ -112,7 +112,7 @@ public class ClientNodeHandler {
         if (nodes != null) {
           showNodes(nodes, event.getPlayer());
         }
-        Collection<Edge> edges = chunkEdgeMap.get(key);
+        Collection<SimpleEdge> edges = chunkEdgeMap.get(key);
         if (edges != null) {
           showEdges(edges, event.getPlayer());
         }
@@ -146,7 +146,7 @@ public class ClientNodeHandler {
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
         }
         if (entityEdgeMap.containsKey(entityId)) {
-          Edge edge = entityEdgeMap.get(entityId);
+          SimpleEdge edge = entityEdgeMap.get(entityId);
           if (edge == null) {
             throw new IllegalStateException("ClientNodeHandler Tables off sync!");
           }
@@ -154,7 +154,7 @@ public class ClientNodeHandler {
           Player player = event.getPlayer();
           int slot = player.getInventory().getHeldItemSlot();
           Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
-          Action<TargetContext<Edge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
+          Action<TargetContext<SimpleEdge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, edge));
         }
       }
@@ -187,10 +187,10 @@ public class ClientNodeHandler {
                 nodeSingleHead});
   }
 
-  public void showEdges(Collection<Edge> edges, Player player) {
-    Map<Edge, Edge> undirected = new HashMap<>();
-    for (Edge edge : edges) {
-      Edge contained = undirected.keySet().stream()
+  public void showEdges(Collection<SimpleEdge> edges, Player player) {
+    Map<SimpleEdge, SimpleEdge> undirected = new HashMap<>();
+    for (SimpleEdge edge : edges) {
+      SimpleEdge contained = undirected.keySet().stream()
           .filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart()))
           .findFirst().orElse(null);
       if (contained != null) {
@@ -204,7 +204,7 @@ public class ClientNodeHandler {
     }
   }
 
-  public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
+  public void showEdge(SimpleEdge edge, @Nullable SimpleEdge otherDirection, Player player) {
     Node<?> start = edge.resolveStart().join();
     Node<?> end = edge.resolveEnd().join();
 
@@ -236,7 +236,7 @@ public class ClientNodeHandler {
     nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(node.getLocation())));
   }
 
-  public void hideEdges(Collection<Edge> edges, Player player) {
+  public void hideEdges(Collection<SimpleEdge> edges, Player player) {
     removeArmorstand(player,
         edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
     edges.forEach(edgeEntityMap::remove);
@@ -255,16 +255,16 @@ public class ClientNodeHandler {
     teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()),
         location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
-      for (Edge edge : node.getEdges()) {
+      for (SimpleEdge edge : node.getEdges()) {
         updateEdgePosition(edge, player);
       }
-      for (Edge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
+      for (SimpleEdge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
         updateEdgePosition(edge, player);
       }
     }
   }
 
-  private void updateEdgePosition(Edge edge, Player player) {
+  private void updateEdgePosition(SimpleEdge edge, Player player) {
     Node<?> start = edge.resolveStart().join();
     Node<?> end = edge.resolveEnd().join();
 

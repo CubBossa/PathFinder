@@ -12,10 +12,10 @@ import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.NodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
@@ -62,14 +62,14 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
   private final Collection<Integer> editModeTasks;
 
   private final Map<UUID, Node<?>> nodes = new HashMap<>();
-  private final Collection<Edge> edges = new HashSet<>();
+  private final Collection<SimpleEdge> edges = new HashSet<>();
 
   private float particleDistance = .3f;
   private int tickDelay = 5;
   private Color colorFrom = new Color(255, 0, 0);
   private Color colorTo = new Color(0, 127, 255);
 
-  public DefaultNodeGroupEditor(NodeGroup group) {
+  public DefaultNodeGroupEditor(SimpleNodeGroup group) {
     this.pathFinder = PathFinderProvider.get();
     this.key = group.getKey();
 
@@ -153,7 +153,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       if (opt.isEmpty()) {
         return;
       }
-      NodeGroup group = opt.get();
+      SimpleNodeGroup group = opt.get();
       group.resolve().thenAccept(nodes -> {
         for (Node<?> node : nodes) {
           this.nodes.put(node.getNodeId(), node);
@@ -200,9 +200,9 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor, Listener {
       var sched = Bukkit.getScheduler();
       new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
 
-      Map<Edge, Boolean> undirected = new HashMap<>();
-      for (Edge edge : edges) {
-        Edge contained = edges.stream()
+      Map<SimpleEdge, Boolean> undirected = new HashMap<>();
+      for (SimpleEdge edge : edges) {
+        SimpleEdge contained = edges.stream()
             .filter(e -> e.getEnd().equals(edge.getStart()) && e.getStart().equals(edge.getEnd()))
             .findAny().orElse(null);
         if (contained != null && undirected.containsKey(contained)) {

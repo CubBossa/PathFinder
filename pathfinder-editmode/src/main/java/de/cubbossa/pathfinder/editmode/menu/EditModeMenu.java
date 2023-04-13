@@ -8,11 +8,11 @@ import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
@@ -42,11 +42,11 @@ public class EditModeMenu {
   private final PathFinder pathFinder;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
-  private final Collection<NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types;
+  private final Collection<AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types;
   private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types) {
+  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types) {
     this.pathFinder = pathFinder;
     this.key = group;
     this.types = types;
@@ -72,7 +72,7 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-            NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>
+            AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>
                 type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
@@ -113,11 +113,11 @@ public class EditModeMenu {
           }
           Collection<CompletableFuture<Void>> futures = new HashSet<>();
           futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> node.getEdges().add(
-              new Edge(edgeStart, c.getTarget(), 1)
+              new SimpleEdge(edgeStart, c.getTarget(), 1)
           )));
           if (undirectedEdges) {
             futures.add(pathFinder.getStorage().modifyNode(c.getTarget(), node -> node.getEdges().add(
-                new Edge(c.getTarget(), edgeStart, 1)
+                new SimpleEdge(c.getTarget(), edgeStart, 1)
             )));
           }
           CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
@@ -247,7 +247,7 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
-      for (NodeGroup group : nodeGroups) {
+      for (SimpleNodeGroup group : nodeGroups) {
 
         TagResolver resolver = TagResolver.builder()
             .tag("key", Messages.formatKey(group.getKey()))
@@ -314,7 +314,7 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
-      for (NodeGroup group : nodeGroups) {
+      for (SimpleNodeGroup group : nodeGroups) {
 
         TagResolver resolver = TagResolver.builder()
             .tag("key", Messages.formatKey(group.getKey()))
@@ -379,7 +379,7 @@ public class EditModeMenu {
   private void openNodeTypeMenu(Player player, Location location) {
 
     ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 2);
-    for (NodeType<?> type : types) {
+    for (AbstractNodeType<?> type : types) {
 
       menu.addListEntry(Button.builder()
           .withItemStack(type::getDisplayItem)

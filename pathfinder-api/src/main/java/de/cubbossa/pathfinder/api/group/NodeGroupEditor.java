@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.api.group;
 
+import de.cubbossa.pathfinder.api.misc.Keyed;
+
 import java.util.UUID;
-import org.bukkit.Keyed;
-import org.bukkit.entity.Player;
 
 public interface NodeGroupEditor extends Keyed {
 
@@ -22,13 +22,11 @@ public interface NodeGroupEditor extends Keyed {
    */
   void setEditMode(UUID uuid, boolean activate);
 
-  void showArmorStands(Player player);
+  void showArmorStands(UUID player);
 
-  void hideArmorStands(Player player);
+  void hideArmorStands(UUID player);
 
   boolean isEditing(UUID uuid);
-
-  boolean isEditing(Player player);
 
   /**
    * Erstellt eine Liste aus Partikel Packets, die mithilfe eines Schedulers immerwieder an die Spieler im Editmode geschickt werden.

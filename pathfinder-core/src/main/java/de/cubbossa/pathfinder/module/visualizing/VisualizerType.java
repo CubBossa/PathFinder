@@ -4,7 +4,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.api.storage.VisualizerDataStorage;
-import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -13,7 +12,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 
 /**
@@ -24,7 +22,7 @@ import org.bukkit.NamespacedKey;
  */
 @Getter
 @Setter
-public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements Keyed {
+public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements de.cubbossa.pathfinder.api.visualizer.VisualizerType<T> {
 
   /**
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
@@ -36,20 +34,16 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
     this.key = key;
   }
 
+  @Override
   public String getCommandName() {
     return key.getKey();
   }
 
-  public abstract T create(NamespacedKey key, String nameFormat);
-
-  public abstract Message getInfoMessage(T element);
-
-  public abstract ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                                 int argumentOffset);
-
+  @Override
   public void deserialize(final T visualizer, Map<String, Object> values) {
   }
 
+  @Override
   public Map<String, Object> serialize(T visualizer) {
     return null;
   }

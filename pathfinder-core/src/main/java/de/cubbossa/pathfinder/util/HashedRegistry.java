@@ -2,12 +2,14 @@ package de.cubbossa.pathfinder.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
+
+import de.cubbossa.pathfinder.api.misc.Keyed;
+import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K> implements Iterable<K> {
+public class HashedRegistry<K extends Keyed>  extends HashMap<NamespacedKey, K> implements KeyedRegistry<K> {
 
   @Nullable
   public K get(@NotNull NamespacedKey namespacedKey) {

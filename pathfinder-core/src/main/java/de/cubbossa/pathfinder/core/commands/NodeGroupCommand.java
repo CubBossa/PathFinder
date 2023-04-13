@@ -6,7 +6,7 @@ import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.ModifierType;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.Pagination;
 import de.cubbossa.translations.TranslationHandler;
@@ -43,7 +43,7 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_NG_INFO)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((commandSender, objects) -> {
-              showGroup(commandSender, (NodeGroup) objects[0]);
+              showGroup(commandSender, (SimpleNodeGroup) objects[0]);
             })
         )
     );
@@ -71,7 +71,7 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
-              deleteGroup(sender, (NodeGroup) objects[0]);
+              deleteGroup(sender, (SimpleNodeGroup) objects[0]);
             })));
 
     ArgumentTree set = CustomArgs.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
@@ -80,12 +80,12 @@ public class NodeGroupCommand extends Command {
     for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getModifiers()) {
       ArgumentTree lit = CustomArgs.literal(modifier.getSubCommandLiteral());
       lit = modifier.registerAddCommand(lit, mod -> (commandSender, objects) -> {
-        addModifier(commandSender, (NodeGroup) objects[0], mod);
+        addModifier(commandSender, (SimpleNodeGroup) objects[0], mod);
       });
       set = set.then(lit);
       unset = unset.then(CustomArgs.literal(modifier.getSubCommandLiteral())
           .executes((commandSender, objects) -> {
-            removeModifier(commandSender, (NodeGroup) objects[0], modifier.getModifierClass());
+            removeModifier(commandSender, (SimpleNodeGroup) objects[0], modifier.getModifierClass());
           })
       );
     }
@@ -118,7 +118,7 @@ public class NodeGroupCommand extends Command {
     });
   }
 
-  private void showGroup(CommandSender sender, NodeGroup group) {
+  private void showGroup(CommandSender sender, SimpleNodeGroup group) {
     TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_INFO.format(TagResolver.builder()
         .tag("key", Messages.formatKey(group.getKey()))
         .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
@@ -142,7 +142,7 @@ public class NodeGroupCommand extends Command {
         });
   }
 
-  private void deleteGroup(CommandSender sender, NodeGroup group) {
+  private void deleteGroup(CommandSender sender, SimpleNodeGroup group) {
     getPathfinder().getStorage().deleteGroup(group).thenRun(() -> {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(
           Placeholder.parsed("name", group.getKey().toString())
@@ -150,14 +150,14 @@ public class NodeGroupCommand extends Command {
     });
   }
 
-  private void addModifier(CommandSender sender, NodeGroup group, Modifier modifier) {
+  private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       // TODO message
     });
   }
 
-  private void removeModifier(CommandSender sender, NodeGroup group,
+  private void removeModifier(CommandSender sender, SimpleNodeGroup group,
                               Class<? extends Modifier> mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {

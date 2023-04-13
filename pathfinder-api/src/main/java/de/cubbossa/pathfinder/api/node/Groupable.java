@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.api.node;
 
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import java.util.Collection;
-import org.bukkit.NamespacedKey;
 
 public interface Groupable<N extends Node<N>> extends Node<N> {
 

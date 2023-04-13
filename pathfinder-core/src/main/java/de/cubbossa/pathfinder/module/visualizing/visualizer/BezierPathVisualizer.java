@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.CurveLengthModifier;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
@@ -21,7 +22,8 @@ import org.bukkit.util.Vector;
 @Getter
 @Setter
 public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
-    extends Visualizer<T, BezierPathVisualizer.BezierData> {
+  extends AbstractVisualizer<T, BezierPathVisualizer.BezierData>
+    implements PathVisualizer<T, BezierPathVisualizer.BezierData> {
 
   private float pointDistance = .2f;
   private int bezierSamplingRate = 16;

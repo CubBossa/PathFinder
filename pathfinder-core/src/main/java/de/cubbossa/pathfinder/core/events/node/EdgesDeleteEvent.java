@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.events.node;
 
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.util.Collection;
 import lombok.Getter;
@@ -38,7 +38,7 @@ public class EdgesDeleteEvent {
   public static class Post extends Event {
     private static final HandlerList handlers = new HandlerList();
 
-    private final Collection<Edge> edges;
+    private final Collection<SimpleEdge> edges;
 
     public static HandlerList getHandlerList() {
       return handlers;

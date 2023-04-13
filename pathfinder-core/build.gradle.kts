@@ -65,7 +65,7 @@ dependencies {
     // Plugins
     runtimeOnly(project(":pathfinder-editmode"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
-    implementation(project(":pathfinder-api"))
+    api(project(":pathfinder-api"))
     implementation(project(":pathfinder-graph"))
 
     // Statistics

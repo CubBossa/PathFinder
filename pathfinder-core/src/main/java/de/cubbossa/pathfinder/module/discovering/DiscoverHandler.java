@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.module.discovering;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
@@ -42,9 +42,9 @@ public class DiscoverHandler {
         if (!(context.node() instanceof Groupable<?> groupable)) {
           return true;
         }
-        Collection<NodeGroup> groups = groupable.getGroups();
+        Collection<SimpleNodeGroup> groups = groupable.getGroups();
 
-        for (NodeGroup group : groups) {
+        for (SimpleNodeGroup group : groups) {
           if (!group.hasModifier(DiscoverableModifier.class)) {
             continue;
           }
@@ -70,7 +70,7 @@ public class DiscoverHandler {
         Placeholder.component("name", discoverable.getDisplayName()));
   }
 
-  public boolean fulfillsDiscoveringRequirements(NodeGroup group, Player player) {
+  public boolean fulfillsDiscoveringRequirements(SimpleNodeGroup group, Player player) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return false;
     }
@@ -95,7 +95,7 @@ public class DiscoverHandler {
     return false;
   }
 
-  public void discover(UUID playerId, NodeGroup group, LocalDateTime date) {
+  public void discover(UUID playerId, SimpleNodeGroup group, LocalDateTime date) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return;
     }
@@ -116,7 +116,7 @@ public class DiscoverHandler {
     });
   }
 
-  public void forget(UUID playerId, NodeGroup group) {
+  public void forget(UUID playerId, SimpleNodeGroup group) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return;
     }
@@ -136,7 +136,7 @@ public class DiscoverHandler {
     });
   }
 
-  public CompletableFuture<Boolean> hasDiscovered(UUID playerId, NodeGroup group) {
+  public CompletableFuture<Boolean> hasDiscovered(UUID playerId, SimpleNodeGroup group) {
     return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenApply(Optional::isPresent);
   }
 

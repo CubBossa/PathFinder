@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizerType;
@@ -39,7 +40,7 @@ public class VisualizerHandler {
   @Getter
   private static VisualizerHandler instance;
 
-  private final HashedRegistry<VisualizerType<?>> visualizerTypes;
+  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?,?>>> visualizerTypes;
 
   public VisualizerHandler() {
     instance = this;
@@ -51,16 +52,16 @@ public class VisualizerHandler {
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
   }
 
-  public @Nullable <T extends PathVisualizer<T, ?>> VisualizerType<T> getVisualizerType(
+  public @Nullable <T extends PathVisualizer<T, ?>> de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> getVisualizerType(
       NamespacedKey key) {
-    return (VisualizerType<T>) visualizerTypes.get(key);
+    return (de.cubbossa.pathfinder.module.visualizing.VisualizerType<T>) visualizerTypes.get(key);
   }
 
   public <T extends PathVisualizer<T, ?>> void registerVisualizerType(VisualizerType<T> type) {
     visualizerTypes.put(type);
   }
 
-  public void unregisterVisualizerType(VisualizerType<?> type) {
+  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?,?>> type) {
     visualizerTypes.remove(type.getKey());
   }
 

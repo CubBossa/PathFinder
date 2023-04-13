@@ -1,44 +1,51 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.api.PathPluginExtension;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinderExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-public class ExtensionsRegistry {
+public class ExtensionsRegistry implements de.cubbossa.pathfinder.api.ExtensionsRegistry {
 
-  private final List<PathPluginExtension> extensions;
+  private final List<PathFinderExtension> extensions;
 
   public ExtensionsRegistry() {
     extensions = new ArrayList<>();
   }
 
-  public List<PathPluginExtension> getExtensions() {
+  @Override
+  public List<PathFinderExtension> getExtensions() {
     return new ArrayList<>(extensions);
   }
 
-  public void registerExtension(PathPluginExtension module) {
+  @Override
+  public void registerExtension(PathFinderExtension module) {
     extensions.add(module);
   }
 
-  public void unregisterExtension(PathPluginExtension module) {
+  @Override
+  public void unregisterExtension(PathFinderExtension module) {
     extensions.remove(module);
   }
 
   public void findServiceExtensions(ClassLoader classLoader) {
-    ServiceLoader<PathPluginExtension> loader = ServiceLoader.load(PathPluginExtension.class, classLoader);
+    ServiceLoader<PathFinderExtension> loader = ServiceLoader.load(PathFinderExtension.class, classLoader);
     loader.forEach(extensions::add);
   }
 
-  public void loadExtensions(PathPlugin pathPlugin) {
+  @Override
+  public void loadExtensions(PathFinder pathPlugin) {
     new ArrayList<>(extensions).forEach(e -> e.onLoad(pathPlugin));
   }
 
-  public void enableExtensions(PathPlugin pathPlugin) {
+  @Override
+  public void enableExtensions(PathFinder pathPlugin) {
     new ArrayList<>(extensions).forEach(e -> e.onEnable(pathPlugin));
   }
 
-  public void disableExtensions(PathPlugin pathPlugin) {
+  @Override
+  public void disableExtensions(PathFinder pathPlugin) {
     new ArrayList<>(extensions).forEach(e -> e.onDisable(pathPlugin));
   }
 }

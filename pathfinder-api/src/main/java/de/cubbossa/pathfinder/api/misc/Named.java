@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.api;
+package de.cubbossa.pathfinder.api.misc;
 
 import net.kyori.adventure.text.Component;
 

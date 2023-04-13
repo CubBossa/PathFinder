@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @Setter
 public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D extends EdgeBasedVisualizer.Data>
-    extends Visualizer<T, D> {
+		implements PathVisualizer<T, D> {
 
   private int interval = 10;
   private @Nullable String permission;

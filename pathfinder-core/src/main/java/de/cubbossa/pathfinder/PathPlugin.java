@@ -1,12 +1,13 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.events.EventDispatcher;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.WaypointType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.ModifierRegistry;
@@ -50,7 +51,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private Storage storage;
   @Setter
   private PathPluginConfig configuration;
-  private final ExtensionsRegistry extensionsRegistry;
+  private final ExtensionsRegistry extensionRegistry;
   private final CommandRegistry commandRegistry;
   private final BStatsLoader bStatsLoader;
   private final ConfigFileLoader configFileLoader;
@@ -72,8 +73,8 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     bStatsLoader = new BStatsLoader();
     commandRegistry = new CommandRegistry(this);
-    extensionsRegistry = new ExtensionsRegistry();
-    extensionsRegistry.findServiceExtensions(this.getClassLoader());
+    extensionRegistry = new ExtensionsRegistry();
+    extensionRegistry.findServiceExtensions(this.getClassLoader());
   }
 
   @SneakyThrows
@@ -87,7 +88,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     loadConfig();
 
     commandRegistry.loadCommands();
-    extensionsRegistry.loadExtensions(this);
+    extensionRegistry.loadExtensions(this);
   }
 
   @SneakyThrows
@@ -145,7 +146,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 
     commandRegistry.enableCommands(this);
-    extensionsRegistry.enableExtensions(this);
+    extensionRegistry.enableExtensions(this);
   }
 
   @SneakyThrows
@@ -154,7 +155,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
     NodeHandler.getInstance().cancelAllEditModes();
 
-    extensionsRegistry.disableExtensions(this);
+    extensionRegistry.disableExtensions(this);
 
     storage.shutdown();
     commandRegistry.unregisterCommands();
@@ -170,7 +171,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     }
   }
 
-  public void setWaypointNodeType(NodeType<Waypoint> nodeType) {
+  public void setWaypointNodeType(AbstractNodeType<Waypoint> nodeType) {
     waypointNodeType = nodeType;
     nodeTypeRegistry.setWaypointNodeType(nodeType);
     nodeTypeRegistry.registerNodeType(nodeType);

@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.api;
 
 import de.cubbossa.pathfinder.api.PathFinder;
 import org.jetbrains.annotations.ApiStatus;

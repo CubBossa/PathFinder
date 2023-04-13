@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.storage.implementation;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.cubbossa.pathfinder.PathPluginConfig;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
 import org.jooq.ConnectionProvider;
 import org.jooq.impl.DataSourceConnectionProvider;
 

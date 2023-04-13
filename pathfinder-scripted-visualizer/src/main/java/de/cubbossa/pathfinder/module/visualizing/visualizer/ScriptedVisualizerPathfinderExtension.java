@@ -3,8 +3,10 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+
 import java.util.function.Consumer;
+
+import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class ScriptedVisualizerPathfinderExtension implements PathPluginExtension {
 
   public static final NamespacedKey KEY = new NamespacedKey(PathPlugin.getInstance(), "scriptline-visualizers");
-  public static VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
+  public static VisualizerTypex<de.cubbossa.pathfinder.module.visualizing.visualizer.ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
       new ScriptLineParticleVisualizerType(
           new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
 
@@ -23,7 +25,7 @@ public class ScriptedVisualizerPathfinderExtension implements PathPluginExtensio
   }
 
   @Override
-  public void registerVisualizerType(Consumer<VisualizerType<?>> typeConsumer) {
+  public void registerVisualizerType(Consumer<VisualizerTypex<? extends de.cubbossa.pathfinder.api.visualizer.PathVisualizer<?,?>>> typeConsumer) {
     typeConsumer.accept(ADV_PARTICLE_VISUALIZER_TYPE);
   }
 }

@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.AbstractNodeType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class EmptyNode implements Node<EmptyNode> {
 
-  public static final de.cubbossa.pathfinder.api.node.NodeType<EmptyNode> TYPE = new NodeType<>(
+  public static final de.cubbossa.pathfinder.api.node.NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
       new NamespacedKey(PathPlugin.getInstance(), "empty"),
       "empty",
       new ItemStack(Material.DIRT),
@@ -55,7 +55,7 @@ public class EmptyNode implements Node<EmptyNode> {
   }
 
   @Override
-  public Collection<Edge> getEdges() {
+  public Collection<SimpleEdge> getEdges() {
     return new HashSet<>();
   }
 

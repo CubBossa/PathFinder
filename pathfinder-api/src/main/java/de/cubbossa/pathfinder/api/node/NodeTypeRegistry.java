@@ -1,27 +1,26 @@
-package de.cubbossa.pathfinder.core.node;
+package de.cubbossa.pathfinder.api.node;
 
+import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.NamespacedKey;
 
 public class NodeTypeRegistry {
 
-  private final HashedRegistry<de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> types;
+  private final KeyedRegistry<NodeType<? extends Node<?>>> types;
   @Getter
   @Setter
-  private de.cubbossa.pathfinder.api.node.NodeType<Waypoint> waypointNodeType;
+  private NodeType<Waypoint> waypointNodeType;
 
   public NodeTypeRegistry() {
     this.types = new HashedRegistry<>();
   }
 
-  public <N extends Node<N>> de.cubbossa.pathfinder.api.node.NodeType<N> getNodeType(NamespacedKey key) {
-    return types.get(key);
+  public <N extends Node<N>> NodeType<N> getNodeType(NamespacedKey key) {
+    return (NodeType<N>) types.get(key);
   }
 
   public Collection<NamespacedKey> getTypeKeys() {

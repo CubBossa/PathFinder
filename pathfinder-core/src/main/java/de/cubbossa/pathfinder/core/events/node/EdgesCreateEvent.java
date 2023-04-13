@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.events.node;
 
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import java.util.Collection;
 import java.util.HashSet;
@@ -41,9 +41,9 @@ public class  EdgesCreateEvent {
   public static class Post extends Event {
     private static final HandlerList handlers = new HandlerList();
 
-    private final Collection<Edge> edges;
+    private final Collection<SimpleEdge> edges;
 
-    public Post(Collection<Edge> edges) {
+    public Post(Collection<SimpleEdge> edges) {
       this.edges = new HashSet<>(edges);
     }
 

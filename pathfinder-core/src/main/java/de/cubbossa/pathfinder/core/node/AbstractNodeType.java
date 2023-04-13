@@ -15,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Setter
-public abstract class NodeType<N extends Node<N>> implements
+public abstract class AbstractNodeType<N extends Node<N>> implements
     de.cubbossa.pathfinder.api.node.NodeType<N> {
 
   private final NamespacedKey key;
@@ -25,11 +25,11 @@ public abstract class NodeType<N extends Node<N>> implements
   private String nameFormat;
   private Component displayName;
 
-  public NodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage) {
+  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage) {
     this(key, name, displayItem, miniMessage, null);
   }
 
-  public NodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage, NodeDataStorage<N> storage) {
+  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage, NodeDataStorage<N> storage) {
     this.key = key;
     this.miniMessage = miniMessage;
     this.setNameFormat(name);

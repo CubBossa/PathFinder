@@ -1,9 +1,10 @@
 package de.cubbossa.pathfinder.core.nodegroup;
 
-import de.cubbossa.pathfinder.api.group.Modified;
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,11 +14,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
-public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Comparable<NodeGroup> {
+public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
   private final PathFinder pathFinder = PathFinderProvider.get();
   private final NamespacedKey key;
@@ -27,11 +26,11 @@ public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Compara
   @Setter
   private double weight = 1;
 
-  public NodeGroup(NamespacedKey key) {
+  public SimpleNodeGroup(NamespacedKey key) {
     this(key, new HashSet<>());
   }
 
-  public NodeGroup(NamespacedKey key, Collection<Node<?>> nodes) {
+  public SimpleNodeGroup(NamespacedKey key, Collection<Node<?>> nodes) {
     super(nodes.stream().map(Node::getNodeId).toList());
     this.key = key;
     this.modifiers = new HashMap<>();
@@ -46,7 +45,7 @@ public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Compara
     if (this == o) {
       return true;
     }
-    if (!(o instanceof NodeGroup group)) {
+    if (!(o instanceof SimpleNodeGroup group)) {
       return false;
     }
     if (!super.equals(o)) {
@@ -97,6 +96,6 @@ public class NodeGroup extends HashSet<UUID> implements Keyed, Modified, Compara
 
   @Override
   public int compareTo(@NotNull NodeGroup o) {
-    return Double.compare(weight, o.weight);
+    return Double.compare(weight, o.getWeight());
   }
 }

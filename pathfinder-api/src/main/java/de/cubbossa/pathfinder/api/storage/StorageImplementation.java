@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 
 public interface StorageImplementation {
 

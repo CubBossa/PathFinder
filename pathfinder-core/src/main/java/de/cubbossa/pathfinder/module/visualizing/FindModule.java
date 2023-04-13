@@ -3,14 +3,15 @@ package de.cubbossa.pathfinder.module.visualizing;
 import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.api.PathPluginExtension;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinderExtension;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
@@ -44,8 +45,8 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@AutoService(PathPluginExtension.class)
-public class FindModule implements Listener, PathPluginExtension {
+@AutoService(PathFinderExtension.class)
+public class FindModule implements Listener, PathFinderExtension {
 
   @Getter
   private static FindModule instance;
@@ -71,21 +72,22 @@ public class FindModule implements Listener, PathPluginExtension {
   }
 
   @Override
-  public void onLoad(PathPlugin pathPlugin) {
+  public void onLoad(PathFinder pathPlugin) {
+
     if (!plugin.getConfiguration().moduleConfig.navigationModule) {
-      pathPlugin.getExtensionsRegistry().unregisterExtension(this);
+      plugin.getExtensionsRegistry().unregisterExtension(this);
     }
     findCommand = new FindCommand(pathPlugin);
     findLocationCommand = new FindLocationCommand(pathPlugin);
     cancelPathCommand = new CancelPathCommand(pathPlugin);
 
-    pathPlugin.getCommandRegistry().registerCommand(findCommand);
-    pathPlugin.getCommandRegistry().registerCommand(findLocationCommand);
-    pathPlugin.getCommandRegistry().registerCommand(cancelPathCommand);
+    plugin.getCommandRegistry().registerCommand(findCommand);
+    plugin.getCommandRegistry().registerCommand(findLocationCommand);
+    plugin.getCommandRegistry().registerCommand(cancelPathCommand);
   }
 
   @Override
-  public void onEnable(PathPlugin pathPlugin) {
+  public void onEnable(PathFinder pathPlugin) {
 
     registerListener();
 
@@ -107,7 +109,7 @@ public class FindModule implements Listener, PathPluginExtension {
   }
 
   @Override
-  public void onDisable(PathPlugin pathPlugin) {
+  public void onDisable(PathFinder pathPlugin) {
     unregisterListener();
   }
 
@@ -163,7 +165,7 @@ public class FindModule implements Listener, PathPluginExtension {
       Waypoint waypoint = new Waypoint(UUID.randomUUID());
       waypoint.setLocation(_location);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
-      fClosest.getEdges().add(new Edge(fClosest, waypoint, 1));
+      fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));
 
       return findPath(player, new NodeSelection(waypoint)).join();
     });

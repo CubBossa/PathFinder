@@ -1,11 +1,13 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.WorldLocation;
 import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,18 +17,16 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 
 @Getter
 @Setter
 public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final UUID nodeId;
-  private final List<Edge> edges;
+  private final List<SimpleEdge> edges;
   private final Map<NamespacedKey, NodeGroup> groups;
 
-  private Location location;
+  private WorldLocation location;
 
   public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;

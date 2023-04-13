@@ -6,7 +6,7 @@ public interface Modified {
   
   void addModifier(Modifier modifier);
   
-  <C extends Modifier> Modifier getModifier(Class<C> modifierClass);
+  <C extends Modifier> C getModifier(Class<C> modifierClass);
 
   <C extends Modifier> C removeModifier(Class<C> modifierClass);
 
