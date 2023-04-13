@@ -4,7 +4,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;

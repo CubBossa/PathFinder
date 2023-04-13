@@ -10,7 +10,7 @@ import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer> {
 

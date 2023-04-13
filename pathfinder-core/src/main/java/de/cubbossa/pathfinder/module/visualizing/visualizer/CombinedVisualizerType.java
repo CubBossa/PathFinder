@@ -19,7 +19,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisualizer> {
 

@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class VisualizerCache {
 

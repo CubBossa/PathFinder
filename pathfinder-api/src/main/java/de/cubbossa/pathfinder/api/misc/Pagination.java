@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.api.misc;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class Pagination {
+public final class Pagination {
 
   private final int offset;
   private final int limit;

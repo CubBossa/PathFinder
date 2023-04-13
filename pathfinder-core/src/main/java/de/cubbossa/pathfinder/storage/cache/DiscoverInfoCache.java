@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class DiscoverInfoCache {
 

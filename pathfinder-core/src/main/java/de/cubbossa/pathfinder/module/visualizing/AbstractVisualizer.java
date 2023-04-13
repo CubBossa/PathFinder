@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module.visualizing.visualizer;
+package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
@@ -37,7 +37,7 @@ public abstract class AbstractVisualizer<T extends PathVisualizer<T, D>, D> impl
 		this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
 	}
 
-	interface Property<V extends PathVisualizer<?, ?>, T> {
+	public interface Property<V extends PathVisualizer<?, ?>, T> {
 
 		String getKey();
 
@@ -49,10 +49,10 @@ public abstract class AbstractVisualizer<T extends PathVisualizer<T, D>, D> impl
 
 		boolean isVisible();
 	}
+
 	@Getter
 	@RequiredArgsConstructor
-	static
-	class SimpleProperty<V extends PathVisualizer<?, ?>, T> implements Property<V, T> {
+	public static class SimpleProperty<V extends PathVisualizer<?, ?>, T> implements Property<V, T> {
 		private final String key;
 		private final Class<T> type;
 		private final boolean visible;

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 
 public class CombinedVisualizer

@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
@@ -8,9 +10,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 import lombok.Getter;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ public class EmptyNode implements Node<EmptyNode> {
   private final Location location;
 
   public EmptyNode(World world) {
-    this.location = new Location(world, 0, 0, 0);
+    this.location = new Location(0, 0, 0, world.getUID());
   }
 
   @Override
@@ -55,7 +56,7 @@ public class EmptyNode implements Node<EmptyNode> {
   }
 
   @Override
-  public Collection<SimpleEdge> getEdges() {
+  public Collection<Edge> getEdges() {
     return new HashSet<>();
   }
 

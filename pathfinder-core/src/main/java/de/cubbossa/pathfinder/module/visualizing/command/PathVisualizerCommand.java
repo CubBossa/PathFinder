@@ -10,7 +10,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.util.CommandUtils;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
@@ -25,7 +25,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
 public class PathVisualizerCommand extends Command {

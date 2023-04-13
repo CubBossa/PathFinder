@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.api.storage;
 
+import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import org.bukkit.Location;
 
 public interface NodeDataStorage<N extends Node<N>> {
 

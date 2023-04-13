@@ -2,7 +2,9 @@ package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.node.NodeType;
+import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Groupable;
@@ -17,7 +19,7 @@ import de.cubbossa.pathfinder.storage.cache.EdgeCache;
 import de.cubbossa.pathfinder.storage.cache.GroupCache;
 import de.cubbossa.pathfinder.storage.cache.NodeCache;
 import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,8 +35,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Keyed;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 @Getter
 @RequiredArgsConstructor
@@ -396,7 +397,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
     return asyncFuture(() -> visualizerCache.getVisualizers(() -> {
       Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
-      for (de.cubbossa.pathfinder.module.visualizing.VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
       }
       return visualizers;

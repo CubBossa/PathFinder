@@ -6,11 +6,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ModifierRegistry implements de.cubbossa.pathfinder.api.group.ModifierRegistry {
+public class ModifierRegistryImpl implements de.cubbossa.pathfinder.api.group.ModifierRegistry {
 
   private final Map<Class<? extends Modifier>, ModifierType<?>> modifiers;
 
-  public ModifierRegistry() {
+  public ModifierRegistryImpl() {
     modifiers = new HashMap<>();
   }
 

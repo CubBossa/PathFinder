@@ -14,7 +14,7 @@ import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
-import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
@@ -23,12 +23,12 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
 import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -219,7 +219,7 @@ public abstract class SqlStorage implements StorageImplementation {
     List<de.cubbossa.pathfinder.api.node.NodeType<N>> resultSet = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
-        .fetch(t -> nodeTypeRegistry.getNodeType(t.getNodeType()));
+        .fetch(t -> nodeTypeRegistry.getType(t.getNodeType()));
     return resultSet.stream().findFirst();
   }
 
@@ -228,7 +228,7 @@ public abstract class SqlStorage implements StorageImplementation {
     Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> result = new HashMap<>();
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
-        .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getNodeType(t.getNodeType())));
+        .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
     return result;
   }
 

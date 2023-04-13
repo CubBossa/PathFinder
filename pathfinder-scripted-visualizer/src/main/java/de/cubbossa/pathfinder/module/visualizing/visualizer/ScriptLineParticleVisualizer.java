@@ -9,7 +9,7 @@ import javax.script.ScriptException;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
 
 @Getter

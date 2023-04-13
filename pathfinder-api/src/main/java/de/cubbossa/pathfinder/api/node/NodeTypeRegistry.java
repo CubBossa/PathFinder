@@ -1,45 +1,18 @@
 package de.cubbossa.pathfinder.api.node;
 
-import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.api.node.NodeType;
 import java.util.Collection;
-import lombok.Getter;
-import lombok.Setter;
 
-public class NodeTypeRegistry {
+public interface NodeTypeRegistry {
+  <N extends Node<N>> NodeType<N> getType(NamespacedKey key);
 
-  private final KeyedRegistry<NodeType<? extends Node<?>>> types;
-  @Getter
-  @Setter
-  private NodeType<Waypoint> waypointNodeType;
+  Collection<NamespacedKey> getTypeKeys();
 
-  public NodeTypeRegistry() {
-    this.types = new HashedRegistry<>();
-  }
+  Collection<NodeType<? extends Node<?>>> getTypes();
 
-  public <N extends Node<N>> NodeType<N> getNodeType(NamespacedKey key) {
-    return (NodeType<N>) types.get(key);
-  }
+  <N extends Node<N>> void register(NodeType<N> type);
 
-  public Collection<NamespacedKey> getTypeKeys() {
-    return types.keySet();
-  }
+  <N extends Node<N>> void unregister(NodeType<N> type);
 
-  public Collection<de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> getTypes() {
-    return types.values();
-  }
-
-  public <N extends Node<N>> void registerNodeType(NodeType<N> type) {
-    this.types.put(type);
-  }
-
-  public <N extends Node<N>> void unregister(de.cubbossa.pathfinder.api.node.NodeType<N> type) {
-    unregister(type.getKey());
-  }
-
-  public void unregister(NamespacedKey key) {
-    this.types.remove(key);
-  }
+  void unregister(NamespacedKey key);
 }

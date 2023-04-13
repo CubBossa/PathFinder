@@ -10,7 +10,7 @@ import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class VisualizerImportCommand extends CustomLiteralArgument {
 

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.listener;
 
 import de.cubbossa.pathfinder.core.node.NodeHandler;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;

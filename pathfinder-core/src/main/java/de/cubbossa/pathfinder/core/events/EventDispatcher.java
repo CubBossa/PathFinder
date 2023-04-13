@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.core.events;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.Collection;
@@ -11,7 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-public class EventDispatcher {
+public class EventDispatcher implements de.cubbossa.pathfinder.api.EventDispatcher {
 
   private void dispatchEvent(Event event) {
     try {
@@ -43,23 +44,28 @@ public class EventDispatcher {
     return CompletableFuture.failedFuture(new RuntimeException("Event cancelled"));
   }
 
+  @Override
   public <N extends Node<N>> void dispatchNodeCreate(N node) {
 
   }
 
+  @Override
   public <N extends Node<N>> void dispatchNodeDelete(Node<?> node) {
 
   }
 
+  @Override
   public <N extends Node<N>> void dispatchNodesDelete(Collection<UUID> nodes) {
 
   }
 
-  public void dispatchNodeUnassign(Node<?> node, Collection<SimpleNodeGroup> groups) {
+  @Override
+  public void dispatchNodeUnassign(Node<?> node, Collection<NodeGroup> groups) {
 
   }
 
-  public void dispatchNodeAssign(Node<?> node, Collection<SimpleNodeGroup> groups) {
+  @Override
+  public void dispatchNodeAssign(Node<?> node, Collection<NodeGroup> groups) {
 
   }
 }

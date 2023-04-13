@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import java.io.File;
 import java.sql.Connection;

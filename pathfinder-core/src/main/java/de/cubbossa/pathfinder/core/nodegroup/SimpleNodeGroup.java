@@ -24,7 +24,7 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
   private final Map<Class<? extends Modifier>, Modifier> modifiers;
   @Getter
   @Setter
-  private double weight = 1;
+  private float weight = 1;
 
   public SimpleNodeGroup(NamespacedKey key) {
     this(key, new HashSet<>());

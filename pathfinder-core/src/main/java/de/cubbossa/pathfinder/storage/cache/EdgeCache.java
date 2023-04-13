@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
+import de.cubbossa.pathfinder.api.node.Edge;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -20,21 +20,21 @@ public class EdgeCache {
     private final UUID end;
   }
 
-  public final Cache<Key, SimpleEdge> cache;
+  public final Cache<Key, Edge> cache;
 
   public EdgeCache() {
     cache = Caffeine.newBuilder()
         .build();
   }
 
-  public Optional<SimpleEdge> getEdge(UUID from, UUID to, Supplier<Optional<SimpleEdge>> loader) {
+  public Optional<Edge> getEdge(UUID from, UUID to, Supplier<Optional<Edge>> loader) {
     return Optional.ofNullable(
         cache.get(new Key(from, to), key -> loader.get().orElse(null))
     );
   }
 
-  public Collection<SimpleEdge> getEdgesFrom(UUID from) {
-    Collection<SimpleEdge> result = new HashSet<>();
+  public Collection<Edge> getEdgesFrom(UUID from) {
+    Collection<Edge> result = new HashSet<>();
     cache.asMap().forEach((key, value) -> {
       if (key.start.equals(from)) {
         result.add(value);
@@ -43,8 +43,8 @@ public class EdgeCache {
     return result;
   }
 
-  public Collection<SimpleEdge> getEdgesTo(UUID to) {
-    Collection<SimpleEdge> result = new HashSet<>();
+  public Collection<Edge> getEdgesTo(UUID to) {
+    Collection<Edge> result = new HashSet<>();
     cache.asMap().forEach((key, value) -> {
       if (key.end.equals(to)) {
         result.add(value);
@@ -53,11 +53,11 @@ public class EdgeCache {
     return result;
   }
 
-  public void write(SimpleEdge edge) {
+  public void write(Edge edge) {
     cache.put(new Key(edge.getStart(), edge.getEnd()), edge);
   }
 
-  public void invalidate(SimpleEdge edge) {
+  public void invalidate(Edge edge) {
     cache.invalidate(new Key(edge.getStart(), edge.getEnd()));
   }
 

@@ -5,7 +5,7 @@ import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 

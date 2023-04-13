@@ -37,12 +37,6 @@ dependencies {
     // Antlr
     antlr("org.antlr:antlr4:4.12.0") { isTransitive = true }
 
-    // Adventure
-    api("net.kyori:adventure-api:4.12.0")
-    api("net.kyori:adventure-platform-bukkit:4.1.2")
-    api("net.kyori:adventure-text-minimessage:4.12.0")
-    api("net.kyori:adventure-text-serializer-plain:4.12.0")
-
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
     api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")

@@ -3,8 +3,8 @@ package de.cubbossa.pathfinder.storage.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathfinder.api.group.Modifier;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -12,12 +12,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class GroupCache {
 
-  private final Cache<NamespacedKey, SimpleNodeGroup> cache;
-  private final Cache<UUID, Collection<SimpleNodeGroup>> nodeGroupCache;
+  private final Cache<NamespacedKey, NodeGroup> cache;
+  private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
   private boolean cachedAll = false;
 
   public GroupCache() {
@@ -30,30 +30,30 @@ public class GroupCache {
         .build();
   }
 
-  public Optional<SimpleNodeGroup> getGroup(NamespacedKey key,
-                                            Function<NamespacedKey, SimpleNodeGroup> loader) {
+  public Optional<NodeGroup> getGroup(NamespacedKey key,
+                                            Function<NamespacedKey, NodeGroup> loader) {
     return Optional.ofNullable(cache.get(key, loader));
   }
 
-  public <M extends Modifier> Collection<SimpleNodeGroup> getGroups(Class<M> modifier, Function<Class<M>, Collection<SimpleNodeGroup>> loader) {
+  public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier, Function<Class<M>, Collection<NodeGroup>> loader) {
     return cachedAll
         ? cache.asMap().values().stream().filter(group -> group.hasModifier(modifier)).toList()
         : loader.apply(modifier);
   }
 
-  public List<SimpleNodeGroup> getGroups(Pagination pagination, Function<Pagination, List<SimpleNodeGroup>> loader) {
+  public List<NodeGroup> getGroups(Pagination pagination, Function<Pagination, List<NodeGroup>> loader) {
     if (cachedAll) {
       return cache.asMap().values().stream().toList().subList(pagination.getOffset(), pagination.getOffset() + pagination.getLimit());
     }
     return loader.apply(pagination);
   }
 
-  public Collection<SimpleNodeGroup> getGroups(Collection<NamespacedKey> keys,
-                                               Function<Collection<NamespacedKey>, Collection<SimpleNodeGroup>> loader) {
-    Collection<SimpleNodeGroup> result = new HashSet<>();
+  public Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
+                                               Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
+    Collection<NodeGroup> result = new HashSet<>();
     Collection<NamespacedKey> toLoad = new HashSet<>();
     for (NamespacedKey key : keys) {
-      SimpleNodeGroup group = cache.getIfPresent(key);
+      NodeGroup group = cache.getIfPresent(key);
       if (group != null) {
         result.add(group);
       } else {
@@ -64,27 +64,28 @@ public class GroupCache {
     return result;
   }
 
-  public Collection<SimpleNodeGroup> getGroups(Supplier<Collection<SimpleNodeGroup>> loader) {
+  public Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }
-    Collection<SimpleNodeGroup> loaded = loader.get();
+    Collection<NodeGroup> loaded = loader.get();
     loaded.forEach(g -> cache.put(g.getKey(), g));
+    cachedAll = true;
     return loaded;
   }
 
-  public Collection<SimpleNodeGroup> getGroups(UUID node, Function<UUID, Collection<SimpleNodeGroup>> loader) {
+  public Collection<NodeGroup> getGroups(UUID node, Function<UUID, Collection<NodeGroup>> loader) {
     return nodeGroupCache.get(node, loader);
   }
 
-  public void write(SimpleNodeGroup group) {
+  public void write(NodeGroup group) {
     cache.put(group.getKey(), group);
   }
 
-  public void invalidate(SimpleNodeGroup group) {
+  public void invalidate(NodeGroup group) {
     cache.invalidate(group.getKey());
     for (UUID nodeId : group) {
-      Collection<SimpleNodeGroup> groups = nodeGroupCache.getIfPresent(nodeId);
+      Collection<NodeGroup> groups = nodeGroupCache.getIfPresent(nodeId);
       if (groups != null) {
         groups.remove(group);
       }

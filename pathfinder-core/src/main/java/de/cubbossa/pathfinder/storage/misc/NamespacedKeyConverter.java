@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.storage.misc;
 
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Converter;
 

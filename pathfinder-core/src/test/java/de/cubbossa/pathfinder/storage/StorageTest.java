@@ -10,7 +10,7 @@
 //import java.util.Optional;
 //import net.kyori.adventure.text.minimessage.MiniMessage;
 //import org.bukkit.Location;
-//import org.bukkit.NamespacedKey;
+//import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 //import org.bukkit.World;
 //import org.junit.jupiter.api.*;
 //

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.core.events.nodegroup;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

@@ -4,7 +4,7 @@ import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 public class WaypointType extends AbstractNodeType<Waypoint> {

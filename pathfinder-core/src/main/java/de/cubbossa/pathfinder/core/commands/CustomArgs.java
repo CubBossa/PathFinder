@@ -21,7 +21,7 @@ import de.cubbossa.pathfinder.module.visualizing.query.FindQueryParser;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.StorageAssistant;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.Argument;
@@ -55,7 +55,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -281,7 +281,7 @@ public class CustomArgs {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       NodeType<T> type =
           PathPlugin.getInstance().getNodeTypeRegistry()
-              .getNodeType(customArgumentInfo.currentInput());
+              .getType(customArgumentInfo.currentInput());
       if (type == null) {
         throw new CustomArgument.CustomArgumentException(
             "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");

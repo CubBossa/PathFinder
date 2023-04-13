@@ -3,7 +3,8 @@ package de.cubbossa.pathfinder.core.node.implementation;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import de.cubbossa.pathfinder.api.misc.WorldLocation;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Groupable;
@@ -23,10 +24,10 @@ import lombok.Setter;
 public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final UUID nodeId;
-  private final List<SimpleEdge> edges;
+  private final List<Edge> edges;
   private final Map<NamespacedKey, NodeGroup> groups;
 
-  private WorldLocation location;
+  private Location location;
 
   public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;

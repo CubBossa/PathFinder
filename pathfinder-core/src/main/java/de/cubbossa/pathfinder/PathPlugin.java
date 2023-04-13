@@ -1,16 +1,16 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.api.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
-import de.cubbossa.pathfinder.core.events.EventDispatcher;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
-import de.cubbossa.pathfinder.api.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.core.node.WaypointType;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.ModifierRegistry;
+import de.cubbossa.pathfinder.core.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
@@ -47,7 +47,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
   private File effectsFile;
   private final NodeTypeRegistry nodeTypeRegistry;
-  private final ModifierRegistry modifierRegistry;
+  private final ModifierRegistryImpl modifierRegistry;
   private Storage storage;
   @Setter
   private PathPluginConfig configuration;
@@ -66,7 +66,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     storage = new Storage(this);
 
     nodeTypeRegistry = new NodeTypeRegistry();
-    modifierRegistry = new ModifierRegistry();
+    modifierRegistry = new ModifierRegistryImpl();
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
 
@@ -174,6 +174,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   public void setWaypointNodeType(AbstractNodeType<Waypoint> nodeType) {
     waypointNodeType = nodeType;
     nodeTypeRegistry.setWaypointNodeType(nodeType);
-    nodeTypeRegistry.registerNodeType(nodeType);
+    nodeTypeRegistry.register(nodeType);
   }
 }

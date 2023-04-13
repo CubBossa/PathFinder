@@ -4,7 +4,7 @@ import de.cubbossa.pathfinder.api.group.NodeGroupEditor;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor

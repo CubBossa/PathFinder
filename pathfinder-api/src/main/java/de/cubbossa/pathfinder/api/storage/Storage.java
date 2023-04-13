@@ -2,15 +2,14 @@ package de.cubbossa.pathfinder.api.storage;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Map;
@@ -66,19 +65,6 @@ public interface Storage {
 
   CompletableFuture<Void> deleteEdge(Edge edge);
 
-  // Waypoint
-  CompletableFuture<Waypoint> createAndLoadWaypoint(Location location);
-
-  CompletableFuture<Optional<Waypoint>> loadWaypoint(UUID uuid);
-
-  CompletableFuture<Collection<Waypoint>> loadAllWaypoints();
-
-  CompletableFuture<Collection<Waypoint>> loadWaypoints(Collection<UUID> uuids);
-
-  CompletableFuture<Void> saveWaypoint(Waypoint waypoint);
-
-  CompletableFuture<Void> deleteWaypoints(Collection<Waypoint> waypoints);
-
   // Groups
   CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
 
@@ -126,14 +112,4 @@ public interface Storage {
   CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer);
 
   CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer);
-
-  de.cubbossa.pathfinder.storage.cache.NodeCache getNodeCache();
-
-  de.cubbossa.pathfinder.storage.cache.EdgeCache getEdgeCache();
-
-  de.cubbossa.pathfinder.storage.cache.GroupCache getGroupCache();
-
-  de.cubbossa.pathfinder.storage.cache.VisualizerCache getVisualizerCache();
-
-  de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache getDiscoverInfoCache();
 }

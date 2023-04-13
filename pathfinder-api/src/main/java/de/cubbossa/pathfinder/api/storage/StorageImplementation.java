@@ -1,14 +1,15 @@
 package de.cubbossa.pathfinder.api.storage;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.util.Pagination;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -42,14 +43,6 @@ public interface StorageImplementation {
   Optional<Edge> loadEdge(UUID start, UUID end);
   void saveEdge(Edge edge);
   void deleteEdge(Edge edge);
-
-  // Waypoint
-  Waypoint createAndLoadWaypoint(Location location);
-  Optional<Waypoint> loadWaypoint(UUID uuid);
-  Collection<Waypoint> loadAllWaypoints();
-  Collection<Waypoint> loadWaypoints(Collection<UUID> uuids);
-  void saveWaypoint(Waypoint waypoint);
-  void deleteWaypoints(Collection<Waypoint> waypoints);
 
   // Groups
   NodeGroup createAndLoadGroup(NamespacedKey key);

@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.ModifierType;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
-import de.cubbossa.pathfinder.util.Pagination;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
@@ -16,7 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
 /**

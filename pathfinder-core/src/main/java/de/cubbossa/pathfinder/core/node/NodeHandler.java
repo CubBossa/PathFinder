@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 
 public class NodeHandler {

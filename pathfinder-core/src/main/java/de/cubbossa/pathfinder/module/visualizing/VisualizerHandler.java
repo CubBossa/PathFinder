@@ -23,7 +23,7 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +66,7 @@ public class VisualizerHandler {
   }
 
   public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer,
-                                                              PathVisualizer.Property<V, T> prop,
+                                                              AbstractVisualizer.Property<V, T> prop,
                                                               T val) {
     setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
         () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));

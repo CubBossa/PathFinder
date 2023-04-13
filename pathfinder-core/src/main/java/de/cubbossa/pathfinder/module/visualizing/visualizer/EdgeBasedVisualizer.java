@@ -6,11 +6,13 @@ import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +35,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
   }
 
   @Override
-  public D prepare(List<Node<?>> nodes, Player player) {
+  public D prepare(List<Node<?>> nodes, UUID player) {
 
     List<Edge> edges = new ArrayList<>();
     Node prev = null;
@@ -49,11 +51,11 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
     return newData(player, nodes, edges);
   }
 
-  public abstract D newData(Player player, List<Node<?>> nodes, List<Edge> edges);
+  public abstract D newData(UUID player, List<Node<?>> nodes, List<Edge> edges);
 
   @Override
   public void play(VisualizerContext<D> context) {
-    Player targetPlayer = context.player();
+    Player targetPlayer = Bukkit.getPlayer(context.player());
 
     // No need to update, the player has not moved.
     if (targetPlayer.getLocation().equals(context.data().getLastPlayerLocation())) {

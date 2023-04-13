@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -49,14 +49,14 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
   }
 
   protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
-                                                            PathVisualizer.Property<V, ?> property,
+                                                            AbstractVisualizer.Property<V, ?> property,
                                                             V visualizer) {
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
   protected <A, V extends PathVisualizer<?, ?>> ArgumentTree subCommand(String node,
                                                                         Argument<A> argument,
-                                                                        PathVisualizer.Property<V, A> property) {
+                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, objects) -> {
       if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
         VisualizerHandler.getInstance()
@@ -72,7 +72,7 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
 
   protected <A, V extends PathVisualizer<?, ?>> void loadProperty(Map<String, Object> values,
                                                                   V visualizer,
-                                                                  PathVisualizer.Property<V, A> property) {
+                                                                  AbstractVisualizer.Property<V, A> property) {
     loadProperty(values, property.getKey(), property.getType(),
         a -> property.setValue(visualizer, a));
   }

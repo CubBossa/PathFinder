@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
@@ -95,7 +96,7 @@ public class DiscoverHandler {
     return false;
   }
 
-  public void discover(UUID playerId, SimpleNodeGroup group, LocalDateTime date) {
+  public void discover(UUID playerId, NodeGroup group, LocalDateTime date) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return;
     }
@@ -116,7 +117,7 @@ public class DiscoverHandler {
     });
   }
 
-  public void forget(UUID playerId, SimpleNodeGroup group) {
+  public void forget(UUID playerId, NodeGroup group) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return;
     }

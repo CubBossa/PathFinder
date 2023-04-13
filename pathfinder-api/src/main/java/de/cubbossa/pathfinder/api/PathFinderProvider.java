@@ -1,10 +1,9 @@
 package de.cubbossa.pathfinder.api;
 
-import de.cubbossa.pathfinder.api.PathFinder;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-public class PathFinderProvider {
+public final class PathFinderProvider {
 
   private static PathFinder instance = null;
 

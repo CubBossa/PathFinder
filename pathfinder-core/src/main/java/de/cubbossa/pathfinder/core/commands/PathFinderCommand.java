@@ -22,7 +22,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -69,7 +69,7 @@ public class PathFinderCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
           List<String> list =
-              PathPlugin.getInstance().getExtensionsRegistry().getExtensions().stream()
+              PathPlugin.getInstance().getExtensionRegistry().getExtensions().stream()
                   .map(PathFinderExtension::getKey)
                   .map(NamespacedKey::toString).toList();
 

@@ -7,7 +7,7 @@ import de.cubbossa.pathfinder.PathPluginExtension;
 import java.util.function.Consumer;
 
 import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
 @AutoService(PathPluginExtension.class)
