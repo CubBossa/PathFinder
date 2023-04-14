@@ -292,7 +292,7 @@ jooq {
                         name = "org.jooq.meta.sqlite.SQLiteDatabase"
                         forcedTypes = listOf(
                             ForcedType().apply {
-                                userType = "org.bukkit.NamespacedKey"
+                                userType = "de.cubbossa.pathfinder.api.misc.NamespacedKey"
                                 converter = "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
                                 includeExpression = ".*key|.*type"
                             },

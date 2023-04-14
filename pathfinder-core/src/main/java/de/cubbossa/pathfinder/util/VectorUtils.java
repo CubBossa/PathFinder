@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
@@ -58,5 +59,13 @@ public class VectorUtils {
 
   public static double convertYawToAngle(double yaw) {
     return (yaw + 180) % 360;
+  }
+
+  public static Location convertTo(de.cubbossa.pathfinder.api.misc.Location internal) {
+    return new Location(Bukkit.getWorld(internal.getWorld()), internal.getX(), internal.getY(), internal.getZ());
+  }
+
+  public static de.cubbossa.pathfinder.api.misc.Location convertFrom(Location bukkit) {
+    return new de.cubbossa.pathfinder.api.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(), bukkit.getWorld().getUID());
   }
 }

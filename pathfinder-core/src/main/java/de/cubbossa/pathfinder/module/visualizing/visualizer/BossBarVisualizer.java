@@ -36,13 +36,13 @@ public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D ext
   }
 
   @Override
-  public D newData(Player player, List<Node<?>> nodes, List<Edge> edges) {
+  public D newData(UUID player, List<Node<?>> nodes, List<Edge> edges) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
     TranslationHandler.getInstance().getAudiences().player(player).showBossBar(bossBar);
     return newData(player, nodes, edges, bossBar);
   }
 
-  public abstract D newData(Player player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar);
+  public abstract D newData(UUID player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar);
 
   @Override
   public void destruct(UUID player, D data) {

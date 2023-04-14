@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathfinder.api.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
@@ -38,6 +39,10 @@ import org.bukkit.util.Vector;
 public class PathPlugin extends JavaPlugin implements PathFinder {
 
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
+
+  public static NamespacedKey pathfinder(String key) {
+    return new NamespacedKey("pathfinder", key);
+  }
 
   @Getter
   private static PathPlugin instance;

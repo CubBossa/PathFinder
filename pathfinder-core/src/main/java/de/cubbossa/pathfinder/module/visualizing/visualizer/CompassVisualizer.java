@@ -9,9 +9,12 @@ import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.util.StringCompass;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -68,7 +71,7 @@ public class CompassVisualizer
   }
 
   @Override
-  public Data newData(Player player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar) {
+  public Data newData(UUID player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
     compass.addMarker("E", east, 90.);
@@ -81,12 +84,13 @@ public class CompassVisualizer
   public void play(VisualizerContext<Data> context, Location nearestPoint, Location leadPoint,
                    Edge nearestEdge) {
     if (context.data().getCompass().getAngle() == null) {
+      Player player = Bukkit.getPlayer(context.player());
       context.data().getCompass().setAngle(() -> {
-        return VectorUtils.convertDirectionToXZAngle(context.player().getLocation());
+        return VectorUtils.convertDirectionToXZAngle(player.getLocation());
       });
       context.data().getCompass().addMarker("target", target, () -> {
         return VectorUtils.convertDirectionToXZAngle(
-            this.leadPoint.clone().subtract(context.player().getLocation()).toVector());
+            this.leadPoint.clone().subtract(player.getLocation()).toVector());
       });
     }
     this.leadPoint = leadPoint;

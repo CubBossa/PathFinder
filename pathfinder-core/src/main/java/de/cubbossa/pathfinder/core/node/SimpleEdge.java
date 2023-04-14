@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.node;
 
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,7 +14,7 @@ import org.bukkit.Location;
 
 @Getter
 @Setter
-public class SimpleEdge {
+public class SimpleEdge implements Edge {
 
   private final PathFinder pathFinder;
 
@@ -75,5 +76,10 @@ public class SimpleEdge {
         ", end=" + end +
         ", weightModifier=" + weightModifier +
         '}';
+  }
+
+  @Override
+  public float getWeight() {
+    return weightModifier;
   }
 }

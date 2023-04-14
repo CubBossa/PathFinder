@@ -52,7 +52,7 @@ public class FindModule implements Listener, PathFinderExtension {
   private static FindModule instance;
 
   @Getter
-  private final NamespacedKey key = new NamespacedKey(PathPlugin.getInstance(), "navigation");
+  private final NamespacedKey key = PathPlugin.pathfinder("navigation");
 
   private FindCommand findCommand;
   private FindLocationCommand findLocationCommand;
@@ -75,7 +75,7 @@ public class FindModule implements Listener, PathFinderExtension {
   public void onLoad(PathFinder pathPlugin) {
 
     if (!plugin.getConfiguration().moduleConfig.navigationModule) {
-      plugin.getExtensionsRegistry().unregisterExtension(this);
+      plugin.getExtensionRegistry().unregisterExtension(this);
     }
     findCommand = new FindCommand(pathPlugin);
     findLocationCommand = new FindLocationCommand(pathPlugin);
@@ -148,11 +148,14 @@ public class FindModule implements Listener, PathFinderExtension {
       // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
       Location _location = location.toVector().equals(player.getLocation().toVector())
           ? location.add(0, 0.01, 0) : location;
+      de.cubbossa.pathfinder.api.misc.Location converted = new de.cubbossa.pathfinder.api.misc.Location(
+        _location.getX(), _location.getY(), _location.getZ(), _location.getWorld().getUID()
+      );
 
       Node<?> closest = null;
       double dist = Double.MAX_VALUE;
       for (Node<?> node : nodes) {
-        double curDist = node.getLocation().distance(_location);
+        double curDist = node.getLocation().distance(converted);
         if (curDist < dist && curDist < _maxDist) {
           closest = node;
           dist = curDist;
@@ -163,7 +166,7 @@ public class FindModule implements Listener, PathFinderExtension {
       }
       final Node<?> fClosest = closest;
       Waypoint waypoint = new Waypoint(UUID.randomUUID());
-      waypoint.setLocation(_location);
+      waypoint.setLocation(converted);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
       fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));
 

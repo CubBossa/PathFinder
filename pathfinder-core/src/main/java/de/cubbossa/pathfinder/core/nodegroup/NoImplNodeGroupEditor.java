@@ -39,22 +39,17 @@ public class NoImplNodeGroupEditor implements NodeGroupEditor {
   }
 
   @Override
-  public void showArmorStands(Player player) {
+  public void showArmorStands(UUID player) {
 
   }
 
   @Override
-  public void hideArmorStands(Player player) {
+  public void hideArmorStands(UUID player) {
 
   }
 
   @Override
   public boolean isEditing(UUID uuid) {
-    return false;
-  }
-
-  @Override
-  public boolean isEditing(Player player) {
     return false;
   }
 

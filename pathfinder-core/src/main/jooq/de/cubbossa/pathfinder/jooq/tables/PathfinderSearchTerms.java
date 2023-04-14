@@ -4,6 +4,7 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderSearchTermsRecord;
@@ -13,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import org.bukkit.NamespacedKey;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function2;

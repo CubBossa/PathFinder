@@ -5,16 +5,19 @@ import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.UUID;
 
 @Getter
 @Setter
 public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer> {
 
   public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
-      new Property.SimpleProperty<>("particle-steps", Integer.class, true,
+      new SimpleProperty<>("particle-steps", Integer.class, true,
           ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
 
   private int schedulerSteps = 50;
@@ -37,7 +40,8 @@ public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer>
   public void play(VisualizerContext<BezierData> context) {
     for (int i = context.interval() % getSchedulerSteps(); i < context.data().points().size();
          i += getSchedulerSteps()) {
-      for (Player player : context.players()) {
+      for (UUID uuid : context.players()) {
+        Player player = Bukkit.getPlayer(uuid);
         player.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(),
             offset.getY(), offset.getZ(), speed, particleData);
       }

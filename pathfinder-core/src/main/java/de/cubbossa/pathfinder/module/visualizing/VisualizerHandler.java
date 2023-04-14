@@ -31,11 +31,11 @@ import org.jetbrains.annotations.Nullable;
 public class VisualizerHandler {
 
   public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE =
-      new ParticleVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "particle"));
+      new ParticleVisualizerType(PathPlugin.pathfinder("particle"));
   public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE =
-      new CombinedVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "combined"));
+      new CombinedVisualizerType(PathPlugin.pathfinder("combined"));
   public static final VisualizerType<CompassVisualizer> COMPASS_VISUALIZER_TYPE =
-      new CompassVisualizerType(new NamespacedKey(PathPlugin.getInstance(), "compass"));
+      new CompassVisualizerType(PathPlugin.pathfinder("compass"));
 
   @Getter
   private static VisualizerHandler instance;

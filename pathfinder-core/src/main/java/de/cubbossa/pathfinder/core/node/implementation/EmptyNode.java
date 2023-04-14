@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class EmptyNode implements Node<EmptyNode> {
 
   public static final de.cubbossa.pathfinder.api.node.NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
-      new NamespacedKey(PathPlugin.getInstance(), "empty"),
+      PathPlugin.pathfinder("empty"),
       "empty",
       new ItemStack(Material.DIRT),
       PathPlugin.getInstance().getMiniMessage()

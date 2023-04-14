@@ -11,6 +11,10 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDE
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
@@ -40,10 +44,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -73,8 +74,7 @@ public abstract class SqlStorage implements StorageImplementation {
     UUID worldUid = record.getWorld();
 
     Waypoint node = new Waypoint(id);
-    World world = Bukkit.getWorld(worldUid);
-    node.setLocation(new Location(world, x, y, z));
+    node.setLocation(new Location(x, y, z, worldUid));
     return node;
   };
 
@@ -95,11 +95,11 @@ public abstract class SqlStorage implements StorageImplementation {
   // |  Nodegroup Table                        |
   // +-----------------------------------------+
 
-  private final RecordMapper<? super PathfinderNodegroupsRecord, SimpleNodeGroup> groupMapper =
+  private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
       record -> {
         NamespacedKey key = record.getKey();
         SimpleNodeGroup group = new SimpleNodeGroup(key);
-        group.setWeight(record.getWeight());
+        group.setWeight(record.getWeight().floatValue());
         return group;
       };
 
@@ -312,7 +312,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public SimpleEdge createAndLoadEdge(UUID start, UUID end, double weight) {
+  public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
     create.insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)
         .execute();
@@ -320,14 +320,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<SimpleEdge> loadEdgesFrom(UUID start) {
+  public Collection<Edge> loadEdgesFrom(UUID start) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .fetch(edgeMapper);
   }
 
   @Override
-  public Collection<SimpleEdge> loadEdgesTo(UUID end) {
+  public Collection<Edge> loadEdgesTo(UUID end) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .fetch(edgeMapper);
@@ -358,7 +358,7 @@ public abstract class SqlStorage implements StorageImplementation {
         .execute();
   }
 
-  private void deleteNode(Node node, AbstractNodeType type) {
+  private void deleteNode(Node node, NodeType type) {
     type.deleteNode(node);
   }
 
@@ -367,7 +367,7 @@ public abstract class SqlStorage implements StorageImplementation {
     UUID uuid = UUID.randomUUID();
     create
         .insertInto(PATHFINDER_WAYPOINTS)
-        .values(uuid, l.getWorld() == null ? null : l.getWorld().getUID(), l.getX(), l.getY(), l.getZ())
+        .values(uuid, l.getWorld() == null ? null : l.getWorld(), l.getX(), l.getY(), l.getZ())
         .execute();
     Waypoint waypoint = new Waypoint(uuid);
     waypoint.setLocation(l);
@@ -435,14 +435,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Optional<SimpleNodeGroup> loadGroup(NamespacedKey key) {
+  public Optional<NodeGroup> loadGroup(NamespacedKey key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .fetch(groupMapper).stream().findAny();
   }
 
   @Override
-  public Collection<UUID> loadGroupNodes(SimpleNodeGroup group) {
+  public Collection<UUID> loadGroupNodes(NodeGroup group) {
     return create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
         .from(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
@@ -450,14 +450,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<SimpleNodeGroup> loadGroups(Collection<NamespacedKey> key) {
+  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);
   }
 
   @Override
-  public List<SimpleNodeGroup> loadGroups(Pagination pagination) {
+  public List<NodeGroup> loadGroups(Pagination pagination) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .offset(pagination.getOffset())
         .limit(pagination.getLimit())
@@ -465,14 +465,14 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<SimpleNodeGroup> loadGroups(UUID node) {
+  public Collection<NodeGroup> loadGroups(UUID node) {
     return create.select().from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_NODEGROUP_NODES)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.eq(node))
         .fetch(record -> {
           SimpleNodeGroup group = new SimpleNodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
-          group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT));
+          group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT).floatValue());
           group.addAll(loadGroupNodes(group));
           return group;
         });
@@ -489,7 +489,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public <M extends Modifier> Collection<SimpleNodeGroup> loadGroups(Class<M> modifier) {
+  public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
     return create
         .select()
         .from(PATHFINDER_NODEGROUPS)
@@ -507,7 +507,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public Collection<SimpleNodeGroup> loadAllGroups() {
+  public Collection<NodeGroup> loadAllGroups() {
     Map<NamespacedKey, SimpleNodeGroup> groups = new HashMap<>();
 
     create.selectFrom(PATHFINDER_NODEGROUPS)
@@ -518,7 +518,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void saveGroup(SimpleNodeGroup group) {
+  public void saveGroup(NodeGroup group) {
     create
         .update(PATHFINDER_NODEGROUPS)
         .set(PATHFINDER_NODEGROUPS.WEIGHT, group.getWeight())
@@ -527,7 +527,7 @@ public abstract class SqlStorage implements StorageImplementation {
   }
 
   @Override
-  public void deleteGroup(SimpleNodeGroup group) {
+  public void deleteGroup(NodeGroup group) {
     create
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))

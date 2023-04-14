@@ -3,9 +3,11 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.pathfinder.api.node.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
@@ -59,7 +61,8 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
   public void play(VisualizerContext<BezierData> context) {
     int step = context.interval() % schedulerSteps;
     for (int i = step; i < context.data().points().size(); i += schedulerSteps) {
-      for (Player player : context.players()) {
+      for (UUID uuid : context.players()) {
+        Player player = Bukkit.getPlayer(uuid);
         Location point = context.data().points().get(i);
         Context c =
             new Context(player, point, context.interval(), step, i, context.data().points().size());

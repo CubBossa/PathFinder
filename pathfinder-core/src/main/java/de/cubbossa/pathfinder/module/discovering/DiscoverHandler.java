@@ -43,9 +43,9 @@ public class DiscoverHandler {
         if (!(context.node() instanceof Groupable<?> groupable)) {
           return true;
         }
-        Collection<SimpleNodeGroup> groups = groupable.getGroups();
+        Collection<NodeGroup> groups = groupable.getGroups();
 
-        for (SimpleNodeGroup group : groups) {
+        for (NodeGroup group : groups) {
           if (!group.hasModifier(DiscoverableModifier.class)) {
             continue;
           }
@@ -137,7 +137,7 @@ public class DiscoverHandler {
     });
   }
 
-  public CompletableFuture<Boolean> hasDiscovered(UUID playerId, SimpleNodeGroup group) {
+  public CompletableFuture<Boolean> hasDiscovered(UUID playerId, NodeGroup group) {
     return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenApply(Optional::isPresent);
   }
 

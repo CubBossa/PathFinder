@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class PlayerNode implements Node<PlayerNode> {
 
   public static final de.cubbossa.pathfinder.api.node.NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
-      new NamespacedKey(PathPlugin.getInstance(), "empty"),
+      PathPlugin.pathfinder("player"),
       "empty",
       new ItemStack(Material.DIRT),
       PathPlugin.getInstance().getMiniMessage()

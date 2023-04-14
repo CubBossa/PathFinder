@@ -65,7 +65,7 @@ public class VisualizerPath<D> extends ArrayList<Node<?>> {
       paths.add(new SubPath<>(null, null, null)); //TODO
     }
     for (SubPath<?> subPath : paths) {
-      subPath.visualizer.prepare(subPath.path, player);
+      subPath.visualizer.prepare(subPath.path, player.getUniqueId());
     }
   }
 
@@ -114,8 +114,7 @@ public class VisualizerPath<D> extends ArrayList<Node<?>> {
     Bukkit.getScheduler().cancelTask(path.task.getTaskId());
     this.active = false;
 
-    Player player = Bukkit.getPlayer(playerUuid);
-    path.visualizer.destruct(player, path.data);
+    path.visualizer.destruct(playerUuid, path.data);
   }
 
   @RequiredArgsConstructor

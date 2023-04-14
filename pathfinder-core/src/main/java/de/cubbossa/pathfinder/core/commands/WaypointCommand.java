@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Groupable;
@@ -224,7 +225,7 @@ public class WaypointCommand extends Command {
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
     for (Node<?> s : start) {
       for (Node<?> e : end) {
-        Optional<SimpleEdge> edge = s.getEdges().stream()
+        Optional<Edge> edge = s.getEdges().stream()
             .filter(edge1 -> edge1.getEnd().equals(e.getNodeId()))
             .findAny();
         edge.ifPresent(edge1 -> s.getEdges().remove(edge1));

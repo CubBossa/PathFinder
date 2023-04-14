@@ -12,6 +12,8 @@ import de.cubbossa.splinelib.util.Spline;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -34,7 +36,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   }
 
   @Override
-  public BezierData prepare(List<Node<?>> nodes, Player player) {
+  public BezierData prepare(List<Node<?>> nodes, UUID player) {
 
     //TODO has to be rewritten if portals are being introduced
     World world = nodes.get(0).getLocation().getWorld();
