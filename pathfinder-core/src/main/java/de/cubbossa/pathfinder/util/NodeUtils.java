@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.misc.Vector;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.splinelib.util.BezierVector;
 import java.util.ArrayList;
@@ -8,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.bukkit.util.Vector;
 
 public class NodeUtils {
 
@@ -25,9 +25,9 @@ public class NodeUtils {
 
     Node<?> first = path.keySet().iterator().next();
     vectors.add(new BezierVector(
-        PathPlugin.SPLINES.convertToVector(first.getLocation().toVector()),
-        PathPlugin.SPLINES.convertToVector(first.getLocation().toVector()),
-        PathPlugin.SPLINES.convertToVector(first.getLocation().toVector())));
+        PathPlugin.SPLINES.convertToVector(first.getLocation()),
+        PathPlugin.SPLINES.convertToVector(first.getLocation()),
+        PathPlugin.SPLINES.convertToVector(first.getLocation())));
 
     Node<?> prev = null;
     double sPrev = 1;
@@ -47,7 +47,7 @@ public class NodeUtils {
       sPrev = sCurr;
       curr = next;
       sCurr = sNext;
-      vNext = next.getLocation().toVector();
+      vNext = next.getLocation();
     }
     vectors.add(new BezierVector(
         PathPlugin.SPLINES.convertToVector(vNext),
@@ -60,9 +60,9 @@ public class NodeUtils {
       Node<?> previous, Node<?> current, Node<?> next,
       double strengthPrevious, double strengthCurrent, double strengthNext,
       @Nullable TangentModifier tangentModifier) {
-    Vector vPrevious = previous.getLocation().toVector();
-    Vector vCurrent = current.getLocation().toVector();
-    Vector vNext = next.getLocation().toVector();
+    Vector vPrevious = previous.getLocation();
+    Vector vCurrent = current.getLocation();
+    Vector vNext = next.getLocation();
 
     // make both same distance to vCurrent
     vPrevious = vCurrent.clone().add(vPrevious.clone().subtract(vCurrent).normalize());
@@ -74,12 +74,12 @@ public class NodeUtils {
     double sCurrentNext = strengthCurrent;
 
     if (tangentModifier != null) {
-      double distPrevious = vCurrent.distance(previous.getLocation().toVector());
+      double distPrevious = vCurrent.distance(previous.getLocation());
       if (sCurrentPrev + strengthPrevious > distPrevious) {
         sCurrentPrev = distPrevious * sCurrentPrev / (strengthPrevious + sCurrentPrev
             + tangentModifier.staticOffset()) * tangentModifier.relativeOffset();
       }
-      double distNext = vCurrent.distance(next.getLocation().toVector());
+      double distNext = vCurrent.distance(next.getLocation());
       if (sCurrentNext + strengthNext > distNext) {
         sCurrentNext =
             distNext * sCurrentNext / (strengthNext + sCurrentNext + tangentModifier.staticOffset())

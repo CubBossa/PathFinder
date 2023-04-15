@@ -1,26 +1,25 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Setter
-public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D extends EdgeBasedVisualizer.Data>
-		implements PathVisualizer<T, D> {
+public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>, D extends EdgeBasedVisualizer.Data>
+		extends BukkitVisualizer<T, D> {
 
   private int interval = 10;
   private @Nullable String permission;
@@ -35,40 +34,41 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
   }
 
   @Override
-  public D prepare(List<Node<?>> nodes, UUID player) {
+  public D prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
 
     List<Edge> edges = new ArrayList<>();
-    Node prev = null;
+    Node<?> prev = null;
     int index = 0;
-    for (Node node : nodes) {
+    for (Node<?> node : nodes) {
       if (prev == null) {
         prev = node;
         continue;
       }
-      edges.add(new Edge(index++, prev.getLocation().clone(), node.getLocation().clone()));
+      edges.add(new Edge(index++, VectorUtils.toBukkit(prev.getLocation()), VectorUtils.toBukkit(node.getLocation())));
       prev = node;
     }
     return newData(player, nodes, edges);
   }
 
-  public abstract D newData(UUID player, List<Node<?>> nodes, List<Edge> edges);
+  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges);
 
   @Override
-  public void play(VisualizerContext<D> context) {
-    Player targetPlayer = Bukkit.getPlayer(context.player());
+  public void play(VisualizerContext<D, Player> context) {
+    PathPlayer<Player> targetPlayer = context.player();
+    Player player = targetPlayer.unwrap();
 
     // No need to update, the player has not moved.
-    if (targetPlayer.getLocation().equals(context.data().getLastPlayerLocation())) {
+    if (player.getLocation().equals(context.data().getLastPlayerLocation())) {
       return;
     }
-    context.data().setLastPlayerLocation(targetPlayer.getLocation());
+    context.data().setLastPlayerLocation(player.getLocation());
 
     // find nearest edge
     Edge nearest = null;
     double edgeNearestDist = Double.MAX_VALUE;
     for (Edge edge : context.data().getEdges()) {
       double dist = VectorUtils.distancePointToSegment(
-          targetPlayer.getEyeLocation().toVector(),
+          player.getEyeLocation().toVector(),
           edge.support().toVector(),
           edge.target().toVector());
       if (dist < edgeNearestDist) {
@@ -84,14 +84,14 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
 
     // find the closest point on closest edge and move some blocks along in direction of target.
     Vector closestPoint = VectorUtils.closestPointOnSegment(
-        targetPlayer.getEyeLocation().toVector(),
+        player.getEyeLocation().toVector(),
         nearest.support().toVector(),
         nearest.target().toVector()
     );
 
     // shift the closest point 5 units towards final target location
     double unitsToShift = moveAhead;
-    Location currentPoint = closestPoint.toLocation(targetPlayer.getWorld());
+    Location currentPoint = closestPoint.toLocation(player.getWorld());
     Edge currentEdge = nearest;
     while (currentEdge != null && unitsToShift > 0) {
       double dist = currentPoint.distance(currentEdge.target());
@@ -113,7 +113,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D>, D exte
         currentPoint, nearest);
   }
 
-  public abstract void play(VisualizerContext<D> context, Location nearestPoint, Location leadPoint,
+  public abstract void play(VisualizerContext<D, Player> context, Location nearestPoint, Location leadPoint,
                             Edge nearestEdge);
 
   protected record Edge(int index, Location support, Location target) {

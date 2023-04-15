@@ -2,13 +2,12 @@ package de.cubbossa.pathfinder.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.World;
 import de.cubbossa.pathfinder.test.TestNode;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.splinelib.util.Vector;
 import java.util.UUID;
-import org.bukkit.Location;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class NodeUtilsTest {
@@ -20,9 +19,10 @@ class NodeUtilsTest {
     TestNode b = new TestNode(UUID.randomUUID());
     TestNode c = new TestNode(UUID.randomUUID());
 
-    a.setLocation(new Location(null, 0, 0, 0));
-    b.setLocation(new Location(null, 2, 0, 0));
-    c.setLocation(new Location(null, 4, 0, 0));
+    World world = new WorldImpl(UUID.randomUUID());
+    a.setLocation(new Location(0, 0, 0, world));
+    b.setLocation(new Location(2, 0, 0, new WorldImpl(UUID.randomUUID())));
+    c.setLocation(new Location(4, 0, 0, new WorldImpl(UUID.randomUUID())));
 
     assertEquals(
         NodeUtils.toBezierVector(a, b, c, 2, 2, 2, new NodeUtils.TangentModifier(1, 0)),

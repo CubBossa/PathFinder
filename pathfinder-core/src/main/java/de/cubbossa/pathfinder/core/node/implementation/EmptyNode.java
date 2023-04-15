@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.util.WorldImpl;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class EmptyNode implements Node<EmptyNode> {
   private final Location location;
 
   public EmptyNode(World world) {
-    this.location = new Location(0, 0, 0, world.getUID());
+    this.location = new Location(0, 0, 0, new WorldImpl(world.getUID()));
   }
 
   @Override

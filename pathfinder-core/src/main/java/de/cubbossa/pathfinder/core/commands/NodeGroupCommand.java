@@ -78,8 +78,11 @@ public class NodeGroupCommand extends Command {
     ArgumentTree unset =
         CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
     for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getModifiers()) {
+      if (!(modifier instanceof ModifierCommandExtension cmdExt)) {
+        continue;
+      }
       ArgumentTree lit = CustomArgs.literal(modifier.getSubCommandLiteral());
-      lit = modifier.registerAddCommand(lit, mod -> (commandSender, objects) -> {
+      lit = cmdExt.registerAddCommand(lit, mod -> (commandSender, objects) -> {
         addModifier(commandSender, (SimpleNodeGroup) objects[0], mod);
       });
       set = set.then(lit);
@@ -134,7 +137,7 @@ public class NodeGroupCommand extends Command {
     TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE_FAIL, sender);
 
     getPathfinder().getStorage()
-        .createAndLoadGroup(new NamespacedKey(PathPlugin.getInstance(), name))
+        .createAndLoadGroup(PathPlugin.pathfinder(name))
         .thenAccept(group -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(
               Placeholder.parsed("key", group.getKey().toString())

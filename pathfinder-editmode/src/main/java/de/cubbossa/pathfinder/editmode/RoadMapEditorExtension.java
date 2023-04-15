@@ -3,7 +3,9 @@ package de.cubbossa.pathfinder.editmode;
 import com.google.auto.service.AutoService;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.PathPluginExtension;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinderExtension;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.Version;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,20 +14,20 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.UnknownDependencyException;
 import org.jetbrains.annotations.NotNull;
 
-@AutoService(PathPluginExtension.class)
-public class RoadMapEditorExtension implements PathPluginExtension {
+@AutoService(PathFinderExtension.class)
+public class RoadMapEditorExtension implements PathFinderExtension {
 
   @NotNull
   @Override
   public NamespacedKey getKey() {
-    return new NamespacedKey(PathPlugin.getInstance(), "rmeditors");
+    return PathPlugin.pathfinder("roadmap-editor");
   }
 
   private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
   private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
 
   @Override
-  public void onEnable(PathPlugin plugin) {
+  public void onEnable(PathFinder plugin) {
 
     Plugin protocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib");
     if (protocolLib == null) {
@@ -47,7 +49,7 @@ public class RoadMapEditorExtension implements PathPluginExtension {
   }
 
   @Override
-  public void onDisable(PathPlugin plugin) {
+  public void onDisable(PathFinder plugin) {
     PathPlugin.getInstance().getLogger().info("Disabling default roadmap editors.");
     GUIHandler.getInstance().disable();
   }

@@ -3,7 +3,11 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathfinder.api.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.misc.Vector;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
@@ -20,20 +24,23 @@ import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
+import de.cubbossa.pathfinder.util.PathPlayerImpl;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.translations.TranslationHandler;
 import java.io.File;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Vector;
 
 @Getter
 public class PathPlugin extends JavaPlugin implements PathFinder {
@@ -42,6 +49,14 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
   public static NamespacedKey pathfinder(String key) {
     return new NamespacedKey("pathfinder", key);
+  }
+
+  public static NamespacedKey convert(org.bukkit.NamespacedKey key) {
+    return new NamespacedKey(key.getNamespace(), key.getKey());
+  }
+
+  public static PathPlayer<Player> wrap(Player player) {
+    return new PathPlayerImpl(player.getUniqueId());
   }
 
   @Getter
@@ -180,5 +195,10 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     waypointNodeType = nodeType;
     nodeTypeRegistry.setWaypointNodeType(nodeType);
     nodeTypeRegistry.register(nodeType);
+  }
+
+  @Override
+  public VisualizerTypeRegistry getVisualizerTypeRegistry() {
+    return VisualizerHandler.getInstance();
   }
 }

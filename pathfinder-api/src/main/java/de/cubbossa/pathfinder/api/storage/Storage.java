@@ -23,6 +23,8 @@ public interface Storage {
 
   void shutdown();
 
+  StorageImplementation getImplementation();
+
   CompletableFuture<Void> saveNodeType(UUID node,
                                        de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type);
 
@@ -95,21 +97,21 @@ public interface Storage {
   CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info);
 
   // Visualizer
-  <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      PathVisualizer<T, ?> visualizer);
+  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
+      PathVisualizer<T, ?, ?> visualizer);
 
-  <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(
+  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
       VisualizerType<T> type, NamespacedKey key);
 
-  CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers();
+  CompletableFuture<Collection<PathVisualizer<?, ?, ?>>> loadVisualizers();
 
-  <T extends PathVisualizer<T, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
+  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
       VisualizerType<T> type);
 
-  <T extends PathVisualizer<T, D>, D> CompletableFuture<Optional<T>> loadVisualizer(
+  <T extends PathVisualizer<T, D, ?>, D> CompletableFuture<Optional<T>> loadVisualizer(
       NamespacedKey key);
 
-  CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer);
+  CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?, ?> visualizer);
 
-  CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer);
+  CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?, ?> visualizer);
 }

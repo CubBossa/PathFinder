@@ -14,7 +14,7 @@ public class VisualizerPermissionChangedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final PathVisualizer<?, ?> visualizer;
+  private final PathVisualizer<?, ?, ?> visualizer;
   private final String oldPermission;
   private final String newPermission;
 

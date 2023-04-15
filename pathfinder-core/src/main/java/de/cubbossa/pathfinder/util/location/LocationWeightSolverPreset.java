@@ -23,7 +23,7 @@ public class LocationWeightSolverPreset<C> {
 
   public static final LocationWeightSolverPreset<RaycastLocationWeightSolverConfig> RAYCAST =
       new LocationWeightSolverPreset<>("RAYCAST",
-          config -> new RaycastLocationWeightSolver<Node<?>>(n -> VectorUtils.convertTo(n.getLocation()))
+          config -> new RaycastLocationWeightSolver<Node<?>>(n -> VectorUtils.toBukkit(n.getLocation()))
               .withRaycastCount(config.raycastCount)
               .withBlockCollisionWeight(config.blockCollisionWeight)
               .withStartLocationDirectionWeight(config.startLocationDirectionWeight)

@@ -14,7 +14,7 @@ public class VisualizerNameChangedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final PathVisualizer<?, ?> visualizer;
+  private final PathVisualizer<?, ?, ?> visualizer;
   private final String oldNameFormat;
   private final String newNameFormat;
 

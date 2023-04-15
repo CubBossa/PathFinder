@@ -62,9 +62,9 @@ public interface StorageImplementation {
   void deleteDiscoverInfo(DiscoverInfo info);
 
   // Visualizer
-  <T extends PathVisualizer<T, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key);
-  <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type);
-  <T extends PathVisualizer<T, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key);
-  void saveVisualizer(PathVisualizer<?, ?> visualizer);
-  void deleteVisualizer(PathVisualizer<?, ?> visualizer);
+  <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key);
+  <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type);
+  <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key);
+  void saveVisualizer(PathVisualizer<?, ?, ?> visualizer);
+  void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer);
 }

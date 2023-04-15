@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerTypex;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.EdgeBasedVisualizer;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
@@ -10,10 +11,9 @@ import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.w3c.dom.Node;
 
 @Getter
 @Setter
@@ -21,35 +21,35 @@ public class PlaceholderVisualizer
     extends EdgeBasedVisualizer<PlaceholderVisualizer, PlaceholderVisualizer.Data> {
 
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH =
-      new Property.SimpleProperty<>("format-north",
+      new SimpleProperty<>("format-north",
           String.class, true, PlaceholderVisualizer::getNorth, PlaceholderVisualizer::setNorth);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_EAST =
-      new Property.SimpleProperty<>("format-north-east",
+      new SimpleProperty<>("format-north-east",
           String.class, true, PlaceholderVisualizer::getNorthEast,
           PlaceholderVisualizer::setNorthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_EAST =
-      new Property.SimpleProperty<>("format-east",
+      new SimpleProperty<>("format-east",
           String.class, true, PlaceholderVisualizer::getEast, PlaceholderVisualizer::setEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_EAST =
-      new Property.SimpleProperty<>("format-south-east",
+      new SimpleProperty<>("format-south-east",
           String.class, true, PlaceholderVisualizer::getSouthEast,
           PlaceholderVisualizer::setSouthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH =
-      new Property.SimpleProperty<>("format-south",
+      new SimpleProperty<>("format-south",
           String.class, true, PlaceholderVisualizer::getSouth, PlaceholderVisualizer::setSouth);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_WEST =
-      new Property.SimpleProperty<>("format-south-west",
+      new SimpleProperty<>("format-south-west",
           String.class, true, PlaceholderVisualizer::getSouthWest,
           PlaceholderVisualizer::setSouthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_WEST =
-      new Property.SimpleProperty<>("format-west",
+      new SimpleProperty<>("format-west",
           String.class, true, PlaceholderVisualizer::getWest, PlaceholderVisualizer::setWest);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_WEST =
-      new Property.SimpleProperty<>("format-north-west",
+      new SimpleProperty<>("format-north-west",
           String.class, true, PlaceholderVisualizer::getNorthWest,
           PlaceholderVisualizer::setNorthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_DISTANCE =
-      new Property.SimpleProperty<>("format-distance",
+      new SimpleProperty<>("format-distance",
           String.class, true, PlaceholderVisualizer::getDistanceFormat,
           PlaceholderVisualizer::setDistanceFormat);
   public static final Property<PlaceholderVisualizer, String>[] PROPS = new Property[] {
@@ -76,22 +76,23 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public Data newData(Player player, List<Node<?>> nodes, List<Edge> edges) {
+  public Data newData(PathPlayer<Player> player, List<de.cubbossa.pathfinder.api.node.Node<?>> nodes, List<Edge> edges) {
     return new Data(nodes, edges);
   }
 
   @Override
-  public Data prepare(List<Node<?>> nodes, Player player) {
+  public Data prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
     Data data = super.prepare(nodes, player);
-    PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, player, data::getDirection);
-    PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, player, data::getDistance);
+    Player bp = player.unwrap();
+    PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, data::getDirection);
+    PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, bp, data::getDistance);
     return data;
   }
 
   @Override
-  public void play(VisualizerContext<Data> context, Location nearestPoint, Location leadPoint,
+  public void play(VisualizerContext<Data, Player> context, Location nearestPoint, Location leadPoint,
                    Edge nearestEdge) {
-    double distance = context.player().getLocation().distance(nearestPoint) + nearestPoint.distance(
+    double distance = VectorUtils.toBukkit(context.player().getLocation()).distance(nearestPoint) + nearestPoint.distance(
         nearestEdge.target());
     int nearestEdgeIndex = context.data().getEdges().indexOf(nearestEdge);
     for (Edge edge : context.data().getEdges()
@@ -101,7 +102,7 @@ public class PlaceholderVisualizer
 
 
     double angle = VectorUtils.convertDirectionToXZAngle(
-        leadPoint.clone().subtract(context.player().getLocation()).toVector());
+        leadPoint.clone().subtract(VectorUtils.toBukkit(context.player().getLocation())));
 
     context.data().direction = directions[(int) ((angle + 22.5) / 45) % 8];
     context.data().distance = resolveDistance(distance);
@@ -114,7 +115,7 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public VisualizerTypex<de.cubbossa.pathfinder.module.papi.PlaceholderVisualizer> getType() {
+  public AbstractVisualizerType<PlaceholderVisualizer> getType() {
     return PlaceholderHook.PLACEHOLDER_VISUALIZER_TYPE;
   }
 

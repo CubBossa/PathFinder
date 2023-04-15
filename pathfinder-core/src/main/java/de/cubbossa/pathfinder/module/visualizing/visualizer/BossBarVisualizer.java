@@ -1,17 +1,14 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizer;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizer.Property;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizer.SimpleProperty;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.List;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 
 @Getter
@@ -36,18 +33,18 @@ public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D ext
   }
 
   @Override
-  public D newData(UUID player, List<Node<?>> nodes, List<Edge> edges) {
+  public D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
-    TranslationHandler.getInstance().getAudiences().player(player).showBossBar(bossBar);
+    TranslationHandler.getInstance().getAudiences().player(player.unwrap()).showBossBar(bossBar);
     return newData(player, nodes, edges, bossBar);
   }
 
-  public abstract D newData(UUID player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar);
+  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar);
 
   @Override
-  public void destruct(UUID player, D data) {
+  public void destruct(PathPlayer<Player> player, D data) {
     super.destruct(player, data);
-    TranslationHandler.getInstance().getAudiences().player(player).hideBossBar(data.getBossBar());
+    TranslationHandler.getInstance().getAudiences().player(player.getUniqueId()).hideBossBar(data.getBossBar());
   }
 
   @Getter

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathfinder.api.misc.Vector;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.FormattedMessage;
@@ -28,7 +29,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 @MessageFile

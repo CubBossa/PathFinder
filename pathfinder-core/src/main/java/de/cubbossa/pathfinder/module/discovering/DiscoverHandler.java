@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.module.discovering;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.PermissionModifier;
@@ -71,7 +71,7 @@ public class DiscoverHandler {
         Placeholder.component("name", discoverable.getDisplayName()));
   }
 
-  public boolean fulfillsDiscoveringRequirements(SimpleNodeGroup group, Player player) {
+  public boolean fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return false;
     }

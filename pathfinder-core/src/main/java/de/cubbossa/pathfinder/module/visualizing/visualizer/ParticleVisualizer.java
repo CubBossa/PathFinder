@@ -1,16 +1,14 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import lombok.Getter;
 import lombok.Setter;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -37,12 +35,12 @@ public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer>
   }
 
   @Override
-  public void play(VisualizerContext<BezierData> context) {
+  public void play(VisualizerContext<BezierData, Player> context) {
     for (int i = context.interval() % getSchedulerSteps(); i < context.data().points().size();
          i += getSchedulerSteps()) {
-      for (UUID uuid : context.players()) {
-        Player player = Bukkit.getPlayer(uuid);
-        player.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(),
+      for (PathPlayer<Player> player : context.players()) {
+        Player bukkitPlayer = player.unwrap();
+        bukkitPlayer.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(),
             offset.getY(), offset.getZ(), speed, particleData);
       }
     }

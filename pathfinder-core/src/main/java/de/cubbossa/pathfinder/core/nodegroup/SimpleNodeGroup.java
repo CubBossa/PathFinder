@@ -36,6 +36,7 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
     this.modifiers = new HashMap<>();
   }
 
+  @Override
   public CompletableFuture<Collection<Node<?>>> resolve() {
     return pathFinder.getStorage().loadNodes(this);
   }

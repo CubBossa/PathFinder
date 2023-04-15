@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.module.visualizing;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.module.visualizing.events.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizerType;
@@ -28,7 +29,7 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
-public class VisualizerHandler {
+public class VisualizerHandler implements VisualizerTypeRegistry {
 
   public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE =
       new ParticleVisualizerType(PathPlugin.pathfinder("particle"));
@@ -40,7 +41,7 @@ public class VisualizerHandler {
   @Getter
   private static VisualizerHandler instance;
 
-  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?,?>>> visualizerTypes;
+  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?,?, ?>>> visualizerTypes;
 
   public VisualizerHandler() {
     instance = this;
@@ -52,41 +53,44 @@ public class VisualizerHandler {
     visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
   }
 
-  public @Nullable <T extends PathVisualizer<T, ?>> de.cubbossa.pathfinder.module.visualizing.VisualizerType<T> getVisualizerType(
+  @Override
+  public @Nullable <T extends PathVisualizer<T, ?, ?>> AbstractVisualizerType<T> getVisualizerType(
       NamespacedKey key) {
-    return (de.cubbossa.pathfinder.module.visualizing.VisualizerType<T>) visualizerTypes.get(key);
+    return (AbstractVisualizerType<T>) visualizerTypes.get(key);
   }
 
-  public <T extends PathVisualizer<T, ?>> void registerVisualizerType(VisualizerType<T> type) {
+  @Override
+  public <T extends PathVisualizer<T, ?, ?>> void registerVisualizerType(VisualizerType<T> type) {
     visualizerTypes.put(type);
   }
 
-  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?,?>> type) {
+  @Override
+  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?, ?>> type) {
     visualizerTypes.remove(type.getKey());
   }
 
-  public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer,
+  public <V extends PathVisualizer<?, ?, ?>, T> void setProperty(CommandSender sender, V visualizer,
                                                               AbstractVisualizer.Property<V, T> prop,
                                                               T val) {
     setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
         () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter) {
     setProperty(sender, visualizer, value, property, visual, getter, setter,
         t -> Component.text(t.toString()));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter, Function<T, ComponentLike> formatter) {
     setProperty(sender, visualizer, value, property, visual, getter, setter,
         (s, t) -> Placeholder.component(s, formatter.apply(t)));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter, BiFunction<String, T, TagResolver> formatter) {
     T old = getter.get();

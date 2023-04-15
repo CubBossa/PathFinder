@@ -1,32 +1,34 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.misc.World;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.CurveLengthModifier;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizer;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.UUID;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 @Getter
 @Setter
 public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
-  extends AbstractVisualizer<T, BezierPathVisualizer.BezierData>
-    implements PathVisualizer<T, BezierPathVisualizer.BezierData> {
+  extends BukkitVisualizer<T, BezierPathVisualizer.BezierData>
+    implements PathVisualizer<T, BezierPathVisualizer.BezierData, Player> {
 
   private float pointDistance = .2f;
   private int bezierSamplingRate = 16;
@@ -36,28 +38,45 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   }
 
   @Override
-  public BezierData prepare(List<Node<?>> nodes, UUID player) {
+  public BezierData prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
 
-    //TODO has to be rewritten if portals are being introduced
-    World world = nodes.get(0).getLocation().getWorld();
-    LinkedHashMap<Node<?>, Double> path = new LinkedHashMap<>();
+    // split the path into segments for each appearing world change
+    List<PathSegment> segments = new ArrayList<>();
+    World last = null;
+    List<Node<?>> open = new ArrayList<>();
     for (Node<?> node : nodes) {
-      if (!(node instanceof Groupable<?> groupable)) {
-        path.put(node, 1.);
-        continue;
+      if (!Objects.equals(last, node.getLocation().getWorld())) {
+        if (last != null) {
+          segments.add(new PathSegment(last, new ArrayList<>(open)));
+          open.clear();
+        }
+        last = node.getLocation().getWorld();
       }
-      CurveLengthModifier mod = groupable.getGroups().stream()
-          .filter(g -> g.hasModifier(CurveLengthModifier.class))
-          .sorted()
-          .map(g -> g.getModifier(CurveLengthModifier.class))
-          .findFirst().orElse(null);
-
-      path.put(node, mod == null ? 1 : mod.curveLength());
+      open.add(node);
     }
-    Spline spline = makeSpline(path);
-    List<Vector> curve = transform(interpolate(spline));
-    List<Location> calculatedPoints =
-        new ArrayList<>(curve.stream().map(vector -> vector.toLocation(world)).toList());
+
+    // make a smooth spline for each segment and append them.
+    List<Location> calculatedPoints = new ArrayList<>();
+    for (PathSegment segment : segments) {
+      LinkedHashMap<Node<?>, Double> path = new LinkedHashMap<>();
+      for (Node<?> node : segment.nodes()) {
+        if (!(node instanceof Groupable<?> groupable)) {
+          path.put(node, 1.);
+          continue;
+        }
+        CurveLengthModifier mod = groupable.getGroups().stream()
+            .filter(g -> g.hasModifier(CurveLengthModifier.class))
+            .sorted()
+            .map(g -> g.getModifier(CurveLengthModifier.class))
+            .findFirst().orElse(null);
+
+        path.put(node, mod == null ? 1 : mod.curveLength());
+      }
+      Spline spline = makeSpline(path);
+      List<Vector> curve = transform(interpolate(spline));
+      org.bukkit.World world = Bukkit.getWorld(segment.world().getUniqueId());
+      calculatedPoints.addAll(curve.stream().map(vector -> vector.toLocation(world)).toList());
+    }
     return new BezierData(calculatedPoints);
   }
 
@@ -76,13 +95,21 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
         .withClosedPath(false)
         .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
         .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))
-        .buildAndConvert();
+        .buildAndConvert().stream()
+        .map(vector -> new Vector(vector.getX(), vector.getY(), vector.getZ()))
+        .collect(Collectors.toList());
   }
 
   private List<Vector> transform(List<Vector> curve) {
     return curve;
   }
 
+  @Override
+  public void destruct(PathPlayer<Player> player, BezierData data) {
+  }
+
   public record BezierData(List<Location> points) {
   }
+
+  private record PathSegment(World world, List<Node<?>> nodes) {}
 }

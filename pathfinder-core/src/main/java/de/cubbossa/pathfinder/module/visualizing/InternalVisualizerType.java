@@ -4,7 +4,8 @@ import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
-public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?>> extends VisualizerType<T> {
+public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?, ?>> extends
+    AbstractVisualizerType<T> {
 
   public InternalVisualizerType(NamespacedKey key) {
     super(key);

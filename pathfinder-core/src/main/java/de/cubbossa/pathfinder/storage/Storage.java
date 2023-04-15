@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.misc.Keyed;
 import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
@@ -9,7 +10,6 @@ import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Keyed;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 @Getter
@@ -234,63 +233,6 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
     });
   }
 
-  // Waypoint
-  @Override
-  public CompletableFuture<Waypoint> createAndLoadWaypoint(Location location) {
-    return asyncFuture(() -> {
-      Waypoint waypoint = implementation.createAndLoadWaypoint(location);
-      nodeCache.write(waypoint);
-      return waypoint;
-    });
-  }
-
-  @Override
-  public CompletableFuture<Optional<Waypoint>> loadWaypoint(UUID uuid) {
-    return asyncFuture(() -> {
-      Optional<Node<?>> opt = nodeCache.getNode(uuid);
-      if (opt.isEmpty()) {
-        return implementation.loadNode(uuid);
-      }
-      return opt.get() instanceof Waypoint waypoint ? Optional.of(waypoint) : Optional.empty();
-    });
-  }
-
-  @Override
-  public CompletableFuture<Collection<Waypoint>> loadAllWaypoints() {
-    return asyncFuture(() -> {
-      Collection<Waypoint> waypoints = implementation.loadAllWaypoints();
-      waypoints.forEach(nodeCache::write);
-      return waypoints;
-    });
-  }
-
-  @Override
-  public CompletableFuture<Collection<Waypoint>> loadWaypoints(Collection<UUID> uuids) {
-    return asyncFuture(() -> {
-      Collection<Node<?>> present = nodeCache.getNodes(uuids, implementation::loadWaypoints);
-      return present.stream()
-          .filter(node -> node instanceof Waypoint)
-          .map(node -> (Waypoint) node)
-          .toList();
-    });
-  }
-
-  @Override
-  public CompletableFuture<Void> saveWaypoint(Waypoint waypoint) {
-    return asyncFuture(() -> {
-      implementation.saveWaypoint(waypoint);
-      nodeCache.write(waypoint);
-    });
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteWaypoints(Collection<Waypoint> waypoints) {
-    return asyncFuture(() -> {
-      implementation.deleteWaypoints(waypoints);
-      waypoints.stream().map(Node::getNodeId).forEach(nodeCache::invalidate);
-    });
-  }
-
   // Groups
   @Override
   public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
@@ -378,13 +320,13 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   // Visualizer
   @Override
-  public <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      PathVisualizer<T, ?> visualizer) {
+  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
+      PathVisualizer<T, ?, ?> visualizer) {
     return createAndLoadVisualizer(visualizer.getType(), visualizer.getKey());
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?>> CompletableFuture<T> createAndLoadVisualizer(
+  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
       VisualizerType<T> type, NamespacedKey key) {
     return asyncFuture(() -> {
       T visualizer = type.getStorage().createAndLoadVisualizer(key);
@@ -394,9 +336,9 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
+  public CompletableFuture<Collection<PathVisualizer<?, ?, ?>>> loadVisualizers() {
     return asyncFuture(() -> visualizerCache.getVisualizers(() -> {
-      Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
+      Collection<PathVisualizer<?, ?, ?>> visualizers = new HashSet<>();
       for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
       }
@@ -405,18 +347,18 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
+  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
       VisualizerType<T> type) {
     return asyncFuture(() -> visualizerCache.getVisualizers(type, t -> implementation.loadVisualizers(t).values()).stream()
         .collect(Collectors.toMap(Keyed::getKey, t -> t)));
   }
 
   @Override
-  public <T extends PathVisualizer<T, D>, D> CompletableFuture<Optional<T>> loadVisualizer(
+  public <T extends PathVisualizer<T, D, ?>, D> CompletableFuture<Optional<T>> loadVisualizer(
       NamespacedKey key) {
     return asyncFuture(() -> visualizerCache.getVisualizer(key, k -> {
-      for (VisualizerType<? extends PathVisualizer<?,?>> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
-        Optional<PathVisualizer<?, ?>> opt = (Optional<PathVisualizer<?, ?>>) type.getStorage().loadVisualizer(key);
+      for (VisualizerType<? extends PathVisualizer<?,?, ?>> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+        Optional<PathVisualizer<?, ?, ?>> opt = (Optional<PathVisualizer<?, ?, ?>>) type.getStorage().loadVisualizer(key);
         if (opt.isPresent()) return (T) opt.get();
       }
       return null;
@@ -424,7 +366,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
+  public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.saveVisualizer(visualizer);
       visualizerCache.write(visualizer);
@@ -432,7 +374,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
+  public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.deleteVisualizer(visualizer);
       visualizerCache.invalidate(visualizer);

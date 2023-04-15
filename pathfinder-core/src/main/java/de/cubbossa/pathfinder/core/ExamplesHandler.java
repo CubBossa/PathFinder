@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.core;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizerType;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
 import java.io.StringReader;
@@ -55,11 +55,11 @@ public class ExamplesHandler {
     return files;
   }
 
-  public CompletableFuture<PathVisualizer<?, ?>> loadVisualizer(ExamplesReader.ExampleFile file) {
+  public CompletableFuture<PathVisualizer<?, ?, ?>> loadVisualizer(ExamplesReader.ExampleFile file) {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values =
           YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
-      VisualizerType<?> type = VisualizerHandler.getInstance()
+      AbstractVisualizerType<?> type = VisualizerHandler.getInstance()
           .getVisualizerType(NamespacedKey.fromString((String) values.get("type")));
       if (type == null) {
         PathPlugin.getInstance().getLogger().log(Level.SEVERE,
@@ -70,8 +70,8 @@ public class ExamplesHandler {
     });
   }
 
-  private <T extends PathVisualizer<T, ?>> PathVisualizer<T, ?> parse(
-      ExamplesReader.ExampleFile file, VisualizerType<T> type, Map<String, Object> values) {
+  private <T extends PathVisualizer<T, ?, ?>> PathVisualizer<T, ?, ?> parse(
+      ExamplesReader.ExampleFile file, AbstractVisualizerType<T> type, Map<String, Object> values) {
 
     NamespacedKey name =
         NamespacedKey.fromString(file.name().replace(".yml", "").replace("$", ":"));

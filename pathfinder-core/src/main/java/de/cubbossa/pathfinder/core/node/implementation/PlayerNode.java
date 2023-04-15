@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
 import java.util.Collection;
@@ -11,8 +11,6 @@ import java.util.HashSet;
 import java.util.UUID;
 import lombok.Getter;
 import org.bukkit.Material;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,9 +30,9 @@ public class PlayerNode implements Node<PlayerNode> {
     }
   };
 
-  private final Player player;
+  private final PathPlayer<?> player;
 
-  public PlayerNode(Player player) {
+  public PlayerNode(PathPlayer<?> player) {
     this.player = player;
   }
 
@@ -50,8 +48,7 @@ public class PlayerNode implements Node<PlayerNode> {
 
   @Override
   public Location getLocation() {
-    org.bukkit.Location loc = player.getLocation().add(0, .5f, 0);
-    return new Location(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().getUID());
+    return player.getLocation();
   }
 
   @Override

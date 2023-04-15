@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.commands;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
@@ -11,6 +12,7 @@ import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.LocationType;
@@ -24,7 +26,7 @@ import java.util.function.Supplier;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Location;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -73,7 +75,7 @@ public class WaypointCommand extends Command {
     then(CustomArgs.literal("create")
         .withPermission(PathPerms.PERM_CMD_WP_CREATE)
         .executesPlayer((player, objects) -> {
-          createNode(player, fallbackWaypointType.get(), player.getLocation());
+          createNode(player, fallbackWaypointType.get(), VectorUtils.toInternal(player.getLocation()));
         })
         .then(CustomArgs.location("location")
             .displayAsOptional()
@@ -83,7 +85,7 @@ public class WaypointCommand extends Command {
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
-              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0], player.getLocation());
+              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0], VectorUtils.toInternal(player.getLocation()));
             })
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
@@ -105,7 +107,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              teleportNodes(player, (NodeSelection) objects[0], player.getLocation());
+              teleportNodes(player, (NodeSelection) objects[0], VectorUtils.toInternal(player.getLocation()));
             })
         )
     );
@@ -248,7 +250,7 @@ public class WaypointCommand extends Command {
     }
   }
 
-  private void createNode(CommandSender sender, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type, Location location) {
+  private void createNode(CommandSender sender, NodeType<? extends Node<?>> type, Location location) {
     getPathfinder().getStorage().createAndLoadNode(
         type,
         location
@@ -292,7 +294,7 @@ public class WaypointCommand extends Command {
     }
     Node<?> node = selection.get(0);
 
-    Collection<UUID> neighbours = node.getEdges().stream().map(SimpleEdge::getEnd).toList();
+    Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
     Collection<Node<?>> resolvedNeighbours =
         getPathfinder().getStorage().loadNodes(neighbours).join();
 
@@ -300,7 +302,7 @@ public class WaypointCommand extends Command {
         .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
         .resolver(
             Placeholder.component("position",
-                Messages.formatVector(node.getLocation().toVector())))
+                Messages.formatVector(node.getLocation())))
         .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
         .resolver(Placeholder.component("edges",
             Messages.formatNodeSelection(player, resolvedNeighbours)))
@@ -333,14 +335,14 @@ public class WaypointCommand extends Command {
         10,
         new ArrayList<>(selection),
         n -> {
-          Collection<UUID> neighbours = n.getEdges().stream().map(SimpleEdge::getEnd).toList();
+          Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
           Collection<Node<?>> resolvedNeighbours =
               getPathfinder().getStorage().loadNodes(neighbours).join();
 
           TagResolver r = TagResolver.builder()
               .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
               .resolver(Placeholder.component("position",
-                  Messages.formatVector(n.getLocation().toVector())))
+                  Messages.formatVector(n.getLocation())))
               .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
               .resolver(Placeholder.component("edges",
                   Messages.formatNodeSelection(player, resolvedNeighbours)))

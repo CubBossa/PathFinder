@@ -6,11 +6,13 @@ import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
@@ -18,6 +20,7 @@ import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.Collection;
@@ -42,11 +45,11 @@ public class EditModeMenu {
   private final PathFinder pathFinder;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
-  private final Collection<AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types;
+  private final Collection<NodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types;
   private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>> types) {
+  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<NodeType<? extends Node<?>>> types) {
     this.pathFinder = pathFinder;
     this.key = group;
     this.types = types;
@@ -57,7 +60,7 @@ public class EditModeMenu {
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
       Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(),
-          () -> editor.setEditMode(c.getPlayer().getUniqueId(), false), 1L);
+          () -> editor.setEditMode(PathPlugin.wrap(c.getPlayer()), false), 1L);
     });
 
     menu.setButton(0, Button.builder()
@@ -72,12 +75,11 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-            AbstractNodeType<? extends de.cubbossa.pathfinder.api.node.Node<?>>
-                type = types.stream().findAny().orElse(null);
+            NodeType<? extends Node<?>> type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
-            pathFinder.getStorage().createAndLoadNode(type, pos).thenAccept(node -> {
+            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(pos)).thenAccept(node -> {
               if (!(node instanceof Groupable<?> groupable)) {
                 return;
               }
@@ -170,7 +172,7 @@ public class EditModeMenu {
             Node<?> nearest = null;
             Location pLoc = context.getPlayer().getLocation();
             for (Node<?> node : nodes) {
-              double d = node.getLocation().distance(pLoc);
+              double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
               if (dist == -1 || d < dist) {
                 nearest = node;
                 dist = d;
@@ -180,7 +182,7 @@ public class EditModeMenu {
               return;
             }
             Player p = context.getPlayer();
-            Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
+            Location newLoc = VectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
             p.teleport(newLoc);
             p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
           });
@@ -247,7 +249,7 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
-      for (SimpleNodeGroup group : nodeGroups) {
+      for (NodeGroup group : nodeGroups) {
 
         TagResolver resolver = TagResolver.builder()
             .tag("key", Messages.formatKey(group.getKey()))
@@ -314,7 +316,7 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
-      for (SimpleNodeGroup group : nodeGroups) {
+      for (NodeGroup group : nodeGroups) {
 
         TagResolver resolver = TagResolver.builder()
             .tag("key", Messages.formatKey(group.getKey()))
@@ -379,12 +381,12 @@ public class EditModeMenu {
   private void openNodeTypeMenu(Player player, Location location) {
 
     ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 2);
-    for (AbstractNodeType<?> type : types) {
+    for (NodeType<?> type : types) {
 
       menu.addListEntry(Button.builder()
-          .withItemStack(type::getDisplayItem)
+          .withItemStack(() -> new ItemStack(Material.CYAN_CONCRETE_POWDER))
           .withClickHandler(Action.RIGHT, c -> {
-            pathFinder.getStorage().createAndLoadNode(type, location);
+            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(location));
             menu.close(player);
           }));
     }

@@ -6,6 +6,9 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
@@ -26,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -47,9 +49,10 @@ public class SelectionUtils {
       new NodeSelectionParser.Argument<>(r -> NumberRange.fromString(r.getRemaining()))
           .execute(c -> {
             if (c.getSender() instanceof Player player) {
+              PathPlayer<Player> p = PathPlugin.wrap(player);
               return c.getScope().stream()
                   .filter(
-                      n -> c.getValue().contains(n.getLocation().distance(player.getLocation())))
+                      n -> c.getValue().contains(n.getLocation().distance(p.getLocation())))
                   .collect(Collectors.toList());
             }
             return Lists.newArrayList();
@@ -63,7 +66,7 @@ public class SelectionUtils {
         }
         return world;
       }).execute(c -> c.getScope().stream()
-              .filter(node -> Objects.equals(node.getLocation().getWorld(), c.getValue()))
+              .filter(node -> Objects.equals(node.getLocation().getWorld(), c.getValue().getUID()))
               .collect(Collectors.toList()))
           .suggestStrings(c -> Bukkit.getWorlds().stream()
               .map(World::getName)
@@ -86,8 +89,8 @@ public class SelectionUtils {
           r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
           .execute(c -> {
             Location playerLocation = c.getSender() instanceof Player player
-                ? player.getLocation()
-                : new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
+                ? PathPlugin.wrap(player).getLocation()
+                : new Location(0, 0, 0, null);
             return switch (c.getValue()) {
               case NEAREST -> c.getScope().stream()
                   .sorted(Comparator.comparingDouble(o -> o.getLocation().distance(playerLocation)))
@@ -108,15 +111,15 @@ public class SelectionUtils {
           })
           .suggestStrings(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
 
-  public static final NodeSelectionParser.Argument<Collection<SimpleNodeGroup>> GROUP =
+  public static final NodeSelectionParser.Argument<Collection<NodeGroup>> GROUP =
       new NodeSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
-        Collection<SimpleNodeGroup> groups = new HashSet<>();
+        Collection<NodeGroup> groups = new HashSet<>();
         NamespacedKey key = NamespacedKey.fromString(in);
         if (key == null) {
           throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
         }
-        Optional<SimpleNodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
+        Optional<NodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
         groups.add(group.orElseThrow(() -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
         return groups;
       })
@@ -126,7 +129,7 @@ public class SelectionUtils {
                   .containsAll(c.getValue()))
               .collect(Collectors.toList()))
           .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
-              .map(SimpleNodeGroup::getKey)
+              .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
 

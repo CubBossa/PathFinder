@@ -519,7 +519,7 @@
 //  }
 //
 //  @Override
-//  public void deletePathVisualizer(PathVisualizer<?, ?> visualizer) {
+//  public void deletePathVisualizer(PathVisualizer<?, ?, ?> visualizer) {
 //    File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
 //    file.deleteOnExit();
 //  }

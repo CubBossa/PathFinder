@@ -79,12 +79,12 @@ public class PathFinderCommand extends Command {
         }));
 
     then(CustomArgs.literal("editmode")
-        .executesPlayer((commandSender, args) -> {
-          NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, NodeHandler.GROUP_GLOBAL);
+        .executesPlayer((player, args) -> {
+          NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), NodeHandler.GROUP_GLOBAL);
         })
         .then(CustomArgs.nodeGroupArgument("group")
-            .executesPlayer((commandSender, args) -> {
-              NodeHandler.getInstance().toggleNodeGroupEditor(commandSender, ((SimpleNodeGroup) args[0]).getKey());
+            .executesPlayer((player, args) -> {
+              NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), ((SimpleNodeGroup) args[0]).getKey());
             })));
 
     then(CustomArgs.literal("help")

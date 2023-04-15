@@ -5,7 +5,7 @@ import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 import java.util.Map;
 
-public interface VisualizerType<T extends PathVisualizer<T, ?>> extends Keyed {
+public interface VisualizerType<T extends PathVisualizer<T, ?, ?>> extends Keyed {
 	String getCommandName();
 
 	T create(NamespacedKey key, String nameFormat);

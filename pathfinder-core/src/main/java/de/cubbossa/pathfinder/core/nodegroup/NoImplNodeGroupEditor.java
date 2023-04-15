@@ -1,14 +1,15 @@
 package de.cubbossa.pathfinder.core.nodegroup;
 
 import de.cubbossa.pathfinder.api.group.NodeGroupEditor;
-import java.util.UUID;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
-public class NoImplNodeGroupEditor implements NodeGroupEditor {
+public class NoImplNodeGroupEditor implements NodeGroupEditor<Object> {
 
   @Getter
   private final NamespacedKey key;
@@ -24,7 +25,7 @@ public class NoImplNodeGroupEditor implements NodeGroupEditor {
   }
 
   @Override
-  public boolean toggleEditMode(UUID uuid) {
+  public boolean toggleEditMode(PathPlayer<Object> player) {
     throw new IllegalStateException("Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
   }
 
@@ -34,22 +35,22 @@ public class NoImplNodeGroupEditor implements NodeGroupEditor {
   }
 
   @Override
-  public void setEditMode(UUID uuid, boolean activate) {
+  public void setEditMode(PathPlayer<Object> player, boolean activate) {
     throw new IllegalStateException("Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
   }
 
   @Override
-  public void showArmorStands(UUID player) {
+  public void showArmorStands(PathPlayer<Object> player) {
 
   }
 
   @Override
-  public void hideArmorStands(UUID player) {
+  public void hideArmorStands(PathPlayer<Object> player) {
 
   }
 
   @Override
-  public boolean isEditing(UUID uuid) {
+  public boolean isEditing(PathPlayer<Object> uuid) {
     return false;
   }
 

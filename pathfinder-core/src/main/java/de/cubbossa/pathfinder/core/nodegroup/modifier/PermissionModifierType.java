@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.core.nodegroup.modifier;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.api.group.ModifierType;
+import de.cubbossa.pathfinder.core.commands.ModifierCommandExtension;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
@@ -9,7 +10,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 
-public class PermissionModifierType implements ModifierType<PermissionModifier> {
+public class PermissionModifierType implements ModifierType<PermissionModifier>,
+    ModifierCommandExtension {
 
   @Override
   public Class<PermissionModifier> getModifierClass() {

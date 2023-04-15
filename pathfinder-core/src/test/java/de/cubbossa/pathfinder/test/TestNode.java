@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.test;
 
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.api.node.Node;
@@ -8,7 +10,6 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Location;
 
 @RequiredArgsConstructor
 @Getter
@@ -24,7 +25,7 @@ public class TestNode implements Node<TestNode> {
   }
 
   @Override
-  public Collection<SimpleEdge> getEdges() {
+  public Collection<Edge> getEdges() {
     return null;
   }
 }

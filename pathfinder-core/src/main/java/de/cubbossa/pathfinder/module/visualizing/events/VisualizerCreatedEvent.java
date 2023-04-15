@@ -14,7 +14,7 @@ public class VisualizerCreatedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final PathVisualizer<?, ?> visualizer;
+  private final PathVisualizer<?, ?, ?> visualizer;
 
   public static HandlerList getHandlerList() {
     return handlers;

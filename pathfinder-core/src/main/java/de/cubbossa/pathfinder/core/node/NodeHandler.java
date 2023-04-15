@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.core.node;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.node.implementation.PlayerNode;
@@ -23,7 +24,6 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import org.bukkit.entity.Player;
 
 public class NodeHandler {
 
@@ -81,16 +81,16 @@ public class NodeHandler {
 
   // Editing
 
-  public @Nullable NamespacedKey getEdited(Player player) {
+  public @Nullable NamespacedKey getEdited(PathPlayer<?> player) {
     return editors.values().stream()
-        .filter(e -> e.isEditing(player.getUniqueId()))
+        .filter(e -> e.isEditing(player))
         .map(NodeGroupEditor::getKey)
         .findFirst().orElse(null);
   }
 
-  public void toggleNodeGroupEditor(Player player, NamespacedKey key) {
+  public void toggleNodeGroupEditor(PathPlayer<?> player, NamespacedKey key) {
     getNodeGroupEditor(key).thenAccept(nodeGroupEditor -> {
-      nodeGroupEditor.toggleEditMode(player.getUniqueId());
+      nodeGroupEditor.toggleEditMode(player);
     });
   }
 

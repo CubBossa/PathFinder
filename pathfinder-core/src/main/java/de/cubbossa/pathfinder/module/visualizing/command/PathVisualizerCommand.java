@@ -1,16 +1,19 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.commands.Command;
-import de.cubbossa.pathfinder.core.commands.CustomArgs;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.core.commands.Command;
+import de.cubbossa.pathfinder.core.commands.CustomArgs;
+import de.cubbossa.pathfinder.core.commands.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.core.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
-import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
@@ -25,7 +28,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
 public class PathVisualizerCommand extends Command {
@@ -52,8 +54,9 @@ public class PathVisualizerCommand extends Command {
         .then(CustomArgs.visualizerTypeArgument("type")
             .then(new StringArgument("key")
                 .executes((commandSender, objects) -> {
-                  onCreate(commandSender, (VisualizerType<? extends PathVisualizer<?,?>>) objects[0],
-                      new NamespacedKey(PathPlugin.getInstance(), (String) objects[1]));
+                  onCreate(commandSender,
+                      (VisualizerType<? extends PathVisualizer<?, ?, ?>>) objects[0],
+                      PathPlugin.pathfinder((String) objects[1]));
                 }))));
 
     then(CustomArgs.literal("delete")
@@ -61,7 +64,7 @@ public class PathVisualizerCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_PV_DELETE)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
-              onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
+              onDelete(commandSender, (PathVisualizer<?, ?, ?>) objects[0]);
             })));
 
     then(CustomArgs.literal("info")
@@ -69,7 +72,7 @@ public class PathVisualizerCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_PV_INFO)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
-              onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
+              onInfo(commandSender, (PathVisualizer<?, ?, ?>) objects[0]);
             })));
 
     then(new VisualizerImportCommand(pathFinder, "import", 0));
@@ -79,16 +82,21 @@ public class PathVisualizerCommand extends Command {
   public void register() {
 
     Argument<String> lit = CustomArgs.literal("edit");
-    for (VisualizerType<? extends PathVisualizer<?,?>> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+    for (VisualizerType<? extends PathVisualizer<?, ?, ?>> type : VisualizerHandler.getInstance()
+        .getVisualizerTypes()) {
+
+      if (!(type instanceof VisualizerTypeCommandExtension cmdExt)) {
+        continue;
+      }
 
       ArgumentTree typeArg = CustomArgs.pathVisualizerArgument("visualizer", type);
-      type.appendEditCommand(typeArg, 0, 1);
+      cmdExt.appendEditCommand(typeArg, 0, 1);
 
       typeArg.then(CustomArgs.literal("name")
           .withPermission(PathPerms.PERM_CMD_PV_SET_NAME)
           .then(CustomArgs.miniMessageArgument("name")
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (String) objects[1], "name", true,
                           visualizer::getNameFormat, visualizer::setNameFormat);
@@ -98,7 +106,7 @@ public class PathVisualizerCommand extends Command {
           .withPermission(PathPerms.PERM_CMD_PV_SET_PERMISSION)
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (String) objects[1], "permission",
                           true,
@@ -110,7 +118,7 @@ public class PathVisualizerCommand extends Command {
           .withPermission(PathPerms.PERM_CMD_PV_INTERVAL)
           .then(CustomArgs.integer("ticks", 1)
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (Integer) objects[1], "interval",
                           true,
@@ -127,13 +135,15 @@ public class PathVisualizerCommand extends Command {
   public void onList(CommandSender sender, Pagination pagination) {
     getPathfinder().getStorage().loadVisualizers().thenAccept(pathVisualizers -> {
       //TODO pagination in load
-      CommandUtils.printList(sender, pagination, pag -> new ArrayList<>(pathVisualizers).subList(pag.getStart(), pag.getEndExclusive()),
+      CommandUtils.printList(sender, pagination,
+          pag -> new ArrayList<>(pathVisualizers).subList(pag.getStart(), pag.getEndExclusive()),
           visualizer -> {
             TagResolver r = TagResolver.builder()
                 .tag("key", Messages.formatKey(visualizer.getKey()))
                 .resolver(Placeholder.component("name", visualizer.getDisplayName()))
                 .resolver(
-                    Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
+                    Placeholder.component("name-format",
+                        Component.text(visualizer.getNameFormat())))
                 .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
                 .build();
 
@@ -145,7 +155,8 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public void onCreate(CommandSender sender, VisualizerType<? extends PathVisualizer<?,?>> type, NamespacedKey key) {
+  public void onCreate(CommandSender sender, VisualizerType<? extends PathVisualizer<?, ?, ?>> type,
+                       NamespacedKey key) {
 
     Optional<?> opt = getPathfinder().getStorage().loadVisualizer(key).join();
     if (opt.isPresent()) {
@@ -165,7 +176,7 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
+  public void onDelete(CommandSender sender, PathVisualizer<?, ?, ?> visualizer) {
     getPathfinder().getStorage().deleteVisualizer(visualizer).thenRun(() -> {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
           .format(TagResolver.builder()
@@ -181,11 +192,15 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public <T extends PathVisualizer<T, ?>> void onInfo(CommandSender sender,
-                                                      PathVisualizer<T, ?> visualizer) {
+  public <T extends PathVisualizer<T, ?, ?>> void onInfo(CommandSender sender, PathVisualizer<T, ?, ?> visualizer) {
+    if (!(visualizer.getType() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
+      return;
+    }
+    // can be safely assumed, the type was extracted from the visualizer
+    VisualizerTypeMessageExtension<T> cast = (VisualizerTypeMessageExtension<T>) msgExt;
 
     FormattedMessage message =
-        visualizer.getType().getInfoMessage((T) visualizer).format(TagResolver.builder()
+        cast.getInfoMessage((T) visualizer).format(TagResolver.builder()
             .tag("key", Messages.formatKey(visualizer.getKey()))
             .resolver(Placeholder.component("name", visualizer.getDisplayName()))
             .resolver(

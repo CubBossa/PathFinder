@@ -19,12 +19,13 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.util.IntPair;
 import de.cubbossa.pathfinder.util.LerpUtils;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,8 +56,8 @@ public class ClientNodeHandler {
 
   public static final Action<TargetContext<UUID>> RIGHT_CLICK_NODE = new Action<>();
   public static final Action<TargetContext<UUID>> LEFT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<SimpleEdge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<SimpleEdge>> LEFT_CLICK_EDGE = new Action<>();
+  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
+  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
   private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
@@ -75,11 +76,11 @@ public class ClientNodeHandler {
   private static int entityId = 10_000;
   private final ProtocolManager protocolManager;
   private final Map<IntPair, Collection<Node<?>>> chunkNodeMap;
-  private final Map<IntPair, Collection<SimpleEdge>> chunkEdgeMap;
+  private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
   private final Map<UUID, Integer> nodeEntityMap;
   private final Map<Integer, UUID> entityNodeMap;
-  private final Map<SimpleEdge, Integer> edgeEntityMap;
-  private final Map<Integer, SimpleEdge> entityEdgeMap;
+  private final Map<Edge, Integer> edgeEntityMap;
+  private final Map<Integer, Edge> entityEdgeMap;
   private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
   private ItemStack nodeGroupHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_BLUE);
   private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
@@ -112,7 +113,7 @@ public class ClientNodeHandler {
         if (nodes != null) {
           showNodes(nodes, event.getPlayer());
         }
-        Collection<SimpleEdge> edges = chunkEdgeMap.get(key);
+        Collection<Edge> edges = chunkEdgeMap.get(key);
         if (edges != null) {
           showEdges(edges, event.getPlayer());
         }
@@ -146,7 +147,7 @@ public class ClientNodeHandler {
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
         }
         if (entityEdgeMap.containsKey(entityId)) {
-          SimpleEdge edge = entityEdgeMap.get(entityId);
+          Edge edge = entityEdgeMap.get(entityId);
           if (edge == null) {
             throw new IllegalStateException("ClientNodeHandler Tables off sync!");
           }
@@ -154,7 +155,7 @@ public class ClientNodeHandler {
           Player player = event.getPlayer();
           int slot = player.getInventory().getHeldItemSlot();
           Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
-          Action<TargetContext<SimpleEdge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
+          Action<TargetContext<Edge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
           menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, edge));
         }
       }
@@ -172,7 +173,7 @@ public class ClientNodeHandler {
   }
 
   public void showNode(Node<?> node, Player player) {
-    Location location = node.getLocation();
+    Location location = VectorUtils.toBukkit(node.getLocation());
     int id = spawnArmorstand(player, location, null, false);
 
     nodeEntityMap.put(node.getNodeId(), id);
@@ -187,10 +188,10 @@ public class ClientNodeHandler {
                 nodeSingleHead});
   }
 
-  public void showEdges(Collection<SimpleEdge> edges, Player player) {
-    Map<SimpleEdge, SimpleEdge> undirected = new HashMap<>();
-    for (SimpleEdge edge : edges) {
-      SimpleEdge contained = undirected.keySet().stream()
+  public void showEdges(Collection<Edge> edges, Player player) {
+    Map<Edge, Edge> undirected = new HashMap<>();
+    for (Edge edge : edges) {
+      Edge contained = undirected.keySet().stream()
           .filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart()))
           .findFirst().orElse(null);
       if (contained != null) {
@@ -204,15 +205,14 @@ public class ClientNodeHandler {
     }
   }
 
-  public void showEdge(SimpleEdge edge, @Nullable SimpleEdge otherDirection, Player player) {
+  public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
     Node<?> start = edge.resolveStart().join();
     Node<?> end = edge.resolveEnd().join();
 
-    Location location = LerpUtils.lerp(start.getLocation(), end.getLocation(), .3f);
+    Location location = LerpUtils.lerp(VectorUtils.toBukkit(start.getLocation()), VectorUtils.toBukkit(end.getLocation()), .3f);
     int id = spawnArmorstand(player, location, null, true);
     equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
-    setHeadRotation(player, id,
-        end.getLocation().toVector().subtract(start.getLocation().toVector()));
+    setHeadRotation(player, id, VectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation())).toVector());
 
     edgeEntityMap.put(edge, id);
     entityEdgeMap.put(id, edge);
@@ -233,19 +233,19 @@ public class ClientNodeHandler {
     nodeIds.forEach(nodeEntityMap::remove);
     new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodeIds.contains(e.getValue()))
         .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
-    nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(node.getLocation())));
+    nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(VectorUtils.toBukkit(node.getLocation()))));
   }
 
-  public void hideEdges(Collection<SimpleEdge> edges, Player player) {
+  public void hideEdges(Collection<Edge> edges, Player player) {
     removeArmorstand(player,
         edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
     edges.forEach(edgeEntityMap::remove);
     edges.forEach(edge -> {
       Node<?> start = edge.resolveStart().join();
       Node<?> end = edge.resolveEnd().join();
-      Location pos = start.getLocation().clone().add(
+      Location pos = VectorUtils.toBukkit(start.getLocation().clone().add(
           end.getLocation().clone().subtract(start.getLocation()).multiply(.5f)
-      );
+      ));
       chunkEdgeMap.remove(locationToChunkIntPair(pos));
     });
   }
@@ -255,21 +255,21 @@ public class ClientNodeHandler {
     teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()),
         location.clone().add(ARMORSTAND_OFFSET));
     if (updateEdges) {
-      for (SimpleEdge edge : node.getEdges()) {
+      for (Edge edge : node.getEdges()) {
         updateEdgePosition(edge, player);
       }
-      for (SimpleEdge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
+      for (Edge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
         updateEdgePosition(edge, player);
       }
     }
   }
 
-  private void updateEdgePosition(SimpleEdge edge, Player player) {
+  private void updateEdgePosition(Edge edge, Player player) {
     Node<?> start = edge.resolveStart().join();
     Node<?> end = edge.resolveEnd().join();
 
     teleportArmorstand(player, edgeEntityMap.get(edge),
-        LerpUtils.lerp(start.getLocation(), end.getLocation(), 0.3f).clone()
+        LerpUtils.lerp(VectorUtils.toBukkit(start.getLocation()), VectorUtils.toBukkit(end.getLocation()), 0.3f).clone()
             .add(ARMORSTAND_CHILD_OFFSET));
   }
 

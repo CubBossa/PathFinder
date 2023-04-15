@@ -14,7 +14,7 @@ import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 public class VisualizerCache {
 
-  private final Cache<NamespacedKey, PathVisualizer<?, ?>> cache;
+  private final Cache<NamespacedKey, PathVisualizer<?, ?, ?>> cache;
   private boolean cachedAll = false;
   private Collection<NamespacedKey> cachedTypes = new HashSet<>();
 
@@ -25,11 +25,11 @@ public class VisualizerCache {
         .build();
   }
 
-  public <T extends PathVisualizer<T, ?>> Optional<T> getVisualizer(NamespacedKey key, Function<NamespacedKey, T> loader) {
+  public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key, Function<NamespacedKey, T> loader) {
     return Optional.ofNullable((T) cache.get(key, loader));
   }
 
-  public Collection<PathVisualizer<?, ?>> getVisualizers(Supplier<Collection<PathVisualizer<?, ?>>> loader) {
+  public Collection<PathVisualizer<?, ?, ?>> getVisualizers(Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }
@@ -38,7 +38,7 @@ public class VisualizerCache {
     return cache.asMap().values();
   }
 
-  public <T extends PathVisualizer<T, ?>> Collection<T> getVisualizers(VisualizerType<T> type, Function<VisualizerType<T>, Collection<T>> loader) {
+  public <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type, Function<VisualizerType<T>, Collection<T>> loader) {
     if (cachedAll || cachedTypes.contains(type.getKey())) {
       return cache.asMap().values().stream()
           .filter(visualizer -> visualizer.getType().equals(type))
@@ -51,11 +51,11 @@ public class VisualizerCache {
     return loaded;
   }
 
-  public void write(PathVisualizer<?, ?> visualizer) {
+  public void write(PathVisualizer<?, ?, ?> visualizer) {
     cache.put(visualizer.getKey(), visualizer);
   }
 
-  public void invalidate(PathVisualizer<?, ?> visualizer) {
+  public void invalidate(PathVisualizer<?, ?, ?> visualizer) {
     cache.invalidate(visualizer.getKey());
   }
 }

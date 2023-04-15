@@ -22,7 +22,7 @@ import de.cubbossa.pathfinder.api.misc.NamespacedKey;
  */
 @Getter
 @Setter
-public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements de.cubbossa.pathfinder.api.visualizer.VisualizerType<T> {
+public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>> implements de.cubbossa.pathfinder.api.visualizer.VisualizerType<T> {
 
   /**
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
@@ -30,7 +30,7 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
   private final NamespacedKey key;
   private VisualizerDataStorage<T> storage = null;
 
-  public VisualizerType(NamespacedKey key) {
+  public AbstractVisualizerType(NamespacedKey key) {
     this.key = key;
   }
 
@@ -48,17 +48,17 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
     return null;
   }
 
-  protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
+  protected <V extends PathVisualizer<?, ?, ?>> void serialize(Map<String, Object> map,
                                                             AbstractVisualizer.Property<V, ?> property,
                                                             V visualizer) {
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
-  protected <A, V extends PathVisualizer<?, ?>> ArgumentTree subCommand(String node,
+  protected <A, V extends PathVisualizer<?, ?, ?>> ArgumentTree subCommand(String node,
                                                                         Argument<A> argument,
                                                                         AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, objects) -> {
-      if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+      if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
         VisualizerHandler.getInstance()
             .setProperty(commandSender, (V) visualizer, property, (A) objects[1]);
       } else {
@@ -70,7 +70,7 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
     }));
   }
 
-  protected <A, V extends PathVisualizer<?, ?>> void loadProperty(Map<String, Object> values,
+  protected <A, V extends PathVisualizer<?, ?, ?>> void loadProperty(Map<String, Object> values,
                                                                   V visualizer,
                                                                   AbstractVisualizer.Property<V, A> property) {
     loadProperty(values, property.getKey(), property.getType(),
