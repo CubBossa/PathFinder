@@ -85,6 +85,9 @@ public class EditModeMenu {
               }
               groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
               pathFinder.getStorage().saveNode(node);
+            }).exceptionally(throwable -> {
+              throwable.printStackTrace();
+              return null;
             });
           } else {
             openNodeTypeMenu(context.getPlayer(), pos);
@@ -113,20 +116,19 @@ public class EditModeMenu {
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
           }
-          Collection<CompletableFuture<Void>> futures = new HashSet<>();
-          futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> node.getEdges().add(
-              new SimpleEdge(edgeStart, c.getTarget(), 1)
-          )));
-          if (undirectedEdges) {
-            futures.add(pathFinder.getStorage().modifyNode(c.getTarget(), node -> node.getEdges().add(
-                new SimpleEdge(c.getTarget(), edgeStart, 1)
-            )));
-          }
-          CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+          pathFinder.getStorage().modifyNode(edgeStart, node -> {
+            node.getEdges().add(new SimpleEdge(edgeStart, c.getTarget(), 1));
+            if (undirectedEdges) {
+              node.getEdges().add(new SimpleEdge(c.getTarget(), edgeStart, 1));
+            }
+          }).thenRun(() -> {
             edgeStart = null;
             c.getMenu().refresh(c.getSlot());
             EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
                 "editor_edge_connect", p, p.getLocation());
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {

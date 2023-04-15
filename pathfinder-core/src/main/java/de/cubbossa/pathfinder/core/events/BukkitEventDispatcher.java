@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.core.events;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -12,7 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-public class EventDispatcher implements de.cubbossa.pathfinder.api.EventDispatcher {
+public class BukkitEventDispatcher implements de.cubbossa.pathfinder.api.EventDispatcher {
 
   private void dispatchEvent(Event event) {
     try {

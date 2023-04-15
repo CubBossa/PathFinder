@@ -118,10 +118,10 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
       if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
         return;
       }
-
       if (!isEdited()) {
         startParticleTask();
       }
+
       BottomInventoryMenu menu = new EditModeMenu(pathFinder, key,
           PathPlugin.getInstance().getNodeTypeRegistry().getTypes()).createHotbarMenu(this, bukkitPlayer);
       editingPlayers.put(player, menu);

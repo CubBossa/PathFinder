@@ -24,11 +24,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -106,33 +108,6 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
-    return loadNode(id).thenApply(n -> {
-      Node<?> node = n.orElseThrow();
-      Collection<NodeGroup> groupsBefore = new HashSet<>();
-      Collection<NodeGroup> groupsAfter = new HashSet<>();
-      if (node instanceof Groupable<?> groupable) {
-        groupsBefore = new ArrayList<>(groupable.getGroups());
-      }
-      updater.accept(node);
-      if (node instanceof Groupable<?> groupable) {
-        groupsAfter = new ArrayList<>(groupable.getGroups());
-      }
-      Collection<NodeGroup> added = new ArrayList<>(groupsAfter);
-      Collection<NodeGroup> removed = new ArrayList<>(groupsBefore);
-      added.removeAll(groupsBefore);
-      removed.removeAll(groupsAfter);
-      if (!added.isEmpty()) {
-        pathFinder.getEventDispatcher().dispatchNodeAssign(node, added);
-      }
-      if (!removed.isEmpty()) {
-        pathFinder.getEventDispatcher().dispatchNodeUnassign(node, removed);
-      }
-      return n;
-    }).thenCompose(n -> saveNode(n.orElseThrow()));
-  }
-
-  @Override
   public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id) {
     return asyncFuture(() -> {
       Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
@@ -169,10 +144,18 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Void> saveNode(Node<?> node) {
-    return asyncFuture(() -> {
+    return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
       implementation.saveNode(node);
       nodeCache.write(node);
     });
+  }
+
+  @Override
+  public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
+    return loadNode(id).thenApply(n -> {
+      updater.accept(n.orElseThrow());
+      return n;
+    }).thenCompose(n -> saveNode(n.orElseThrow()));
   }
 
   @Override
@@ -280,7 +263,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Void> saveGroup(NodeGroup group) {
-    return asyncFuture(() -> {
+    return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       groupCache.write(group);
     });

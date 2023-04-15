@@ -44,6 +44,7 @@ public class SqliteStorage extends SqlStorage {
     try {
       if (connection != null && !connection.isClosed()) {
         connection.close();
+        connection = null;
       }
     } catch (SQLException e) {
       throw new DataStorageException("Could not disconnect Sqlite database", e);
@@ -54,6 +55,9 @@ public class SqliteStorage extends SqlStorage {
     return new ConnectionProvider() {
       @Override
       public @Nullable Connection acquire() throws DataAccessException {
+        if (connection != null) {
+          return connection;
+        }
         try {
           connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
           return connection;
@@ -64,11 +68,6 @@ public class SqliteStorage extends SqlStorage {
 
       @Override
       public void release(Connection connection) throws DataAccessException {
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          throw new DataStorageException("Could not close Sqlite database.", e);
-        }
       }
     };
 

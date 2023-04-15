@@ -13,27 +13,28 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
+import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.api.node.NodeType;
+import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
+import de.cubbossa.pathfinder.api.storage.StorageImplementation;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
-import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
-import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
-import de.cubbossa.pathfinder.api.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -44,9 +45,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -101,32 +103,34 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
       record -> {
         NamespacedKey key = record.getKey();
         SimpleNodeGroup group = new SimpleNodeGroup(key);
+        group.addAll(loadGroupNodes(group));
         group.setWeight(record.getWeight().floatValue());
         return group;
       };
 
   //
 
-  private <T extends PathVisualizer<T, ?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(VisualizerType<T> type) {
+  private <T extends PathVisualizer<T, ?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(
+      VisualizerType<T> type) {
     return record -> {
-        // create visualizer object
-        T visualizer = type.create(record.getKey(),
-            record.getNameFormat());
-        visualizer.setPermission(record.getPermission());
-        Integer interval = record.getInterval();
-        visualizer.setInterval(interval == null ? 20 : interval);
+      // create visualizer object
+      T visualizer = type.create(record.getKey(),
+          record.getNameFormat());
+      visualizer.setPermission(record.getPermission());
+      Integer interval = record.getInterval();
+      visualizer.setInterval(interval == null ? 20 : interval);
 
-        // inject data from map
-        YamlConfiguration cfg = new YamlConfiguration();
-        try {
-          cfg.loadFromString(record.getData());
-        } catch (InvalidConfigurationException e) {
-          e.printStackTrace();
-        }
-        type.deserialize(visualizer, cfg.getValues(false));
+      // inject data from map
+      YamlConfiguration cfg = new YamlConfiguration();
+      try {
+        cfg.loadFromString(record.getData());
+      } catch (InvalidConfigurationException e) {
+        e.printStackTrace();
+      }
+      type.deserialize(visualizer, cfg.getValues(false));
 
-        return visualizer;
-      };
+      return visualizer;
+    };
   }
 
   private final SQLDialect dialect;
@@ -217,8 +221,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public <N extends Node<N>> Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> loadNodeType(UUID node) {
-    List<de.cubbossa.pathfinder.api.node.NodeType<N>> resultSet = create
+  public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
+    List<NodeType<N>> resultSet = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
         .fetch(t -> nodeTypeRegistry.getType(t.getNodeType()));
@@ -226,8 +230,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
-    Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> result = new HashMap<>();
+  public Map<UUID, NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
+    Map<UUID, NodeType<? extends Node<?>>> result = new HashMap<>();
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
         .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
@@ -235,7 +239,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public <N extends Node<N>> N createAndLoadNode(de.cubbossa.pathfinder.api.node.NodeType<N> type, Location location) {
+  public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
     return type.createAndLoadNode(new NodeDataStorage.Context(location));
   }
 
@@ -268,12 +272,26 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   private <N extends Node<N>> void saveNodeTyped(Node<?> node) {
-    AbstractNodeType<N> type = (AbstractNodeType<N>) node.getType();
+    NodeType<N> type = (NodeType<N>) node.getType();
+    N before = type.loadNode(node.getNodeId()).orElseThrow();
     type.saveNode((N) node);
+
+    if (before instanceof Groupable<?> gBefore && node instanceof Groupable<?> gAfter) {
+      ComparisonResult<NodeGroup> cmp = compare(gBefore.getGroups(), gAfter.getGroups());
+      cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
+      cmp.toDeleteIfPresent(nodeGroups -> unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
+    }
+    ComparisonResult<Edge> cmp = compare(before.getEdges(), node.getEdges());
+    cmp.toInsertIfPresent(edges -> {
+      for (Edge edge : edges) {
+        createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
+      }
+    });
+    cmp.toDeleteIfPresent(edges -> edges.forEach(this::deleteEdge));
   }
 
   @Override
-  public void saveNodeType(UUID node, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type) {
+  public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
     create
         .insertInto(PATHFINDER_NODE_TYPE_RELATION)
         .values(node, type)
@@ -281,7 +299,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public void saveNodeTypes(Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> typeMapping) {
+  public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -294,7 +312,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   @Override
   public void deleteNodes(Collection<Node<?>> nodes) {
     Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-    Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> types = loadNodeTypes(ids);
+    Map<UUID, NodeType<? extends Node<?>>> types = loadNodeTypes(ids);
     create
         .deleteFrom(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
@@ -369,7 +387,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     UUID uuid = UUID.randomUUID();
     create
         .insertInto(PATHFINDER_WAYPOINTS)
-        .values(uuid, l.getWorld() == null ? null : l.getWorld(), l.getX(), l.getY(), l.getZ())
+        .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
+            l.getZ())
         .execute();
     Waypoint waypoint = new Waypoint(uuid);
     waypoint.setLocation(l);
@@ -414,6 +433,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
         .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
         .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
+        .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
         .execute();
     //TODO save edges
     //TODO save groups
@@ -521,10 +541,44 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public void saveGroup(NodeGroup group) {
+    NodeGroup before = loadGroup(group.getKey()).orElseThrow();
     create
         .update(PATHFINDER_NODEGROUPS)
         .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.getWeight())
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
+        .execute();
+    ComparisonResult<UUID> cmp = compare(before, group);
+    cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
+    cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
+  }
+
+  public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+    if (groups.isEmpty() || nodes.isEmpty()) {
+      return;
+    }
+    create.batched(configuration -> {
+      for (UUID nodeId : nodes) {
+        for (NodeGroup group : groups) {
+          DSL.using(configuration)
+              .insertInto(PATHFINDER_NODEGROUP_NODES)
+              .columns(PATHFINDER_NODEGROUP_NODES.GROUP_KEY, PATHFINDER_NODEGROUP_NODES.NODE_ID)
+              .values(group.getKey(), nodeId)
+              .onDuplicateKeyIgnore()
+              .execute();
+        }
+      }
+    });
+  }
+
+  public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+    if (groups.isEmpty() || nodes.isEmpty()) {
+      return;
+    }
+    Collection<NamespacedKey> keys = groups.stream().map(NodeGroup::getKey).toList();
+    create
+        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.in(keys))
+        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
         .execute();
   }
 
@@ -536,30 +590,9 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .execute();
   }
 
-  public CompletableFuture<Void> assignNodesToGroup(NamespacedKey group, NodeSelection selection) {
-    create.batched(configuration -> {
-      for (UUID nodeId : selection.stream().map(Node::getNodeId).toList()) {
-        DSL.using(configuration)
-            .insertInto(PATHFINDER_NODEGROUP_NODES)
-            .values(group, nodeId)
-            .onDuplicateKeyIgnore()
-            .execute();
-      }
-    });
-    return CompletableFuture.completedFuture(null);
-  }
-
-  public CompletableFuture<Void> removeNodesFromGroup(NamespacedKey key, NodeSelection selection) {
-    create
-        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(key))
-        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(selection))
-        .execute();
-    return CompletableFuture.completedFuture(null);
-  }
-
   @Override
-  public DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time) {
+  public DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key,
+                                                LocalDateTime time) {
     create
         .insertInto(PATHFINDER_DISCOVERINGS)
         .values(key, player, time)
@@ -600,7 +633,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     return CompletableFuture.completedFuture(new SimpleEdge(start, end, (float) weight));
   }
 
-  public CompletableFuture<Collection<SimpleEdge>> connectNodes(NodeSelection start, NodeSelection end) {
+  public CompletableFuture<Collection<SimpleEdge>> connectNodes(NodeSelection start,
+                                                                NodeSelection end) {
     CompletableFuture<Collection<SimpleEdge>> future = new CompletableFuture<>();
     create.batched(configuration -> {
       Collection<SimpleEdge> edges = new HashSet<>();
@@ -690,12 +724,14 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+  public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
+                                                                       NamespacedKey key) {
     return null;
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+  public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
+                                                                        NamespacedKey key) {
     return create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(key))
@@ -704,7 +740,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type) {
+  public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(
+      VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
@@ -715,7 +752,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
 
-  private <T extends PathVisualizer<T, ?, ?>> Map<String, Object> serialize(PathVisualizer<?, ?, ?> pathVisualizer) {
+  private <T extends PathVisualizer<T, ?, ?>> Map<String, Object> serialize(
+      PathVisualizer<?, ?, ?> pathVisualizer) {
     VisualizerType<T> type = ((T) pathVisualizer).getType();
     return type.serialize((T) pathVisualizer);
   }
@@ -761,5 +799,29 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .deleteFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))
         .execute();
+  }
+
+  private <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after) {
+    return compare(before, after, HashSet::new);
+  }
+
+  private <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after,
+                                          Function<Collection<T>, Collection<T>> collector) {
+    Collection<T> toDelete = collector.apply(before);
+    toDelete.removeAll(after);
+    Collection<T> toInsert = collector.apply(after);
+    toInsert.removeAll(before);
+    return new ComparisonResult<>(toDelete, toInsert);
+  }
+
+  record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {
+
+    public void toDeleteIfPresent(Consumer<Collection<T>> consumer) {
+      if (!toDelete.isEmpty()) consumer.accept(toDelete);
+    }
+
+    public void toInsertIfPresent(Consumer<Collection<T>> consumer) {
+      if (!toInsert.isEmpty()) consumer.accept(toInsert);
+    }
   }
 }

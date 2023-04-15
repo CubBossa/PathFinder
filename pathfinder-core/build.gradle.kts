@@ -191,6 +191,7 @@ tasks {
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
         // otherwise jar grows from ~8mb to ~30mb
         dependencies {
+            include(project(":pathfinder-api"))
             include(project(":pathfinder-graph"))
             include(project(":pathfinder-editmode"))
             include(project(":pathfinder-scripted-visualizer"))

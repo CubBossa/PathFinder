@@ -3,12 +3,12 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathfinder.api.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
-import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.misc.Vector;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
+import de.cubbossa.pathfinder.core.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.core.listener.PlayerListener;
 import de.cubbossa.pathfinder.core.node.NodeHandler;
 import de.cubbossa.pathfinder.core.node.AbstractNodeType;
@@ -26,13 +26,11 @@ import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.PathPlayerImpl;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.translations.TranslationHandler;
 import java.io.File;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -95,6 +93,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     commandRegistry = new CommandRegistry(this);
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());
+    eventDispatcher = new BukkitEventDispatcher();
   }
 
   @SneakyThrows
