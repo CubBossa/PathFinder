@@ -55,4 +55,14 @@ public final class Location extends Vector {
 	public Location normalize() {
 		return divide(length());
 	}
+
+	@Override
+	public String toString() {
+		return "Location{" +
+				"world=" + world.getName() +
+				", x=" + x +
+				", y=" + y +
+				", z=" + z +
+				'}';
+	}
 }

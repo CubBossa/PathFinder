@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.Pagination;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,12 +85,34 @@ public class GroupCache {
     cache.put(group.getKey(), group);
   }
 
+  public void write(Node<?> node) {
+    if (node instanceof Groupable<?> groupable) {
+      nodeGroupCache.put(node.getNodeId(), groupable.getGroups());
+      for (NodeGroup present : cache.asMap().values()) {
+        if (groupable.getGroups().contains(present)) {
+          present.add(groupable.getNodeId());
+        } else {
+          present.remove(groupable.getNodeId());
+        }
+      }
+    }
+  }
+
   public void invalidate(NodeGroup group) {
     cache.invalidate(group.getKey());
     for (UUID nodeId : group) {
       Collection<NodeGroup> groups = nodeGroupCache.getIfPresent(nodeId);
       if (groups != null) {
         groups.remove(group);
+      }
+    }
+  }
+
+  public void invalidate(Node<?> node) {
+    nodeGroupCache.invalidate(node.getNodeId());
+    if (node instanceof Groupable<?> groupable) {
+      for (NodeGroup value : cache.asMap().values()) {
+        value.remove(groupable.getNodeId());
       }
     }
   }

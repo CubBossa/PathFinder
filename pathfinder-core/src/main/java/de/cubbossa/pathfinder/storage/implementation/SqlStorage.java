@@ -241,7 +241,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
         .fetch(t -> nodeTypeRegistry.getType(t.getNodeType()));
-    debug("Storage Implementation: 'loadNodeType(UUID): Optional<NodeType<N>>'");
+    debug(" > Storage Implementation: 'loadNodeType(UUID): Optional<NodeType<N>>'");
     return resultSet.stream().findFirst();
   }
 
@@ -251,7 +251,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
         .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
-    debug("Storage Implementation: 'loadNodeTypes(Collection<UUID>): Map<UUID, NodeType<N>>'");
+    debug(" > Storage Implementation: 'loadNodeTypes(Collection<UUID>): Map<UUID, NodeType<N>>'");
     return result;
   }
 
@@ -452,8 +452,6 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
         .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
         .execute();
-    //TODO save edges
-    //TODO save groups
   }
 
   @Override
@@ -470,13 +468,13 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .insertInto(PATHFINDER_NODEGROUPS)
         .values(key, 1)
         .execute();
-    debug("Storage Implementation: 'createAndLoadGroup(" + key + ")'");
+    debug(" > Storage Implementation: 'createAndLoadGroup(" + key + ")'");
     return new SimpleNodeGroup(key);
   }
 
   @Override
   public Optional<NodeGroup> loadGroup(NamespacedKey key) {
-    debug("Storage Implementation: 'loadGroup(" + key + ")'");
+    debug(" > Storage Implementation: 'loadGroup(" + key + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .fetch(groupMapper).stream().findAny();
@@ -484,7 +482,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<UUID> loadGroupNodes(NodeGroup group) {
-    debug("Storage Implementation: 'loadGroupNodes(" + group.getKey() + ")'");
+    debug(" > Storage Implementation: 'loadGroupNodes(" + group.getKey() + ")'");
     return create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
         .from(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
@@ -493,7 +491,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
-    debug("Storage Implementation: 'loadGroups(" + key.stream().map(NamespacedKey::toString).collect(Collectors.joining(",")) + ")'");
+    debug(" > Storage Implementation: 'loadGroups(" + key.stream().map(NamespacedKey::toString).collect(Collectors.joining(",")) + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);
@@ -501,7 +499,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public List<NodeGroup> loadGroups(Pagination pagination) {
-    debug("Storage Implementation: 'loadGroups(" + pagination + ")'");
+    debug(" > Storage Implementation: 'loadGroups(" + pagination + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .offset(pagination.getOffset())
         .limit(pagination.getLimit())
@@ -510,7 +508,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<NodeGroup> loadGroups(UUID node) {
-    debug("Storage Implementation: 'loadGroups(" + node + ")'");
+    debug(" > Storage Implementation: 'loadGroups(" + node + ")'");
     return create.select().from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_NODEGROUP_NODES)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))
@@ -524,20 +522,20 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   private Waypoint insertGroups(Waypoint waypoint) {
-    debug("Storage Implementation: 'insertGroups(" + waypoint.getNodeId() + ")'");
+    debug(" > Storage Implementation: 'insertGroups(" + waypoint.getNodeId() + ")'");
     loadGroups(waypoint.getNodeId()).forEach(waypoint::addGroup);
     return waypoint;
   }
 
   private Waypoint insertEdges(Waypoint waypoint) {
-    debug("Storage Implementation: 'insertEdges(" + waypoint.getNodeId() + ")'");
+    debug(" > Storage Implementation: 'insertEdges(" + waypoint.getNodeId() + ")'");
     waypoint.getEdges().addAll(loadEdgesFrom(waypoint.getNodeId()));
     return waypoint;
   }
 
   @Override
   public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
-    debug("Storage Implementation: 'loadGroups(" + modifier.getSimpleName() + ")'");
+    debug(" > Storage Implementation: 'loadGroups(" + modifier.getSimpleName() + ")'");
     return create
         .select()
         .from(PATHFINDER_NODEGROUPS)
@@ -556,7 +554,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<NodeGroup> loadAllGroups() {
-    debug("Storage Implementation: 'loadAllGroups()'");
+    debug(" > Storage Implementation: 'loadAllGroups()'");
     return create.selectFrom(PATHFINDER_NODEGROUPS).fetch(groupMapper);
   }
 
@@ -571,7 +569,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     Storage.ComparisonResult<UUID> cmp = Storage.ComparisonResult.compare(before, group);
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
-    debug("Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
+    debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
   }
 
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
@@ -590,7 +588,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         }
       }
     });
-    debug("Storage Implementation: 'assignToGroups("
+    debug(" > Storage Implementation: 'assignToGroups("
         + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString).collect(Collectors.joining(",")) + "]"
         + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
@@ -605,7 +603,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.in(keys))
         .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
         .execute();
-    debug("Storage Implementation: 'unassignFromGroups("
+    debug(" > Storage Implementation: 'unassignFromGroups("
         + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString).collect(Collectors.joining(",")) + "]"
         + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
@@ -616,7 +614,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
         .execute();
-    debug("Storage Implementation: 'deleteGroup(" + group.getKey() + ")'");
+    debug(" > Storage Implementation: 'deleteGroup(" + group.getKey() + ")'");
   }
 
   @Override

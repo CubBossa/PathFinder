@@ -45,7 +45,7 @@ public class NodeCache {
     if (!allCached) {
       Collection<UUID> notPreset = new HashSet<>();
       for (UUID id : ids) {
-        if (nodeCache.containsKey(id)) {
+        if (!nodeCache.containsKey(id)) {
           notPreset.add(id);
         }
       }

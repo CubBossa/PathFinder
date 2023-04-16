@@ -82,8 +82,6 @@ public interface Storage {
 
   CompletableFuture<Collection<NodeGroup>> loadAllGroups();
 
-  CompletableFuture<Collection<Node<?>>> loadGroupNodes(NodeGroup group);
-
   CompletableFuture<Void> saveGroup(NodeGroup group);
 
   CompletableFuture<Void> deleteGroup(NodeGroup group);

@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -100,8 +101,8 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   // Nodes
   @Override
-  public <N extends Node<N>> CompletableFuture<N> createAndLoadNode(NodeType<N> type,
-                                                                    Location location) {
+  public <N extends Node<N>> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location) {
+    debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
       N node = implementation.createAndLoadNode(type, location);
       nodeCache.write(node);
@@ -112,6 +113,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id) {
+    debug("Storage: 'loadNode(" + id + ")'");
     return asyncFuture(() -> {
       Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
       if (opt.isPresent()) {
@@ -124,8 +126,8 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(
-      de.cubbossa.pathfinder.api.node.NodeType<N> type, UUID id) {
+  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
+    debug("Storage: 'loadNode(" + type.getKey() + ", " + id + ")'");
     return asyncFuture(() -> {
       Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
       if (opt.isPresent()) {
@@ -137,24 +139,29 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Collection<Node<?>>> loadNodes() {
+    debug("Storage: 'loadNodes()'");
     return asyncFuture(() -> nodeCache.getAllNodes(implementation::loadNodes));
   }
 
   @Override
   public CompletableFuture<Collection<Node<?>>> loadNodes(Collection<UUID> ids) {
+    debug("Storage: 'loadNodes(" + ids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     return asyncFuture(() -> nodeCache.getNodes(ids, implementation::loadNodes));
   }
 
   @Override
   public CompletableFuture<Void> saveNode(Node<?> node) {
+    debug("Storage: 'saveNode(" + node.getNodeId() + ")'");
     return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
       implementation.saveNode(node);
       nodeCache.write(node);
+      groupCache.write(node);
     });
   }
 
   @Override
   public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
+    debug("Storage: 'modifyNode(" + id + ")'");
     return loadNode(id).thenApply(n -> {
       updater.accept(n.orElseThrow());
       return n;
@@ -163,10 +170,12 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids) {
+    debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     return loadNodes(uuids).thenAccept(nodes -> {
       implementation.deleteNodes(nodes);
       uuids.forEach(nodeCache::invalidate);
       uuids.forEach(edgeCache::invalidate);
+      nodes.forEach(groupCache::invalidate);
       pathFinder.getEventDispatcher().dispatchNodesDelete(uuids);
     });
   }
@@ -222,6 +231,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   // Groups
   @Override
   public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
+    debug("Storage: 'createAndLoadGroup(" + key + ")'");
     return asyncFuture(() -> {
       NodeGroup group = implementation.createAndLoadGroup(key);
       groupCache.write(group);
@@ -231,41 +241,43 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key) {
+    debug("Storage: 'loadGroup(" + key + ")'");
     return asyncFuture(() -> groupCache.getGroup(key, k -> implementation.loadGroup(k).orElseThrow()));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
+    debug("Storage: 'loadGroups(" + pagination + ")'");
     return asyncFuture(() -> groupCache.getGroups(pagination, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys) {
+    debug("Storage: 'loadGroups(" + keys.stream().map(NamespacedKey::toString).collect(Collectors.joining(",")) + ")'");
     return asyncFuture(() -> groupCache.getGroups(keys, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node) {
+    debug("Storage: 'loadGroups(" + node + ")'");
     return asyncFuture(() -> groupCache.getGroups(node, implementation::loadGroups));
   }
 
   @Override
   public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier) {
+    debug("Storage: 'loadGroups(" + modifier + ")'");
     return asyncFuture(() -> groupCache.getGroups(modifier, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadAllGroups() {
+    debug("Storage: 'loadAllGroups()'");
     return asyncFuture(() -> groupCache.getGroups(implementation::loadAllGroups));
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> loadGroupNodes(NodeGroup group) {
-    return null;
-  }
-
-  @Override
   public CompletableFuture<Void> saveGroup(NodeGroup group) {
+    debug("Storage: 'saveGroup(" + group.getKey() + ")'");
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       groupCache.write(group);
@@ -275,6 +287,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   @Override
   public CompletableFuture<Void> deleteGroup(NodeGroup group) {
+    debug("Storage: 'deleteGroup(" + group.getKey() + ")'");
     return asyncFuture(() -> {
       implementation.deleteGroup(group);
       groupCache.invalidate(group);
@@ -366,6 +379,10 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
       implementation.deleteVisualizer(visualizer);
       visualizerCache.invalidate(visualizer);
     });
+  }
+
+  private void debug(String message) {
+    pathFinder.getLogger().log(Level.INFO, message);
   }
 
   public record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {
