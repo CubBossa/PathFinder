@@ -1,12 +1,14 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
@@ -17,8 +19,8 @@ public class SqliteStorage extends SqlStorage {
   private final File file;
   private Connection connection;
 
-  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry) {
-    super(SQLDialect.SQLITE, nodeTypeRegistry);
+  public SqliteStorage(PathFinder pathFinder, File file, NodeTypeRegistry nodeTypeRegistry) {
+    super(pathFinder, SQLDialect.SQLITE, nodeTypeRegistry);
     this.file = file;
 
     PathPlugin.getInstance().getLogger().info("Setting up SQLITE database: " + file.getAbsolutePath());
@@ -30,9 +32,6 @@ public class SqliteStorage extends SqlStorage {
       file.createNewFile();
     }
     try {
-      String url = "jdbc:sqlite:" + file.getAbsolutePath();
-      connection = DriverManager.getConnection(url);
-      connection.setAutoCommit(false);
       super.init();
 
     } catch (SQLException e) {
@@ -54,7 +53,7 @@ public class SqliteStorage extends SqlStorage {
   public ConnectionProvider getConnectionProvider() {
     return new ConnectionProvider() {
       @Override
-      public @Nullable Connection acquire() throws DataAccessException {
+      public synchronized @Nullable Connection acquire() throws DataAccessException {
         if (connection != null) {
           return connection;
         }
@@ -66,8 +65,12 @@ public class SqliteStorage extends SqlStorage {
         }
       }
 
+      @SneakyThrows
       @Override
-      public void release(Connection connection) throws DataAccessException {
+      public void release(Connection con) throws DataAccessException {
+        con.commit();
+        con.close();
+        connection = null;
       }
     };
 

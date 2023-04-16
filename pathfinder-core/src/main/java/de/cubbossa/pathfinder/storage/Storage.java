@@ -1,30 +1,28 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.Keyed;
 import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.Pagination;
+import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.api.storage.StorageImplementation;
-import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
 import de.cubbossa.pathfinder.storage.cache.EdgeCache;
 import de.cubbossa.pathfinder.storage.cache.GroupCache;
 import de.cubbossa.pathfinder.storage.cache.NodeCache;
 import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
-import de.cubbossa.pathfinder.api.misc.Pagination;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +34,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
 @Getter
 @RequiredArgsConstructor
@@ -62,11 +59,17 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   private CompletableFuture<Void> asyncFuture(Runnable runnable) {
-    return CompletableFuture.runAsync(runnable);
+    return CompletableFuture.runAsync(runnable).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
-    return CompletableFuture.supplyAsync(supplier);
+    return CompletableFuture.supplyAsync(supplier).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   // Node Type
@@ -266,6 +269,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       groupCache.write(group);
+      nodeCache.write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
     });
   }
 
@@ -362,5 +366,29 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
       implementation.deleteVisualizer(visualizer);
       visualizerCache.invalidate(visualizer);
     });
+  }
+
+  public record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {
+
+    public static <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after) {
+      return compare(before, after, HashSet::new);
+    }
+
+    public static <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after,
+                                                  Function<Collection<T>, Collection<T>> collector) {
+      Collection<T> toDelete = collector.apply(before);
+      toDelete.removeAll(after);
+      Collection<T> toInsert = collector.apply(after);
+      toInsert.removeAll(before);
+      return new ComparisonResult<>(toDelete, toInsert);
+    }
+
+    public void toDeleteIfPresent(Consumer<Collection<T>> consumer) {
+      if (!toDelete.isEmpty()) consumer.accept(toDelete);
+    }
+
+    public void toInsertIfPresent(Consumer<Collection<T>> consumer) {
+      if (!toInsert.isEmpty()) consumer.accept(toInsert);
+    }
   }
 }

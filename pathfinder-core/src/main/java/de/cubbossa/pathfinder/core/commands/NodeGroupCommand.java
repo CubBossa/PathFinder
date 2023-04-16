@@ -6,12 +6,14 @@ import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.group.ModifierType;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -101,6 +103,9 @@ public class NodeGroupCommand extends Command {
   }
 
   private void listGroups(CommandSender sender, Pagination pagination) {
+    getPathfinder().getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+      sender.sendMessage(nodeGroups.stream().map(NodeGroup::getKey).map(NamespacedKey::getKey).collect(Collectors.joining(", ")));
+    });
     getPathfinder().getStorage().loadGroups(pagination).thenApply(nodeGroups -> {
       CommandUtils.printList(
           sender,

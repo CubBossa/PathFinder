@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.Pagination;
+import de.cubbossa.pathfinder.util.CommandUtils;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -23,10 +25,8 @@ public class GroupCache {
   public GroupCache() {
     this.cache = Caffeine.newBuilder()
         .maximumSize(100)
-        .weakValues()
         .build();
     this.nodeGroupCache = Caffeine.newBuilder()
-        .weakValues()
         .build();
   }
 
@@ -43,7 +43,8 @@ public class GroupCache {
 
   public List<NodeGroup> getGroups(Pagination pagination, Function<Pagination, List<NodeGroup>> loader) {
     if (cachedAll) {
-      return cache.asMap().values().stream().toList().subList(pagination.getOffset(), pagination.getOffset() + pagination.getLimit());
+      List<NodeGroup> present = cache.asMap().values().stream().toList();
+      return CommandUtils.subList(present, pagination.getOffset(), pagination.getOffset() + pagination.getLimit());
     }
     return loader.apply(pagination);
   }
@@ -66,7 +67,7 @@ public class GroupCache {
 
   public Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader) {
     if (cachedAll) {
-      return cache.asMap().values();
+      return new HashSet<>(cache.asMap().values());
     }
     Collection<NodeGroup> loaded = loader.get();
     loaded.forEach(g -> cache.put(g.getKey(), g));

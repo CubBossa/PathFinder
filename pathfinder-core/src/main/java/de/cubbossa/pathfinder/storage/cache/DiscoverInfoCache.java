@@ -28,7 +28,6 @@ public class DiscoverInfoCache {
     cache = Caffeine.newBuilder()
         .expireAfterAccess(10, TimeUnit.MINUTES)
         .maximumSize(1000)
-        .weakValues()
         .build();
   }
 

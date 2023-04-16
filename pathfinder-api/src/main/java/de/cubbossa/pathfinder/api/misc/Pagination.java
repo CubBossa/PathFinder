@@ -19,6 +19,14 @@ public final class Pagination {
     return offset + limit;
   }
 
+  @Override
+  public String toString() {
+    return "Pagination{" +
+        "offset=" + offset +
+        ", limit=" + limit +
+        '}';
+  }
+
   public static Pagination pagination(int offset, int limit) {
     return new Pagination(offset, limit);
   }

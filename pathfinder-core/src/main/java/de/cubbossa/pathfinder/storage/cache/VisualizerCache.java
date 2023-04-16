@@ -21,7 +21,6 @@ public class VisualizerCache {
   public VisualizerCache() {
     cache = Caffeine.newBuilder()
         .maximumSize(100)
-        .weakValues()
         .build();
   }
 

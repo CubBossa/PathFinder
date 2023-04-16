@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.api.misc;
 
+import java.util.Objects;
 import lombok.Getter;
 
 @Getter
@@ -23,6 +24,18 @@ public final class NamespacedKey {
 	@Override
 	public String toString() {
 		return namespace + SEPARATOR + key;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		NamespacedKey that = (NamespacedKey) o;
+		return Objects.equals(namespace, that.namespace) && Objects.equals(key, that.key);
 	}
 
 	@Override
