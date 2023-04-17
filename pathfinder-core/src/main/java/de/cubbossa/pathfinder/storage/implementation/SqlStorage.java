@@ -265,11 +265,15 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
-    return type.createAndLoadNode(new NodeDataStorage.Context(location));
+    debug(" > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
+    N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
+    saveNodeType(node.getNodeId(), type);
+    return node;
   }
 
   @Override
   public <N extends Node<N>> Optional<N> loadNode(UUID id) {
+    debug(" > Storage Implementation: 'loadNode(" + id + ")'");
     Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> type = loadNodeType(id);
     if (type.isPresent()) {
       return type.get().loadNode(id);
@@ -279,6 +283,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<Node<?>> loadNodes() {
+    debug(" > Storage Implementation: 'loadNodes()'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadAllNodes().stream())
         .collect(Collectors.toList());
@@ -286,6 +291,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<Node<?>> loadNodes(Collection<UUID> ids) {
+    debug(" > Storage Implementation: 'loadNodes(" + ids.stream()
+        .map(UUID::toString).collect(Collectors.joining(", ")) + ")'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadNodes(ids).stream())
         .collect(Collectors.toList());
@@ -293,6 +300,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public void saveNode(Node<?> node) {
+    debug(" > Storage Implementation: 'saveNode(" + node.getNodeId() + ")'");
     saveNodeTyped(node);
   }
 
@@ -317,14 +325,17 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
+    debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
     create
         .insertInto(PATHFINDER_NODE_TYPE_RELATION)
-        .values(node, type)
+        .values(node, type.getKey())
         .execute();
   }
 
   @Override
   public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
+    debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
+            .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}").collect(Collectors.joining(", ")) + ")'");
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -336,6 +347,8 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public void deleteNodes(Collection<Node<?>> nodes) {
+    debug(" > Storage Implementation: 'deleteNodes(" + nodes.stream()
+        .map(Node::getNodeId).map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
     Map<UUID, NodeType<? extends Node<?>>> types = loadNodeTypes(ids);
     create
@@ -361,11 +374,13 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     create.insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)
         .execute();
+    debug(" > Storage Implementation: 'createAndLoadEdge(" + start + ", " + end + ")'");
     return new SimpleEdge(start, end, (float) weight);
   }
 
   @Override
   public Collection<Edge> loadEdgesFrom(UUID start) {
+    debug(" > Storage Implementation: 'loadEdgesFrom(" + start + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .fetch(edgeMapper);
@@ -373,6 +388,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Collection<Edge> loadEdgesTo(UUID end) {
+    debug(" > Storage Implementation: 'loadEdgesTo(" + end + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .fetch(edgeMapper);
@@ -380,6 +396,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
 
   @Override
   public Optional<Edge> loadEdge(UUID start, UUID end) {
+    debug(" > Storage Implementation: 'loadEdge(" + start + ", " + end + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .and(PATHFINDER_EDGES.START_ID.eq(start))
@@ -393,6 +410,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
+    debug(" > Storage Implementation: 'saveEdge(" + edge + ")'");
   }
 
   @Override
@@ -401,6 +419,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
+    debug(" > Storage Implementation: 'deleteEdge(" + edge + ")'");
   }
 
   private void deleteNode(Node node, NodeType type) {

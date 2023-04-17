@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
@@ -15,7 +16,7 @@ public class SqlStorageTest extends StorageTest {
 
   @Override
   StorageImplementation storage() {
-    return new SqlStorage(SQLDialect.H2, nodeTypeRegistry) {
+    SqlStorage implementation = new SqlStorage(SQLDialect.H2, nodeTypeRegistry) {
       @Override
       public ConnectionProvider getConnectionProvider() {
         final Connection connection;
@@ -47,5 +48,7 @@ public class SqlStorageTest extends StorageTest {
         }
       }
     };
+    implementation.setLogger(Logger.getLogger("TESTS"));
+    return implementation;
   }
 }

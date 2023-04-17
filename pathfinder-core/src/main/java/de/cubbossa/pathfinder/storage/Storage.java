@@ -85,17 +85,6 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   // Node Type
 
   @Override
-  public CompletableFuture<Void> saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
-    return asyncFuture(() -> implementation.saveNodeType(node, type));
-  }
-
-  @Override
-  public CompletableFuture<Void> saveNodeTypes(
-      Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
-    return asyncFuture(() -> implementation.saveNodeTypes(typeMapping));
-  }
-
-  @Override
   public <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(
       UUID node) {
     return asyncFuture(() -> implementation.loadNodeType(node));

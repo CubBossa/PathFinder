@@ -62,21 +62,14 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
   private final Map<PathPlayer<Player>, BottomInventoryMenu> editingPlayers;
   private final Map<PathPlayer<Player>, GameMode> preservedGameModes;
 
-  private final Collection<Integer> editModeTasks;
-
   private final Map<UUID, Node<?>> nodes = new HashMap<>();
   private final Collection<Edge> edges = new HashSet<>();
 
-  private float particleDistance = .3f;
-  private int tickDelay = 5;
-  private Color colorFrom = new Color(255, 0, 0);
-  private Color colorTo = new Color(0, 127, 255);
 
   public DefaultNodeGroupEditor(NodeGroup group) {
     this.pathFinder = PathFinderProvider.get();
     this.key = group.getKey();
 
-    this.editModeTasks = new HashSet<>();
     this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
     this.editingPlayers = new HashMap<>();
     this.preservedGameModes = new HashMap<>();
@@ -191,8 +184,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
   }
 
   private void stopParticleTask() {
-    var sched = Bukkit.getScheduler();
-    editModeTasks.forEach(sched::cancelTask);
+
   }
 
   /**
@@ -201,63 +193,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
    * Wird asynchron ausgeführt
    */
   public void updateEditModeParticles() {
-    CompletableFuture.runAsync(() -> {
 
-      var sched = Bukkit.getScheduler();
-      new ArrayList<>(editModeTasks).forEach(sched::cancelTask);
-
-      Map<Edge, Boolean> undirected = new HashMap<>();
-      for (Edge edge : edges) {
-        Edge contained = edges.stream()
-            .filter(e -> e.getEnd().equals(edge.getStart()) && e.getStart().equals(edge.getEnd()))
-            .findAny().orElse(null);
-        if (contained != null && undirected.containsKey(contained)) {
-          undirected.put(contained, true);
-        } else {
-          undirected.put(edge, false);
-        }
-      }
-
-      Map<Color, List<Object>> packets = new HashMap<>();
-      Map<Color, ParticleBuilder> particles = new HashMap<>();
-
-      for (var entry : undirected.entrySet()) {
-        entry.getKey().resolveStart().thenAccept(start -> {
-          entry.getKey().resolveEnd().thenAccept(end -> {
-            if (!Objects.equals(start.getLocation().getWorld(),
-                end.getLocation().getWorld())) {
-              return;
-            }
-            boolean directed = !entry.getValue();
-
-            Vector a = VectorUtils.toBukkit(start.getLocation().asVector());
-            Vector b = VectorUtils.toBukkit(end.getLocation().asVector());
-            double dist = a.distance(b);
-
-            for (float i = 0; i < dist; i += particleDistance) {
-              Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
-
-              ParticleBuilder builder = particles.computeIfAbsent(c,
-                  k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-              packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
-                  LerpUtils.lerp(a, b, i / dist)
-                      .toLocation(Bukkit.getWorld(start.getLocation().getWorld().getUniqueId()))).toPacket());
-            }
-          });
-        });
-      }
-      for (var entry : packets.entrySet()) {
-        editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay,
-            () -> editingPlayers.keySet().stream()
-                .map(PathPlayer::unwrap)
-                .filter(Objects::nonNull)
-                .filter(Player::isOnline)
-                .collect(Collectors.toSet())));
-      }
-    }).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
-    });
   }
 
   @EventHandler

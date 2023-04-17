@@ -25,11 +25,6 @@ public interface Storage {
 
   StorageImplementation getImplementation();
 
-  CompletableFuture<Void> saveNodeType(UUID node,
-                                       de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type);
-
-  CompletableFuture<Void> saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping);
-
   <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node);
 
   CompletableFuture<Map<UUID, NodeType<? extends Node<?>>>> loadNodeTypes(Collection<UUID> nodes);
