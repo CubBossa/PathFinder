@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import de.cubbossa.pathfinder.api.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
@@ -31,23 +32,31 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+
 @Getter
-@RequiredArgsConstructor
+@Setter
 public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
-  private final PathFinder pathFinder;
-  @Setter
+  private @Nullable EventDispatcher eventDispatcher;
+  private @Nullable Logger logger;
+
   private StorageImplementation implementation;
   private final NodeCache nodeCache = new NodeCache();
   private final EdgeCache edgeCache = new EdgeCache();
   private final GroupCache groupCache = new GroupCache();
   private final VisualizerCache visualizerCache = new VisualizerCache();
   private final DiscoverInfoCache discoverInfoCache = new DiscoverInfoCache();
+
+  private Optional<EventDispatcher> eventDispatcher() {
+    return Optional.ofNullable(eventDispatcher);
+  }
 
   @Override
   public void init() throws Exception {
@@ -76,25 +85,24 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   // Node Type
 
   @Override
-  public CompletableFuture<Void> saveNodeType(UUID node,
-                                              de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type) {
+  public CompletableFuture<Void> saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
     return asyncFuture(() -> implementation.saveNodeType(node, type));
   }
 
   @Override
   public CompletableFuture<Void> saveNodeTypes(
-      Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>> typeMapping) {
+      Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
     return asyncFuture(() -> implementation.saveNodeTypes(typeMapping));
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Optional<de.cubbossa.pathfinder.api.node.NodeType<N>>> loadNodeType(
+  public <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(
       UUID node) {
     return asyncFuture(() -> implementation.loadNodeType(node));
   }
 
   @Override
-  public CompletableFuture<Map<UUID, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>>>> loadNodeTypes(
+  public CompletableFuture<Map<UUID, NodeType<? extends Node<?>>>> loadNodeTypes(
       Collection<UUID> nodes) {
     return asyncFuture(() -> implementation.loadNodeTypes(nodes));
   }
@@ -106,7 +114,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
     return asyncFuture(() -> {
       N node = implementation.createAndLoadNode(type, location);
       nodeCache.write(node);
-      pathFinder.getEventDispatcher().dispatchNodeCreate(node);
+      eventDispatcher().ifPresent(e -> e.dispatchNodeCreate(node));
       return node;
     });
   }
@@ -176,7 +184,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
       uuids.forEach(nodeCache::invalidate);
       uuids.forEach(edgeCache::invalidate);
       nodes.forEach(groupCache::invalidate);
-      pathFinder.getEventDispatcher().dispatchNodesDelete(uuids);
+      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(uuids));
     });
   }
 
@@ -242,7 +250,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   @Override
   public CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key) {
     debug("Storage: 'loadGroup(" + key + ")'");
-    return asyncFuture(() -> groupCache.getGroup(key, k -> implementation.loadGroup(k).orElseThrow()));
+    return asyncFuture(() -> groupCache.getGroup(key, k -> implementation.loadGroup(k).orElse(null)));
   }
 
   @Override
@@ -382,7 +390,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   }
 
   private void debug(String message) {
-    pathFinder.getLogger().log(Level.INFO, message);
+    if (logger != null) logger.log(Level.INFO, message);
   }
 
   public record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {

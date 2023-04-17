@@ -12,8 +12,8 @@ public class RemoteSqlStorage extends SqlStorage {
 
   private final HikariDataSource dataSource;
 
-  public RemoteSqlStorage(PathFinder pathFinder, PathPluginConfig.SqlStorageConfig configuration, NodeTypeRegistry nodeTypeRegistry) {
-    super(pathFinder, configuration.dialect, nodeTypeRegistry);
+  public RemoteSqlStorage(PathPluginConfig.SqlStorageConfig configuration, NodeTypeRegistry nodeTypeRegistry) {
+    super(configuration.dialect, nodeTypeRegistry);
 
     HikariConfig config = new HikariConfig();
     config.setUsername(configuration.username);
@@ -31,7 +31,7 @@ public class RemoteSqlStorage extends SqlStorage {
   }
 
   @Override
-  ConnectionProvider getConnectionProvider() {
+  public ConnectionProvider getConnectionProvider() {
     return new DataSourceConnectionProvider(dataSource);
   }
 }

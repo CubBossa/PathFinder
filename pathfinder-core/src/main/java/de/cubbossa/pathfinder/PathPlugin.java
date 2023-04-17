@@ -81,7 +81,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     instance = this;
     PathFinderProvider.setPathFinder(this);
 
-    storage = new Storage(this);
+    storage = new Storage();
 
     nodeTypeRegistry = new NodeTypeRegistry();
     modifierRegistry = new ModifierRegistryImpl();
@@ -133,7 +133,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
       case SQLITE -> new SqliteStorage(this, configuration.database.embeddedSql.file, nodeTypeRegistry);
-      case REMOTE_SQL -> new RemoteSqlStorage(this, configuration.database.remoteSql, nodeTypeRegistry);
+      case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry);
       default -> null;
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };

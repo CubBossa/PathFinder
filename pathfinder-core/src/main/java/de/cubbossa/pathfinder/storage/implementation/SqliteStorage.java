@@ -20,7 +20,7 @@ public class SqliteStorage extends SqlStorage {
   private Connection connection;
 
   public SqliteStorage(PathFinder pathFinder, File file, NodeTypeRegistry nodeTypeRegistry) {
-    super(pathFinder, SQLDialect.SQLITE, nodeTypeRegistry);
+    super(SQLDialect.SQLITE, nodeTypeRegistry);
     this.file = file;
 
     PathPlugin.getInstance().getLogger().info("Setting up SQLITE database: " + file.getAbsolutePath());

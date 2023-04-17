@@ -48,8 +48,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -61,15 +64,19 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
+import javax.annotation.Nullable;
+
 public abstract class SqlStorage implements StorageImplementation, WaypointDataStorage {
 
-  private final PathFinder pathFinder;
-  abstract ConnectionProvider getConnectionProvider();
+  @Getter
+  @Setter
+  private @Nullable Logger logger;
+  public abstract ConnectionProvider getConnectionProvider();
 
   private DSLContext create;
 
   private void debug(String message) {
-    pathFinder.getLogger().log(Level.INFO, message);
+    if (logger != null) logger.log(Level.INFO, message);
   }
 
   // +-----------------------------------------+
@@ -143,8 +150,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   @Getter
   private final NodeTypeRegistry nodeTypeRegistry;
 
-  public SqlStorage(PathFinder pathFinder, SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
-    this.pathFinder = pathFinder;
+  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
     this.dialect = dialect;
     this.nodeTypeRegistry = nodeTypeRegistry;
   }

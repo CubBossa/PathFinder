@@ -32,8 +32,7 @@ public class GroupCache {
         .build();
   }
 
-  public Optional<NodeGroup> getGroup(NamespacedKey key,
-                                            Function<NamespacedKey, NodeGroup> loader) {
+  public Optional<NodeGroup> getGroup(NamespacedKey key, Function<NamespacedKey, NodeGroup> loader) {
     return Optional.ofNullable(cache.get(key, loader));
   }
 
