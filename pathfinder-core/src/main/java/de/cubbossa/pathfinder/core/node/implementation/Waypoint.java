@@ -23,13 +23,15 @@ import lombok.Setter;
 @Setter
 public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
+  private final NodeType<Waypoint> type;
   private final UUID nodeId;
   private final List<Edge> edges;
   private final Map<NamespacedKey, NodeGroup> groups;
 
   private Location location;
 
-  public Waypoint(UUID databaseId) {
+  public Waypoint(NodeType<Waypoint> type, UUID databaseId) {
+    this.type = type;
     this.nodeId = databaseId;
     this.groups = new HashMap<>();
 
@@ -50,7 +52,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   @Override
   public NodeType<Waypoint> getType() {
-    return PathPlugin.getInstance().getWaypointNodeType();
+    return type;
   }
 
   @Override

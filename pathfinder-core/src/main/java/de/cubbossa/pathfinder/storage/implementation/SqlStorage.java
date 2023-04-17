@@ -83,17 +83,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   // |  Node Table                             |
   // +-----------------------------------------+
 
-  private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper = record -> {
-    UUID id = record.getId();
-    double x = record.getX();
-    double y = record.getY();
-    double z = record.getZ();
-    UUID worldUid = record.getWorld();
-
-    Waypoint node = new Waypoint(id);
-    node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
-    return node;
-  };
+  private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper;
 
   // +-----------------------------------------+
   // |  Edge Table                             |
@@ -153,6 +143,18 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
     this.dialect = dialect;
     this.nodeTypeRegistry = nodeTypeRegistry;
+
+    nodeMapper = record -> {
+      UUID id = record.getId();
+      double x = record.getX();
+      double y = record.getY();
+      double z = record.getZ();
+      UUID worldUid = record.getWorld();
+
+      Waypoint node = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), id);
+      node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
+      return node;
+    };
   }
 
   @Override
@@ -413,7 +415,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
             l.getZ())
         .execute();
-    Waypoint waypoint = new Waypoint(uuid);
+    Waypoint waypoint = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), uuid);
     waypoint.setLocation(l);
     return waypoint;
   }

@@ -164,7 +164,7 @@ public class FindModule implements Listener, PathFinderExtension {
         return NavigateResult.FAIL_TOO_FAR_AWAY;
       }
       final Node<?> fClosest = closest;
-      Waypoint waypoint = new Waypoint(UUID.randomUUID());
+      Waypoint waypoint = new Waypoint(plugin.getNodeTypeRegistry().getWaypointNodeType(), UUID.randomUUID());
       waypoint.setLocation(_location);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
       fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));

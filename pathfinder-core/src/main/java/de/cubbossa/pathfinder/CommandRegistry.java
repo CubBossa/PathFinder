@@ -47,7 +47,7 @@ public class CommandRegistry {
     nodeGroupCommand.register();
     pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
     pathVisualizerCommand.register();
-    waypointCommand = new WaypointCommand(pathFinder, plugin::getWaypointNodeType);
+    waypointCommand = new WaypointCommand(pathFinder, () -> plugin.getNodeTypeRegistry().getWaypointNodeType());
     waypointCommand.register();
     externalCommands.forEach(CommandTree::register);
   }

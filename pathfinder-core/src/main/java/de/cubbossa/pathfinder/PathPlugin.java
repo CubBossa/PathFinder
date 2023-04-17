@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.misc.Vector;
+import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.events.BukkitEventDispatcher;
@@ -74,8 +75,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private final BStatsLoader bStatsLoader;
   private final ConfigFileLoader configFileLoader;
   private EventDispatcher eventDispatcher;
-
-  private de.cubbossa.pathfinder.api.node.NodeType<Waypoint> waypointNodeType;
 
   public PathPlugin() {
     instance = this;
@@ -191,7 +190,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   }
 
   public void setWaypointNodeType(AbstractNodeType<Waypoint> nodeType) {
-    waypointNodeType = nodeType;
     nodeTypeRegistry.setWaypointNodeType(nodeType);
     nodeTypeRegistry.register(nodeType);
   }
