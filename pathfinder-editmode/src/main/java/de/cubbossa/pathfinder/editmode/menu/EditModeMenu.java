@@ -13,11 +13,10 @@ import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
-import de.cubbossa.pathfinder.core.node.AbstractNodeType;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
-import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
+import de.cubbossa.pathfinder.editmode.renderer.AbstractArmorstandRenderer;
+import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
@@ -27,7 +26,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -66,9 +65,9 @@ public class EditModeMenu {
     menu.setButton(0, Button.builder()
         .withItemStack(new LocalizedItem(Material.NETHER_STAR, Messages.E_NODE_TOOL_N,
             Messages.E_NODE_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          pathFinder.getStorage().deleteNodesById(List.of(context.getTarget()))
+          pathFinder.getStorage().deleteNodesById(List.of(context.getTarget().getNodeId()))
               .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
         })
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
@@ -104,22 +103,22 @@ public class EditModeMenu {
           }
           return stack;
         })
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, c -> {
           Player p = c.getPlayer();
 
           if (edgeStart == null) {
-            edgeStart = c.getTarget();
+            edgeStart = c.getTarget().getNodeId();
             c.getMenu().refresh(c.getSlot());
             return;
           }
-          if (edgeStart.equals(c.getTarget())) {
+          if (edgeStart.equals(c.getTarget().getNodeId())) {
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
           }
           pathFinder.getStorage().modifyNode(edgeStart, node -> {
-            node.getEdges().add(new SimpleEdge(edgeStart, c.getTarget(), 1));
+            node.getEdges().add(new SimpleEdge(edgeStart, c.getTarget().getNodeId(), 1));
             if (undirectedEdges) {
-              node.getEdges().add(new SimpleEdge(c.getTarget(), edgeStart, 1));
+              node.getEdges().add(new SimpleEdge(c.getTarget().getNodeId(), edgeStart, 1));
             }
           }).thenRun(() -> {
             edgeStart = null;
@@ -148,15 +147,15 @@ public class EditModeMenu {
           context.getMenu().refresh(context.getSlot());
 
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
+        .withClickHandler(AbstractArmorstandRenderer.LEFT_CLICK_EDGE, context -> {
           Player player = context.getPlayer();
           pathFinder.getStorage().deleteEdge(context.getTarget()).join();
           EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
               "editor_edge_disconnect", player, player.getLocation());
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player player = context.getPlayer();
-          pathFinder.getStorage().modifyNode(context.getTarget(), n -> {
+          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), n -> {
             n.getEdges().clear();
             EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
                 "editor_edge_disconnect", player, player.getLocation());
@@ -193,15 +192,15 @@ public class EditModeMenu {
     menu.setButton(3, Button.builder()
         .withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N,
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          pathFinder.getStorage().loadNode(context.getTarget()).thenAccept(node -> {
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          pathFinder.getStorage().loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
             if (node.isPresent() && node.get() instanceof Groupable<?> groupable) {
               openGroupMenu(context.getPlayer(), groupable);
             }
           });
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget(), node -> {
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable<?> groupable)) {
               return;
             }
@@ -217,8 +216,8 @@ public class EditModeMenu {
     menu.setButton(4, Button.builder()
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget(), node -> {
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable<?> groupable)) {
               return;
             }
@@ -229,8 +228,8 @@ public class EditModeMenu {
                 Sound.BLOCK_CHEST_CLOSE, 1, 1);
           });
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget(), node -> {
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable<?> groupable)) {
               return;
             }

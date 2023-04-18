@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.api.group;
+package de.cubbossa.pathfinder.api.editor;
 
 import de.cubbossa.pathfinder.api.misc.Keyed;
 
@@ -22,16 +22,5 @@ public interface NodeGroupEditor<Player> extends Keyed {
    */
   void setEditMode(PathPlayer<Player> player, boolean activate);
 
-  void showArmorStands(PathPlayer<Player> player);
-
-  void hideArmorStands(PathPlayer<Player> player);
-
   boolean isEditing(PathPlayer<Player> uuid);
-
-  /**
-   * Erstellt eine Liste aus Partikel Packets, die mithilfe eines Schedulers immerwieder an die Spieler im Editmode geschickt werden.
-   * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktualisiert werden.
-   * Wird asynchron ausgeführt
-   */
-  void updateEditModeParticles();
 }

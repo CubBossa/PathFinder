@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.editmode.utils;
+package de.cubbossa.pathfinder.editmode.renderer;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -8,35 +8,15 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftVersion;
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.Pair;
-import com.comphenix.protocol.wrappers.Vector3F;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedDataValue;
-import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.*;
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.IntPair;
-import de.cubbossa.pathfinder.util.LerpUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.UUID;
-import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -50,18 +30,18 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
+import java.util.*;
+
 @Getter
 @Setter
-public class ClientNodeHandler {
+public abstract class AbstractArmorstandRenderer<T> {
 
-  public static final Action<TargetContext<UUID>> RIGHT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<UUID>> LEFT_CLICK_NODE = new Action<>();
   public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
   public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
   private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
-  private static final Vector ARMORSTAND_OFFSET = new Vector(0, -1.75, 0);
   private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
   private static final int META_INDEX_FLAGS = 0;
@@ -73,30 +53,22 @@ public class ClientNodeHandler {
   private static final byte META_FLAG_INVISIBLE = 0x20;
   private static final byte META_FLAG_SMALL = 0x01;
 
-  private static int entityId = 10_000;
-  private final ProtocolManager protocolManager;
-  private final Map<IntPair, Collection<Node<?>>> chunkNodeMap;
-  private final Map<IntPair, Collection<Edge>> chunkEdgeMap;
-  private final Map<UUID, Integer> nodeEntityMap;
-  private final Map<Integer, UUID> entityNodeMap;
-  private final Map<Edge, Integer> edgeEntityMap;
-  private final Map<Integer, Edge> entityEdgeMap;
-  private ItemStack nodeSingleHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
-  private ItemStack nodeGroupHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_BLUE);
+  static int entityId = 10_000;
+  final ProtocolManager protocolManager;
+  final Map<IntPair, Collection<T>> chunkNodeMap;
+  final Map<T, Integer> nodeEntityMap;
+  final Map<Integer, T> entityNodeMap;
   private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
-  public ClientNodeHandler(JavaPlugin plugin) {
+  public AbstractArmorstandRenderer(JavaPlugin plugin) {
     entityId = Bukkit.getWorlds().stream()
         .mapToInt(w -> w.getEntities().stream().mapToInt(Entity::getEntityId).max().orElse(0)).max()
         .orElse(0) + 10_000;
     protocolManager = ProtocolLibrary.getProtocolManager();
 
     chunkNodeMap = new HashMap<>();
-    chunkEdgeMap = new HashMap<>();
     nodeEntityMap = new HashMap<>();
-    entityNodeMap = new TreeMap<>();
-    edgeEntityMap = new HashMap<>();
-    entityEdgeMap = new TreeMap<>();
+    entityNodeMap = new HashMap<>();
 
     protocolManager.addPacketListener(new PacketAdapter(plugin,
         ListenerPriority.NORMAL,
@@ -109,13 +81,9 @@ public class ClientNodeHandler {
         int chunkY = packet.getIntegers().read(1);
 
         var key = new IntPair(chunkX, chunkY);
-        Collection<Node<?>> nodes = chunkNodeMap.get(key);
-        if (nodes != null) {
-          showNodes(nodes, event.getPlayer());
-        }
-        Collection<Edge> edges = chunkEdgeMap.get(key);
-        if (edges != null) {
-          showEdges(edges, event.getPlayer());
+        Collection<T> elements = chunkNodeMap.get(key);
+        if (elements != null) {
+          showElements(elements, event.getPlayer());
         }
       }
     });
@@ -132,8 +100,8 @@ public class ClientNodeHandler {
         boolean left = packet.getEnumEntityUseActions().read(0).getAction()
             .equals(EnumWrappers.EntityUseAction.ATTACK);
         if (entityNodeMap.containsKey(entityId)) {
-          UUID node = entityNodeMap.get(entityId);
-          if (node == null) {
+          T element = entityNodeMap.get(entityId);
+          if (element == null) {
             throw new IllegalStateException("ClientNodeHandler Tables off sync!");
           }
           Player player = event.getPlayer();
@@ -143,20 +111,8 @@ public class ClientNodeHandler {
             return;
           }
           event.setCancelled(true);
-          Action<TargetContext<UUID>> action = left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
-          menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, node));
-        }
-        if (entityEdgeMap.containsKey(entityId)) {
-          Edge edge = entityEdgeMap.get(entityId);
-          if (edge == null) {
-            throw new IllegalStateException("ClientNodeHandler Tables off sync!");
-          }
-          event.setCancelled(true);
-          Player player = event.getPlayer();
-          int slot = player.getInventory().getHeldItemSlot();
-          Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
-          Action<TargetContext<Edge>> action = left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
-          menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, edge));
+          Action<TargetContext<T>> action = handleInteract(player, slot, left);
+          menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, element));
         }
       }
     });
@@ -166,111 +122,42 @@ public class ClientNodeHandler {
     return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
   }
 
-  public void showNodes(Collection<Node<?>> nodes, Player player) {
-    for (Node<?> node : nodes) {
-      showNode(node, player);
+  abstract ItemStack head(T element);
+
+  abstract Location retrieveFrom(T element);
+
+  abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
+
+  public void showElements(Collection<T> elements, Player player) {
+    for (T element : elements) {
+      showElement(element, player);
     }
   }
 
-  public void showNode(Node<?> node, Player player) {
-    Location location = VectorUtils.toBukkit(node.getLocation());
+  public void showElement(T element, Player player) {
+    Location location = retrieveFrom(element);
     int id = spawnArmorstand(player, location, null, false);
 
-    nodeEntityMap.put(node.getNodeId(), id);
-    entityNodeMap.put(id, node.getNodeId());
+    nodeEntityMap.put(element, id);
+    entityNodeMap.put(id, element);
 
     IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
-    chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(node);
+    chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(element);
 
-    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null,
-        node instanceof Groupable<?> groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead
-            :
-                nodeSingleHead});
+    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, head(element)});
   }
 
-  public void showEdges(Collection<Edge> edges, Player player) {
-    Map<Edge, Edge> undirected = new HashMap<>();
-    for (Edge edge : edges) {
-      Edge contained = undirected.keySet().stream()
-          .filter(e -> e.getStart().equals(edge.getEnd()) && e.getEnd().equals(edge.getStart()))
-          .findFirst().orElse(null);
-      if (contained != null) {
-        undirected.put(contained, edge);
-      } else {
-        undirected.put(edge, null);
-      }
-    }
-    for (var entry : undirected.entrySet()) {
-      showEdge(entry.getKey(), entry.getValue(), player);
-    }
-  }
+  public void hideElements(Collection<T> elements, Player player) {
+    removeArmorstand(player, elements.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
 
-  public void showEdge(Edge edge, @Nullable Edge otherDirection, Player player) {
-    Node<?> start = edge.resolveStart().join();
-    Node<?> end = edge.resolveEnd().join();
-
-    Location location = LerpUtils.lerp(VectorUtils.toBukkit(start.getLocation()), VectorUtils.toBukkit(end.getLocation()), .3f);
-    int id = spawnArmorstand(player, location, null, true);
-    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, edgeHead});
-    setHeadRotation(player, id, VectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation())).toVector());
-
-    edgeEntityMap.put(edge, id);
-    entityEdgeMap.put(id, edge);
-
-    IntPair key = locationToChunkIntPair(location);
-    chunkEdgeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(edge);
-
-    if (otherDirection != null) {
-      showEdge(otherDirection, null, player);
-    }
-  }
-
-  public void hideNodes(Collection<Node<?>> nodes, Player player) {
-    Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).toList();
-    removeArmorstand(player,
-        nodeIds.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
-
-    nodeIds.forEach(nodeEntityMap::remove);
-    new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> nodeIds.contains(e.getValue()))
+    elements.forEach(nodeEntityMap::remove);
+    new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> elements.contains(e.getValue()))
         .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
-    nodes.forEach(node -> chunkNodeMap.remove(locationToChunkIntPair(VectorUtils.toBukkit(node.getLocation()))));
+    elements.forEach(e -> chunkNodeMap.remove(locationToChunkIntPair(retrieveFrom(e))));
   }
 
-  public void hideEdges(Collection<Edge> edges, Player player) {
-    removeArmorstand(player,
-        edges.stream().map(edgeEntityMap::get).filter(Objects::nonNull).toList());
-    edges.forEach(edgeEntityMap::remove);
-    edges.forEach(edge -> {
-      Node<?> start = edge.resolveStart().join();
-      Node<?> end = edge.resolveEnd().join();
-      Location pos = VectorUtils.toBukkit(start.getLocation().clone().add(
-          end.getLocation().clone().subtract(start.getLocation()).multiply(.5f)
-      ));
-      chunkEdgeMap.remove(locationToChunkIntPair(pos));
-    });
-  }
-
-  public void updateNodePosition(Node<?> node, Player player, Location location,
-                                 boolean updateEdges) {
-    teleportArmorstand(player, nodeEntityMap.get(node.getNodeId()),
-        location.clone().add(ARMORSTAND_OFFSET));
-    if (updateEdges) {
-      for (Edge edge : node.getEdges()) {
-        updateEdgePosition(edge, player);
-      }
-      for (Edge edge : PathFinderProvider.get().getStorage().loadEdgesTo(node.getNodeId()).join()) {
-        updateEdgePosition(edge, player);
-      }
-    }
-  }
-
-  private void updateEdgePosition(Edge edge, Player player) {
-    Node<?> start = edge.resolveStart().join();
-    Node<?> end = edge.resolveEnd().join();
-
-    teleportArmorstand(player, edgeEntityMap.get(edge),
-        LerpUtils.lerp(VectorUtils.toBukkit(start.getLocation()), VectorUtils.toBukkit(end.getLocation()), 0.3f).clone()
-            .add(ARMORSTAND_CHILD_OFFSET));
+  public void updateElementPosition(T element, Player player) {
+    teleportArmorstand(player, nodeEntityMap.get(element), retrieveFrom(element));
   }
 
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
@@ -293,11 +180,9 @@ public class ClientNodeHandler {
     protocolManager.sendServerPacket(player, packet);
   }
 
-  public synchronized int spawnArmorstand(Player player, Location location,
-                                          @Nullable Component name, boolean small) {
+  public synchronized int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
 
-    location = location.clone().add((small ? ARMORSTAND_CHILD_OFFSET : ARMORSTAND_OFFSET));
-    int entityId = ClientNodeHandler.entityId++;
+    int entityId = AbstractArmorstandRenderer.entityId++;
 
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.SPAWN_ENTITY);
     packet.getModifier().writeDefaults();
@@ -366,20 +251,17 @@ public class ClientNodeHandler {
     protocolManager.sendServerPacket(player, packet);
   }
 
-  public void updateNodeHead(Player player, Node<?> node) {
-    Integer id = nodeEntityMap.get(node.getNodeId());
+  public void updateNodeHead(Player player, T element) {
+    Integer id = nodeEntityMap.get(element);
     if (id == null) {
       throw new RuntimeException(
           "Trying to update armorstand that was not registered for client side display.");
     }
-    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null,
-        node instanceof Groupable<?> groupable && groupable.getGroups().size() >= 1 ? nodeGroupHead
-            :
-                nodeSingleHead});
+    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, head(element)});
   }
 
-  public void renameArmorstand(Player player, Node<?> node, @Nullable Component name) {
-    Integer id = nodeEntityMap.get(node.getNodeId());
+  public void renameArmorstand(Player player, T element, @Nullable Component name) {
+    Integer id = nodeEntityMap.get(element);
     if (id == null) {
       throw new RuntimeException(
           "Trying to update armorstand that was not registered for client side display.");

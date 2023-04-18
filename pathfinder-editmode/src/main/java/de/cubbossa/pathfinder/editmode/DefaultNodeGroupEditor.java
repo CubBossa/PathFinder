@@ -1,76 +1,55 @@
 package de.cubbossa.pathfinder.editmode;
 
-import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
+import de.cubbossa.pathfinder.api.editor.GraphRenderer;
+import de.cubbossa.pathfinder.api.editor.NodeGroupEditor;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.group.NodeGroupEditor;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
-import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.Groupable;
 import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.events.node.EdgesCreateEvent;
-import de.cubbossa.pathfinder.core.events.node.EdgesDeleteEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
-import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
-import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
-import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
-import de.cubbossa.pathfinder.util.LerpUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
+import de.cubbossa.pathfinder.editmode.renderer.ParticleEdgeRenderer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.util.Vector;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
-import xyz.xenondevs.particle.task.TaskManager;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener {
+public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRenderer<Player>, Listener {
 
   private final PathFinder pathFinder;
   private final NamespacedKey key;
-  private final ClientNodeHandler armorstandHandler;
 
   private final Map<PathPlayer<Player>, BottomInventoryMenu> editingPlayers;
   private final Map<PathPlayer<Player>, GameMode> preservedGameModes;
 
-  private final Map<UUID, Node<?>> nodes = new HashMap<>();
-  private final Collection<Edge> edges = new HashSet<>();
+  private final Collection<GraphRenderer<Player>> renderers;
 
 
   public DefaultNodeGroupEditor(NodeGroup group) {
     this.pathFinder = PathFinderProvider.get();
     this.key = group.getKey();
 
-    this.armorstandHandler = new ClientNodeHandler(PathPlugin.getInstance());
+    this.renderers = new ArrayList<>();
     this.editingPlayers = new HashMap<>();
     this.preservedGameModes = new HashMap<>();
 
@@ -111,9 +90,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
       if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
         return;
       }
-      if (!isEdited()) {
-        startParticleTask();
-      }
 
       BottomInventoryMenu menu = new EditModeMenu(pathFinder, key,
           PathPlugin.getInstance().getNodeTypeRegistry().getTypes()).createHotbarMenu(this, bukkitPlayer);
@@ -123,8 +99,11 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
       preservedGameModes.put(player, bukkitPlayer.getGameMode());
       bukkitPlayer.setGameMode(GameMode.CREATIVE);
 
-      showArmorStands(player);
-
+      pathFinder.getStorage().loadGroup(key).thenAccept(group -> {
+        pathFinder.getStorage().loadNodes(group.orElseThrow()).thenAccept(n -> {
+          renderNodes(player, n);
+        });
+      });
     } else {
 
       if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
@@ -132,43 +111,11 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
         if (menu != null) {
           menu.close(bukkitPlayer);
         }
-        hideArmorStands(player);
-        bukkitPlayer.setGameMode(
-            preservedGameModes.getOrDefault(player, GameMode.SURVIVAL));
+        bukkitPlayer.setGameMode(preservedGameModes.getOrDefault(player, GameMode.SURVIVAL));
       }
-
+      clear(player);
       editingPlayers.remove(player);
-
-      if (!isEdited()) {
-        stopParticleTask();
-      }
     }
-  }
-
-  public void showArmorStands(PathPlayer<Player> player) {
-    pathFinder.getStorage().loadGroup(key).thenAccept(opt -> {
-      if (opt.isEmpty()) {
-        return;
-      }
-      NodeGroup group = opt.get();
-      group.resolve().thenAccept(nodes -> {
-        for (Node<?> node : nodes) {
-          this.nodes.put(node.getNodeId(), node);
-          this.edges.addAll(node.getEdges());
-        }
-        Player p = player.unwrap();
-        armorstandHandler.showNodes(nodes, p);
-        armorstandHandler.showEdges(edges, p);
-      });
-    });
-  }
-
-  public void hideArmorStands(PathPlayer<Player> player) {
-    Player p = player.unwrap();
-    armorstandHandler.hideNodes(nodes.values(), p);
-    armorstandHandler.hideEdges(edges, p);
-    nodes.clear();
-    edges.clear();
   }
 
   public boolean isEditing(PathPlayer<Player> player) {
@@ -179,95 +126,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
     return isEditing(PathPlugin.wrap(player));
   }
 
-  private void startParticleTask() {
-    updateEditModeParticles();
-  }
-
-  private void stopParticleTask() {
-
-  }
-
-  /**
-   * Erstellt eine Liste aus Partikel Packets, die mithilfe eines Schedulers immerwieder an die Spieler im Editmode geschickt werden.
-   * Um gelöschte und neue Kanten darstellen zu können, muss diese Liste aus Packets aktualisiert werden.
-   * Wird asynchron ausgeführt
-   */
-  public void updateEditModeParticles() {
-
-  }
-
-  @EventHandler
-  public void onNodeGroupAssign(NodeGroupAssignedEvent event) {
-    pathFinder.getStorage().loadNodes(event.getGroupables()).thenAccept(nodes -> {
-      nodes.forEach(node -> {
-        editingPlayers.keySet().stream().map(PathPlayer::unwrap).forEach(player -> {
-          armorstandHandler.showNode(node, player);
-        });
-        this.nodes.put(node.getNodeId(), node);
-      });
-    });
-  }
-
-  @EventHandler(priority = EventPriority.HIGHEST)
-  public void onNodeGroupRemove(NodeGroupRemovedEvent event) {
-    Collection<Groupable<?>> groupables = event.getGroupables();
-    for (PathPlayer<Player> pp : editingPlayers.keySet()) {
-      for (Groupable<?> node : groupables) {
-        armorstandHandler.updateNodeHead(pp.unwrap(), node);
-      }
-    }
-  }
-
-  @EventHandler
-  public void onEdgeCreated(EdgesCreateEvent.Post event) {
-    // TODO check if in current group obv
-    editingPlayers.keySet().stream().map(PathPlayer::unwrap).forEach(player -> {
-      armorstandHandler.showEdges(event.getEdges(), player);
-    });
-    updateEditModeParticles();
-  }
-
-  @EventHandler
-  public void onNodesDeleted(NodesDeletedEvent event) {
-
-    editingPlayers.keySet().stream().map(PathPlayer::unwrap).forEach(player -> {
-      for (Node<?> node : event.getNodes()) {
-        this.nodes.remove(node.getNodeId());
-      }
-      armorstandHandler.hideNodes(event.getNodes(), player);
-    });
-    updateEditModeParticles();
-  }
-
-  @EventHandler
-  public void onEdgesDeleted(EdgesDeleteEvent.Post event) {
-    editingPlayers.keySet().stream().map(PathPlayer::unwrap).forEach(player ->
-        armorstandHandler.hideEdges(Lists.newArrayList(event.getEdges()), player));
-    updateEditModeParticles();
-  }
-
-  @EventHandler(priority = EventPriority.MONITOR)
-  public void onTeleportNode(NodeTeleportEvent event) {
-    Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(), () -> {
-      if (event.isCancelled()) {
-        return;
-      }
-      int updateCount = 0;
-      for (PathPlayer<Player> pp : editingPlayers.keySet()) {
-        Player player = pp.unwrap();
-        for (Node<?> node : event.getNodes()) {
-          if (node != null) {
-            armorstandHandler.updateNodePosition(node, player, player.getLocation(), true);
-            updateCount++;
-          }
-        }
-      }
-      if (updateCount > 0) {
-        updateEditModeParticles();
-      }
-    }, 1);
-  }
-
   @EventHandler(priority = EventPriority.MONITOR)
   public void onDelete(NodeGroupDeleteEvent event) {
     if (event.isCancelled()) {
@@ -276,5 +134,26 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, Listener
     if (event.getGroup().equals(key)) {
       dispose();
     }
+  }
+
+  @Override
+  public CompletableFuture<Void> clear(PathPlayer<Player> player) {
+    return CompletableFuture.allOf(renderers.stream()
+        .map(r -> r.clear(player))
+        .toArray(CompletableFuture[]::new));
+  }
+
+  @Override
+  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+    return CompletableFuture.allOf(renderers.stream()
+        .map(r -> r.renderNodes(player, nodes))
+        .toArray(CompletableFuture[]::new));
+  }
+
+  @Override
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+    return CompletableFuture.allOf(renderers.stream()
+        .map(r -> r.eraseNodes(player, nodes))
+        .toArray(CompletableFuture[]::new));
   }
 }

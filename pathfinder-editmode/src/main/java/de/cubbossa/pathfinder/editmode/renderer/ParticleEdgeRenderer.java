@@ -1,5 +1,6 @@
-package de.cubbossa.pathfinder.editmode;
+package de.cubbossa.pathfinder.editmode.renderer;
 
+import de.cubbossa.pathfinder.api.editor.GraphRenderer;
 import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Edge;
@@ -90,6 +91,11 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     }
     return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
         .thenRun(() -> updateRenderer(player));
+  }
+
+  @Override
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+    return null; //TODO
   }
 
   private void updateRenderer(PathPlayer<Player> player) {
