@@ -6,14 +6,20 @@ import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.api.editor.GraphRenderer;
 import de.cubbossa.pathfinder.api.editor.NodeGroupEditor;
+import de.cubbossa.pathfinder.api.event.EventDispatcher;
+import de.cubbossa.pathfinder.api.event.NodeCreateEvent;
+import de.cubbossa.pathfinder.api.event.NodeDeleteEvent;
+import de.cubbossa.pathfinder.api.event.NodeEvent;
+import de.cubbossa.pathfinder.api.event.NodeSaveEvent;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
-import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
-import de.cubbossa.pathfinder.editmode.renderer.ParticleEdgeRenderer;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -54,6 +60,21 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     this.preservedGameModes = new HashMap<>();
 
     Bukkit.getPluginManager().registerEvents(this, PathPlugin.getInstance());
+    EventDispatcher eventDispatcher = PathPlugin.getInstance().getEventDispatcher();
+
+    Consumer<NodeEvent> render = event -> {
+      for (PathPlayer<Player> player : editingPlayers.keySet()) {
+        renderNodes(player, List.of(event.getNode()));
+      }
+    };
+    eventDispatcher.listen(NodeCreateEvent.class, render);
+    eventDispatcher.listen(NodeSaveEvent.class, render);
+
+    eventDispatcher.listen(NodeDeleteEvent.class, nodeDeleteEvent -> {
+      for (PathPlayer<Player> player : editingPlayers.keySet()) {
+        eraseNodes(player, List.of(nodeDeleteEvent.getNode()));
+      }
+    });
   }
 
   public void dispose() {

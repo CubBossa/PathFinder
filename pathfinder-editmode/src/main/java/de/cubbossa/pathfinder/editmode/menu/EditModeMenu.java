@@ -15,7 +15,7 @@ import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.core.node.SimpleEdge;
 import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
-import de.cubbossa.pathfinder.editmode.renderer.AbstractArmorstandRenderer;
+import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
@@ -147,7 +147,7 @@ public class EditModeMenu {
           context.getMenu().refresh(context.getSlot());
 
         })
-        .withClickHandler(AbstractArmorstandRenderer.LEFT_CLICK_EDGE, context -> {
+        .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
           Player player = context.getPlayer();
           pathFinder.getStorage().deleteEdge(context.getTarget()).join();
           EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),

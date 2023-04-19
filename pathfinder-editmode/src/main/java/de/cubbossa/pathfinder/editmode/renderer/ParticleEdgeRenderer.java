@@ -49,10 +49,12 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   private float particleDistance = .3f;
   private int tickDelay = 5;
 
+  private final Collection<Node<?>> rendered;
   private final Collection<ParticleEdge> edges;
   private final Collection<Integer> editModeTasks;
 
   public ParticleEdgeRenderer() {
+    rendered = new HashSet<>();
     edges = new HashSet<>();
     editModeTasks = new HashSet<>();
   }
@@ -61,6 +63,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   public CompletableFuture<Void> clear(PathPlayer<Player> player) {
     var sched = Bukkit.getScheduler();
     editModeTasks.forEach(sched::cancelTask);
+    rendered.clear();
     edges.clear();
     return CompletableFuture.completedFuture(null);
   }
@@ -68,6 +71,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
 
+    rendered.addAll(nodes);
     Collection<CompletableFuture<Void>> futures = new HashSet<>();
     for (Node<?> node : nodes) {
       for (Edge edge : node.getEdges()) {
@@ -95,7 +99,10 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
-    return null; //TODO
+    Collection<Node<?>> rendered = new HashSet<>(this.rendered);
+    clear(player);
+    rendered.removeAll(nodes);
+    return renderNodes(player, rendered);
   }
 
   private void updateRenderer(PathPlayer<Player> player) {

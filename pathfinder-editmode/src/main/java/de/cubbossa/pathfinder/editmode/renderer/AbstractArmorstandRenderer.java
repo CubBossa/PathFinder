@@ -14,9 +14,14 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.editor.GraphRenderer;
+import de.cubbossa.pathfinder.api.event.NodeCreateEvent;
+import de.cubbossa.pathfinder.api.event.NodeDeleteEvent;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.IntPair;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -35,14 +40,9 @@ import java.util.*;
 
 @Getter
 @Setter
-public abstract class AbstractArmorstandRenderer<T> {
-
-  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
+public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Player> {
 
   private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
-
-  private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
   private static final int META_INDEX_FLAGS = 0;
   private static final int META_INDEX_NAME = 2;
@@ -54,13 +54,13 @@ public abstract class AbstractArmorstandRenderer<T> {
   private static final byte META_FLAG_SMALL = 0x01;
 
   static int entityId = 10_000;
+  protected final Collection<PathPlayer<Player>> players;
   final ProtocolManager protocolManager;
   final Map<IntPair, Collection<T>> chunkNodeMap;
   final Map<T, Integer> nodeEntityMap;
   final Map<Integer, T> entityNodeMap;
-  private ItemStack edgeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
-  public AbstractArmorstandRenderer(JavaPlugin plugin) {
+  public AbstractArmorstandRenderer(PathPlugin plugin) {
     entityId = Bukkit.getWorlds().stream()
         .mapToInt(w -> w.getEntities().stream().mapToInt(Entity::getEntityId).max().orElse(0)).max()
         .orElse(0) + 10_000;
@@ -69,6 +69,7 @@ public abstract class AbstractArmorstandRenderer<T> {
     chunkNodeMap = new HashMap<>();
     nodeEntityMap = new HashMap<>();
     entityNodeMap = new HashMap<>();
+    players = new HashSet<>();
 
     protocolManager.addPacketListener(new PacketAdapter(plugin,
         ListenerPriority.NORMAL,
@@ -128,6 +129,9 @@ public abstract class AbstractArmorstandRenderer<T> {
 
   abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
 
+  abstract boolean isSmall(T element);
+  abstract @Nullable Component getName(T element);
+
   public void showElements(Collection<T> elements, Player player) {
     for (T element : elements) {
       showElement(element, player);
@@ -136,7 +140,7 @@ public abstract class AbstractArmorstandRenderer<T> {
 
   public void showElement(T element, Player player) {
     Location location = retrieveFrom(element);
-    int id = spawnArmorstand(player, location, null, false);
+    int id = spawnArmorstand(player, location, getName(element), isSmall(element));
 
     nodeEntityMap.put(element, id);
     entityNodeMap.put(id, element);

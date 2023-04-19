@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathfinder.api.EventDispatcher;
-import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.event.EventDispatcher;
 import de.cubbossa.pathfinder.api.group.Modifier;
 import de.cubbossa.pathfinder.api.group.NodeGroup;
 import de.cubbossa.pathfinder.api.misc.Keyed;
@@ -35,7 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
@@ -150,6 +148,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public CompletableFuture<Void> saveNode(Node<?> node) {
     debug("Storage: 'saveNode(" + node.getNodeId() + ")'");
     return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
+      eventDispatcher().ifPresent(e -> e.dispatchSaveNode(node));
       implementation.saveNode(node);
       nodeCache.write(node);
       groupCache.write(node);
@@ -169,11 +168,11 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids) {
     debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     return loadNodes(uuids).thenAccept(nodes -> {
+      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
       implementation.deleteNodes(nodes);
       uuids.forEach(nodeCache::invalidate);
       uuids.forEach(edgeCache::invalidate);
       nodes.forEach(groupCache::invalidate);
-      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(uuids));
     });
   }
 

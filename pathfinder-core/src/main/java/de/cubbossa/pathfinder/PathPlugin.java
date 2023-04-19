@@ -1,12 +1,11 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.api.EventDispatcher;
+import de.cubbossa.pathfinder.api.event.EventDispatcher;
 import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.api.PathFinderProvider;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import de.cubbossa.pathfinder.api.misc.Vector;
-import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.core.ExamplesHandler;
 import de.cubbossa.pathfinder.core.events.BukkitEventDispatcher;
@@ -92,7 +91,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     commandRegistry = new CommandRegistry(this);
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());
-    eventDispatcher = new BukkitEventDispatcher();
+    eventDispatcher = new BukkitEventDispatcher(getLogger());
   }
 
   @SneakyThrows
@@ -136,7 +135,10 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
       default -> null;
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
+    impl.setLogger(getLogger());
     storage.setImplementation(impl);
+    storage.setEventDispatcher(eventDispatcher);
+    storage.setLogger(getLogger());
     storage.init();
 
     ExamplesHandler examples = ExamplesHandler.getInstance();

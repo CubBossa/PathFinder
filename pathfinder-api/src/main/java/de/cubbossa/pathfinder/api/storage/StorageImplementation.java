@@ -16,11 +16,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public interface StorageImplementation {
 
   void init() throws Exception;
   void shutdown();
+
+  void setLogger(Logger logger);
+  Logger getLogger();
 
   // Node Type
   void saveNodeType(UUID node, de.cubbossa.pathfinder.api.node.NodeType<? extends Node<?>> type);
