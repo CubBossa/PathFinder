@@ -8,7 +8,7 @@ class VersionTest {
   @Test
   public void construct1() {
     Assertions.assertDoesNotThrow(() -> new Version("5.0.0-SNAPSHOT-636"));
-    Assertions.assertDoesNotThrow(() -> new Version("5.0.0-SNAPSHOT-636"));
+    Assertions.assertDoesNotThrow(() -> new Version("v5.0.0-SNAPSHOT-b636"));
     Assertions.assertDoesNotThrow(() -> new Version("1.2.3-123"));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new Version("a"));
     Assertions.assertThrows(IllegalArgumentException.class, () -> new Version("1a"));
