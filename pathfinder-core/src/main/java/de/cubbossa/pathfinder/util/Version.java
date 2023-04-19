@@ -16,7 +16,7 @@ public class Version implements Comparable<Version> {
    * - v2.1.19.20-b109
    * - v2.1.19.20-SNAPSHOT-b109
    */
-  private static final Pattern VERSION_PATTERN = Pattern.compile("v?(\\d+(.\\d+)*)(-SNAPSHOT)?(-b(\\d+))?");
+  private static final Pattern VERSION_PATTERN = Pattern.compile("v?([0-9]+(\\.[0-9]+)*)(-SNAPSHOT)?(-b?([0-9]+))?");
 
   private final int[] elements;
   private final boolean snapshot;
@@ -32,8 +32,8 @@ public class Version implements Comparable<Version> {
     elements = Arrays.stream(matcher.group(1).split("\\."))
         .mapToInt(Integer::parseInt)
         .toArray();
-    snapshot = matcher.group(4) != null;
-    build = matcher.group(5) == null ? null : Integer.valueOf(matcher.group(5));
+    snapshot = matcher.group(4) != null && matcher.group(4).equalsIgnoreCase("snapshot");
+    build = matcher.group(matcher.groupCount() - 1) == null ? null : Integer.valueOf(matcher.group(matcher.groupCount() - 1).substring(1).replaceAll("[a-z]", ""));
   }
 
   @Override
