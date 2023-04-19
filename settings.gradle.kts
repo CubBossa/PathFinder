@@ -5,9 +5,11 @@ plugins {
 rootProject.name = "pathfinder"
 
 sequenceOf(
+    "api",
     "core",
     "graph",
     "editmode",
+    "papi",
     "scripted-visualizer"
 ).forEach {
     val name = "${rootProject.name}-$it"

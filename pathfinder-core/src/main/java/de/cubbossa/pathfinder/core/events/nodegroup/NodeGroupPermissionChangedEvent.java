@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class NodeGroupPermissionChangedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final NodeGroup group;
+  private final SimpleNodeGroup group;
   private final @Nullable
   String permission;
 

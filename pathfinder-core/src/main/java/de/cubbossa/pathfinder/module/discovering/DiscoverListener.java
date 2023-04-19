@@ -1,37 +1,38 @@
 package de.cubbossa.pathfinder.module.discovering;
 
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.storage.Storage;
 import java.time.LocalDateTime;
-import java.util.Date;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+@RequiredArgsConstructor
 public class DiscoverListener implements Listener {
+
+  private final PathFinder pathFinder;
 
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
-    for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
-      if (!group.isDiscoverable()) {
-        continue;
+    pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+      for (NodeGroup group : nodeGroups) {
+        if (!DiscoverHandler.getInstance().fulfillsDiscoveringRequirements(group, PathPlugin.wrap(event.getPlayer()))) {
+          continue;
+        }
+        DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
       }
-      if (!group.fulfillsDiscoveringRequirements(event.getPlayer())) {
-        continue;
-      }
-      DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
-    }
-  }
-
-  @EventHandler
-  public void onJoin(PlayerJoinEvent event) {
-    DiscoverHandler.getInstance().cachePlayer(event.getPlayer().getUniqueId());
+    });
   }
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-    DiscoverHandler.getInstance().invalidatePlayerCache(event.getPlayer().getUniqueId());
+
+    //TODO cache in interface
+    ((Storage) pathFinder.getStorage()).getDiscoverInfoCache().invalidate(event.getPlayer().getUniqueId());
   }
 }

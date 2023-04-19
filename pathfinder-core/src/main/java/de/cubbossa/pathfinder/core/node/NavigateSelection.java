@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.core.node;
 
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.Collection;
 import java.util.HashSet;
 import lombok.Getter;
@@ -7,9 +8,9 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class NavigateSelection extends HashSet<Navigable> {
+public class NavigateSelection extends HashSet<Node<?>> {
 
-  public NavigateSelection(Collection<Navigable> collection) {
+  public NavigateSelection(Collection<Node<?>> collection) {
     super(collection);
   }
 }

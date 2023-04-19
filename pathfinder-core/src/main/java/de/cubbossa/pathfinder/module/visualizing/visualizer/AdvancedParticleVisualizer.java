@@ -1,13 +1,16 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -34,7 +37,7 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
   }
 
   @Override
-  public BezierData prepare(List<Node<?>> nodes, Player player) {
+  public BezierData prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
     BezierData bezierData = super.prepare(nodes, player);
     List<Location> points = new ArrayList<>();
     for (int i = 1; i < bezierData.points().size() - 1; i++) {
@@ -56,27 +59,28 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
   }
 
   @Override
-  public void play(VisualizerContext<BezierData> context) {
+  public void play(VisualizerContext<BezierData, Player> context) {
     int step = context.interval() % schedulerSteps;
     for (int i = step; i < context.data().points().size(); i += schedulerSteps) {
-      for (Player player : context.players()) {
+      for (PathPlayer<Player> player : context.players()) {
+        Player bukkitPlayer = player.unwrap();
         Location point = context.data().points().get(i);
         Context c =
             new Context(player, point, context.interval(), step, i, context.data().points().size());
         Particle p = particle.apply(c);
         Object data = particleData.apply(c);
         if (data == null || !p.getDataType().equals(data.getClass())) {
-          player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+          bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
               particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
         } else {
-          player.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+          bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
               particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), data);
         }
       }
     }
   }
 
-  public record Context(Player player, Location point, int interval, int step, int index,
+  public record Context(PathPlayer<Player> player, Location point, int interval, int step, int index,
                         int count) {
 
   }

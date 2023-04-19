@@ -1,12 +1,16 @@
 package de.cubbossa.pathfinder.core.commands;
 
+import de.cubbossa.pathfinder.api.PathFinder;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import dev.jorel.commandapi.CommandTree;
 
 public class Command extends CommandTree {
 
-  public Command(String commandName) {
+  private PathFinder pathFinder;
+
+  public Command(PathFinder pathFinder, String commandName) {
     super(commandName);
+    this.pathFinder = pathFinder;
   }
 
   public Command withGeneratedHelp() {
@@ -21,5 +25,9 @@ public class Command extends CommandTree {
       CommandUtils.sendHelp(sender, this, depth);
     });
     return this;
+  }
+
+  public PathFinder getPathfinder() {
+    return pathFinder;
   }
 }

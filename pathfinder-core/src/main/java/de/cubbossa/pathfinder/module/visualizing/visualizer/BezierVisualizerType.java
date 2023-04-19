@@ -1,14 +1,16 @@
 package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
+import de.cubbossa.pathfinder.core.commands.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.module.visualizing.InternalVisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
-import org.bukkit.NamespacedKey;
 
 public abstract class BezierVisualizerType<T extends BezierPathVisualizer<T>>
-    extends InternalVisualizerType<T> {
+    extends InternalVisualizerType<T>
+    implements VisualizerTypeCommandExtension {
 
   public BezierVisualizerType(NamespacedKey key) {
     super(key);

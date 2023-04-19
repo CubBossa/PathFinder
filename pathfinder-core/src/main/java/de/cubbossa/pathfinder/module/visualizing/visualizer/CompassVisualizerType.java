@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
+import de.cubbossa.pathfinder.core.commands.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.core.commands.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.module.visualizing.InternalVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
@@ -10,9 +12,10 @@ import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
-public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer> {
+public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer>
+    implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {
 
   public CompassVisualizerType(NamespacedKey key) {
     super(key);

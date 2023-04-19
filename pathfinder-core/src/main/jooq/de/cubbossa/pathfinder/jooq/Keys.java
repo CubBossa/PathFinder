@@ -6,20 +6,22 @@ package de.cubbossa.pathfinder.jooq;
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderRoadmaps;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderDiscoveringsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsNodesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderGroupModifierRelationRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodeTypeRelationRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupNodesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderRoadmapsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderSearchTermsRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
@@ -39,21 +41,19 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<PathfinderDiscoveringsRecord> PATHFINDER_DISCOVERINGS__PK_PATHFINDER_DISCOVERINGS = Internal.createUniqueKey(PathfinderDiscoverings.PATHFINDER_DISCOVERINGS, DSL.name("pk_pathfinder_discoverings"), new TableField[] { PathfinderDiscoverings.PATHFINDER_DISCOVERINGS.DISCOVER_KEY, PathfinderDiscoverings.PATHFINDER_DISCOVERINGS.PLAYER_ID }, true);
-    public static final UniqueKey<PathfinderEdgesRecord> PATHFINDER_EDGES__PK_PATHFINDER_EDGES = Internal.createUniqueKey(PathfinderEdges.PATHFINDER_EDGES, DSL.name("pk_pathfinder_edges"), new TableField[] { PathfinderEdges.PATHFINDER_EDGES.START_ID, PathfinderEdges.PATHFINDER_EDGES.END_ID }, true);
-    public static final UniqueKey<PathfinderNodegroupsRecord> PATHFINDER_NODEGROUPS__PK_PATHFINDER_NODEGROUPS = Internal.createUniqueKey(PathfinderNodegroups.PATHFINDER_NODEGROUPS, DSL.name("pk_pathfinder_nodegroups"), new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
-    public static final UniqueKey<PathfinderNodegroupsNodesRecord> PATHFINDER_NODEGROUPS_NODES__PK_PATHFINDER_NODEGROUPS_NODES = Internal.createUniqueKey(PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES, DSL.name("pk_pathfinder_nodegroups_nodes"), new TableField[] { PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES.GROUP_KEY, PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES.NODE_ID }, true);
-    public static final UniqueKey<PathfinderNodesRecord> PATHFINDER_NODES__PK_PATHFINDER_NODES = Internal.createUniqueKey(PathfinderNodes.PATHFINDER_NODES, DSL.name("pk_pathfinder_nodes"), new TableField[] { PathfinderNodes.PATHFINDER_NODES.ID }, true);
+    public static final UniqueKey<PathfinderDiscoveringsRecord> PATHFINDER_DISCOVERINGS__PATHFINDER_DISCOVERINGS_PK = Internal.createUniqueKey(PathfinderDiscoverings.PATHFINDER_DISCOVERINGS, DSL.name("pathfinder_discoverings_PK"), new TableField[] { PathfinderDiscoverings.PATHFINDER_DISCOVERINGS.DISCOVER_KEY, PathfinderDiscoverings.PATHFINDER_DISCOVERINGS.PLAYER_ID }, true);
+    public static final UniqueKey<PathfinderEdgesRecord> PATHFINDER_EDGES__PATHFINDER_EDGES_PK = Internal.createUniqueKey(PathfinderEdges.PATHFINDER_EDGES, DSL.name("pathfinder_edges_PK"), new TableField[] { PathfinderEdges.PATHFINDER_EDGES.START_ID, PathfinderEdges.PATHFINDER_EDGES.END_ID }, true);
+    public static final UniqueKey<PathfinderGroupModifierRelationRecord> PATHFINDER_GROUP_MODIFIER_RELATION__PATHFINDER_GROUP_MODIFIER_RELATION_PK = Internal.createUniqueKey(PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION, DSL.name("pathfinder_group_modifier_relation_PK"), new TableField[] { PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS }, true);
+    public static final UniqueKey<PathfinderNodeTypeRelationRecord> PATHFINDER_NODE_TYPE_RELATION__PATHFINDER_NODE_TYPE_RELATION_PK = Internal.createUniqueKey(PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION, DSL.name("pathfinder_node_type_relation_PK"), new TableField[] { PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE }, true);
+    public static final UniqueKey<PathfinderNodegroupNodesRecord> PATHFINDER_NODEGROUP_NODES__PATHFINDER_NODEGROUP_NODES_PK = Internal.createUniqueKey(PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES, DSL.name("pathfinder_nodegroup_nodes_PK"), new TableField[] { PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES.GROUP_KEY, PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES.NODE_ID }, true);
+    public static final UniqueKey<PathfinderNodegroupsRecord> PATHFINDER_NODEGROUPS__PATHFINDER_NODEGROUPS__PK = Internal.createUniqueKey(PathfinderNodegroups.PATHFINDER_NODEGROUPS, DSL.name("pathfinder_nodegroups__PK"), new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
     public static final UniqueKey<PathfinderPathVisualizerRecord> PATHFINDER_PATH_VISUALIZER__PK_PATHFINDER_PATH_VISUALIZER = Internal.createUniqueKey(PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER, DSL.name("pk_pathfinder_path_visualizer"), new TableField[] { PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER.KEY }, true);
-    public static final UniqueKey<PathfinderRoadmapsRecord> PATHFINDER_ROADMAPS__PK_PATHFINDER_ROADMAPS = Internal.createUniqueKey(PathfinderRoadmaps.PATHFINDER_ROADMAPS, DSL.name("pk_pathfinder_roadmaps"), new TableField[] { PathfinderRoadmaps.PATHFINDER_ROADMAPS.KEY }, true);
     public static final UniqueKey<PathfinderSearchTermsRecord> PATHFINDER_SEARCH_TERMS__PK_PATHFINDER_SEARCH_TERMS = Internal.createUniqueKey(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS, DSL.name("pk_pathfinder_search_terms"), new TableField[] { PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.GROUP_KEY, PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.SEARCH_TERM }, true);
+    public static final UniqueKey<PathfinderWaypointsRecord> PATHFINDER_WAYPOINTS__PATHFINDER_WAYPOINTS_PK = Internal.createUniqueKey(PathfinderWaypoints.PATHFINDER_WAYPOINTS, DSL.name("pathfinder_waypoints_PK"), new TableField[] { PathfinderWaypoints.PATHFINDER_WAYPOINTS.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<PathfinderNodegroupsNodesRecord, PathfinderNodegroupsRecord> PATHFINDER_NODEGROUPS_NODES__FK_PATHFINDER_NODEGROUPS_NODES_PK_PATHFINDER_NODEGROUPS = Internal.createForeignKey(PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES, DSL.name("fk_pathfinder_nodegroups_nodes_pk_pathfinder_nodegroups"), new TableField[] { PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES.GROUP_KEY }, Keys.PATHFINDER_NODEGROUPS__PK_PATHFINDER_NODEGROUPS, new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
-    public static final ForeignKey<PathfinderNodegroupsNodesRecord, PathfinderNodesRecord> PATHFINDER_NODEGROUPS_NODES__FK_PATHFINDER_NODEGROUPS_NODES_PK_PATHFINDER_NODES = Internal.createForeignKey(PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES, DSL.name("fk_pathfinder_nodegroups_nodes_pk_pathfinder_nodes"), new TableField[] { PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES.NODE_ID }, Keys.PATHFINDER_NODES__PK_PATHFINDER_NODES, new TableField[] { PathfinderNodes.PATHFINDER_NODES.ID }, true);
-    public static final ForeignKey<PathfinderNodesRecord, PathfinderRoadmapsRecord> PATHFINDER_NODES__FK_PATHFINDER_NODES_PK_PATHFINDER_ROADMAPS = Internal.createForeignKey(PathfinderNodes.PATHFINDER_NODES, DSL.name("fk_pathfinder_nodes_pk_pathfinder_roadmaps"), new TableField[] { PathfinderNodes.PATHFINDER_NODES.ROADMAP_KEY }, Keys.PATHFINDER_ROADMAPS__PK_PATHFINDER_ROADMAPS, new TableField[] { PathfinderRoadmaps.PATHFINDER_ROADMAPS.KEY }, true);
-    public static final ForeignKey<PathfinderSearchTermsRecord, PathfinderNodegroupsRecord> PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PK_PATHFINDER_NODEGROUPS = Internal.createForeignKey(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS, DSL.name("fk_pathfinder_search_terms_pk_pathfinder_nodegroups"), new TableField[] { PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.GROUP_KEY }, Keys.PATHFINDER_NODEGROUPS__PK_PATHFINDER_NODEGROUPS, new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
+    public static final ForeignKey<PathfinderSearchTermsRecord, PathfinderNodegroupsRecord> PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PATHFINDER_NODEGROUPS__PK = Internal.createForeignKey(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS, DSL.name("fk_pathfinder_search_terms_pathfinder_nodegroups__PK"), new TableField[] { PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.GROUP_KEY }, Keys.PATHFINDER_NODEGROUPS__PATHFINDER_NODEGROUPS__PK, new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
 }

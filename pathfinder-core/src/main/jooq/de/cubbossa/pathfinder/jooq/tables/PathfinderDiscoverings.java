@@ -4,15 +4,17 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
-import de.cubbossa.pathfinder.data.NamespacedKeyConverter;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderDiscoveringsRecord;
+import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
+import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.function.Function;
 
-import org.bukkit.NamespacedKey;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function3;
@@ -55,12 +57,12 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
     /**
      * The column <code>pathfinder_discoverings.discover_key</code>.
      */
-    public final TableField<PathfinderDiscoveringsRecord, NamespacedKey> DISCOVER_KEY = createField(DSL.name("discover_key"), SQLDataType.VARCHAR.nullable(false), this, "", new NamespacedKeyConverter());
+    public final TableField<PathfinderDiscoveringsRecord, NamespacedKey> DISCOVER_KEY = createField(DSL.name("discover_key"), SQLDataType.VARCHAR(64).nullable(false), this, "", new NamespacedKeyConverter());
 
     /**
      * The column <code>pathfinder_discoverings.player_id</code>.
      */
-    public final TableField<PathfinderDiscoveringsRecord, String> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.VARCHAR.nullable(false), this, "");
+    public final TableField<PathfinderDiscoveringsRecord, UUID> PLAYER_ID = createField(DSL.name("player_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_discoverings.date</code>.
@@ -107,7 +109,7 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
 
     @Override
     public UniqueKey<PathfinderDiscoveringsRecord> getPrimaryKey() {
-        return Keys.PATHFINDER_DISCOVERINGS__PK_PATHFINDER_DISCOVERINGS;
+        return Keys.PATHFINDER_DISCOVERINGS__PATHFINDER_DISCOVERINGS_PK;
     }
 
     @Override
@@ -154,14 +156,14 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
     // -------------------------------------------------------------------------
 
     @Override
-    public Row3<NamespacedKey, String, LocalDateTime> fieldsRow() {
+    public Row3<NamespacedKey, UUID, LocalDateTime> fieldsRow() {
         return (Row3) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function3<? super NamespacedKey, ? super String, ? super LocalDateTime, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function3<? super NamespacedKey, ? super UUID, ? super LocalDateTime, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -169,7 +171,7 @@ public class PathfinderDiscoverings extends TableImpl<PathfinderDiscoveringsReco
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super NamespacedKey, ? super String, ? super LocalDateTime, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super NamespacedKey, ? super UUID, ? super LocalDateTime, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

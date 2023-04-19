@@ -2,19 +2,18 @@ package de.cubbossa.pathfinder.module.visualizing.visualizer;
 
 import com.google.auto.service.AutoService;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.PathPluginExtension;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-import java.util.function.Consumer;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.api.PathFinderExtension;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizerType;
 import org.jetbrains.annotations.NotNull;
 
-@AutoService(PathPluginExtension.class)
-public class ScriptedVisualizerPathfinderExtension implements PathPluginExtension {
+@AutoService(PathFinderExtension.class)
+public class ScriptedVisualizerPathfinderExtension implements PathFinderExtension {
 
-  public static final NamespacedKey KEY = new NamespacedKey(PathPlugin.getInstance(), "scriptline-visualizers");
-  public static final VisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
-      new ScriptLineParticleVisualizerType(
-          new NamespacedKey(PathPlugin.getInstance(), "scriptline"));
+  public static final NamespacedKey KEY = PathPlugin.pathfinder("scriptline-visualizers");
+  public static AbstractVisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
+      new ScriptLineParticleVisualizerType(PathPlugin.pathfinder("scriptline"));
 
   @NotNull
   @Override
@@ -23,7 +22,7 @@ public class ScriptedVisualizerPathfinderExtension implements PathPluginExtensio
   }
 
   @Override
-  public void registerVisualizerType(Consumer<VisualizerType<?>> typeConsumer) {
-    typeConsumer.accept(ADV_PARTICLE_VISUALIZER_TYPE);
+  public void onEnable(PathFinder pathPlugin) {
+    pathPlugin.getVisualizerTypeRegistry().registerVisualizerType(ADV_PARTICLE_VISUALIZER_TYPE);
   }
 }

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
-import de.cubbossa.pathfinder.core.node.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.ArrayList;
 import java.util.Collection;
 import lombok.Getter;
@@ -12,10 +12,10 @@ import org.bukkit.event.HandlerList;
 public class NodeGroupSearchTermsChangedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
-  private final NodeGroup group;
+  private final SimpleNodeGroup group;
   private final Action action;
   private final Collection<String> changedTerms;
-  public NodeGroupSearchTermsChangedEvent(NodeGroup group, Action action,
+  public NodeGroupSearchTermsChangedEvent(SimpleNodeGroup group, Action action,
                                           Collection<String> terms) {
     this.group = group;
     this.action = action;

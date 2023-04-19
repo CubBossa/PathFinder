@@ -3,11 +3,13 @@ package de.cubbossa.pathfinder.util.location;
 import de.cubbossa.pathfinder.PathPluginConfig.NearestLocationSolverConfig;
 import de.cubbossa.pathfinder.PathPluginConfig.RaycastLocationWeightSolverConfig;
 import de.cubbossa.pathfinder.PathPluginConfig.SimpleLocationWeightSolverConfig;
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.function.Function;
+
+import de.cubbossa.pathfinder.util.VectorUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Location;
 
 public class LocationWeightSolverPreset<C> {
 
@@ -21,7 +23,7 @@ public class LocationWeightSolverPreset<C> {
 
   public static final LocationWeightSolverPreset<RaycastLocationWeightSolverConfig> RAYCAST =
       new LocationWeightSolverPreset<>("RAYCAST",
-          config -> new RaycastLocationWeightSolver<Node<?>>(Node::getLocation)
+          config -> new RaycastLocationWeightSolver<Node<?>>(n -> VectorUtils.toBukkit(n.getLocation()))
               .withRaycastCount(config.raycastCount)
               .withBlockCollisionWeight(config.blockCollisionWeight)
               .withStartLocationDirectionWeight(config.startLocationDirectionWeight)

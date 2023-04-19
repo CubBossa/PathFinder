@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.command;
 
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.commands.Command;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
@@ -9,17 +11,20 @@ import org.bukkit.Bukkit;
 
 public class FindCommand extends Command {
 
-  public FindCommand() {
-    super("find");
+  public FindCommand(PathFinder pathFinder) {
+    super(pathFinder, "find");
     withAliases("gps", "navigate");
-    withPermission(PathPlugin.PERM_CMD_FIND);
+    withPermission(PathPerms.PERM_CMD_FIND);
     withGeneratedHelp();
 
     then(CustomArgs.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
           Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
             NodeSelection targets = (NodeSelection) args[0];
-            FindModule.printResult(FindModule.getInstance().findPath(player, targets), player);
+
+              FindModule.getInstance().findPath(PathPlugin.wrap(player), targets).thenAccept(navigateResult -> {
+                  FindModule.printResult(navigateResult, player);
+              });
           });
         })
     );

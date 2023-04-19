@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.core.node.Node;
+import de.cubbossa.pathfinder.api.node.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
-public class NodeSelection extends ArrayList<Node<?>> implements Collection<Node<?>> {
+public class NodeSelection extends ArrayList<Node<?>> {
 
   @Getter
   @Setter
@@ -18,12 +18,12 @@ public class NodeSelection extends ArrayList<Node<?>> implements Collection<Node
   public NodeSelection() {
   }
 
-  public NodeSelection(Node<?>... nodes) {
-    super(Arrays.asList(nodes));
+  public NodeSelection(Collection<Node<?>> nodes) {
+    super(nodes);
   }
 
-  public NodeSelection(Collection<Node<?>> other) {
-    super(other);
+  public NodeSelection(Node<?>... nodes) {
+    super(Arrays.stream(nodes).toList());
   }
 
   public record Meta(String selector, Map<String, String> arguments) {

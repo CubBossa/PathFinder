@@ -1,13 +1,14 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 
-public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?>> extends VisualizerType<T> {
+public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?, ?>> extends
+    AbstractVisualizerType<T> {
 
   public InternalVisualizerType(NamespacedKey key) {
     super(key);
-    setStorage(new InternalVisualizerDataStorage<>(this, PathPlugin.getInstance().getDatabase()));
+    setStorage(new InternalVisualizerDataStorage<>(this, PathPlugin.getInstance().getStorage()));
   }
 }

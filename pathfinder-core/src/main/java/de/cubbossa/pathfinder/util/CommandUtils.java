@@ -4,14 +4,14 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.api.misc.Pagination;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTreeLike;
-import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.audience.Audience;
@@ -23,12 +23,6 @@ import org.bukkit.command.CommandSender;
 public class CommandUtils {
 
   private CommandHelpGenerator generator = new CommandHelpGenerator();
-
-  public void unregister(CommandTree tree) {
-    if (tree != null) {
-      CommandAPI.unregister(tree.getName());
-    }
-  }
 
   public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree) {
     sendHelp(sender, tree, -1);
@@ -84,6 +78,35 @@ public class CommandUtils {
         .collect(Collectors.toList());
 
     return Suggestions.create(command, result);
+  }
+
+  public <T> void printList(CommandSender sender, Pagination pagination,
+                            Function<Pagination, List<T>> supplier,
+                            Consumer<T> print, Message header, Message footer) {
+
+    /*supplier.apply(pagination).thenAccept(elements -> {
+      int maxPage = (int) Math.ceil(elements.size() / (float));
+      if (maxPage == 0) {
+        maxPage = 1;
+      }
+      page = Integer.min(page, maxPage);
+      int prevPage = Integer.max(page - 1, 1);
+      int nextPage = Integer.min(page + 1, maxPage);
+
+      TagResolver resolver = TagResolver.builder()
+          .resolver(Placeholder.parsed("page", page + ""))
+          .resolver(Placeholder.parsed("prev-page", prevPage + ""))
+          .resolver(Placeholder.parsed("next-page", nextPage + ""))
+          .resolver(Placeholder.parsed("pages", maxPage + ""))
+          .build();
+
+
+      TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
+      for (T element : CommandUtils.subListPaginated(elements, page - 1, pageSize)) {
+        print.accept(element);
+      }
+      TranslationHandler.getInstance().sendMessage(footer.format(resolver), sender);
+    });*/
   }
 
   public <T> void printList(CommandSender sender, int page, int pageSize, List<T> elements,

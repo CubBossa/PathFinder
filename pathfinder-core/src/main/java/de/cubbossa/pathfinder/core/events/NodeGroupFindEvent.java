@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.core.events;
 
-import de.cubbossa.pathfinder.core.node.NodeGroup;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.Date;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -22,7 +22,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
   @Getter
   @Setter
   private @Nullable
-  NodeGroup group;
+  SimpleNodeGroup group;
   @Getter
   @Setter
   private Date date;
@@ -30,7 +30,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
   @Setter
   private boolean cancelled;
 
-  public NodeGroupFindEvent(UUID playerId, NodeGroup group, Waypoint triggeringFindable,
+  public NodeGroupFindEvent(UUID playerId, SimpleNodeGroup group, Waypoint triggeringFindable,
                             Date date) {
     this.playerId = playerId;
     this.group = group;

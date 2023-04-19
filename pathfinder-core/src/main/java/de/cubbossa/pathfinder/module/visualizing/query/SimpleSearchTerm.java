@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.query;
 
+import de.cubbossa.pathfinder.api.visualizer.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTerm;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.api.misc.Vector;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -26,10 +26,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 @MessageFile
@@ -194,9 +193,9 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix>Successfully deleted <selection>.",
       placeholders = "selection")
   public static final Message CMD_N_DELETE = new Message("commands.node.delete");
-  @MessageMeta(value = "<ins:prefix><gray>Moved <selection> to <location>.</gray>",
+  @MessageMeta(value = "<ins:prefix><gray>Updated <selection>.</gray>",
       placeholders = {"selection", "location"})
-  public static final Message CMD_N_MOVED = new Message("commands.node.moved");
+  public static final Message CMD_N_UPDATED = new Message("commands.node.moved");
   @MessageMeta(value = """
       <offset>Node #<id></offset> <gray>(<roadmap>)</gray>
       <dark_gray>» </dark_gray><gray>Position: <main><position></main> (<world>)
@@ -256,6 +255,13 @@ public class Messages {
   @MessageMeta(value = "<ins:prefix><gray>Node group deleted: <name>.</gray>",
       placeholders = "name")
   public static final Message CMD_NG_DELETE = new Message("commands.node_group.delete");
+  @MessageMeta(value = """
+      <offset>Group '<key>'</offset>
+      <dark_gray>» </dark_gray><gray>Nodes: <main><nodes></main>
+      <dark_gray>» </dark_gray><gray>Weight: <main><weight></main>
+      <dark_gray>» </dark_gray><gray>Modifiers: <main><curve-length></main>
+      """, placeholders = {"modifiers", "key", "nodes", "weight"})
+  public static final Message CMD_NG_INFO = new Message("commands.node_group.info");
   @MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Node-Groups</offset> ------------</gradient>",
       placeholders = {"page", "next-page", "prev-page", "pages"})
   public static final Message CMD_NG_LIST_HEADER = new Message("commands.node_group.list.header");
@@ -553,15 +559,11 @@ public class Messages {
 
   public static Component formatNodeSelection(CommandSender sender, Collection<Node<?>> nodes) {
     return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
-        node -> Component.text("#" + node.getNodeId()));
+        node -> Component.text("#" + node));
   }
 
-  public static Component formatNodeGroups(CommandSender sender, Collection<NodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, NodeGroup::getDisplayName);
-  }
-
-  public static Component formatRoadmaps(CommandSender sender, Collection<RoadMap> roadMaps) {
-    return formatGroupInHover(sender, GEN_RM_SEL, roadMaps, RoadMap::getDisplayName);
+  public static Component formatNodeGroups(CommandSender sender, Collection<SimpleNodeGroup> groups) {
+    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,

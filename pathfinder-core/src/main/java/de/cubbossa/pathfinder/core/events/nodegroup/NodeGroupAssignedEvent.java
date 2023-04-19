@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.core.events.nodegroup;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -17,14 +17,14 @@ public class NodeGroupAssignedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable<?>> groupables;
-  private final Collection<NodeGroup> groups;
+  private final Collection<UUID> groupables;
+  private final Collection<NamespacedKey> groups;
 
-  public NodeGroupAssignedEvent(Groupable<?> groupables, NodeGroup groups) {
+  public NodeGroupAssignedEvent(UUID groupables, NamespacedKey groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupAssignedEvent(Collection<Groupable<?>> groupables, Collection<NodeGroup> groups) {
+  public NodeGroupAssignedEvent(Collection<UUID> groupables, Collection<NamespacedKey> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
   }

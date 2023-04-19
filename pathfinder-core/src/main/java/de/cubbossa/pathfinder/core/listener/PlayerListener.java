@@ -1,7 +1,10 @@
 package de.cubbossa.pathfinder.core.listener;
 
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -10,12 +13,12 @@ public class PlayerListener implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
+    PathPlayer<Player> player = PathPlugin.wrap(event.getPlayer());
 
-    NamespacedKey currentlyEdited =
-        RoadMapHandler.getInstance().getRoadMapEditedBy(event.getPlayer());
+    NamespacedKey currentlyEdited = NodeHandler.getInstance().getEdited(player);
     if (currentlyEdited != null) {
-      RoadMapHandler.getInstance().getRoadMapEditor(currentlyEdited)
-          .setEditMode(event.getPlayer().getUniqueId(), false);
+      NodeHandler.getInstance().getNodeGroupEditor(currentlyEdited)
+          .thenAccept(e -> e.setEditMode(player, false));
     }
   }
 }

@@ -2,8 +2,12 @@ package de.cubbossa.pathfinder.module.visualizing.query;
 
 import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTermHolder;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -14,8 +18,14 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class FindQueryParser {
 
-  public <T extends SearchTermHolder> Collection<T> parse(String input, List<T> scope)
-      throws ParseCancellationException {
+  public <T> Collection<T> parse(String input, List<T> scope, Function<T, Collection<SearchTerm>> seachtermSupplier) throws ParseCancellationException {
+    return parse(input, scope.stream().map(t -> new Wrapper<>(t, seachtermSupplier)).toList())
+        .stream()
+        .map(w -> w.element)
+        .collect(Collectors.toList());
+  }
+
+    public <T extends SearchTermHolder> Collection<T> parse(String input, List<T> scope) {
 
     CharStream charStream = CharStreams.fromString(input);
     QueryLanguageLexer lexer = new QueryLanguageLexer(charStream);
@@ -39,6 +49,14 @@ public class FindQueryParser {
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
                             int charPositionInLine, String msg, RecognitionException e) {
       throw new ParseCancellationException(msg, e);
+    }
+  }
+
+  private record Wrapper<T>(T element, Function<T, Collection<SearchTerm>> fun) implements SearchTermHolder {
+
+    @Override
+    public Collection<SearchTerm> getSearchTerms() {
+      return fun.apply(element);
     }
   }
 }

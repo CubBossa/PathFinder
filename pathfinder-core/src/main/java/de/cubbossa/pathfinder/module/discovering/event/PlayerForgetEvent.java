@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module.discovering.event;
 
-import de.cubbossa.pathfinder.core.node.Discoverable;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class PlayerForgetEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
   private final UUID playerId;
-  private final Discoverable discoverable;
+  private final NodeGroup group;
   private boolean cancelled;
 
   public static HandlerList getHandlerList() {

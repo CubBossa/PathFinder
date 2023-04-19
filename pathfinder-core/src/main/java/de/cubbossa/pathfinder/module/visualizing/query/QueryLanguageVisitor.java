@@ -2,6 +2,8 @@ package de.cubbossa.pathfinder.module.visualizing.query;
 
 import de.cubbossa.pathfinder.antlr.QueryLanguageBaseVisitor;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTermHolder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -69,7 +71,7 @@ public class QueryLanguageVisitor<T extends SearchTermHolder>
   }
 
   public SearchQueryAttribute visitAnAttribute(QueryLanguageParser.AttributeContext context) {
-    return new SearchQueryAttribute(
+    return new de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute(
         context.IDENTIFIER().getText(),
         SearchQueryAttribute.Comparator.fromString(context.comparator().getText()),
         context.value().getText()

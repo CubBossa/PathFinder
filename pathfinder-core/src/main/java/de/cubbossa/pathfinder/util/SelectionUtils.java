@@ -5,90 +5,58 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.api.group.NodeGroup;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.selection.NodeSelectionParser;
 import de.cubbossa.pathfinder.util.selection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
-import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 public class SelectionUtils {
 
-  public static final NodeSelectionParser.Argument<NumberRange> ID =
-      new NodeSelectionParser.Argument<NumberRange>(r -> {
-        try {
-          return NumberRange.parse(r.getRemaining());
-        } catch (ParseException e) {
-          throw new RuntimeException(e);
-        }
-      })
+  public static final NodeSelectionParser.Argument<UUID> ID =
+      new NodeSelectionParser.Argument<>(r -> UUID.fromString(r.getRemaining()))
           .execute(c -> c.getScope().stream()
-              .filter(n -> c.getValue().contains(n.getNodeId()))
+              .filter(n -> c.getValue().equals(n.getNodeId()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> RoadMapHandler.getInstance().getRoadMaps().values().stream()
-              .map(RoadMap::getNodes)
-              .flatMap(Collection::stream)
+          .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadNodes().join().stream()
               .map(Node::getNodeId)
               .map(integer -> integer + "")
-              .collect(Collectors.toList()));
-
-  public static final NodeSelectionParser.Argument<NumberRange> TANGENT_LENGTH =
-      NodeSelectionParser.argument(r -> NumberRange.fromString(r.getRemaining()))
-          .execute(c -> c.getScope().stream()
-              .filter(n -> {
-                Double curveLength = n.getCurveLength();
-                if (curveLength == null) {
-                  curveLength = RoadMapHandler.getInstance().getRoadMap(n.getRoadMapKey())
-                      .getDefaultCurveLength();
-                }
-                return c.getValue().contains(curveLength);
-              })
               .collect(Collectors.toList()));
 
   public static final NodeSelectionParser.Argument<NumberRange> DISTANCE =
       new NodeSelectionParser.Argument<>(r -> NumberRange.fromString(r.getRemaining()))
           .execute(c -> {
             if (c.getSender() instanceof Player player) {
+              PathPlayer<Player> p = PathPlugin.wrap(player);
               return c.getScope().stream()
                   .filter(
-                      n -> c.getValue().contains(n.getLocation().distance(player.getLocation())))
+                      n -> c.getValue().contains(n.getLocation().distance(p.getLocation())))
                   .collect(Collectors.toList());
             }
             return Lists.newArrayList();
           });
-
-  public static final NodeSelectionParser.Argument<NamespacedKey> ROADMAP =
-      new NodeSelectionParser.Argument<>(
-          r -> NamespacedKey.fromString(r.getRemaining()))
-          .execute(c -> {
-            NamespacedKey roadmapKey = c.getValue();
-            return c.getScope().stream()
-                .filter(n -> n.getRoadMapKey().equals(roadmapKey))
-                .collect(Collectors.toList());
-          })
-          .suggestStrings(RoadMapHandler.getInstance().getRoadMapsStream()
-              .map(RoadMap::getKey)
-              .map(NamespacedKey::toString)
-              .collect(Collectors.toList()));
-
 
   public static final NodeSelectionParser.Argument<World> WORLD =
       new NodeSelectionParser.Argument<>(r -> {
@@ -98,7 +66,7 @@ public class SelectionUtils {
         }
         return world;
       }).execute(c -> c.getScope().stream()
-              .filter(node -> Objects.equals(node.getLocation().getWorld(), c.getValue()))
+              .filter(node -> Objects.equals(node.getLocation().getWorld(), c.getValue().getUID()))
               .collect(Collectors.toList()))
           .suggestStrings(c -> Bukkit.getWorlds().stream()
               .map(World::getName)
@@ -121,8 +89,8 @@ public class SelectionUtils {
           r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
           .execute(c -> {
             Location playerLocation = c.getSender() instanceof Player player
-                ? player.getLocation()
-                : new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
+                ? PathPlugin.wrap(player).getLocation()
+                : new Location(0, 0, 0, null);
             return switch (c.getValue()) {
               case NEAREST -> c.getScope().stream()
                   .sorted(Comparator.comparingDouble(o -> o.getLocation().distance(playerLocation)))
@@ -137,7 +105,7 @@ public class SelectionUtils {
                     return n;
                   }));
               case ARBITRARY -> c.getScope().stream()
-                  .sorted(Comparator.comparingInt(Node::getNodeId))
+                  .sorted()
                   .collect(Collectors.toList());
             };
           })
@@ -147,26 +115,20 @@ public class SelectionUtils {
       new NodeSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
         Collection<NodeGroup> groups = new HashSet<>();
-        if (in.startsWith("@")) {
-          // TODO parse groups
-        } else {
-          NamespacedKey key = NamespacedKey.fromString(in);
-          if (key == null) {
-            throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
-          }
-          NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(key);
-          if (group == null) {
-            throw new IllegalArgumentException("There is no group with the key '" + key + "'");
-          }
-          groups.add(group);
+        NamespacedKey key = NamespacedKey.fromString(in);
+        if (key == null) {
+          throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
         }
+        Optional<NodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
+        groups.add(group.orElseThrow(() -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
         return groups;
       })
           .execute(c -> c.getScope().stream()
-              .filter(node -> node instanceof Groupable groupable
-                  && groupable.getGroups().containsAll(c.getValue()))
+              .filter(node -> node instanceof Groupable<?> groupable
+                  && groupable.getGroups()
+                  .containsAll(c.getValue()))
               .collect(Collectors.toList()))
-          .suggestStrings(c -> NodeGroupHandler.getInstance().getNodeGroups().stream()
+          .suggestStrings(c -> PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
@@ -176,10 +138,8 @@ public class SelectionUtils {
       "offset", OFFSET,
       "limit", LIMIT,
       "distance", DISTANCE,
-      "curvelength", TANGENT_LENGTH,
       "sort", SORT,
       "world", WORLD,
-      "roadmap", ROADMAP,
       "group", GROUP
   );
 
@@ -192,12 +152,8 @@ public class SelectionUtils {
   public static NodeSelection getNodeSelection(Player player, String selectString)
       throws CommandSyntaxException, ParseCancellationException {
 
-    return new NodeSelection(parser.parse(
-        player,
-        selectString,
-        RoadMapHandler.getInstance().getRoadMaps().values().stream()
-            .flatMap(roadMap -> roadMap.getNodes().stream())
-            .collect(Collectors.toList())));
+    List<Node<?>> nodes = new ArrayList<>(PathPlugin.getInstance().getStorage().loadNodes().join());
+    return new NodeSelection(parser.parse(player, selectString, nodes));
   }
 
   public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(

@@ -29,18 +29,13 @@ repositories {
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://repo.dmulloy2.net/repository/public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
 
     // Antlr
     antlr("org.antlr:antlr4:4.12.0") { isTransitive = true }
-
-    // Adventure
-    api("net.kyori:adventure-api:4.13.0")
-    api("net.kyori:adventure-platform-bukkit:4.3.0")
-    api("net.kyori:adventure-text-minimessage:4.13.0")
-    api("net.kyori:adventure-text-serializer-plain:4.13.0")
 
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
@@ -62,9 +57,9 @@ dependencies {
     api("de.cubbossa:SerializedEffects:1.0")
 
     // Plugins
-    compileOnly("me.clip:placeholderapi:2.11.2")
     runtimeOnly(project(":pathfinder-editmode"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
+    api(project(":pathfinder-api"))
     implementation(project(":pathfinder-graph"))
 
     // Statistics
@@ -80,10 +75,15 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("com.h2database:h2:2.1.214")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
+    testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 
     // UI
     api("de.cubbossa:Translations:1.1")
 
+    // Utility
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
     implementation(files("generated/plugin-yml/Bukkit/plugin.yml"))
 }
 
@@ -191,6 +191,7 @@ tasks {
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
         // otherwise jar grows from ~8mb to ~30mb
         dependencies {
+            include(project(":pathfinder-api"))
             include(project(":pathfinder-graph"))
             include(project(":pathfinder-editmode"))
             include(project(":pathfinder-scripted-visualizer"))
@@ -216,6 +217,7 @@ tasks {
             include(dependency("org.reactivestreams:reactive-streams:.*"))
             include(dependency("io.r2dbc:r2dbc-spi:.*"))
             include(dependency("com.zaxxer:HikariCP:.*"))
+            include(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
         }
 
         fun relocate(from: String, to: String) {
@@ -291,9 +293,14 @@ jooq {
                         name = "org.jooq.meta.sqlite.SQLiteDatabase"
                         forcedTypes = listOf(
                             ForcedType().apply {
-                                userType = "org.bukkit.NamespacedKey"
-                                converter = "de.cubbossa.pathfinder.data.NamespacedKeyConverter"
-                                includeExpression = ".*key|type"
+                                userType = "de.cubbossa.pathfinder.api.misc.NamespacedKey"
+                                converter = "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
+                                includeExpression = ".*key|.*type"
+                            },
+                            ForcedType().apply {
+                                userType = "java.util.UUID"
+                                converter = "de.cubbossa.pathfinder.storage.misc.UUIDConverter"
+                                includeExpression = "id|.*_id|world"
                             }
                         )
                     }

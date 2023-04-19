@@ -1,27 +1,30 @@
 package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.api.PathFinder;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.PathPluginExtension;
-import de.cubbossa.pathfinder.data.DataExporter;
-import de.cubbossa.pathfinder.data.DataStorage;
-import de.cubbossa.pathfinder.data.SqliteDataStorage;
-import de.cubbossa.pathfinder.data.YmlDataStorage;
+import de.cubbossa.pathfinder.api.PathFinderExtension;
+import de.cubbossa.pathfinder.core.node.NodeHandler;
+import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.DiscoverableModifier;
+import de.cubbossa.pathfinder.module.discovering.DiscoverHandler;
 import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.arguments.TextArgument;
-import java.io.File;
-import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 /**
@@ -32,16 +35,16 @@ public class PathFinderCommand extends Command {
   /**
    * The basic command of this plugin, which handles things like reload, export, import, etc.
    */
-  public PathFinderCommand() {
-    super("pathfinder");
+  public PathFinderCommand(PathFinder pathFinder) {
+    super(pathFinder, "pathfinder");
     withAliases("pf");
 
     withRequirement(sender ->
-        sender.hasPermission(PathPlugin.PERM_CMD_PF_HELP)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_INFO)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_IMPORT)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_EXPORT)
-            || sender.hasPermission(PathPlugin.PERM_CMD_PF_RELOAD)
+        sender.hasPermission(PathPerms.PERM_CMD_PF_HELP)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_INFO)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_IMPORT)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_EXPORT)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_RELOAD)
     );
 
     executes((sender, args) -> {
@@ -51,7 +54,7 @@ public class PathFinderCommand extends Command {
     });
 
     then(CustomArgs.literal("info")
-        .withPermission(PathPlugin.PERM_CMD_PF_INFO)
+        .withPermission(PathPerms.PERM_CMD_PF_INFO)
         .executes((commandSender, objects) -> {
           PluginDescriptionFile desc = PathPlugin.getInstance().getDescription();
           TranslationHandler.getInstance().sendMessage(Messages.INFO.format(TagResolver.builder()
@@ -63,83 +66,40 @@ public class PathFinderCommand extends Command {
         }));
 
     then(CustomArgs.literal("modules")
-        .withPermission(PathPlugin.PERM_CMD_PF_MODULES)
+        .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
-          List<String> list = PathPlugin.getInstance().getExtensions().stream()
-              .map(PathPluginExtension::getKey)
-              .map(NamespacedKey::toString).toList();
+          List<String> list =
+              PathPlugin.getInstance().getExtensionRegistry().getExtensions().stream()
+                  .map(PathFinderExtension::getKey)
+                  .map(NamespacedKey::toString).toList();
 
           TranslationHandler.getInstance().sendMessage(Messages.MODULES.format(TagResolver.builder()
               .resolver(TagResolver.resolver("modules", Messages.formatList(list, Component::text)))
               .build()), commandSender);
         }));
 
+    then(CustomArgs.literal("editmode")
+        .executesPlayer((player, args) -> {
+          NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), NodeHandler.GROUP_GLOBAL);
+        })
+        .then(CustomArgs.nodeGroupArgument("group")
+            .executesPlayer((player, args) -> {
+              NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), ((SimpleNodeGroup) args[0]).getKey());
+            })));
+
     then(CustomArgs.literal("help")
-        .withPermission(PathPlugin.PERM_CMD_PF_HELP)
+        .withPermission(PathPerms.PERM_CMD_PF_HELP)
         .executes((commandSender, objects) -> {
           TranslationHandler.getInstance().sendMessage(Messages.CMD_HELP, commandSender);
         }));
 
-    then(CustomArgs.literal("export")
-        .withPermission(PathPlugin.PERM_CMD_PF_EXPORT)
-        .then(CustomArgs.literal("sqlite")
-            .then(new TextArgument("filename")
-                .executes((commandSender, objects) -> {
-                  PathPlugin pl = PathPlugin.getInstance();
-                  long now = System.currentTimeMillis();
-                  Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String fileName = (String) objects[0];
-                    if (!fileName.endsWith(".db")) {
-                      fileName = fileName + ".db";
-                    }
-                    DataStorage storage =
-                        new SqliteDataStorage(new File(pl.getDataFolder(), "exports/" + fileName));
-                    try {
-                      storage.connect();
-                      DataExporter.all().save(storage);
-                    } catch (IOException e) {
-                      pl.getLogger().log(Level.SEVERE, e, e::getMessage);
-                      commandSender.sendMessage(
-                          "Complete in " + (System.currentTimeMillis() - now) + "ms.");
-                    }
-                  });
-                })
-            )
-        )
-        .then(CustomArgs.literal("yaml")
-            .then(new TextArgument("directory")
-                .executes((commandSender, objects) -> {
-                  PathPlugin pl = PathPlugin.getInstance();
-                  long now = System.currentTimeMillis();
-                  Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String dir = (String) objects[0];
-                    if (!dir.startsWith("/")) {
-                      dir = "/" + dir;
-                    }
-                    File directory = new File(pl.getDataFolder(), "exports/" + dir);
-                    directory.mkdirs();
-                    DataStorage storage = new YmlDataStorage(directory);
-                    try {
-                      storage.connect();
-                      DataExporter.all().save(storage);
-                      commandSender.sendMessage(
-                          "Complete in " + (System.currentTimeMillis() - now) + "ms.");
-                    } catch (IOException e) {
-                      pl.getLogger().log(Level.SEVERE, e, e::getMessage);
-                    }
-                  });
-                })
-            )
-        )
-    );
-
     then(CustomArgs.literal("import")
-        .withPermission(PathPlugin.PERM_CMD_PF_IMPORT)
-        .then(new VisualizerImportCommand("visualizer", 0))
+        .withPermission(PathPerms.PERM_CMD_PF_IMPORT)
+        .then(new VisualizerImportCommand(pathFinder, "visualizer", 0))
     );
 
     then(CustomArgs.literal("reload")
-        .withPermission(PathPlugin.PERM_CMD_PF_RELOAD)
+        .withPermission(PathPerms.PERM_CMD_PF_RELOAD)
 
         .executes((sender, objects) -> {
           long now = System.currentTimeMillis();
@@ -270,5 +230,58 @@ public class PathFinderCommand extends Command {
             })
         )
     );
+
+    then(CustomArgs.literal("forcefind")
+        .withGeneratedHelp()
+        .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
+        .then(CustomArgs.player("player")
+            .withGeneratedHelp()
+            .then(CustomArgs.discoverableArgument("discovering")
+                .executes((commandSender, args) -> {
+                  onForceFind(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                }))));
+    then(CustomArgs.literal("forceforget")
+        .withGeneratedHelp()
+        .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
+        .then(CustomArgs.player("player")
+            .withGeneratedHelp()
+            .then(CustomArgs.discoverableArgument("discovering")
+                .executes((commandSender, args) -> {
+                  onForceForget(commandSender, (Player) args[1], (NamespacedKey) args[2]);
+                }))));
+  }
+
+  private void onForceFind(CommandSender sender, Player target, NamespacedKey discoverable) {
+    getPathfinder().getStorage().loadGroup(discoverable)
+        .thenApply(Optional::orElseThrow)
+        .thenAccept(group -> {
+          DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+
+          DiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
+
+          TranslationHandler.getInstance()
+              .sendMessage(Messages.CMD_RM_FORCE_FIND.format(TagResolver.builder()
+                  .resolver(Placeholder.component("name",
+                      PathPlugin.getInstance().getAudiences().player(target)
+                          .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+                  .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+        });
+  }
+
+  private void onForceForget(CommandSender sender, Player target, NamespacedKey discoverable) {
+    getPathfinder().getStorage().loadGroup(discoverable)
+        .thenApply(Optional::orElseThrow)
+        .thenAccept(group -> {
+      DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+
+      DiscoverHandler.getInstance().forget(target.getUniqueId(), group);
+
+      TranslationHandler.getInstance()
+          .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
+              .resolver(Placeholder.component("name",
+                  PathPlugin.getInstance().getAudiences().player(target)
+                      .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+    });
   }
 }

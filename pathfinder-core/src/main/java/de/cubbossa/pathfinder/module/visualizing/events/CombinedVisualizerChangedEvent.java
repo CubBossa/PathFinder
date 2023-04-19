@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.visualizing.events;
 
 import de.cubbossa.pathfinder.module.visualizing.visualizer.CombinedVisualizer;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class CombinedVisualizerChangedEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
   private final CombinedVisualizer visualizer;
   private final Action action;
-  private final Collection<PathVisualizer<?, ?>> targets;
+  private final Collection<PathVisualizer<?, ?, ?>> targets;
 
   public static HandlerList getHandlerList() {
     return handlers;

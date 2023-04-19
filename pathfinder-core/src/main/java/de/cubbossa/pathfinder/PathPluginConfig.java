@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.data.DatabaseType;
+import de.cubbossa.pathfinder.storage.DatabaseType;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset.LocationWeightSolverPresetEnum;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;

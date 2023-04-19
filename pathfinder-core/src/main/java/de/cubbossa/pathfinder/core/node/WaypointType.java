@@ -1,26 +1,26 @@
 package de.cubbossa.pathfinder.core.node;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
-public class WaypointType extends NodeType<Waypoint> {
+public class WaypointType extends AbstractNodeType<Waypoint> {
 
-  public WaypointType() {
+  public WaypointType(NodeDataStorage<Waypoint> storage, MiniMessage miniMessage) {
     super(
-        new NamespacedKey(PathPlugin.getInstance(), "waypoint"),
+        NamespacedKey.fromString("pathfinder:waypoint"),
         "<color:#ff0000>Waypoint</color>",
         new ItemStack(Material.MAP),
-        PathPlugin.getInstance().getDatabase()
+        miniMessage,
+        storage
     );
   }
 
   @Override
-  public Waypoint createNode(NodeCreationContext context) {
-    Waypoint waypoint = new Waypoint(context.id(), context.roadMap(), context.persistent());
-    waypoint.setLocation(context.location());
-    return waypoint;
+  public Waypoint createAndLoadNode(Context context) {
+    return getStorage().createAndLoadNode(context);
   }
 }

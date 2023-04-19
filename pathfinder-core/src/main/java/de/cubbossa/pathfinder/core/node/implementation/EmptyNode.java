@@ -1,73 +1,54 @@
 package de.cubbossa.pathfinder.core.node.implementation;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
+import de.cubbossa.pathfinder.api.misc.Location;
+import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathfinder.core.node.SimpleEdge;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.core.node.AbstractNodeType;
+import de.cubbossa.pathfinder.util.WorldImpl;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
 import lombok.Getter;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class EmptyNode implements Node<EmptyNode> {
 
-  public static final NodeType<EmptyNode> TYPE = new NodeType<>(
-      new NamespacedKey(PathPlugin.getInstance(), "empty"),
+  public static final de.cubbossa.pathfinder.api.node.NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
+      PathPlugin.pathfinder("empty"),
       "empty",
-      new ItemStack(Material.DIRT)
+      new ItemStack(Material.DIRT),
+      PathPlugin.getInstance().getMiniMessage()
   ) {
+
     @Override
-    public EmptyNode createNode(NodeCreationContext context) {
+    public EmptyNode createAndLoadNode(Context context) {
       throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
           + "must be created from constructor.");
     }
   };
 
-  private final RoadMap roadMap;
+  private final UUID uuid = UUID.randomUUID();
   @Getter
   private final Location location;
 
-  public EmptyNode(RoadMap roadMap, World world) {
-    this.roadMap = roadMap;
-    this.location = new Location(world, 0, 0, 0);
+  public EmptyNode(World world) {
+    this.location = new Location(0, 0, 0, new WorldImpl(world.getUID()));
   }
 
   @Override
-  public NodeType<EmptyNode> getType() {
+  public de.cubbossa.pathfinder.api.node.NodeType<EmptyNode> getType() {
     return TYPE;
   }
 
   @Override
-  public boolean isPersistent() {
-    return false;
-  }
-
-  @Override
-  public Collection<SearchTerm> getSearchTerms() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public Collection<Node<?>> getGroup() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public int getNodeId() {
-    return -1;
-  }
-
-  @Override
-  public NamespacedKey getRoadMapKey() {
-    return roadMap.getKey();
+  public UUID getNodeId() {
+    return uuid;
   }
 
   @Override
@@ -78,26 +59,6 @@ public class EmptyNode implements Node<EmptyNode> {
   @Override
   public Collection<Edge> getEdges() {
     return new HashSet<>();
-  }
-
-  @Override
-  public @Nullable Double getCurveLength() {
-    return null;
-  }
-
-  @Override
-  public void setCurveLength(Double value) {
-
-  }
-
-  @Override
-  public Edge connect(Node<?> target) {
-    return null;
-  }
-
-  @Override
-  public void disconnect(Node<?> target) {
-
   }
 
   @Override

@@ -2,73 +2,121 @@ package de.cubbossa.pathfinder.module.visualizing;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathfinder.api.node.Groupable;
+import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathfinder.core.nodegroup.modifier.VisualizerModifier;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 @Getter
-public class VisualizerPath<D> extends ArrayList<Node<?>> {
+public class VisualizerPath<P> extends ArrayList<Node<?>> {
 
-  private final UUID playerUuid;
-  private final PathVisualizer<?, D> visualizer;
-  private D visualizerData;
-
+  private final PathPlayer<P> player;
+  private final Collection<SubPath<?, P>> paths;
   private boolean active;
-  private BukkitTask task;
 
-  public VisualizerPath(UUID playerUuid, PathVisualizer<?, D> visualizer) {
-    this.playerUuid = playerUuid;
+  public VisualizerPath(PathPlayer<P> player) {
+    this.player = player;
+    this.paths = new HashSet<>();
     this.active = false;
-    this.visualizer = visualizer;
   }
 
-  public void prepare(List<Node<?>> path, Player player) {
-    visualizerData = visualizer.prepare(path, player);
+  public void prepare(List<Node<?>> path, PathPlayer<P> player) {
+    // build sub paths for every visualizer change
+    SortedMap<Node<?>, Collection<PathVisualizer<?, ?, ?>>> nodeVisualizerMap = new TreeMap<>();
+    for (Node<?> node : path) {
+      if (!(node instanceof Groupable<?> groupable)) {
+        // this node cannot be rendered, it cannot be grouped
+        continue;
+      }
+      VisualizerModifier mod = groupable.getGroups().stream()
+          .filter(g -> g.hasModifier(VisualizerModifier.class))
+          .sorted()
+          .map(g -> g.getModifier(VisualizerModifier.class))
+          .findFirst().orElse(null);
+      if (mod == null) {
+        continue;
+      }
+      nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add(mod.visualizer());
+    }
+
+    // create SubPaths from map
+    while (!nodeVisualizerMap.isEmpty()) {
+
+      // skip all leading nodes that do not have a visualizer
+      while (nodeVisualizerMap.get(nodeVisualizerMap.firstKey()).isEmpty()) {
+        nodeVisualizerMap.remove(nodeVisualizerMap.firstKey());
+      }
+
+      // follow one visualizer along path
+      paths.add(new SubPath<>(null, null, null)); //TODO
+    }
+    for (SubPath<?, P> subPath : paths) {
+      subPath.visualizer.prepare(subPath.path, player);
+    }
   }
 
   public void run() {
-    run(playerUuid);
+    run(player);
   }
 
-  public void run(UUID uuid) {
-    prepare(this, Bukkit.getPlayer(uuid));
+  public void run(PathPlayer<P> player) {
+    prepare(this, player);
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
       cancelSync();
       this.active = true;
 
       AtomicInteger interval = new AtomicInteger(0);
-      task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
-        Player searching = Bukkit.getPlayer(uuid);
-        if (searching == null) {
-          return;
-        }
-        long fullTime = searching.getWorld().getFullTime(); //TODO global time parameter?
-
-        visualizer.play(new PathVisualizer.VisualizerContext<D>(Lists.newArrayList(searching),
-            interval.getAndIncrement(), fullTime, visualizerData));
-      }, 0L, visualizer.getInterval());
+      for (SubPath<?, P> path : paths) {
+        path.task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
+          play(path, player, interval);
+        }, 0L, path.visualizer.getInterval());
+      }
     });
   }
 
+  private <T> void play(SubPath<T, P> path, PathPlayer<P> player, AtomicInteger interval) {
+    long fullTime = 0; //TODO player..getWorld().getFullTime();
+    path.visualizer.play(new PathVisualizer.VisualizerContext<>(Lists.newArrayList(player),
+            interval.getAndIncrement(), fullTime, path.data));
+  }
+
   public void cancel() {
-    Bukkit.getScheduler().runTask(PathPlugin.getInstance(), this::cancelSync);
+    Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> cancelSync());
   }
 
   public void cancelSync() {
-    if (task == null) {
+    paths.forEach(this::cancelSync);
+  }
+
+  private <T> void cancelSync(SubPath<T, P> path) {
+    if (path.task == null) {
       return;
     }
-    Bukkit.getScheduler().cancelTask(task.getTaskId());
+    Bukkit.getScheduler().cancelTask(path.task.getTaskId());
     this.active = false;
 
-    Player player = Bukkit.getPlayer(playerUuid);
-    visualizer.destruct(player, visualizerData);
+    path.visualizer.destruct(player, path.data);
+  }
+
+  @RequiredArgsConstructor
+  @Accessors(fluent = true)
+  private static class SubPath<D, P> {
+    private final List<Node<?>> path;
+    private final PathVisualizer<?, D, P> visualizer;
+    private final D data;
+    private BukkitTask task;
   }
 }

@@ -2,6 +2,9 @@ package de.cubbossa.pathfinder.module.visualizing.query;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.api.visualizer.query.SearchTermHolder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -6,12 +6,13 @@ package de.cubbossa.pathfinder.jooq;
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupsNodes;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodes;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderRoadmaps;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints;
 import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
 
 
@@ -32,19 +33,24 @@ public class Tables {
     public static final PathfinderEdges PATHFINDER_EDGES = PathfinderEdges.PATHFINDER_EDGES;
 
     /**
+     * The table <code>pathfinder_group_modifier_relation</code>.
+     */
+    public static final PathfinderGroupModifierRelation PATHFINDER_GROUP_MODIFIER_RELATION = PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION;
+
+    /**
+     * The table <code>pathfinder_node_type_relation</code>.
+     */
+    public static final PathfinderNodeTypeRelation PATHFINDER_NODE_TYPE_RELATION = PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION;
+
+    /**
+     * The table <code>pathfinder_nodegroup_nodes</code>.
+     */
+    public static final PathfinderNodegroupNodes PATHFINDER_NODEGROUP_NODES = PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
+
+    /**
      * The table <code>pathfinder_nodegroups</code>.
      */
     public static final PathfinderNodegroups PATHFINDER_NODEGROUPS = PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-
-    /**
-     * The table <code>pathfinder_nodegroups_nodes</code>.
-     */
-    public static final PathfinderNodegroupsNodes PATHFINDER_NODEGROUPS_NODES = PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
-
-    /**
-     * The table <code>pathfinder_nodes</code>.
-     */
-    public static final PathfinderNodes PATHFINDER_NODES = PathfinderNodes.PATHFINDER_NODES;
 
     /**
      * The table <code>pathfinder_path_visualizer</code>.
@@ -52,14 +58,14 @@ public class Tables {
     public static final PathfinderPathVisualizer PATHFINDER_PATH_VISUALIZER = PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
 
     /**
-     * The table <code>pathfinder_roadmaps</code>.
-     */
-    public static final PathfinderRoadmaps PATHFINDER_ROADMAPS = PathfinderRoadmaps.PATHFINDER_ROADMAPS;
-
-    /**
      * The table <code>pathfinder_search_terms</code>.
      */
     public static final PathfinderSearchTerms PATHFINDER_SEARCH_TERMS = PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
+
+    /**
+     * The table <code>pathfinder_waypoints</code>.
+     */
+    public static final PathfinderWaypoints PATHFINDER_WAYPOINTS = PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
     /**
      * The table <code>sqlite_sequence</code>.

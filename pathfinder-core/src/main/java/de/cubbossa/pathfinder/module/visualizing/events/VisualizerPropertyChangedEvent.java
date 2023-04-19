@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.module.visualizing.events;
 
-import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.Event;
@@ -12,7 +12,7 @@ public class VisualizerPropertyChangedEvent<T> extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final PathVisualizer<?, ?> visualizer;
+  private final PathVisualizer<?, ?, ?> visualizer;
   private final String field;
   private final boolean visual;
   private final T oldValue;

@@ -2,23 +2,21 @@ package de.cubbossa.pathfinder.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
+
+import de.cubbossa.pathfinder.api.misc.Keyed;
+import de.cubbossa.pathfinder.api.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K>
-    implements Registry<K> {
+public class HashedRegistry<K extends Keyed>  extends HashMap<NamespacedKey, K> implements KeyedRegistry<K> {
 
   @Nullable
-  @Override
   public K get(@NotNull NamespacedKey namespacedKey) {
     return super.get(namespacedKey);
   }
 
   @NotNull
-  @Override
   public Iterator<K> iterator() {
     return super.values().iterator();
   }
