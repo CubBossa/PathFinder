@@ -49,19 +49,6 @@ public interface Storage {
 
   CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes);
 
-  // Edges
-  CompletableFuture<Edge> createAndLoadEdge(UUID start, UUID end, double weight);
-
-  CompletableFuture<Collection<Edge>> loadEdgesFrom(UUID start);
-
-  CompletableFuture<Collection<Edge>> loadEdgesTo(UUID end);
-
-  CompletableFuture<Optional<Edge>> loadEdge(UUID start, UUID end);
-
-  CompletableFuture<Void> saveEdge(Edge edge);
-
-  CompletableFuture<Void> deleteEdge(Edge edge);
-
   // Groups
   CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
 

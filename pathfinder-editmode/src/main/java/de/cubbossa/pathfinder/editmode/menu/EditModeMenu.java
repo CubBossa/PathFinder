@@ -149,7 +149,9 @@ public class EditModeMenu {
         })
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
           Player player = context.getPlayer();
-          pathFinder.getStorage().deleteEdge(context.getTarget()).join();
+          pathFinder.getStorage().modifyNode(context.getTarget().getStart(), node -> {
+            node.getEdges().removeIf(edge -> edge.equals(context.getTarget()));
+          });
           EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
               "editor_edge_disconnect", player, player.getLocation());
         })

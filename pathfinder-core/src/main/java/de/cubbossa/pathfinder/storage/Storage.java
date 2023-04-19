@@ -47,7 +47,6 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
 
   private StorageImplementation implementation;
   private final NodeCache nodeCache = new NodeCache();
-  private final EdgeCache edgeCache = new EdgeCache();
   private final GroupCache groupCache = new GroupCache();
   private final VisualizerCache visualizerCache = new VisualizerCache();
   private final DiscoverInfoCache discoverInfoCache = new DiscoverInfoCache();
@@ -171,57 +170,13 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
       eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
       implementation.deleteNodes(nodes);
       uuids.forEach(nodeCache::invalidate);
-      uuids.forEach(edgeCache::invalidate);
       nodes.forEach(groupCache::invalidate);
     });
   }
 
   @Override
-  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) { //TODO bad performance
     return deleteNodesById(nodes.stream().map(Node::getNodeId).toList());
-  }
-
-  // Edges
-  @Override
-  public CompletableFuture<Edge> createAndLoadEdge(UUID start, UUID end, double weight) {
-    return asyncFuture(() -> {
-      Edge edge = implementation.createAndLoadEdge(start, end, weight);
-      edgeCache.write(edge);
-      return edge;
-    });
-  }
-
-  @Override
-  public CompletableFuture<Collection<Edge>> loadEdgesFrom(UUID start) {
-    return asyncFuture(() -> edgeCache.getEdgesFrom(start));
-  }
-
-  @Override
-  public CompletableFuture<Collection<Edge>> loadEdgesTo(UUID end) {
-    return asyncFuture(() -> edgeCache.getEdgesTo(end));
-  }
-
-  @Override
-  public CompletableFuture<Optional<Edge>> loadEdge(UUID start, UUID end) {
-    return asyncFuture(() -> {
-      return edgeCache.getEdge(start, end, () -> implementation.loadEdge(start, end));
-    });
-  }
-
-  @Override
-  public CompletableFuture<Void> saveEdge(Edge edge) {
-    return asyncFuture(() -> {
-      implementation.saveEdge(edge);
-      edgeCache.write(edge);
-    });
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteEdge(Edge edge) {
-    return asyncFuture(() -> {
-      implementation.deleteEdge(edge);
-      edgeCache.invalidate(edge);
-    });
   }
 
   // Groups
