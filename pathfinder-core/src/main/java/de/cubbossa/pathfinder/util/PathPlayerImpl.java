@@ -5,6 +5,9 @@ import de.cubbossa.pathfinder.api.misc.PathPlayer;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.Nullable;
+
+import de.cubbossa.translations.TranslationHandler;
+import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -65,5 +68,11 @@ public class PathPlayerImpl implements PathPlayer<Player> {
       player = Bukkit.getPlayer(uuid);
     }
     return player;
+  }
+
+  @Override
+  public void sendMessage(ComponentLike message) {
+    TranslationHandler.getInstance().getAudiences().player(unwrap()).sendMessage(message);
+    // TODO TranslationHandler.getInstance().sendMessage(message, unwrap());
   }
 }

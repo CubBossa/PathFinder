@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.api.misc.Keyed;
 import de.cubbossa.pathfinder.api.misc.Location;
 import de.cubbossa.pathfinder.api.misc.NamespacedKey;
 import de.cubbossa.pathfinder.api.misc.Pagination;
-import de.cubbossa.pathfinder.api.node.Edge;
 import de.cubbossa.pathfinder.api.node.Node;
 import de.cubbossa.pathfinder.api.node.NodeType;
 import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
@@ -16,7 +15,6 @@ import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
-import de.cubbossa.pathfinder.storage.cache.EdgeCache;
 import de.cubbossa.pathfinder.storage.cache.GroupCache;
 import de.cubbossa.pathfinder.storage.cache.NodeCache;
 import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
@@ -147,7 +145,7 @@ public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
   public CompletableFuture<Void> saveNode(Node<?> node) {
     debug("Storage: 'saveNode(" + node.getNodeId() + ")'");
     return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
-      eventDispatcher().ifPresent(e -> e.dispatchSaveNode(node));
+      eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
       implementation.saveNode(node);
       nodeCache.write(node);
       groupCache.write(node);

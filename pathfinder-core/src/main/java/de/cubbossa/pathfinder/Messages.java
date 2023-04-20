@@ -66,14 +66,6 @@ public class Messages {
   public static final Message GEN_NODE_SEL = new Message("general.selection.nodes");
   @MessageMeta(value = "<white><u><amount> Groups</u></white>", placeholders = "amount")
   public static final Message GEN_GROUP_SEL = new Message("general.selection.groups");
-  @MessageMeta(value = "<white><u><amount> Groups</u></white>", placeholders = "amount")
-  public static final Message GEN_RM_SEL = new Message("general.selection.roadmaps");
-
-  public static final Message ERROR_PARSE_STRING = new Message("error.parse.string");
-  public static final Message ERROR_PARSE_INTEGER = new Message("error.parse.integer");
-  public static final Message ERROR_PARSE_DOUBLE = new Message("error.parse.double");
-  public static final Message ERROR_PARSE_PERCENT = new Message("error.parse.percent");
-  public static final Message ERROR_PARSE_KEY = new Message("error.parse.namespaced_key");
 
   @MessageMeta(placeholders = "error", value = "<negative>An error occurred while reloading: <error></negative>")
   public static final Message RELOAD_ERROR = new Message("command.reload.error");
@@ -126,67 +118,12 @@ public class Messages {
       <modules:"\n":"<dark_gray>» </dark_gray>">""", placeholders = { "modules" })
   public static final Message MODULES = new Message("commands.modules");
 
-  @MessageMeta(value = """
-      <offset>Roadmap:</offset> <name> <gray>(<key>)</gray>
-      <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:'/roadmap edit <key> name <name-format>'><name-format></click></hover></main>
-      <dark_gray>» </dark_gray><gray>Nodes: <nodes></gray>
-      <dark_gray>» </dark_gray><gray>Groups: <groups></gray>
-      <dark_gray>» </dark_gray><offset>Visualizer:</offset>
-      <dark_gray>  » </dark_gray><gray>Path Visualizer: <main><hover:show_text:"Click to change path-visualizer"><click:suggest_command:'/roadmap edit <key> visualizer <path-visualizer>'><path-visualizer></click></hover>
-      <dark_gray>  » </dark_gray><gray>Default Curve length: <main><hover:show_text:"Click to change curve length"><click:suggest_command:'/roadmap edit <key> curve-length <curve-length>'><curve-length></click></hover>
-      """, placeholders = {"name", "key", "name-format", "curve-length", "path-visualizer", "nodes",
-      "groups"})
-  public static final Message CMD_RM_INFO = new Message("commands.roadmap.info");
-  @MessageMeta("<negative>Could not create Roadmap, another Roadmap with this key already exists.")
-  public static final Message CMD_RM_CREATE_DUPLICATE_KEY =
-      new Message("commands.roadmap.create.duplicate_key");
-  @MessageMeta("<negative>Could not create Roadmap. Check out console for details.")
-  public static final Message CMD_RM_CREATE_FAIL = new Message("commands.roadmap.create.fail");
-  @MessageMeta(value = "<ins:prefix><gray>Successfully created Roadmap <offset><name></offset>.</gray>", placeholders = "name")
-  public static final Message CMD_RM_CREATE_SUCCESS =
-      new Message("commands.roadmap.create.success");
-  @MessageMeta(value = "<ins:prefix><gray>Successfully deleted Roadmap <offset><roadmap></offset>.</gray>", placeholders = "roadmap")
-  public static final Message CMD_RM_DELETE = new Message("commands.roadmap.delete");
-  @MessageMeta(value = "<gradient:black:dark_gray:black>------------ <offset>Roadmaps</offset> ------------</gradient>",
-      placeholders = {"page", "next-page", "prev-page", "pages"})
-  public static final Message CMD_RM_LIST_HEADER = new Message("commands.roadmap.list.header");
-  @MessageMeta(value = "<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>",
-      placeholders = {"key", "name", "world", "discoverable", "find-distance", "curve-length",
-          "path-visualizer"})
-  public static final Message CMD_RM_LIST_ENTRY = new Message("commands.roadmap.list.entry");
-  @MessageMeta(value = "<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>",
-      placeholders = {"page", "next-page", "prev-page", "pages"})
-  public static final Message CMD_RM_LIST_FOOTER = new Message("commands.roadmap.list.footer");
-  @MessageMeta("<negative>Please specify a roadmap: /roadmap editmode <roadmap>")
-  public static final Message CMD_RM_EM_PROVIDE_RM =
-      new Message("commands.roadmap.editmode.specify_roadmap");
-  @MessageMeta(value = "<ins:prefix>Editmode activated for <offset><roadmap></offset>.", placeholders = {
-      "roadmap"})
-  public static final Message CMD_RM_EM_ACTIVATED =
-      new Message("commands.roadmap.editmode.activated");
-  @MessageMeta(value = "<ins:prefix>Editmode deactivated for <offset><roadmap></offset>.", placeholders = {
-      "roadmap"})
-  public static final Message CMD_RM_EM_DEACTIVATED =
-      new Message("commands.roadmap.editmode.deactivated");
-  @MessageMeta("<red>No editor implementation found.</red>")
-  public static final Message CMD_RM_EM_NO_IMPL = new Message("commands.roadmap.editmode.no_impl");
   @MessageMeta(value = "<ins:prefix>Player <name> discovered <discovery>.", placeholders = {"name",
       "discovery"})
   public static final Message CMD_RM_FORCE_FIND = new Message("commands.roadmap.force_find");
   @MessageMeta(value = "<ins:prefix>Player <name> forgot about <discovery>.", placeholders = {
       "name", "discovery"})
   public static final Message CMD_RM_FORCE_FORGET = new Message("commands.roadmap.force_forget");
-  @MessageMeta(value = "<ins:prefix>Successfully set name for <offset><old-value></offset> to <value>. (<name-format>)</gray>",
-      placeholders = {"key", "roadmap", "old-value", "name-format", "value"})
-  public static final Message CMD_RM_SET_NAME = new Message("commands.roadmap.set_name");
-  @MessageMeta(value = "<ins:prefix>Successfully set curve length for <offset><roadmap></offset> to <offset_light><value></offset_light>",
-      placeholders = {"key", "roadmap", "old-value", "value"})
-  public static final Message CMD_RM_SET_CURVED = new Message("commands.roadmap.set_curve_length");
-  @MessageMeta(value = "<ins:prefix>Successfully set visualizer for <offset><roadmap></offset> " +
-      "from <old-value> to <value>.</gray>",
-      placeholders = {"key", "roadmap", "old-value", "value"})
-  public static final Message CMD_RM_SET_VISUALIZER =
-      new Message("commands.roadmap.set_visualizer");
 
   @MessageMeta(value = "<ins:prefix>Successfully created Node #<id>.", placeholders = "id")
   public static final Message CMD_N_CREATE = new Message("commands.node.create");
@@ -552,6 +489,9 @@ public class Messages {
   @MessageMeta(value = "Discovered: <name>", placeholders = {"name"})
   public static final Message LOCATION_FOUND_AB =
       new Message("general.target_discovered.actionbar");
+
+  @MessageMeta(value = "<negative>Your currently edited group was deleted by another user.")
+  public static final Message EDITM_NG_DELETED = new Message("editmode.group_deleted");
 
   public static Message formatBool(boolean val) {
     return val ? GEN_TRUE : GEN_FALSE;
