@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.core.commands.Command;
-import de.cubbossa.pathfinder.core.commands.CommandArgument;
-import de.cubbossa.pathfinder.core.commands.CustomLiteralArgument;
+import de.cubbossa.pathfinder.commands.Command;
+import de.cubbossa.pathfinder.commands.CommandArgument;
+import de.cubbossa.pathfinder.commands.CustomLiteralArgument;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.ArgumentTreeLike;
 import dev.jorel.commandapi.CommandTree;

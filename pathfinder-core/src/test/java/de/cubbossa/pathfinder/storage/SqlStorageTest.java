@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.api.storage.StorageImplementation;
+import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import java.sql.Connection;
 import java.sql.DriverManager;

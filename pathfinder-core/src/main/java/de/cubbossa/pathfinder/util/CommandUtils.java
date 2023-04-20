@@ -4,7 +4,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.api.misc.Pagination;
+import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTreeLike;

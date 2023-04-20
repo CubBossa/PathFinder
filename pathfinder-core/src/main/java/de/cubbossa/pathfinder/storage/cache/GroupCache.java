@@ -2,13 +2,13 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.api.group.Modifier;
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.misc.Pagination;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.util.CommandUtils;
-import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class GroupCache {
 

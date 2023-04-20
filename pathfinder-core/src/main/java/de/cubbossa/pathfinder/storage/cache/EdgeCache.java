@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathfinder.api.node.Edge;
+import de.cubbossa.pathapi.node.Edge;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;

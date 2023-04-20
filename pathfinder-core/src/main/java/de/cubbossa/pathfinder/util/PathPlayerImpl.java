@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.api.misc.Location;
-import de.cubbossa.pathfinder.api.misc.PathPlayer;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.Nullable;

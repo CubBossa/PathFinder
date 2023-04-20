@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.core.commands.NodeGroupCommand;
-import de.cubbossa.pathfinder.core.commands.PathFinderCommand;
-import de.cubbossa.pathfinder.core.commands.WaypointCommand;
-import de.cubbossa.pathfinder.module.visualizing.command.PathVisualizerCommand;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathfinder.commands.NodeGroupCommand;
+import de.cubbossa.pathfinder.commands.PathFinderCommand;
+import de.cubbossa.pathfinder.commands.WaypointCommand;
+import de.cubbossa.pathfinder.commands.PathVisualizerCommand;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import dev.jorel.commandapi.CommandTree;

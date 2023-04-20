@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.api.PathFinderExtension;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;

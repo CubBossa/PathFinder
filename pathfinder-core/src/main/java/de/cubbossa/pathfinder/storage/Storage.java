@@ -1,19 +1,19 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathfinder.api.event.EventDispatcher;
-import de.cubbossa.pathfinder.api.group.Modifier;
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.misc.Keyed;
-import de.cubbossa.pathfinder.api.misc.Location;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import de.cubbossa.pathfinder.api.misc.Pagination;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
-import de.cubbossa.pathfinder.api.storage.StorageImplementation;
-import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
+import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Keyed;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
 import de.cubbossa.pathfinder.storage.cache.GroupCache;
 import de.cubbossa.pathfinder.storage.cache.NodeCache;
@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 
 @Getter
 @Setter
-public class Storage implements de.cubbossa.pathfinder.api.storage.Storage {
+public class Storage implements de.cubbossa.pathapi.storage.Storage {
 
   private @Nullable EventDispatcher eventDispatcher;
   private @Nullable Logger logger;

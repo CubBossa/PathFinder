@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.api.misc.Vector;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageFile;
@@ -26,7 +26,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;

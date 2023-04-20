@@ -10,25 +10,24 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFI
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
-import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.api.group.Modifier;
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.misc.Location;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import de.cubbossa.pathfinder.api.misc.Pagination;
-import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.api.node.NodeType;
-import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
-import de.cubbossa.pathfinder.api.storage.NodeDataStorage;
-import de.cubbossa.pathfinder.api.storage.StorageImplementation;
-import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.api.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.core.node.SimpleEdge;
-import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.NodeDataStorage;
+import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
@@ -51,7 +50,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -274,7 +272,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   @Override
   public <N extends Node<N>> Optional<N> loadNode(UUID id) {
     debug(" > Storage Implementation: 'loadNode(" + id + ")'");
-    Optional<de.cubbossa.pathfinder.api.node.NodeType<N>> type = loadNodeType(id);
+    Optional<NodeType<N>> type = loadNodeType(id);
     if (type.isPresent()) {
       return type.get().loadNode(id);
     }

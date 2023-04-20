@@ -61,19 +61,19 @@ public class VectorUtils {
     return (yaw + 180) % 360;
   }
 
-  public static Location toBukkit(de.cubbossa.pathfinder.api.misc.Location internal) {
+  public static Location toBukkit(de.cubbossa.pathapi.misc.Location internal) {
     return new Location(Bukkit.getWorld(internal.getWorld().getUniqueId()), internal.getX(), internal.getY(), internal.getZ());
   }
 
-  public static Vector toBukkit(de.cubbossa.pathfinder.api.misc.Vector internal) {
+  public static Vector toBukkit(de.cubbossa.pathapi.misc.Vector internal) {
     return new Vector(internal.getX(), internal.getY(), internal.getZ());
   }
 
-  public static de.cubbossa.pathfinder.api.misc.Location toInternal(Location bukkit) {
-    return new de.cubbossa.pathfinder.api.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(), new WorldImpl(bukkit.getWorld().getUID()));
+  public static de.cubbossa.pathapi.misc.Location toInternal(Location bukkit) {
+    return new de.cubbossa.pathapi.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(), new WorldImpl(bukkit.getWorld().getUID()));
   }
 
-  public static de.cubbossa.pathfinder.api.misc.Vector toInternal(Vector bukkit) {
-    return new de.cubbossa.pathfinder.api.misc.Vector(bukkit.getX(), bukkit.getY(), bukkit.getZ());
+  public static de.cubbossa.pathapi.misc.Vector toInternal(Vector bukkit) {
+    return new de.cubbossa.pathapi.misc.Vector(bukkit.getX(), bukkit.getY(), bukkit.getZ());
   }
 }

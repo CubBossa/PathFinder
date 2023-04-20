@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
-import de.cubbossa.pathfinder.core.commands.CustomArgs;
-import de.cubbossa.pathfinder.core.commands.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.core.commands.VisualizerTypeMessageExtension;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizerType;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.commands.CustomArgs;
+import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import java.util.Arrays;

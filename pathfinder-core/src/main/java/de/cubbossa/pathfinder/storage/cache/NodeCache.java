@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.storage.cache;
 
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

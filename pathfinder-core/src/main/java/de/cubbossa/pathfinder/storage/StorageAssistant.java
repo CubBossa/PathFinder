@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathfinder.api.group.Modifier;
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.api.group.NodeGroup;
-import de.cubbossa.pathfinder.api.node.Groupable;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.core.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;

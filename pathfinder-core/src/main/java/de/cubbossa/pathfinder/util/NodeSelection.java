@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathapi.node.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

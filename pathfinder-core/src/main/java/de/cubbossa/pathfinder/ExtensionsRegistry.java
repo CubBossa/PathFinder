@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.api.PathFinder;
-import de.cubbossa.pathfinder.api.PathFinderExtension;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-public class ExtensionsRegistry implements de.cubbossa.pathfinder.api.ExtensionsRegistry {
+public class ExtensionsRegistry implements de.cubbossa.pathapi.ExtensionsRegistry {
 
   private final List<PathFinderExtension> extensions;
 

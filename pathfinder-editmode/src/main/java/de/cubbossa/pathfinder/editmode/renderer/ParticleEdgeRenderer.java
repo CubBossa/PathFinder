@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
-import de.cubbossa.pathfinder.api.editor.GraphRenderer;
-import de.cubbossa.pathfinder.api.misc.Location;
-import de.cubbossa.pathfinder.api.misc.PathPlayer;
-import de.cubbossa.pathfinder.api.node.Edge;
-import de.cubbossa.pathfinder.api.node.Node;
+import de.cubbossa.pathapi.editor.GraphRenderer;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.awt.Color;

@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import de.cubbossa.pathfinder.api.misc.Location;
-import de.cubbossa.pathfinder.api.misc.World;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathfinder.test.TestNode;
 import de.cubbossa.splinelib.util.BezierVector;
 import de.cubbossa.splinelib.util.Vector;

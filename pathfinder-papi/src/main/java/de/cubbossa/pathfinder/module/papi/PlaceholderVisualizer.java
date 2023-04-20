@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathfinder.api.misc.PathPlayer;
-import de.cubbossa.pathfinder.api.node.Node;
-import de.cubbossa.pathfinder.module.visualizing.AbstractVisualizerType;
-import de.cubbossa.pathfinder.module.visualizing.visualizer.EdgeBasedVisualizer;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
+import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -76,7 +76,7 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<de.cubbossa.pathfinder.api.node.Node<?>> nodes, List<Edge> edges) {
+  public Data newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges) {
     return new Data(nodes, edges);
   }
 

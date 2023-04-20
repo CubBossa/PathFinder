@@ -1,16 +1,16 @@
 //package de.cubbossa.pathfinder.storage.implementation;
 //
-//import de.cubbossa.pathfinder.api.group.Modifier;
+//import de.cubbossa.pathapi.group.Modifier;
 //import de.cubbossa.pathfinder.core.node.Edge;
-//import de.cubbossa.pathfinder.api.node.Node;
+//import de.cubbossa.pathapi.node.Node;
 //import de.cubbossa.pathfinder.core.node.NodeType;
 //import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
 //import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
 //import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
 //import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-//import de.cubbossa.pathfinder.api.visualizer.PathVisualizer;
+//import de.cubbossa.pathapi.visualizer.PathVisualizer;
 //import de.cubbossa.pathfinder.storage.DataStorageException;
-//import de.cubbossa.pathfinder.api.storage.DiscoverInfo;
+//import de.cubbossa.pathapi.storage.DiscoverInfo;
 //import de.cubbossa.pathfinder.storage.Storage;
 //import de.cubbossa.pathfinder.util.HashedRegistry;
 //import de.cubbossa.pathfinder.util.NodeSelection;
@@ -33,7 +33,7 @@
 //import java.util.stream.Collectors;
 //import lombok.Getter;
 //import org.bukkit.Location;
-//import de.cubbossa.pathfinder.api.misc.NamespacedKey;
+//import de.cubbossa.pathapi.misc.NamespacedKey;
 //import org.bukkit.configuration.ConfigurationSection;
 //import org.bukkit.configuration.file.YamlConfiguration;
 //
