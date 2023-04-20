@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,7 +15,7 @@ import org.jooq.exception.DataAccessException;
 public class SqlStorageTest extends StorageTest {
 
   @Override
-  StorageImplementation storage() {
+  StorageImplementation storage(NodeTypeRegistry registry) {
     SqlStorage implementation = new SqlStorage(SQLDialect.H2, nodeTypeRegistry) {
       @Override
       public ConnectionProvider getConnectionProvider() {

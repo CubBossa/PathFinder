@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 
 public abstract class StorageTest {
 
-  abstract StorageImplementation storage();
+  abstract StorageImplementation storage(NodeTypeRegistry registry);
 
   protected static MiniMessage miniMessage;
   protected static World world;
@@ -69,7 +69,7 @@ public abstract class StorageTest {
     nodeTypeRegistry = new NodeTypeRegistry();
     storage = new Storage();
     storage.setLogger(logger);
-    storage.setImplementation(storage());
+    storage.setImplementation(storage(nodeTypeRegistry));
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
     nodeTypeRegistry.setWaypointNodeType(waypointNodeType);

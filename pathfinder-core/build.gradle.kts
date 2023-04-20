@@ -76,6 +76,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("com.h2database:h2:2.1.214")
+    testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
     testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
     testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 

@@ -8,6 +8,8 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
+
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
@@ -19,11 +21,9 @@ public class SqliteStorage extends SqlStorage {
   private final File file;
   private Connection connection;
 
-  public SqliteStorage(PathFinder pathFinder, File file, NodeTypeRegistry nodeTypeRegistry) {
+  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry) {
     super(SQLDialect.SQLITE, nodeTypeRegistry);
     this.file = file;
-
-    PathPlugin.getInstance().getLogger().info("Setting up SQLITE database: " + file.getAbsolutePath());
   }
 
   public void init() throws Exception {
@@ -58,9 +58,11 @@ public class SqliteStorage extends SqlStorage {
           return connection;
         }
         try {
+          Class.forName("org.sqlite.JDBC");
           connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+          connection.setAutoCommit(false);
           return connection;
-        } catch (SQLException e) {
+        } catch (ClassNotFoundException | SQLException e) {
           throw new DataStorageException("Could not connect to Sqlite database.", e);
         }
       }
@@ -69,8 +71,6 @@ public class SqliteStorage extends SqlStorage {
       @Override
       public void release(Connection con) throws DataAccessException {
         con.commit();
-        con.close();
-        connection = null;
       }
     };
 
