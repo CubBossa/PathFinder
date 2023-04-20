@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public interface StorageImplementation {
 
@@ -59,6 +60,9 @@ public interface StorageImplementation {
   Collection<UUID> loadGroupNodes(NodeGroup group);
   void saveGroup(NodeGroup group);
   void deleteGroup(NodeGroup group);
+
+  void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
+  void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
 
   // Find Data
   DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time);

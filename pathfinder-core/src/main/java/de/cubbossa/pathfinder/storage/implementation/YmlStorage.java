@@ -1,372 +1,118 @@
-//package de.cubbossa.pathfinder.storage.implementation;
-//
-//import de.cubbossa.pathapi.group.Modifier;
-//import de.cubbossa.pathfinder.core.node.Edge;
-//import de.cubbossa.pathapi.node.Node;
-//import de.cubbossa.pathfinder.core.node.NodeType;
-//import de.cubbossa.pathfinder.core.node.NodeTypeRegistry;
-//import de.cubbossa.pathfinder.core.node.implementation.Waypoint;
-//import de.cubbossa.pathfinder.core.nodegroup.NodeGroup;
-//import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
-//import de.cubbossa.pathapi.visualizer.PathVisualizer;
-//import de.cubbossa.pathfinder.storage.DataStorageException;
-//import de.cubbossa.pathapi.storage.DiscoverInfo;
-//import de.cubbossa.pathfinder.storage.Storage;
-//import de.cubbossa.pathfinder.util.HashedRegistry;
-//import de.cubbossa.pathfinder.util.NodeSelection;
-//import java.io.File;
-//import java.io.IOException;
-//import java.time.LocalDateTime;
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Collection;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.Objects;
-//import java.util.UUID;
-//import java.util.concurrent.CompletableFuture;
-//import java.util.function.Consumer;
-//import java.util.function.Function;
-//import java.util.regex.Pattern;
-//import java.util.stream.Collectors;
-//import lombok.Getter;
-//import org.bukkit.Location;
-//import de.cubbossa.pathapi.misc.NamespacedKey;
-//import org.bukkit.configuration.ConfigurationSection;
-//import org.bukkit.configuration.file.YamlConfiguration;
-//
-//public class YmlStorage implements Storage {
-//
-//  private static final String FILE_TYPES = "node_types.yml";
-//  private static final String FILE_NODES = "waypoints.yml";
-//  private static final String FILE_EDGES = "edges.yml";
-//  private static final String DIR_NG = "nodegroups";
-//  private static final String DIR_PV = "path_visualizer";
-//  private static final String DIR_USER = "users";
-//  private static final Pattern FILE_REGEX = Pattern.compile("[a-zA-Z0-9_]+\\$[a-zA-Z0-9_]+\\.yml");
-//  private final Meta meta = new Meta(true);
-//  private final Map<NamespacedKey, YamlConfiguration> visualizerHandles;
-//  @Getter
-//  private final NodeTypeRegistry nodeTypeRegistry;
-//  private final File dataDirectory;
-//  private File nodeGroupDir;
-//  private File pathVisualizerDir;
-//  private File userDir;
-//
-//  public YmlStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry) {
-//    if (!dataDirectory.isDirectory()) {
-//      throw new IllegalArgumentException("Data directory must be a directory!");
-//    }
-//    this.dataDirectory = dataDirectory;
-//    this.visualizerHandles = new HashMap<>();
-//    this.nodeTypeRegistry = nodeTypeRegistry;
-//  }
-//
-//  public String toFileName(NamespacedKey key) {
-//    return key.toString().replace(':', '$') + ".yml";
-//  }
-//
-//  public NamespacedKey fromFileName(String name) {
-//    if (name.endsWith(".yml")) {
-//      name = name.substring(0, name.length() - 4);
-//    }
-//    return NamespacedKey.fromString(name.replace('$', ':'));
-//  }
-//
-//  @Override
-//  public void connect(Runnable initial) {
-//    if (!dataDirectory.exists()) {
-//      dataDirectory.mkdirs();
-//      initial.run();
-//    }
-//    this.nodeGroupDir = new File(dataDirectory, DIR_NG);
-//    this.nodeGroupDir.mkdirs();
-//    this.pathVisualizerDir = new File(dataDirectory, DIR_PV);
-//    this.pathVisualizerDir.mkdirs();
-//    this.userDir = new File(dataDirectory, DIR_USER);
-//    this.userDir.mkdirs();
-//  }
-//
-//  @Override
-//  public void disconnect() {
-//  }
-//
-//  private CompletableFuture<Void> workOnFile(File file, Consumer<YamlConfiguration> editor) {
-//    return workOnFile(file, cfg -> {
-//      editor.accept(cfg);
-//      return null;
-//    });
-//  }
-//
-//  private <T> CompletableFuture<T> workOnFile(File file, Function<YamlConfiguration, T> editor) {
-//    if (!file.exists()) {
-//      try {
-//        file.createNewFile();
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-//    }
-//    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-//    T data = editor.apply(cfg);
-//    try {
-//      cfg.save(file);
-//    } catch (IOException e) {
-//      return CompletableFuture.failedFuture(e);
-//    }
-//    return CompletableFuture.completedFuture(data);
-//  }
-//
-//  @Override
-//  public CompletableFuture<NodeType<?>> getNodeType(UUID nodeId) {
-//    return workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
-//      String typeString = cfg.getString(nodeId.toString());
-//      if (typeString == null) {
-//        throw new IllegalArgumentException("Could not find type for given UUID.");
-//      }
-//      NamespacedKey typeKey = NamespacedKey.fromString(typeString);
-//      NodeType<?> type = nodeTypeRegistry.getNodeType(typeKey);
-//      if (type == null) {
-//        throw new IllegalArgumentException("Could not find type for given UUID.");
-//      }
-//      return type;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> setNodeType(UUID nodeId, NamespacedKey nodeType) {
-//    return workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
-//      cfg.set(nodeId.toString(), nodeType.toString());
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Node<?>> getNode(UUID uuid) {
-//    return getNodeType(uuid).thenApply(nodeType -> nodeType.getNodeFromStorage(uuid).join());
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<NamespacedKey>> getNodeGroups(UUID node) {
-//    return getNodeGroupKeySet().thenApply(nodeGroups -> {
-//      Collection<CompletableFuture<?>> futures = new ArrayList<>();
-//      Collection<NamespacedKey> groups = new ArrayList<>();
-//      for (NamespacedKey nodeGroup : nodeGroups) {
-//        futures.add(workOnFile(new File(dataDirectory, toFileName(nodeGroup)), cfg -> {
-//          if (cfg.getStringList("nodes").contains(node.toString())) {
-//            groups.add(nodeGroup);
-//          }
-//        }));
-//      }
-//      return CompletableFuture
-//          .allOf(futures.toArray(CompletableFuture[]::new))
-//          .thenApply(u -> groups)
-//          .join();
-//    });
-//  }
-//
-//  @Override
-//  public <N extends Node<N>> CompletableFuture<N> createNode(NodeType<N> type, Location location) {
-//    return Storage.super.createNode(type, location).thenApply(n -> {
-//      workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
-//        cfg.set(n.getNodeId().toString(), n.getType().getKey().toString());
-//      }).join();
-//      return n;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> deleteNodes(NodeSelection nodes) {
-//    return Storage.super.deleteNodes(nodes).thenRun(() -> {
-//      workOnFile(new File(dataDirectory, FILE_TYPES), cfg -> {
-//        for (UUID n : nodes) {
-//          cfg.set(n.toString(), null);
-//        }
-//      }).join();
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Edge> connectNodes(UUID start, UUID end, double weight) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      cfg.set(start.toString() + "." + end.toString(), weight);
-//      return new Edge(start, end, (float) weight);
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Edge>> connectNodes(NodeSelection start, NodeSelection end) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      Collection<Edge> edges = new HashSet<>();
-//      for (UUID startId : start) {
-//        for (UUID endId : end) {
-//          cfg.set(startId.toString() + "." + endId.toString(), 1);
-//          edges.add(new Edge(startId, endId, 1));
-//        }
-//      }
-//      return edges;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> disconnectNodes(NodeSelection start) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      for (UUID uuid : start) {
-//        cfg.set(uuid.toString(), null);
-//      }
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      for (UUID startId : start) {
-//        for (UUID endId : end) {
-//          cfg.set(startId.toString() + "." + endId.toString(), null);
-//        }
-//      }
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      ConfigurationSection nodeSec = cfg.getConfigurationSection(start.toString());
-//      if (nodeSec == null) {
-//        return new HashSet<>();
-//      }
-//      Collection<Edge> edges = new HashSet<>();
-//      for (String to : nodeSec.getKeys(false)) {
-//        edges.add(new Edge(start, UUID.fromString(to), (float) nodeSec.getDouble(to)));
-//      }
-//      return edges;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      String idString = end.toString();
-//      Collection<Edge> result = new HashSet<>();
-//      for (String start : cfg.getKeys(false)) {
-//        if (cfg.getConfigurationSection(start) != null && cfg.isSet(start + "." + idString)) {
-//          result.add(new Edge(UUID.fromString(start), end,
-//              (float) cfg.getDouble(start + "." + idString)));
-//        }
-//      }
-//      return result;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection ends) {
-//    return workOnFile(new File(dataDirectory, FILE_EDGES), cfg -> {
-//      Collection<Edge> result = new HashSet<>();
-//      for (String start : cfg.getKeys(false)) {
-//        for (UUID end : ends) {
-//          String idString = end.toString();
-//          if (cfg.getConfigurationSection(start) != null && cfg.isSet(start + "." + idString)) {
-//            result.add(new Edge(UUID.fromString(start), end,
-//                (float) cfg.getDouble(start + "." + idString)));
-//          }
-//        }
-//      }
-//      return result;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<UUID>> getNodeGroupNodes(NamespacedKey group) {
-//    return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
-//      return cfg.getStringList("nodes").stream().map(UUID::fromString).toList();
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> clearNodeGroups(NodeSelection selection) {
-//    return null;
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<NamespacedKey>> getNodeGroupKeySet() {
-//    return CompletableFuture.completedFuture(Arrays.stream(nodeGroupDir.listFiles())
-//        .map(File::getName)
-//        .map(this::fromFileName)
-//        .collect(Collectors.toList()));
-//  }
-//
-//  @Override
-//  public CompletableFuture<NodeGroup> getNodeGroup(NamespacedKey key) {
-//    return workOnFile(new File(nodeGroupDir, toFileName(key)), cfg -> {
-//      NodeGroup group = new NodeGroup(key);
-//      group.setWeight(cfg.getDouble("weight"));
-//      cfg.getStringList("nodes").stream()
-//          .map(UUID::fromString)
-//          .forEach(group::add);
-//
-//      //TODO assign modifiers
-//
-//      return group;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<NodeGroup>> getNodeGroups() {
-//    return getNodeGroups(new Pagination(0, Integer.MAX_VALUE)).thenApply(n -> n);
-//  }
-//
-//  @Override
-//  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> getNodeGroups(Class<M> modifier) {
-//    return getNodeGroups().thenApply(nodeGroups -> {
-//      return nodeGroups.stream().filter(g -> g.hasModifier(modifier)).collect(Collectors.toList());
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<List<NodeGroup>> getNodeGroups(Pagination pagination) {
-//    List<File> fileList = Arrays.asList(nodeGroupDir.listFiles())
-//        .subList(pagination.offset(), pagination.offset() + pagination.limit());
-//    return CompletableFuture.completedFuture(fileList.stream()
-//        .parallel()
-//        .map(File::getName)
-//        .map(this::fromFileName)
-//        .map(this::getNodeGroup)
-//        .map(CompletableFuture::join)
-//        .collect(Collectors.toList()));
-//  }
-//
-//  @Override
-//  public CompletableFuture<NodeGroup> createNodeGroup(NamespacedKey key) {
-//    File file = new File(nodeGroupDir, toFileName(key));
-//    if (file.exists()) {
-//      return CompletableFuture.failedFuture(
-//          new IllegalArgumentException("Group with this key already exists."));
-//    }
-//    return workOnFile(file, cfg -> {
-//      cfg.set("key", key.toString());
-//      cfg.set("weight", 1);
-//      return new NodeGroup(key);
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> updateNodeGroup(NamespacedKey group,
-//                                                 Consumer<NodeGroup> modifier) {
-//    return workOnFile(new File(nodeGroupDir, toFileName(group)), cfg -> {
-//      NodeGroup g = getNodeGroup(group).join();
-//      modifier.accept(g);
-//      cfg.set("weight", g.getWeight());
-//      cfg.set("nodes", g.stream().map(UUID::toString).toList());
-//      // TODO modifiers
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> deleteNodeGroup(NamespacedKey key) {
-//    new File(nodeGroupDir, toFileName(key)).delete();
-//    return CompletableFuture.completedFuture(null);
-//  }
-//
+package de.cubbossa.pathfinder.storage.implementation;
+
+import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.storage.DataStorageException;
+import de.cubbossa.pathfinder.storage.WaypointDataStorage;
+import de.cubbossa.pathfinder.util.WorldImpl;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+public class YmlStorage extends CommonStorage implements WaypointDataStorage {
+
+  private static final String FILE_TYPES = "node_types.yml";
+  private static final String FILE_NODES = "waypoints.yml";
+  private static final String DIR_NG = "nodegroups";
+  private static final String DIR_PV = "path_visualizer";
+  private static final String DIR_USER = "users";
+  private static final Pattern FILE_REGEX = Pattern.compile("[a-zA-Z0-9_]+\\$[a-zA-Z0-9_]+\\.yml");
+  private final Meta meta = new Meta(true);
+  private final Map<NamespacedKey, YamlConfiguration> visualizerHandles;
+  private final File dataDirectory;
+	@Getter
+	@Setter
+	private Logger logger;
+  private File nodeGroupDir;
+  private File pathVisualizerDir;
+  private File userDir;
+
+  public YmlStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry) {
+	  super(nodeTypeRegistry);
+	  if (!dataDirectory.isDirectory()) {
+      throw new IllegalArgumentException("Data directory must be a directory!");
+    }
+    this.dataDirectory = dataDirectory;
+    this.visualizerHandles = new HashMap<>();
+  }
+
+	private File fileTypes() {
+		return new File(dataDirectory, FILE_TYPES);
+	}
+
+	private File fileWaypoints() {
+		return new File(dataDirectory, FILE_NODES);
+	}
+
+	private File fileGroup(NamespacedKey key) {
+		return new File(DIR_NG, toFileName(key));
+	}
+
+  public String toFileName(NamespacedKey key) {
+    return key.toString().replace(':', '$') + ".yml";
+  }
+
+  public NamespacedKey fromFileName(String name) {
+    if (name.endsWith(".yml")) {
+      name = name.substring(0, name.length() - 4);
+    }
+    return NamespacedKey.fromString(name.replace('$', ':'));
+  }
+
+  private void workOnFile(File file, Consumer<YamlConfiguration> editor) {
+	  workOnFile(file, cfg -> {
+		  editor.accept(cfg);
+		  return null;
+	  });
+  }
+
+	private <T> Optional<T> workOnFileIfExists(File file, Function<YamlConfiguration, T> editor) {
+		if (!file.exists()) {
+			return Optional.empty();
+		}
+		return Optional.ofNullable(workOnFile(file, editor));
+	}
+
+  private <T> T workOnFile(File file, Function<YamlConfiguration, T> editor) {
+    if (!file.exists()) {
+      try {
+        file.createNewFile();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+    T data = editor.apply(cfg);
+    try {
+      cfg.save(file);
+    } catch (IOException e) {
+			throw new DataStorageException("Could not work on file '" + file.getName() + "'.", e);
+    }
+    return data;
+  }
 //  @Override
 //  public DiscoverInfo createDiscoverInfo(UUID playerId, NodeGroup discoverable,
 //                                         LocalDateTime foundDate) {
@@ -605,9 +351,296 @@
 //      }
 //    });
 //  }
-//
-//  public record Meta(
-//      boolean oneFileForAllUsers
-//  ) {
-//  }
-//}
+
+	@Override
+	public void init() throws Exception {
+		if (!dataDirectory.exists()) {
+			dataDirectory.mkdirs();
+		}
+		this.nodeGroupDir = new File(dataDirectory, DIR_NG);
+		this.nodeGroupDir.mkdirs();
+		this.pathVisualizerDir = new File(dataDirectory, DIR_PV);
+		this.pathVisualizerDir.mkdirs();
+		this.userDir = new File(dataDirectory, DIR_USER);
+		this.userDir.mkdirs();
+	}
+
+	@Override
+	public void shutdown() {
+
+	}
+
+	@Override
+	public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
+		workOnFile(fileTypes(), cfg -> {
+			cfg.set(node.toString(), type.getKey().toString());
+		});
+	}
+
+	@Override
+	public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
+		workOnFile(fileTypes(), cfg -> {
+			typeMapping.forEach((uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
+		});
+	}
+
+	@Override
+	public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
+		return workOnFile(fileTypes(), cfg -> {
+			String keyString = cfg.getString(node.toString());
+			if (keyString == null) {
+				return Optional.empty();
+			}
+			NamespacedKey key = NamespacedKey.fromString(keyString);
+			return Optional.ofNullable(nodeTypeRegistry.getType(key));
+		});
+	}
+
+	@Override
+	public Map<UUID, NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
+		return workOnFile(fileTypes(), cfg -> {
+			Map<UUID, NodeType<?>> types = new HashMap<>();
+			for (UUID node : nodes) {
+				String keyString = cfg.getString(node.toString());
+				if (keyString != null) {
+					types.put(node, nodeTypeRegistry.getType(NamespacedKey.fromString(keyString)));
+				}
+			}
+			return types;
+		});
+	}
+
+	@Override
+	public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
+		return null;
+	}
+
+	@Override
+	public Collection<Edge> loadEdgesFrom(UUID start) {
+		return null;
+	}
+
+	@Override
+	public Collection<Edge> loadEdgesTo(UUID end) {
+		return null;
+	}
+
+	@Override
+	public Optional<Edge> loadEdge(UUID start, UUID end) {
+		return Optional.empty();
+	}
+
+	@Override
+	public void saveEdge(Edge edge) {
+
+	}
+
+	@Override
+	public void deleteEdge(Edge edge) {
+
+	}
+
+	private Optional<NodeGroup> loadGroup(YamlConfiguration cfg) {
+		try {
+			NamespacedKey k = NamespacedKey.fromString(cfg.getString("key"));
+			SimpleNodeGroup group = new SimpleNodeGroup(k);
+			group.setWeight((float) cfg.getDouble("weight"));
+			group.addAll(cfg.getStringList("nodes").stream()
+					.map(UUID::fromString).toList());
+			return Optional.of(group);
+		} catch (Throwable t) {
+			t.printStackTrace();
+			return Optional.empty();
+		}
+	}
+
+	private void writeGroup(NodeGroup group) {
+		workOnFile(fileGroup(group.getKey()), cfg -> {
+			cfg.set("key", group.getKey().toString());
+			cfg.set("weight", group.getWeight());
+			cfg.set("nodes", group.stream().map(UUID::toString).toList());
+		});
+	}
+
+	@Override
+	public NodeGroup createAndLoadGroup(NamespacedKey key) {
+		SimpleNodeGroup group = new SimpleNodeGroup(key);
+		writeGroup(group);
+		return group;
+	}
+
+	@Override
+	public Optional<NodeGroup> loadGroup(NamespacedKey key) {
+		return workOnFileIfExists(fileGroup(key), this::loadGroup).flatMap(g -> g);
+	}
+
+	@Override
+	public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
+		return key.stream()
+				.map(this::loadGroup)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public List<NodeGroup> loadGroups(Pagination pagination) {
+		return null;
+	}
+
+	@Override
+	public Collection<NodeGroup> loadGroups(UUID node) {
+		return loadAllGroups().stream()
+				.filter(g -> g.contains(node))
+				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
+		return null;
+	}
+
+	@Override
+	public Collection<NodeGroup> loadAllGroups() {
+		return Arrays.stream(new File(dataDirectory, DIR_NG).listFiles())
+				.map(f -> workOnFile(f, cfg -> {
+					return loadGroup(cfg);
+				}))
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public Collection<UUID> loadGroupNodes(NodeGroup group) {
+		// nodes were already loaded with the group.
+		return group;
+	}
+
+	@Override
+	public void saveGroup(NodeGroup group) {
+		writeGroup(group);
+	}
+
+	@Override
+	public void deleteGroup(NodeGroup group) {
+		fileGroup(group.getKey()).delete();
+	}
+
+	@Override
+	public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+
+	}
+
+	@Override
+	public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+
+	}
+
+	@Override
+	public DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time) {
+		return null;
+	}
+
+	@Override
+	public Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key) {
+		return Optional.empty();
+	}
+
+	@Override
+	public void deleteDiscoverInfo(DiscoverInfo info) {
+
+	}
+
+	@Override
+	public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+		return null;
+	}
+
+	@Override
+	public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type) {
+		return null;
+	}
+
+	@Override
+	public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key) {
+		return Optional.empty();
+	}
+
+	@Override
+	public void saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+
+	}
+
+	@Override
+	public void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+
+	}
+
+	private Optional<Waypoint> loadWaypoint(YamlConfiguration cfg, UUID id) {
+		NodeType<Waypoint> type = ((de.cubbossa.pathfinder.node.NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType();
+
+		ConfigurationSection sec = cfg.getConfigurationSection(id.toString());
+		if (sec == null) {
+			return Optional.empty();
+		}
+		double x = sec.getDouble("x");
+		double y = sec.getDouble("y");
+		double z = sec.getDouble("z");
+		UUID world = UUID.fromString(sec.getString("world"));
+		de.cubbossa.pathapi.misc.Location location = new de.cubbossa.pathapi.misc.Location(x, y, z, new WorldImpl(world));
+
+		Waypoint waypoint = new Waypoint(type, id);
+		waypoint.setLocation(location);
+
+		return Optional.of(waypoint);
+	}
+
+	@Override
+	public Waypoint createAndLoadWaypoint(Location location) {
+		return null;
+	}
+
+	@Override
+	public Optional<Waypoint> loadWaypoint(UUID uuid) {
+		return workOnFile(fileWaypoints(), cfg -> {
+			return loadWaypoint(cfg, uuid);
+		});
+	}
+
+	@Override
+	public Collection<Waypoint> loadWaypoints(Collection<UUID> ids) {
+		return workOnFile(fileWaypoints(), cfg -> {
+			return ids.stream()
+					.map(uuid -> loadWaypoint(cfg, uuid))
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(Collectors.toSet());
+		});
+	}
+
+	@Override
+	public Collection<Waypoint> loadAllWaypoints() {
+		return workOnFile(fileWaypoints(), cfg -> {
+			return loadWaypoints(cfg.getKeys(false).stream()
+					.map(UUID::fromString).collect(Collectors.toSet()));
+		});
+	}
+
+	@Override
+	public void saveWaypoint(Waypoint node) {
+
+	}
+
+	@Override
+	public void deleteWaypoints(Collection<Waypoint> waypoints) {
+		workOnFile(fileWaypoints(), cfg -> {
+			waypoints.forEach(waypoint -> cfg.set(waypoint.getNodeId().toString(), null));
+		});
+	}
+
+	public record Meta(
+      boolean oneFileForAllUsers
+  ) {
+  }
+}

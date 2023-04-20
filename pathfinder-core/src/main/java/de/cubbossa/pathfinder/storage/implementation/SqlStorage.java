@@ -16,12 +16,9 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.NodeDataStorage;
-import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
@@ -33,7 +30,6 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.storage.Storage;
-import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
@@ -46,11 +42,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -62,20 +55,11 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-import javax.annotation.Nullable;
+public abstract class SqlStorage extends CommonStorage {
 
-public abstract class SqlStorage implements StorageImplementation, WaypointDataStorage {
-
-  @Getter
-  @Setter
-  private @Nullable Logger logger;
   public abstract ConnectionProvider getConnectionProvider();
 
   private DSLContext create;
-
-  private void debug(String message) {
-    if (logger != null) logger.log(Level.INFO, message);
-  }
 
   // +-----------------------------------------+
   // |  Node Table                             |
@@ -135,12 +119,10 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   private final SQLDialect dialect;
-  @Getter
-  private final NodeTypeRegistry nodeTypeRegistry;
 
   public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
+    super(nodeTypeRegistry);
     this.dialect = dialect;
-    this.nodeTypeRegistry = nodeTypeRegistry;
 
     nodeMapper = record -> {
       UUID id = record.getId();
@@ -262,66 +244,6 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
   }
 
   @Override
-  public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
-    debug(" > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
-    N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
-    saveNodeType(node.getNodeId(), type);
-    return node;
-  }
-
-  @Override
-  public <N extends Node<N>> Optional<N> loadNode(UUID id) {
-    debug(" > Storage Implementation: 'loadNode(" + id + ")'");
-    Optional<NodeType<N>> type = loadNodeType(id);
-    if (type.isPresent()) {
-      return type.get().loadNode(id);
-    }
-    throw new IllegalStateException("No type found for node with UUID '" + id + "'.");
-  }
-
-  @Override
-  public Collection<Node<?>> loadNodes() {
-    debug(" > Storage Implementation: 'loadNodes()'");
-    return nodeTypeRegistry.getTypes().stream()
-        .flatMap(nodeType -> nodeType.loadAllNodes().stream())
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public Collection<Node<?>> loadNodes(Collection<UUID> ids) {
-    debug(" > Storage Implementation: 'loadNodes(" + ids.stream()
-        .map(UUID::toString).collect(Collectors.joining(", ")) + ")'");
-    return nodeTypeRegistry.getTypes().stream()
-        .flatMap(nodeType -> nodeType.loadNodes(ids).stream())
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public void saveNode(Node<?> node) {
-    debug(" > Storage Implementation: 'saveNode(" + node.getNodeId() + ")'");
-    saveNodeTyped(node);
-  }
-
-  private <N extends Node<N>> void saveNodeTyped(Node<?> node) {
-    NodeType<N> type = (NodeType<N>) node.getType();
-    N before = type.loadNode(node.getNodeId()).orElseThrow();
-    type.saveNode((N) node);
-
-    if (before instanceof Groupable<?> gBefore && node instanceof Groupable<?> gAfter) {
-      Storage.ComparisonResult<NodeGroup> cmp = Storage.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
-      cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
-      cmp.toDeleteIfPresent(nodeGroups -> unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
-    }
-    Storage.ComparisonResult<Edge> cmp = Storage.ComparisonResult.compare(before.getEdges(), node.getEdges());
-    cmp.toInsertIfPresent(edges -> {
-      for (Edge edge : edges) {
-        createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
-      }
-    });
-    cmp.toDeleteIfPresent(edges -> edges.forEach(this::deleteEdge));
-  }
-
-  @Override
   public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
     debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
     create
@@ -420,10 +342,6 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
     debug(" > Storage Implementation: 'deleteEdge(" + edge + ")'");
   }
 
-  private void deleteNode(Node node, NodeType type) {
-    type.deleteNode(node);
-  }
-
   @Override
   public Waypoint createAndLoadWaypoint(Location l) {
     UUID uuid = UUID.randomUUID();
@@ -432,7 +350,7 @@ public abstract class SqlStorage implements StorageImplementation, WaypointDataS
         .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
             l.getZ())
         .execute();
-    Waypoint waypoint = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), uuid);
+    Waypoint waypoint = new Waypoint(((NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType(), uuid);
     waypoint.setLocation(l);
     return waypoint;
   }
