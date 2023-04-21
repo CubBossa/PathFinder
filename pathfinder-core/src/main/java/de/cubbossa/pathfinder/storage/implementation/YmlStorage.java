@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
@@ -12,15 +13,18 @@ import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
+import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,12 +40,12 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
   private static final String FILE_TYPES = "node_types.yml";
   private static final String FILE_NODES = "waypoints.yml";
+  private static final String FILE_EDGES = "edges.yml";
   private static final String DIR_NG = "nodegroups";
   private static final String DIR_PV = "path_visualizer";
   private static final String DIR_USER = "users";
   private static final Pattern FILE_REGEX = Pattern.compile("[a-zA-Z0-9_]+\\$[a-zA-Z0-9_]+\\.yml");
   private final Meta meta = new Meta(true);
-  private final Map<NamespacedKey, YamlConfiguration> visualizerHandles;
   private final File dataDirectory;
 	@Getter
 	@Setter
@@ -56,7 +60,6 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
     this.dataDirectory = dataDirectory;
-    this.visualizerHandles = new HashMap<>();
   }
 
 	private File fileTypes() {
@@ -67,8 +70,20 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 		return new File(dataDirectory, FILE_NODES);
 	}
 
+	private File fileEdges() {
+		return new File(dataDirectory, FILE_EDGES);
+	}
+
 	private File fileGroup(NamespacedKey key) {
-		return new File(DIR_NG, toFileName(key));
+		return new File(nodeGroupDir, toFileName(key));
+	}
+
+	private File filePlayer(UUID id) {
+		return new File(userDir, id + ".yml");
+	}
+
+	private File fileVisualizer(NamespacedKey visualizer) {
+		return new File(pathVisualizerDir, toFileName(visualizer));
 	}
 
   public String toFileName(NamespacedKey key) {
@@ -113,244 +128,6 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     }
     return data;
   }
-//  @Override
-//  public DiscoverInfo createDiscoverInfo(UUID playerId, NodeGroup discoverable,
-//                                         LocalDateTime foundDate) {
-//    File file;
-//    YamlConfiguration config;
-//    ConfigurationSection cfg;
-//    if (meta.oneFileForAllUsers()) {
-//      file = new File(userDir, "user_data.yml");
-//      config = YamlConfiguration.loadConfiguration(file);
-//      if (config.getConfigurationSection(playerId + "") != null) {
-//        cfg = config.getConfigurationSection(playerId + "");
-//      } else {
-//        cfg = config.createSection(playerId + "");
-//      }
-//    } else {
-//      file = new File(userDir, playerId + ".yml");
-//      config = YamlConfiguration.loadConfiguration(file);
-//      cfg = config;
-//    }
-//    ConfigurationSection discoveries = cfg.getConfigurationSection("discoveries");
-//    if (discoveries == null) {
-//      discoveries = cfg.createSection("discoveries");
-//    }
-//    discoveries.set(discoverable.getKey() + ".date", foundDate);
-//    try {
-//      config.save(file);
-//    } catch (IOException e) {
-//      throw new DataStorageException("Could not save discovery info." + e);
-//    }
-//    return new DiscoverInfo(playerId, discoverable.getKey(), foundDate);
-//  }
-//
-//  @Override
-//  public Map<NamespacedKey, DiscoverInfo> loadDiscoverInfo(UUID playerId) {
-//    File file;
-//    ConfigurationSection cfg;
-//    if (meta.oneFileForAllUsers()) {
-//      file = new File(userDir, "user_data.yml");
-//      cfg = YamlConfiguration.loadConfiguration(file);
-//      if (cfg.getConfigurationSection(playerId + "") != null) {
-//        cfg = cfg.getConfigurationSection(playerId + "");
-//      } else {
-//        cfg = cfg.createSection(playerId + "");
-//      }
-//    } else {
-//      file = new File(userDir, playerId + ".yml");
-//      cfg = YamlConfiguration.loadConfiguration(file);
-//    }
-//    ConfigurationSection discoveries = cfg.getConfigurationSection("discoveries");
-//    if (discoveries == null) {
-//      discoveries = cfg.createSection("discoveries");
-//    }
-//    Map<NamespacedKey, DiscoverInfo> map = new HashMap<>();
-//    for (String key : discoveries.getKeys(false)) {
-//      NamespacedKey nkey = NamespacedKey.fromString(key);
-//      map.put(nkey,
-//          new DiscoverInfo(playerId, nkey, (LocalDateTime) discoveries.get(key + ".date")));
-//    }
-//    return map;
-//  }
-//
-//  @Override
-//  public void deleteDiscoverInfo(UUID playerId, NamespacedKey discoverKey) {
-//    File file;
-//    YamlConfiguration config;
-//    ConfigurationSection cfg;
-//    if (meta.oneFileForAllUsers()) {
-//      file = new File(userDir, "user_data.yml");
-//      config = YamlConfiguration.loadConfiguration(file);
-//      if (config.getConfigurationSection(playerId + "") != null) {
-//        cfg = config.getConfigurationSection(playerId + "");
-//      } else {
-//        cfg = config.createSection(playerId + "");
-//      }
-//    } else {
-//      file = new File(userDir, playerId + ".yml");
-//      config = YamlConfiguration.loadConfiguration(file);
-//      cfg = config;
-//    }
-//    ConfigurationSection discoveries = cfg.getConfigurationSection("discoveries");
-//    if (discoveries == null) {
-//      return;
-//    }
-//    discoveries.set(discoverKey.toString(), null);
-//    try {
-//      config.save(file);
-//    } catch (IOException e) {
-//      throw new DataStorageException("Could not delete discovery info." + e);
-//    }
-//  }
-//
-//  @Override
-//  public <T extends PathVisualizer<T, ?>> Map<NamespacedKey, T> loadPathVisualizer(
-//      VisualizerType<T> type) {
-//    HashedRegistry<T> registry = new HashedRegistry<>();
-//    for (File file : Arrays.stream(pathVisualizerDir.listFiles())
-//        .filter(file -> file.getName().matches(FILE_REGEX.pattern()))
-//        .toList()
-//    ) {
-//      try {
-//        NamespacedKey key = fromFileName(file.getName());
-//        YamlConfiguration cfg =
-//            visualizerHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
-//        if (!Objects.equals(cfg.get("type"), type.getKey().toString())) {
-//          continue;
-//        }
-//        registry.put(loadVis(key, type, cfg));
-//      } catch (Exception e) {
-//        throw new DataStorageException("Could not load visualizer: " + file.getName(), e);
-//      }
-//    }
-//    return registry;
-//  }
-//
-//  private <T extends PathVisualizer<T, ?>> T loadVis(NamespacedKey key,
-//                                                     VisualizerType<T> type,
-//                                                     ConfigurationSection cfg) {
-//    if (type == null) {
-//      throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
-//    }
-//    T vis = type.create(key, cfg.getString("display-name"));
-//    Map<String, Object> values = (Map<String, Object>) cfg.get("props");
-//    type.deserialize(vis, values == null ? new HashMap<>() : values);
-//    return vis;
-//  }
-//
-//  @Override
-//  public <T extends PathVisualizer<T, ?>> void updatePathVisualizer(T visualizer) {
-//    File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
-//    if (!file.exists()) {
-//      try {
-//        if (!file.createNewFile()) {
-//          throw new DataStorageException("Could not create visualizer file.");
-//        }
-//      } catch (IOException e) {
-//        throw new DataStorageException("Could not create visualizer file.", e);
-//      }
-//    }
-//    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-//    cfg.set("type", visualizer.getType().getKey().toString());
-//    cfg.set("display-name", visualizer.getNameFormat());
-//    visualizer.getType().serialize(visualizer).forEach(cfg::set);
-//
-//    try {
-//      cfg.save(file);
-//    } catch (IOException e) {
-//      throw new DataStorageException("Could not save visualizer file.", e);
-//    }
-//    visualizerHandles.put(visualizer.getKey(), cfg);
-//  }
-//
-//  @Override
-//  public void deletePathVisualizer(PathVisualizer<?, ?, ?> visualizer) {
-//    File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
-//    file.deleteOnExit();
-//  }
-//
-//  @Override
-//  public CompletableFuture<Waypoint> createNodeInStorage(NodeType.NodeCreationContext context) {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      UUID id = UUID.randomUUID();
-//      cfg.set(id + ".location", context.location());
-//      Waypoint waypoint = new Waypoint(id);
-//      waypoint.setLocation(context.location());
-//      return waypoint;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Waypoint> getNodeFromStorage(UUID id) {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      Location location = cfg.getLocation("id.location");
-//      Waypoint waypoint = new Waypoint(id);
-//      waypoint.setLocation(location);
-//      return waypoint;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage() {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      Collection<Waypoint> waypoints = new HashSet<>();
-//      for (String idString : cfg.getKeys(false)) {
-//        Location location = cfg.getLocation("id.location");
-//        Waypoint waypoint = new Waypoint(UUID.fromString(idString));
-//        waypoint.setLocation(location);
-//      }
-//      return waypoints;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Collection<Waypoint>> getNodesFromStorage(NodeSelection ids) {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      Collection<String> idStrings = ids.stream().map(Objects::toString).toList();
-//      Collection<Waypoint> waypoints = new HashSet<>();
-//      for (String idString : cfg.getKeys(false)) {
-//        if (!idStrings.contains(idString)) {
-//          continue;
-//        }
-//        Location location = cfg.getLocation("id.location");
-//        Waypoint waypoint = new Waypoint(UUID.fromString(idString));
-//        waypoint.setLocation(location);
-//      }
-//      return waypoints;
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> updateNodeInStorage(UUID nodeId, Consumer<Waypoint> nodeConsumer) {
-//    return getNodeFromStorage(nodeId).thenAccept(waypoint -> {
-//      workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//        nodeConsumer.accept(waypoint);
-//        cfg.set(nodeId + ".location", waypoint.getLocation());
-//      });
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> updateNodesInStorage(NodeSelection nodeIds,
-//                                                      Consumer<Waypoint> nodeConsumer) {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      for (UUID nodeId : nodeIds) {
-//        Waypoint waypoint = getNodeFromStorage(nodeId).join();
-//        nodeConsumer.accept(waypoint);
-//        cfg.set(nodeId + ".location", waypoint.getLocation());
-//      }
-//    });
-//  }
-//
-//  @Override
-//  public CompletableFuture<Void> deleteNodesFromStorage(NodeSelection nodes) {
-//    return workOnFile(new File(dataDirectory, FILE_NODES), cfg -> {
-//      for (UUID node : nodes) {
-//        cfg.set(node.toString(), null);
-//      }
-//    });
-//  }
 
 	@Override
 	public void init() throws Exception {
@@ -367,7 +144,6 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
 	@Override
 	public void shutdown() {
-
 	}
 
 	@Override
@@ -410,14 +186,40 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 		});
 	}
 
+	Optional<Edge> readEdge(UUID start, UUID end, ConfigurationSection startSection) {
+		if (startSection == null) {
+			return Optional.empty();
+		}
+		double weight = startSection.getDouble(end.toString());
+		return Optional.of(new SimpleEdge(start, end, (float) weight));
+	}
+
+	void writeEdge(Edge edge, ConfigurationSection section) {
+		section.set(edge.getEnd().toString(), edge.getWeight());
+	}
+
 	@Override
 	public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
-		return null;
+		return workOnFile(fileEdges(), cfg -> {
+			SimpleEdge edge = new SimpleEdge(start, end, (float) weight);
+			writeEdge(edge, cfg.createSection(start.toString()));
+			return edge;
+		});
 	}
 
 	@Override
 	public Collection<Edge> loadEdgesFrom(UUID start) {
-		return null;
+		return workOnFile(fileEdges(), cfg -> {
+			ConfigurationSection section = cfg.getConfigurationSection(start.toString());
+			if (section == null) {
+				return new HashSet<>();
+			}
+			return section.getKeys(false).stream()
+					.map(end -> readEdge(start, UUID.fromString(end), section))
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(Collectors.toSet());
+		});
 	}
 
 	@Override
@@ -427,17 +229,26 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
 	@Override
 	public Optional<Edge> loadEdge(UUID start, UUID end) {
-		return Optional.empty();
+		return workOnFile(fileEdges(), cfg -> {
+			return readEdge(start, end, cfg.getConfigurationSection(start.toString()));
+		});
 	}
 
 	@Override
 	public void saveEdge(Edge edge) {
-
+		workOnFile(fileEdges(), cfg -> {
+			writeEdge(edge, cfg.createSection(edge.getStart().toString()));
+		});
 	}
 
 	@Override
 	public void deleteEdge(Edge edge) {
-
+		workOnFile(fileEdges(), cfg -> {
+			ConfigurationSection start = cfg.getConfigurationSection(edge.getStart().toString());
+			if (start != null) {
+				start.set(edge.getEnd().toString(), null);
+			}
+		});
 	}
 
 	private Optional<NodeGroup> loadGroup(YamlConfiguration cfg) {
@@ -485,7 +296,14 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
 	@Override
 	public List<NodeGroup> loadGroups(Pagination pagination) {
-		return null;
+		return CommandUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(), pagination.getOffset(), pagination.getLimit())
+				.stream()
+				.map(f -> workOnFile(f, cfg -> {
+					return loadGroup(cfg);
+				}))
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -529,55 +347,94 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
 	@Override
 	public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-
+		// Not required, nodes are already handled within group file
 	}
 
 	@Override
 	public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-
+		// Not required, nodes are already handled within group file
 	}
 
 	@Override
 	public DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time) {
-		return null;
+		return workOnFile(filePlayer(player), cfg -> {
+			DiscoverInfo info = new DiscoverInfo(player, key, time);
+			cfg.set(info.discoverable().toString(), info.foundDate());
+			return info;
+		});
 	}
 
 	@Override
 	public Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key) {
-		return Optional.empty();
+		return workOnFileIfExists(filePlayer(player), (Function<YamlConfiguration, Optional<DiscoverInfo>>)  cfg -> {
+			LocalDateTime time = cfg.getObject(key.toString(), LocalDateTime.class);
+			if (time == null) {
+				return Optional.empty();
+			}
+			return Optional.of(new DiscoverInfo(player, key, time));
+		}).flatMap(Function.identity());
 	}
 
 	@Override
 	public void deleteDiscoverInfo(DiscoverInfo info) {
+		workOnFile(filePlayer(info.playerId()), cfg -> {
+			cfg.set(info.discoverable().toString(), null);
+		});
+	}
 
+	private <T extends PathVisualizer<T, ?, ?>> void writeVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+		workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
+			cfg.set("type", visualizer.getType().getKey().toString());
+	    cfg.set("display-name", visualizer.getNameFormat());
+      VisualizerType<T> type = (VisualizerType<T>) visualizer.getType();
+			type.serialize((T) visualizer).forEach(cfg::set);
+		});
+	}
+
+	private <T extends PathVisualizer<T, ?, ?>> T readVisualizer(VisualizerType<T> type, NamespacedKey key, ConfigurationSection cfg) {
+		if (type == null) {
+      throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
+    }
+    T vis = type.create(key, cfg.getString("display-name"));
+    Map<String, Object> values = (Map<String, Object>) cfg.get("props");
+    type.deserialize(vis, values == null ? new HashMap<>() : values);
+    return vis;
 	}
 
 	@Override
 	public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type, NamespacedKey key) {
-		return null;
+		T visualizer = type.create(key, ""); //TODO
+		writeVisualizer(visualizer);
+		return visualizer;
 	}
 
 	@Override
 	public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type) {
-		return null;
+		return Arrays.stream(pathVisualizerDir.listFiles())
+				.map(file -> workOnFile(file, cfg -> {
+					return readVisualizer(type, fromFileName(file.getName()), cfg);
+				}))
+				.filter(v -> v.getType().getKey().equals(type.getKey()))
+				.collect(Collectors.toMap(Keyed::getKey, Function.identity()));
 	}
 
 	@Override
 	public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type, NamespacedKey key) {
-		return Optional.empty();
+		return workOnFileIfExists(fileVisualizer(key), cfg -> readVisualizer(type, key, cfg));
 	}
 
 	@Override
 	public void saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
-
+		writeVisualizer(visualizer);
 	}
 
 	@Override
 	public void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
-
+    File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
+    file.deleteOnExit();
 	}
 
-	private Optional<Waypoint> loadWaypoint(YamlConfiguration cfg, UUID id) {
+	private Optional<Waypoint> readWaypoint(YamlConfiguration cfg, UUID id) {
 		NodeType<Waypoint> type = ((de.cubbossa.pathfinder.node.NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType();
 
 		ConfigurationSection sec = cfg.getConfigurationSection(id.toString());
@@ -596,15 +453,27 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 		return Optional.of(waypoint);
 	}
 
+	private void writeWaypoint(Waypoint waypoint, ConfigurationSection cfg) {
+		cfg.set("x", waypoint.getLocation().getX());
+		cfg.set("y", waypoint.getLocation().getY());
+		cfg.set("z", waypoint.getLocation().getZ());
+		cfg.set("world", waypoint.getLocation().getWorld().getUniqueId().toString());
+	}
+
 	@Override
 	public Waypoint createAndLoadWaypoint(Location location) {
-		return null;
+		return workOnFile(fileWaypoints(), cfg -> {
+			Waypoint waypoint = new Waypoint(((de.cubbossa.pathfinder.node.NodeTypeRegistry)nodeTypeRegistry).getWaypointNodeType(), UUID.randomUUID());
+			waypoint.setLocation(location);
+			writeWaypoint(waypoint, cfg.createSection(waypoint.getNodeId().toString()));
+			return waypoint;
+		});
 	}
 
 	@Override
 	public Optional<Waypoint> loadWaypoint(UUID uuid) {
 		return workOnFile(fileWaypoints(), cfg -> {
-			return loadWaypoint(cfg, uuid);
+			return readWaypoint(cfg, uuid);
 		});
 	}
 
@@ -612,7 +481,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 	public Collection<Waypoint> loadWaypoints(Collection<UUID> ids) {
 		return workOnFile(fileWaypoints(), cfg -> {
 			return ids.stream()
-					.map(uuid -> loadWaypoint(cfg, uuid))
+					.map(uuid -> readWaypoint(cfg, uuid))
 					.filter(Optional::isPresent)
 					.map(Optional::get)
 					.collect(Collectors.toSet());
@@ -629,7 +498,9 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
 	@Override
 	public void saveWaypoint(Waypoint node) {
-
+		workOnFile(fileWaypoints(), cfg -> {
+			writeWaypoint(node, cfg.createSection(node.getNodeId().toString()));
+		});
 	}
 
 	@Override

@@ -60,6 +60,10 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
 
   @Override
   public void shutdown() {
+    nodeCache.invalidateAll();
+    groupCache.invalidateAll();
+    visualizerCache.invalidateAll();
+    discoverInfoCache.invalidateAll();
     implementation.shutdown();
   }
 
@@ -249,7 +253,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
                                                                    LocalDateTime time) {
     return asyncFuture(() -> {
       DiscoverInfo info = implementation.createAndLoadDiscoverinfo(player, key, time);
-      discoverInfoCache.handleNew(info);
+      discoverInfoCache.write(info);
       return info;
     });
   }
@@ -263,7 +267,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info) {
     return asyncFuture(() -> {
       implementation.deleteDiscoverInfo(info);
-      discoverInfoCache.handleDelete(info);
+      discoverInfoCache.invalidate(info);
     });
   }
 

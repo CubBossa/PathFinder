@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.cubbossa.pathapi.storage.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,7 +13,7 @@ import java.util.function.Supplier;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 
-public class VisualizerCache {
+public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
 
   private final Cache<NamespacedKey, PathVisualizer<?, ?, ?>> cache;
   private boolean cachedAll = false;
@@ -56,5 +57,12 @@ public class VisualizerCache {
 
   public void invalidate(PathVisualizer<?, ?, ?> visualizer) {
     cache.invalidate(visualizer.getKey());
+  }
+
+  @Override
+  public void invalidateAll() {
+    cache.invalidateAll();
+    cachedTypes.clear();
+    cachedAll = false;
   }
 }

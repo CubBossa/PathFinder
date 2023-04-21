@@ -7,6 +7,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.storage.StorageCache;
 import de.cubbossa.pathfinder.util.CommandUtils;
 
 import java.util.Collection;
@@ -18,7 +19,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 
-public class GroupCache {
+public class GroupCache implements StorageCache<NodeGroup> {
 
   private final Cache<NamespacedKey, NodeGroup> cache;
   private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
@@ -105,6 +106,13 @@ public class GroupCache {
         groups.remove(group);
       }
     }
+  }
+
+  @Override
+  public void invalidateAll() {
+    cache.invalidateAll();
+    cachedAll = false;
+    nodeGroupCache.invalidateAll();
   }
 
   public void invalidate(Node<?> node) {

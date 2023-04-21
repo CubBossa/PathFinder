@@ -9,11 +9,13 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+
+import de.cubbossa.pathapi.storage.StorageCache;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 
-public class DiscoverInfoCache {
+public class DiscoverInfoCache implements StorageCache<DiscoverInfo> {
 
   @EqualsAndHashCode
   @RequiredArgsConstructor
@@ -41,15 +43,20 @@ public class DiscoverInfoCache {
         .collect(Collectors.toList());
   }
 
-  public void handleNew(DiscoverInfo info) {
+  public void write(DiscoverInfo info) {
     cache.put(new Key(info.playerId(), info.discoverable()), info);
   }
 
-  public void handleDelete(DiscoverInfo info) {
+  public void invalidate(DiscoverInfo info) {
     cache.invalidate(new Key(info.playerId(), info.discoverable()));
   }
 
   public void invalidate(UUID player) {
     cache.invalidateAll(cache.asMap().keySet().stream().filter(key -> key.uuid.equals(player)).toList());
+  }
+
+  @Override
+  public void invalidateAll() {
+    cache.invalidateAll();
   }
 }
