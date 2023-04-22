@@ -65,12 +65,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
 		};
 		eventDispatcher.listen(NodeCreateEvent.class, render);
 		eventDispatcher.listen(NodeSaveEvent.class, render);
-
-		eventDispatcher.listen(NodeDeleteEvent.class, nodeDeleteEvent -> {
-			for (PathPlayer<Player> player : editingPlayers.keySet()) {
-				eraseNodes(player, List.of(nodeDeleteEvent.getNode()));
-			}
-		});
+		eventDispatcher.listen(NodeDeleteEvent.class, e -> erase.accept(e.getNode()));
 
 		eventDispatcher.listen(NodeGroupDeleteEvent.class, nodeGroupDeleteEvent -> {
 			if (!nodeGroupDeleteEvent.getGroup().getKey().equals(key)) {

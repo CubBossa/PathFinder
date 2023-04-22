@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
@@ -18,8 +19,8 @@ import java.util.logging.Logger;
 public class SqliteStorageTest extends StorageTest {
 
   @Override
-  StorageImplementation storage(NodeTypeRegistry registry) {
-    SqlStorage implementation = new SqliteStorage(new File("./src/test/resources/database.db"), registry) {
+  StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry) {
+    SqlStorage implementation = new SqliteStorage(new File("./src/test/resources/database.db"), registry, modifierRegistry) {
       @Override
       public void shutdown() {
         super.shutdown();

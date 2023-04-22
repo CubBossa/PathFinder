@@ -82,6 +82,9 @@ public class NodeCache implements StorageCache<Node<?>> {
 
   public void invalidate(UUID uuid) {
     nodeCache.remove(uuid);
+    nodeCache. values().forEach(node -> {
+      node.getEdges().removeIf(edge -> edge.getEnd().equals(uuid));
+    });
   }
 
   public void invalidate(Node<?> node) {

@@ -1,15 +1,12 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Logger;
-
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
@@ -21,8 +18,8 @@ public class SqliteStorage extends SqlStorage {
   private final File file;
   private Connection connection;
 
-  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry) {
-    super(SQLDialect.SQLITE, nodeTypeRegistry);
+  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+    super(SQLDialect.SQLITE, nodeTypeRegistry, modifierRegistry);
     this.file = file;
   }
 

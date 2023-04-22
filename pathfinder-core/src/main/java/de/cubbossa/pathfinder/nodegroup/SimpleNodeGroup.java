@@ -20,7 +20,6 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
   private final PathFinder pathFinder = PathFinderProvider.get();
   private final NamespacedKey key;
-  @Getter
   private final Map<Class<? extends Modifier>, Modifier> modifiers;
   @Getter
   @Setter
@@ -63,6 +62,10 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
   @Override
   public NamespacedKey getKey() {
     return key;
+  }
+
+  public Collection<Modifier> getModifiers() {
+    return new HashSet<>(modifiers.values());
   }
 
   @Override

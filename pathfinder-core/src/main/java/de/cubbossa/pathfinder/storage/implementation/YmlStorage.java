@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Location;
@@ -54,8 +55,8 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   private File pathVisualizerDir;
   private File userDir;
 
-  public YmlStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry) {
-	  super(nodeTypeRegistry);
+  public YmlStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+	  super(nodeTypeRegistry, modifierRegistry);
 	  if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
@@ -353,6 +354,17 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 	@Override
 	public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
 		// Not required, nodes are already handled within group file
+	}
+
+	@Override
+	public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
+
+	}
+
+	@Override
+	public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group,
+															   Class<M> modifier) {
+
 	}
 
 	@Override

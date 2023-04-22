@@ -11,6 +11,8 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDE
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.ModifierRegistry;
+import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -21,18 +23,19 @@ import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.node.SimpleEdge;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.Storage;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
+import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,8 +45,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
-import lombok.Getter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.ConnectionProvider;
@@ -54,6 +57,7 @@ import org.jooq.SQLDialect;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
+import org.yaml.snakeyaml.Yaml;
 
 public abstract class SqlStorage extends CommonStorage {
 
@@ -120,8 +124,8 @@ public abstract class SqlStorage extends CommonStorage {
 
   private final SQLDialect dialect;
 
-  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry) {
-    super(nodeTypeRegistry);
+  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+    super(nodeTypeRegistry, modifierRegistry);
     this.dialect = dialect;
 
     nodeMapper = record -> {
@@ -156,6 +160,7 @@ public abstract class SqlStorage extends CommonStorage {
     createEdgeTable();
     createDiscoverInfoTable();
     createNodeTypeRelation();
+    createModifierGroupRelation();
   }
 
   private void createNodeTable() {
@@ -223,6 +228,14 @@ public abstract class SqlStorage extends CommonStorage {
     debug("Table created: 'pathfinder_node_type_relation'");
   }
 
+  private void createModifierGroupRelation() {
+    create
+        .createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
+        .execute();
+    debug("Table created: 'pathfinder_group_modifier_relation'");
+  }
+
   @Override
   public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
     List<NodeType<N>> resultSet = create
@@ -255,7 +268,8 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
     debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
-            .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}").collect(Collectors.joining(", ")) + ")'");
+        .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
+        .collect(Collectors.joining(", ")) + ")'");
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -350,7 +364,8 @@ public abstract class SqlStorage extends CommonStorage {
         .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
             l.getZ())
         .execute();
-    Waypoint waypoint = new Waypoint(((NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType(), uuid);
+    Waypoint waypoint =
+        new Waypoint(((NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType(), uuid);
     waypoint.setLocation(l);
     return waypoint;
   }
@@ -434,7 +449,8 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
-    debug(" > Storage Implementation: 'loadGroups(" + key.stream().map(NamespacedKey::toString).collect(Collectors.joining(",")) + ")'");
+    debug(" > Storage Implementation: 'loadGroups(" + key.stream().map(NamespacedKey::toString)
+        .collect(Collectors.joining(",")) + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);
@@ -490,7 +506,7 @@ public abstract class SqlStorage extends CommonStorage {
               r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
           );
           group.addAll(loadGroupNodes(group));
-          loadModifiers(group.getKey()).join().forEach(group::addModifier);
+          loadModifiers(group.getKey()).forEach(group::addModifier);
           return group;
         });
   }
@@ -512,6 +528,10 @@ public abstract class SqlStorage extends CommonStorage {
     Storage.ComparisonResult<UUID> cmp = Storage.ComparisonResult.compare(before, group);
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
+
+    Storage.ComparisonResult<Modifier> cmpMod = Storage.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
+    cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
+    cmpMod.toDeleteIfPresent(mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
     debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
   }
 
@@ -532,7 +552,8 @@ public abstract class SqlStorage extends CommonStorage {
       }
     });
     debug(" > Storage Implementation: 'assignToGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString).collect(Collectors.joining(",")) + "]"
+        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
+        .collect(Collectors.joining(",")) + "]"
         + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
 
@@ -547,12 +568,19 @@ public abstract class SqlStorage extends CommonStorage {
         .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
         .execute();
     debug(" > Storage Implementation: 'unassignFromGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString).collect(Collectors.joining(",")) + "]"
+        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
+        .collect(Collectors.joining(",")) + "]"
         + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
 
   @Override
   public void deleteGroup(NodeGroup group) {
+    create.deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
+        .execute();
+    create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group.getKey()))
+        .execute();
     create
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
@@ -680,17 +708,45 @@ public abstract class SqlStorage extends CommonStorage {
     return CompletableFuture.completedFuture(edges);
   }
 
-  public CompletableFuture<Collection<Modifier>> loadModifiers(NamespacedKey group) {
-    return CompletableFuture.completedFuture(new HashSet<>());
+  public Collection<Modifier> loadModifiers(NamespacedKey group) {
+    HashSet<Modifier> modifiers = new HashSet<>();
+    create.selectFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
+        .forEach(record -> {
+          try {
+            ModifierType<?> type = modifierRegistry.getType(record.getModifierClass()).orElseThrow();
+            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(record.getData()));
+            Modifier modifier = type.deserialize(cfg.getValues(false));
+            modifiers.add(modifier);
+          } catch (Throwable t) {
+            if (getLogger() != null) {
+              getLogger().log(Level.WARNING, "Could not load modifier with class name '" + record.getModifierClass() + "', skipping.");
+            } else {
+              throw new RuntimeException(t);
+            }
+          }
+        });
+    return modifiers;
   }
 
-  public CompletableFuture<Void> assignNodeGroupModifier(NamespacedKey group, Modifier modifier) {
-    return null;
+  public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
+    YamlConfiguration cfg = new YamlConfiguration();
+    ModifierType<M> type = modifierRegistry.getType((Class<M>) modifier.getClass()).orElseThrow();
+    type.serialize(modifier).forEach(cfg::set);
+    create
+        .insertInto(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, group)
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS, type.getModifierClass().getName())
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.DATA, cfg.saveToString())
+        .execute();
   }
 
-  public CompletableFuture<Void> unassignNodeGroupModifier(NamespacedKey group,
-                                                           Class<? extends Modifier> modifier) {
-    return null;
+  @Override
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
+    create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
+        .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))
+        .execute();
   }
 
   @Override

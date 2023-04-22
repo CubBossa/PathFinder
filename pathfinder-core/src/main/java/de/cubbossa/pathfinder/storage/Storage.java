@@ -167,18 +167,20 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
 
   @Override
   public CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids) {
+    return loadNodes(uuids).thenAccept(this::deleteNodes);
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) {
+    Collection<UUID> uuids = nodes.stream().map(Node::getNodeId).toList();
     debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
-    return loadNodes(uuids).thenAccept(nodes -> {
+
+    return asyncFuture(() -> {
       eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
       implementation.deleteNodes(nodes);
       uuids.forEach(nodeCache::invalidate);
       nodes.forEach(groupCache::invalidate);
     });
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) { //TODO bad performance
-    return deleteNodesById(nodes.stream().map(Node::getNodeId).toList());
   }
 
   // Groups

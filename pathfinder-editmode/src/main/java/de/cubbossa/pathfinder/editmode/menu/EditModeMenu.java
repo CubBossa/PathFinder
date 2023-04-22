@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -115,12 +116,16 @@ public class EditModeMenu {
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
           }
-          pathFinder.getStorage().modifyNode(edgeStart, node -> {
+          Collection<CompletableFuture<?>> futures = new HashSet<>();
+          futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> {
             node.getEdges().add(new SimpleEdge(edgeStart, c.getTarget().getNodeId(), 1));
-            if (undirectedEdges) {
+          }));
+          if (undirectedEdges) {
+            futures.add(pathFinder.getStorage().modifyNode(c.getTarget().getNodeId(), node -> {
               node.getEdges().add(new SimpleEdge(c.getTarget().getNodeId(), edgeStart, 1));
-            }
-          }).thenRun(() -> {
+            }));
+          }
+          CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             edgeStart = null;
             c.getMenu().refresh(c.getSlot());
             EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -40,13 +41,14 @@ import org.junit.jupiter.api.*;
 
 public abstract class StorageTest {
 
-  abstract StorageImplementation storage(NodeTypeRegistry registry);
+  abstract StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry);
 
   protected static MiniMessage miniMessage;
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
   protected Storage storage;
   protected NodeTypeRegistry nodeTypeRegistry;
+  protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
 
   @BeforeAll
@@ -72,7 +74,7 @@ public abstract class StorageTest {
     nodeTypeRegistry = new NodeTypeRegistry();
     storage = new Storage();
     storage.setLogger(logger);
-    storage.setImplementation(storage(nodeTypeRegistry));
+    storage.setImplementation(storage(nodeTypeRegistry, modifierRegistry));
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
     nodeTypeRegistry.setWaypointNodeType(waypointNodeType);

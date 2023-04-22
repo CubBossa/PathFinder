@@ -15,6 +15,7 @@ import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
+import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
@@ -84,6 +85,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     modifierRegistry = new ModifierRegistryImpl();
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
+    modifierRegistry.registerModifierType(new NavigableModifierType());
 
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     bStatsLoader = new BStatsLoader();
@@ -129,8 +131,8 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
-      case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry);
-      case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry);
+      case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry, modifierRegistry);
+      case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry, modifierRegistry);
       default -> null;
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };

@@ -21,5 +21,4 @@ public class DiscoverableModifier implements Modifier, Named {
     this.nameFormat = name;
     this.displayName = TranslationHandler.getInstance().getMiniMessage().deserialize(nameFormat);
   }
-
 }

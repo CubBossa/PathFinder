@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class PermissionModifierType implements ModifierType<PermissionModifier>,
-    ModifierCommandExtension {
+    ModifierCommandExtension<PermissionModifier> {
 
   @Override
   public Class<PermissionModifier> getModifierClass() {

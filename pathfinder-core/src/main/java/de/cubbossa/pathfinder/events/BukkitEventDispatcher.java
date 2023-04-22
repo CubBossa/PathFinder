@@ -85,12 +85,11 @@ public class BukkitEventDispatcher implements EventDispatcher {
 
 	@Override
 	public void dispatchNodeSave(Node<?> node) {
-
+		dispatchEvent(new NodeSavedEvent(node));
 	}
 
 	@Override
 	public void dispatchNodeLoad(Node<?> node) {
-
 	}
 
 	@Override

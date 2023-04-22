@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class ModifierRegistryImpl implements ModifierRegistry {
 
@@ -21,7 +22,18 @@ public class ModifierRegistryImpl implements ModifierRegistry {
   }
 
   @Override
-  public Collection<ModifierType<?>> getModifiers() {
+  public Collection<ModifierType<?>> getTypes() {
     return modifiers.values();
+  }
+
+  @Override
+  public <M extends Modifier> Optional<ModifierType<M>> getType(Class<M> clazz) {
+    ModifierType<M> type = (ModifierType<M>) modifiers.get(clazz);
+    return Optional.ofNullable(type);
+  }
+
+  @Override
+  public <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName) throws ClassNotFoundException {
+    return getType((Class<M>) Class.forName(clazzName));
   }
 }

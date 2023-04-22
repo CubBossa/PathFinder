@@ -23,7 +23,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
 
   private final NodeType<Waypoint> type;
   private final UUID nodeId;
-  private final List<Edge> edges;
+  private final HashSet<Edge> edges;
   private final Map<NamespacedKey, NodeGroup> groups;
 
   private Location location;
@@ -33,7 +33,7 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
     this.nodeId = databaseId;
     this.groups = new HashMap<>();
 
-    edges = new ArrayList<>();
+    edges = new HashSet<>();
   }
 
   @Override

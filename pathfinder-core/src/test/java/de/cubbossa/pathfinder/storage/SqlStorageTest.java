@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
@@ -15,8 +16,8 @@ import org.jooq.exception.DataAccessException;
 public class SqlStorageTest extends StorageTest {
 
   @Override
-  StorageImplementation storage(NodeTypeRegistry registry) {
-    SqlStorage implementation = new SqlStorage(SQLDialect.H2, nodeTypeRegistry) {
+  StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry) {
+    SqlStorage implementation = new SqlStorage(SQLDialect.H2, nodeTypeRegistry, modifierRegistry) {
       @Override
       public ConnectionProvider getConnectionProvider() {
         final Connection connection;

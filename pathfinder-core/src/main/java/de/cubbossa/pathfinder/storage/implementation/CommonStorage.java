@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.*;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public abstract class CommonStorage implements StorageImplementation, WaypointDataStorage {
 
 	final NodeTypeRegistry nodeTypeRegistry;
+	final ModifierRegistry modifierRegistry;
 	@Getter
 	@Setter
 	private @Nullable Logger logger;
@@ -93,8 +95,12 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
 	public void deleteNodes(Collection<Node<?>> nodes) {
 		Map<UUID, NodeType<?>> types = loadNodeTypes(nodes.stream().map(Node::getNodeId).toList());
 		for (Node<?> node : nodes) {
+			if (node instanceof Groupable<?> groupable) {
+				unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
+			}
 			deleteNode(node, types.get(node.getNodeId()));
 		}
+		// TODO remove Type mapping, remove edge mapping
 	}
 
 	void deleteNode(Node node, NodeType type) {

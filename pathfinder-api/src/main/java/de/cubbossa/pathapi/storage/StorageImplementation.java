@@ -64,6 +64,9 @@ public interface StorageImplementation {
   void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
   void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
 
+  <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier);
+  <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier);
+
   // Find Data
   DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time);
   Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key);

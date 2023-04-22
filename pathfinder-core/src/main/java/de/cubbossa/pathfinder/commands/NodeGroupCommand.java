@@ -79,8 +79,8 @@ public class NodeGroupCommand extends Command {
     ArgumentTree set = CustomArgs.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
     ArgumentTree unset =
         CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
-    for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getModifiers()) {
-      if (!(modifier instanceof ModifierCommandExtension cmdExt)) {
+    for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getTypes()) {
+      if (!(modifier instanceof ModifierCommandExtension<?> cmdExt)) {
         continue;
       }
       ArgumentTree lit = CustomArgs.literal(modifier.getSubCommandLiteral());
