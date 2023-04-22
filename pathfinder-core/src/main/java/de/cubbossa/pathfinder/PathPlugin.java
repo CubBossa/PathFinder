@@ -15,6 +15,9 @@ import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
+import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifierType;
+import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierType;
+import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
@@ -86,6 +89,9 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
     modifierRegistry.registerModifierType(new NavigableModifierType());
+    modifierRegistry.registerModifierType(new DiscoverableModifierType());
+    modifierRegistry.registerModifierType(new FindDistanceModifierType());
+    modifierRegistry.registerModifierType(new CurveLengthModifierType());
 
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     bStatsLoader = new BStatsLoader();
