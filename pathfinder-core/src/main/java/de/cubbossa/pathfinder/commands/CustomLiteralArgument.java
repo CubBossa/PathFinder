@@ -28,18 +28,17 @@ public class CustomLiteralArgument extends LiteralArgument {
     this.setListed(false);
   }
 
-
-  @Override
-  public Class<String> getPrimitiveType() {
-    return String.class;
-  }
-
   public static dev.jorel.commandapi.arguments.LiteralArgument of(final String literal) {
     return new dev.jorel.commandapi.arguments.LiteralArgument(literal);
   }
 
   public static dev.jorel.commandapi.arguments.LiteralArgument literal(final String literal) {
     return new dev.jorel.commandapi.arguments.LiteralArgument(literal);
+  }
+
+  @Override
+  public Class<String> getPrimitiveType() {
+    return String.class;
   }
 
   public String getLiteral() {

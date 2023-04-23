@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-
+import de.cubbossa.pathfinder.PathPlugin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,7 +23,8 @@ public class StorageAssistant {
           .forEach(groupable -> {
             for (NodeGroup group : groupable.getGroups()) {
               if (group.hasModifier(modifier)) {
-                results.computeIfAbsent(groupable, g -> new TreeMap<>()).put(group.getWeight(), group.getModifier(modifier));
+                results.computeIfAbsent(groupable, g -> new TreeMap<>())
+                    .put(group.getWeight(), group.getModifier(modifier));
               }
             }
           });

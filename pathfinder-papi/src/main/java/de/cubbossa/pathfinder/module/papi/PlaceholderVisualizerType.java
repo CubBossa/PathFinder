@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
@@ -22,7 +22,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 @Getter
 @Setter
 public class PlaceholderVisualizerType extends AbstractVisualizerType<PlaceholderVisualizer>
-    implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<PlaceholderVisualizer> {
+    implements VisualizerTypeCommandExtension,
+    VisualizerTypeMessageExtension<PlaceholderVisualizer> {
 
   public PlaceholderVisualizerType(NamespacedKey key) {
     super(key);

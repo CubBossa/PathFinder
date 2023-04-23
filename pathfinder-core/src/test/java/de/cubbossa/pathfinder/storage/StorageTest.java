@@ -34,14 +34,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 
 public abstract class StorageTest {
-
-  abstract StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry);
 
   protected static MiniMessage miniMessage;
   protected static World world;
@@ -63,6 +66,9 @@ public abstract class StorageTest {
   static void afterAll() {
     MockBukkit.unmock();
   }
+
+  abstract StorageImplementation storage(NodeTypeRegistry registry,
+                                         ModifierRegistry modifierRegistry);
 
   @AfterEach
   void afterEach() {

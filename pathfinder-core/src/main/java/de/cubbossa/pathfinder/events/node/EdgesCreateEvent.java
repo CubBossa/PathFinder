@@ -10,9 +10,10 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class  EdgesCreateEvent {
+public class EdgesCreateEvent {
 
-  private EdgesCreateEvent() {}
+  private EdgesCreateEvent() {
+  }
 
   @Getter
   public static class Pre extends Event implements Cancellable {

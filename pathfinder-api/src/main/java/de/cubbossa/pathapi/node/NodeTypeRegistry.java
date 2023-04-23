@@ -1,7 +1,6 @@
 package de.cubbossa.pathapi.node;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-
 import java.util.Collection;
 
 public interface NodeTypeRegistry {

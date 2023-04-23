@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.node;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
@@ -11,13 +12,12 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Setter
 public abstract class AbstractNodeType<N extends Node<N>> implements
-		NodeType<N> {
+    NodeType<N> {
 
   private final NamespacedKey key;
   private final ItemStack displayItem;
@@ -26,11 +26,13 @@ public abstract class AbstractNodeType<N extends Node<N>> implements
   private String nameFormat;
   private Component displayName;
 
-  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage) {
+  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem,
+                          MiniMessage miniMessage) {
     this(key, name, displayItem, miniMessage, null);
   }
 
-  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem, MiniMessage miniMessage, NodeDataStorage<N> storage) {
+  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem,
+                          MiniMessage miniMessage, NodeDataStorage<N> storage) {
     this.key = key;
     this.miniMessage = miniMessage;
     this.setNameFormat(name);

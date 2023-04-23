@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -26,7 +27,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
@@ -115,7 +115,7 @@ public class Messages {
 
   @MessageMeta(value = """
       <offset>Active Modules:</offset>
-      <modules:"\n":"<dark_gray>» </dark_gray>">""", placeholders = { "modules" })
+      <modules:"\n":"<dark_gray>» </dark_gray>">""", placeholders = {"modules"})
   public static final Message MODULES = new Message("commands.modules");
 
   @MessageMeta(value = "<ins:prefix>Player <name> discovered <discovery>.", placeholders = {"name",
@@ -502,8 +502,10 @@ public class Messages {
         node -> Component.text("#" + node));
   }
 
-  public static Component formatNodeGroups(CommandSender sender, Collection<SimpleNodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
+  public static Component formatNodeGroups(CommandSender sender,
+                                           Collection<SimpleNodeGroup> groups) {
+    return formatGroupInHover(sender, GEN_GROUP_SEL, groups,
+        g -> Component.text(g.getKey().toString()));
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,

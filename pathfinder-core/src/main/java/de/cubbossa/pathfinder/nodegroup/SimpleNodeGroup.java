@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.nodegroup;
 
-import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;

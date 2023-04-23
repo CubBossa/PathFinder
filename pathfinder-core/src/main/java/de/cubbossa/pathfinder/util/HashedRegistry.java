@@ -1,15 +1,15 @@
 package de.cubbossa.pathfinder.util;
 
-import java.util.HashMap;
-import java.util.Iterator;
-
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import java.util.HashMap;
+import java.util.Iterator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HashedRegistry<K extends Keyed>  extends HashMap<NamespacedKey, K> implements KeyedRegistry<K> {
+public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K>
+    implements KeyedRegistry<K> {
 
   @Nullable
   public K get(@NotNull NamespacedKey namespacedKey) {

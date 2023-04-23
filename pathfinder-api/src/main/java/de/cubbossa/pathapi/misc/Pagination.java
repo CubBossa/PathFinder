@@ -11,6 +11,14 @@ public final class Pagination {
   private final int offset;
   private final int limit;
 
+  public static Pagination pagination(int offset, int limit) {
+    return new Pagination(offset, limit);
+  }
+
+  public static Pagination page(int page, int size) {
+    return new Pagination(page * size, size);
+  }
+
   public int getStart() {
     return offset;
   }
@@ -25,13 +33,5 @@ public final class Pagination {
         "offset=" + offset +
         ", limit=" + limit +
         '}';
-  }
-
-  public static Pagination pagination(int offset, int limit) {
-    return new Pagination(offset, limit);
-  }
-
-  public static Pagination page(int page, int size) {
-    return new Pagination(page * size, size);
   }
 }

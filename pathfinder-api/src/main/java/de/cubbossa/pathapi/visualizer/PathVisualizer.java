@@ -2,13 +2,13 @@ package de.cubbossa.pathapi.visualizer;
 
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Named;
-import de.cubbossa.pathapi.misc.PermissionHolder;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.misc.PermissionHolder;
 import de.cubbossa.pathapi.node.Node;
-
 import java.util.List;
 
-public interface PathVisualizer<T extends PathVisualizer<T, D, P>, D, P> extends Keyed, Named, PermissionHolder {
+public interface PathVisualizer<T extends PathVisualizer<T, D, P>, D, P>
+    extends Keyed, Named, PermissionHolder {
 
   VisualizerType<T> getType();
 

@@ -1,14 +1,14 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -31,7 +31,8 @@ import org.bukkit.entity.Player;
 
 public class WaypointCommand extends Command {
 
-  public WaypointCommand(PathFinder pathFinder, Supplier<NodeType<? extends Node<?>>> fallbackWaypointType) {
+  public WaypointCommand(PathFinder pathFinder,
+                         Supplier<NodeType<? extends Node<?>>> fallbackWaypointType) {
     super(pathFinder, "waypoint");
     withAliases("node");
     withGeneratedHelp();
@@ -74,7 +75,8 @@ public class WaypointCommand extends Command {
     then(CustomArgs.literal("create")
         .withPermission(PathPerms.PERM_CMD_WP_CREATE)
         .executesPlayer((player, objects) -> {
-          createNode(player, fallbackWaypointType.get(), VectorUtils.toInternal(player.getLocation()));
+          createNode(player, fallbackWaypointType.get(),
+              VectorUtils.toInternal(player.getLocation()));
         })
         .then(CustomArgs.location("location")
             .displayAsOptional()
@@ -84,7 +86,8 @@ public class WaypointCommand extends Command {
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
-              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0], VectorUtils.toInternal(player.getLocation()));
+              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0],
+                  VectorUtils.toInternal(player.getLocation()));
             })
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
@@ -106,7 +109,8 @@ public class WaypointCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              teleportNodes(player, (NodeSelection) objects[0], VectorUtils.toInternal(player.getLocation()));
+              teleportNodes(player, (NodeSelection) objects[0],
+                  VectorUtils.toInternal(player.getLocation()));
             })
         )
     );
@@ -249,7 +253,8 @@ public class WaypointCommand extends Command {
     }
   }
 
-  private void createNode(CommandSender sender, NodeType<? extends Node<?>> type, Location location) {
+  private void createNode(CommandSender sender, NodeType<? extends Node<?>> type,
+                          Location location) {
     getPathfinder().getStorage().createAndLoadNode(
         type,
         location

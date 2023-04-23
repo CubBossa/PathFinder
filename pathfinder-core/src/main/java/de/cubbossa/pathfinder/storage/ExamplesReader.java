@@ -78,7 +78,8 @@ public class ExamplesReader {
           Writer writer = new StringWriter();
           char[] buffer = new char[2048];
           try {
-            Reader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            Reader reader =
+                new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
             int counter;
             while ((counter = reader.read(buffer)) != -1) {
               writer.write(buffer, 0, counter);

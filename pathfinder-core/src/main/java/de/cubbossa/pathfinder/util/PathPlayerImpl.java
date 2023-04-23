@@ -2,11 +2,10 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.translations.TranslationHandler;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.Nullable;
-
-import de.cubbossa.translations.TranslationHandler;
 import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

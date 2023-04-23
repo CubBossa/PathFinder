@@ -1,14 +1,15 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
-import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.time.LocalDateTime;
@@ -21,7 +22,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -79,11 +79,13 @@ public class PathFinderCommand extends Command {
 
     then(CustomArgs.literal("editmode")
         .executesPlayer((player, args) -> {
-          NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), NodeHandler.GROUP_GLOBAL);
+          NodeHandler.getInstance()
+              .toggleNodeGroupEditor(PathPlugin.wrap(player), NodeHandler.GROUP_GLOBAL);
         })
         .then(CustomArgs.nodeGroupArgument("group")
             .executesPlayer((player, args) -> {
-              NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player), ((SimpleNodeGroup) args[0]).getKey());
+              NodeHandler.getInstance().toggleNodeGroupEditor(PathPlugin.wrap(player),
+                  ((SimpleNodeGroup) args[0]).getKey());
             })));
 
     then(CustomArgs.literal("help")
@@ -271,16 +273,16 @@ public class PathFinderCommand extends Command {
     getPathfinder().getStorage().loadGroup(discoverable)
         .thenApply(Optional::orElseThrow)
         .thenAccept(group -> {
-      DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+          DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-      DiscoverHandler.getInstance().forget(target.getUniqueId(), group);
+          DiscoverHandler.getInstance().forget(target.getUniqueId(), group);
 
-      TranslationHandler.getInstance()
-          .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
-              .resolver(Placeholder.component("name",
-                  PathPlugin.getInstance().getAudiences().player(target)
-                      .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
-              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
-    });
+          TranslationHandler.getInstance()
+              .sendMessage(Messages.CMD_RM_FORCE_FORGET.format(TagResolver.builder()
+                  .resolver(Placeholder.component("name",
+                      PathPlugin.getInstance().getAudiences().player(target)
+                          .getOrDefault(Identity.DISPLAY_NAME, Component.text(target.getName()))))
+                  .tag("discovery", Tag.inserting(mod.getDisplayName())).build()), sender);
+        });
   }
 }

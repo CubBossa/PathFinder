@@ -33,67 +33,6 @@ import org.bukkit.entity.Player;
 
 public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>> {
 
-  @Getter
-  @RequiredArgsConstructor
-  public static class ArgumentContext<S, T> {
-    private final S value;
-    private final List<T> scope;
-  }
-
-  @Getter
-  @RequiredArgsConstructor
-  public static class SuggestionContext {
-    private final Player player;
-    private final String input;
-  }
-
-  @Getter
-  public static class Argument<S, T, C extends SelectionParser.ArgumentContext<?, T>, A extends Argument<S, T, C, A>> {
-
-    private final Function<String, S> parse;
-    private Function<C, List<T>> execute;
-    private Function<SuggestionContext, List<Suggestion>> suggest;
-
-    public Argument(ArgumentType<S> type) {
-      this.parse = s -> {
-        try {
-          return type.parse(new StringReader(s));
-        } catch (CommandSyntaxException e) {
-          throw new RuntimeException(e);
-        }
-      };
-    }
-
-    public A execute(Function<C, List<T>> execute) {
-      this.execute = execute;
-      return (A) this;
-    }
-
-    public A suggest(List<Suggestion> suggest) {
-      this.suggest = context -> suggest;
-      return (A) this;
-    }
-
-    public A suggestStrings(List<String> suggest) {
-      this.suggest = context -> suggest.stream()
-          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
-          .collect(Collectors.toList());
-      return (A) this;
-    }
-
-    public A suggest(Function<SuggestionContext, List<Suggestion>> suggest) {
-      this.suggest = suggest;
-      return (A) this;
-    }
-
-    public A suggestStrings(Function<SuggestionContext, List<String>> suggest) {
-      this.suggest = context -> suggest.apply(context).stream()
-          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
-          .collect(Collectors.toList());
-      return (A) this;
-    }
-  }
-
   private final Collection<String> identifiers = new ArrayList<>();
   private final Map<String, Argument<?, T, C, ?>> argumentMap = new HashMap<>();
 
@@ -164,6 +103,67 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
         new SelectSuggestionVisitor(identifiers, map, input, null).visit(tree);
 
     return CompletableFuture.completedFuture(Suggestions.create(command, suggestions));
+  }
+
+  @Getter
+  @RequiredArgsConstructor
+  public static class ArgumentContext<S, T> {
+    private final S value;
+    private final List<T> scope;
+  }
+
+  @Getter
+  @RequiredArgsConstructor
+  public static class SuggestionContext {
+    private final Player player;
+    private final String input;
+  }
+
+  @Getter
+  public static class Argument<S, T, C extends SelectionParser.ArgumentContext<?, T>, A extends Argument<S, T, C, A>> {
+
+    private final Function<String, S> parse;
+    private Function<C, List<T>> execute;
+    private Function<SuggestionContext, List<Suggestion>> suggest;
+
+    public Argument(ArgumentType<S> type) {
+      this.parse = s -> {
+        try {
+          return type.parse(new StringReader(s));
+        } catch (CommandSyntaxException e) {
+          throw new RuntimeException(e);
+        }
+      };
+    }
+
+    public A execute(Function<C, List<T>> execute) {
+      this.execute = execute;
+      return (A) this;
+    }
+
+    public A suggest(List<Suggestion> suggest) {
+      this.suggest = context -> suggest;
+      return (A) this;
+    }
+
+    public A suggestStrings(List<String> suggest) {
+      this.suggest = context -> suggest.stream()
+          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
+          .collect(Collectors.toList());
+      return (A) this;
+    }
+
+    public A suggest(Function<SuggestionContext, List<Suggestion>> suggest) {
+      this.suggest = suggest;
+      return (A) this;
+    }
+
+    public A suggestStrings(Function<SuggestionContext, List<String>> suggest) {
+      this.suggest = context -> suggest.apply(context).stream()
+          .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
+          .collect(Collectors.toList());
+      return (A) this;
+    }
   }
 
   public static class ErrorListener extends BaseErrorListener {

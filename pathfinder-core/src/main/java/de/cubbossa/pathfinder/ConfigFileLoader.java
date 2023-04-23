@@ -36,16 +36,18 @@ public class ConfigFileLoader {
             #                        Configuration                          #
             #                                                               #
             #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-            
+                        
             """)
         .build();
 
     if (!configFile.exists()) {
       configuration = new PathPluginConfig();
-      YamlConfigurations.save(configFile.toPath(), PathPluginConfig.class, configuration, properties);
+      YamlConfigurations.save(configFile.toPath(), PathPluginConfig.class, configuration,
+          properties);
       return configuration;
     }
-    configuration = YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
+    configuration =
+        YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
 

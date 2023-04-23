@@ -14,9 +14,6 @@ public class CommandHelpBuilder {
   private final String format;
   private final List<Entry> entries;
 
-  private record Entry(String cmd, String desc, ClickEvent.Action action, String actionInput) {
-  }
-
   public CommandHelpBuilder(String format) {
     this.format = format;
     this.entries = new ArrayList<>();
@@ -59,5 +56,8 @@ public class CommandHelpBuilder {
       result.add(mm.deserialize(format, resolver));
     }
     return result;
+  }
+
+  private record Entry(String cmd, String desc, ClickEvent.Action action, String actionInput) {
   }
 }

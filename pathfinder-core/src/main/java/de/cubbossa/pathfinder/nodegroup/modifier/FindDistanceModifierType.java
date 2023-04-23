@@ -5,7 +5,6 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathfinder.commands.ModifierCommandExtension;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import java.io.IOException;
 import java.util.Map;
@@ -44,6 +43,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
     if (values.containsKey("find-distance") && values.get("find-distance") instanceof Float f) {
       return new FindDistanceModifier(f);
     }
-    throw new IOException("Could not deserialize FindDistanceModifier, missing 'find-distance' attribute.");
+    throw new IOException(
+        "Could not deserialize FindDistanceModifier, missing 'find-distance' attribute.");
   }
 }

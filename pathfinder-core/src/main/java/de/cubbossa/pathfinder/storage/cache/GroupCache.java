@@ -4,12 +4,12 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.StorageCache;
 import de.cubbossa.pathfinder.util.CommandUtils;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class GroupCache implements StorageCache<NodeGroup> {
 
@@ -33,26 +32,30 @@ public class GroupCache implements StorageCache<NodeGroup> {
         .build();
   }
 
-  public Optional<NodeGroup> getGroup(NamespacedKey key, Function<NamespacedKey, NodeGroup> loader) {
+  public Optional<NodeGroup> getGroup(NamespacedKey key,
+                                      Function<NamespacedKey, NodeGroup> loader) {
     return Optional.ofNullable(cache.get(key, loader));
   }
 
-  public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier, Function<Class<M>, Collection<NodeGroup>> loader) {
+  public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier,
+                                                              Function<Class<M>, Collection<NodeGroup>> loader) {
     return cachedAll
         ? cache.asMap().values().stream().filter(group -> group.hasModifier(modifier)).toList()
         : loader.apply(modifier);
   }
 
-  public List<NodeGroup> getGroups(Pagination pagination, Function<Pagination, List<NodeGroup>> loader) {
+  public List<NodeGroup> getGroups(Pagination pagination,
+                                   Function<Pagination, List<NodeGroup>> loader) {
     if (cachedAll) {
       List<NodeGroup> present = cache.asMap().values().stream().toList();
-      return CommandUtils.subList(present, pagination.getOffset(), pagination.getOffset() + pagination.getLimit());
+      return CommandUtils.subList(present, pagination.getOffset(),
+          pagination.getOffset() + pagination.getLimit());
     }
     return loader.apply(pagination);
   }
 
   public Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
-                                               Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
+                                         Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
     Collection<NodeGroup> result = new HashSet<>();
     Collection<NamespacedKey> toLoad = new HashSet<>();
     for (NamespacedKey key : keys) {

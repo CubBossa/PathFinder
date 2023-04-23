@@ -12,7 +12,8 @@ import org.bukkit.event.HandlerList;
 
 public class EdgesDeleteEvent {
 
-  private EdgesDeleteEvent() {}
+  private EdgesDeleteEvent() {
+  }
 
   @Getter
   @RequiredArgsConstructor

@@ -8,16 +8,31 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftVersion;
-import com.comphenix.protocol.wrappers.*;
+import com.comphenix.protocol.wrappers.EnumWrappers;
+import com.comphenix.protocol.wrappers.Pair;
+import com.comphenix.protocol.wrappers.Vector3F;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.comphenix.protocol.wrappers.WrappedDataValue;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.util.IntPair;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -29,9 +44,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 @Getter
 @Setter
@@ -108,7 +120,8 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
           }
           event.setCancelled(true);
           Action<TargetContext<T>> action = handleInteract(player, slot, left);
-          menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, element));
+          menu.handleInteract(action,
+              new TargetContext<>(player, menu, slot, action, true, element));
         }
       }
     });
@@ -125,6 +138,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
   abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
 
   abstract boolean isSmall(T element);
+
   abstract @Nullable Component getName(T element);
 
   public void showElements(Collection<T> elements, Player player) {
@@ -147,7 +161,8 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
   }
 
   public void hideElements(Collection<T> elements, Player player) {
-    removeArmorstand(player, elements.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
+    removeArmorstand(player,
+        elements.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
 
     elements.forEach(nodeEntityMap::remove);
     new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> elements.contains(e.getValue()))
@@ -179,7 +194,8 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     protocolManager.sendServerPacket(player, packet);
   }
 
-  public synchronized int spawnArmorstand(Player player, Location location, @Nullable Component name, boolean small) {
+  public synchronized int spawnArmorstand(Player player, Location location,
+                                          @Nullable Component name, boolean small) {
 
     int entityId = AbstractArmorstandRenderer.entityId++;
 

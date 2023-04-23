@@ -15,6 +15,7 @@ public class NodeGroupSearchTermsChangedEvent extends Event {
   private final SimpleNodeGroup group;
   private final Action action;
   private final Collection<String> changedTerms;
+
   public NodeGroupSearchTermsChangedEvent(SimpleNodeGroup group, Action action,
                                           Collection<String> terms) {
     this.group = group;

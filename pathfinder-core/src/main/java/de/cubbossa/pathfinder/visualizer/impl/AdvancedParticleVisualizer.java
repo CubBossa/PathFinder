@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import java.util.ArrayList;
@@ -8,7 +9,6 @@ import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -78,7 +78,8 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
     }
   }
 
-  public record Context(PathPlayer<Player> player, Location point, int interval, int step, int index,
+  public record Context(PathPlayer<Player> player, Location point, int interval, int step,
+                        int index,
                         int count) {
 
   }

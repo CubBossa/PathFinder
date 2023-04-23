@@ -3,37 +3,20 @@ package de.cubbossa.pathfinder.util.nodeselection;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import de.cubbossa.pathfinder.nodeselection.NumberRange;
+import de.cubbossa.pathfinder.nodeselection.SelectionParser;
 import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import de.cubbossa.pathfinder.nodeselection.NumberRange;
-import de.cubbossa.pathfinder.nodeselection.SelectionParser;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class SelectionParserTest {
-
-  public static class TestParser
-      extends SelectionParser<String, SelectionParser.ArgumentContext<?, String>> {
-
-    public static class Argument<V>
-        extends SelectionParser.Argument<V, String, ArgumentContext<V, String>, Argument<V>> {
-
-      public Argument(ArgumentType<V> type) {
-        super(type);
-      }
-    }
-
-    public TestParser(String identifier, String... alias) {
-      super(identifier, alias);
-    }
-  }
 
   public static final TestParser.Argument<Integer> LETTER_COUNT = new TestParser.Argument<>(
       IntegerArgumentType.integer(1, 10)
@@ -47,7 +30,6 @@ public class SelectionParserTest {
         return counter == c.getValue();
       })
       .collect(Collectors.toList()));
-
   public static final TestParser.Argument<NumberRange> LENGTH = new TestParser.Argument<>(
       reader -> {
         try {
@@ -62,11 +44,6 @@ public class SelectionParserTest {
           .filter(s -> (s.length() >= context.getValue().getStart().doubleValue())
               && (s.length() <= context.getValue().getEnd().doubleValue()))
           .collect(Collectors.toList()));
-
-  private enum CharacterType {
-    LETTER, NUMBER, MISC
-  }
-
   public static final TestParser.Argument<CharacterType> TYPE =
       new TestParser.Argument<>(reader -> switch (reader.getRemaining()) {
         case "letter" -> CharacterType.LETTER;
@@ -83,7 +60,6 @@ public class SelectionParserTest {
             case MISC -> context.getScope();
           })
           .suggestStrings(List.of("letter", "number"));
-
   private static final List<String> SCOPE = Lists.newArrayList(
       "A", "B", "C", "D", "E",
       "Word", "OtherWord", "XYZ",
@@ -91,7 +67,6 @@ public class SelectionParserTest {
       "            ", " ", "",
       "More words than one", "Another sentence"
   );
-
   private static TestParser parser;
 
   @BeforeAll
@@ -181,5 +156,25 @@ public class SelectionParserTest {
     System.out.println(parser.applySuggestions(null, "", "@n[type=le,").get());
     System.out.println(parser.applySuggestions(null, "", "@s[]").get());
     System.out.println(parser.applySuggestions(null, "", "@n").get());
+  }
+
+  private enum CharacterType {
+    LETTER, NUMBER, MISC
+  }
+
+  public static class TestParser
+      extends SelectionParser<String, SelectionParser.ArgumentContext<?, String>> {
+
+    public TestParser(String identifier, String... alias) {
+      super(identifier, alias);
+    }
+
+    public static class Argument<V>
+        extends SelectionParser.Argument<V, String, ArgumentContext<V, String>, Argument<V>> {
+
+      public Argument(ArgumentType<V> type) {
+        super(type);
+      }
+    }
   }
 }

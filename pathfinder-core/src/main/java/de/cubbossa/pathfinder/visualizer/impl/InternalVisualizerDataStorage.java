@@ -1,13 +1,12 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.storage.Storage;
 import de.cubbossa.pathapi.storage.VisualizerDataStorage;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.Map;
 import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

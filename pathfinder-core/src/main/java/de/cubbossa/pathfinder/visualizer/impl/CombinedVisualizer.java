@@ -1,20 +1,18 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.Keyed;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 
 public class CombinedVisualizer extends
     AbstractVisualizer<CombinedVisualizer, CombinedVisualizer.CombinedData, Object> {

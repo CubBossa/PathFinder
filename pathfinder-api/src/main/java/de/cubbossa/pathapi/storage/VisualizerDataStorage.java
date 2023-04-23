@@ -8,8 +8,12 @@ import java.util.Optional;
 public interface VisualizerDataStorage<T extends PathVisualizer<T, ?, ?>> {
 
   T createAndLoadVisualizer(NamespacedKey key);
+
   Map<NamespacedKey, T> loadVisualizers();
+
   Optional<T> loadVisualizer(NamespacedKey key);
+
   void saveVisualizer(T visualizer);
+
   void deleteVisualizer(T visualizer);
 }

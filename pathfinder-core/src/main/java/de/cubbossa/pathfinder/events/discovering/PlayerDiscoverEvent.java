@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.events.discovering;
 
 import de.cubbossa.pathapi.group.NodeGroup;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;

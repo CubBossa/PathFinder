@@ -7,18 +7,18 @@ import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import org.bukkit.entity.Player;
 
 public abstract class BukkitVisualizer<T extends PathVisualizer<T, D, Player>, D>
-		extends AbstractVisualizer<T, D, Player> {
+    extends AbstractVisualizer<T, D, Player> {
 
-	public BukkitVisualizer(NamespacedKey key, String nameFormat) {
-		super(key, nameFormat);
-	}
+  public BukkitVisualizer(NamespacedKey key, String nameFormat) {
+    super(key, nameFormat);
+  }
 
-	@Override
-	public Class<Player> getTargetType() {
-		return Player.class;
-	}
+  @Override
+  public Class<Player> getTargetType() {
+    return Player.class;
+  }
 
-	@Override
-	public void destruct(PathPlayer<Player> player, D data) {
-	}
+  @Override
+  public void destruct(PathPlayer<Player> player, D data) {
+  }
 }

@@ -22,7 +22,8 @@ public class PathStartEvent extends Event implements Cancellable {
   private float distance;
   private boolean cancelled = false;
 
-  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<?> path, Location target, float distance) {
+  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<?> path, Location target,
+                        float distance) {
     this.player = player;
     this.path = path;
     this.target = target;

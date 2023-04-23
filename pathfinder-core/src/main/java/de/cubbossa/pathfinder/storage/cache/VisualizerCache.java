@@ -2,16 +2,15 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
 
@@ -25,11 +24,13 @@ public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
         .build();
   }
 
-  public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key, Function<NamespacedKey, T> loader) {
+  public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key,
+                                                                       Function<NamespacedKey, T> loader) {
     return Optional.ofNullable((T) cache.get(key, loader));
   }
 
-  public Collection<PathVisualizer<?, ?, ?>> getVisualizers(Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
+  public Collection<PathVisualizer<?, ?, ?>> getVisualizers(
+      Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }
@@ -38,7 +39,8 @@ public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
     return cache.asMap().values();
   }
 
-  public <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type, Function<VisualizerType<T>, Collection<T>> loader) {
+  public <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
+                                                                          Function<VisualizerType<T>, Collection<T>> loader) {
     if (cachedAll || cachedTypes.contains(type.getKey())) {
       return cache.asMap().values().stream()
           .filter(visualizer -> visualizer.getType().equals(type))

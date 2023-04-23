@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
@@ -11,7 +12,6 @@ import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {

@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.node.implementation;
 
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import java.util.Collection;

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
@@ -10,7 +11,6 @@ import java.util.Objects;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @Setter
 public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>, D extends EdgeBasedVisualizer.Data>
-		extends BukkitVisualizer<T, D> {
+    extends BukkitVisualizer<T, D> {
 
   private int interval = 10;
   private @Nullable String permission;
@@ -44,7 +44,8 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
         prev = node;
         continue;
       }
-      edges.add(new Edge(index++, VectorUtils.toBukkit(prev.getLocation()), VectorUtils.toBukkit(node.getLocation())));
+      edges.add(new Edge(index++, VectorUtils.toBukkit(prev.getLocation()),
+          VectorUtils.toBukkit(node.getLocation())));
       prev = node;
     }
     return newData(player, nodes, edges);
@@ -113,7 +114,8 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
         currentPoint, nearest);
   }
 
-  public abstract void play(PathVisualizer.VisualizerContext<D, Player> context, Location nearestPoint, Location leadPoint,
+  public abstract void play(PathVisualizer.VisualizerContext<D, Player> context,
+                            Location nearestPoint, Location leadPoint,
                             Edge nearestEdge);
 
   protected record Edge(int index, Location support, Location target) {

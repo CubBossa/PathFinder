@@ -1,34 +1,35 @@
 package de.cubbossa.pathfinder.module;
 
 import com.google.auto.service.AutoService;
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.listener.NavigationListener;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.node.NodeHandler;
-import de.cubbossa.pathfinder.node.implementation.PlayerNode;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
-import de.cubbossa.pathfinder.graph.PathSolver;
-import de.cubbossa.pathfinder.graph.SimpleDijkstra;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.commands.CancelPathCommand;
 import de.cubbossa.pathfinder.commands.FindCommand;
 import de.cubbossa.pathfinder.commands.FindLocationCommand;
 import de.cubbossa.pathfinder.events.visualizer.PathStartEvent;
 import de.cubbossa.pathfinder.events.visualizer.PathTargetFoundEvent;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.graph.PathSolver;
+import de.cubbossa.pathfinder.graph.SimpleDijkstra;
+import de.cubbossa.pathfinder.listener.NavigationListener;
+import de.cubbossa.pathfinder.node.NodeHandler;
+import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.implementation.PlayerNode;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.ArrayList;
@@ -42,7 +43,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -57,14 +57,12 @@ public class FindModule implements Listener, PathFinderExtension {
 
   @Getter
   private final NamespacedKey key = PathPlugin.pathfinder("navigation");
-
-  private FindCommand findCommand;
-  private FindLocationCommand findLocationCommand;
-  private CancelPathCommand cancelPathCommand;
-
   private final Map<PathPlayer<Player>, SearchInfo> activePaths;
   private final PathPlugin plugin;
   private final List<Predicate<NavigationRequestContext>> navigationFilter;
+  private FindCommand findCommand;
+  private FindLocationCommand findLocationCommand;
+  private CancelPathCommand cancelPathCommand;
   private NavigationListener listener;
 
   public FindModule() {
@@ -73,6 +71,18 @@ public class FindModule implements Listener, PathFinderExtension {
 
     this.activePaths = new HashMap<>();
     this.navigationFilter = new ArrayList<>();
+  }
+
+  public static void printResult(FindModule.NavigateResult result, Player player) {
+    switch (result) {
+      case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
+      case FAIL_BLOCKED ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+      case FAIL_EMPTY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY ->
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
+    }
   }
 
   @Override
@@ -166,7 +176,8 @@ public class FindModule implements Listener, PathFinderExtension {
         return NavigateResult.FAIL_TOO_FAR_AWAY;
       }
       final Node<?> fClosest = closest;
-      Waypoint waypoint = new Waypoint(plugin.getNodeTypeRegistry().getWaypointNodeType(), UUID.randomUUID());
+      Waypoint waypoint =
+          new Waypoint(plugin.getNodeTypeRegistry().getWaypointNodeType(), UUID.randomUUID());
       waypoint.setLocation(_location);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
       fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));
@@ -175,7 +186,8 @@ public class FindModule implements Listener, PathFinderExtension {
     });
   }
 
-  public CompletableFuture<NavigateResult> findPath(PathPlayer<Player> player, NodeSelection targets) {
+  public CompletableFuture<NavigateResult> findPath(PathPlayer<Player> player,
+                                                    NodeSelection targets) {
 
     if (targets.size() == 0) {
       return CompletableFuture.completedFuture(NavigateResult.FAIL_EMPTY);
@@ -217,7 +229,8 @@ public class FindModule implements Listener, PathFinderExtension {
           // Refresh cancel-path command so that it is visible
           cancelPathCommand.refresh(player);
           EffectHandler.getInstance()
-              .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started", player.unwrap(),
+              .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started",
+                  player.unwrap(),
                   VectorUtils.toBukkit(player.getLocation()));
         }
         return result;
@@ -236,7 +249,8 @@ public class FindModule implements Listener, PathFinderExtension {
             player.getLocation());
   }
 
-  public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path, Location target,
+  public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path,
+                                Location target,
                                 float distance) {
     PathStartEvent event = new PathStartEvent(player, path, target, distance);
     Bukkit.getPluginManager().callEvent(event);
@@ -284,18 +298,6 @@ public class FindModule implements Listener, PathFinderExtension {
             player.getLocation());
   }
 
-  public static void printResult(FindModule.NavigateResult result, Player player) {
-    switch (result) {
-      case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-      case FAIL_BLOCKED ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-      case FAIL_EMPTY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
-      case FAIL_TOO_FAR_AWAY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
-    }
-  }
-
   public enum NavigateResult {
     SUCCESS, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
     FAIL_TOO_FAR_AWAY;
@@ -304,6 +306,7 @@ public class FindModule implements Listener, PathFinderExtension {
   public record NavigationRequestContext(UUID playerId, Node<?> node) {
   }
 
-  public record SearchInfo(PathPlayer<Player> player, VisualizerPath<?> path, Location target, float distance) {
+  public record SearchInfo(PathPlayer<Player> player, VisualizerPath<?> path, Location target,
+                           float distance) {
   }
 }

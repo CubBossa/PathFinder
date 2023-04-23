@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
 import com.google.common.collect.Lists;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

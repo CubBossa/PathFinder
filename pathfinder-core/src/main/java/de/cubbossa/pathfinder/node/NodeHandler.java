@@ -1,16 +1,17 @@
 package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathapi.editor.NodeGroupEditor;
+import de.cubbossa.pathapi.editor.NodeGroupEditorFactory;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.nodegroup.NoImplNodeGroupEditor;
-import de.cubbossa.pathapi.editor.NodeGroupEditor;
-import de.cubbossa.pathapi.editor.NodeGroupEditorFactory;
-import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
@@ -23,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class NodeHandler {
 
@@ -101,7 +101,8 @@ public class NodeHandler {
       pathFinder.getStorage().loadGroup(key).thenAccept(g -> {
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
           NodeGroupEditor e = editModeFactory.apply(
-              g.orElseThrow(() -> new IllegalArgumentException("No group exists with key '" + key + "'. Cannot create editor."))
+              g.orElseThrow(() -> new IllegalArgumentException(
+                  "No group exists with key '" + key + "'. Cannot create editor."))
           );
           editors.put(e);
           future.complete(e);

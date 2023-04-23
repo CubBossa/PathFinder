@@ -3,13 +3,10 @@ package de.cubbossa.pathfinder.storage;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
-import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
-import lombok.SneakyThrows;
-
 import java.io.File;
 import java.util.logging.Logger;
+import lombok.SneakyThrows;
 
 public class YamlStorageTest extends StorageTest {
 
@@ -17,34 +14,35 @@ public class YamlStorageTest extends StorageTest {
   @Override
   StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry) {
     new File("./src/test/resources/data/").mkdir();
-    YmlStorage implementation = new YmlStorage(new File("./src/test/resources/data/"), registry, modifierRegistry) {
+    YmlStorage implementation =
+        new YmlStorage(new File("./src/test/resources/data/"), registry, modifierRegistry) {
 
-      @Override
-      public void init() throws Exception {
-        new File("./src/test/resources/data/").mkdir();
-        super.init();
-      }
-
-      @Override
-      public void shutdown() {
-        super.shutdown();
-        deleteDirectory(new File("./src/test/resources/data/"));
-      }
-
-      static boolean deleteDirectory(File path) {
-        if (path.exists()) {
-          File[] files = path.listFiles();
-          for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
-              deleteDirectory(files[i]);
-            } else {
-              files[i].delete();
+          static boolean deleteDirectory(File path) {
+            if (path.exists()) {
+              File[] files = path.listFiles();
+              for (int i = 0; i < files.length; i++) {
+                if (files[i].isDirectory()) {
+                  deleteDirectory(files[i]);
+                } else {
+                  files[i].delete();
+                }
+              }
             }
+            return (path.delete());
           }
-        }
-        return (path.delete());
-      }
-    };
+
+          @Override
+          public void init() throws Exception {
+            new File("./src/test/resources/data/").mkdir();
+            super.init();
+          }
+
+          @Override
+          public void shutdown() {
+            super.shutdown();
+            deleteDirectory(new File("./src/test/resources/data/"));
+          }
+        };
     implementation.setLogger(Logger.getLogger("TESTS"));
     return implementation;
   }

@@ -5,8 +5,6 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.ModifierCommandExtension;
 import dev.jorel.commandapi.ArgumentTree;
-import dev.jorel.commandapi.arguments.FloatArgument;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import java.io.IOException;
 import java.util.Map;
@@ -45,6 +43,7 @@ public class DiscoverableModifierType implements ModifierType<DiscoverableModifi
     if (values.containsKey("name-format") && values.get("name-format") instanceof String string) {
       return new DiscoverableModifier(string);
     }
-    throw new IOException("Could not deserialize DiscoverableModifier, missing 'name-format' attribute.");
+    throw new IOException(
+        "Could not deserialize DiscoverableModifier, missing 'name-format' attribute.");
   }
 }

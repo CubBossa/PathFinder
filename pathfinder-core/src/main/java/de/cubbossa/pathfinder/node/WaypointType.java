@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 public class WaypointType extends AbstractNodeType<Waypoint> {

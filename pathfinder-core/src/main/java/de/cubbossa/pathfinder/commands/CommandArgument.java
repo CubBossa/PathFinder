@@ -10,18 +10,17 @@ import dev.jorel.commandapi.nms.NMS;
 
 public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
 
-  static <S, T extends Argument<S>> CommandArgument<S, T> arg(T argument) {
-    return new CommandArgument<>(argument);
-  }
-
   private final T argument;
   private String wiki;
   private String description;
   private boolean optional;
-
   public CommandArgument(final T argument) {
     super(argument.getNodeName(), argument.getRawType());
     this.argument = argument;
+  }
+
+  static <S, T extends Argument<S>> CommandArgument<S, T> arg(T argument) {
+    return new CommandArgument<>(argument);
   }
 
   @Override

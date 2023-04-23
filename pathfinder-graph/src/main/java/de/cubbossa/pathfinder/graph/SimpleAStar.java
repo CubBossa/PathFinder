@@ -140,19 +140,16 @@ public class SimpleAStar<N> implements PathSolver<N> {
   @Getter
   private class Node implements Comparable<Node> {
     private final N node;
+    private final Map<Node, Double> adjacent = new HashMap<>();
+    private final List<Node> path = new LinkedList<>();
     private Node predecessor;
-
     // total cost
     private double f;
     // distance between current node and start node
     private double g;
     // estimated distance from current to target
     private double h;
-
-
     private boolean settled = false;
-    private final Map<Node, Double> adjacent = new HashMap<>();
-    private final List<Node> path = new LinkedList<>();
 
     public Node(N node) {
       this.node = node;

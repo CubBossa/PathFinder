@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.navigationquery;
 
-import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
-import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathapi.visualizer.query.SearchTermHolder;
+import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
+import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -18,14 +18,16 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class FindQueryParser {
 
-  public <T> Collection<T> parse(String input, List<T> scope, Function<T, Collection<SearchTerm>> seachtermSupplier) throws ParseCancellationException {
+  public <T> Collection<T> parse(String input, List<T> scope,
+                                 Function<T, Collection<SearchTerm>> seachtermSupplier)
+      throws ParseCancellationException {
     return parse(input, scope.stream().map(t -> new Wrapper<>(t, seachtermSupplier)).toList())
         .stream()
         .map(w -> w.element)
         .collect(Collectors.toList());
   }
 
-    public <T extends SearchTermHolder> Collection<T> parse(String input, List<T> scope) {
+  public <T extends SearchTermHolder> Collection<T> parse(String input, List<T> scope) {
 
     CharStream charStream = CharStreams.fromString(input);
     QueryLanguageLexer lexer = new QueryLanguageLexer(charStream);
@@ -52,7 +54,8 @@ public class FindQueryParser {
     }
   }
 
-  private record Wrapper<T>(T element, Function<T, Collection<SearchTerm>> fun) implements SearchTermHolder {
+  private record Wrapper<T>(T element, Function<T, Collection<SearchTerm>> fun)
+      implements SearchTermHolder {
 
     @Override
     public Collection<SearchTerm> getSearchTerms() {

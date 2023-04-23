@@ -1,16 +1,15 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathfinder.visualizer.impl.AdvancedParticleVisualizer;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.visualizer.impl.AdvancedParticleVisualizer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-
 import lombok.Getter;
 import lombok.Setter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 
 @Getter
@@ -93,7 +92,8 @@ public class ScriptLineParticleVisualizer
 
   private Bindings contextBindings(ScriptEngine engine, Context context) {
     Bindings bindings = engine.createBindings();
-    bindings.put("playerdistance", VectorUtils.toBukkit(context.player().getLocation()).distance(context.point()));
+    bindings.put("playerdistance",
+        VectorUtils.toBukkit(context.player().getLocation()).distance(context.point()));
     bindings.put("count", context.count());
     bindings.put("index", context.index());
     bindings.put("step", context.step());

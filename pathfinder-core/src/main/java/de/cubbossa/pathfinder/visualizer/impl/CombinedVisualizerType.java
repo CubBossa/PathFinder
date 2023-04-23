@@ -1,8 +1,9 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
@@ -20,7 +21,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CombinedVisualizer> {

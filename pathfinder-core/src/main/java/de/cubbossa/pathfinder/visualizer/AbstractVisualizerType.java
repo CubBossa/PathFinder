@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.DataStorageException;
-import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -23,7 +23,8 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
  */
 @Getter
 @Setter
-public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>> implements VisualizerType<T> {
+public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>>
+    implements VisualizerType<T> {
 
   /**
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
@@ -50,14 +51,14 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>> 
   }
 
   protected <V extends PathVisualizer<?, ?, ?>> void serialize(Map<String, Object> map,
-                                                            AbstractVisualizer.Property<V, ?> property,
-                                                            V visualizer) {
+                                                               AbstractVisualizer.Property<V, ?> property,
+                                                               V visualizer) {
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
   protected <A, V extends PathVisualizer<?, ?, ?>> ArgumentTree subCommand(String node,
-                                                                        Argument<A> argument,
-                                                                        AbstractVisualizer.Property<V, A> property) {
+                                                                           Argument<A> argument,
+                                                                           AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, objects) -> {
       if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
         VisualizerHandler.getInstance()
@@ -72,8 +73,8 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>> 
   }
 
   protected <A, V extends PathVisualizer<?, ?, ?>> void loadProperty(Map<String, Object> values,
-                                                                  V visualizer,
-                                                                  AbstractVisualizer.Property<V, A> property) {
+                                                                     V visualizer,
+                                                                     AbstractVisualizer.Property<V, A> property) {
     loadProperty(values, property.getKey(), property.getType(),
         a -> property.setValue(visualizer, a));
   }

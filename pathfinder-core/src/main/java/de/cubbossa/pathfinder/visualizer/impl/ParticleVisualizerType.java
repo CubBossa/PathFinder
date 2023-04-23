@@ -1,13 +1,14 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
@@ -19,7 +20,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
@@ -46,7 +46,8 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
             Placeholder.component("particle-steps", Component.text(element.getSchedulerSteps())))
         .resolver(Placeholder.component("amount", Component.text(element.getAmount())))
         .resolver(Formatter.number("speed", element.getSpeed()))
-        .resolver(Placeholder.component("offset", Messages.formatVector(VectorUtils.toInternal(element.getOffset()))))
+        .resolver(Placeholder.component("offset",
+            Messages.formatVector(VectorUtils.toInternal(element.getOffset()))))
         .resolver(Formatter.number("point-distance", element.getPointDistance()))
         .build());
   }

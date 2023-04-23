@@ -1,13 +1,19 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.events.visualizer.VisualizerPropertyChangedEvent;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.HashedRegistry;
-import de.cubbossa.pathfinder.visualizer.impl.*;
+import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizer;
+import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
+import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizer;
+import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
+import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
+import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -19,7 +25,6 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +43,7 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   @Getter
   private static VisualizerHandler instance;
 
-  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?,?, ?>>> visualizerTypes;
+  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?, ?, ?>>> visualizerTypes;
 
   public VisualizerHandler() {
     instance = this;
@@ -67,8 +72,8 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   }
 
   public <V extends PathVisualizer<?, ?, ?>, T> void setProperty(CommandSender sender, V visualizer,
-                                                              AbstractVisualizer.Property<V, T> prop,
-                                                              T val) {
+                                                                 AbstractVisualizer.Property<V, T> prop,
+                                                                 T val) {
     setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
         () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
   }

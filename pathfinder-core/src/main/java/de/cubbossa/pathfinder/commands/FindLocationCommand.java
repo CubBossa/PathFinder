@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.FindModule;
 
 public class FindLocationCommand extends Command {
@@ -18,9 +18,10 @@ public class FindLocationCommand extends Command {
         .executesPlayer((player, args) -> {
           Location target = (Location) args[0];
 
-          FindModule.getInstance().findPath(PathPlugin.wrap(player), target).thenAccept(navigateResult -> {
-            FindModule.printResult(navigateResult, player);
-          });
+          FindModule.getInstance().findPath(PathPlugin.wrap(player), target)
+              .thenAccept(navigateResult -> {
+                FindModule.printResult(navigateResult, player);
+              });
         })
     );
   }

@@ -1,8 +1,8 @@
 package de.cubbossa.pathapi.storage;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public record DiscoverInfo(
     UUID playerId,

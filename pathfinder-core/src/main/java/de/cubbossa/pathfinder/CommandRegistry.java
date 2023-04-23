@@ -3,8 +3,8 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathfinder.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.commands.PathFinderCommand;
-import de.cubbossa.pathfinder.commands.WaypointCommand;
 import de.cubbossa.pathfinder.commands.PathVisualizerCommand;
+import de.cubbossa.pathfinder.commands.WaypointCommand;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIConfig;
 import dev.jorel.commandapi.CommandTree;
@@ -14,13 +14,11 @@ import java.util.List;
 public class CommandRegistry {
 
   private final PathFinder pathFinder;
-
+  private final List<CommandTree> externalCommands;
   private PathFinderCommand pathFinderCommand;
   private NodeGroupCommand nodeGroupCommand;
   private PathVisualizerCommand pathVisualizerCommand;
   private WaypointCommand waypointCommand;
-
-  private final List<CommandTree> externalCommands;
 
   public CommandRegistry(PathFinder pathFinder) {
     this.pathFinder = pathFinder;
@@ -47,7 +45,8 @@ public class CommandRegistry {
     nodeGroupCommand.register();
     pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
     pathVisualizerCommand.register();
-    waypointCommand = new WaypointCommand(pathFinder, () -> plugin.getNodeTypeRegistry().getWaypointNodeType());
+    waypointCommand =
+        new WaypointCommand(pathFinder, () -> plugin.getNodeTypeRegistry().getWaypointNodeType());
     waypointCommand.register();
     externalCommands.forEach(CommandTree::register);
   }

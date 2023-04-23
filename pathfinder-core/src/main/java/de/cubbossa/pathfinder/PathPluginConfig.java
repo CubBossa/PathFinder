@@ -17,12 +17,18 @@ public class PathPluginConfig {
   @Comment("Don't change, specifies plugin version while generating config and helps to identify outdated files.")
   public String version = PathPlugin.getInstance().getDescription().getVersion();
 
+  public enum DistancePolicy {
+    SMALLEST,
+    LARGEST,
+    NATURAL
+  }
+
   @Configuration
   public static class LanguageConfig {
     @Comment("""
         If client language is set to true plugin messages will appear in the according client
         language. You need to add according language files if you want to use this feature.
-        
+                
         See also: https://docs.leonardbausenwein.de/configuration/config.html#client-language""")
     public boolean clientLanguage = false;
     @Comment("""
@@ -32,7 +38,7 @@ public class PathPluginConfig {
                 
         The input value is a string that refers to the name of the language file in the
         /pathfinder/lang/ directory.
-        
+                
         See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language""")
     public String fallbackLanguage = "en_US";
   }
@@ -42,7 +48,7 @@ public class PathPluginConfig {
     @Comment("""
         Choose a database type.
         Valid types: IN_MEMORY, YAML, SQLITE, REMOTE_SQL
-        
+                
         See also: https://docs.leonardbausenwein.de/configuration/config.html#type""")
     public DatabaseType type = DatabaseType.SQLITE;
     public EmbeddedSqlStorageConfig embeddedSql = new EmbeddedSqlStorageConfig();
@@ -52,9 +58,9 @@ public class PathPluginConfig {
   @Configuration
   public static class NavigationConfig {
     @Comment("""
-      Set this to true, if players have to discover nodegroups first to use the /find location
-      <filter> command. If set to false, one can always navigate to every group, even if it hasn't
-      been discovered first.""")
+        Set this to true, if players have to discover nodegroups first to use the /find location
+        <filter> command. If set to false, one can always navigate to every group, even if it hasn't
+        been discovered first.""")
     public boolean requireDiscovery = false;
     public FindLocationCommandConfig findLocation = new FindLocationCommandConfig();
     public NearestLocationSolverConfig nearestLocationSolver = new NearestLocationSolverConfig();
@@ -101,10 +107,10 @@ public class PathPluginConfig {
   @Configuration
   public static class FindLocationCommandConfig {
     @Comment("""
-      The command /findlocation <location> creates a virtual waypoint at the given location
-      and connects it with the nearest waypoint around. The maximum distance can be set to
-      not allow commands with locations far away from the actual roadmap. Default's set to 20.
-      -1 can be set to disable a distance check.""")
+        The command /findlocation <location> creates a virtual waypoint at the given location
+        and connects it with the nearest waypoint around. The maximum distance can be set to
+        not allow commands with locations far away from the actual roadmap. Default's set to 20.
+        -1 can be set to disable a distance check.""")
     public double maxDistance = 20.;
   }
 
@@ -116,7 +122,8 @@ public class PathPluginConfig {
         RAYCAST: Sends multiple raycasts to find the nearest node that is not obstructed by walls.""")
     public LocationWeightSolverPresetEnum algorithm = LocationWeightSolverPresetEnum.RAYCAST;
     public SimpleLocationWeightSolverConfig simpleConfig = new SimpleLocationWeightSolverConfig();
-    public RaycastLocationWeightSolverConfig raycastConfig = new RaycastLocationWeightSolverConfig();
+    public RaycastLocationWeightSolverConfig raycastConfig =
+        new RaycastLocationWeightSolverConfig();
   }
 
   @Configuration
@@ -131,28 +138,22 @@ public class PathPluginConfig {
   @Configuration
   public static class RaycastLocationWeightSolverConfig {
     @Comment("""
-      The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
-      nodes. Default: 10""")
+        The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
+        nodes. Default: 10""")
     public int raycastCount = 10;
     @Comment("""
-      If nodes in the players view direction should be preferred.
-      1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
+        If nodes in the players view direction should be preferred.
+        1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
     public double startLocationDirectionWeight = 1;
     @Comment("""
-      If the node location direction should have an effect on its closeness to the player. Similar
-      to start-direction-weight but for nodes instead of player. Default: 0""")
+        If the node location direction should have an effect on its closeness to the player. Similar
+        to start-direction-weight but for nodes instead of player. Default: 0""")
     public double scopeLocationDirectionWeight = 0;
     @Comment("""
-      Each block between the player/a node and another node will count as the given amount of
-      distance in blocks. Default of 10.000 means that two blocks between a player and a node
-      will count as a distance of 20.000 blocks. While another node that is further away from the
-      player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
+        Each block between the player/a node and another node will count as the given amount of
+        distance in blocks. Default of 10.000 means that two blocks between a player and a node
+        will count as a distance of 20.000 blocks. While another node that is further away from the
+        player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
     public double blockCollisionWeight = 10_000d;
-  }
-
-  public enum DistancePolicy {
-    SMALLEST,
-    LARGEST,
-    NATURAL
   }
 }

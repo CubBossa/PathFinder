@@ -7,7 +7,6 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
@@ -17,15 +16,16 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.module.FindModule;
+import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
-import de.cubbossa.pathfinder.module.FindModule;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.storage.StorageAssistant;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
@@ -213,7 +213,8 @@ public class CustomArgs {
   public Argument<? extends PathVisualizer<?, ?, ?>> pathVisualizerArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       Optional<?> vis =
-          PathFinderProvider.get().getStorage().loadVisualizer(PathPlugin.convert(customArgumentInfo.currentInput()))
+          PathFinderProvider.get().getStorage()
+              .loadVisualizer(PathPlugin.convert(customArgumentInfo.currentInput()))
               .join();
       if (vis.isEmpty()) {
         throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
@@ -340,7 +341,8 @@ public class CustomArgs {
       String nodeName) {
     return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(
         new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
-          return PathFinderProvider.get().getStorage().loadGroup(PathPlugin.convert(info.currentInput())).join()
+          return PathFinderProvider.get().getStorage()
+              .loadGroup(PathPlugin.convert(info.currentInput())).join()
               .orElseThrow();
         })
     ).replaceSuggestions(suggestNamespacedKeys(
@@ -357,7 +359,8 @@ public class CustomArgs {
    */
   public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
       String nodeName) {
-    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), i -> PathPlugin.convert(i.currentInput())).includeSuggestions(
+    return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName),
+        i -> PathPlugin.convert(i.currentInput())).includeSuggestions(
         suggestNamespacedKeys(sender -> PathPlugin.getInstance().getStorage().loadAllGroups()
             .thenApply(nodeGroups -> nodeGroups.stream()
                 .filter(g -> g.hasModifier(DiscoverableModifier.class))
@@ -452,7 +455,8 @@ public class CustomArgs {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
       VisualizerType<? extends PathVisualizer<?, ?, ?>> type =
-          VisualizerHandler.getInstance().getVisualizerType(PathPlugin.convert(customArgumentInfo.currentInput()));
+          VisualizerHandler.getInstance()
+              .getVisualizerType(PathPlugin.convert(customArgumentInfo.currentInput()));
       if (type == null) {
         throw new CustomArgument.CustomArgumentException(
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");

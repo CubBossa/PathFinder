@@ -1,15 +1,15 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.util.CommandUtils;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
@@ -188,7 +188,8 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public <T extends PathVisualizer<T, ?, ?>> void onInfo(CommandSender sender, PathVisualizer<T, ?, ?> visualizer) {
+  public <T extends PathVisualizer<T, ?, ?>> void onInfo(CommandSender sender,
+                                                         PathVisualizer<T, ?, ?> visualizer) {
     if (!(visualizer.getType() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
       return;
     }

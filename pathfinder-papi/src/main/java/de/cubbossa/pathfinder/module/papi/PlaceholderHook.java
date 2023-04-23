@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;

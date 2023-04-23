@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathfinder.commands.CustomArgs;
 import de.cubbossa.pathfinder.commands.ModifierCommandExtension;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.FloatArgument;
@@ -44,6 +43,7 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
     if (values.containsKey("curve-length") && values.get("curve-length") instanceof Float f) {
       return new CurveLengthModifier(f);
     }
-    throw new IOException("Could not deserialize CurveLengthModifier, missing 'curve-length' attribute.");
+    throw new IOException(
+        "Could not deserialize CurveLengthModifier, missing 'curve-length' attribute.");
   }
 }

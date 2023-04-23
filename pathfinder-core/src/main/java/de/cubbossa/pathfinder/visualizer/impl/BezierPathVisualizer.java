@@ -1,11 +1,12 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifier;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
@@ -13,21 +14,19 @@ import de.cubbossa.splinelib.util.Spline;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 @Getter
 @Setter
 public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
-  extends BukkitVisualizer<T, BezierPathVisualizer.BezierData>
+    extends BukkitVisualizer<T, BezierPathVisualizer.BezierData>
     implements PathVisualizer<T, BezierPathVisualizer.BezierData, Player> {
 
   private float pointDistance = .2f;
@@ -111,5 +110,6 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   public record BezierData(List<Location> points) {
   }
 
-  private record PathSegment(World world, List<Node<?>> nodes) {}
+  private record PathSegment(World world, List<Node<?>> nodes) {
+  }
 }

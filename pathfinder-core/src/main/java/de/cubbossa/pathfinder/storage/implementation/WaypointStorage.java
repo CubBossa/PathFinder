@@ -17,7 +17,8 @@ public class WaypointStorage implements NodeDataStorage<Waypoint> {
     if (storage.getImplementation() instanceof WaypointDataStorage wp) {
       implementation = wp;
     } else {
-      throw new IllegalArgumentException("Storage implementation must also include waypoint methods.");
+      throw new IllegalArgumentException(
+          "Storage implementation must also include waypoint methods.");
     }
   }
 

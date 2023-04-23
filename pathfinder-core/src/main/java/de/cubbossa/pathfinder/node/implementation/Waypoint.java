@@ -1,17 +1,15 @@
 package de.cubbossa.pathfinder.node.implementation;
 
 import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import java.util.ArrayList;
+import de.cubbossa.pathapi.node.NodeType;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.Getter;

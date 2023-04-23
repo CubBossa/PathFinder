@@ -2,27 +2,19 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.StorageCache;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-
-import de.cubbossa.pathapi.storage.StorageCache;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class DiscoverInfoCache implements StorageCache<DiscoverInfo> {
-
-  @EqualsAndHashCode
-  @RequiredArgsConstructor
-  private static class Key {
-    private final UUID uuid;
-    private final NamespacedKey key;
-  }
 
   private final Cache<Key, DiscoverInfo> cache;
 
@@ -33,7 +25,8 @@ public class DiscoverInfoCache implements StorageCache<DiscoverInfo> {
         .build();
   }
 
-  public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key, BiFunction<UUID, NamespacedKey, DiscoverInfo> loader) {
+  public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key,
+                                             BiFunction<UUID, NamespacedKey, DiscoverInfo> loader) {
     return Optional.ofNullable(cache.get(new Key(player, key), k -> loader.apply(k.uuid, k.key)));
   }
 
@@ -52,11 +45,19 @@ public class DiscoverInfoCache implements StorageCache<DiscoverInfo> {
   }
 
   public void invalidate(UUID player) {
-    cache.invalidateAll(cache.asMap().keySet().stream().filter(key -> key.uuid.equals(player)).toList());
+    cache.invalidateAll(
+        cache.asMap().keySet().stream().filter(key -> key.uuid.equals(player)).toList());
   }
 
   @Override
   public void invalidateAll() {
     cache.invalidateAll();
+  }
+
+  @EqualsAndHashCode
+  @RequiredArgsConstructor
+  private static class Key {
+    private final UUID uuid;
+    private final NamespacedKey key;
   }
 }

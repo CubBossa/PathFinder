@@ -25,15 +25,14 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class CommandHelpGenerator {
 
-  private static PlainTextComponentSerializer TO_PLAIN = PlainTextComponentSerializer.builder()
-      .build();
-
   private static final TextColor[] ARG_COLORS = {
       NamedTextColor.AQUA,
       NamedTextColor.YELLOW,
       NamedTextColor.GREEN,
       NamedTextColor.LIGHT_PURPLE
   };
+  private static PlainTextComponentSerializer TO_PLAIN = PlainTextComponentSerializer.builder()
+      .build();
 
   public List<ComponentLike> format(ArgumentTreeLike<?, ?> tree) {
     return format(tree, -1);

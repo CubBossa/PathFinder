@@ -57,24 +57,10 @@ import org.jooq.SQLDialect;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.yaml.snakeyaml.Yaml;
 
 public abstract class SqlStorage extends CommonStorage {
 
-  public abstract ConnectionProvider getConnectionProvider();
-
-  private DSLContext create;
-
-  // +-----------------------------------------+
-  // |  Node Table                             |
-  // +-----------------------------------------+
-
   private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper;
-
-  // +-----------------------------------------+
-  // |  Edge Table                             |
-  // +-----------------------------------------+
-
   private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
       record -> {
         UUID startId = record.getStartId();
@@ -85,9 +71,18 @@ public abstract class SqlStorage extends CommonStorage {
       };
 
   // +-----------------------------------------+
+  // |  Node Table                             |
+  // +-----------------------------------------+
+  private final SQLDialect dialect;
+
+  // +-----------------------------------------+
+  // |  Edge Table                             |
+  // +-----------------------------------------+
+  private DSLContext create;
+
+  // +-----------------------------------------+
   // |  Nodegroup Table                        |
   // +-----------------------------------------+
-
   private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
       record -> {
         NamespacedKey key = record.getKey();
@@ -98,6 +93,26 @@ public abstract class SqlStorage extends CommonStorage {
       };
 
   //
+
+  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry,
+                    ModifierRegistry modifierRegistry) {
+    super(nodeTypeRegistry, modifierRegistry);
+    this.dialect = dialect;
+
+    nodeMapper = record -> {
+      UUID id = record.getId();
+      double x = record.getX();
+      double y = record.getY();
+      double z = record.getZ();
+      UUID worldUid = record.getWorld();
+
+      Waypoint node = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), id);
+      node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
+      return node;
+    };
+  }
+
+  public abstract ConnectionProvider getConnectionProvider();
 
   private <T extends PathVisualizer<T, ?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(
       VisualizerType<T> type) {
@@ -119,25 +134,6 @@ public abstract class SqlStorage extends CommonStorage {
       type.deserialize(visualizer, cfg.getValues(false));
 
       return visualizer;
-    };
-  }
-
-  private final SQLDialect dialect;
-
-  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
-    super(nodeTypeRegistry, modifierRegistry);
-    this.dialect = dialect;
-
-    nodeMapper = record -> {
-      UUID id = record.getId();
-      double x = record.getX();
-      double y = record.getY();
-      double z = record.getZ();
-      UUID worldUid = record.getWorld();
-
-      Waypoint node = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), id);
-      node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
-      return node;
     };
   }
 
@@ -529,9 +525,11 @@ public abstract class SqlStorage extends CommonStorage {
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
 
-    Storage.ComparisonResult<Modifier> cmpMod = Storage.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
+    Storage.ComparisonResult<Modifier> cmpMod =
+        Storage.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
     cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
-    cmpMod.toDeleteIfPresent(mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
+    cmpMod.toDeleteIfPresent(
+        mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
     debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
   }
 
@@ -714,13 +712,17 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .forEach(record -> {
           try {
-            ModifierType<?> type = modifierRegistry.getType(record.getModifierClass()).orElseThrow();
-            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(record.getData()));
+            ModifierType<?> type =
+                modifierRegistry.getType(record.getModifierClass()).orElseThrow();
+            YamlConfiguration cfg =
+                YamlConfiguration.loadConfiguration(new StringReader(record.getData()));
             Modifier modifier = type.deserialize(cfg.getValues(false));
             modifiers.add(modifier);
           } catch (Throwable t) {
             if (getLogger() != null) {
-              getLogger().log(Level.WARNING, "Could not load modifier with class name '" + record.getModifierClass() + "', skipping.");
+              getLogger().log(Level.WARNING,
+                  "Could not load modifier with class name '" + record.getModifierClass()
+                      + "', skipping.");
             } else {
               throw new RuntimeException(t);
             }
@@ -742,7 +744,8 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group,
+                                                             Class<M> modifier) {
     create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))

@@ -9,6 +9,8 @@ public interface ModifierRegistry {
 
   Collection<ModifierType<?>> getTypes();
 
-  <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName) throws ClassNotFoundException;
+  <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName)
+      throws ClassNotFoundException;
+
   <M extends Modifier> Optional<ModifierType<M>> getType(Class<M> clazz);
 }

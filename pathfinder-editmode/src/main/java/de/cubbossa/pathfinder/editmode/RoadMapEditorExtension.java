@@ -2,10 +2,10 @@ package de.cubbossa.pathfinder.editmode;
 
 import com.google.auto.service.AutoService;
 import de.cubbossa.menuframework.GUIHandler;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.util.Version;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,14 +17,14 @@ import org.jetbrains.annotations.NotNull;
 @AutoService(PathFinderExtension.class)
 public class RoadMapEditorExtension implements PathFinderExtension {
 
+  private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
+  private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
+
   @NotNull
   @Override
   public NamespacedKey getKey() {
     return PathPlugin.pathfinder("roadmap-editor");
   }
-
-  private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
-  private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
 
   @Override
   public void onEnable(PathFinder plugin) {
@@ -61,19 +61,22 @@ public class RoadMapEditorExtension implements PathFinderExtension {
     if (spigot.compareTo(new Version("1.19")) >= 0) {
       // require 5.0.0 up to build 606
       if (protocolLib.compareTo(new Version("5")) < 0) {
-        throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
-            + " Current ProtocolLib: " + new Version(protocolLibVersion));
+        throw new UnknownDependencyException(
+            "Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
+                + " Current ProtocolLib: " + new Version(protocolLibVersion));
       }
       if (spigot.compareTo(new Version("1.19.3")) >= 0) {
         // search for build 607+
         if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b607")) < 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3."
-          + " Current ProtocolLib: " + new Version(protocolLibVersion));
+          throw new UnknownDependencyException(
+              "Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3."
+                  + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       } else {
         if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b606")) > 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2."
-              + " Current ProtocolLib: " + new Version(protocolLibVersion));
+          throw new UnknownDependencyException(
+              "Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2."
+                  + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       }
     }

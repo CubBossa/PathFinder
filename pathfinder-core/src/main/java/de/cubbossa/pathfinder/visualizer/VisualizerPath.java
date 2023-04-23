@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -90,7 +90,7 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
   private <T> void play(SubPath<T, P> path, PathPlayer<P> player, AtomicInteger interval) {
     long fullTime = 0; //TODO player..getWorld().getFullTime();
     path.visualizer.play(new PathVisualizer.VisualizerContext<>(Lists.newArrayList(player),
-            interval.getAndIncrement(), fullTime, path.data));
+        interval.getAndIncrement(), fullTime, path.data));
   }
 
   public void cancel() {

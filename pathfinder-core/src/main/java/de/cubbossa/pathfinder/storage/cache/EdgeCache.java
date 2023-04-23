@@ -13,13 +13,6 @@ import lombok.RequiredArgsConstructor;
 
 public class EdgeCache {
 
-  @RequiredArgsConstructor
-  @EqualsAndHashCode
-  private static class Key {
-    private final UUID start;
-    private final UUID end;
-  }
-
   public final Cache<Key, Edge> cache;
 
   public EdgeCache() {
@@ -67,6 +60,13 @@ public class EdgeCache {
         .filter(edge -> edge.getEnd().equals(node))
         .map(edge -> new Key(edge.getStart(), edge.getEnd()))
         .toList());
+  }
+
+  @RequiredArgsConstructor
+  @EqualsAndHashCode
+  private static class Key {
+    private final UUID start;
+    private final UUID end;
   }
 
 

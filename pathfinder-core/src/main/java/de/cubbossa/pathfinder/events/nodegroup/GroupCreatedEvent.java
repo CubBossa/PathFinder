@@ -8,20 +8,20 @@ import org.bukkit.event.HandlerList;
 
 public class GroupCreatedEvent extends Event implements NodeGroupCreateEvent {
 
-	private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-	@Getter
-	private final NodeGroup group;
+  @Getter
+  private final NodeGroup group;
 
-	public GroupCreatedEvent(NodeGroup group) {
-		this.group = group;
-	}
+  public GroupCreatedEvent(NodeGroup group) {
+    this.group = group;
+  }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

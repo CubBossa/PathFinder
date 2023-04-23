@@ -2,9 +2,8 @@ package de.cubbossa.pathfinder.util.nodeselection;
 
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
-import java.util.List;
-
 import de.cubbossa.pathfinder.nodeselection.SelectionVisitor;
+import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;

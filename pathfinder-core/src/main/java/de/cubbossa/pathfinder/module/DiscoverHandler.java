@@ -1,16 +1,16 @@
 package de.cubbossa.pathfinder.module;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
+import de.cubbossa.pathfinder.events.discovering.PlayerForgetEvent;
 import de.cubbossa.pathfinder.listener.DiscoverListener;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
-import de.cubbossa.pathfinder.events.discovering.PlayerForgetEvent;
 import de.cubbossa.serializedeffects.EffectHandler;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -32,7 +32,7 @@ public class DiscoverHandler {
   public DiscoverHandler(PathPlugin plugin) {
     instance = this;
     this.plugin = plugin;
-    
+
     if (!plugin.getConfiguration().moduleConfig.discoveryModule) {
       return;
     }
@@ -111,9 +111,10 @@ public class DiscoverHandler {
       }
       DiscoverableModifier discoverable = group.getModifier(DiscoverableModifier.class);
 
-      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date).thenAccept(info -> {
-        playDiscovery(playerId, discoverable);
-      });
+      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date)
+          .thenAccept(info -> {
+            playDiscovery(playerId, discoverable);
+          });
     });
   }
 
@@ -138,7 +139,8 @@ public class DiscoverHandler {
   }
 
   public CompletableFuture<Boolean> hasDiscovered(UUID playerId, NodeGroup group) {
-    return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenApply(Optional::isPresent);
+    return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey())
+        .thenApply(Optional::isPresent);
   }
 
   public float getDiscoveryDistance(UUID playerId, Node<?> node) {

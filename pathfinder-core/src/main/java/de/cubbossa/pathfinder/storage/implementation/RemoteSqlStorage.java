@@ -12,7 +12,8 @@ public class RemoteSqlStorage extends SqlStorage {
 
   private final HikariDataSource dataSource;
 
-  public RemoteSqlStorage(PathPluginConfig.SqlStorageConfig configuration, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+  public RemoteSqlStorage(PathPluginConfig.SqlStorageConfig configuration,
+                          NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
     super(configuration.dialect, nodeTypeRegistry, modifierRegistry);
 
     HikariConfig config = new HikariConfig();

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.World;

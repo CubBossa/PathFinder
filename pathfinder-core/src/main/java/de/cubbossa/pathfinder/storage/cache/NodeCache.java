@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.StorageCache;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +39,8 @@ public class NodeCache implements StorageCache<Node<?>> {
     return nodeCache.values();
   }
 
-  public Collection<Node<?>> getNodes(Collection<UUID> ids, Function<Collection<UUID>, Collection<? extends Node<?>>> loader) {
+  public Collection<Node<?>> getNodes(Collection<UUID> ids,
+                                      Function<Collection<UUID>, Collection<? extends Node<?>>> loader) {
     Collection<Node<?>> result = new HashSet<>();
     SortedSet<UUID> sortedIds = new TreeSet<>(ids);
 
@@ -82,7 +82,7 @@ public class NodeCache implements StorageCache<Node<?>> {
 
   public void invalidate(UUID uuid) {
     nodeCache.remove(uuid);
-    nodeCache. values().forEach(node -> {
+    nodeCache.values().forEach(node -> {
       node.getEdges().removeIf(edge -> edge.getEnd().equals(uuid));
     });
   }

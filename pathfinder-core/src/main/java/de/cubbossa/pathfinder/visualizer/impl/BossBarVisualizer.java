@@ -40,12 +40,14 @@ public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D ext
     return newData(player, nodes, edges, bossBar);
   }
 
-  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar);
+  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges,
+                            BossBar bossBar);
 
   @Override
   public void destruct(PathPlayer<Player> player, D data) {
     super.destruct(player, data);
-    TranslationHandler.getInstance().getAudiences().player(player.getUniqueId()).hideBossBar(data.getBossBar());
+    TranslationHandler.getInstance().getAudiences().player(player.getUniqueId())
+        .hideBossBar(data.getBossBar());
   }
 
   @Getter

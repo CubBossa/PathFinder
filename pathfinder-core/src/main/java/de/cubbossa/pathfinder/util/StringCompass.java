@@ -26,6 +26,7 @@ public class StringCompass implements ComponentLike {
   @Getter
   @Setter
   private Supplier<Double> angle;
+
   public StringCompass(String background, int radius, Supplier<Double> angle) {
     this.background = miniMessage.deserialize(background);
     this.backgroundLength = miniMessage.stripTags(background).length();
@@ -88,13 +89,13 @@ public class StringCompass implements ComponentLike {
                 ? PatternReplacementResult.REPLACE
                 : PatternReplacementResult.CONTINUE).replacement(""));
 
-		/*
+        /*
 
 
-				.replaceText(builder -> builder
-						.match(Pattern.compile(".{" + (backgroundLength * 3 - offset - 2 * radius - 1) + "}"))
-						.once().replacement(""))
-		 */
+                .replaceText(builder -> builder
+                        .match(Pattern.compile(".{" + (backgroundLength * 3 - offset - 2 * radius - 1) + "}"))
+                        .once().replacement(""))
+         */
   }
 
   private record Marker(String key, ComponentLike display, Supplier<Double> angle) {

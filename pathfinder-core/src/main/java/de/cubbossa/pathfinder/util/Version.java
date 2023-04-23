@@ -16,13 +16,14 @@ public class Version implements Comparable<Version> {
    * - v2.1.19.20-b109
    * - v2.1.19.20-SNAPSHOT-b109
    */
-  private static final Pattern VERSION_PATTERN = Pattern.compile("v?([0-9]+(\\.[0-9]+)*)(-SNAPSHOT)?(-b?([0-9]+))?");
+  private static final Pattern VERSION_PATTERN =
+      Pattern.compile("v?([0-9]+(\\.[0-9]+)*)(-SNAPSHOT)?(-b?([0-9]+))?");
 
   private final int[] elements;
   private final boolean snapshot;
   private final Integer build;
 
-  public Version (String versionString) {
+  public Version(String versionString) {
 
     Matcher matcher = VERSION_PATTERN.matcher(versionString);
 
@@ -33,12 +34,14 @@ public class Version implements Comparable<Version> {
         .mapToInt(Integer::parseInt)
         .toArray();
     snapshot = matcher.group(4) != null && matcher.group(4).equalsIgnoreCase("snapshot");
-    build = matcher.group(matcher.groupCount() - 1) == null ? null : Integer.valueOf(matcher.group(matcher.groupCount() - 1).substring(1).replaceAll("[a-z]", ""));
+    build = matcher.group(matcher.groupCount() - 1) == null ? null : Integer.valueOf(
+        matcher.group(matcher.groupCount() - 1).substring(1).replaceAll("[a-z]", ""));
   }
 
   @Override
   public String toString() {
-    String version = "v" + Arrays.stream(elements).mapToObj(value -> value + "").collect(Collectors.joining("."));
+    String version = "v" + Arrays.stream(elements).mapToObj(value -> value + "")
+        .collect(Collectors.joining("."));
     if (snapshot) {
       version += "-SNAPSHOT";
     }

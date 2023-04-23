@@ -1,15 +1,15 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.ExamplesHandler;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 public class VisualizerImportCommand extends CustomLiteralArgument {
 

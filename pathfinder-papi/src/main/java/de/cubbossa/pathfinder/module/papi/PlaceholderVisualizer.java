@@ -1,17 +1,17 @@
 package de.cubbossa.pathfinder.module.papi;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -90,9 +90,11 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public void play(VisualizerContext<Data, Player> context, Location nearestPoint, Location leadPoint,
+  public void play(VisualizerContext<Data, Player> context, Location nearestPoint,
+                   Location leadPoint,
                    Edge nearestEdge) {
-    double distance = VectorUtils.toBukkit(context.player().getLocation()).distance(nearestPoint) + nearestPoint.distance(
+    double distance = VectorUtils.toBukkit(context.player().getLocation()).distance(nearestPoint)
+        + nearestPoint.distance(
         nearestEdge.target());
     int nearestEdgeIndex = context.data().getEdges().indexOf(nearestEdge);
     for (Edge edge : context.data().getEdges()

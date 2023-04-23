@@ -30,7 +30,8 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
   @Override
   public Map<String, Object> serialize(NavigableModifier modifier) {
     return new LinkedHashMapBuilder<String, Object>()
-        .put("search-terms", modifier.getSearchTerms().stream().map(SearchTerm::getIdentifier).collect(Collectors.joining(",")))
+        .put("search-terms", modifier.getSearchTerms().stream().map(SearchTerm::getIdentifier)
+            .collect(Collectors.joining(",")))
         .build();
   }
 
@@ -40,13 +41,16 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
       return new NavigableModifier(Arrays.stream(str.split(","))
           .map(SimpleSearchTerm::new).collect(Collectors.toSet()));
     }
-    throw new IOException("Could not deserialize NavigableModifier, missing 'search-terms' attribute.");
+    throw new IOException(
+        "Could not deserialize NavigableModifier, missing 'search-terms' attribute.");
   }
 
   @Override
-  public ArgumentTree registerAddCommand(ArgumentTree tree, Function<NavigableModifier, CommandExecutor> consumer) {
+  public ArgumentTree registerAddCommand(ArgumentTree tree,
+                                         Function<NavigableModifier, CommandExecutor> consumer) {
     return tree.then(new GreedyStringArgument("search-terms").executes((commandSender, objects) -> {
-      consumer.apply(new NavigableModifier(((String) objects[1]).split(","))).run(commandSender, objects);
+      consumer.apply(new NavigableModifier(((String) objects[1]).split(",")))
+          .run(commandSender, objects);
     }));
   }
 }

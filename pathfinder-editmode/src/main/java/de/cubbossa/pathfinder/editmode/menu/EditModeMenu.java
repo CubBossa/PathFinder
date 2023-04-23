@@ -5,19 +5,20 @@ import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.node.SimpleEdge;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
+import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.serializedeffects.EffectHandler;
@@ -26,7 +27,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -34,7 +34,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -49,7 +48,8 @@ public class EditModeMenu {
   private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group, Collection<NodeType<? extends Node<?>>> types) {
+  public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
+                      Collection<NodeType<? extends Node<?>>> types) {
     this.pathFinder = pathFinder;
     this.key = group;
     this.types = types;
@@ -79,16 +79,17 @@ public class EditModeMenu {
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
-            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(pos)).thenAccept(node -> {
-              if (!(node instanceof Groupable<?> groupable)) {
-                return;
-              }
-              groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
-              pathFinder.getStorage().saveNode(node);
-            }).exceptionally(throwable -> {
-              throwable.printStackTrace();
-              return null;
-            });
+            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(pos))
+                .thenAccept(node -> {
+                  if (!(node instanceof Groupable<?> groupable)) {
+                    return;
+                  }
+                  groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
+                  pathFinder.getStorage().saveNode(node);
+                }).exceptionally(throwable -> {
+                  throwable.printStackTrace();
+                  return null;
+                });
           } else {
             openNodeTypeMenu(context.getPlayer(), pos);
           }
@@ -190,7 +191,8 @@ public class EditModeMenu {
               return;
             }
             Player p = context.getPlayer();
-            Location newLoc = VectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
+            Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
+                .setDirection(p.getLocation().getDirection());
             p.teleport(newLoc);
             p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
           });

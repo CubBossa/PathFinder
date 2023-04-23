@@ -18,7 +18,8 @@ public class SqliteStorage extends SqlStorage {
   private final File file;
   private Connection connection;
 
-  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+  public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry,
+                       ModifierRegistry modifierRegistry) {
     super(SQLDialect.SQLITE, nodeTypeRegistry, modifierRegistry);
     this.file = file;
   }

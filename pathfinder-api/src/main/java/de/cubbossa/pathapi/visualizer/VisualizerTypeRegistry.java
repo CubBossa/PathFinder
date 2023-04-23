@@ -6,7 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 public interface VisualizerTypeRegistry {
 
-  @Nullable <T extends PathVisualizer<T, ?, ?>> VisualizerType<T> getVisualizerType(NamespacedKey key);
+  @Nullable <T extends PathVisualizer<T, ?, ?>> VisualizerType<T> getVisualizerType(
+      NamespacedKey key);
 
   <T extends PathVisualizer<T, ?, ?>> void registerVisualizerType(VisualizerType<T> type);
 

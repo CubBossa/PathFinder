@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.google.auto.service.AutoService;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.PathPlugin;
 import org.jetbrains.annotations.NotNull;
 
 @AutoService(PathFinderExtension.class)

@@ -62,7 +62,8 @@ public class VectorUtils {
   }
 
   public static Location toBukkit(de.cubbossa.pathapi.misc.Location internal) {
-    return new Location(Bukkit.getWorld(internal.getWorld().getUniqueId()), internal.getX(), internal.getY(), internal.getZ());
+    return new Location(Bukkit.getWorld(internal.getWorld().getUniqueId()), internal.getX(),
+        internal.getY(), internal.getZ());
   }
 
   public static Vector toBukkit(de.cubbossa.pathapi.misc.Vector internal) {
@@ -70,7 +71,8 @@ public class VectorUtils {
   }
 
   public static de.cubbossa.pathapi.misc.Location toInternal(Location bukkit) {
-    return new de.cubbossa.pathapi.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(), new WorldImpl(bukkit.getWorld().getUID()));
+    return new de.cubbossa.pathapi.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(),
+        new WorldImpl(bukkit.getWorld().getUID()));
   }
 
   public static de.cubbossa.pathapi.misc.Vector toInternal(Vector bukkit) {

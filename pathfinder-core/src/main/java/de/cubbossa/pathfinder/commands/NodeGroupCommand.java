@@ -1,15 +1,16 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
-import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.StringArgument;
@@ -18,7 +19,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -90,7 +90,8 @@ public class NodeGroupCommand extends Command {
       set = set.then(lit);
       unset = unset.then(CustomArgs.literal(modifier.getSubCommandLiteral())
           .executes((commandSender, objects) -> {
-            removeModifier(commandSender, (SimpleNodeGroup) objects[0], modifier.getModifierClass());
+            removeModifier(commandSender, (SimpleNodeGroup) objects[0],
+                modifier.getModifierClass());
           })
       );
     }
@@ -104,7 +105,8 @@ public class NodeGroupCommand extends Command {
 
   private void listGroups(CommandSender sender, Pagination pagination) {
     getPathfinder().getStorage().loadAllGroups().thenAccept(nodeGroups -> {
-      sender.sendMessage(nodeGroups.stream().map(NodeGroup::getKey).map(NamespacedKey::getKey).collect(Collectors.joining(", ")));
+      sender.sendMessage(nodeGroups.stream().map(NodeGroup::getKey).map(NamespacedKey::getKey)
+          .collect(Collectors.joining(", ")));
     });
     getPathfinder().getStorage().loadGroups(pagination).thenApply(nodeGroups -> {
       CommandUtils.printList(
@@ -129,7 +131,8 @@ public class NodeGroupCommand extends Command {
   private void showGroup(CommandSender sender, SimpleNodeGroup group) {
     TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_INFO.format(TagResolver.builder()
         .tag("key", Messages.formatKey(group.getKey()))
-        .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
+        .resolver(Placeholder.component("nodes",
+            Messages.formatNodeSelection(sender, group.resolve().join())))
         .resolver(Formatter.number("weight", group.getWeight()))
         .build()), sender);
   }

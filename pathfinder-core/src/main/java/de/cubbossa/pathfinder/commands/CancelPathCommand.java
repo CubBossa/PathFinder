@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.commands;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.FindModule;
 import dev.jorel.commandapi.CommandAPI;
 import org.bukkit.entity.Player;

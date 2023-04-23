@@ -32,27 +32,13 @@ import xyz.xenondevs.particle.task.TaskManager;
 @Setter
 public class ParticleEdgeRenderer implements GraphRenderer<Player> {
 
-  @Setter
-  @Getter
-  @RequiredArgsConstructor
-  private static class ParticleEdge {
-    private final UUID startId;
-    private final UUID endId;
-    private final Location start;
-    private final Location end;
-    private boolean directed = true;
-  }
-
-  private Color colorFrom = new Color(255, 0, 0);
-  private Color colorTo = new Color(0, 127, 255);
-
-  private float particleDistance = .3f;
-  private int tickDelay = 5;
-
   private final Collection<Node<?>> rendered;
   private final Collection<ParticleEdge> edges;
   private final Collection<Integer> editModeTasks;
-
+  private Color colorFrom = new Color(255, 0, 0);
+  private Color colorTo = new Color(0, 127, 255);
+  private float particleDistance = .3f;
+  private int tickDelay = 5;
   public ParticleEdgeRenderer() {
     rendered = new HashSet<>();
     edges = new HashSet<>();
@@ -81,7 +67,6 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
             .findAny();
         contained.ifPresentOrElse(e -> {
           e.setDirected(false);
-          edges.remove(e);
         }, () -> {
           futures.add(edge.resolveStart().thenAccept(startNode -> {
             Node<?> endNode = edge.resolveEnd().join();
@@ -143,5 +128,16 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
       throwable.printStackTrace();
       return null;
     });
+  }
+
+  @Setter
+  @Getter
+  @RequiredArgsConstructor
+  private static class ParticleEdge {
+    private final UUID startId;
+    private final UUID endId;
+    private final Location start;
+    private final Location end;
+    private boolean directed = true;
   }
 }

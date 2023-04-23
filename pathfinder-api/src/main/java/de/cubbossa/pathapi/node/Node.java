@@ -1,9 +1,8 @@
 package de.cubbossa.pathapi.node;
 
+import de.cubbossa.pathapi.misc.Location;
 import java.util.Collection;
 import java.util.UUID;
-
-import de.cubbossa.pathapi.misc.Location;
 import org.jetbrains.annotations.NotNull;
 
 public interface Node<N extends Node<N>> extends Comparable<Node<?>> {

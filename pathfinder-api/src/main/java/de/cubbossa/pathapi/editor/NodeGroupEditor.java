@@ -1,7 +1,6 @@
 package de.cubbossa.pathapi.editor;
 
 import de.cubbossa.pathapi.misc.Keyed;
-
 import de.cubbossa.pathapi.misc.PathPlayer;
 
 public interface NodeGroupEditor<Player> extends Keyed {

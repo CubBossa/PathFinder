@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.test;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
 import java.util.Collection;
 import java.util.UUID;
 import lombok.Getter;

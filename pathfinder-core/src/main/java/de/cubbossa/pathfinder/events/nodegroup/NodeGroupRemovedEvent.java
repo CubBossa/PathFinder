@@ -24,7 +24,8 @@ public class NodeGroupRemovedEvent extends Event {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupRemovedEvent(Collection<Groupable<?>> groupables, Collection<SimpleNodeGroup> groups) {
+  public NodeGroupRemovedEvent(Collection<Groupable<?>> groupables,
+                               Collection<SimpleNodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
   }

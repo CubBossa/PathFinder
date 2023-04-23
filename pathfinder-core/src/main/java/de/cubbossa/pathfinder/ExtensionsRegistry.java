@@ -30,7 +30,8 @@ public class ExtensionsRegistry implements de.cubbossa.pathapi.ExtensionsRegistr
   }
 
   public void findServiceExtensions(ClassLoader classLoader) {
-    ServiceLoader<PathFinderExtension> loader = ServiceLoader.load(PathFinderExtension.class, classLoader);
+    ServiceLoader<PathFinderExtension> loader =
+        ServiceLoader.load(PathFinderExtension.class, classLoader);
     loader.forEach(extensions::add);
   }
 

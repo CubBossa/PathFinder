@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.listener;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.FindModule;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

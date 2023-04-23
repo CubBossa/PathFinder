@@ -4,9 +4,9 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathfinder.util.StringCompass;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -66,7 +66,8 @@ public class CompassVisualizer
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges, BossBar bossBar) {
+  public Data newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges,
+                      BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
     compass.addMarker("E", east, 90.);
@@ -76,7 +77,8 @@ public class CompassVisualizer
   }
 
   @Override
-  public void play(VisualizerContext<Data, Player> context, Location nearestPoint, Location leadPoint, Edge nearestEdge) {
+  public void play(VisualizerContext<Data, Player> context, Location nearestPoint,
+                   Location leadPoint, Edge nearestEdge) {
     if (context.data().getCompass().getAngle() == null) {
       Player player = context.player().unwrap();
       context.data().getCompass().setAngle(() -> {

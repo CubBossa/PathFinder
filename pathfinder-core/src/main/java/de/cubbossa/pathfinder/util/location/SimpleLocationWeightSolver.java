@@ -28,11 +28,14 @@ public class SimpleLocationWeightSolver<T> implements LocationWeightSolver<T> {
     int i = 0;
     Map<T, Double> result = new HashMap<>();
     for (Map.Entry<Double, T> tEntry : elements.entrySet()) {
-      if (i >= connections) break;
+      if (i >= connections) {
+        break;
+      }
       result.put(tEntry.getValue(), tEntry.getKey());
     }
     return result;
   }
 
-  record Position(double x, double y, double z) {}
+  record Position(double x, double y, double z) {
+  }
 }

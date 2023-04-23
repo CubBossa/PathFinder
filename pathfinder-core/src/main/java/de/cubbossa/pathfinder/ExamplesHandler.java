@@ -1,9 +1,10 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import lombok.Getter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class ExamplesHandler {
@@ -54,7 +54,8 @@ public class ExamplesHandler {
     return files;
   }
 
-  public CompletableFuture<PathVisualizer<?, ?, ?>> loadVisualizer(ExamplesReader.ExampleFile file) {
+  public CompletableFuture<PathVisualizer<?, ?, ?>> loadVisualizer(
+      ExamplesReader.ExampleFile file) {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values =
           YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);

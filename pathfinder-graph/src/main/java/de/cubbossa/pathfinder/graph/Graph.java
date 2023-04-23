@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.graph;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

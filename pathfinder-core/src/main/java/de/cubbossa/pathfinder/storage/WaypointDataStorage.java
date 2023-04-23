@@ -9,10 +9,15 @@ import java.util.UUID;
 public interface WaypointDataStorage {
 
   Waypoint createAndLoadWaypoint(Location location);
+
   Optional<Waypoint> loadWaypoint(UUID uuid);
+
   Collection<Waypoint> loadWaypoints(Collection<UUID> ids);
+
   Collection<Waypoint> loadAllWaypoints();
+
   void saveWaypoint(Waypoint node);
+
   void deleteWaypoints(Collection<Waypoint> waypoints);
 
 }

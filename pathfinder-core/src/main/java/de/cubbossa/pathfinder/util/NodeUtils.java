@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.splinelib.util.BezierVector;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -89,7 +89,8 @@ public class NodeUtils {
 
     return new BezierVector(
         PathPlugin.SPLINES.convertToVector(vCurrent),
-        PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
+        PathPlugin.SPLINES.convertToVector(
+            vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
         PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
     );
   }

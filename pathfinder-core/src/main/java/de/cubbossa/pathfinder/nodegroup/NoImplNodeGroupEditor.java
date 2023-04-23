@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.nodegroup;
 
 import de.cubbossa.pathapi.editor.NodeGroupEditor;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 
 @RequiredArgsConstructor
 public class NoImplNodeGroupEditor implements NodeGroupEditor<Object> {
@@ -24,7 +24,8 @@ public class NoImplNodeGroupEditor implements NodeGroupEditor<Object> {
 
   @Override
   public boolean toggleEditMode(PathPlayer<Object> player) {
-    throw new IllegalStateException("Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
+    throw new IllegalStateException(
+        "Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
   }
 
   @Override
@@ -34,7 +35,8 @@ public class NoImplNodeGroupEditor implements NodeGroupEditor<Object> {
 
   @Override
   public void setEditMode(PathPlayer<Object> player, boolean activate) {
-    throw new IllegalStateException("Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
+    throw new IllegalStateException(
+        "Cannot use roadmap editor: no editor type registered. Are you using an API version of PathFinder?");
   }
 
   @Override

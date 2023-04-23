@@ -5,12 +5,13 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.nodeselection.NodeSelectionParser;
 import de.cubbossa.pathfinder.nodeselection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
@@ -28,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -78,11 +78,6 @@ public class SelectionUtils {
   public static final NodeSelectionParser.Argument<Integer> OFFSET =
       new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
           .execute(c -> CommandUtils.subList(c.getScope(), c.getValue()));
-
-  private enum SortMethod {
-    NEAREST, FURTHEST, RANDOM, ARBITRARY;
-  }
-
   public static final NodeSelectionParser.Argument<SortMethod> SORT =
       new NodeSelectionParser.Argument<SortMethod>(
           r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
@@ -109,7 +104,6 @@ public class SelectionUtils {
             };
           })
           .suggestStrings(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
-
   public static final NodeSelectionParser.Argument<Collection<NodeGroup>> GROUP =
       new NodeSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
@@ -119,7 +113,8 @@ public class SelectionUtils {
           throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
         }
         Optional<NodeGroup> group = PathPlugin.getInstance().getStorage().loadGroup(key).join();
-        groups.add(group.orElseThrow(() -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
+        groups.add(group.orElseThrow(
+            () -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
         return groups;
       })
           .execute(c -> c.getScope().stream()
@@ -131,7 +126,6 @@ public class SelectionUtils {
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
-
   public static final Map<String, NodeSelectionParser.Argument<?>> SELECTORS = Map.of(
       "id", ID,
       "offset", OFFSET,
@@ -141,7 +135,6 @@ public class SelectionUtils {
       "world", WORLD,
       "group", GROUP
   );
-
   private static final NodeSelectionParser parser = new NodeSelectionParser("node", "n", "nodes");
 
   static {
@@ -173,5 +166,9 @@ public class SelectionUtils {
             suggestionInfo.currentArg(), offset))
         // shift suggestions toward actual command argument offset
         .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
+  }
+
+  private enum SortMethod {
+    NEAREST, FURTHEST, RANDOM, ARBITRARY;
   }
 }

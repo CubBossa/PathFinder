@@ -165,6 +165,7 @@ bukkit {
 
 tasks {
     build {
+        dependsOn(checkstyleMain)
         dependsOn(shadowJar)
     }
     generateGrammarSource {
@@ -295,7 +296,8 @@ jooq {
                         forcedTypes = listOf(
                             ForcedType().apply {
                                 userType = "de.cubbossa.pathapi.misc.NamespacedKey"
-                                converter = "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
+                                converter =
+                                    "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
                                 includeExpression = ".*key|.*type"
                             },
                             ForcedType().apply {

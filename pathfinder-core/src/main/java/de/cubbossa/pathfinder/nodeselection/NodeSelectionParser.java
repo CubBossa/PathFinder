@@ -12,14 +12,6 @@ import org.bukkit.entity.Player;
 
 public class NodeSelectionParser extends SelectionParser<Node<?>, NodeSelectionParser.Context<?>> {
 
-  public static class Argument<T>
-      extends SelectionParser.Argument<T, Node<?>, Context<T>, Argument<T>> {
-
-    public Argument(ArgumentType<T> type) {
-      super(type);
-    }
-  }
-
   public NodeSelectionParser(String identifier, String... alias) {
     super(identifier, alias);
   }
@@ -31,6 +23,14 @@ public class NodeSelectionParser extends SelectionParser<Node<?>, NodeSelectionP
   public <S> Collection<Node<?>> parse(Player player, String input, List<Node<?>> scope)
       throws ParseCancellationException, CommandSyntaxException {
     return super.<S>parse(input, scope, (o, nodes) -> new Context<>(o, scope, player));
+  }
+
+  public static class Argument<T>
+      extends SelectionParser.Argument<T, Node<?>, Context<T>, Argument<T>> {
+
+    public Argument(ArgumentType<T> type) {
+      super(type);
+    }
   }
 
   @Getter

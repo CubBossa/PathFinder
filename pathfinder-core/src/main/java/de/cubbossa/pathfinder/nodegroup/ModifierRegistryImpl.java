@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.nodegroup;
 
-import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,7 +33,8 @@ public class ModifierRegistryImpl implements ModifierRegistry {
   }
 
   @Override
-  public <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName) throws ClassNotFoundException {
+  public <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName)
+      throws ClassNotFoundException {
     return getType((Class<M>) Class.forName(clazzName));
   }
 }

@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.listener;
 
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.pathfinder.storage.Storage;
 import java.time.LocalDateTime;
@@ -21,10 +21,12 @@ public class DiscoverListener implements Listener {
   public void onMove(PlayerMoveEvent event) {
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
       for (NodeGroup group : nodeGroups) {
-        if (!DiscoverHandler.getInstance().fulfillsDiscoveringRequirements(group, PathPlugin.wrap(event.getPlayer()))) {
+        if (!DiscoverHandler.getInstance()
+            .fulfillsDiscoveringRequirements(group, PathPlugin.wrap(event.getPlayer()))) {
           continue;
         }
-        DiscoverHandler.getInstance().discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
+        DiscoverHandler.getInstance()
+            .discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
       }
     });
   }
@@ -33,6 +35,7 @@ public class DiscoverListener implements Listener {
   public void onQuit(PlayerQuitEvent event) {
 
     //TODO cache in interface
-    ((Storage) pathFinder.getStorage()).getDiscoverInfoCache().invalidate(event.getPlayer().getUniqueId());
+    ((Storage) pathFinder.getStorage()).getDiscoverInfoCache()
+        .invalidate(event.getPlayer().getUniqueId());
   }
 }

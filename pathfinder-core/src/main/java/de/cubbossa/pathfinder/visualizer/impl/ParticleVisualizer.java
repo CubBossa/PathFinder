@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import lombok.Getter;
 import lombok.Setter;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
