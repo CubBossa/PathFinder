@@ -241,7 +241,16 @@ public class StorageImpl implements Storage {
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       cache.getGroupCache().write(group);
-      cache.getNodeCache().write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
+      cache.getNodeCache()
+          .write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
+    });
+  }
+
+  @Override
+  public CompletableFuture<Void> modifyGroup(NamespacedKey key, Consumer<NodeGroup> update) {
+    return loadGroup(key).thenApply(Optional::orElseThrow).thenAccept(group -> {
+      update.accept(group);
+      saveGroup(group).join();
     });
   }
 

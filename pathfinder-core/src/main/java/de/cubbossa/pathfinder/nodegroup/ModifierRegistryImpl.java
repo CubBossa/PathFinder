@@ -18,6 +18,10 @@ public class ModifierRegistryImpl implements ModifierRegistry {
 
   @Override
   public <M extends Modifier> void registerModifierType(ModifierType<M> modifierType) {
+    if (modifiers.containsKey(modifierType.getModifierClass())) {
+      throw new IllegalArgumentException(
+          "Another ModifierType with this modifier class has already been registered.");
+    }
     modifiers.put(modifierType.getModifierClass(), modifierType);
   }
 

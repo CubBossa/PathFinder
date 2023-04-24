@@ -92,7 +92,7 @@ public class CacheLayerImpl implements CacheLayer {
     }, new GroupCache() {
       @Override
       public Optional<NodeGroup> getGroup(NamespacedKey key, Function<NamespacedKey, NodeGroup> loader) {
-        return Optional.empty();
+        return Optional.ofNullable(loader.apply(key));
       }
 
       @Override
@@ -150,7 +150,7 @@ public class CacheLayerImpl implements CacheLayer {
       @Override
       public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key,
                                                                            Function<NamespacedKey, T> loader) {
-        return Optional.empty();
+        return Optional.ofNullable(loader.apply(key));
       }
 
       @Override

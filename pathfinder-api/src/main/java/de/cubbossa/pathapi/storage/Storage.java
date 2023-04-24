@@ -134,6 +134,8 @@ public interface Storage {
 
   CompletableFuture<Void> deleteGroup(NodeGroup group);
 
+  CompletableFuture<Void> modifyGroup(NamespacedKey key, Consumer<NodeGroup> update);
+
   // Find Data
   CompletableFuture<DiscoverInfo> createAndLoadDiscoverinfo(UUID player, NamespacedKey key,
                                                             LocalDateTime time);
