@@ -3,6 +3,8 @@ package de.cubbossa.pathapi.misc;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Getter
 @Setter
 public final class Location extends Vector {
@@ -63,5 +65,18 @@ public final class Location extends Vector {
         ", y=" + y +
         ", z=" + z +
         '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Location l = (Location) o;
+    return world.equals(l.world) && l.getX() == x && l.getY() == y && l.getZ() == z;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(world, x, y, z);
   }
 }
