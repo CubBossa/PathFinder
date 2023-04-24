@@ -8,9 +8,10 @@ import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +34,9 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   @Getter
   @Setter
   private @Nullable Logger logger;
+  @Getter
+  @Setter
+  CacheLayer cache;
 
   @Override
   public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
@@ -82,14 +86,14 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     type.saveNode((N) node);
 
     if (before instanceof Groupable<?> gBefore && node instanceof Groupable<?> gAfter) {
-      Storage.ComparisonResult<NodeGroup> cmp =
-          Storage.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
+      StorageImpl.ComparisonResult<NodeGroup> cmp =
+          StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
       cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
       cmp.toDeleteIfPresent(
           nodeGroups -> unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
     }
-    Storage.ComparisonResult<Edge> cmp =
-        Storage.ComparisonResult.compare(before.getEdges(), node.getEdges());
+    StorageImpl.ComparisonResult<Edge> cmp =
+        StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
     cmp.toInsertIfPresent(edges -> {
       for (Edge edge : edges) {
         createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());

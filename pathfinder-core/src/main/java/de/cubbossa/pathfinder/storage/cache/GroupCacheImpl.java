@@ -8,7 +8,8 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.StorageCache;
+import de.cubbossa.pathapi.storage.cache.GroupCache;
+import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,13 +19,13 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class GroupCache implements StorageCache<NodeGroup> {
+public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   private final Cache<NamespacedKey, NodeGroup> cache;
   private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
   private boolean cachedAll = false;
 
-  public GroupCache() {
+  public GroupCacheImpl() {
     this.cache = Caffeine.newBuilder()
         .maximumSize(100)
         .build();
@@ -32,11 +33,13 @@ public class GroupCache implements StorageCache<NodeGroup> {
         .build();
   }
 
+  @Override
   public Optional<NodeGroup> getGroup(NamespacedKey key,
                                       Function<NamespacedKey, NodeGroup> loader) {
     return Optional.ofNullable(cache.get(key, loader));
   }
 
+  @Override
   public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier,
                                                               Function<Class<M>, Collection<NodeGroup>> loader) {
     return cachedAll
@@ -44,6 +47,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
         : loader.apply(modifier);
   }
 
+  @Override
   public List<NodeGroup> getGroups(Pagination pagination,
                                    Function<Pagination, List<NodeGroup>> loader) {
     if (cachedAll) {
@@ -54,6 +58,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
     return loader.apply(pagination);
   }
 
+  @Override
   public Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
                                          Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
     Collection<NodeGroup> result = new HashSet<>();
@@ -70,6 +75,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
     return result;
   }
 
+  @Override
   public Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader) {
     if (cachedAll) {
       return new HashSet<>(cache.asMap().values());
@@ -80,6 +86,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
     return loaded;
   }
 
+  @Override
   public Collection<NodeGroup> getGroups(UUID node, Function<UUID, Collection<NodeGroup>> loader) {
     return nodeGroupCache.get(node, loader);
   }
@@ -88,6 +95,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
     cache.put(group.getKey(), group);
   }
 
+  @Override
   public void write(Node<?> node) {
     if (node instanceof Groupable<?> groupable) {
       nodeGroupCache.put(node.getNodeId(), groupable.getGroups());
@@ -118,6 +126,7 @@ public class GroupCache implements StorageCache<NodeGroup> {
     nodeGroupCache.invalidateAll();
   }
 
+  @Override
   public void invalidate(Node<?> node) {
     nodeGroupCache.invalidate(node.getNodeId());
     if (node instanceof Groupable<?> groupable) {

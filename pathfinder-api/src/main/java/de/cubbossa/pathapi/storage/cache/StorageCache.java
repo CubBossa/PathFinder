@@ -1,4 +1,4 @@
-package de.cubbossa.pathapi.storage;
+package de.cubbossa.pathapi.storage.cache;
 
 public interface StorageCache<E> {
 

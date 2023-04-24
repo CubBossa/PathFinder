@@ -31,7 +31,7 @@ import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
-import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
@@ -521,12 +521,12 @@ public abstract class SqlStorage extends CommonStorage {
         .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.getWeight())
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
         .execute();
-    Storage.ComparisonResult<UUID> cmp = Storage.ComparisonResult.compare(before, group);
+    StorageImpl.ComparisonResult<UUID> cmp = StorageImpl.ComparisonResult.compare(before, group);
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
 
-    Storage.ComparisonResult<Modifier> cmpMod =
-        Storage.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
+    StorageImpl.ComparisonResult<Modifier> cmpMod =
+        StorageImpl.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
     cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
     cmpMod.toDeleteIfPresent(
         mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));

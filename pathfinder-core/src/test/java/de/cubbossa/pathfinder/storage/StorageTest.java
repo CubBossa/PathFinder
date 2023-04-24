@@ -21,6 +21,7 @@ import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
@@ -49,7 +50,7 @@ public abstract class StorageTest {
   protected static MiniMessage miniMessage;
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
-  protected Storage storage;
+  protected StorageImpl storage;
   protected NodeTypeRegistry nodeTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
@@ -78,12 +79,14 @@ public abstract class StorageTest {
   @BeforeEach
   void beforeEach() throws Exception {
     nodeTypeRegistry = new NodeTypeRegistry();
-    storage = new Storage();
+    storage = new StorageImpl();
     storage.setLogger(logger);
-    storage.setImplementation(storage(nodeTypeRegistry, modifierRegistry));
+    StorageImplementation implementation = storage(nodeTypeRegistry, modifierRegistry);
+    storage.setImplementation(implementation);
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
     nodeTypeRegistry.setWaypointNodeType(waypointNodeType);
+    storage.setCache(CacheLayerImpl.empty());
     storage.init();
   }
 

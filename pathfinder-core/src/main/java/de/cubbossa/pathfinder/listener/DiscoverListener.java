@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
-import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImpl;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
@@ -33,9 +33,6 @@ public class DiscoverListener implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-
-    //TODO cache in interface
-    ((Storage) pathFinder.getStorage()).getDiscoverInfoCache()
-        .invalidate(event.getPlayer().getUniqueId());
+    pathFinder.getStorage().getCache().getDiscoverInfoCache().invalidate(event.getPlayer().getUniqueId());
   }
 }

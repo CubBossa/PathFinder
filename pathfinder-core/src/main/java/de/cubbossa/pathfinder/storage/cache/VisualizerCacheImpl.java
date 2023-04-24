@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.storage.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.storage.StorageCache;
+import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import java.util.Collection;
@@ -12,25 +12,27 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
+public class VisualizerCacheImpl implements StorageCache<PathVisualizer<?, ?, ?>>, de.cubbossa.pathapi.storage.cache.VisualizerCache {
 
   private final Cache<NamespacedKey, PathVisualizer<?, ?, ?>> cache;
   private boolean cachedAll = false;
   private Collection<NamespacedKey> cachedTypes = new HashSet<>();
 
-  public VisualizerCache() {
+  public VisualizerCacheImpl() {
     cache = Caffeine.newBuilder()
         .maximumSize(100)
         .build();
   }
 
+  @Override
   public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key,
                                                                        Function<NamespacedKey, T> loader) {
     return Optional.ofNullable((T) cache.get(key, loader));
   }
 
+  @Override
   public Collection<PathVisualizer<?, ?, ?>> getVisualizers(
-      Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
+		  Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }
@@ -39,6 +41,7 @@ public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
     return cache.asMap().values();
   }
 
+  @Override
   public <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
                                                                           Function<VisualizerType<T>, Collection<T>> loader) {
     if (cachedAll || cachedTypes.contains(type.getKey())) {
@@ -53,10 +56,12 @@ public class VisualizerCache implements StorageCache<PathVisualizer<?, ?, ?>> {
     return loaded;
   }
 
+  @Override
   public void write(PathVisualizer<?, ?, ?> visualizer) {
     cache.put(visualizer.getKey(), visualizer);
   }
 
+  @Override
   public void invalidate(PathVisualizer<?, ?, ?> visualizer) {
     cache.invalidate(visualizer.getKey());
   }

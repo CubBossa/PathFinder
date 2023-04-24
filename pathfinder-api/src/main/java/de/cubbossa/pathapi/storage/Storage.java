@@ -40,6 +40,10 @@ public interface Storage {
    */
   StorageImplementation getImplementation();
 
+  CacheLayer getCache();
+
+  void setCache(CacheLayer cacheLayer);
+
   /**
    * Loads the node type for a node with given {@link UUID}.
    *

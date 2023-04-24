@@ -28,6 +28,10 @@ public interface StorageImplementation {
 
   void setLogger(Logger logger);
 
+  CacheLayer getCache();
+
+  void setCache(CacheLayer cacheLayer);
+
   // Node Type
   void saveNodeType(UUID node, NodeType<? extends Node<?>> type);
 

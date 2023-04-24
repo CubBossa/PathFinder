@@ -22,7 +22,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
-import de.cubbossa.pathfinder.storage.Storage;
+import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -58,7 +58,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   private BukkitAudiences audiences;
   private MiniMessage miniMessage;
   private File effectsFile;
-  private Storage storage;
+  private StorageImpl storage;
   @Setter
   private PathPluginConfig configuration;
   private EventDispatcher eventDispatcher;
@@ -66,7 +66,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     instance = this;
     PathFinderProvider.setPathFinder(this);
 
-    storage = new Storage();
+    storage = new StorageImpl();
 
     nodeTypeRegistry = new NodeTypeRegistry();
     modifierRegistry = new ModifierRegistryImpl();

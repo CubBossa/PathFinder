@@ -9,14 +9,14 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.storage.cache.DiscoverInfoCache;
-import de.cubbossa.pathfinder.storage.cache.GroupCache;
-import de.cubbossa.pathfinder.storage.cache.NodeCache;
-import de.cubbossa.pathfinder.storage.cache.VisualizerCache;
+import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -37,12 +37,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Storage implements de.cubbossa.pathapi.storage.Storage {
+public class StorageImpl implements Storage {
 
-  private final NodeCache nodeCache = new NodeCache();
-  private final GroupCache groupCache = new GroupCache();
-  private final VisualizerCache visualizerCache = new VisualizerCache();
-  private final DiscoverInfoCache discoverInfoCache = new DiscoverInfoCache();
+  private CacheLayer cache;
   private @Nullable EventDispatcher eventDispatcher;
   private @Nullable Logger logger;
   private StorageImplementation implementation;
@@ -51,17 +48,21 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     return Optional.ofNullable(eventDispatcher);
   }
 
+  public StorageImpl() {
+    cache = new CacheLayerImpl();
+  }
+
   @Override
   public void init() throws Exception {
+    implementation.setCache(cache);
     implementation.init();
   }
 
   @Override
   public void shutdown() {
-    nodeCache.invalidateAll();
-    groupCache.invalidateAll();
-    visualizerCache.invalidateAll();
-    discoverInfoCache.invalidateAll();
+    for (StorageCache<?> cache : this.cache) {
+      cache.invalidateAll();
+    }
     implementation.shutdown();
   }
 
@@ -100,7 +101,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
       N node = implementation.createAndLoadNode(type, location);
-      nodeCache.write(node);
+      cache.getNodeCache().write(node);
       eventDispatcher().ifPresent(e -> e.dispatchNodeCreate(node));
       return node;
     });
@@ -110,12 +111,12 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id) {
     debug("Storage: 'loadNode(" + id + ")'");
     return asyncFuture(() -> {
-      Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
+      Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
       if (opt.isPresent()) {
         return opt;
       }
       Optional<N> node = implementation.loadNode(id);
-      node.ifPresent(nodeCache::write);
+      node.ifPresent(cache.getNodeCache()::write);
       return node;
     });
   }
@@ -124,7 +125,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
     debug("Storage: 'loadNode(" + type.getKey() + ", " + id + ")'");
     return asyncFuture(() -> {
-      Optional<N> opt = (Optional<N>) nodeCache.getNode(id);
+      Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
       if (opt.isPresent()) {
         return opt;
       }
@@ -135,14 +136,14 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   @Override
   public CompletableFuture<Collection<Node<?>>> loadNodes() {
     debug("Storage: 'loadNodes()'");
-    return asyncFuture(() -> nodeCache.getAllNodes(implementation::loadNodes));
+    return asyncFuture(() -> cache.getNodeCache().getAllNodes(implementation::loadNodes));
   }
 
   @Override
   public CompletableFuture<Collection<Node<?>>> loadNodes(Collection<UUID> ids) {
     debug("Storage: 'loadNodes(" + ids.stream().map(UUID::toString).collect(Collectors.joining(","))
         + ")'");
-    return asyncFuture(() -> nodeCache.getNodes(ids, implementation::loadNodes));
+    return asyncFuture(() -> cache.getNodeCache().getNodes(ids, implementation::loadNodes));
   }
 
   @Override
@@ -151,8 +152,8 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
       eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
       implementation.saveNode(node);
-      nodeCache.write(node);
-      groupCache.write(node);
+      cache.getNodeCache().write(node);
+      cache.getGroupCache().write(node);
     });
   }
 
@@ -179,8 +180,8 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     return asyncFuture(() -> {
       eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
       implementation.deleteNodes(nodes);
-      uuids.forEach(nodeCache::invalidate);
-      nodes.forEach(groupCache::invalidate);
+      uuids.forEach(cache.getNodeCache()::invalidate);
+      nodes.forEach(cache.getGroupCache()::invalidate);
     });
   }
 
@@ -190,7 +191,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     debug("Storage: 'createAndLoadGroup(" + key + ")'");
     return asyncFuture(() -> {
       NodeGroup group = implementation.createAndLoadGroup(key);
-      groupCache.write(group);
+      cache.getGroupCache().write(group);
       return group;
     });
   }
@@ -199,39 +200,39 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key) {
     debug("Storage: 'loadGroup(" + key + ")'");
     return asyncFuture(
-        () -> groupCache.getGroup(key, k -> implementation.loadGroup(k).orElse(null)));
+        () -> cache.getGroupCache().getGroup(key, k -> implementation.loadGroup(k).orElse(null)));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
     debug("Storage: 'loadGroups(" + pagination + ")'");
-    return asyncFuture(() -> groupCache.getGroups(pagination, implementation::loadGroups));
+    return asyncFuture(() -> cache.getGroupCache().getGroups(pagination, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys) {
     debug("Storage: 'loadGroups(" + keys.stream().map(NamespacedKey::toString)
         .collect(Collectors.joining(",")) + ")'");
-    return asyncFuture(() -> groupCache.getGroups(keys, implementation::loadGroups));
+    return asyncFuture(() -> cache.getGroupCache().getGroups(keys, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node) {
     debug("Storage: 'loadGroups(" + node + ")'");
-    return asyncFuture(() -> groupCache.getGroups(node, implementation::loadGroups));
+    return asyncFuture(() -> cache.getGroupCache().getGroups(node, implementation::loadGroups));
   }
 
   @Override
   public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(
       Class<M> modifier) {
     debug("Storage: 'loadGroups(" + modifier + ")'");
-    return asyncFuture(() -> groupCache.getGroups(modifier, implementation::loadGroups));
+    return asyncFuture(() -> cache.getGroupCache().getGroups(modifier, implementation::loadGroups));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadAllGroups() {
     debug("Storage: 'loadAllGroups()'");
-    return asyncFuture(() -> groupCache.getGroups(implementation::loadAllGroups));
+    return asyncFuture(() -> cache.getGroupCache().getGroups(implementation::loadAllGroups));
   }
 
   @Override
@@ -239,8 +240,8 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     debug("Storage: 'saveGroup(" + group.getKey() + ")'");
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
-      groupCache.write(group);
-      nodeCache.write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
+      cache.getGroupCache().write(group);
+      cache.getNodeCache().write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
     });
   }
 
@@ -249,7 +250,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
     debug("Storage: 'deleteGroup(" + group.getKey() + ")'");
     return asyncFuture(() -> {
       implementation.deleteGroup(group);
-      groupCache.invalidate(group);
+      cache.getGroupCache().invalidate(group);
     });
   }
 
@@ -259,7 +260,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
                                                                    LocalDateTime time) {
     return asyncFuture(() -> {
       DiscoverInfo info = implementation.createAndLoadDiscoverinfo(player, key, time);
-      discoverInfoCache.write(info);
+      cache.getDiscoverInfoCache().write(info);
       return info;
     });
   }
@@ -268,7 +269,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Optional<DiscoverInfo>> loadDiscoverInfo(UUID player,
                                                                     NamespacedKey key) {
     return asyncFuture(() -> {
-      return discoverInfoCache.getDiscovery(player, key,
+      return cache.getDiscoverInfoCache().getDiscovery(player, key,
           (uuid, key1) -> implementation.loadDiscoverInfo(uuid, key1).get());
     });
   }
@@ -277,7 +278,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info) {
     return asyncFuture(() -> {
       implementation.deleteDiscoverInfo(info);
-      discoverInfoCache.invalidate(info);
+      cache.getDiscoverInfoCache().invalidate(info);
     });
   }
 
@@ -293,14 +294,14 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
       VisualizerType<T> type, NamespacedKey key) {
     return asyncFuture(() -> {
       T visualizer = type.getStorage().createAndLoadVisualizer(key);
-      visualizerCache.write(visualizer);
+      cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });
   }
 
   @Override
   public CompletableFuture<Collection<PathVisualizer<?, ?, ?>>> loadVisualizers() {
-    return asyncFuture(() -> visualizerCache.getVisualizers(() -> {
+    return asyncFuture(() -> cache.getVisualizerCache().getVisualizers(() -> {
       Collection<PathVisualizer<?, ?, ?>> visualizers = new HashSet<>();
       for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
@@ -313,7 +314,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
       VisualizerType<T> type) {
     return asyncFuture(
-        () -> visualizerCache.getVisualizers(type, t -> implementation.loadVisualizers(t).values())
+        () -> cache.getVisualizerCache().getVisualizers(type, t -> implementation.loadVisualizers(t).values())
             .stream()
             .collect(Collectors.toMap(Keyed::getKey, t -> t)));
   }
@@ -321,7 +322,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   @Override
   public <T extends PathVisualizer<T, D, ?>, D> CompletableFuture<Optional<T>> loadVisualizer(
       NamespacedKey key) {
-    return asyncFuture(() -> visualizerCache.getVisualizer(key, k -> {
+    return asyncFuture(() -> cache.getVisualizerCache().getVisualizer(key, k -> {
       for (VisualizerType<? extends PathVisualizer<?, ?, ?>> type : VisualizerHandler.getInstance()
           .getVisualizerTypes()) {
         Optional<PathVisualizer<?, ?, ?>> opt =
@@ -338,7 +339,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.saveVisualizer(visualizer);
-      visualizerCache.write(visualizer);
+      cache.getVisualizerCache().write(visualizer);
     });
   }
 
@@ -346,7 +347,7 @@ public class Storage implements de.cubbossa.pathapi.storage.Storage {
   public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.deleteVisualizer(visualizer);
-      visualizerCache.invalidate(visualizer);
+      cache.getVisualizerCache().invalidate(visualizer);
     });
   }
 

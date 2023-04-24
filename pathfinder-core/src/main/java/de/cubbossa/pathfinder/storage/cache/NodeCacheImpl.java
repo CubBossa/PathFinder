@@ -3,7 +3,8 @@ package de.cubbossa.pathfinder.storage.cache;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.StorageCache;
+import de.cubbossa.pathapi.storage.cache.NodeCache;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,13 +16,13 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class NodeCache implements StorageCache<Node<?>> {
+public class NodeCacheImpl implements NodeCache {
 
   private final Map<UUID, Node<?>> nodeCache;
 
   private boolean allCached = false;
 
-  public NodeCache() {
+  public NodeCacheImpl() {
     nodeCache = new HashMap<>();
   }
 
