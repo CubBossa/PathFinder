@@ -37,13 +37,7 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import java.io.StringReader;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -371,30 +365,22 @@ public abstract class SqlStorage extends CommonStorage {
     return create
         .selectFrom(PATHFINDER_WAYPOINTS)
         .where(PATHFINDER_WAYPOINTS.ID.eq(uuid))
-        .fetch(nodeMapper).stream()
-        .map(this::insertGroups)
-        .map(this::insertEdges).findFirst();
+        .fetch(nodeMapper).stream().findFirst();
   }
 
   @Override
   public Collection<Waypoint> loadAllWaypoints() {
-    return create
+    return new ArrayList<>(create
         .selectFrom(PATHFINDER_WAYPOINTS)
-        .fetch(nodeMapper).stream()
-        .map(this::insertGroups)
-        .map(this::insertEdges)
-        .collect(Collectors.toList());
+        .fetch(nodeMapper));
   }
 
   @Override
   public Collection<Waypoint> loadWaypoints(Collection<UUID> uuids) {
-    return create
+    return new ArrayList<>(create
         .selectFrom(PATHFINDER_WAYPOINTS)
         .where(PATHFINDER_WAYPOINTS.ID.in(uuids))
-        .fetch(nodeMapper).stream()
-        .map(this::insertGroups)
-        .map(this::insertEdges)
-        .collect(Collectors.toList());
+        .fetch(nodeMapper));
   }
 
   @Override
@@ -474,18 +460,6 @@ public abstract class SqlStorage extends CommonStorage {
           group.addAll(loadGroupNodes(group));
           return group;
         });
-  }
-
-  private Waypoint insertGroups(Waypoint waypoint) {
-    debug(" > Storage Implementation: 'insertGroups(" + waypoint.getNodeId() + ")'");
-    loadGroups(waypoint.getNodeId()).forEach(waypoint::addGroup);
-    return waypoint;
-  }
-
-  private Waypoint insertEdges(Waypoint waypoint) {
-    debug(" > Storage Implementation: 'insertEdges(" + waypoint.getNodeId() + ")'");
-    waypoint.getEdges().addAll(loadEdgesFrom(waypoint.getNodeId()));
-    return waypoint;
   }
 
   @Override

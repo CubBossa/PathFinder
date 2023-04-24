@@ -11,6 +11,7 @@ import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import java.util.Collection;
@@ -38,6 +39,20 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   @Setter
   CacheLayer cache;
 
+  private Node<?> insertGroups(Node<?> node) {
+    if (node instanceof Groupable<?> groupable) {
+      debug(" > Storage Implementation: 'insertGroups(" + node.getNodeId() + ")'");
+      loadGroups(node.getNodeId()).forEach(groupable::addGroup);
+    }
+    return node;
+  }
+
+  private Node<?> insertEdges(Node<?> node) {
+    debug(" > Storage Implementation: 'insertEdges(" + node.getNodeId() + ")'");
+    node.getEdges().addAll(loadEdgesFrom(node.getNodeId()));
+    return node;
+  }
+
   @Override
   public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
     debug(
@@ -52,7 +67,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     debug(" > Storage Implementation: 'loadNode(" + id + ")'");
     Optional<NodeType<N>> type = loadNodeType(id);
     if (type.isPresent()) {
-      return type.get().loadNode(id);
+      return (Optional<N>) type.get().loadNode(id).map(this::insertEdges).map(this::insertGroups);
     }
     throw new IllegalStateException("No type found for node with UUID '" + id + "'.");
   }
@@ -62,6 +77,8 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     debug(" > Storage Implementation: 'loadNodes()'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadAllNodes().stream())
+        .map(this::insertEdges)
+        .map(this::insertGroups)
         .collect(Collectors.toList());
   }
 
@@ -71,6 +88,8 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
         .map(UUID::toString).collect(Collectors.joining(", ")) + ")'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadNodes(ids).stream())
+        .map(this::insertEdges)
+        .map(this::insertGroups)
         .collect(Collectors.toList());
   }
 

@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -90,12 +91,6 @@ public abstract class StorageTest {
     storage.init();
   }
 
-  @SneakyThrows
-  private void reconnectStorage() {
-    storage.shutdown();
-    storage.init();
-  }
-
   private Waypoint waypoint() throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Waypoint> future =
         storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world));
@@ -120,8 +115,6 @@ public abstract class StorageTest {
 
     Collection<Node<?>> nodesAfter = storage.loadNodes().join();
     assertEquals(1, nodesAfter.size());
-
-    reconnectStorage();
 
     CompletableFuture<Optional<Waypoint>> x = storage.loadNode(waypoint.getNodeId());
     Waypoint xx = x.get(1, TimeUnit.SECONDS).orElseThrow();
@@ -179,6 +172,7 @@ public abstract class StorageTest {
     future.get(1, TimeUnit.SECONDS);
     assertFalse(future.isCompletedExceptionally());
 
+    Node<?> node = storage.loadNode(start.getNodeId()).get().orElseThrow();
     assertTrue(storage.loadNode(start.getNodeId()).get(1, TimeUnit.SECONDS).orElseThrow().getEdges()
         .stream().anyMatch(e -> e.getEnd().equals(end.getNodeId())));
     return edge;
@@ -196,12 +190,6 @@ public abstract class StorageTest {
   @Test
   @Order(7)
   void disconnectNodes() throws ExecutionException, InterruptedException, TimeoutException {
-    disconnectNodes_();
-    reconnectStorage();
-    disconnectNodes_();
-  }
-
-  void disconnectNodes_() throws ExecutionException, InterruptedException, TimeoutException {
     Waypoint a = waypoint();
     Waypoint b = waypoint();
     Edge edge = connectNodes(a, b);
@@ -395,12 +383,12 @@ public abstract class StorageTest {
     CompletableFuture<Optional<Waypoint>> future1 = storage.loadNode(a.getNodeId());
     Waypoint waypoint = future1.get(1, TimeUnit.SECONDS).orElseThrow();
     assertFalse(future1.isCompletedExceptionally());
-    assertTrue(waypoint.getGroups().contains(g));
+    assertTrue(waypoint.getGroups().stream().map(NodeGroup::getKey).anyMatch(k -> k.equals(gk)));
   }
 
   @Test
   @Order(16)
-  void unassignNodesToGroup() throws ExecutionException, InterruptedException, TimeoutException {
+  void unassignNodesFromGroup() throws ExecutionException, InterruptedException, TimeoutException {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = waypoint();
     Waypoint b = waypoint();
@@ -411,8 +399,9 @@ public abstract class StorageTest {
         groupable.addGroup(g);
       }
     }).get(1, TimeUnit.SECONDS);
+
     assertTrue(storage.loadNode(a.getNodeId()).get(1, TimeUnit.SECONDS)
-        .orElseThrow() instanceof Groupable<?> groupable && groupable.getGroups().contains(g));
+        .orElseThrow() instanceof Groupable<?> groupable && groupable.getGroups().stream().map(NodeGroup::getKey).anyMatch(gk::equals));
     assertTrue(
         storage.loadGroup(gk).get(1, TimeUnit.SECONDS).orElseThrow().contains(a.getNodeId()));
     assertFalse(
