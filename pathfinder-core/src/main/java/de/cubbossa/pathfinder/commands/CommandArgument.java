@@ -14,6 +14,7 @@ public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
   private String wiki;
   private String description;
   private boolean optional;
+
   public CommandArgument(final T argument) {
     super(argument.getNodeName(), argument.getRawType());
     this.argument = argument;

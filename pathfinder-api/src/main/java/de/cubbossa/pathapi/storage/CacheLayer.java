@@ -1,14 +1,18 @@
 package de.cubbossa.pathapi.storage;
 
-import de.cubbossa.pathapi.storage.cache.*;
+import de.cubbossa.pathapi.storage.cache.DiscoverInfoCache;
+import de.cubbossa.pathapi.storage.cache.GroupCache;
+import de.cubbossa.pathapi.storage.cache.NodeCache;
+import de.cubbossa.pathapi.storage.cache.StorageCache;
+import de.cubbossa.pathapi.storage.cache.VisualizerCache;
 
 public interface CacheLayer extends Iterable<StorageCache<?>> {
 
-		NodeCache getNodeCache();
+  NodeCache getNodeCache();
 
-		GroupCache getGroupCache();
+  GroupCache getGroupCache();
 
-		VisualizerCache getVisualizerCache();
+  VisualizerCache getVisualizerCache();
 
-		DiscoverInfoCache getDiscoverInfoCache();
+  DiscoverInfoCache getDiscoverInfoCache();
 }

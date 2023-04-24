@@ -12,7 +12,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class VisualizerCacheImpl implements StorageCache<PathVisualizer<?, ?, ?>>, de.cubbossa.pathapi.storage.cache.VisualizerCache {
+public class VisualizerCacheImpl
+    implements StorageCache<PathVisualizer<?, ?, ?>>, de.cubbossa.pathapi.storage.cache.VisualizerCache {
 
   private final Cache<NamespacedKey, PathVisualizer<?, ?, ?>> cache;
   private boolean cachedAll = false;
@@ -32,7 +33,7 @@ public class VisualizerCacheImpl implements StorageCache<PathVisualizer<?, ?, ?>
 
   @Override
   public Collection<PathVisualizer<?, ?, ?>> getVisualizers(
-		  Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
+      Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }

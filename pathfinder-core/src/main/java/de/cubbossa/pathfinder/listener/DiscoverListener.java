@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
-import de.cubbossa.pathfinder.storage.StorageImpl;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;

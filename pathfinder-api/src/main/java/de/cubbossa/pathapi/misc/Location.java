@@ -1,9 +1,8 @@
 package de.cubbossa.pathapi.misc;
 
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -69,8 +68,12 @@ public final class Location extends Vector {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     Location l = (Location) o;
     return world.equals(l.world) && l.getX() == x && l.getY() == y && l.getZ() == z;
   }

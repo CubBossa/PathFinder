@@ -76,12 +76,9 @@ public class FindModule implements Listener, PathFinderExtension {
   public static void printResult(FindModule.NavigateResult result, Player player) {
     switch (result) {
       case SUCCESS -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND, player);
-      case FAIL_BLOCKED ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
-      case FAIL_EMPTY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
-      case FAIL_TOO_FAR_AWAY ->
-          TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
+      case FAIL_BLOCKED -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_BLOCKED, player);
+      case FAIL_EMPTY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_EMPTY, player);
+      case FAIL_TOO_FAR_AWAY -> TranslationHandler.getInstance().sendMessage(Messages.CMD_FIND_TOO_FAR, player);
     }
   }
 

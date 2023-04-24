@@ -9,6 +9,7 @@ public final class NamespacedKey {
   private static final char SEPARATOR = ':';
   private final String namespace;
   private final String key;
+
   public NamespacedKey(String namespace, String key) {
     this.namespace = namespace;
     this.key = key;

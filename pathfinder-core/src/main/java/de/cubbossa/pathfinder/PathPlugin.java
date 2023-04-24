@@ -62,6 +62,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   @Setter
   private PathPluginConfig configuration;
   private EventDispatcher eventDispatcher;
+
   public PathPlugin() {
     instance = this;
     PathFinderProvider.setPathFinder(this);

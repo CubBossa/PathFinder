@@ -33,7 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -401,7 +400,8 @@ public abstract class StorageTest {
     }).get(1, TimeUnit.SECONDS);
 
     assertTrue(storage.loadNode(a.getNodeId()).get(1, TimeUnit.SECONDS)
-        .orElseThrow() instanceof Groupable<?> groupable && groupable.getGroups().stream().map(NodeGroup::getKey).anyMatch(gk::equals));
+        .orElseThrow() instanceof Groupable<?> groupable &&
+        groupable.getGroups().stream().map(NodeGroup::getKey).anyMatch(gk::equals));
     assertTrue(
         storage.loadGroup(gk).get(1, TimeUnit.SECONDS).orElseThrow().contains(a.getNodeId()));
     assertFalse(

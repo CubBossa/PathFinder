@@ -44,12 +44,12 @@ public class StorageImpl implements Storage {
   private @Nullable Logger logger;
   private StorageImplementation implementation;
 
-  private Optional<EventDispatcher> eventDispatcher() {
-    return Optional.ofNullable(eventDispatcher);
-  }
-
   public StorageImpl() {
     cache = new CacheLayerImpl();
+  }
+
+  private Optional<EventDispatcher> eventDispatcher() {
+    return Optional.ofNullable(eventDispatcher);
   }
 
   @Override

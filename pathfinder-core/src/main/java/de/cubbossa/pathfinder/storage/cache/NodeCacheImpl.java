@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.NodeCache;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

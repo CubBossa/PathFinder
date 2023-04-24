@@ -39,6 +39,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   private Color colorTo = new Color(0, 127, 255);
   private float particleDistance = .3f;
   private int tickDelay = 5;
+
   public ParticleEdgeRenderer() {
     rendered = new HashSet<>();
     edges = new HashSet<>();

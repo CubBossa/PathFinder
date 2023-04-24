@@ -11,7 +11,6 @@ import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import java.util.Collection;
@@ -34,10 +33,10 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   final ModifierRegistry modifierRegistry;
   @Getter
   @Setter
-  private @Nullable Logger logger;
+  CacheLayer cache;
   @Getter
   @Setter
-  CacheLayer cache;
+  private @Nullable Logger logger;
 
   private Node<?> insertGroups(Node<?> node) {
     if (node instanceof Groupable<?> groupable) {
