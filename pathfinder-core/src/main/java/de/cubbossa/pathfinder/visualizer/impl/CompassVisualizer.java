@@ -17,7 +17,7 @@ import org.bukkit.entity.Player;
 @Getter
 @Setter
 public class CompassVisualizer
-    extends BossBarVisualizer<CompassVisualizer, CompassVisualizer.Data> {
+    extends BossBarVisualizer<CompassVisualizer.Data> {
 
   public static final Property<CompassVisualizer, Integer> PROP_RADIUS =
       new SimpleProperty<>("radius", Integer.class, true,
@@ -61,12 +61,7 @@ public class CompassVisualizer
   }
 
   @Override
-  public VisualizerType<CompassVisualizer> getType() {
-    return VisualizerHandler.COMPASS_VISUALIZER_TYPE;
-  }
-
-  @Override
-  public Data newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges,
+  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges,
                       BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
@@ -97,7 +92,7 @@ public class CompassVisualizer
   public static class Data extends BossBarVisualizer.Data {
     private final StringCompass compass;
 
-    public Data(List<Node<?>> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
+    public Data(List<Node> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
       super(nodes, edges, bossBar);
       this.compass = compass;
     }

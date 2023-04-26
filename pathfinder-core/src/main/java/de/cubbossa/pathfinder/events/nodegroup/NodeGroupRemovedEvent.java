@@ -17,14 +17,14 @@ public class NodeGroupRemovedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable<?>> groupables;
+  private final Collection<Groupable> groupables;
   private final Collection<SimpleNodeGroup> groups;
 
-  public NodeGroupRemovedEvent(Groupable<?> groupables, SimpleNodeGroup groups) {
+  public NodeGroupRemovedEvent(Groupable groupables, SimpleNodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupRemovedEvent(Collection<Groupable<?>> groupables,
+  public NodeGroupRemovedEvent(Collection<Groupable> groupables,
                                Collection<SimpleNodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);

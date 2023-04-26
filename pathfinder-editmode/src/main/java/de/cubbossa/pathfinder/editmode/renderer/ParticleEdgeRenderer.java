@@ -32,7 +32,7 @@ import xyz.xenondevs.particle.task.TaskManager;
 @Setter
 public class ParticleEdgeRenderer implements GraphRenderer<Player> {
 
-  private final Collection<Node<?>> rendered;
+  private final Collection<Node> rendered;
   private final Collection<ParticleEdge> edges;
   private final Collection<Integer> editModeTasks;
   private Color colorFrom = new Color(255, 0, 0);
@@ -56,11 +56,11 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   }
 
   @Override
-  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
 
     rendered.addAll(nodes);
     Collection<CompletableFuture<Void>> futures = new HashSet<>();
-    for (Node<?> node : nodes) {
+    for (Node node : nodes) {
       for (Edge edge : node.getEdges()) {
         Optional<ParticleEdge> contained = edges.stream()
             .filter(
@@ -70,7 +70,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
           e.setDirected(false);
         }, () -> {
           futures.add(edge.resolveStart().thenAccept(startNode -> {
-            Node<?> endNode = edge.resolveEnd().join();
+            Node endNode = edge.resolveEnd().join();
             edges.add(new ParticleEdge(
                 edge.getStart(), edge.getEnd(),
                 startNode.getLocation(), endNode.getLocation()
@@ -84,8 +84,8 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   }
 
   @Override
-  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
-    Collection<Node<?>> rendered = new HashSet<>(this.rendered);
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
+    Collection<Node> rendered = new HashSet<>(this.rendered);
     clear(player);
     rendered.removeAll(nodes);
     return renderNodes(player, rendered);

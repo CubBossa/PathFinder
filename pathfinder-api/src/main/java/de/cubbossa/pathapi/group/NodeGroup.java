@@ -11,5 +11,5 @@ public interface NodeGroup extends Keyed, Modified, Set<UUID>, Comparable<NodeGr
 
   float getWeight();
 
-  CompletableFuture<Collection<Node<?>>> resolve();
+  CompletableFuture<Collection<Node>> resolve();
 }

@@ -7,19 +7,19 @@ import java.util.function.Consumer;
 
 public interface EventDispatcher {
 
-  <N extends Node<N>> void dispatchNodeCreate(N node);
+  <N extends Node> void dispatchNodeCreate(N node);
 
-  void dispatchNodeSave(Node<?> node);
+  void dispatchNodeSave(Node node);
 
-  void dispatchNodeLoad(Node<?> node);
+  void dispatchNodeLoad(Node node);
 
-  <N extends Node<N>> void dispatchNodeDelete(N node);
+  <N extends Node> void dispatchNodeDelete(N node);
 
-  void dispatchNodesDelete(Collection<Node<?>> nodes);
+  void dispatchNodesDelete(Collection<Node> nodes);
 
-  void dispatchNodeUnassign(Node<?> node, Collection<NodeGroup> groups);
+  void dispatchNodeUnassign(Node node, Collection<NodeGroup> groups);
 
-  void dispatchNodeAssign(Node<?> node, Collection<NodeGroup> groups);
+  void dispatchNodeAssign(Node node, Collection<NodeGroup> groups);
 
   void dispatchGroupCreate(NodeGroup group);
 

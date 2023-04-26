@@ -56,13 +56,13 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
 
     EventDispatcher eventDispatcher = PathPlugin.getInstance().getEventDispatcher();
 
-    Consumer<Node<?>> erase = node -> {
+    Consumer<Node> erase = node -> {
       for (PathPlayer<Player> player : editingPlayers.keySet()) {
         eraseNodes(player, List.of(node));
       }
     };
     Consumer<NodeEvent> render = event -> {
-      if (!(event.getNode() instanceof Groupable<?> groupable)
+      if (!(event.getNode() instanceof Groupable groupable)
           || groupable.getGroups().stream().noneMatch(g -> g.getKey().equals(key))) {
         erase.accept(event.getNode());
         return;
@@ -165,14 +165,14 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   }
 
   @Override
-  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.allOf(renderers.stream()
         .map(r -> r.renderNodes(player, nodes))
         .toArray(CompletableFuture[]::new));
   }
 
   @Override
-  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.allOf(renderers.stream()
         .map(r -> r.eraseNodes(player, nodes))
         .toArray(CompletableFuture[]::new));

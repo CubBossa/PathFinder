@@ -14,15 +14,15 @@ public class NodesDeleteEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Node<?>> nodes;
+  private final Collection<Node> nodes;
   @Setter
   private boolean cancelled;
 
-  public NodesDeleteEvent(Collection<Node<?>> nodes) {
+  public NodesDeleteEvent(Collection<Node> nodes) {
     this.nodes = nodes;
   }
 
-  public NodesDeleteEvent(Node<?> node) {
+  public NodesDeleteEvent(Node node) {
     this.nodes = List.of(node);
   }
 

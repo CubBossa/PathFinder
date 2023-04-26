@@ -33,26 +33,26 @@ public interface StorageImplementation {
   void setCache(CacheLayer cacheLayer);
 
   // Node Type
-  void saveNodeType(UUID node, NodeType<? extends Node<?>> type);
+  void saveNodeType(UUID node, NodeType<? extends Node> type);
 
-  void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping);
+  void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping);
 
-  <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node);
+  <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node);
 
-  Map<UUID, NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes);
+  Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
-  <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location);
+  <N extends Node> N createAndLoadNode(NodeType<N> type, Location location);
 
-  <N extends Node<N>> Optional<N> loadNode(UUID id);
+  <N extends Node> Optional<N> loadNode(UUID id);
 
-  Collection<Node<?>> loadNodes();
+  Collection<Node> loadNodes();
 
-  Collection<Node<?>> loadNodes(Collection<UUID> ids);
+  Collection<Node> loadNodes(Collection<UUID> ids);
 
-  void saveNode(Node<?> node);
+  void saveNode(Node node);
 
-  void deleteNodes(Collection<Node<?>> node);
+  void deleteNodes(Collection<Node> node);
 
   // Edges
   Edge createAndLoadEdge(UUID start, UUID end, double weight);
@@ -104,15 +104,27 @@ public interface StorageImplementation {
   void deleteDiscoverInfo(DiscoverInfo info);
 
   // Visualizer
-  <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
-                                                                NamespacedKey key);
 
-  <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(VisualizerType<T> type);
+  <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
+                                                                     VisualizerType<VisualizerT> type);
 
-  <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
-                                                                 NamespacedKey key);
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
+      NamespacedKey key);
 
-  void saveVisualizer(PathVisualizer<?, ?, ?> visualizer);
+  Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key);
 
-  void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer);
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadVisualizer(
+      VisualizerType<VisualizerT> type,
+      NamespacedKey key);
+
+  <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadVisualizers(
+      VisualizerType<VisualizerT> type);
+
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadVisualizer(
+      VisualizerType<VisualizerT> type,
+      NamespacedKey key);
+
+  void saveVisualizer(PathVisualizer<?, ?> visualizer);
+
+  void deleteVisualizer(PathVisualizer<?, ?> visualizer);
 }

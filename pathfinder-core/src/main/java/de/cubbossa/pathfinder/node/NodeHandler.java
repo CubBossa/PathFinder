@@ -51,16 +51,16 @@ public class NodeHandler {
         () -> g -> new NoImplNodeGroupEditor(g.getKey()));
   }
 
-  public CompletableFuture<Graph<Node<?>>> createGraph(@Nullable PlayerNode player) {
+  public CompletableFuture<Graph<Node>> createGraph(@Nullable PlayerNode player) {
     return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
-      Map<UUID, Node<?>> map = new HashMap<>();
+      Map<UUID, Node> map = new HashMap<>();
       nodes.forEach(node -> map.put(node.getNodeId(), node));
 
-      Graph<Node<?>> graph = new Graph<>();
+      Graph<Node> graph = new Graph<>();
       nodes.forEach(graph::addNode);
-      for (Node<?> node : nodes) {
+      for (Node node : nodes) {
         for (Edge e : node.getEdges()) {
-          Node<?> end = map.get(e.getEnd());
+          Node end = map.get(e.getEnd());
           graph.connect(node, end,
               node.getLocation().distance(end.getLocation()) * e.getWeight());
         }
@@ -68,10 +68,10 @@ public class NodeHandler {
 
       if (player != null) {
         graph.addNode(player);
-        LocationWeightSolver<Node<?>> solver =
+        LocationWeightSolver<Node> solver =
             LocationWeightSolverPreset.fromConfig(PathPlugin.getInstance()
                 .getConfiguration().navigation.nearestLocationSolver);
-        Map<Node<?>, Double> weighted = solver.solve(player, graph);
+        Map<Node, Double> weighted = solver.solve(player, graph);
 
         weighted.forEach((node, weight) -> graph.connect(player, node, weight));
       }

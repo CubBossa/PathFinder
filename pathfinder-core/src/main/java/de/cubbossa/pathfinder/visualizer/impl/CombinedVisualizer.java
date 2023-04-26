@@ -5,9 +5,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,10 +13,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CombinedVisualizer extends
-    AbstractVisualizer<CombinedVisualizer, CombinedVisualizer.CombinedData, Object> {
+    AbstractVisualizer<CombinedVisualizer.CombinedData, Object> {
 
   private final List<NamespacedKey> visualizerKeys;
-  private final List<PathVisualizer<?, ?, ?>> visualizers;
+  private final List<PathVisualizer<?, ?>> visualizers;
   private boolean referencesResolved = false;
 
   public CombinedVisualizer(NamespacedKey key, String nameFormat) {
@@ -37,12 +35,12 @@ public class CombinedVisualizer extends
     referencesResolved = false;
   }
 
-  public void addVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void addVisualizer(PathVisualizer<?, ?> visualizer) {
     this.visualizerKeys.add(visualizer.getKey());
     this.visualizers.add(visualizer);
   }
 
-  public void removeVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void removeVisualizer(PathVisualizer<?, ?> visualizer) {
     this.visualizerKeys.remove(visualizer.getKey());
     this.visualizers.remove(visualizer);
   }
@@ -52,16 +50,11 @@ public class CombinedVisualizer extends
     this.visualizers.clear();
   }
 
-  public List<PathVisualizer<?, ?, ?>> getVisualizers() {
+  public List<PathVisualizer<?, ?>> getVisualizers() {
     return new ArrayList<>(visualizers);
   }
 
-  @Override
-  public VisualizerType<CombinedVisualizer> getType() {
-    return VisualizerHandler.COMBINED_VISUALIZER_TYPE;
-  }
-
-  public void resolveReferences(Collection<PathVisualizer<?, ?, ?>> scope) {
+  public void resolveReferences(Collection<PathVisualizer<?, ?>> scope) {
     if (referencesResolved) {
       return;
     }
@@ -74,7 +67,7 @@ public class CombinedVisualizer extends
   }
 
   @Override
-  public CombinedData prepare(List<Node<?>> nodes, PathPlayer<Object> player) {
+  public CombinedData prepare(List<Node> nodes, PathPlayer<Object> player) {
     return new CombinedData(visualizers.stream()
         .filter(v -> v.getTargetType().equals(player.getPlayerClass()))
         // safely assume that the player type matches for all sub visualizers that matched the filter

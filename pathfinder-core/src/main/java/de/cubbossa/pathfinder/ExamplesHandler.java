@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
@@ -54,7 +55,7 @@ public class ExamplesHandler {
     return files;
   }
 
-  public CompletableFuture<PathVisualizer<?, ?, ?>> loadVisualizer(
+  public CompletableFuture<PathVisualizer<?, ?>> loadVisualizer(
       ExamplesReader.ExampleFile file) {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values =
@@ -70,14 +71,15 @@ public class ExamplesHandler {
     });
   }
 
-  private <T extends PathVisualizer<T, ?, ?>> PathVisualizer<T, ?, ?> parse(
-      ExamplesReader.ExampleFile file, AbstractVisualizerType<T> type, Map<String, Object> values) {
+  private <VisualizerT extends PathVisualizer<?, ?>> VisualizerT parse(
+      ExamplesReader.ExampleFile file, VisualizerType<VisualizerT> type,
+      Map<String, Object> values) {
 
     NamespacedKey name =
         NamespacedKey.fromString(file.name().replace(".yml", "").replace("$", ":"));
     String displayName = (String) values.get("display-name");
 
-    T visualizer = type.create(name, displayName);
+    VisualizerT visualizer = type.create(name, displayName);
     type.deserialize(visualizer, values);
     return visualizer;
   }

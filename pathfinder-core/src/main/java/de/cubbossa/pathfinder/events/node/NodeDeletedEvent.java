@@ -11,9 +11,9 @@ public class NodeDeletedEvent extends Event implements NodeDeleteEvent {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Node<?> node;
+  private final Node node;
 
-  public NodeDeletedEvent(Node<?> node) {
+  public NodeDeletedEvent(Node node) {
     this.node = node;
   }
 

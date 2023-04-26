@@ -13,7 +13,7 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class NodeCreateEvent<N extends Node<N>> extends Event implements Cancellable {
+public class NodeCreateEvent<N extends Node> extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
   private final NodeType<N> nodeType;

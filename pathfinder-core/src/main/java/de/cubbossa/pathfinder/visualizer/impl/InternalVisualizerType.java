@@ -5,8 +5,8 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 
-public abstract class InternalVisualizerType<T extends PathVisualizer<T, ?, ?>> extends
-    AbstractVisualizerType<T> {
+public abstract class InternalVisualizerType<VisualizerT extends PathVisualizer<?, ?>> extends
+    AbstractVisualizerType<VisualizerT> {
 
   public InternalVisualizerType(NamespacedKey key) {
     super(key);

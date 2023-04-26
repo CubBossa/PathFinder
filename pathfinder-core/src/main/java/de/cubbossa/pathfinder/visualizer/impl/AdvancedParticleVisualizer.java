@@ -15,8 +15,7 @@ import org.bukkit.util.Vector;
 
 @Getter
 @Setter
-public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisualizer<T>>
-    extends BezierPathVisualizer<T> {
+public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
 
   private int schedulerSteps = 40;
   private Function<Context, Particle> particle = c -> Particle.FLAME;
@@ -35,7 +34,7 @@ public abstract class AdvancedParticleVisualizer<T extends AdvancedParticleVisua
   }
 
   @Override
-  public BezierData prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
+  public BezierData prepare(List<Node> nodes, PathPlayer<Player> player) {
     BezierData bezierData = super.prepare(nodes, player);
     List<Location> points = new ArrayList<>();
     for (int i = 1; i < bezierData.points().size() - 1; i++) {

@@ -17,7 +17,7 @@ public class CombinedVisualizerChangedEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
   private final CombinedVisualizer visualizer;
   private final Action action;
-  private final Collection<PathVisualizer<?, ?, ?>> targets;
+  private final Collection<PathVisualizer<?, ?>> targets;
 
   public static HandlerList getHandlerList() {
     return handlers;

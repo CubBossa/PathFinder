@@ -2,8 +2,6 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Particle;
@@ -12,7 +10,7 @@ import org.bukkit.util.Vector;
 
 @Getter
 @Setter
-public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer> {
+public class ParticleVisualizer extends BezierPathVisualizer {
 
   public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
       new SimpleProperty<>("particle-steps", Integer.class, true,
@@ -27,11 +25,6 @@ public class ParticleVisualizer extends BezierPathVisualizer<ParticleVisualizer>
 
   public ParticleVisualizer(NamespacedKey key, String nameFormat) {
     super(key, nameFormat);
-  }
-
-  @Override
-  public VisualizerType<ParticleVisualizer> getType() {
-    return VisualizerHandler.PARTICLE_VISUALIZER_TYPE;
   }
 
   @Override

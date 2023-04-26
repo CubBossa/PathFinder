@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 public class NodeCacheImpl implements NodeCache {
 
-  private final Map<UUID, Node<?>> nodeCache;
+  private final Map<UUID, Node> nodeCache;
 
   private boolean allCached = false;
 
@@ -25,23 +25,23 @@ public class NodeCacheImpl implements NodeCache {
     nodeCache = new HashMap<>();
   }
 
-  public Optional<Node<?>> getNode(UUID uuid) {
-    Node<?> node = nodeCache.get(uuid);
+  public Optional<Node> getNode(UUID uuid) {
+    Node node = nodeCache.get(uuid);
     return node == null ? Optional.empty() : Optional.of(node);
   }
 
-  public Collection<Node<?>> getAllNodes(Supplier<Collection<Node<?>>> loader) {
+  public Collection<Node> getAllNodes(Supplier<Collection<Node>> loader) {
     if (!allCached) {
-      Collection<Node<?>> result = loader.get();
+      Collection<Node> result = loader.get();
       result.forEach(this::write);
       allCached = true;
     }
     return nodeCache.values();
   }
 
-  public Collection<Node<?>> getNodes(Collection<UUID> ids,
-                                      Function<Collection<UUID>, Collection<? extends Node<?>>> loader) {
-    Collection<Node<?>> result = new HashSet<>();
+  public Collection<Node> getNodes(Collection<UUID> ids,
+                                   Function<Collection<UUID>, Collection<? extends Node>> loader) {
+    Collection<Node> result = new HashSet<>();
     SortedSet<UUID> sortedIds = new TreeSet<>(ids);
 
     if (!allCached) {
@@ -55,7 +55,7 @@ public class NodeCacheImpl implements NodeCache {
         loader.apply(notPreset).forEach(this::write);
       }
     }
-    for (Node<?> value : nodeCache.values()) {
+    for (Node value : nodeCache.values()) {
       if (sortedIds.contains(value.getNodeId())) {
         result.add(value);
       }
@@ -63,18 +63,18 @@ public class NodeCacheImpl implements NodeCache {
     return result;
   }
 
-  public void write(Node<?> node) {
+  public void write(Node node) {
     nodeCache.put(node.getNodeId(), node);
   }
 
   public void write(NodeGroup group, Collection<UUID> deleted) {
     for (UUID uuid : group) {
-      if (nodeCache.get(uuid) instanceof Groupable<?> groupable) {
+      if (nodeCache.get(uuid) instanceof Groupable groupable) {
         groupable.addGroup(group);
       }
     }
     for (UUID uuid : deleted) {
-      if (nodeCache.get(uuid) instanceof Groupable<?> groupable) {
+      if (nodeCache.get(uuid) instanceof Groupable groupable) {
         groupable.removeGroup(group.getKey());
       }
     }
@@ -87,7 +87,7 @@ public class NodeCacheImpl implements NodeCache {
     });
   }
 
-  public void invalidate(Node<?> node) {
+  public void invalidate(Node node) {
     nodeCache.remove(node.getNodeId());
   }
 

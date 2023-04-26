@@ -19,7 +19,7 @@ import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
@@ -56,7 +56,7 @@ public abstract class StorageTest {
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
   protected StorageImpl storage;
-  protected NodeTypeRegistry nodeTypeRegistry;
+  protected NodeTypeRegistryImpl nodeTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
 
@@ -73,7 +73,7 @@ public abstract class StorageTest {
     MockBukkit.unmock();
   }
 
-  abstract StorageImplementation storage(NodeTypeRegistry registry,
+  abstract StorageImplementation storage(NodeTypeRegistryImpl registry,
                                          ModifierRegistry modifierRegistry);
 
   @AfterEach
@@ -83,7 +83,7 @@ public abstract class StorageTest {
 
   @BeforeEach
   void beforeEach() throws Exception {
-    nodeTypeRegistry = new NodeTypeRegistry();
+    nodeTypeRegistry = new NodeTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
     modifierRegistry.registerModifierType(new PermissionModifierType());
 
@@ -126,7 +126,7 @@ public abstract class StorageTest {
         () -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
   }
 
-  protected <N extends Node<N>> N assertNodeExists(UUID node) throws Exception {
+  protected <N extends Node> N assertNodeExists(UUID node) throws Exception {
     return (N) storage.loadNode(node).get(1, TimeUnit.SECONDS).orElseThrow();
   }
 
@@ -136,7 +136,7 @@ public abstract class StorageTest {
   }
 
   protected void assertNodeCount(int count) throws Exception {
-    Collection<Node<?>> nodesAfter = storage.loadNodes().get(1, TimeUnit.SECONDS);
+    Collection<Node> nodesAfter = storage.loadNodes().get(1, TimeUnit.SECONDS);
     assertEquals(count, nodesAfter.size());
   }
 
@@ -156,7 +156,7 @@ public abstract class StorageTest {
   }
 
   protected void assertNoEdge(UUID start, UUID end) throws Exception {
-    Optional<Node<?>> node = (Optional<Node<?>>) storage.loadNode(start).get(1, TimeUnit.SECONDS);
+    Optional<Node> node = (Optional<Node>) storage.loadNode(start).get(1, TimeUnit.SECONDS);
     if (node.isEmpty()) {
       return;
     }
@@ -200,7 +200,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(3)
-  <N extends Node<N>> void getNodeType()
+  <N extends Node> void getNodeType()
       throws Exception {
     Waypoint waypoint = makeWaypoint();
     NodeType<N> type = assertOptResult(() -> storage.loadNodeType(waypoint.getNodeId()));
@@ -214,7 +214,7 @@ public abstract class StorageTest {
     assertFuture(() -> storage.modifyNode(waypoint.getNodeId(), node -> {
       node.setLocation(waypoint.getLocation().clone().add(0, 2, 0));
     }));
-    Node<?> after = assertNodeExists(waypoint.getNodeId());
+    Node after = assertNodeExists(waypoint.getNodeId());
     assertEquals(waypoint.getLocation().add(0, 2, 0), after.getLocation());
   }
 
@@ -301,7 +301,7 @@ public abstract class StorageTest {
     NodeGroup g = makeGroup(gk);
 
     assertFuture(() -> storage.modifyNode(a.getNodeId(), n -> {
-      if (n instanceof Groupable<?> groupable) {
+      if (n instanceof Groupable groupable) {
         groupable.addGroup(g);
       }
     }));
@@ -318,7 +318,7 @@ public abstract class StorageTest {
     NodeGroup g = makeGroup(gk);
 
     assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable<?> groupable) {
+      if (node instanceof Groupable groupable) {
         groupable.addGroup(g);
       }
     }));
@@ -329,7 +329,7 @@ public abstract class StorageTest {
     assertTrue(g1.contains(a.getNodeId()));
 
     assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable<?> groupable) {
+      if (node instanceof Groupable groupable) {
         groupable.removeGroup(gk);
       }
     }));
@@ -346,7 +346,7 @@ public abstract class StorageTest {
     NodeGroup g = makeGroup(gk);
 
     storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable<?> groupable) {
+      if (node instanceof Groupable groupable) {
         groupable.addGroup(g);
       }
     }).get(1, TimeUnit.SECONDS);

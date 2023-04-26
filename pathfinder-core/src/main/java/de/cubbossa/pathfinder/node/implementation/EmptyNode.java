@@ -16,7 +16,7 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class EmptyNode implements Node<EmptyNode> {
+public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
       PathPlugin.pathfinder("empty"),
@@ -38,11 +38,6 @@ public class EmptyNode implements Node<EmptyNode> {
 
   public EmptyNode(World world) {
     this.location = new Location(0, 0, 0, new WorldImpl(world.getUID()));
-  }
-
-  @Override
-  public NodeType<EmptyNode> getType() {
-    return TYPE;
   }
 
   @Override

@@ -14,12 +14,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class StorageAssistant {
 
-  public <M extends Modifier> CompletableFuture<Map<Node<?>, M>> loadNodes(Class<M> modifier) {
+  public <M extends Modifier> CompletableFuture<Map<Node, M>> loadNodes(Class<M> modifier) {
     return PathPlugin.getInstance().getStorage().loadNodes().thenApply(nodes -> {
-      Map<Node<?>, TreeMap<Float, M>> results = new HashMap<>();
+      Map<Node, TreeMap<Float, M>> results = new HashMap<>();
       nodes.stream()
-          .filter(node -> node instanceof Groupable<?>)
-          .map(node -> (Groupable<?>) node)
+          .filter(node -> node instanceof Groupable)
+          .map(node -> (Groupable) node)
           .forEach(groupable -> {
             for (NodeGroup group : groupable.getGroups()) {
               if (group.hasModifier(modifier)) {
@@ -28,8 +28,8 @@ public class StorageAssistant {
               }
             }
           });
-      Map<Node<?>, M> result = new HashMap<>();
-      for (Map.Entry<Node<?>, TreeMap<Float, M>> e : results.entrySet()) {
+      Map<Node, M> result = new HashMap<>();
+      for (Map.Entry<Node, TreeMap<Float, M>> e : results.entrySet()) {
         result.put(e.getKey(), e.getValue().lastEntry().getValue());
       }
       return result;

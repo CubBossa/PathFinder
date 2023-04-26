@@ -7,27 +7,25 @@ import de.cubbossa.pathapi.misc.PermissionHolder;
 import de.cubbossa.pathapi.node.Node;
 import java.util.List;
 
-public interface PathVisualizer<T extends PathVisualizer<T, D, P>, D, P>
+public interface PathVisualizer<DataT, PlayerT>
     extends Keyed, Named, PermissionHolder {
 
-  VisualizerType<T> getType();
+  Class<PlayerT> getTargetType();
 
-  Class<P> getTargetType();
+  DataT prepare(List<Node> nodes, PathPlayer<PlayerT> player);
 
-  D prepare(List<Node<?>> nodes, PathPlayer<P> player);
+  void play(VisualizerContext<DataT, PlayerT> context);
 
-  void play(VisualizerContext<D, P> context);
-
-  void destruct(PathPlayer<P> player, D data);
+  void destruct(PathPlayer<PlayerT> player, DataT data);
 
   int getInterval();
 
   void setInterval(int interval);
 
-  //TODO interface
-  record VisualizerContext<D, P>(List<PathPlayer<P>> players, int interval, long time, D data) {
+  record VisualizerContext<DataT, PlayerT>(List<PathPlayer<PlayerT>> players, int interval,
+                                           long time, DataT data) {
 
-    public PathPlayer<P> player() {
+    public PathPlayer<PlayerT> player() {
       return players.get(0);
     }
   }

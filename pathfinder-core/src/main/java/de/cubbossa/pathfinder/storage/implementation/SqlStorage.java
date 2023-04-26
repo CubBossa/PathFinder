@@ -27,7 +27,7 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -71,19 +71,10 @@ public abstract class SqlStorage extends CommonStorage {
         return new SimpleEdge(startId, endId, (float) weight);
       };
 
-  // +-----------------------------------------+
-  // |  Node Table                             |
-  // +-----------------------------------------+
   private final SQLDialect dialect;
 
-  // +-----------------------------------------+
-  // |  Edge Table                             |
-  // +-----------------------------------------+
   private DSLContext create;
 
-  // +-----------------------------------------+
-  // |  Nodegroup Table                        |
-  // +-----------------------------------------+
   private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
       record -> {
         NamespacedKey key = record.getKey();
@@ -94,9 +85,7 @@ public abstract class SqlStorage extends CommonStorage {
         return group;
       };
 
-  //
-
-  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry,
+  public SqlStorage(SQLDialect dialect, NodeTypeRegistryImpl nodeTypeRegistry,
                     ModifierRegistry modifierRegistry) {
     super(nodeTypeRegistry, modifierRegistry);
     this.dialect = dialect;
@@ -108,7 +97,7 @@ public abstract class SqlStorage extends CommonStorage {
       double z = record.getZ();
       UUID worldUid = record.getWorld();
 
-      Waypoint node = new Waypoint(nodeTypeRegistry.getWaypointNodeType(), id);
+      Waypoint node = new Waypoint(id);
       node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
       return node;
     };
@@ -116,7 +105,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   public abstract ConnectionProvider getConnectionProvider();
 
-  private <T extends PathVisualizer<T, ?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(
+  private <T extends PathVisualizer<?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(
       VisualizerType<T> type) {
     return record -> {
       // create visualizer object
@@ -235,7 +224,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
+  public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
     List<NodeType<N>> resultSet = create
         .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
@@ -245,8 +234,8 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public Map<UUID, NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
-    Map<UUID, NodeType<? extends Node<?>>> result = new HashMap<>();
+  public Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes) {
+    Map<UUID, NodeType<? extends Node>> result = new HashMap<>();
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
         .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
@@ -255,7 +244,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
+  public void saveNodeType(UUID node, NodeType<? extends Node> type) {
     debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
     create
         .insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -264,7 +253,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
+  public void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping) {
     debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
         .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
         .collect(Collectors.joining(", ")) + ")'");
@@ -278,11 +267,11 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void deleteNodes(Collection<Node<?>> nodes) {
+  public void deleteNodes(Collection<Node> nodes) {
     debug(" > Storage Implementation: 'deleteNodes(" + nodes.stream()
         .map(Node::getNodeId).map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-    Map<UUID, NodeType<? extends Node<?>>> types = loadNodeTypes(ids);
+    Map<UUID, NodeType<? extends Node>> types = loadNodeTypes(ids);
     create
         .deleteFrom(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
@@ -292,7 +281,7 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_EDGES.START_ID.in(ids))
         .or(PATHFINDER_EDGES.END_ID.in(ids))
         .execute();
-    for (Node<?> node : nodes) {
+    for (Node node : nodes) {
       deleteNode(node, types.get(node.getNodeId()));
     }
     create
@@ -362,8 +351,7 @@ public abstract class SqlStorage extends CommonStorage {
         .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
             l.getZ())
         .execute();
-    Waypoint waypoint =
-        new Waypoint(((NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType(), uuid);
+    Waypoint waypoint = new Waypoint(uuid);
     waypoint.setLocation(l);
     return waypoint;
   }
@@ -616,8 +604,8 @@ public abstract class SqlStorage extends CommonStorage {
     CompletableFuture<Collection<SimpleEdge>> future = new CompletableFuture<>();
     create.batched(configuration -> {
       Collection<SimpleEdge> edges = new HashSet<>();
-      for (Node<?> startNode : start) {
-        for (Node<?> endNode : end) {
+      for (Node startNode : start) {
+        for (Node endNode : end) {
           DSL.using(configuration)
               .insertInto(PATHFINDER_EDGES)
               .values(startNode.getNodeId(), endNode.getNodeId(), 1)
@@ -642,8 +630,8 @@ public abstract class SqlStorage extends CommonStorage {
   public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
     CompletableFuture<Void> future = new CompletableFuture<>();
     create.batched(configuration -> {
-      for (Node<?> startNode : start) {
-        for (Node<?> endNode : end) {
+      for (Node startNode : start) {
+        for (Node endNode : end) {
           DSL.using(configuration)
               .deleteFrom(PATHFINDER_EDGES)
               .where(PATHFINDER_EDGES.START_ID.eq(startNode.getNodeId()))
@@ -739,14 +727,14 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
-                                                                       NamespacedKey key) {
+  public <T extends PathVisualizer<?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
+                                                                    NamespacedKey key) {
     return null;
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
-                                                                        NamespacedKey key) {
+  public <T extends PathVisualizer<?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
+                                                                     NamespacedKey key) {
     return create
         .selectFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(key))
@@ -755,7 +743,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(
+  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadVisualizers(
       VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
@@ -767,14 +755,14 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
 
-  private <T extends PathVisualizer<T, ?, ?>> Map<String, Object> serialize(
-      PathVisualizer<?, ?, ?> pathVisualizer) {
-    VisualizerType<T> type = ((T) pathVisualizer).getType();
-    return type.serialize((T) pathVisualizer);
+  private <VisualizerT extends PathVisualizer<?, ?>> Map<String, Object> serialize(
+      VisualizerT pathVisualizer) {
+    VisualizerType<VisualizerT> type = resolve(pathVisualizer);
+    return type.serialize(pathVisualizer);
   }
 
   @Override
-  public void saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void saveVisualizer(PathVisualizer<?, ?> visualizer) {
     Map<String, Object> data = serialize(visualizer);
     if (data == null) {
       return;
@@ -794,13 +782,13 @@ public abstract class SqlStorage extends CommonStorage {
             PATHFINDER_PATH_VISUALIZER.DATA
         )
         .values(
-            visualizer.getKey(), visualizer.getType().getKey(),
+            visualizer.getKey(), resolve(visualizer).getKey(),
             visualizer.getNameFormat(), visualizer.getPermission(),
             visualizer.getInterval(), dataString
         )
         .onDuplicateKeyUpdate()
         .set(PATHFINDER_PATH_VISUALIZER.KEY, visualizer.getKey())
-        .set(PATHFINDER_PATH_VISUALIZER.TYPE, visualizer.getType().getKey())
+        .set(PATHFINDER_PATH_VISUALIZER.TYPE, resolve(visualizer).getKey())
         .set(PATHFINDER_PATH_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
         .set(PATHFINDER_PATH_VISUALIZER.PERMISSION, visualizer.getPermission())
         .set(PATHFINDER_PATH_VISUALIZER.INTERVAL, visualizer.getInterval())
@@ -809,7 +797,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     create
         .deleteFrom(PATHFINDER_PATH_VISUALIZER)
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))

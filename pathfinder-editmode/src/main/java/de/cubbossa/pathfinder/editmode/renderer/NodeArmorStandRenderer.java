@@ -17,11 +17,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node<?>>
+public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
     implements GraphRenderer<Player> {
 
-  public static final Action<TargetContext<Node<?>>> RIGHT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<Node<?>>> LEFT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
   private static final Vector NODE_OFFSET = new Vector(0, -1.75, 0);
 
   private final ItemStack nodeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);
@@ -31,28 +31,28 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node<?>>
   }
 
   @Override
-  Location retrieveFrom(Node<?> element) {
+  Location retrieveFrom(Node element) {
     return VectorUtils.toBukkit(element.getLocation()).add(NODE_OFFSET);
   }
 
   @Override
-  Action<TargetContext<Node<?>>> handleInteract(Player player, int slot, boolean left) {
+  Action<TargetContext<Node>> handleInteract(Player player, int slot, boolean left) {
     return left ? LEFT_CLICK_NODE : RIGHT_CLICK_NODE;
   }
 
   @Override
-  ItemStack head(Node<?> element) {
+  ItemStack head(Node element) {
     return nodeHead.clone();
   }
 
   @Override
-  boolean isSmall(Node<?> element) {
+  boolean isSmall(Node element) {
     return false;
   }
 
   @Nullable
   @Override
-  Component getName(Node<?> element) {
+  Component getName(Node element) {
     return null;
   }
 
@@ -64,14 +64,14 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node<?>>
   }
 
   @Override
-  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     showElements(nodes, player.unwrap());
     players.add(player);
     return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     hideElements(nodes, player.unwrap());
     return CompletableFuture.completedFuture(null);
   }

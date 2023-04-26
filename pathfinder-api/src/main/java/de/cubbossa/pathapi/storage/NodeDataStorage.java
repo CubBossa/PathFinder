@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface NodeDataStorage<N extends Node<N>> {
+public interface NodeDataStorage<N extends Node> {
 
   N createAndLoadNode(Context context);
 

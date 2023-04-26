@@ -4,25 +4,27 @@ import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.Setter;
 
-public class NodeTypeRegistry implements de.cubbossa.pathapi.node.NodeTypeRegistry {
+public class NodeTypeRegistryImpl implements NodeTypeRegistry {
 
-  private final KeyedRegistry<NodeType<? extends Node<?>>> types;
+  private final KeyedRegistry<NodeType<? extends Node>> types;
+
   @Getter
   @Setter
   private NodeType<Waypoint> waypointNodeType;
 
-  public NodeTypeRegistry() {
+  public NodeTypeRegistryImpl() {
     this.types = new HashedRegistry<>();
   }
 
   @Override
-  public <N extends Node<N>> NodeType<N> getType(NamespacedKey key) {
+  public <N extends Node> NodeType<N> getType(NamespacedKey key) {
     return (NodeType<N>) types.get(key);
   }
 
@@ -32,17 +34,17 @@ public class NodeTypeRegistry implements de.cubbossa.pathapi.node.NodeTypeRegist
   }
 
   @Override
-  public Collection<NodeType<? extends Node<?>>> getTypes() {
+  public Collection<NodeType<? extends Node>> getTypes() {
     return types.values();
   }
 
   @Override
-  public <N extends Node<N>> void register(NodeType<N> type) {
+  public <N extends Node> void register(NodeType<N> type) {
     this.types.put(type);
   }
 
   @Override
-  public <N extends Node<N>> void unregister(NodeType<N> type) {
+  public <N extends Node> void unregister(NodeType<N> type) {
     unregister(type.getKey());
   }
 

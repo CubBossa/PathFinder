@@ -96,8 +96,8 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   }
 
   @Override
-  public void write(Node<?> node) {
-    if (node instanceof Groupable<?> groupable) {
+  public void write(Node node) {
+    if (node instanceof Groupable groupable) {
       nodeGroupCache.put(node.getNodeId(), groupable.getGroups());
       for (NodeGroup present : cache.asMap().values()) {
         if (groupable.getGroups().contains(present)) {
@@ -127,9 +127,9 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   }
 
   @Override
-  public void invalidate(Node<?> node) {
+  public void invalidate(Node node) {
     nodeGroupCache.invalidate(node.getNodeId());
-    if (node instanceof Groupable<?> groupable) {
+    if (node instanceof Groupable groupable) {
       for (NodeGroup value : cache.asMap().values()) {
         value.remove(groupable.getNodeId());
       }

@@ -5,16 +5,16 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import java.util.Map;
 
-public interface VisualizerType<T extends PathVisualizer<T, ?, ?>> extends Keyed {
+public interface VisualizerType<VisualizerT extends PathVisualizer<?, ?>> extends Keyed {
   String getCommandName();
 
-  T create(NamespacedKey key, String nameFormat);
+  VisualizerT create(NamespacedKey key, String nameFormat);
 
-  void deserialize(T visualizer, Map<String, Object> values);
+  void deserialize(VisualizerT visualizer, Map<String, Object> values);
 
-  Map<String, Object> serialize(T visualizer);
+  Map<String, Object> serialize(VisualizerT visualizer);
 
-  VisualizerDataStorage<T> getStorage();
+  VisualizerDataStorage<VisualizerT> getStorage();
 
-  void setStorage(VisualizerDataStorage<T> storage);
+  void setStorage(VisualizerDataStorage<VisualizerT> storage);
 }

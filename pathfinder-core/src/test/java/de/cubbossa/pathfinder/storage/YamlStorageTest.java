@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import java.io.File;
 import java.util.logging.Logger;
@@ -12,7 +12,7 @@ public class YamlStorageTest extends StorageTest {
 
   @SneakyThrows
   @Override
-  StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry) {
+  StorageImplementation storage(NodeTypeRegistryImpl registry, ModifierRegistry modifierRegistry) {
     new File("./src/test/resources/data/").mkdir();
     YmlStorage implementation =
         new YmlStorage(new File("./src/test/resources/data/"), registry, modifierRegistry) {

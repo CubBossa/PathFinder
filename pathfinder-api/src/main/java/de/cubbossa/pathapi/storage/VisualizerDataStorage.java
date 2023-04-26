@@ -5,15 +5,15 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import java.util.Map;
 import java.util.Optional;
 
-public interface VisualizerDataStorage<T extends PathVisualizer<T, ?, ?>> {
+public interface VisualizerDataStorage<VisualizerT extends PathVisualizer<?, ?>> {
 
-  T createAndLoadVisualizer(NamespacedKey key);
+  VisualizerT createAndLoadVisualizer(NamespacedKey key);
 
-  Map<NamespacedKey, T> loadVisualizers();
+  Map<NamespacedKey, VisualizerT> loadVisualizers();
 
-  Optional<T> loadVisualizer(NamespacedKey key);
+  Optional<VisualizerT> loadVisualizer(NamespacedKey key);
 
-  void saveVisualizer(T visualizer);
+  void saveVisualizer(VisualizerT visualizer);
 
-  void deleteVisualizer(T visualizer);
+  void deleteVisualizer(VisualizerT visualizer);
 }

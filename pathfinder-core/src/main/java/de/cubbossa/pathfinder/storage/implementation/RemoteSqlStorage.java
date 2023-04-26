@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathfinder.PathPluginConfig;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import org.jooq.ConnectionProvider;
 import org.jooq.impl.DataSourceConnectionProvider;
 
@@ -13,7 +13,8 @@ public class RemoteSqlStorage extends SqlStorage {
   private final HikariDataSource dataSource;
 
   public RemoteSqlStorage(PathPluginConfig.SqlStorageConfig configuration,
-                          NodeTypeRegistry nodeTypeRegistry, ModifierRegistry modifierRegistry) {
+                          NodeTypeRegistryImpl nodeTypeRegistry,
+                          ModifierRegistry modifierRegistry) {
     super(configuration.dialect, nodeTypeRegistry, modifierRegistry);
 
     HikariConfig config = new HikariConfig();

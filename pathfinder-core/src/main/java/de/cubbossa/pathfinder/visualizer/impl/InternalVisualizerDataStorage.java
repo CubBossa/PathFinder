@@ -10,7 +10,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class InternalVisualizerDataStorage<T extends PathVisualizer<T, ?, ?>>
+public class InternalVisualizerDataStorage<T extends PathVisualizer<?, ?>>
     implements VisualizerDataStorage<T> {
 
   private final AbstractVisualizerType<T> type;

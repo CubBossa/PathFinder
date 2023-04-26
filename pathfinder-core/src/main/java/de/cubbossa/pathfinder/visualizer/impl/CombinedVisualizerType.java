@@ -54,7 +54,7 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
             .then(CustomArgs.pathVisualizerArgument("child")
                 .executes((sender, objects) -> {
                   CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-                  PathVisualizer<?, ?, ?> target = (PathVisualizer<?, ?, ?>) objects[1];
+                  PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
                   vis.addVisualizer(target);
                   Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
@@ -69,7 +69,7 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
             .then(CustomArgs.pathVisualizerArgument("child")
                 .executes((sender, objects) -> {
                   CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-                  PathVisualizer<?, ?, ?> target = (PathVisualizer<?, ?, ?>) objects[1];
+                  PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
                   vis.removeVisualizer(target);
                   Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
@@ -84,7 +84,7 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
         .then(CustomArgs.literal("clear")
             .executes((commandSender, objects) -> {
               CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-              Collection<PathVisualizer<?, ?, ?>> targets = vis.getVisualizers();
+              Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();
               vis.clearVisualizers();
               Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
                   Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,

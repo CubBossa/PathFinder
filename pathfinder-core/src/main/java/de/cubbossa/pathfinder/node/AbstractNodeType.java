@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Setter
-public abstract class AbstractNodeType<N extends Node<N>> implements
+public abstract class AbstractNodeType<N extends Node> implements
     NodeType<N> {
 
   private final NamespacedKey key;

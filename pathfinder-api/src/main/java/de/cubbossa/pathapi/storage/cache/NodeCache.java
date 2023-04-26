@@ -8,13 +8,14 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface NodeCache extends StorageCache<Node<?>> {
+public interface NodeCache extends StorageCache<Node> {
 
-  Optional<Node<?>> getNode(UUID uuid);
+  Optional<Node> getNode(UUID uuid);
 
-  Collection<Node<?>> getAllNodes(Supplier<Collection<Node<?>>> loader);
+  Collection<Node> getAllNodes(Supplier<Collection<Node>> loader);
 
-  Collection<Node<?>> getNodes(Collection<UUID> ids, Function<Collection<UUID>, Collection<? extends Node<?>>> loader);
+  Collection<Node> getNodes(Collection<UUID> ids,
+                            Function<Collection<UUID>, Collection<? extends Node>> loader);
 
   void write(NodeGroup group, Collection<UUID> deleted);
 

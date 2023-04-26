@@ -15,8 +15,8 @@ import org.bukkit.inventory.ItemStack;
 
 @Getter
 @Setter
-public abstract class AbstractVisualizer<T extends PathVisualizer<T, D, Player>, D, Player>
-    implements PathVisualizer<T, D, Player> {
+public abstract class AbstractVisualizer<DataT, PlayerT>
+    implements PathVisualizer<DataT, PlayerT> {
 
   private final NamespacedKey key;
   private String nameFormat;
@@ -37,22 +37,22 @@ public abstract class AbstractVisualizer<T extends PathVisualizer<T, D, Player>,
     this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
   }
 
-  public interface Property<Visualizer extends PathVisualizer<?, ?, ?>, Type> {
+  public interface Property<VisualizerT extends PathVisualizer<?, ?>, TypeT> {
 
     String getKey();
 
-    Class<Type> getType();
+    Class<TypeT> getType();
 
-    void setValue(Visualizer visualizer, Type value);
+    void setValue(VisualizerT visualizer, TypeT value);
 
-    Type getValue(Visualizer visualizer);
+    TypeT getValue(VisualizerT visualizer);
 
     boolean isVisible();
   }
 
   @Getter
   @RequiredArgsConstructor
-  public static class SimpleProperty<Value extends PathVisualizer<?, ?, ?>, Type>
+  public static class SimpleProperty<Value extends PathVisualizer<?, ?>, Type>
       implements Property<Value, Type> {
     private final String key;
     private final Class<Type> type;

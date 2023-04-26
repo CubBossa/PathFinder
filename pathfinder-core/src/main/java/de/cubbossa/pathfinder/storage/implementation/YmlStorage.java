@@ -154,14 +154,14 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public void saveNodeType(UUID node, NodeType<? extends Node<?>> type) {
+  public void saveNodeType(UUID node, NodeType<? extends Node> type) {
     workOnFile(fileTypes(), cfg -> {
       cfg.set(node.toString(), type.getKey().toString());
     });
   }
 
   @Override
-  public void saveNodeTypes(Map<UUID, NodeType<? extends Node<?>>> typeMapping) {
+  public void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping) {
     workOnFile(fileTypes(), cfg -> {
       typeMapping.forEach(
           (uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
@@ -169,7 +169,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public <N extends Node<N>> Optional<NodeType<N>> loadNodeType(UUID node) {
+  public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
     return workOnFile(fileTypes(), cfg -> {
       String keyString = cfg.getString(node.toString());
       if (keyString == null) {
@@ -181,7 +181,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public Map<UUID, NodeType<? extends Node<?>>> loadNodeTypes(Collection<UUID> nodes) {
+  public Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes) {
     return workOnFile(fileTypes(), cfg -> {
       Map<UUID, NodeType<?>> types = new HashMap<>();
       for (UUID node : nodes) {
@@ -404,19 +404,18 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     });
   }
 
-  private <T extends PathVisualizer<T, ?, ?>> void writeVisualizer(
-      PathVisualizer<?, ?, ?> visualizer) {
+  private <VisualizerT extends PathVisualizer<?, ?>> void writeVisualizer(VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
       cfg.set("type", visualizer.getType().getKey().toString());
       cfg.set("display-name", visualizer.getNameFormat());
-      VisualizerType<T> type = (VisualizerType<T>) visualizer.getType();
-      type.serialize((T) visualizer).forEach(cfg::set);
+      VisualizerType<VisualizerT> type = (VisualizerType<VisualizerT>) visualizer.getType();
+      type.serialize((VisualizerT) visualizer).forEach(cfg::set);
     });
   }
 
-  private <T extends PathVisualizer<T, ?, ?>> T readVisualizer(VisualizerType<T> type,
-                                                               NamespacedKey key,
-                                                               ConfigurationSection cfg) {
+  private <T extends PathVisualizer<?, ?>> T readVisualizer(VisualizerType<T> type,
+                                                            NamespacedKey key,
+                                                            ConfigurationSection cfg) {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
@@ -427,15 +426,15 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
-                                                                       NamespacedKey key) {
+  public <T extends PathVisualizer<?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
+                                                                    NamespacedKey key) {
     T visualizer = type.create(key, ""); //TODO
     writeVisualizer(visualizer);
     return visualizer;
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Map<NamespacedKey, T> loadVisualizers(
+  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadVisualizers(
       VisualizerType<T> type) {
     return Arrays.stream(pathVisualizerDir.listFiles())
         .map(file -> workOnFile(file, cfg -> {
@@ -446,18 +445,18 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
-                                                                        NamespacedKey key) {
+  public <T extends PathVisualizer<?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
+                                                                     NamespacedKey key) {
     return workOnFileIfExists(fileVisualizer(key), cfg -> readVisualizer(type, key, cfg));
   }
 
   @Override
-  public void saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void saveVisualizer(PathVisualizer<?, ?> visualizer) {
     writeVisualizer(visualizer);
   }
 
   @Override
-  public void deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
     file.deleteOnExit();
   }
@@ -466,9 +465,6 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
    * don't deal with edges and groups, are introduced by {@link de.cubbossa.pathapi.storage.Storage#loadNode(UUID)}
    */
   private Optional<Waypoint> readWaypoint(YamlConfiguration cfg, UUID id) {
-
-    NodeType<Waypoint> type =
-        ((de.cubbossa.pathfinder.node.NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType();
 
     ConfigurationSection sec = cfg.getConfigurationSection(id.toString());
     if (sec == null) {
@@ -481,7 +477,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     de.cubbossa.pathapi.misc.Location location =
         new de.cubbossa.pathapi.misc.Location(x, y, z, new WorldImpl(world));
 
-    Waypoint waypoint = new Waypoint(type, id);
+    Waypoint waypoint = new Waypoint(id);
     waypoint.setLocation(location);
 
     return Optional.of(waypoint);
@@ -497,9 +493,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   @Override
   public Waypoint createAndLoadWaypoint(Location location) {
     return workOnFile(fileWaypoints(), cfg -> {
-      Waypoint waypoint = new Waypoint(
-          ((de.cubbossa.pathfinder.node.NodeTypeRegistry) nodeTypeRegistry).getWaypointNodeType(),
-          UUID.randomUUID());
+      Waypoint waypoint = new Waypoint(UUID.randomUUID());
       waypoint.setLocation(location);
       writeWaypoint(waypoint, cfg.createSection(waypoint.getNodeId().toString()));
       return waypoint;

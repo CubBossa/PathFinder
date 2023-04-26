@@ -210,7 +210,7 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a path visualizer argument instance
    */
-  public Argument<? extends PathVisualizer<?, ?, ?>> pathVisualizerArgument(String nodeName) {
+  public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       Optional<?> vis =
           PathFinderProvider.get().getStorage()
@@ -219,7 +219,7 @@ public class CustomArgs {
       if (vis.isEmpty()) {
         throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
       }
-      return (PathVisualizer<?, ?, ?>) vis.get();
+      return (PathVisualizer<?, ?>) vis.get();
     })).includeSuggestions(suggestNamespacedKeys(sender ->
         PathFinderProvider.get().getStorage().loadVisualizers()
             .thenApply(pathVisualizers -> pathVisualizers.stream()
@@ -237,8 +237,8 @@ public class CustomArgs {
    * @param type     The type that all suggested and parsed visualizers are required to have
    * @return a path visualizer argument instance
    */
-  public <T extends PathVisualizer<T, ?, ?>> Argument<T> pathVisualizerArgument(String nodeName,
-                                                                                VisualizerType<T> type) {
+  public <T extends PathVisualizer<?, ?>> Argument<T> pathVisualizerArgument(String nodeName,
+                                                                             VisualizerType<T> type) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       Optional<T> vis = (Optional<T>) PathFinderProvider.get().getStorage()
           .loadVisualizer(PathPlugin.convert(customArgumentInfo.currentInput())).join();
@@ -287,10 +287,10 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a node type argument instance
    */
-  public <T extends Node<T>> Argument<NodeType<T>> nodeTypeArgument(
+  public <N extends Node> Argument<NodeType<N>> nodeTypeArgument(
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-      NodeType<T> type =
+      NodeType<N> type =
           PathPlugin.getInstance().getNodeTypeRegistry()
               .getType(PathPlugin.convert(customArgumentInfo.currentInput()));
       if (type == null) {
@@ -380,7 +380,7 @@ public class CustomArgs {
         throw new CustomArgument.CustomArgumentException("Only for players");
       }
       String search = context.currentInput();
-      List<Node<?>> scope = PathPlugin.getInstance().getStorage().loadNodes().join().stream()
+      List<Node> scope = PathPlugin.getInstance().getStorage().loadNodes().join().stream()
           .filter(node -> {
             FindModule.NavigationRequestContext c =
                 new FindModule.NavigationRequestContext(player.getUniqueId(), node);
@@ -390,9 +390,9 @@ public class CustomArgs {
           .toList();
 
       try {
-        Map<Node<?>, NavigableModifier> map =
+        Map<Node, NavigableModifier> map =
             StorageAssistant.loadNodes(NavigableModifier.class).join();
-        Collection<Node<?>> target =
+        Collection<Node> target =
             new FindQueryParser().parse(search, scope, n -> map.get(n).getSearchTerms());
         return new NodeSelection(target);
       } catch (Throwable t) {
@@ -450,11 +450,11 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a visualizer type argument instance
    */
-  public Argument<? extends VisualizerType<? extends PathVisualizer<?, ?, ?>>> visualizerTypeArgument(
+  public Argument<? extends VisualizerType<? extends PathVisualizer<?, ?>>> visualizerTypeArgument(
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
-      VisualizerType<? extends PathVisualizer<?, ?, ?>> type =
+      VisualizerType<? extends PathVisualizer<?, ?>> type =
           VisualizerHandler.getInstance()
               .getVisualizerType(PathPlugin.convert(customArgumentInfo.currentInput()));
       if (type == null) {

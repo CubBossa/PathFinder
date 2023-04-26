@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.storage.implementation;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
@@ -11,6 +12,8 @@ import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import java.util.Collection;
@@ -38,22 +41,32 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   @Setter
   private @Nullable Logger logger;
 
-  private Node<?> insertGroups(Node<?> node) {
-    if (node instanceof Groupable<?> groupable) {
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolve(
+      VisualizerT visualizer) {
+    return resolve(visualizer.getKey());
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolve(
+      NamespacedKey key) {
+    return cache.getVisualizerTypeCache().getType(key, this::loadVisualizerType);
+  }
+
+  private Node insertGroups(Node node) {
+    if (node instanceof Groupable groupable) {
       debug(" > Storage Implementation: 'insertGroups(" + node.getNodeId() + ")'");
       loadGroups(node.getNodeId()).forEach(groupable::addGroup);
     }
     return node;
   }
 
-  private Node<?> insertEdges(Node<?> node) {
+  private Node insertEdges(Node node) {
     debug(" > Storage Implementation: 'insertEdges(" + node.getNodeId() + ")'");
     node.getEdges().addAll(loadEdgesFrom(node.getNodeId()));
     return node;
   }
 
   @Override
-  public <N extends Node<N>> N createAndLoadNode(NodeType<N> type, Location location) {
+  public <N extends Node> N createAndLoadNode(NodeType<N> type, Location location) {
     debug(
         " > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
     N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
@@ -62,7 +75,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   @Override
-  public <N extends Node<N>> Optional<N> loadNode(UUID id) {
+  public <N extends Node> Optional<N> loadNode(UUID id) {
     debug(" > Storage Implementation: 'loadNode(" + id + ")'");
     Optional<NodeType<N>> type = loadNodeType(id);
     if (type.isPresent()) {
@@ -72,7 +85,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   @Override
-  public Collection<Node<?>> loadNodes() {
+  public Collection<Node> loadNodes() {
     debug(" > Storage Implementation: 'loadNodes()'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadAllNodes().stream())
@@ -82,7 +95,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   @Override
-  public Collection<Node<?>> loadNodes(Collection<UUID> ids) {
+  public Collection<Node> loadNodes(Collection<UUID> ids) {
     debug(" > Storage Implementation: 'loadNodes(" + ids.stream()
         .map(UUID::toString).collect(Collectors.joining(", ")) + ")'");
     return nodeTypeRegistry.getTypes().stream()
@@ -93,17 +106,17 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   @Override
-  public void saveNode(Node<?> node) {
+  public void saveNode(Node node) {
     debug(" > Storage Implementation: 'saveNode(" + node.getNodeId() + ")'");
     saveNodeTyped(node);
   }
 
-  private <N extends Node<N>> void saveNodeTyped(Node<?> node) {
-    NodeType<N> type = (NodeType<N>) node.getType();
+  private <N extends Node> void saveNodeTyped(N node) {
+    NodeType<N> type = cache.getNodeTypeCache().<N>getType(node.getNodeId(), this::loadNodeType);
     N before = type.loadNode(node.getNodeId()).orElseThrow();
-    type.saveNode((N) node);
+    type.saveNode(node);
 
-    if (before instanceof Groupable<?> gBefore && node instanceof Groupable<?> gAfter) {
+    if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
       StorageImpl.ComparisonResult<NodeGroup> cmp =
           StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
       cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
@@ -127,10 +140,10 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   @Override
-  public void deleteNodes(Collection<Node<?>> nodes) {
+  public void deleteNodes(Collection<Node> nodes) {
     Map<UUID, NodeType<?>> types = loadNodeTypes(nodes.stream().map(Node::getNodeId).toList());
-    for (Node<?> node : nodes) {
-      if (node instanceof Groupable<?> groupable) {
+    for (Node node : nodes) {
+      if (node instanceof Groupable groupable) {
         unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
       }
       deleteNode(node, types.get(node.getNodeId()));

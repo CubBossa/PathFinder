@@ -22,7 +22,7 @@ public class LocationWeightSolverPreset<C> {
 
   public static final LocationWeightSolverPreset<RaycastLocationWeightSolverConfig> RAYCAST =
       new LocationWeightSolverPreset<>("RAYCAST",
-          config -> new RaycastLocationWeightSolver<Node<?>>(
+          config -> new RaycastLocationWeightSolver<Node>(
               n -> VectorUtils.toBukkit(n.getLocation()))
               .withRaycastCount(config.raycastCount)
               .withBlockCollisionWeight(config.blockCollisionWeight)
@@ -35,10 +35,10 @@ public class LocationWeightSolverPreset<C> {
 
   private final String key;
   @Getter
-  private final Function<C, LocationWeightSolver<Node<?>>> solverFunction;
+  private final Function<C, LocationWeightSolver<Node>> solverFunction;
 
   private LocationWeightSolverPreset(String key,
-                                     Function<C, LocationWeightSolver<Node<?>>> solverFunction) {
+                                     Function<C, LocationWeightSolver<Node>> solverFunction) {
     this.key = key;
     this.solverFunction = solverFunction;
   }

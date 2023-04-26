@@ -29,14 +29,14 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
     this(key, new HashSet<>());
   }
 
-  public SimpleNodeGroup(NamespacedKey key, Collection<Node<?>> nodes) {
+  public SimpleNodeGroup(NamespacedKey key, Collection<Node> nodes) {
     super(nodes.stream().map(Node::getNodeId).toList());
     this.key = key;
     this.modifiers = new HashMap<>();
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> resolve() {
+  public CompletableFuture<Collection<Node>> resolve() {
     return pathFinder.getStorage().loadNodes(this);
   }
 

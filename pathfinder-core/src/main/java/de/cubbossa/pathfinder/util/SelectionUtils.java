@@ -118,7 +118,7 @@ public class SelectionUtils {
         return groups;
       })
           .execute(c -> c.getScope().stream()
-              .filter(node -> node instanceof Groupable<?> groupable
+              .filter(node -> node instanceof Groupable groupable
                   && groupable.getGroups()
                   .containsAll(c.getValue()))
               .collect(Collectors.toList()))
@@ -144,7 +144,7 @@ public class SelectionUtils {
   public static NodeSelection getNodeSelection(Player player, String selectString)
       throws CommandSyntaxException, ParseCancellationException {
 
-    List<Node<?>> nodes = new ArrayList<>(PathPlugin.getInstance().getStorage().loadNodes().join());
+    List<Node> nodes = new ArrayList<>(PathPlugin.getInstance().getStorage().loadNodes().join());
     return new NodeSelection(parser.parse(player, selectString, nodes));
   }
 

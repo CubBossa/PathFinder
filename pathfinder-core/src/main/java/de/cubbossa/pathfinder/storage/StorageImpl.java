@@ -83,21 +83,21 @@ public class StorageImpl implements Storage {
   // Node Type
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(
+  public <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(
       UUID node) {
     return asyncFuture(() -> implementation.loadNodeType(node));
   }
 
   @Override
-  public CompletableFuture<Map<UUID, NodeType<? extends Node<?>>>> loadNodeTypes(
+  public CompletableFuture<Map<UUID, NodeType<? extends Node>>> loadNodeTypes(
       Collection<UUID> nodes) {
     return asyncFuture(() -> implementation.loadNodeTypes(nodes));
   }
 
   // Nodes
   @Override
-  public <N extends Node<N>> CompletableFuture<N> createAndLoadNode(NodeType<N> type,
-                                                                    Location location) {
+  public <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type,
+                                                                 Location location) {
     debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
       N node = implementation.createAndLoadNode(type, location);
@@ -108,7 +108,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id) {
+  public <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id) {
     debug("Storage: 'loadNode(" + id + ")'");
     return asyncFuture(() -> {
       Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
@@ -122,7 +122,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
+  public <N extends Node> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
     debug("Storage: 'loadNode(" + type.getKey() + ", " + id + ")'");
     return asyncFuture(() -> {
       Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
@@ -134,22 +134,24 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> loadNodes() {
+  public CompletableFuture<Collection<Node>> loadNodes() {
     debug("Storage: 'loadNodes()'");
     return asyncFuture(() -> cache.getNodeCache().getAllNodes(implementation::loadNodes));
   }
 
   @Override
-  public CompletableFuture<Collection<Node<?>>> loadNodes(Collection<UUID> ids) {
+  public CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids) {
     debug("Storage: 'loadNodes(" + ids.stream().map(UUID::toString).collect(Collectors.joining(","))
         + ")'");
     return asyncFuture(() -> cache.getNodeCache().getNodes(ids, implementation::loadNodes));
   }
 
   @Override
-  public CompletableFuture<Void> saveNode(Node<?> node) {
+  public CompletableFuture<Void> saveNode(Node node) {
     debug("Storage: 'saveNode(" + node.getNodeId() + ")'");
-    return loadNode(node.getType(), node.getNodeId()).thenAccept(before -> {
+    NodeType<?> type =
+        cache.getNodeTypeCache().getType(node.getNodeId(), implementation::loadNodeType);
+    return loadNode(type, node.getNodeId()).thenAccept(before -> {
       eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
       implementation.saveNode(node);
       cache.getNodeCache().write(node);
@@ -158,7 +160,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater) {
+  public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater) {
     debug("Storage: 'modifyNode(" + id + ")'");
     return loadNode(id).thenApply(n -> {
       updater.accept(n.orElseThrow());
@@ -172,7 +174,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> deleteNodes(Collection<Node> nodes) {
     Collection<UUID> uuids = nodes.stream().map(Node::getNodeId).toList();
     debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString)
         .collect(Collectors.joining(",")) + ")'");
@@ -291,27 +293,48 @@ public class StorageImpl implements Storage {
     });
   }
 
-  // Visualizer
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      PathVisualizer<T, ?, ?> visualizer) {
-    return createAndLoadVisualizer(visualizer.getType(), visualizer.getKey());
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerType<VisualizerT>> loadVisualizerType(
+      NamespacedKey key) {
+    return null;
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      VisualizerType<T> type, NamespacedKey key) {
+  public CompletableFuture<Map<NamespacedKey, VisualizerType<?>>> loadVisualizerTypes(
+      Collection<NamespacedKey> keys) {
     return asyncFuture(() -> {
-      T visualizer = type.getStorage().createAndLoadVisualizer(key);
+      return cache.getVisualizerTypeCache().getTypes(keys, implementation::loadVisualizerTypes);
+    });
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Void> saveVisualizerType(
+      NamespacedKey key, VisualizerType<VisualizerT> type) {
+    return null;
+  }
+
+  // Visualizer
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
+      VisualizerT visualizer) {
+    return createAndLoadVisualizer(cache.getVisualizerTypeCache()
+        .getType(visualizer.getKey(), implementation::loadVisualizerType), visualizer.getKey());
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
+      VisualizerType<VisualizerT> type, NamespacedKey key) {
+    return asyncFuture(() -> {
+      VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(key);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });
   }
 
   @Override
-  public CompletableFuture<Collection<PathVisualizer<?, ?, ?>>> loadVisualizers() {
+  public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
     return asyncFuture(() -> cache.getVisualizerCache().getVisualizers(() -> {
-      Collection<PathVisualizer<?, ?, ?>> visualizers = new HashSet<>();
+      Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
       for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
       }
@@ -320,24 +343,25 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
-      VisualizerType<T> type) {
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Map<NamespacedKey, VisualizerT>> loadVisualizers(
+      VisualizerType<VisualizerT> type) {
     return asyncFuture(
-        () -> cache.getVisualizerCache().getVisualizers(type, t -> implementation.loadVisualizers(t).values())
+        () -> cache.getVisualizerCache()
+            .getVisualizers(type, t -> implementation.loadVisualizers(t).values())
             .stream()
             .collect(Collectors.toMap(Keyed::getKey, t -> t)));
   }
 
   @Override
-  public <T extends PathVisualizer<T, D, ?>, D> CompletableFuture<Optional<T>> loadVisualizer(
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerT>> loadVisualizer(
       NamespacedKey key) {
     return asyncFuture(() -> cache.getVisualizerCache().getVisualizer(key, k -> {
-      for (VisualizerType<? extends PathVisualizer<?, ?, ?>> type : VisualizerHandler.getInstance()
+      for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerHandler.getInstance()
           .getVisualizerTypes()) {
-        Optional<PathVisualizer<?, ?, ?>> opt =
-            (Optional<PathVisualizer<?, ?, ?>>) type.getStorage().loadVisualizer(key);
+        Optional<PathVisualizer<?, ?>> opt =
+            (Optional<PathVisualizer<?, ?>>) type.getStorage().loadVisualizer(key);
         if (opt.isPresent()) {
-          return (T) opt.get();
+          return (VisualizerT) opt.get();
         }
       }
       return null;
@@ -345,7 +369,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.saveVisualizer(visualizer);
       cache.getVisualizerCache().write(visualizer);
@@ -353,7 +377,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?, ?> visualizer) {
+  public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     return asyncFuture(() -> {
       implementation.deleteVisualizer(visualizer);
       cache.getVisualizerCache().invalidate(visualizer);

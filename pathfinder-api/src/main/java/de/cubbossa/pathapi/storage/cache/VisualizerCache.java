@@ -8,13 +8,14 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface VisualizerCache extends StorageCache<PathVisualizer<?, ?, ?>> {
-  <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                Function<NamespacedKey, T> loader);
+public interface VisualizerCache extends StorageCache<PathVisualizer<?, ?>> {
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> getVisualizer(NamespacedKey key,
+                                                                                 Function<NamespacedKey, VisualizerT> loader);
 
-  Collection<PathVisualizer<?, ?, ?>> getVisualizers(
-      Supplier<Collection<PathVisualizer<?, ?, ?>>> loader);
+  Collection<PathVisualizer<?, ?>> getVisualizers(
+      Supplier<Collection<PathVisualizer<?, ?>>> loader);
 
-  <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
-                                                                   Function<VisualizerType<T>, Collection<T>> loader);
+  <VisualizerT extends PathVisualizer<?, ?>> Collection<VisualizerT> getVisualizers(
+      VisualizerType<VisualizerT> type,
+      Function<VisualizerType<VisualizerT>, Collection<VisualizerT>> loader);
 }

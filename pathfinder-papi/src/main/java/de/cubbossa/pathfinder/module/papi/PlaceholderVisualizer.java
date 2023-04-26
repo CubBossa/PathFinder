@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.util.VectorUtils;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
 import java.util.List;
 import lombok.Getter;
@@ -76,12 +75,12 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges) {
+  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
     return new Data(nodes, edges);
   }
 
   @Override
-  public Data prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
+  public Data prepare(List<Node> nodes, PathPlayer<Player> player) {
     Data data = super.prepare(nodes, player);
     Player bp = player.unwrap();
     PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, data::getDirection);
@@ -116,18 +115,13 @@ public class PlaceholderVisualizer
         .replace("\\<", "<");
   }
 
-  @Override
-  public AbstractVisualizerType<PlaceholderVisualizer> getType() {
-    return PlaceholderHook.PLACEHOLDER_VISUALIZER_TYPE;
-  }
-
   @Getter
   @Setter
   protected static class Data extends EdgeBasedVisualizer.Data {
 
     private String direction = "", distance = "";
 
-    public Data(List<Node<?>> nodes, List<Edge> edges) {
+    public Data(List<Node> nodes, List<Edge> edges) {
       super(nodes, edges);
     }
   }

@@ -14,8 +14,8 @@ import org.bukkit.entity.Player;
 
 @Getter
 @Setter
-public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D extends BossBarVisualizer.Data>
-    extends EdgeBasedVisualizer<T, D> {
+public abstract class BossBarVisualizer<DataT extends BossBarVisualizer.Data>
+    extends EdgeBasedVisualizer<DataT> {
 
   public static final AbstractVisualizer.Property<CompassVisualizer, BossBar.Color> PROP_COLOR =
       new AbstractVisualizer.SimpleProperty<>("color", BossBar.Color.class, true,
@@ -34,17 +34,17 @@ public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D ext
   }
 
   @Override
-  public D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges) {
+  public DataT newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
     TranslationHandler.getInstance().getAudiences().player(player.unwrap()).showBossBar(bossBar);
     return newData(player, nodes, edges, bossBar);
   }
 
-  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges,
-                            BossBar bossBar);
+  public abstract DataT newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges,
+                                BossBar bossBar);
 
   @Override
-  public void destruct(PathPlayer<Player> player, D data) {
+  public void destruct(PathPlayer<Player> player, DataT data) {
     super.destruct(player, data);
     TranslationHandler.getInstance().getAudiences().player(player.getUniqueId())
         .hideBossBar(data.getBossBar());
@@ -54,7 +54,7 @@ public abstract class BossBarVisualizer<T extends BossBarVisualizer<T, D>, D ext
   public static class Data extends EdgeBasedVisualizer.Data {
     private final BossBar bossBar;
 
-    public Data(List<Node<?>> nodes, List<Edge> edges, BossBar bossBar) {
+    public Data(List<Node> nodes, List<Edge> edges, BossBar bossBar) {
       super(nodes, edges);
       this.bossBar = bossBar;
     }

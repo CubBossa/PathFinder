@@ -51,7 +51,7 @@ public class PathVisualizerCommand extends Command {
             .then(new StringArgument("key")
                 .executes((commandSender, objects) -> {
                   onCreate(commandSender,
-                      (VisualizerType<? extends PathVisualizer<?, ?, ?>>) objects[0],
+                      (VisualizerType<? extends PathVisualizer<?, ?>>) objects[0],
                       PathPlugin.pathfinder((String) objects[1]));
                 }))));
 
@@ -60,7 +60,7 @@ public class PathVisualizerCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_PV_DELETE)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
-              onDelete(commandSender, (PathVisualizer<?, ?, ?>) objects[0]);
+              onDelete(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
     then(CustomArgs.literal("info")
@@ -68,7 +68,7 @@ public class PathVisualizerCommand extends Command {
         .withPermission(PathPerms.PERM_CMD_PV_INFO)
         .then(CustomArgs.pathVisualizerArgument("visualizer")
             .executes((commandSender, objects) -> {
-              onInfo(commandSender, (PathVisualizer<?, ?, ?>) objects[0]);
+              onInfo(commandSender, (PathVisualizer<?, ?>) objects[0]);
             })));
 
     then(new VisualizerImportCommand(pathFinder, "import", 0));
@@ -78,7 +78,7 @@ public class PathVisualizerCommand extends Command {
   public void register() {
 
     Argument<String> lit = CustomArgs.literal("edit");
-    for (VisualizerType<? extends PathVisualizer<?, ?, ?>> type : VisualizerHandler.getInstance()
+    for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerHandler.getInstance()
         .getVisualizerTypes()) {
 
       if (!(type instanceof VisualizerTypeCommandExtension cmdExt)) {
@@ -92,7 +92,7 @@ public class PathVisualizerCommand extends Command {
           .withPermission(PathPerms.PERM_CMD_PV_SET_NAME)
           .then(CustomArgs.miniMessageArgument("name")
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (String) objects[1], "name", true,
                           visualizer::getNameFormat, visualizer::setNameFormat);
@@ -102,7 +102,7 @@ public class PathVisualizerCommand extends Command {
           .withPermission(PathPerms.PERM_CMD_PV_SET_PERMISSION)
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (String) objects[1], "permission",
                           true,
@@ -114,7 +114,7 @@ public class PathVisualizerCommand extends Command {
           .withPermission(PathPerms.PERM_CMD_PV_INTERVAL)
           .then(CustomArgs.integer("ticks", 1)
               .executes((commandSender, objects) -> {
-                if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
+                if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
                   VisualizerHandler.getInstance()
                       .setProperty(commandSender, visualizer, (Integer) objects[1], "interval",
                           true,
@@ -151,7 +151,7 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public void onCreate(CommandSender sender, VisualizerType<? extends PathVisualizer<?, ?, ?>> type,
+  public void onCreate(CommandSender sender, VisualizerType<? extends PathVisualizer<?, ?>> type,
                        NamespacedKey key) {
 
     Optional<?> opt = getPathfinder().getStorage().loadVisualizer(key).join();
@@ -167,12 +167,14 @@ public class PathVisualizerCommand extends Command {
               .resolver(
                   Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
               .resolver(Placeholder.component("type",
-                  Component.text(visualizer.getType().getCommandName())))
+                  Component.text(
+                      getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).join()
+                          .getCommandName())))
               .build()), sender);
     });
   }
 
-  public void onDelete(CommandSender sender, PathVisualizer<?, ?, ?> visualizer) {
+  public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
     getPathfinder().getStorage().deleteVisualizer(visualizer).thenRun(() -> {
       TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
           .format(TagResolver.builder()
@@ -188,16 +190,17 @@ public class PathVisualizerCommand extends Command {
     });
   }
 
-  public <T extends PathVisualizer<T, ?, ?>> void onInfo(CommandSender sender,
-                                                         PathVisualizer<T, ?, ?> visualizer) {
-    if (!(visualizer.getType() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
+  public <T extends PathVisualizer<?, ?>> void onInfo(CommandSender sender,
+                                                      T visualizer) {
+    if (!(getPathfinder().getStorage().loadVisualizerType(visualizer.getKey())
+        .join() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
       return;
     }
     // can be safely assumed, the type was extracted from the visualizer
     VisualizerTypeMessageExtension<T> cast = (VisualizerTypeMessageExtension<T>) msgExt;
 
     FormattedMessage message =
-        cast.getInfoMessage((T) visualizer).format(TagResolver.builder()
+        cast.getInfoMessage(visualizer).format(TagResolver.builder()
             .tag("key", Messages.formatKey(visualizer.getKey()))
             .resolver(Placeholder.component("name", visualizer.getDisplayName()))
             .resolver(

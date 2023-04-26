@@ -103,7 +103,7 @@ public class FindModule implements Listener, PathFinderExtension {
     registerListener();
 
     registerFindPredicate(c -> {
-      if (!(c.node() instanceof Groupable<?> groupable)) {
+      if (!(c.node() instanceof Groupable groupable)) {
         return true;
       }
       Player player = Bukkit.getPlayer(c.playerId());
@@ -160,9 +160,9 @@ public class FindModule implements Listener, PathFinderExtension {
       Location _location = location.equals(player.getLocation())
           ? location.add(0, 0.01, 0) : location;
 
-      Node<?> closest = null;
+      Node closest = null;
       double dist = Double.MAX_VALUE;
-      for (Node<?> node : nodes) {
+      for (Node node : nodes) {
         double curDist = node.getLocation().distance(_location);
         if (curDist < dist && curDist < _maxDist) {
           closest = node;
@@ -172,9 +172,8 @@ public class FindModule implements Listener, PathFinderExtension {
       if (closest == null) {
         return NavigateResult.FAIL_TOO_FAR_AWAY;
       }
-      final Node<?> fClosest = closest;
-      Waypoint waypoint =
-          new Waypoint(plugin.getNodeTypeRegistry().getWaypointNodeType(), UUID.randomUUID());
+      final Node fClosest = closest;
+      Waypoint waypoint = new Waypoint(UUID.randomUUID());
       waypoint.setLocation(_location);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
       fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));
@@ -195,13 +194,13 @@ public class FindModule implements Listener, PathFinderExtension {
     return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
       return plugin.getStorage().loadNodes().thenApply(nodes -> {
 
-        PathSolver<Node<?>> pathSolver = new SimpleDijkstra<>();
-        List<Node<?>> path;
+        PathSolver<Node> pathSolver = new SimpleDijkstra<>();
+        List<Node> path;
         try {
           // TODO whats going on
           path = pathSolver.solvePath(graph, playerNode, targets.stream()
               .map(node -> nodes.stream().filter(n -> n.equals(node)).findAny().get())
-              .map(node -> (Node<?>) node)
+              .map(node -> (Node) node)
               .collect(Collectors.toList()));
         } catch (NoPathFoundException e) {
           return NavigateResult.FAIL_BLOCKED;
@@ -210,7 +209,7 @@ public class FindModule implements Listener, PathFinderExtension {
         VisualizerPath<Player> visualizerPath = new VisualizerPath<>(player);
         visualizerPath.addAll(path);
 
-        Groupable<?> last = (Groupable<?>) visualizerPath.get(visualizerPath.size() - 1);
+        Groupable last = (Groupable) visualizerPath.get(visualizerPath.size() - 1);
         NodeGroup highest = last.getGroups().stream()
             .filter(g -> g.hasModifier(FindDistanceModifier.class))
             .max(NodeGroup::compareTo).orElse(null);
@@ -300,7 +299,7 @@ public class FindModule implements Listener, PathFinderExtension {
     FAIL_TOO_FAR_AWAY;
   }
 
-  public record NavigationRequestContext(UUID playerId, Node<?> node) {
+  public record NavigationRequestContext(UUID playerId, Node node) {
   }
 
   public record SearchInfo(PathPlayer<Player> player, VisualizerPath<?> path, Location target,

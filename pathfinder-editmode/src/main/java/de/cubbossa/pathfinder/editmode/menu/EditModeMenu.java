@@ -44,12 +44,12 @@ public class EditModeMenu {
   private final PathFinder pathFinder;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
-  private final Collection<NodeType<? extends Node<?>>> types;
+  private final Collection<NodeType<? extends Node>> types;
   private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
   public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
-                      Collection<NodeType<? extends Node<?>>> types) {
+                      Collection<NodeType<? extends Node>> types) {
     this.pathFinder = pathFinder;
     this.key = group;
     this.types = types;
@@ -75,13 +75,13 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-            NodeType<? extends Node<?>> type = types.stream().findAny().orElse(null);
+            NodeType<? extends Node> type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
             pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(pos))
                 .thenAccept(node -> {
-                  if (!(node instanceof Groupable<?> groupable)) {
+                  if (!(node instanceof Groupable groupable)) {
                     return;
                   }
                   groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
@@ -178,9 +178,9 @@ public class EditModeMenu {
           pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
 
             double dist = -1;
-            Node<?> nearest = null;
+            Node nearest = null;
             Location pLoc = context.getPlayer().getLocation();
-            for (Node<?> node : nodes) {
+            for (Node node : nodes) {
               double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
               if (dist == -1 || d < dist) {
                 nearest = node;
@@ -203,14 +203,14 @@ public class EditModeMenu {
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
           pathFinder.getStorage().loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
-            if (node.isPresent() && node.get() instanceof Groupable<?> groupable) {
+            if (node.isPresent() && node.get() instanceof Groupable groupable) {
               openGroupMenu(context.getPlayer(), groupable);
             }
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable<?> groupable)) {
+            if (!(node instanceof Groupable groupable)) {
               return;
             }
             if (groupable.getGroups().isEmpty()) {
@@ -227,7 +227,7 @@ public class EditModeMenu {
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
           pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable<?> groupable)) {
+            if (!(node instanceof Groupable groupable)) {
               return;
             }
             pathFinder.getStorage().loadGroups(multiTool).thenAccept(groups -> {
@@ -239,7 +239,7 @@ public class EditModeMenu {
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable<?> groupable)) {
+            if (!(node instanceof Groupable groupable)) {
               return;
             }
             multiTool.forEach(groupable::removeGroup);
@@ -252,7 +252,7 @@ public class EditModeMenu {
     return menu;
   }
 
-  private void openGroupMenu(Player player, Groupable<?> groupable) {
+  private void openGroupMenu(Player player, Groupable groupable) {
 
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
 

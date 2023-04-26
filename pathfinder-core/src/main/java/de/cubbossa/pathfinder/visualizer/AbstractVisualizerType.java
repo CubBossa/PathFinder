@@ -23,7 +23,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>>
+public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
     implements VisualizerType<T> {
 
   /**
@@ -50,17 +50,17 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>>
     return null;
   }
 
-  protected <V extends PathVisualizer<?, ?, ?>> void serialize(Map<String, Object> map,
-                                                               AbstractVisualizer.Property<V, ?> property,
-                                                               V visualizer) {
+  protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
+                                                            AbstractVisualizer.Property<V, ?> property,
+                                                            V visualizer) {
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
-  protected <A, V extends PathVisualizer<?, ?, ?>> ArgumentTree subCommand(String node,
-                                                                           Argument<A> argument,
-                                                                           AbstractVisualizer.Property<V, A> property) {
+  protected <A, V extends PathVisualizer<?, ?>> ArgumentTree subCommand(String node,
+                                                                        Argument<A> argument,
+                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, objects) -> {
-      if (objects[0] instanceof PathVisualizer<?, ?, ?> visualizer) {
+      if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
         VisualizerHandler.getInstance()
             .setProperty(commandSender, (V) visualizer, property, (A) objects[1]);
       } else {
@@ -72,9 +72,9 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<T, ?, ?>>
     }));
   }
 
-  protected <A, V extends PathVisualizer<?, ?, ?>> void loadProperty(Map<String, Object> values,
-                                                                     V visualizer,
-                                                                     AbstractVisualizer.Property<V, A> property) {
+  protected <A, V extends PathVisualizer<?, ?>> void loadProperty(Map<String, Object> values,
+                                                                  V visualizer,
+                                                                  AbstractVisualizer.Property<V, A> property) {
     loadProperty(values, property.getKey(), property.getType(),
         a -> property.setValue(visualizer, a));
   }

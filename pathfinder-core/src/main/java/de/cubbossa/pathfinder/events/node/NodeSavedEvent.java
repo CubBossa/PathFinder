@@ -11,9 +11,9 @@ public class NodeSavedEvent extends Event implements NodeSaveEvent {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Node<?> node;
+  private final Node node;
 
-  public NodeSavedEvent(Node<?> node) {
+  public NodeSavedEvent(Node node) {
     this.node = node;
   }
 

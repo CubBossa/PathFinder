@@ -31,15 +31,15 @@ public class SimpleEdge implements Edge {
     this.weightModifier = weightModifier;
   }
 
-  public SimpleEdge(Node<?> start, Node<?> end, float weightModifier) {
+  public SimpleEdge(Node start, Node end, float weightModifier) {
     this(start.getNodeId(), end.getNodeId(), weightModifier);
   }
 
-  public CompletableFuture<Node<?>> resolveStart() {
+  public CompletableFuture<Node> resolveStart() {
     return pathFinder.getStorage().loadNode(start).thenApply(Optional::orElseThrow);
   }
 
-  public CompletableFuture<Node<?>> resolveEnd() {
+  public CompletableFuture<Node> resolveEnd() {
     return pathFinder.getStorage().loadNode(end).thenApply(Optional::orElseThrow);
   }
 

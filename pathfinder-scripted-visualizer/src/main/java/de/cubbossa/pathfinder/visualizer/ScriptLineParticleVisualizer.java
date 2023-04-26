@@ -14,8 +14,7 @@ import org.bukkit.Particle;
 
 @Getter
 @Setter
-public class ScriptLineParticleVisualizer
-    extends AdvancedParticleVisualizer<ScriptLineParticleVisualizer> {
+public class ScriptLineParticleVisualizer extends AdvancedParticleVisualizer {
 
   private String particleFunction = "REDSTONE";
   private String particleDataFunction =
@@ -99,10 +98,5 @@ public class ScriptLineParticleVisualizer
     bindings.put("step", context.step());
     bindings.put("interval", context.interval());
     return bindings;
-  }
-
-  @Override
-  public AbstractVisualizerType<ScriptLineParticleVisualizer> getType() {
-    return ScriptedVisualizerPathfinderExtension.ADV_PARTICLE_VISUALIZER_TYPE;
   }
 }

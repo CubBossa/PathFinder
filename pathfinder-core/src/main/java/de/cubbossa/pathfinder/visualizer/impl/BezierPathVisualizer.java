@@ -25,9 +25,9 @@ import org.bukkit.util.Vector;
 
 @Getter
 @Setter
-public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
-    extends BukkitVisualizer<T, BezierPathVisualizer.BezierData>
-    implements PathVisualizer<T, BezierPathVisualizer.BezierData, Player> {
+public abstract class BezierPathVisualizer
+    extends BukkitVisualizer<BezierPathVisualizer.BezierData>
+    implements PathVisualizer<BezierPathVisualizer.BezierData, Player> {
 
   private float pointDistance = .2f;
   private int bezierSamplingRate = 16;
@@ -37,13 +37,13 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   }
 
   @Override
-  public BezierData prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
+  public BezierData prepare(List<Node> nodes, PathPlayer<Player> player) {
 
     // split the path into segments for each appearing world change
     List<PathSegment> segments = new ArrayList<>();
     World last = null;
-    List<Node<?>> open = new ArrayList<>();
-    for (Node<?> node : nodes) {
+    List<Node> open = new ArrayList<>();
+    for (Node node : nodes) {
       if (!Objects.equals(last, node.getLocation().getWorld())) {
         if (last != null) {
           segments.add(new PathSegment(last, new ArrayList<>(open)));
@@ -57,9 +57,9 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
     // make a smooth spline for each segment and append them.
     List<Location> calculatedPoints = new ArrayList<>();
     for (PathSegment segment : segments) {
-      LinkedHashMap<Node<?>, Double> path = new LinkedHashMap<>();
-      for (Node<?> node : segment.nodes()) {
-        if (!(node instanceof Groupable<?> groupable)) {
+      LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
+      for (Node node : segment.nodes()) {
+        if (!(node instanceof Groupable groupable)) {
           path.put(node, 1.);
           continue;
         }
@@ -85,7 +85,7 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
    * @param nodes A map of nodes with a curve length for each node.
    * @return a spline object representing the nodes
    */
-  private Spline makeSpline(LinkedHashMap<Node<?>, Double> nodes) {
+  private Spline makeSpline(LinkedHashMap<Node, Double> nodes) {
     return new Spline(NodeUtils.toSpline(nodes, true));
   }
 
@@ -110,6 +110,6 @@ public abstract class BezierPathVisualizer<T extends BezierPathVisualizer<T>>
   public record BezierData(List<Location> points) {
   }
 
-  private record PathSegment(World world, List<Node<?>> nodes) {
+  private record PathSegment(World world, List<Node> nodes) {
   }
 }

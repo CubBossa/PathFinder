@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.PathPlugin;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -13,9 +14,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class VisualizerCacheImpl
-    implements StorageCache<PathVisualizer<?, ?, ?>>, de.cubbossa.pathapi.storage.cache.VisualizerCache {
+    implements StorageCache<PathVisualizer<?, ?>>,
+    de.cubbossa.pathapi.storage.cache.VisualizerCache {
 
-  private final Cache<NamespacedKey, PathVisualizer<?, ?, ?>> cache;
+  private final Cache<NamespacedKey, PathVisualizer<?, ?>> cache;
   private boolean cachedAll = false;
   private Collection<NamespacedKey> cachedTypes = new HashSet<>();
 
@@ -26,14 +28,14 @@ public class VisualizerCacheImpl
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                       Function<NamespacedKey, T> loader) {
+  public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key,
+                                                                    Function<NamespacedKey, T> loader) {
     return Optional.ofNullable((T) cache.get(key, loader));
   }
 
   @Override
-  public Collection<PathVisualizer<?, ?, ?>> getVisualizers(
-      Supplier<Collection<PathVisualizer<?, ?, ?>>> loader) {
+  public Collection<PathVisualizer<?, ?>> getVisualizers(
+      Supplier<Collection<PathVisualizer<?, ?>>> loader) {
     if (cachedAll) {
       return cache.asMap().values();
     }
@@ -43,11 +45,13 @@ public class VisualizerCacheImpl
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
-                                                                          Function<VisualizerType<T>, Collection<T>> loader) {
+  public <T extends PathVisualizer<?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
+                                                                       Function<VisualizerType<T>, Collection<T>> loader) {
     if (cachedAll || cachedTypes.contains(type.getKey())) {
       return cache.asMap().values().stream()
-          .filter(visualizer -> visualizer.getType().equals(type))
+          .filter(
+              visualizer -> PathPlugin.getInstance().getVisualizerTypeResolver().resolve(visualizer)
+                  .equals(type))
           .map(visualizer -> (T) visualizer)
           .toList();
     }
@@ -58,12 +62,12 @@ public class VisualizerCacheImpl
   }
 
   @Override
-  public void write(PathVisualizer<?, ?, ?> visualizer) {
+  public void write(PathVisualizer<?, ?> visualizer) {
     cache.put(visualizer.getKey(), visualizer);
   }
 
   @Override
-  public void invalidate(PathVisualizer<?, ?, ?> visualizer) {
+  public void invalidate(PathVisualizer<?, ?> visualizer) {
     cache.invalidate(visualizer.getKey());
   }
 

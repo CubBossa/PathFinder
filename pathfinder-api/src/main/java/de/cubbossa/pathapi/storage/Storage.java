@@ -51,7 +51,7 @@ public interface Storage {
    * @param <N>  The Node type.
    * @return The {@link NodeType} instance wrapped in {@link CompletableFuture}.
    */
-  <N extends Node<N>> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node);
+  <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node);
 
   /**
    * Loads the node type for multiple nodes by their {@link UUID}s.
@@ -60,7 +60,7 @@ public interface Storage {
    * @return A map of all uuids with their found node types. If no type was found, it is not included
    * in the map. Therefore, the size of the return map must not be equal to the size of the input collection.
    */
-  CompletableFuture<Map<UUID, NodeType<? extends Node<?>>>> loadNodeTypes(Collection<UUID> nodes);
+  CompletableFuture<Map<UUID, NodeType<? extends Node>>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
 
@@ -72,7 +72,7 @@ public interface Storage {
    * @param <N>      The Node type.
    * @return A node instance matching the type parameter wrapped in {@link CompletableFuture}.
    */
-  <N extends Node<N>> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location);
+  <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location);
 
   /**
    * Loads, modifies and saves a node with given {@link UUID} asynchronously.
@@ -81,18 +81,18 @@ public interface Storage {
    * @param updater A consumer that will be applied to the requested node once loaded.
    * @return A {@link CompletableFuture} indicating the completion of the process.
    */
-  CompletableFuture<Void> modifyNode(UUID id, Consumer<Node<?>> updater);
+  CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater);
 
-  <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(UUID id);
+  <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id);
 
-  <N extends Node<N>> CompletableFuture<Optional<N>> loadNode(
+  <N extends Node> CompletableFuture<Optional<N>> loadNode(
       NodeType<N> type, UUID id);
 
-  CompletableFuture<Collection<Node<?>>> loadNodes();
+  CompletableFuture<Collection<Node>> loadNodes();
 
-  CompletableFuture<Collection<Node<?>>> loadNodes(Collection<UUID> ids);
+  CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids);
 
-  CompletableFuture<Void> saveNode(Node<?> node);
+  CompletableFuture<Void> saveNode(Node node);
 
   /**
    * A wrapper for {@link #deleteNodes(Collection)} that first resolves the input collection of
@@ -113,7 +113,7 @@ public interface Storage {
    * @param nodes A collection of nodes to delete.
    * @return A {@link CompletableFuture} indicating the completion of the process.
    */
-  CompletableFuture<Void> deleteNodes(Collection<Node<?>> nodes);
+  CompletableFuture<Void> deleteNodes(Collection<Node> nodes);
 
   // Groups
   CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
@@ -145,21 +145,31 @@ public interface Storage {
   CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info);
 
   // Visualizer
-  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      PathVisualizer<T, ?, ?> visualizer);
 
-  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<T> createAndLoadVisualizer(
-      VisualizerType<T> type, NamespacedKey key);
-
-  CompletableFuture<Collection<PathVisualizer<?, ?, ?>>> loadVisualizers();
-
-  <T extends PathVisualizer<T, ?, ?>> CompletableFuture<Map<NamespacedKey, T>> loadVisualizers(
-      VisualizerType<T> type);
-
-  <T extends PathVisualizer<T, D, ?>, D> CompletableFuture<Optional<T>> loadVisualizer(
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerType<VisualizerT>> loadVisualizerType(
       NamespacedKey key);
 
-  CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?, ?> visualizer);
+  CompletableFuture<Map<NamespacedKey, VisualizerType<?>>> loadVisualizerTypes(
+      Collection<NamespacedKey> keys);
 
-  CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?, ?> visualizer);
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Void> saveVisualizerType(
+      NamespacedKey key, VisualizerType<VisualizerT> type);
+
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
+      VisualizerT visualizer);
+
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
+      VisualizerType<VisualizerT> type, NamespacedKey key);
+
+  CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers();
+
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Map<NamespacedKey, VisualizerT>> loadVisualizers(
+      VisualizerType<VisualizerT> type);
+
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerT>> loadVisualizer(
+      NamespacedKey key);
+
+  CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer);
+
+  CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer);
 }

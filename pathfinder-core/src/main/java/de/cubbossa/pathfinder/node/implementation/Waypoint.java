@@ -6,7 +6,6 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,17 +16,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
+public class Waypoint implements Node, Groupable {
 
-  private final NodeType<Waypoint> type;
   private final UUID nodeId;
   private final HashSet<Edge> edges;
   private final Map<NamespacedKey, NodeGroup> groups;
 
   private Location location;
 
-  public Waypoint(NodeType<Waypoint> type, UUID databaseId) {
-    this.type = type;
+  public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;
     this.groups = new HashMap<>();
 
@@ -44,11 +41,6 @@ public class Waypoint implements Node<Waypoint>, Groupable<Waypoint> {
     }
 
     return nodeId == waypoint.nodeId;
-  }
-
-  @Override
-  public NodeType<Waypoint> getType() {
-    return type;
   }
 
   @Override

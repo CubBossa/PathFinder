@@ -54,7 +54,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   public void showElement(Edge element, Player player) {
     super.showElement(element, player);
     setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
-      Node<?> end = element.resolveEnd().join();
+      Node end = element.resolveEnd().join();
       return VectorUtils.toBukkit(
           end.getLocation().clone().subtract(start.getLocation()).asVector());
     }).join());
@@ -79,14 +79,14 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   }
 
   @Override
-  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     showElements(nodes.stream().flatMap(n -> n.getEdges().stream()).toList(), player.unwrap());
     players.add(player);
     return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes) {
+  public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     hideElements(nodes.stream().flatMap(n -> n.getEdges().stream()).toList(), player.unwrap());
     return CompletableFuture.completedFuture(null);
   }

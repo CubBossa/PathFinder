@@ -32,7 +32,7 @@ import org.bukkit.entity.Player;
 public class WaypointCommand extends Command {
 
   public WaypointCommand(PathFinder pathFinder,
-                         Supplier<NodeType<? extends Node<?>>> fallbackWaypointType) {
+                         Supplier<NodeType<? extends Node>> fallbackWaypointType) {
     super(pathFinder, "waypoint");
     withAliases("node");
     withGeneratedHelp();
@@ -86,12 +86,12 @@ public class WaypointCommand extends Command {
         )
         .then(CustomArgs.nodeTypeArgument("type")
             .executesPlayer((player, objects) -> {
-              createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0],
+              createNode(player, (NodeType<? extends Node>) objects[0],
                   VectorUtils.toInternal(player.getLocation()));
             })
             .then(CustomArgs.location("location")
                 .executesPlayer((player, objects) -> {
-                  createNode(player, (NodeType<? extends Node<? extends Node<?>>>) objects[0],
+                  createNode(player, (NodeType<? extends Node>) objects[0],
                       (Location) objects[1]);
                 })
             )
@@ -174,8 +174,8 @@ public class WaypointCommand extends Command {
   }
 
   private void addGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
-    for (Node<?> node : nodes) {
-      if (!(node instanceof Groupable<?> groupable)) {
+    for (Node node : nodes) {
+      if (!(node instanceof Groupable groupable)) {
         continue;
       }
       groupable.addGroup(group);
@@ -190,8 +190,8 @@ public class WaypointCommand extends Command {
   }
 
   private void removeGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
-    for (Node<?> node : nodes) {
-      if (!(node instanceof Groupable<?> groupable)) {
+    for (Node node : nodes) {
+      if (!(node instanceof Groupable groupable)) {
         continue;
       }
       if (!groupable.getGroups().contains(group)) {
@@ -209,8 +209,8 @@ public class WaypointCommand extends Command {
   }
 
   private void clearGroups(CommandSender sender, NodeSelection nodes) {
-    for (Node<?> node : nodes) {
-      if (!(node instanceof Groupable<?> groupable)) {
+    for (Node node : nodes) {
+      if (!(node instanceof Groupable groupable)) {
         continue;
       }
       if (groupable.getGroups().isEmpty()) {
@@ -228,8 +228,8 @@ public class WaypointCommand extends Command {
   }
 
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
-    for (Node<?> s : start) {
-      for (Node<?> e : end) {
+    for (Node s : start) {
+      for (Node e : end) {
         Optional<Edge> edge = s.getEdges().stream()
             .filter(edge1 -> edge1.getEnd().equals(e.getNodeId()))
             .findAny();
@@ -239,8 +239,8 @@ public class WaypointCommand extends Command {
   }
 
   private void connectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
-    for (Node<?> s : start) {
-      for (Node<?> e : end) {
+    for (Node s : start) {
+      for (Node e : end) {
         if (s.equals(e)) {
           continue;
         }
@@ -253,7 +253,7 @@ public class WaypointCommand extends Command {
     }
   }
 
-  private void createNode(CommandSender sender, NodeType<? extends Node<?>> type,
+  private void createNode(CommandSender sender, NodeType<? extends Node> type,
                           Location location) {
     getPathfinder().getStorage().createAndLoadNode(
         type,
@@ -275,7 +275,7 @@ public class WaypointCommand extends Command {
 
   private void teleportNodes(CommandSender sender, NodeSelection nodes, Location location) {
     Collection<CompletableFuture<?>> futures = new HashSet<>();
-    for (Node<?> node : nodes) {
+    for (Node node : nodes) {
       node.setLocation(location);
       futures.add(getPathfinder().getStorage().saveNode(node));
     }
@@ -296,10 +296,10 @@ public class WaypointCommand extends Command {
       onList(player, selection, 1);
       return;
     }
-    Node<?> node = selection.get(0);
+    Node node = selection.get(0);
 
     Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
-    Collection<Node<?>> resolvedNeighbours =
+    Collection<Node> resolvedNeighbours =
         getPathfinder().getStorage().loadNodes(neighbours).join();
 
     FormattedMessage message = Messages.CMD_N_INFO.format(TagResolver.builder()
@@ -311,7 +311,7 @@ public class WaypointCommand extends Command {
         .resolver(Placeholder.component("edges",
             Messages.formatNodeSelection(player, resolvedNeighbours)))
 //          .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-//              node instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
+//              node instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
         .build());
     TranslationHandler.getInstance().sendMessage(message, player);
   }
@@ -340,7 +340,7 @@ public class WaypointCommand extends Command {
         new ArrayList<>(selection),
         n -> {
           Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
-          Collection<Node<?>> resolvedNeighbours =
+          Collection<Node> resolvedNeighbours =
               getPathfinder().getStorage().loadNodes(neighbours).join();
 
           TagResolver r = TagResolver.builder()
@@ -351,7 +351,7 @@ public class WaypointCommand extends Command {
               .resolver(Placeholder.component("edges",
                   Messages.formatNodeSelection(player, resolvedNeighbours)))
 //                .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
-//                    n instanceof Groupable<?> groupable ? groupable.getGroups() : new ArrayList<>())))
+//                    n instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
               .build();
           TranslationHandler.getInstance()
               .sendMessage(Messages.CMD_N_LIST_ELEMENT.format(r), player);

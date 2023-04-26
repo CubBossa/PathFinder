@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.commands;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.translations.Message;
 
-public interface VisualizerTypeMessageExtension<Visualizer extends PathVisualizer<Visualizer, ?, ?>> {
+public interface VisualizerTypeMessageExtension<VisualizerT extends PathVisualizer<?, ?>> {
 
-  Message getInfoMessage(Visualizer element);
+  Message getInfoMessage(VisualizerT element);
 }

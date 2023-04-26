@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Setter
-public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>, D extends EdgeBasedVisualizer.Data>
-    extends BukkitVisualizer<T, D> {
+public abstract class EdgeBasedVisualizer<DataT extends EdgeBasedVisualizer.Data>
+    extends BukkitVisualizer<DataT> {
 
   private int interval = 10;
   private @Nullable String permission;
@@ -34,12 +34,12 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
   }
 
   @Override
-  public D prepare(List<Node<?>> nodes, PathPlayer<Player> player) {
+  public DataT prepare(List<Node> nodes, PathPlayer<Player> player) {
 
     List<Edge> edges = new ArrayList<>();
-    Node<?> prev = null;
+    Node prev = null;
     int index = 0;
-    for (Node<?> node : nodes) {
+    for (Node node : nodes) {
       if (prev == null) {
         prev = node;
         continue;
@@ -51,10 +51,10 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
     return newData(player, nodes, edges);
   }
 
-  public abstract D newData(PathPlayer<Player> player, List<Node<?>> nodes, List<Edge> edges);
+  public abstract DataT newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges);
 
   @Override
-  public void play(PathVisualizer.VisualizerContext<D, Player> context) {
+  public void play(PathVisualizer.VisualizerContext<DataT, Player> context) {
     PathPlayer<Player> targetPlayer = context.player();
     Player player = targetPlayer.unwrap();
 
@@ -114,7 +114,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
         currentPoint, nearest);
   }
 
-  public abstract void play(PathVisualizer.VisualizerContext<D, Player> context,
+  public abstract void play(PathVisualizer.VisualizerContext<DataT, Player> context,
                             Location nearestPoint, Location leadPoint,
                             Edge nearestEdge);
 
@@ -125,7 +125,7 @@ public abstract class EdgeBasedVisualizer<T extends PathVisualizer<T, D, Player>
   @Setter
   @RequiredArgsConstructor
   public static class Data {
-    private final List<Node<?>> nodes;
+    private final List<Node> nodes;
     private final List<Edge> edges;
     private Location lastPlayerLocation;
   }

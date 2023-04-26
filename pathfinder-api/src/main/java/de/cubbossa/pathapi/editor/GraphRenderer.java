@@ -29,7 +29,7 @@ public interface GraphRenderer<Player> {
    * @param nodes  A set of nodes to render.
    * @return A completable future that is complete once all nodes are rendered.
    */
-  CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node<?>> nodes);
+  CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes);
 
   /**
    * Remove a scope of nodes with their edges and group information from view.
@@ -38,5 +38,5 @@ public interface GraphRenderer<Player> {
    * @param nodes  A set of nodes to remove from view.
    * @return A completable future that is complete once all nodes are erased.
    */
-  CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node<?>> nodes);
+  CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes);
 }

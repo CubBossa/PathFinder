@@ -15,6 +15,8 @@ import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
 import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import de.cubbossa.translations.TranslationHandler;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -43,12 +45,14 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   @Getter
   private static VisualizerHandler instance;
 
-  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?, ?, ?>>> visualizerTypes;
+  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> visualizerTypes;
+  private final Map<NamespacedKey, VisualizerType<?>> typeMap;
 
   public VisualizerHandler() {
     instance = this;
 
     this.visualizerTypes = new HashedRegistry<>();
+    typeMap = new HashMap<>();
 
     visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
     visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
@@ -56,43 +60,43 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   }
 
   @Override
-  public @Nullable <T extends PathVisualizer<T, ?, ?>> AbstractVisualizerType<T> getVisualizerType(
+  public @Nullable <T extends PathVisualizer<?, ?>> AbstractVisualizerType<T> getVisualizerType(
       NamespacedKey key) {
     return (AbstractVisualizerType<T>) visualizerTypes.get(key);
   }
 
   @Override
-  public <T extends PathVisualizer<T, ?, ?>> void registerVisualizerType(VisualizerType<T> type) {
+  public <T extends PathVisualizer<?, ?>> void registerVisualizerType(VisualizerType<T> type) {
     visualizerTypes.put(type);
   }
 
   @Override
-  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?, ?>> type) {
+  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type) {
     visualizerTypes.remove(type.getKey());
   }
 
-  public <V extends PathVisualizer<?, ?, ?>, T> void setProperty(CommandSender sender, V visualizer,
-                                                                 AbstractVisualizer.Property<V, T> prop,
-                                                                 T val) {
+  public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer,
+                                                              AbstractVisualizer.Property<V, T> prop,
+                                                              T val) {
     setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
         () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter) {
     setProperty(sender, visualizer, value, property, visual, getter, setter,
         t -> Component.text(t.toString()));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter, Function<T, ComponentLike> formatter) {
     setProperty(sender, visualizer, value, property, visual, getter, setter,
         (s, t) -> Placeholder.component(s, formatter.apply(t)));
   }
 
-  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?, ?> visualizer, T value,
+  public <T> void setProperty(CommandSender sender, PathVisualizer<?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter, BiFunction<String, T, TagResolver> formatter) {
     T old = getter.get();
@@ -102,7 +106,9 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
     TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_SET_PROP.format(
         TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
         Placeholder.component("name", visualizer.getDisplayName()),
-        Placeholder.component("type", Component.text(visualizer.getType().getCommandName())),
+        Placeholder.component("type", Component.text(
+            PathPlugin.getInstance().getStorage().loadVisualizerType(visualizer.getKey()).join()
+                .getCommandName())),
         Placeholder.parsed("property", property),
         formatter.apply("old-value", old),
         formatter.apply("value", value)

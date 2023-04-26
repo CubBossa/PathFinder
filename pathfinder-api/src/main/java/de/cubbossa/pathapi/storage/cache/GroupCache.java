@@ -27,7 +27,7 @@ public interface GroupCache extends StorageCache<NodeGroup> {
 
   Collection<NodeGroup> getGroups(UUID node, Function<UUID, Collection<NodeGroup>> loader);
 
-  void write(Node<?> node);
+  void write(Node node);
 
-  void invalidate(Node<?> node);
+  void invalidate(Node node);
 }

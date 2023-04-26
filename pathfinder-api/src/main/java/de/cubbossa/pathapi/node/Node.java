@@ -5,11 +5,9 @@ import java.util.Collection;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
-public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
+public interface Node extends Comparable<Node> {
 
   UUID getNodeId();
-
-  NodeType<N> getType();
 
   Location getLocation();
 
@@ -17,14 +15,14 @@ public interface Node<N extends Node<N>> extends Comparable<Node<?>> {
 
   Collection<Edge> getEdges();
 
-  default boolean hasEdgeTo(Node<?> node) {
+  default boolean hasEdgeTo(Node node) {
     return getEdges().stream()
         .map(Edge::getEnd)
         .anyMatch(uuid -> uuid.equals(node.getNodeId()));
   }
 
   @Override
-  default int compareTo(@NotNull Node<?> o) {
+  default int compareTo(@NotNull Node o) {
     return getNodeId().compareTo(o.getNodeId());
   }
 }

@@ -21,23 +21,23 @@ import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 
 @Getter
-public class VisualizerPath<P> extends ArrayList<Node<?>> {
+public class VisualizerPath<PlayerT> extends ArrayList<Node> {
 
-  private final PathPlayer<P> player;
-  private final Collection<SubPath<?, P>> paths;
+  private final PathPlayer<PlayerT> player;
+  private final Collection<SubPath<?, PlayerT>> paths;
   private boolean active;
 
-  public VisualizerPath(PathPlayer<P> player) {
+  public VisualizerPath(PathPlayer<PlayerT> player) {
     this.player = player;
     this.paths = new HashSet<>();
     this.active = false;
   }
 
-  public void prepare(List<Node<?>> path, PathPlayer<P> player) {
+  public void prepare(List<Node> path, PathPlayer<PlayerT> player) {
     // build sub paths for every visualizer change
-    SortedMap<Node<?>, Collection<PathVisualizer<?, ?, ?>>> nodeVisualizerMap = new TreeMap<>();
-    for (Node<?> node : path) {
-      if (!(node instanceof Groupable<?> groupable)) {
+    SortedMap<Node, Collection<PathVisualizer<?, ?>>> nodeVisualizerMap = new TreeMap<>();
+    for (Node node : path) {
+      if (!(node instanceof Groupable groupable)) {
         // this node cannot be rendered, it cannot be grouped
         continue;
       }
@@ -63,7 +63,7 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
       // follow one visualizer along path
       paths.add(new SubPath<>(null, null, null)); //TODO
     }
-    for (SubPath<?, P> subPath : paths) {
+    for (SubPath<?, PlayerT> subPath : paths) {
       subPath.visualizer.prepare(subPath.path, player);
     }
   }
@@ -72,14 +72,14 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
     run(player);
   }
 
-  public void run(PathPlayer<P> player) {
+  public void run(PathPlayer<PlayerT> player) {
     prepare(this, player);
     Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
       cancelSync();
       this.active = true;
 
       AtomicInteger interval = new AtomicInteger(0);
-      for (SubPath<?, P> path : paths) {
+      for (SubPath<?, PlayerT> path : paths) {
         path.task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
           play(path, player, interval);
         }, 0L, path.visualizer.getInterval());
@@ -87,7 +87,8 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
     });
   }
 
-  private <T> void play(SubPath<T, P> path, PathPlayer<P> player, AtomicInteger interval) {
+  private <DataT> void play(SubPath<DataT, PlayerT> path, PathPlayer<PlayerT> player,
+                            AtomicInteger interval) {
     long fullTime = 0; //TODO player..getWorld().getFullTime();
     path.visualizer.play(new PathVisualizer.VisualizerContext<>(Lists.newArrayList(player),
         interval.getAndIncrement(), fullTime, path.data));
@@ -101,7 +102,7 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
     paths.forEach(this::cancelSync);
   }
 
-  private <T> void cancelSync(SubPath<T, P> path) {
+  private <DataT> void cancelSync(SubPath<DataT, PlayerT> path) {
     if (path.task == null) {
       return;
     }
@@ -113,10 +114,10 @@ public class VisualizerPath<P> extends ArrayList<Node<?>> {
 
   @RequiredArgsConstructor
   @Accessors(fluent = true)
-  private static class SubPath<D, P> {
-    private final List<Node<?>> path;
-    private final PathVisualizer<?, D, P> visualizer;
-    private final D data;
+  private static class SubPath<DataT, PlayerT> {
+    private final List<Node> path;
+    private final PathVisualizer<DataT, PlayerT> visualizer;
+    private final DataT data;
     private BukkitTask task;
   }
 }

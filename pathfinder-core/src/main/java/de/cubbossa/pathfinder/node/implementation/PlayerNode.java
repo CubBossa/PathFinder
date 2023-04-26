@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class PlayerNode implements Node<PlayerNode> {
+public class PlayerNode implements Node {
 
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
       PathPlugin.pathfinder("player"),
@@ -43,11 +43,6 @@ public class PlayerNode implements Node<PlayerNode> {
   }
 
   @Override
-  public NodeType<PlayerNode> getType() {
-    return TYPE;
-  }
-
-  @Override
   public Location getLocation() {
     return player.getLocation();
   }
@@ -63,7 +58,7 @@ public class PlayerNode implements Node<PlayerNode> {
   }
 
   @Override
-  public int compareTo(@NotNull Node<?> o) {
+  public int compareTo(@NotNull Node o) {
     return 0;
   }
 

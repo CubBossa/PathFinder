@@ -11,7 +11,7 @@ public interface Edge {
 
   float getWeight();
 
-  CompletableFuture<Node<?>> resolveStart();
+  CompletableFuture<Node> resolveStart();
 
-  CompletableFuture<Node<?>> resolveEnd();
+  CompletableFuture<Node> resolveEnd();
 }

@@ -13,7 +13,7 @@ import de.cubbossa.pathfinder.listener.PlayerListener;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.node.NodeHandler;
-import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
@@ -49,11 +49,11 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
   @Getter
   private static PathPlugin instance;
-  private final NodeTypeRegistry nodeTypeRegistry;
+  private final NodeTypeRegistryImpl nodeTypeRegistry;
   private final ModifierRegistryImpl modifierRegistry;
   private final ExtensionsRegistry extensionRegistry;
   private final CommandRegistry commandRegistry;
-  private final BStatsLoader bStatsLoader;
+  private final BStatsLoader bstatsLoader;
   private final ConfigFileLoader configFileLoader;
   private BukkitAudiences audiences;
   private MiniMessage miniMessage;
@@ -69,7 +69,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
     storage = new StorageImpl();
 
-    nodeTypeRegistry = new NodeTypeRegistry();
+    nodeTypeRegistry = new NodeTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
@@ -79,7 +79,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     modifierRegistry.registerModifierType(new CurveLengthModifierType());
 
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
-    bStatsLoader = new BStatsLoader();
+    bstatsLoader = new BStatsLoader();
     commandRegistry = new CommandRegistry(this);
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());

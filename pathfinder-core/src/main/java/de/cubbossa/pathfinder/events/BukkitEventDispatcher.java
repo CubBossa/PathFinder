@@ -84,38 +84,38 @@ public class BukkitEventDispatcher implements EventDispatcher {
   }
 
   @Override
-  public <N extends Node<N>> void dispatchNodeCreate(N node) {
+  public <N extends Node> void dispatchNodeCreate(N node) {
     dispatchEvent(new NodeCreatedEvent<>(node));
   }
 
   @Override
-  public void dispatchNodeSave(Node<?> node) {
+  public void dispatchNodeSave(Node node) {
     dispatchEvent(new NodeSavedEvent(node));
   }
 
   @Override
-  public void dispatchNodeLoad(Node<?> node) {
+  public void dispatchNodeLoad(Node node) {
   }
 
   @Override
-  public <N extends Node<N>> void dispatchNodeDelete(N node) {
+  public <N extends Node> void dispatchNodeDelete(N node) {
     dispatchEvent(new NodeDeletedEvent(node));
   }
 
   @Override
-  public void dispatchNodesDelete(Collection<Node<?>> nodes) {
-    for (Node<?> node : nodes) {
+  public void dispatchNodesDelete(Collection<Node> nodes) {
+    for (Node node : nodes) {
       dispatchEvent(new NodeDeletedEvent(node));
     }
   }
 
   @Override
-  public void dispatchNodeUnassign(Node<?> node, Collection<NodeGroup> groups) {
+  public void dispatchNodeUnassign(Node node, Collection<NodeGroup> groups) {
 
   }
 
   @Override
-  public void dispatchNodeAssign(Node<?> node, Collection<NodeGroup> groups) {
+  public void dispatchNodeAssign(Node node, Collection<NodeGroup> groups) {
 
   }
 

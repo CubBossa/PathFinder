@@ -19,17 +19,17 @@ public class NodeGroupRemoveEvent extends Event implements Cancellable {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final Collection<Groupable<?>> groupables;
+  private final Collection<Groupable> groupables;
   private final Collection<SimpleNodeGroup> groups;
-  private Collection<Groupable<?>> modifiedGroupables;
+  private Collection<Groupable> modifiedGroupables;
   private Collection<SimpleNodeGroup> modifiedGroups;
   private boolean cancelled;
 
-  public NodeGroupRemoveEvent(Groupable<?> groupables, SimpleNodeGroup groups) {
+  public NodeGroupRemoveEvent(Groupable groupables, SimpleNodeGroup groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
-  public NodeGroupRemoveEvent(Collection<Groupable<?>> groupables,
+  public NodeGroupRemoveEvent(Collection<Groupable> groupables,
                               Collection<SimpleNodeGroup> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);

@@ -40,7 +40,7 @@ public class DiscoverHandler {
 
     if (plugin.getConfiguration().navigation.requireDiscovery) {
       FindModule.getInstance().registerFindPredicate(context -> {
-        if (!(context.node() instanceof Groupable<?> groupable)) {
+        if (!(context.node() instanceof Groupable groupable)) {
           return true;
         }
         Collection<NodeGroup> groups = groupable.getGroups();
@@ -79,7 +79,7 @@ public class DiscoverHandler {
     if (perm != null && !player.hasPermission(perm.permission())) {
       return false;
     }
-    for (Node<?> node : group.resolve().join()) {
+    for (Node node : group.resolve().join()) {
       if (node == null) {
         plugin.getLogger().log(Level.SEVERE, "Node is null");
         continue;
@@ -143,8 +143,8 @@ public class DiscoverHandler {
         .thenApply(Optional::isPresent);
   }
 
-  public float getDiscoveryDistance(UUID playerId, Node<?> node) {
-    if (!(node instanceof Groupable<?> groupable)) {
+  public float getDiscoveryDistance(UUID playerId, Node node) {
+    if (!(node instanceof Groupable groupable)) {
       return 1.5f;
     }
     FindDistanceModifier mod = groupable.getGroups().stream()

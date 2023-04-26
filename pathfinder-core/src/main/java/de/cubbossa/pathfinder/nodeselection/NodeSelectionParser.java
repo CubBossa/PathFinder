@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class NodeSelectionParser extends SelectionParser<Node<?>, NodeSelectionParser.Context<?>> {
+public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionParser.Context<?>> {
 
   public NodeSelectionParser(String identifier, String... alias) {
     super(identifier, alias);
@@ -20,13 +20,13 @@ public class NodeSelectionParser extends SelectionParser<Node<?>, NodeSelectionP
     return new Argument<>(type);
   }
 
-  public <S> Collection<Node<?>> parse(Player player, String input, List<Node<?>> scope)
+  public <S> Collection<Node> parse(Player player, String input, List<Node> scope)
       throws ParseCancellationException, CommandSyntaxException {
     return super.<S>parse(input, scope, (o, nodes) -> new Context<>(o, scope, player));
   }
 
   public static class Argument<T>
-      extends SelectionParser.Argument<T, Node<?>, Context<T>, Argument<T>> {
+      extends SelectionParser.Argument<T, Node, Context<T>, Argument<T>> {
 
     public Argument(ArgumentType<T> type) {
       super(type);
@@ -34,10 +34,10 @@ public class NodeSelectionParser extends SelectionParser<Node<?>, NodeSelectionP
   }
 
   @Getter
-  public class Context<T> extends ArgumentContext<T, Node<?>> {
+  public class Context<T> extends ArgumentContext<T, Node> {
     private final CommandSender sender;
 
-    public Context(T value, List<Node<?>> scope, CommandSender sender) {
+    public Context(T value, List<Node> scope, CommandSender sender) {
       super(value, scope);
       this.sender = sender;
     }
