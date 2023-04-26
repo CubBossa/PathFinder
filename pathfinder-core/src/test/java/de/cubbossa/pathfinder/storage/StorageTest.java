@@ -50,6 +50,8 @@ import org.junit.jupiter.api.Test;
 
 public abstract class StorageTest {
 
+  protected boolean useCaches = false;
+
   protected static MiniMessage miniMessage;
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
@@ -90,7 +92,7 @@ public abstract class StorageTest {
 
     storage.setImplementation(implementation);
     storage.setLogger(logger);
-    storage.setCache(CacheLayerImpl.empty());
+    storage.setCache(useCaches ? new CacheLayerImpl() : CacheLayerImpl.empty());
 
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
@@ -359,6 +361,16 @@ public abstract class StorageTest {
   }
 
   @Test
+  void deleteNodeWithEdges() {
+
+  }
+
+  @Test
+  void deleteGroupWithModifier() {
+
+  }
+
+  @Test
   void setModifier() throws Exception {
     NamespacedKey gk = NamespacedKey.fromString("test:abc");
     NodeGroup g = makeGroup(gk);
@@ -367,14 +379,29 @@ public abstract class StorageTest {
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.addModifier(mod);
     }));
-    NodeGroup g1 = makeGroup(gk);
+    NodeGroup g1 = assertGroupExists(gk);
     assertTrue(g1.hasModifier(PermissionModifier.class));
     assertEquals("abc", g1.getModifier(PermissionModifier.class).permission());
 
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.removeModifier(PermissionModifier.class);
     }));
-    NodeGroup g2 = makeGroup(gk);
+    NodeGroup g2 = assertGroupExists(gk);
     assertFalse(g2.hasModifier(PermissionModifier.class));
+  }
+
+  @Test
+  void createVisualizer() {
+
+  }
+
+  @Test
+  void deleteVisualizer() {
+
+  }
+
+  @Test
+  void loadVisualizer() {
+
   }
 }

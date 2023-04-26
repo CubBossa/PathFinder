@@ -89,6 +89,7 @@ public abstract class SqlStorage extends CommonStorage {
         NamespacedKey key = record.getKey();
         SimpleNodeGroup group = new SimpleNodeGroup(key);
         group.addAll(loadGroupNodes(group));
+        loadModifiers(group.getKey()).forEach(group::addModifier);
         group.setWeight(record.getWeight().floatValue());
         return group;
       };
@@ -496,6 +497,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void saveGroup(NodeGroup group) {
+    debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
     NodeGroup before = loadGroup(group.getKey()).orElseThrow();
     create
         .update(PATHFINDER_NODEGROUPS)
@@ -511,10 +513,13 @@ public abstract class SqlStorage extends CommonStorage {
     cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
     cmpMod.toDeleteIfPresent(
         mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
-    debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
   }
 
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+    debug(" > Storage Implementation: 'assignToGroups("
+        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
+        .collect(Collectors.joining(",")) + "]"
+        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
     if (groups.isEmpty() || nodes.isEmpty()) {
       return;
     }
@@ -530,13 +535,13 @@ public abstract class SqlStorage extends CommonStorage {
         }
       }
     });
-    debug(" > Storage Implementation: 'assignToGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
-        .collect(Collectors.joining(",")) + "]"
-        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
 
   public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
+    debug(" > Storage Implementation: 'unassignFromGroups("
+        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
+        .collect(Collectors.joining(",")) + "]"
+        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
     if (groups.isEmpty() || nodes.isEmpty()) {
       return;
     }
@@ -546,10 +551,6 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.in(keys))
         .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
         .execute();
-    debug(" > Storage Implementation: 'unassignFromGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
-        .collect(Collectors.joining(",")) + "]"
-        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
   }
 
   @Override
@@ -688,6 +689,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   public Collection<Modifier> loadModifiers(NamespacedKey group) {
+    debug(" > Storage Implementation: 'loadModifiers(" + group.getKey() + ")'");
     HashSet<Modifier> modifiers = new HashSet<>();
     create.selectFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
@@ -712,7 +714,9 @@ public abstract class SqlStorage extends CommonStorage {
     return modifiers;
   }
 
+  @Override
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
+    debug(" > Storage Implementation: 'assignNodeGroupModifier(" + group.getKey() + ")'");
     YamlConfiguration cfg = new YamlConfiguration();
     ModifierType<M> type = modifierRegistry.getType((Class<M>) modifier.getClass()).orElseThrow();
     type.serialize(modifier).forEach(cfg::set);
@@ -727,6 +731,7 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group,
                                                              Class<M> modifier) {
+    debug(" > Storage Implementation: 'unassignNodeGroupModifier(" + group.getKey() + ")'");
     create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))

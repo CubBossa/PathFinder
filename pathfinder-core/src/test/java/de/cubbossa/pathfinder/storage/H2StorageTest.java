@@ -13,7 +13,7 @@ import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 
-public class SqlStorageTest extends StorageTest {
+public class H2StorageTest extends StorageTest {
 
   @Override
   StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry) {
