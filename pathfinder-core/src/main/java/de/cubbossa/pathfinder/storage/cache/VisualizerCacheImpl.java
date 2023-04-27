@@ -50,7 +50,8 @@ public class VisualizerCacheImpl
     if (cachedAll || cachedTypes.contains(type.getKey())) {
       return cache.asMap().values().stream()
           .filter(
-              visualizer -> PathPlugin.getInstance().getStorage().loadVisualizerType(visualizer.getKey())
+              visualizer -> PathPlugin.getInstance().getStorage()
+                  .loadVisualizerType(visualizer.getKey())
                   .join()
                   .equals(type))
           .map(visualizer -> (T) visualizer)

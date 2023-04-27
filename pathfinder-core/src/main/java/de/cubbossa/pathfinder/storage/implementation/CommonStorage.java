@@ -14,6 +14,7 @@ import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import java.util.Collection;
@@ -33,6 +34,7 @@ import lombok.Setter;
 public abstract class CommonStorage implements StorageImplementation, WaypointDataStorage {
 
   final NodeTypeRegistry nodeTypeRegistry;
+  final VisualizerTypeRegistry visualizerTypeRegistry;
   final ModifierRegistry modifierRegistry;
   @Getter
   @Setter

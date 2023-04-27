@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -12,6 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import lombok.Getter;
@@ -60,14 +60,14 @@ public class ExamplesHandler {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values =
           YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
-      AbstractVisualizerType<?> type = VisualizerHandler.getInstance()
-          .getVisualizerType(NamespacedKey.fromString((String) values.get("type")));
-      if (type == null) {
+      Optional<VisualizerType<PathVisualizer<?, ?>>> type = VisualizerHandler.getInstance()
+          .getType(NamespacedKey.fromString((String) values.get("type")));
+      if (type.isEmpty()) {
         PathPlugin.getInstance().getLogger().log(Level.SEVERE,
             "An error occurred while parsing type: " + values.get("type") + " from " + values);
         return null;
       }
-      return parse(file, type, values);
+      return parse(file, type.get(), values);
     });
   }
 

@@ -2,17 +2,20 @@ package de.cubbossa.pathapi.visualizer;
 
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import org.jetbrains.annotations.Nullable;
+import java.util.Optional;
 
 public interface VisualizerTypeRegistry {
 
-  @Nullable <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getVisualizerType(
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
       NamespacedKey key);
+
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
+      VisualizerT visualizer);
 
   <VisualizerT extends PathVisualizer<?, ?>> void registerVisualizerType(
       VisualizerType<VisualizerT> type);
 
   void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type);
 
-  KeyedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> getVisualizerTypes();
+  KeyedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> getTypes();
 }

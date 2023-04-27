@@ -32,6 +32,7 @@ public class DiscoverListener implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-    pathFinder.getStorage().getCache().getDiscoverInfoCache().invalidate(event.getPlayer().getUniqueId());
+    pathFinder.getStorage().getCache().getDiscoverInfoCache()
+        .invalidate(event.getPlayer().getUniqueId());
   }
 }

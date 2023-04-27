@@ -208,7 +208,8 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
     debug("Storage: 'loadGroups(" + pagination + ")'");
-    return asyncFuture(() -> cache.getGroupCache().getGroups(pagination, implementation::loadGroups));
+    return asyncFuture(
+        () -> cache.getGroupCache().getGroups(pagination, implementation::loadGroups));
   }
 
   @Override
@@ -335,7 +336,7 @@ public class StorageImpl implements Storage {
   public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
     return asyncFuture(() -> cache.getVisualizerCache().getVisualizers(() -> {
       Collection<PathVisualizer<?, ?>> visualizers = new HashSet<>();
-      for (VisualizerType<?> type : VisualizerHandler.getInstance().getVisualizerTypes()) {
+      for (VisualizerType<?> type : VisualizerHandler.getInstance().getTypes()) {
         visualizers.addAll(implementation.loadVisualizers(type).values());
       }
       return visualizers;
@@ -357,7 +358,7 @@ public class StorageImpl implements Storage {
       NamespacedKey key) {
     return asyncFuture(() -> cache.getVisualizerCache().getVisualizer(key, k -> {
       for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerHandler.getInstance()
-          .getVisualizerTypes()) {
+          .getTypes()) {
         Optional<PathVisualizer<?, ?>> opt =
             (Optional<PathVisualizer<?, ?>>) type.getStorage().loadVisualizer(key);
         if (opt.isPresent()) {

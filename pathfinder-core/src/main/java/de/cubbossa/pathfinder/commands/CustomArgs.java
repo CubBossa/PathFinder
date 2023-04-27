@@ -450,20 +450,20 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return a visualizer type argument instance
    */
-  public Argument<? extends VisualizerType<? extends PathVisualizer<?, ?>>> visualizerTypeArgument(
+  public Argument<VisualizerType<PathVisualizer<?, ?>>> visualizerTypeArgument(
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
-      VisualizerType<? extends PathVisualizer<?, ?>> type =
+      Optional<VisualizerType<PathVisualizer<?, ?>>> type =
           VisualizerHandler.getInstance()
-              .getVisualizerType(PathPlugin.convert(customArgumentInfo.currentInput()));
-      if (type == null) {
+              .getType(PathPlugin.convert(customArgumentInfo.currentInput()));
+      if (type.isEmpty()) {
         throw new CustomArgument.CustomArgumentException(
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");
       }
-      return type;
+      return type.get();
     })).includeSuggestions(suggestNamespacedKeys(
         sender -> CompletableFuture.completedFuture(
-            VisualizerHandler.getInstance().getVisualizerTypes().keySet())));
+            VisualizerHandler.getInstance().getTypes().keySet())));
   }
 }

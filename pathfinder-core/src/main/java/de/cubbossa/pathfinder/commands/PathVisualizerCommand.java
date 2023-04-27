@@ -79,7 +79,7 @@ public class PathVisualizerCommand extends Command {
 
     Argument<String> lit = CustomArgs.literal("edit");
     for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerHandler.getInstance()
-        .getVisualizerTypes()) {
+        .getTypes()) {
 
       if (!(type instanceof VisualizerTypeCommandExtension cmdExt)) {
         continue;

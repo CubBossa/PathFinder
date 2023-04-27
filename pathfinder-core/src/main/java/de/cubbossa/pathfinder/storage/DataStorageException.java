@@ -6,7 +6,7 @@ public class DataStorageException extends RuntimeException {
     super(message);
   }
 
-  public DataStorageException(String message, Exception cause) {
+  public DataStorageException(String message, Throwable cause) {
     super(message, cause);
   }
 }

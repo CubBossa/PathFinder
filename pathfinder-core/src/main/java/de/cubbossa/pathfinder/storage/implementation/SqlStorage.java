@@ -1,12 +1,13 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER_TYPE_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
@@ -20,14 +21,16 @@ import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
-import de.cubbossa.pathfinder.jooq.tables.records.PathfinderPathVisualizerRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerTypeRelationRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
-import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -85,9 +88,10 @@ public abstract class SqlStorage extends CommonStorage {
         return group;
       };
 
-  public SqlStorage(SQLDialect dialect, NodeTypeRegistryImpl nodeTypeRegistry,
-                    ModifierRegistry modifierRegistry) {
-    super(nodeTypeRegistry, modifierRegistry);
+  public SqlStorage(SQLDialect dialect, NodeTypeRegistry nodeTypeRegistry,
+                    ModifierRegistry modifierRegistry,
+                    VisualizerTypeRegistry visualizerTypeRegistry) {
+    super(nodeTypeRegistry, visualizerTypeRegistry, modifierRegistry);
     this.dialect = dialect;
 
     nodeMapper = record -> {
@@ -105,7 +109,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   public abstract ConnectionProvider getConnectionProvider();
 
-  private <T extends PathVisualizer<?, ?>> RecordMapper<PathfinderPathVisualizerRecord, T> visualizerMapper(
+  private <T extends PathVisualizer<?, ?>> RecordMapper<PathfinderVisualizerRecord, T> visualizerMapper(
       VisualizerType<T> type) {
     return record -> {
       // create visualizer object
@@ -192,8 +196,8 @@ public abstract class SqlStorage extends CommonStorage {
 
   private void createPathVisualizerTable() {
     create
-        .createTableIfNotExists(PATHFINDER_PATH_VISUALIZER)
-        .columns(PATHFINDER_PATH_VISUALIZER.fields())
+        .createTableIfNotExists(PATHFINDER_VISUALIZER)
+        .columns(PATHFINDER_VISUALIZER.fields())
         .execute();
     debug("Table created: 'pathfinder_path_visualizer'");
   }
@@ -736,8 +740,8 @@ public abstract class SqlStorage extends CommonStorage {
   public <T extends PathVisualizer<?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
                                                                      NamespacedKey key) {
     return create
-        .selectFrom(PATHFINDER_PATH_VISUALIZER)
-        .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(key))
+        .selectFrom(PATHFINDER_VISUALIZER)
+        .where(PATHFINDER_VISUALIZER.KEY.eq(key))
         .fetch(visualizerMapper(type))
         .stream().findFirst();
   }
@@ -747,8 +751,8 @@ public abstract class SqlStorage extends CommonStorage {
       VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
-        .selectFrom(PATHFINDER_PATH_VISUALIZER)
-        .where(PATHFINDER_PATH_VISUALIZER.TYPE.eq(type.getKey()))
+        .selectFrom(PATHFINDER_VISUALIZER)
+        .where(PATHFINDER_VISUALIZER.TYPE.eq(type.getKey()))
         .fetch(visualizerMapper(type))
         .forEach(registry::put);
     return registry;
@@ -772,14 +776,14 @@ public abstract class SqlStorage extends CommonStorage {
     String dataString = cfg.saveToString();
 
     create
-        .insertInto(PATHFINDER_PATH_VISUALIZER)
+        .insertInto(PATHFINDER_VISUALIZER)
         .columns(
-            PATHFINDER_PATH_VISUALIZER.KEY,
-            PATHFINDER_PATH_VISUALIZER.TYPE,
-            PATHFINDER_PATH_VISUALIZER.NAME_FORMAT,
-            PATHFINDER_PATH_VISUALIZER.PERMISSION,
-            PATHFINDER_PATH_VISUALIZER.INTERVAL,
-            PATHFINDER_PATH_VISUALIZER.DATA
+            PATHFINDER_VISUALIZER.KEY,
+            PATHFINDER_VISUALIZER.TYPE,
+            PATHFINDER_VISUALIZER.NAME_FORMAT,
+            PATHFINDER_VISUALIZER.PERMISSION,
+            PATHFINDER_VISUALIZER.INTERVAL,
+            PATHFINDER_VISUALIZER.DATA
         )
         .values(
             visualizer.getKey(), resolve(visualizer).getKey(),
@@ -787,37 +791,51 @@ public abstract class SqlStorage extends CommonStorage {
             visualizer.getInterval(), dataString
         )
         .onDuplicateKeyUpdate()
-        .set(PATHFINDER_PATH_VISUALIZER.KEY, visualizer.getKey())
-        .set(PATHFINDER_PATH_VISUALIZER.TYPE, resolve(visualizer).getKey())
-        .set(PATHFINDER_PATH_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
-        .set(PATHFINDER_PATH_VISUALIZER.PERMISSION, visualizer.getPermission())
-        .set(PATHFINDER_PATH_VISUALIZER.INTERVAL, visualizer.getInterval())
-        .set(PATHFINDER_PATH_VISUALIZER.DATA, dataString)
+        .set(PATHFINDER_VISUALIZER.KEY, visualizer.getKey())
+        .set(PATHFINDER_VISUALIZER.TYPE, resolve(visualizer).getKey())
+        .set(PATHFINDER_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
+        .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
+        .set(PATHFINDER_VISUALIZER.INTERVAL, visualizer.getInterval())
+        .set(PATHFINDER_VISUALIZER.DATA, dataString)
         .execute();
   }
 
   @Override
   public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     create
-        .deleteFrom(PATHFINDER_PATH_VISUALIZER)
-        .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))
+        .deleteFrom(PATHFINDER_VISUALIZER)
+        .where(PATHFINDER_VISUALIZER.KEY.eq(visualizer.getKey()))
         .execute();
   }
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
                                                                             VisualizerType<VisualizerT> type) {
-
+    create
+        .insertInto(PATHFINDER_VISUALIZER_TYPE_RELATION)
+        .values(key, type.getKey())
+        .execute();
   }
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
       NamespacedKey key) {
-    return Optional.empty();
+    return create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
+        .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.eq(key))
+        .fetch(PathfinderVisualizerTypeRelationRecord::getTypeKey)
+        .stream().findAny()
+        .map(nodeTypeRegistry::getType)
+        .map(t -> (VisualizerType<VisualizerT>) t);
   }
 
   @Override
   public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key) {
-    return null;
+    Map<NamespacedKey, VisualizerType<?>> map = new HashMap<>();
+    create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
+        .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.in(key))
+        .forEach(r -> visualizerTypeRegistry.getType(r.getTypeKey()).ifPresent(t -> {
+          map.put(r.getVisualizerKey(), t);
+        }));
+    return map;
   }
 }

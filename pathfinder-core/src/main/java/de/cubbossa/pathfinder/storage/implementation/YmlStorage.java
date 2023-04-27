@@ -14,6 +14,7 @@ import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -44,7 +46,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
-  private static final String FILE_TYPES = "node_types.yml";
+  private static final String FILE_NODE_TYPES = "node_types.yml";
+  private static final String FILE_VIS_TYPES = "visualizer_types.yml";
   private static final String FILE_NODES = "waypoints.yml";
   private static final String FILE_EDGES = "edges.yml";
   private static final String DIR_NG = "nodegroups";
@@ -61,16 +64,21 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   private File userDir;
 
   public YmlStorage(File dataDirectory, NodeTypeRegistry nodeTypeRegistry,
+                    VisualizerTypeRegistry visualizerTypeRegistry,
                     ModifierRegistry modifierRegistry) {
-    super(nodeTypeRegistry, modifierRegistry);
+    super(nodeTypeRegistry, visualizerTypeRegistry, modifierRegistry);
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");
     }
     this.dataDirectory = dataDirectory;
   }
 
-  private File fileTypes() {
-    return new File(dataDirectory, FILE_TYPES);
+  private File fileNodeTypes() {
+    return new File(dataDirectory, FILE_NODE_TYPES);
+  }
+
+  private File fileVisualizerTypes() {
+    return new File(dataDirectory, FILE_VIS_TYPES);
   }
 
   private File fileWaypoints() {
@@ -155,14 +163,14 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
   @Override
   public void saveNodeType(UUID node, NodeType<? extends Node> type) {
-    workOnFile(fileTypes(), cfg -> {
+    workOnFile(fileNodeTypes(), cfg -> {
       cfg.set(node.toString(), type.getKey().toString());
     });
   }
 
   @Override
   public void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping) {
-    workOnFile(fileTypes(), cfg -> {
+    workOnFile(fileNodeTypes(), cfg -> {
       typeMapping.forEach(
           (uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
     });
@@ -170,7 +178,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
   @Override
   public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
-    return workOnFile(fileTypes(), cfg -> {
+    return workOnFile(fileNodeTypes(), cfg -> {
       String keyString = cfg.getString(node.toString());
       if (keyString == null) {
         return Optional.empty();
@@ -182,7 +190,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
   @Override
   public Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes) {
-    return workOnFile(fileTypes(), cfg -> {
+    return workOnFile(fileNodeTypes(), cfg -> {
       Map<UUID, NodeType<?>> types = new HashMap<>();
       for (UUID node : nodes) {
         String keyString = cfg.getString(node.toString());
@@ -404,12 +412,52 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     });
   }
 
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
+                                                                            VisualizerType<VisualizerT> type) {
+    workOnFile(fileVisualizerTypes(), cfg -> {
+      cfg.set(key.toString(), type.getKey().toString());
+    });
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
+      NamespacedKey key) {
+    return workOnFile(fileVisualizerTypes(), cfg -> {
+      try {
+        return visualizerTypeRegistry.getType(
+            NamespacedKey.fromString(cfg.getString(key.toString())));
+      } catch (Throwable t) {
+        return Optional.empty();
+      }
+    });
+  }
+
+  @Override
+  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> keys) {
+    return workOnFile(fileVisualizerTypes(), cfg -> {
+      Map<NamespacedKey, VisualizerType<?>> result = new HashMap<>();
+      for (NamespacedKey key : keys) {
+        try {
+          visualizerTypeRegistry.getType(NamespacedKey.fromString(cfg.getString(key.toString())))
+              .ifPresent(type -> {
+                result.put(key, type);
+              });
+        } catch (Throwable t) {
+          throw new DataStorageException(
+              "Error while retrieving visualizer type for '" + key + "'.", t);
+        }
+      }
+      return result;
+    });
+  }
+
   private <VisualizerT extends PathVisualizer<?, ?>> void writeVisualizer(VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
-      cfg.set("type", visualizer.getType().getKey().toString());
+      VisualizerType<VisualizerT> type = visualizerTypeRegistry.getType(visualizer).orElseThrow();
+      cfg.set("type", type.getKey().toString());
       cfg.set("display-name", visualizer.getNameFormat());
-      VisualizerType<VisualizerT> type = (VisualizerType<VisualizerT>) visualizer.getType();
-      type.serialize((VisualizerT) visualizer).forEach(cfg::set);
+      type.serialize(visualizer).forEach(cfg::set);
     });
   }
 
@@ -436,11 +484,20 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   @Override
   public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadVisualizers(
       VisualizerType<T> type) {
-    return Arrays.stream(pathVisualizerDir.listFiles())
+    Collection<NamespacedKey> keys = new HashSet<>();
+    workOnFile(fileVisualizerTypes(), cfg -> {
+      String typeString = type.getKey().toString();
+      for (String key : cfg.getKeys(false)) {
+        if (Objects.equals(cfg.getString(key), typeString)) {
+          keys.add(NamespacedKey.fromString(key));
+        }
+      }
+    });
+    return keys.stream()
+        .map(this::fileVisualizer)
         .map(file -> workOnFile(file, cfg -> {
           return readVisualizer(type, fromFileName(file.getName()), cfg);
         }))
-        .filter(v -> v.getType().getKey().equals(type.getKey()))
         .collect(Collectors.toMap(Keyed::getKey, Function.identity()));
   }
 

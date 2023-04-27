@@ -18,7 +18,9 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.WaypointType;
@@ -30,6 +32,7 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
+import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -50,13 +53,13 @@ import org.junit.jupiter.api.Test;
 
 public abstract class StorageTest {
 
-  protected boolean useCaches = false;
-
   protected static MiniMessage miniMessage;
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
+  protected boolean useCaches = false;
   protected StorageImpl storage;
   protected NodeTypeRegistryImpl nodeTypeRegistry;
+  protected VisualizerTypeRegistry visualizerTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
 
@@ -73,8 +76,9 @@ public abstract class StorageTest {
     MockBukkit.unmock();
   }
 
-  abstract StorageImplementation storage(NodeTypeRegistryImpl registry,
-                                         ModifierRegistry modifierRegistry);
+  abstract StorageImplementation storage(NodeTypeRegistry registry,
+                                         ModifierRegistry modifierRegistry,
+                                         VisualizerTypeRegistry visualizerTypeRegistry);
 
   @AfterEach
   void afterEach() {
@@ -86,9 +90,11 @@ public abstract class StorageTest {
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
     modifierRegistry.registerModifierType(new PermissionModifierType());
+    visualizerTypeRegistry = new VisualizerHandler();
 
     storage = new StorageImpl();
-    StorageImplementation implementation = storage(nodeTypeRegistry, modifierRegistry);
+    StorageImplementation implementation =
+        storage(nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
 
     storage.setImplementation(implementation);
     storage.setLogger(logger);

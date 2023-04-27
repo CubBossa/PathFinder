@@ -41,7 +41,7 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
             element.getVisualizers(),
             v -> v == null ? Component.text("undefined")
                 : v.getDisplayName() != null ? v.getDisplayName()
-                : Component.text(v.getNameFormat()))
+                    : Component.text(v.getNameFormat()))
         )
     );
   }

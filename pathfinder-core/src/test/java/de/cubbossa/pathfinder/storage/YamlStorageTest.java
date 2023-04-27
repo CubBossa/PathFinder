@@ -1,8 +1,9 @@
 package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathapi.group.ModifierRegistry;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
+import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import java.io.File;
 import java.util.logging.Logger;
@@ -12,10 +13,12 @@ public class YamlStorageTest extends StorageTest {
 
   @SneakyThrows
   @Override
-  StorageImplementation storage(NodeTypeRegistryImpl registry, ModifierRegistry modifierRegistry) {
+  StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry,
+                                VisualizerTypeRegistry visualizerTypeRegistry) {
     new File("./src/test/resources/data/").mkdir();
     YmlStorage implementation =
-        new YmlStorage(new File("./src/test/resources/data/"), registry, modifierRegistry) {
+        new YmlStorage(new File("./src/test/resources/data/"), registry, visualizerTypeRegistry,
+            modifierRegistry) {
 
           static boolean deleteDirectory(File path) {
             if (path.exists()) {

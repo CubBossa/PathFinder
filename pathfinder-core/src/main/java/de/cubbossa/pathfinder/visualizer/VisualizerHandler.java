@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -8,15 +9,13 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.events.visualizer.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.util.HashedRegistry;
-import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizer;
 import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizer;
 import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
 import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -33,15 +32,6 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public class VisualizerHandler implements VisualizerTypeRegistry {
 
-  // TODO refactor!
-
-  public static final VisualizerType<ParticleVisualizer> PARTICLE_VISUALIZER_TYPE =
-      new ParticleVisualizerType(PathPlugin.pathfinder("particle"));
-  public static final VisualizerType<CombinedVisualizer> COMBINED_VISUALIZER_TYPE =
-      new CombinedVisualizerType(PathPlugin.pathfinder("combined"));
-  public static final VisualizerType<CompassVisualizer> COMPASS_VISUALIZER_TYPE =
-      new CompassVisualizerType(PathPlugin.pathfinder("compass"));
-
   @Getter
   private static VisualizerHandler instance;
 
@@ -53,16 +43,25 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
 
     this.visualizerTypes = new HashedRegistry<>();
     typeMap = new HashMap<>();
+  }
 
-    visualizerTypes.put(PARTICLE_VISUALIZER_TYPE);
-    visualizerTypes.put(COMBINED_VISUALIZER_TYPE);
-    visualizerTypes.put(COMPASS_VISUALIZER_TYPE);
+  public void registerDefaults() {
+    visualizerTypes.put(new ParticleVisualizerType(PathPlugin.pathfinder("particle")));
+    visualizerTypes.put(new CombinedVisualizerType(PathPlugin.pathfinder("combined")));
+    visualizerTypes.put(new CompassVisualizerType(PathPlugin.pathfinder("compass")));
   }
 
   @Override
-  public @Nullable <T extends PathVisualizer<?, ?>> AbstractVisualizerType<T> getVisualizerType(
+  public @Nullable <T extends PathVisualizer<?, ?>> Optional<VisualizerType<T>> getType(
       NamespacedKey key) {
-    return (AbstractVisualizerType<T>) visualizerTypes.get(key);
+    return Optional.ofNullable((VisualizerType<T>) visualizerTypes.get(key));
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
+      VisualizerT visualizer) {
+    return Optional.ofNullable(
+        (VisualizerType<VisualizerT>) visualizerTypes.get(visualizer.getKey()));
   }
 
   @Override
@@ -73,6 +72,11 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   @Override
   public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type) {
     visualizerTypes.remove(type.getKey());
+  }
+
+  @Override
+  public KeyedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> getTypes() {
+    return new HashedRegistry<>(typeMap);
   }
 
   public <V extends PathVisualizer<?, ?>, T> void setProperty(CommandSender sender, V visualizer,
