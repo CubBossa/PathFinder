@@ -8,7 +8,6 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -19,7 +18,6 @@ import dev.jorel.commandapi.arguments.LocationType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -230,10 +228,8 @@ public class WaypointCommand extends Command {
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
     for (Node s : start) {
       for (Node e : end) {
-        Optional<Edge> edge = s.getEdges().stream()
-            .filter(edge1 -> edge1.getEnd().equals(e.getNodeId()))
-            .findAny();
-        edge.ifPresent(edge1 -> s.getEdges().remove(edge1));
+        s.disconnect(e);
+        getPathfinder().getStorage().saveNode(s);
       }
     }
   }
@@ -244,10 +240,10 @@ public class WaypointCommand extends Command {
         if (s.equals(e)) {
           continue;
         }
-        if (s.hasEdgeTo(e)) {
+        if (s.hasConnection(e)) {
           continue;
         }
-        s.getEdges().add(new SimpleEdge(s, e, 1));
+        s.connect(e);
         getPathfinder().getStorage().saveNode(s);
       }
     }

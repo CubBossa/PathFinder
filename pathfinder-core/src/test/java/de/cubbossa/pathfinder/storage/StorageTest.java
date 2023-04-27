@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -102,52 +101,53 @@ public abstract class StorageTest {
 
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
-    nodeTypeRegistry.setWaypointNodeType(waypointNodeType);
 
     storage.init();
   }
 
-  protected <T> T assertResult(Supplier<CompletableFuture<T>> supplier) throws Exception {
+  protected <T> T assertResult(Supplier<CompletableFuture<T>> supplier) {
     CompletableFuture<T> future = supplier.get();
-    T element = future.get(1, TimeUnit.SECONDS);
+    T element = future.join();
 
     assertFalse(future.isCompletedExceptionally());
     assertNotNull(element);
     return element;
   }
 
-  protected void assertFuture(Supplier<CompletableFuture<Void>> supplier) throws Exception {
+  protected void assertFuture(Supplier<CompletableFuture<Void>> supplier) {
     CompletableFuture<Void> future = supplier.get();
-    future.get(1, TimeUnit.SECONDS);
+    future.join();
     assertFalse(future.isCompletedExceptionally());
   }
 
-  protected <T> T assertOptResult(Supplier<CompletableFuture<Optional<T>>> supplier)
-      throws Exception {
+  protected <T> T assertOptResult(Supplier<CompletableFuture<Optional<T>>> supplier) {
     return assertResult(supplier).orElseThrow();
   }
 
-  protected Waypoint makeWaypoint() throws Exception {
+  protected Waypoint makeWaypoint() {
     return assertResult(
         () -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
   }
 
-  protected <N extends Node> N assertNodeExists(UUID node) throws Exception {
-    return (N) storage.loadNode(node).get(1, TimeUnit.SECONDS).orElseThrow();
+  protected void deleteWaypoint(Waypoint waypoint) {
+    assertResult(() -> storage.deleteNodes(List.of(waypoint)));
+  }
+
+  protected <N extends Node> N assertNodeExists(UUID node) {
+    return (N) storage.loadNode(node).join().orElseThrow();
   }
 
   protected void assertNodeNotExists(UUID node) {
     assertThrows(Exception.class,
-        () -> storage.loadNode(node).get(1, TimeUnit.SECONDS).orElseThrow());
+        () -> storage.loadNode(node).join().orElseThrow());
   }
 
-  protected void assertNodeCount(int count) throws Exception {
-    Collection<Node> nodesAfter = storage.loadNodes().get(1, TimeUnit.SECONDS);
+  protected void assertNodeCount(int count) {
+    Collection<Node> nodesAfter = storage.loadNodes().join();
     assertEquals(count, nodesAfter.size());
   }
 
-  protected Edge makeEdge(Waypoint start, Waypoint end)
-      throws Exception {
+  protected Edge makeEdge(Waypoint start, Waypoint end) {
     Edge edge = new SimpleEdge(start.getNodeId(), end.getNodeId(), 1.23f);
     assertFuture(() -> storage.modifyNode(start.getNodeId(), node -> {
       node.getEdges().add(edge);
@@ -156,40 +156,40 @@ public abstract class StorageTest {
     return edge;
   }
 
-  protected void assertEdge(UUID start, UUID end) throws Exception {
-    assertTrue(storage.loadNode(start).get(1, TimeUnit.SECONDS).orElseThrow().getEdges()
+  protected void assertEdge(UUID start, UUID end) {
+    assertTrue(storage.loadNode(start).join().orElseThrow().getEdges()
         .stream().anyMatch(e -> e.getEnd().equals(end)));
   }
 
-  protected void assertNoEdge(UUID start, UUID end) throws Exception {
-    Optional<Node> node = (Optional<Node>) storage.loadNode(start).get(1, TimeUnit.SECONDS);
+  protected void assertNoEdge(UUID start, UUID end) {
+    Optional<Node> node = storage.loadNode(start).join();
     if (node.isEmpty()) {
       return;
     }
-    assertFalse(node.get().getEdges().stream().anyMatch(e -> e.getEnd().equals(end)));
+    assertFalse(node.get().hasConnection(end));
   }
 
-  protected NodeGroup makeGroup(NamespacedKey key) throws Exception {
+  protected NodeGroup makeGroup(NamespacedKey key) {
     return assertResult(() -> storage.createAndLoadGroup(key));
   }
 
-  protected void deleteGroup(NamespacedKey key) throws Exception {
+  protected void deleteGroup(NamespacedKey key) {
     assertFuture(() -> storage.loadGroup(key)
         .thenAccept(group -> storage.deleteGroup(group.orElseThrow()).join()));
   }
 
-  protected NodeGroup assertGroupExists(NamespacedKey key) throws Exception {
+  protected NodeGroup assertGroupExists(NamespacedKey key) {
     return assertOptResult(() -> storage.loadGroup(key));
   }
 
   protected void assertGroupNotExists(NamespacedKey key) {
     assertThrows(Exception.class,
-        () -> storage.loadGroup(key).get(1, TimeUnit.SECONDS).orElseThrow());
+        () -> storage.loadGroup(key).join().orElseThrow());
   }
 
   @Test
   @Order(1)
-  void createNode() throws Exception {
+  void createNode() {
     assertNodeCount(0);
     Waypoint waypoint = makeWaypoint();
     assertNodeExists(waypoint.getNodeId());
@@ -198,7 +198,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(2)
-  void getNodes() throws Exception {
+  void getNodes() {
     assertNodeCount(0);
     makeWaypoint();
     assertNodeCount(1);
@@ -206,8 +206,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(3)
-  <N extends Node> void getNodeType()
-      throws Exception {
+  <N extends Node> void getNodeType() {
     Waypoint waypoint = makeWaypoint();
     NodeType<N> type = assertOptResult(() -> storage.loadNodeType(waypoint.getNodeId()));
     assertEquals(waypointNodeType, type);
@@ -215,7 +214,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(4)
-  void updateNode() throws Exception {
+  void updateNode() {
     Waypoint waypoint = makeWaypoint();
     assertFuture(() -> storage.modifyNode(waypoint.getNodeId(), node -> {
       node.setLocation(waypoint.getLocation().clone().add(0, 2, 0));
@@ -226,7 +225,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(6)
-  void testConnectNodes() throws Exception {
+  void testConnectNodes() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
     assertNoEdge(a.getNodeId(), b.getNodeId());
@@ -237,7 +236,7 @@ public abstract class StorageTest {
   @SneakyThrows
   @Test
   @Order(7)
-  void disconnectNodes() throws Exception {
+  void disconnectNodes() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
     assertNoEdge(a.getNodeId(), b.getNodeId());
@@ -245,14 +244,14 @@ public abstract class StorageTest {
     assertEdge(a.getNodeId(), b.getNodeId());
 
     assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
-      node.getEdges().removeIf(e -> e.getEnd().equals(edge.getEnd()));
+      node.disconnect(edge.getEnd());
     }));
     assertNoEdge(a.getNodeId(), b.getNodeId());
   }
 
   @Test
   @Order(11)
-  void createGroup() throws Exception {
+  void createGroup() {
     NamespacedKey key = NamespacedKey.fromString("pathfinder:abc");
     assertGroupNotExists(key);
     makeGroup(key);
@@ -261,7 +260,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(12)
-  void deleteGroup() throws Exception {
+  void deleteGroup() {
     NamespacedKey key = NamespacedKey.fromString("pathfinder:abc");
     assertGroupNotExists(key);
     makeGroup(key);
@@ -272,7 +271,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(13)
-  void getNodeGroupKeySet() throws Exception {
+  void getNodeGroupKeySet() {
     NamespacedKey a = NamespacedKey.fromString("pathfinder:a");
     NamespacedKey b = NamespacedKey.fromString("pathfinder:b");
 
@@ -288,7 +287,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(14)
-  void deleteNodes() throws Exception {
+  void deleteNodes() {
     assertNodeCount(0);
     Waypoint a = makeWaypoint();
     makeWaypoint();
@@ -301,7 +300,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(15)
-  void assignNodesToGroup() throws Exception {
+  void assignNodesToGroup() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
@@ -318,7 +317,7 @@ public abstract class StorageTest {
 
   @Test
   @Order(16)
-  void unassignNodesFromGroup() throws Exception {
+  void unassignNodesFromGroup() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
@@ -346,38 +345,40 @@ public abstract class StorageTest {
 
   @Test
   @Order(16)
-  void deleteNodesWithGroups() throws Exception {
+  void deleteNodesWithGroups() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
 
-    storage.modifyNode(a.getNodeId(), node -> {
+    assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
       if (node instanceof Groupable groupable) {
         groupable.addGroup(g);
       }
-    }).get(1, TimeUnit.SECONDS);
-    storage.deleteNodes(new NodeSelection(a)).get(1, TimeUnit.SECONDS);
+    }));
+    assertFuture(() -> storage.deleteNodes(new NodeSelection(a)));
 
-    CompletableFuture<Optional<NodeGroup>> future = storage.loadGroup(gk);
-    Collection<UUID> nodes = future.get(1, TimeUnit.SECONDS).orElseThrow();
-
-    assertFalse(future.isCompletedExceptionally());
-    assertNotNull(nodes);
-    assertEquals(0, nodes.size());
+    NodeGroup g1 = assertGroupExists(gk);
+    assertEquals(0, g1.size());
   }
 
   @Test
   void deleteNodeWithEdges() {
+    Waypoint a = makeWaypoint();
+    Waypoint b = makeWaypoint();
 
+    assertFuture(() -> storage.modifyNode(a.getNodeId(), n -> {
+      n.connect(b);
+    }));
+
+    assertEdge(a.getNodeId(), b.getNodeId());
+    deleteWaypoint(b);
+
+    Waypoint a1 = assertNodeExists(a.getNodeId());
+    assertFalse(a1.hasConnection(b));
   }
 
   @Test
-  void deleteGroupWithModifier() {
-
-  }
-
-  @Test
-  void setModifier() throws Exception {
+  void setModifier() {
     NamespacedKey gk = NamespacedKey.fromString("test:abc");
     NodeGroup g = makeGroup(gk);
     Modifier mod = new PermissionModifier("abc");

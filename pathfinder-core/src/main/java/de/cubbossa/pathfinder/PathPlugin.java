@@ -3,19 +3,19 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.PlayerListener;
 import de.cubbossa.pathfinder.module.DiscoverHandler;
-import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifierType;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierType;
@@ -49,8 +49,9 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
   @Getter
   private static PathPlugin instance;
-  private final NodeTypeRegistryImpl nodeTypeRegistry;
-  private final ModifierRegistryImpl modifierRegistry;
+  private final NodeTypeRegistry nodeTypeRegistry;
+  private final VisualizerTypeRegistry visualizerTypeRegistry;
+  private final ModifierRegistry modifierRegistry;
   private final ExtensionsRegistry extensionRegistry;
   private final CommandRegistry commandRegistry;
   private final BStatsLoader bstatsLoader;
@@ -70,6 +71,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     storage = new StorageImpl();
 
     nodeTypeRegistry = new NodeTypeRegistryImpl();
+    visualizerTypeRegistry = new VisualizerHandler();
     modifierRegistry = new ModifierRegistryImpl();
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
@@ -152,7 +154,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
       examples.getExamples().forEach(examples::loadVisualizer);
     });
 
-    setWaypointNodeType(new WaypointType(
+    nodeTypeRegistry.register(new WaypointType(
         new WaypointStorage(storage),
         miniMessage
     ));
@@ -165,7 +167,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
         context -> TranslationHandler.getInstance()
             .translateLine(context.text(), context.player(), context.resolver()));
 
-    new VisualizerHandler().registerDefaults();
+    VisualizerHandler.getInstance().registerDefaults(); //TODO
     new NodeHandler(this);
     new DiscoverHandler(this);
 
@@ -195,11 +197,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     if (!new File(getDataFolder(), resource).exists()) {
       saveResource(resource, false);
     }
-  }
-
-  public void setWaypointNodeType(AbstractNodeType<Waypoint> nodeType) {
-    nodeTypeRegistry.setWaypointNodeType(nodeType);
-    nodeTypeRegistry.register(nodeType);
   }
 
   @Override

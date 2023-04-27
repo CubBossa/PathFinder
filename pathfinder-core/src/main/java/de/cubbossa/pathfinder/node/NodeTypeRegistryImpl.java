@@ -5,19 +5,12 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;
-import lombok.Getter;
-import lombok.Setter;
 
 public class NodeTypeRegistryImpl implements NodeTypeRegistry {
 
   private final KeyedRegistry<NodeType<? extends Node>> types;
-
-  @Getter
-  @Setter
-  private NodeType<Waypoint> waypointNodeType;
 
   public NodeTypeRegistryImpl() {
     this.types = new HashedRegistry<>();

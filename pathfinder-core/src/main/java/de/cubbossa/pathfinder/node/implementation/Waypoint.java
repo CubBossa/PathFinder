@@ -6,10 +6,12 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.node.SimpleEdge;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -73,5 +75,15 @@ public class Waypoint implements Node, Groupable {
         "nodeId=" + nodeId +
         ", location=" + location +
         '}';
+  }
+
+  @Override
+  public Optional<Edge> connect(UUID other, double weight) {
+    if (getConnection(other).isPresent()) {
+      return Optional.empty();
+    }
+    Edge e = new SimpleEdge(nodeId, other, (float) weight);
+    edges.add(e);
+    return Optional.of(e);
   }
 }

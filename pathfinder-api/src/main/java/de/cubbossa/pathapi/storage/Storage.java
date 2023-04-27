@@ -156,9 +156,6 @@ public interface Storage {
       NamespacedKey key, VisualizerType<VisualizerT> type);
 
   <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
-      VisualizerT visualizer);
-
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key);
 
   CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers();

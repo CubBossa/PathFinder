@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.commands.NodeGroupCommand;
 import de.cubbossa.pathfinder.commands.PathFinderCommand;
 import de.cubbossa.pathfinder.commands.PathVisualizerCommand;
@@ -45,8 +46,8 @@ public class CommandRegistry {
     nodeGroupCommand.register();
     pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
     pathVisualizerCommand.register();
-    waypointCommand =
-        new WaypointCommand(pathFinder, () -> plugin.getNodeTypeRegistry().getWaypointNodeType());
+    NodeType<?> type = plugin.getNodeTypeRegistry().getType(PathPlugin.pathfinder("waypoint"));
+    waypointCommand = new WaypointCommand(pathFinder, () -> type);
     waypointCommand.register();
     externalCommands.forEach(CommandTree::register);
   }

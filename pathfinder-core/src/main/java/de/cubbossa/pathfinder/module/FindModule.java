@@ -21,7 +21,6 @@ import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.listener.NavigationListener;
 import de.cubbossa.pathfinder.node.NodeHandler;
-import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
@@ -179,7 +178,7 @@ public class FindModule implements Listener, PathFinderExtension {
       Waypoint waypoint = new Waypoint(UUID.randomUUID());
       waypoint.setLocation(_location);
       // we can savely add edges because the fClosest object is only a representation of the stored node.
-      fClosest.getEdges().add(new SimpleEdge(fClosest, waypoint, 1));
+      fClosest.connect(waypoint);
 
       return findPath(player, new NodeSelection(waypoint)).join();
     });

@@ -4,6 +4,8 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,11 @@ public class TestNode implements Node {
 
   @Override
   public Collection<Edge> getEdges() {
-    return null;
+    return new HashSet<>();
+  }
+
+  @Override
+  public Optional<Edge> connect(UUID other, double weight) {
+    return Optional.empty();
   }
 }

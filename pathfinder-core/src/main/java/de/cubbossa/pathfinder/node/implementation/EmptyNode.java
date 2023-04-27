@@ -9,6 +9,7 @@ import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
 import org.bukkit.Material;
@@ -53,6 +54,11 @@ public class EmptyNode implements Node {
   @Override
   public Collection<Edge> getEdges() {
     return new HashSet<>();
+  }
+
+  @Override
+  public Optional<Edge> connect(UUID other, double weight) {
+    return Optional.empty();
   }
 
   @Override

@@ -17,7 +17,6 @@ import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
-import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
@@ -119,11 +118,11 @@ public class EditModeMenu {
           }
           Collection<CompletableFuture<?>> futures = new HashSet<>();
           futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> {
-            node.getEdges().add(new SimpleEdge(edgeStart, c.getTarget().getNodeId(), 1));
+            node.connect(c.getTarget().getNodeId());
           }));
           if (undirectedEdges) {
             futures.add(pathFinder.getStorage().modifyNode(c.getTarget().getNodeId(), node -> {
-              node.getEdges().add(new SimpleEdge(c.getTarget().getNodeId(), edgeStart, 1));
+              node.connect(edgeStart);
             }));
           }
           CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
@@ -156,7 +155,7 @@ public class EditModeMenu {
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
           Player player = context.getPlayer();
           pathFinder.getStorage().modifyNode(context.getTarget().getStart(), node -> {
-            node.getEdges().removeIf(edge -> edge.equals(context.getTarget()));
+            node.disconnect(context.getTarget().getEnd());
           });
           EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
               "editor_edge_disconnect", player, player.getLocation());
@@ -164,7 +163,7 @@ public class EditModeMenu {
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player player = context.getPlayer();
           pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), n -> {
-            n.getEdges().clear();
+            n.disconnectAll();
             EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
                 "editor_edge_disconnect", player, player.getLocation());
           });

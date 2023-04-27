@@ -297,7 +297,9 @@ public class StorageImpl implements Storage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerType<VisualizerT>> loadVisualizerType(
       NamespacedKey key) {
-    return null;
+    return asyncFuture(() -> {
+      return cache.getVisualizerTypeCache().getType(key, implementation::loadVisualizerType);
+    });
   }
 
   @Override
@@ -311,22 +313,20 @@ public class StorageImpl implements Storage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Void> saveVisualizerType(
       NamespacedKey key, VisualizerType<VisualizerT> type) {
-    return null;
+    return asyncFuture(() -> {
+      implementation.saveVisualizerType(key, type);
+      cache.getVisualizerTypeCache().write(key, type);
+    });
   }
 
   // Visualizer
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
-      VisualizerT visualizer) {
-    return createAndLoadVisualizer(cache.getVisualizerTypeCache()
-        .getType(visualizer.getKey(), implementation::loadVisualizerType), visualizer.getKey());
-  }
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     return asyncFuture(() -> {
       VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(key);
+      saveVisualizerType(key, type);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });

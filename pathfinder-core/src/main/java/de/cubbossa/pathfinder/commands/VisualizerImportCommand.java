@@ -29,9 +29,9 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
           if (objects[argumentOffset].equals("*")) {
             ExamplesHandler eh = ExamplesHandler.getInstance();
             eh.getExamples().stream().map(eh::loadVisualizer).forEach(future ->
-                future.thenAccept(visualizer ->
-
-                    pathFinder.getStorage().createAndLoadVisualizer(visualizer)));
+                future.thenAccept(visualizer -> {
+                }));
+            // pathFinder.getStorage().createAndLoadVisualizer(visualizer)));
             // TODO handle double names
             return;
           }
@@ -52,7 +52,7 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
             return;
           }
           ExamplesHandler.getInstance().loadVisualizer(file).thenAccept(visualizer -> {
-            pathFinder.getStorage().createAndLoadVisualizer(visualizer);
+            // pathFinder.getStorage().createAndLoadVisualizer(visualizer);
             TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.format(
                 TagResolver.resolver("key", Messages.formatKey(key)),
                 Placeholder.component("name", visualizer.getDisplayName())
