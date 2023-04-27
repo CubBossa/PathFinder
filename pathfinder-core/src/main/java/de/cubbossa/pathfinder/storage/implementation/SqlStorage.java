@@ -803,4 +803,21 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_PATH_VISUALIZER.KEY.eq(visualizer.getKey()))
         .execute();
   }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
+                                                                            VisualizerType<VisualizerT> type) {
+
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
+      NamespacedKey key) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key) {
+    return null;
+  }
 }

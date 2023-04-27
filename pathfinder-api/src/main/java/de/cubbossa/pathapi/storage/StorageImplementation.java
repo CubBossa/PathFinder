@@ -18,8 +18,19 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+/**
+ * A {@link StorageImplementation} handles the actual serializing and deserializing of the given objects.
+ * To access pathfinder data, use an instance of {@link Storage} instead, which also handles caching and
+ * combines different loading methods (e.g. loading a node, its edges and its groups) into one.
+ */
 public interface StorageImplementation {
 
+  /**
+   * Initializes this storage implementation. Will be called by {@link Storage#init()} and will create
+   * necessary files or objects. It assures that the instance can be used without issues afterward.
+   *
+   * @throws Exception Might call an exception. Not specified due to different implementations.
+   */
   void init() throws Exception;
 
   void shutdown();
