@@ -6,10 +6,28 @@ import java.util.Optional;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A node instance is the main structure of the virtual graph that is managed by PathFinder.
+ * They are persistent data of the application that the user specifies to defines possible paths.
+ * Actual pathfinding will happen on a graph built conditionally from all nodes.
+ *
+ * @see Edge serves as connecting structure.
+ */
 public interface Node extends Comparable<Node> {
 
+  /**
+   * The UUID of nodes must be unique for each node and serves as primary key.
+   *
+   * @return The UUID of this Node.
+   */
   UUID getNodeId();
 
+  /**
+   * The current location of this Node. A location consists of a vec3 and a world. Worlds are abstract
+   * and must not be minecraft worlds, bust most commonly are. For example, a world could also resemble a website.
+   *
+   * @return A referenced location of this Node.
+   */
   Location getLocation();
 
   void setLocation(Location location);

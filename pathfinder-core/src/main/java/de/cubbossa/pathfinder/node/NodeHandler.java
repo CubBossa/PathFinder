@@ -88,15 +88,15 @@ public class NodeHandler {
         .findFirst().orElse(null);
   }
 
-  public void toggleNodeGroupEditor(PathPlayer<?> player, NamespacedKey key) {
+  public <PlayerT> void toggleNodeGroupEditor(PathPlayer<PlayerT> player, NamespacedKey key) {
     getNodeGroupEditor(key).thenAccept(nodeGroupEditor -> {
-      nodeGroupEditor.toggleEditMode(player);
+      ((NodeGroupEditor<PlayerT>) nodeGroupEditor).toggleEditMode(player);
     });
   }
 
-  public CompletableFuture<NodeGroupEditor> getNodeGroupEditor(NamespacedKey key) {
-    CompletableFuture<NodeGroupEditor> future = new CompletableFuture<>();
-    NodeGroupEditor editor = editors.get(key);
+  public <PlayerT> CompletableFuture<NodeGroupEditor<PlayerT>> getNodeGroupEditor(NamespacedKey key) {
+    CompletableFuture<NodeGroupEditor<PlayerT>> future = new CompletableFuture<>();
+    NodeGroupEditor<PlayerT> editor = editors.get(key);
     if (editor == null) {
       pathFinder.getStorage().loadGroup(key).thenAccept(g -> {
         Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {

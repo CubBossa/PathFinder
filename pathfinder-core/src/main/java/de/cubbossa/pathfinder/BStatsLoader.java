@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.PathFinder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,15 +12,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class BStatsLoader {
 
+  private final PathFinder pathFinder;
+  
+  public BStatsLoader(PathFinder pathFinder) {
+    this.pathFinder = pathFinder;
+  }
+
   public void registerStatistics(JavaPlugin plugin) {
     Metrics metrics = new Metrics(plugin, 16324);
 
     metrics.addCustomChart(new SimplePie("group_amount",
-        () -> PathPlugin.getInstance().getStorage().loadAllGroups().join().size() + ""));
+        () -> pathFinder.getStorage().loadAllGroups().join().size() + ""));
     metrics.addCustomChart(new SimplePie("visualizer_amount",
-        () -> PathPlugin.getInstance().getStorage().loadVisualizers().join().size() + ""));
+        () -> pathFinder.getStorage().loadVisualizers().join().size() + ""));
     metrics.addCustomChart(new AdvancedPie("nodes_per_group", () -> {
-      IntStream counts = PathPlugin.getInstance().getStorage().loadAllGroups().join().stream()
+      IntStream counts = pathFinder.getStorage().loadAllGroups().join().stream()
           .mapToInt(Collection::size);
       Map<String, Integer> vals = new HashMap<>();
       counts.forEach(value -> {

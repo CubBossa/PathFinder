@@ -30,6 +30,9 @@ import de.cubbossa.pathfinder.util.PathPlayerImpl;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
+import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
+import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.translations.TranslationHandler;
@@ -47,15 +50,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class PathPlugin extends JavaPlugin implements PathFinder {
 
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
+
   @Getter
   private static PathPlugin instance;
-  private final NodeTypeRegistry nodeTypeRegistry;
-  private final VisualizerTypeRegistry visualizerTypeRegistry;
-  private final ModifierRegistry modifierRegistry;
-  private final ExtensionsRegistry extensionRegistry;
-  private final CommandRegistry commandRegistry;
-  private final BStatsLoader bstatsLoader;
-  private final ConfigFileLoader configFileLoader;
+  private NodeTypeRegistry nodeTypeRegistry;
+  private VisualizerTypeRegistry visualizerTypeRegistry;
+  private ModifierRegistry modifierRegistry;
+  private ExtensionsRegistry extensionRegistry;
+  private CommandRegistry commandRegistry;
+  private BStatsLoader bstatsLoader;
+  private ConfigFileLoader configFileLoader;
   private BukkitAudiences audiences;
   private MiniMessage miniMessage;
   private File effectsFile;
@@ -63,30 +67,6 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   @Setter
   private PathPluginConfig configuration;
   private EventDispatcher eventDispatcher;
-
-  public PathPlugin() {
-    instance = this;
-    PathFinderProvider.setPathFinder(this);
-
-    storage = new StorageImpl();
-
-    nodeTypeRegistry = new NodeTypeRegistryImpl();
-    visualizerTypeRegistry = new VisualizerHandler();
-    modifierRegistry = new ModifierRegistryImpl();
-
-    modifierRegistry.registerModifierType(new PermissionModifierType());
-    modifierRegistry.registerModifierType(new NavigableModifierType());
-    modifierRegistry.registerModifierType(new DiscoverableModifierType());
-    modifierRegistry.registerModifierType(new FindDistanceModifierType());
-    modifierRegistry.registerModifierType(new CurveLengthModifierType());
-
-    configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
-    bstatsLoader = new BStatsLoader();
-    commandRegistry = new CommandRegistry(this);
-    extensionRegistry = new ExtensionsRegistry();
-    extensionRegistry.findServiceExtensions(this.getClassLoader());
-    eventDispatcher = new BukkitEventDispatcher(getLogger());
-  }
 
   public static NamespacedKey pathfinder(String key) {
     return new NamespacedKey("pathfinder", key);
@@ -103,6 +83,27 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
   @SneakyThrows
   @Override
   public void onLoad() {
+    instance = this;
+    PathFinderProvider.setPathFinder(this);
+
+    storage = new StorageImpl();
+
+    nodeTypeRegistry = new NodeTypeRegistryImpl();
+    visualizerTypeRegistry = new VisualizerHandler();
+    modifierRegistry = new ModifierRegistryImpl();
+
+    modifierRegistry.registerModifierType(new PermissionModifierType());
+    modifierRegistry.registerModifierType(new NavigableModifierType());
+    modifierRegistry.registerModifierType(new DiscoverableModifierType());
+    modifierRegistry.registerModifierType(new FindDistanceModifierType());
+    modifierRegistry.registerModifierType(new CurveLengthModifierType());
+
+    configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
+    bstatsLoader = new BStatsLoader(this);
+    commandRegistry = new CommandRegistry(this);
+    extensionRegistry = new ExtensionsRegistry();
+    extensionRegistry.findServiceExtensions(this.getClassLoader());
+    eventDispatcher = new BukkitEventDispatcher(getLogger());
 
     generateIfAbsent("lang/styles.yml");
     generateIfAbsent("lang/de_DE.yml");
@@ -137,9 +138,9 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
       case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry,
-          modifierRegistry, VisualizerHandler.getInstance());
+          modifierRegistry, visualizerTypeRegistry);
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
-          modifierRegistry, VisualizerHandler.getInstance());
+          modifierRegistry, visualizerTypeRegistry);
       default -> null;
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
@@ -167,7 +168,9 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
         context -> TranslationHandler.getInstance()
             .translateLine(context.text(), context.player(), context.resolver()));
 
-    VisualizerHandler.getInstance().registerDefaults(); //TODO
+    visualizerTypeRegistry.registerVisualizerType(new ParticleVisualizerType(PathPlugin.pathfinder("particle")));
+    visualizerTypeRegistry.registerVisualizerType(new CombinedVisualizerType(PathPlugin.pathfinder("combined")));
+    visualizerTypeRegistry.registerVisualizerType(new CompassVisualizerType(PathPlugin.pathfinder("compass")));
     new NodeHandler(this);
     new DiscoverHandler(this);
 
@@ -175,6 +178,7 @@ public class PathPlugin extends JavaPlugin implements PathFinder {
 
     commandRegistry.enableCommands(this);
     extensionRegistry.enableExtensions(this);
+    bstatsLoader.registerStatistics(this);
   }
 
   @SneakyThrows

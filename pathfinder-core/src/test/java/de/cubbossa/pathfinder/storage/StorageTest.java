@@ -130,7 +130,7 @@ public abstract class StorageTest {
   }
 
   protected void deleteWaypoint(Waypoint waypoint) {
-    assertResult(() -> storage.deleteNodes(List.of(waypoint)));
+    assertFuture(() -> storage.deleteNodes(List.of(waypoint)));
   }
 
   protected <N extends Node> N assertNodeExists(UUID node) {
@@ -157,8 +157,7 @@ public abstract class StorageTest {
   }
 
   protected void assertEdge(UUID start, UUID end) {
-    assertTrue(storage.loadNode(start).join().orElseThrow().getEdges()
-        .stream().anyMatch(e -> e.getEnd().equals(end)));
+    assertTrue(storage.loadNode(start).join().orElseThrow().hasConnection(end));
   }
 
   protected void assertNoEdge(UUID start, UUID end) {
@@ -240,12 +239,16 @@ public abstract class StorageTest {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
     assertNoEdge(a.getNodeId(), b.getNodeId());
+
     Edge edge = makeEdge(a, b);
     assertEdge(a.getNodeId(), b.getNodeId());
 
-    assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
-      node.disconnect(edge.getEnd());
-    }));
+    a.disconnect(b);
+    assertFuture(() -> storage.saveNode(a));
+
+    // assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
+    //   node.disconnect(edge.getEnd());
+    // }));
     assertNoEdge(a.getNodeId(), b.getNodeId());
   }
 

@@ -17,7 +17,7 @@ public class PlayerListener implements Listener {
 
     NamespacedKey currentlyEdited = NodeHandler.getInstance().getEdited(player);
     if (currentlyEdited != null) {
-      NodeHandler.getInstance().getNodeGroupEditor(currentlyEdited)
+      NodeHandler.getInstance().<Player>getNodeGroupEditor(currentlyEdited)
           .thenAccept(e -> e.setEditMode(player, false));
     }
   }

@@ -45,12 +45,6 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
     typeMap = new HashMap<>();
   }
 
-  public void registerDefaults() {
-    visualizerTypes.put(new ParticleVisualizerType(PathPlugin.pathfinder("particle")));
-    visualizerTypes.put(new CombinedVisualizerType(PathPlugin.pathfinder("combined")));
-    visualizerTypes.put(new CompassVisualizerType(PathPlugin.pathfinder("compass")));
-  }
-
   @Override
   public @Nullable <T extends PathVisualizer<?, ?>> Optional<VisualizerType<T>> getType(
       NamespacedKey key) {
