@@ -2,32 +2,28 @@ package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.commands.CustomArgs;
-import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.ArgumentTree;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.util.*;
+
 @Getter
 @Setter
 public class PlaceholderVisualizerType extends AbstractVisualizerType<PlaceholderVisualizer>
-    implements VisualizerTypeCommandExtension,
-    VisualizerTypeMessageExtension<PlaceholderVisualizer> {
+        implements VisualizerTypeCommandExtension,
+        VisualizerTypeMessageExtension<PlaceholderVisualizer> {
 
-  public PlaceholderVisualizerType(NamespacedKey key) {
-    super(key);
-  }
+    public PlaceholderVisualizerType(NamespacedKey key) {
+        super(key);
+    }
 
   @Override
   public PlaceholderVisualizer create(NamespacedKey key, String nameFormat) {

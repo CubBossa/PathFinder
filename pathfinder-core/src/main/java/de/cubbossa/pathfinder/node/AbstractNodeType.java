@@ -4,43 +4,39 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.inventory.ItemStack;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
 
 @Getter
 @Setter
 public abstract class AbstractNodeType<N extends Node> implements
-    NodeType<N> {
+        NodeType<N> {
 
-  private final NamespacedKey key;
-  private final ItemStack displayItem;
-  private final MiniMessage miniMessage;
-  private final NodeDataStorage<N> storage;
-  private String nameFormat;
-  private Component displayName;
+    private final NamespacedKey key;
+    private final MiniMessage miniMessage;
+    private final NodeDataStorage<N> storage;
+    private String nameFormat;
+    private Component displayName;
 
-  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem,
-                          MiniMessage miniMessage) {
-    this(key, name, displayItem, miniMessage, null);
-  }
+    public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage) {
+        this(key, name, miniMessage, null);
+    }
 
-  public AbstractNodeType(NamespacedKey key, String name, ItemStack displayItem,
-                          MiniMessage miniMessage, NodeDataStorage<N> storage) {
-    this.key = key;
-    this.miniMessage = miniMessage;
-    this.setNameFormat(name);
-    this.displayItem = displayItem;
-    this.storage = storage;
-  }
+    public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage, NodeDataStorage<N> storage) {
+        this.key = key;
+        this.miniMessage = miniMessage;
+        this.setNameFormat(name);
+        this.storage = storage;
+    }
 
-  @Override
+    @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
     this.displayName = miniMessage.deserialize(name);

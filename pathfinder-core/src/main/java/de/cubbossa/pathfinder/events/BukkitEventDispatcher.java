@@ -1,21 +1,20 @@
 package de.cubbossa.pathfinder.events;
 
-import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.event.Listener;
-import de.cubbossa.pathapi.event.NodeCreateEvent;
-import de.cubbossa.pathapi.event.NodeDeleteEvent;
-import de.cubbossa.pathapi.event.NodeGroupCreateEvent;
-import de.cubbossa.pathapi.event.NodeGroupDeleteEvent;
-import de.cubbossa.pathapi.event.NodeSaveEvent;
-import de.cubbossa.pathapi.event.PathFinderEvent;
+import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.events.node.NodeDeletedEvent;
 import de.cubbossa.pathfinder.events.node.NodeSavedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupCreatedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupDeleteEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.bukkit.Bukkit;
+import org.bukkit.event.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -27,14 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import org.bukkit.Bukkit;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
 
 @RequiredArgsConstructor
 public class BukkitEventDispatcher implements EventDispatcher {
@@ -73,10 +64,10 @@ public class BukkitEventDispatcher implements EventDispatcher {
       future.complete(null);
       return future;
     }
-    Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-      dispatchEventWithFuture(event).join();
-      future.complete(null);
-    });
+      Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+          dispatchEventWithFuture(event).join();
+          future.complete(null);
+      });
     return future.exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
@@ -150,7 +141,7 @@ public class BukkitEventDispatcher implements EventDispatcher {
             throw new RuntimeException(e);
           }
         },
-        PathPlugin.getInstance()
+            PathFinderPlugin.getInstance()
     );
     Listener<E> internalListener = new Listener<>(UUID.randomUUID(), eventType, event);
     listenerMap.put(internalListener, listener);

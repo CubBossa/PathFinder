@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.util.location;
 
+import de.cubbossa.pathfinder.util.LocationWeightSolver;
+import lombok.RequiredArgsConstructor;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class SimpleLocationWeightSolver<T> implements LocationWeightSolver<T> {

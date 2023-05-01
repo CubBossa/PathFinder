@@ -2,13 +2,14 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.splinelib.util.BezierVector;
+
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 public class NodeUtils {
 
@@ -24,10 +25,10 @@ public class NodeUtils {
 
 
     Node first = path.keySet().iterator().next();
-    vectors.add(new BezierVector(
-        PathPlugin.SPLINES.convertToVector(first.getLocation()),
-        PathPlugin.SPLINES.convertToVector(first.getLocation()),
-        PathPlugin.SPLINES.convertToVector(first.getLocation())));
+      vectors.add(new BezierVector(
+              CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+              CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+              CommonPathFinder.SPLINES.convertToVector(first.getLocation())));
 
     Node prev = null;
     double sPrev = 1;
@@ -49,10 +50,10 @@ public class NodeUtils {
       sCurr = sNext;
       vNext = next.getLocation();
     }
-    vectors.add(new BezierVector(
-        PathPlugin.SPLINES.convertToVector(vNext),
-        PathPlugin.SPLINES.convertToVector(vNext),
-        PathPlugin.SPLINES.convertToVector(vNext)));
+      vectors.add(new BezierVector(
+              CommonPathFinder.SPLINES.convertToVector(vNext),
+              CommonPathFinder.SPLINES.convertToVector(vNext),
+              CommonPathFinder.SPLINES.convertToVector(vNext)));
     return vectors;
   }
 
@@ -88,10 +89,10 @@ public class NodeUtils {
     }
 
     return new BezierVector(
-        PathPlugin.SPLINES.convertToVector(vCurrent),
-        PathPlugin.SPLINES.convertToVector(
-            vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
-        PathPlugin.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
+            CommonPathFinder.SPLINES.convertToVector(vCurrent),
+            CommonPathFinder.SPLINES.convertToVector(
+                    vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
+            CommonPathFinder.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
     );
   }
 

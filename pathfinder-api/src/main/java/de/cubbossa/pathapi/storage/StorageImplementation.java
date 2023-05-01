@@ -10,12 +10,9 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -43,14 +40,14 @@ public interface StorageImplementation {
 
   void setCache(CacheLayer cacheLayer);
 
-  // Node Type
-  void saveNodeType(UUID node, NodeType<? extends Node> type);
+    // Node Type
+    void saveNodeType(UUID node, NodeType<?> type);
 
-  void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping);
+    void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping);
 
   <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node);
 
-  Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes);
+    Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
   <N extends Node> N createAndLoadNode(NodeType<N> type, Location location);

@@ -3,12 +3,14 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.commands.CustomArgs;
-import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.arguments.Argument;
+
 import java.util.Map;
+
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -39,24 +41,24 @@ public class CompassVisualizerType extends InternalVisualizerType<CompassVisuali
         .resolver(Placeholder.parsed("marker-west", element.getWest()))
         .resolver(Placeholder.parsed("marker-target", element.getTarget()))
         .resolver(
-            Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), element.getRadius() + ""))
+                Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius())))
         .build()
     );
   }
 
-  @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
-    return tree
-        .then(subCommand("color", CustomArgs.enumArgument("value", BossBar.Color.class),
-            BossBarVisualizer.PROP_COLOR))
-        .then(subCommand("overlay", CustomArgs.enumArgument("value", BossBar.Overlay.class),
-            BossBarVisualizer.PROP_OVERLAY))
-        .then(subCommand("background", CustomArgs.miniMessageArgument("value"),
-            CompassVisualizer.PROP_BACKGROUND))
-        .then(subCommand("north", CustomArgs.miniMessageArgument("value"),
-            CompassVisualizer.PROP_NORTH))
-        .then(subCommand("east", CustomArgs.miniMessageArgument("value"),
+    @Override
+    public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                         int argumentOffset) {
+        return tree
+                .then(subCommand("color", CustomArgs.enumArgument("value", BossBar.Color.class),
+                        BossBarVisualizer.PROP_COLOR))
+                .then(subCommand("overlay", CustomArgs.enumArgument("value", BossBar.Overlay.class),
+                        BossBarVisualizer.PROP_OVERLAY))
+                .then(subCommand("background", CustomArgs.miniMessageArgument("value"),
+                        CompassVisualizer.PROP_BACKGROUND))
+                .then(subCommand("north", CustomArgs.miniMessageArgument("value"),
+                        CompassVisualizer.PROP_NORTH))
+                .then(subCommand("east", CustomArgs.miniMessageArgument("value"),
             CompassVisualizer.PROP_EAST))
         .then(subCommand("south", CustomArgs.miniMessageArgument("value"),
             CompassVisualizer.PROP_SOUTH))

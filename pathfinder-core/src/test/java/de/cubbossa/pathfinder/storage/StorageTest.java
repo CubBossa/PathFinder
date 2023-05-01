@@ -1,11 +1,5 @@
 package de.cubbossa.pathfinder.storage;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import de.cubbossa.pathapi.group.Modifier;
@@ -14,11 +8,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
@@ -33,6 +23,10 @@ import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import lombok.SneakyThrows;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.junit.jupiter.api.*;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -41,14 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class StorageTest {
 
@@ -206,8 +194,8 @@ public abstract class StorageTest {
   @Test
   @Order(3)
   <N extends Node> void getNodeType() {
-    Waypoint waypoint = makeWaypoint();
-    NodeType<N> type = assertOptResult(() -> storage.loadNodeType(waypoint.getNodeId()));
+      Waypoint waypoint = makeWaypoint();
+      NodeType<N> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
     assertEquals(waypointNodeType, type);
   }
 
@@ -236,20 +224,17 @@ public abstract class StorageTest {
   @Test
   @Order(7)
   void disconnectNodes() {
-    Waypoint a = makeWaypoint();
-    Waypoint b = makeWaypoint();
-    assertNoEdge(a.getNodeId(), b.getNodeId());
+      Waypoint a = makeWaypoint();
+      Waypoint b = makeWaypoint();
+      assertNoEdge(a.getNodeId(), b.getNodeId());
 
-    Edge edge = makeEdge(a, b);
-    assertEdge(a.getNodeId(), b.getNodeId());
+      Edge edge = makeEdge(a, b);
+      assertEdge(a.getNodeId(), b.getNodeId());
 
-    a.disconnect(b);
-    assertFuture(() -> storage.saveNode(a));
-
-    // assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
-    //   node.disconnect(edge.getEnd());
-    // }));
-    assertNoEdge(a.getNodeId(), b.getNodeId());
+      assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
+          node.disconnect(edge.getEnd());
+      }));
+      assertNoEdge(a.getNodeId(), b.getNodeId());
   }
 
   @Test

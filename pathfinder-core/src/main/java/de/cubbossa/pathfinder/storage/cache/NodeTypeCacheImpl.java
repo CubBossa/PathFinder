@@ -3,11 +3,8 @@ package de.cubbossa.pathfinder.storage.cache;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.cache.NodeTypeCache;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.function.Function;
 
 public class NodeTypeCacheImpl implements NodeTypeCache {
@@ -29,26 +26,25 @@ public class NodeTypeCacheImpl implements NodeTypeCache {
   @Override
   public Map<UUID, NodeType<?>> getTypes(Collection<UUID> uuids,
                                          Function<Collection<UUID>, Map<UUID, NodeType<?>>> loader) {
-    return null;
+      return null; //TODO
   }
 
   @Override
   public void write(UUID uuid, NodeType<?> type) {
-
+      types.put(uuid, type);
   }
 
   @Override
   public void write(UUID uuid) {
-
   }
 
   @Override
   public void invalidate(UUID uuid) {
-
+      types.remove(uuid);
   }
 
   @Override
   public void invalidateAll() {
-
+      types.clear();
   }
 }

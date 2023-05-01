@@ -5,17 +5,14 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import lombok.Getter;
 import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.StringReader;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ExamplesHandler {
 
@@ -25,14 +22,16 @@ public class ExamplesHandler {
   private static ExamplesHandler instance;
   private final List<ExamplesReader.ExampleFile> files = new ArrayList<>();
   private final Collection<Runnable> afterFetch = new HashSet<>();
-  private final ExamplesReader reader;
-  @Getter
-  private boolean fetched = false;
+    private final ExamplesReader reader;
+    private final Logger logger;
+    @Getter
+    private boolean fetched = false;
 
-  public ExamplesHandler() {
-    instance = this;
-    reader = new ExamplesReader();
-  }
+    public ExamplesHandler(Logger logger) {
+        instance = this;
+        this.logger = logger;
+        reader = new ExamplesReader(logger);
+    }
 
   public void fetchExamples() {
     reader.getExamples(LINK).thenAccept(exampleFiles -> {
@@ -63,8 +62,7 @@ public class ExamplesHandler {
       Optional<VisualizerType<PathVisualizer<?, ?>>> type = VisualizerHandler.getInstance()
           .getType(NamespacedKey.fromString((String) values.get("type")));
       if (type.isEmpty()) {
-        PathPlugin.getInstance().getLogger().log(Level.SEVERE,
-            "An error occurred while parsing type: " + values.get("type") + " from " + values);
+          logger.log(Level.SEVERE, "An error occurred while parsing type: " + values.get("type") + " from " + values);
         return null;
       }
       return parse(file, type.get(), values);

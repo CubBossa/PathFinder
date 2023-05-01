@@ -1,17 +1,16 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.PathPlugin;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
+
+import javax.annotation.Nullable;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 @Getter
 @Setter
@@ -24,7 +23,6 @@ public abstract class AbstractVisualizer<DataT, PlayerT>
 
   @Nullable
   private String permission = null;
-  private ItemStack displayItem = new ItemStack(Material.REDSTONE);
   private int interval = 1;
 
   public AbstractVisualizer(NamespacedKey key, String nameFormat) {
@@ -33,8 +31,8 @@ public abstract class AbstractVisualizer<DataT, PlayerT>
   }
 
   public void setNameFormat(String nameFormat) {
-    this.nameFormat = nameFormat;
-    this.displayName = PathPlugin.getInstance().getMiniMessage().deserialize(nameFormat);
+      this.nameFormat = nameFormat;
+      this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
   }
 
   public interface Property<VisualizerT extends PathVisualizer<?, ?>, TypeT> {

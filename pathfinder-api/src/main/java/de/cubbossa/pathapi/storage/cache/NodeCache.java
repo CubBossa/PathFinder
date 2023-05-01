@@ -2,6 +2,7 @@ package de.cubbossa.pathapi.storage.cache;
 
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Node;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,7 +11,7 @@ import java.util.function.Supplier;
 
 public interface NodeCache extends StorageCache<Node> {
 
-  Optional<Node> getNode(UUID uuid);
+    <N extends Node> Optional<N> getNode(UUID uuid);
 
   Collection<Node> getAllNodes(Supplier<Collection<Node>> loader);
 

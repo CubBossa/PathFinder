@@ -1,6 +1,7 @@
 package de.cubbossa.pathapi.node;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
+
 import java.util.Collection;
 
 public interface NodeTypeRegistry {
@@ -8,7 +9,7 @@ public interface NodeTypeRegistry {
 
   Collection<NamespacedKey> getTypeKeys();
 
-  Collection<NodeType<? extends Node>> getTypes();
+    Collection<NodeType<?>> getTypes();
 
   <N extends Node> void register(NodeType<N> type);
 

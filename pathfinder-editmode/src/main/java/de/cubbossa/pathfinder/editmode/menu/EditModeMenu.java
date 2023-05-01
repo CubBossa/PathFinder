@@ -11,8 +11,8 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
@@ -20,7 +20,6 @@ import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
-import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.Collection;
 import java.util.HashSet;
@@ -42,24 +41,24 @@ public class EditModeMenu {
 
   private final PathFinder pathFinder;
   private final NamespacedKey key;
-  private final Collection<NamespacedKey> multiTool = new HashSet<>();
-  private final Collection<NodeType<? extends Node>> types;
-  private UUID edgeStart = null;
+    private final Collection<NamespacedKey> multiTool = new HashSet<>();
+    private final Collection<NodeType<?>> types;
+    private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
-                      Collection<NodeType<? extends Node>> types) {
-    this.pathFinder = pathFinder;
-    this.key = group;
-    this.types = types;
-  }
+    public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
+                        Collection<NodeType<?>> types) {
+        this.pathFinder = pathFinder;
+        this.key = group;
+        this.types = types;
+    }
 
   public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
     BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
-      Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(),
-          () -> editor.setEditMode(PathPlugin.wrap(c.getPlayer()), false), 1L);
+        Bukkit.getScheduler().runTaskLater(PathFinderProvider.get(),
+                () -> editor.setEditMode(CommonPathFinder.wrap(c.getPlayer()), false), 1L);
     });
 
     menu.setButton(0, Button.builder()
@@ -74,7 +73,7 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-            NodeType<? extends Node> type = types.stream().findAny().orElse(null);
+              NodeType<?> type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
@@ -128,8 +127,6 @@ public class EditModeMenu {
           CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             edgeStart = null;
             c.getMenu().refresh(c.getSlot());
-            EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-                "editor_edge_connect", p, p.getLocation());
           }).exceptionally(throwable -> {
             throwable.printStackTrace();
             return null;
@@ -157,15 +154,13 @@ public class EditModeMenu {
           pathFinder.getStorage().modifyNode(context.getTarget().getStart(), node -> {
             node.disconnect(context.getTarget().getEnd());
           });
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_disconnect", player, player.getLocation());
+            EffectHandler.getInstance().playEffect(PathFinderProvider.get().getEffectsFile(),
+                    "editor_edge_disconnect", player, player.getLocation());
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player player = context.getPlayer();
           pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), n -> {
             n.disconnectAll();
-            EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-                "editor_edge_disconnect", player, player.getLocation());
           });
         }));
 
@@ -174,27 +169,30 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-          pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
+            pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
 
-            double dist = -1;
-            Node nearest = null;
-            Location pLoc = context.getPlayer().getLocation();
-            for (Node node : nodes) {
-              double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
-              if (dist == -1 || d < dist) {
-                nearest = node;
-                dist = d;
-              }
-            }
-            if (nearest == null) {
-              return;
-            }
-            Player p = context.getPlayer();
-            Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
-                .setDirection(p.getLocation().getDirection());
-            p.teleport(newLoc);
-            p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
-          });
+                double dist = -1;
+                Node nearest = null;
+                Location pLoc = context.getPlayer().getLocation();
+                for (Node node : nodes) {
+                    double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
+                    if (dist == -1 || d < dist) {
+                        nearest = node;
+                        dist = d;
+                    }
+                }
+                if (nearest == null) {
+                    return;
+                }
+                Player p = context.getPlayer();
+                Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
+                        .setDirection(p.getLocation().getDirection());
+                p.teleport(newLoc);
+                p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+            }).exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+            });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
     menu.setButton(3, Button.builder()
@@ -347,23 +345,23 @@ public class EditModeMenu {
             .withClickHandler(Action.LEFT, c -> {
               if (!multiTool.contains(group.getKey())) {
 
-                Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                  multiTool.add(group.getKey());
-                  c.getPlayer()
-                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
+                  Bukkit.getScheduler().runTask(PathFinderProvider.get(), () -> {
+                      multiTool.add(group.getKey());
+                      c.getPlayer()
+                              .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                      menu.refresh(menu.getListSlots());
+                  });
               }
             })
             .withClickHandler(Action.RIGHT, c -> {
               if (multiTool.contains(group.getKey())) {
 
-                Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                  multiTool.remove(group.getKey());
-                  c.getPlayer()
-                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
+                  Bukkit.getScheduler().runTask(PathFinderProvider.get(), () -> {
+                      multiTool.remove(group.getKey());
+                      c.getPlayer()
+                              .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+                      menu.refresh(menu.getListSlots());
+                  });
               }
             }));
       }

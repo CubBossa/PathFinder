@@ -5,7 +5,11 @@ import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+
+import java.io.File;
 import java.util.logging.Logger;
+
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * The main handler of the PathFinder application.
@@ -58,12 +62,24 @@ public interface PathFinder {
    */
   NodeTypeRegistry getNodeTypeRegistry();
 
-  /**
-   * The visualizer type registry handles different visualizer types.
-   * Register new visualizer types in the loading phase of your application to allow the storage to load
-   * visualizers of such type.
-   *
-   * @return The VisualizerTypeRegistry instance.
-   */
-  VisualizerTypeRegistry getVisualizerTypeRegistry();
+    /**
+     * The visualizer type registry handles different visualizer types.
+     * Register new visualizer types in the loading phase of your application to allow the storage to load
+     * visualizers of such type.
+     *
+     * @return The VisualizerTypeRegistry instance.
+     */
+    VisualizerTypeRegistry getVisualizerTypeRegistry();
+
+    void runSynchronized(Runnable runnable);
+
+    PathFinderConfig getConfiguration();
+
+    String getVersion();
+
+    File getDataFolder();
+
+    ClassLoader getClassLoader();
+
+    MiniMessage getMiniMessage();
 }

@@ -43,7 +43,7 @@ dependencies {
     runtimeOnly("org.snakeyaml:snakeyaml-engine:2.4")
 
     // Commands
-    api("de.cubbossa:commandapi-shade:8.8.0")
+    api("dev.jorel:commandapi-bukkit-shade:9.0.0")
 
     // Other
     implementation("org.jooq:jooq:3.18.0")

@@ -1,29 +1,27 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
-import de.cubbossa.pathfinder.util.WorldImpl;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.Getter;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
-      PathPlugin.pathfinder("empty"),
-      "empty",
-      new ItemStack(Material.DIRT),
-      PathPlugin.getInstance().getMiniMessage()
+          CommonPathFinder.pathfinder("empty"),
+          "empty",
+          PathFinderProvider.get().getMiniMessage()
   ) {
 
     @Override
@@ -38,7 +36,7 @@ public class EmptyNode implements Node {
   private final Location location;
 
   public EmptyNode(World world) {
-    this.location = new Location(0, 0, 0, new WorldImpl(world.getUID()));
+      this.location = new Location(0, 0, 0, world);
   }
 
   @Override

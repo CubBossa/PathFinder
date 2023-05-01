@@ -4,7 +4,6 @@ plugins {
 }
 
 group = "de.cubbossa"
-version = "3.0.0"
 
 repositories {
     mavenCentral()

@@ -1,19 +1,21 @@
 package de.cubbossa.pathapi.editor;
 
-import de.cubbossa.pathapi.misc.Keyed;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 
-public interface NodeGroupEditor<Player> extends Keyed {
+public interface NodeGroupEditor<Player> {
 
-  void dispose();
+    NamespacedKey getGroupKey();
 
-  boolean isEdited();
+    void dispose();
 
-  boolean toggleEditMode(PathPlayer<Player> player);
+    boolean isEdited();
 
-  void cancelEditModes();
+    boolean toggleEditMode(PathPlayer<Player> player);
 
-  /**
+    void cancelEditModes();
+
+    /**
    * Sets a player into edit mode for this roadmap.
    *
    * @param player   the player to set the edit mode for

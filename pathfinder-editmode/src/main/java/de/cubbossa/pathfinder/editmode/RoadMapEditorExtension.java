@@ -5,25 +5,26 @@ import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.util.Version;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.UnknownDependencyException;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @AutoService(PathFinderExtension.class)
 public class RoadMapEditorExtension implements PathFinderExtension {
 
-  private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
-  private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
+    private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
+    private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
 
-  @NotNull
-  @Override
-  public NamespacedKey getKey() {
-    return PathPlugin.pathfinder("roadmap-editor");
+    @NotNull
+    @Override
+    public NamespacedKey getKey() {
+        return CommonPathFinder.pathfinder("roadmap-editor");
   }
 
   @Override
@@ -40,18 +41,18 @@ public class RoadMapEditorExtension implements PathFinderExtension {
 
     checkVersion(spigotVersionExtracted, protocolLib.getDescription().getVersion());
 
-    PathPlugin.getInstance().getLogger().info("Enabling default roadmap editors.");
+      PathFinderProvider.get().getLogger().info("Enabling default roadmap editors.");
 
-    new GUIHandler(PathPlugin.getInstance());
-    GUIHandler.getInstance().enable();
+      new GUIHandler(PathFinderProvider.get());
+      GUIHandler.getInstance().enable();
 
-    PathPlugin.getInstance().getLogger().info("Successfully enabled default roadmap editors.");
+      PathFinderProvider.get().getLogger().info("Successfully enabled default roadmap editors.");
   }
 
   @Override
   public void onDisable(PathFinder plugin) {
-    PathPlugin.getInstance().getLogger().info("Disabling default roadmap editors.");
-    GUIHandler.getInstance().disable();
+      PathFinderProvider.get().getLogger().info("Disabling default roadmap editors.");
+      GUIHandler.getInstance().disable();
   }
 
   public void checkVersion(String spigotVersion, String protocolLibVersion) {

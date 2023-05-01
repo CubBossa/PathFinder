@@ -8,12 +8,7 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftVersion;
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.Pair;
-import com.comphenix.protocol.wrappers.Vector3F;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedDataValue;
-import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.*;
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
@@ -21,29 +16,20 @@ import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.util.IntPair;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.logging.Level;
 
 @Getter
 @Setter
@@ -57,30 +43,28 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
   private static final int META_INDEX_CHILD = 15;
   private static final int META_INDEX_HEAD_EULER = 16;
   private static final int META_INDEX_NO_GRAVITY = 5;
-  private static final byte META_FLAG_INVISIBLE = 0x20;
-  private static final byte META_FLAG_SMALL = 0x01;
+    private static final byte META_FLAG_INVISIBLE = 0x20;
+    private static final byte META_FLAG_SMALL = 0x01;
 
-  static int entityId = 10_000;
-  protected final Collection<PathPlayer<Player>> players;
-  final ProtocolManager protocolManager;
-  final Map<IntPair, Collection<T>> chunkNodeMap;
-  final Map<T, Integer> nodeEntityMap;
-  final Map<Integer, T> entityNodeMap;
+    static int entityId = 10_000;
+    protected final Collection<PathPlayer<Player>> players;
+    final ProtocolManager protocolManager;
+    final Map<IntPair, Collection<T>> chunkNodeMap;
+    final Map<T, Integer> nodeEntityMap;
+    final Map<Integer, T> entityNodeMap;
 
-  public AbstractArmorstandRenderer(PathPlugin plugin) {
-    entityId = Bukkit.getWorlds().stream()
-        .mapToInt(w -> w.getEntities().stream().mapToInt(Entity::getEntityId).max().orElse(0)).max()
-        .orElse(0) + 10_000;
-    protocolManager = ProtocolLibrary.getProtocolManager();
+    public AbstractArmorstandRenderer(CommonPathFinder plugin) {
+        entityId = 0xffffabcd;
+        protocolManager = ProtocolLibrary.getProtocolManager();
 
-    chunkNodeMap = new HashMap<>();
-    nodeEntityMap = new HashMap<>();
-    entityNodeMap = new HashMap<>();
-    players = new HashSet<>();
+        chunkNodeMap = new HashMap<>();
+        nodeEntityMap = new HashMap<>();
+        entityNodeMap = new HashMap<>();
+        players = new HashSet<>();
 
-    protocolManager.addPacketListener(new PacketAdapter(plugin,
-        ListenerPriority.NORMAL,
-        PacketType.Play.Server.MAP_CHUNK) {
+        protocolManager.addPacketListener(new PacketAdapter(plugin,
+                ListenerPriority.NORMAL,
+                PacketType.Play.Server.MAP_CHUNK) {
 
       @Override
       public void onPacketSending(PacketEvent event) {
@@ -121,58 +105,87 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
           event.setCancelled(true);
           Action<TargetContext<T>> action = handleInteract(player, slot, left);
           menu.handleInteract(action,
-              new TargetContext<>(player, menu, slot, action, true, element));
+                  new TargetContext<>(player, menu, slot, action, true, element));
         }
       }
     });
-  }
-
-  public static IntPair locationToChunkIntPair(Location location) {
-    return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
-  }
-
-  abstract ItemStack head(T element);
-
-  abstract Location retrieveFrom(T element);
-
-  abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
-
-  abstract boolean isSmall(T element);
-
-  abstract @Nullable Component getName(T element);
-
-  public void showElements(Collection<T> elements, Player player) {
-    for (T element : elements) {
-      showElement(element, player);
     }
-  }
 
-  public void showElement(T element, Player player) {
-    Location location = retrieveFrom(element);
-    int id = spawnArmorstand(player, location, getName(element), isSmall(element));
+    public static IntPair locationToChunkIntPair(Location location) {
+        return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
+    }
 
-    nodeEntityMap.put(element, id);
-    entityNodeMap.put(id, element);
+    abstract boolean equals(T a, T b);
 
-    IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
-    chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(element);
+    abstract ItemStack head(T element);
 
-    equipArmorstand(player, id, new ItemStack[] {null, null, null, null, null, head(element)});
-  }
+    abstract Location retrieveFrom(T element);
 
-  public void hideElements(Collection<T> elements, Player player) {
-    removeArmorstand(player,
-        elements.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
+    abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
 
-    elements.forEach(nodeEntityMap::remove);
-    new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> elements.contains(e.getValue()))
-        .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
-    elements.forEach(e -> chunkNodeMap.remove(locationToChunkIntPair(retrieveFrom(e))));
-  }
+    abstract boolean isSmall(T element);
 
-  public void updateElementPosition(T element, Player player) {
-    teleportArmorstand(player, nodeEntityMap.get(element), retrieveFrom(element));
-  }
+    abstract @Nullable Component getName(T element);
+
+    private Optional<T> element(int id) {
+        return Optional.ofNullable(entityNodeMap.get(id));
+    }
+
+    private Optional<Integer> id(T element) {
+        return nodeEntityMap.entrySet().stream().filter(t -> equals(t.getKey(), element)).findAny().map(Map.Entry::getValue);
+    }
+
+    public void showElements(Collection<T> elements, Player player) {
+        for (T element : elements) {
+            showElement(element, player);
+        }
+    }
+
+    public void showElement(T element, Player player) {
+        if (nodeEntityMap.keySet().stream().anyMatch(e -> equals(element, e))) {
+            updateElement(element, player);
+            return;
+        }
+
+        Location location = retrieveFrom(element);
+        int id = spawnArmorstand(player, location, getName(element), isSmall(element));
+        PathFinderProvider.get().getLogger().log(Level.INFO, "Spawned ArmorStand (" + element.getClass().getSimpleName() + ") with ID " + id + " at " + location);
+
+        nodeEntityMap.put(element, id);
+        entityNodeMap.put(id, element);
+
+        IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
+        chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(element);
+
+        equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, head(element)});
+    }
+
+    public void updateElement(T element, Player player) {
+        T prev = nodeEntityMap.keySet().stream().filter(e -> equals(element, e)).findAny().orElseThrow();
+        Location prevLoc = retrieveFrom(prev);
+        Location loc = retrieveFrom(element);
+
+        // update position if position changed
+        if (!prevLoc.equals(loc)) {
+            teleportArmorstand(player, id(element).orElseThrow(), retrieveFrom(element));
+
+            // update chunk map
+            chunkNodeMap.computeIfAbsent(locationToChunkIntPair(prevLoc), p -> new HashSet<>())
+                    .removeIf(element::equals);
+            chunkNodeMap.computeIfAbsent(locationToChunkIntPair(loc), p -> new HashSet<>())
+                    .add(element);
+        }
+    }
+
+    public void hideElements(Collection<T> elements, Player player) {
+        removeArmorstand(player,
+                elements.stream().map(nodeEntityMap::get).filter(Objects::nonNull).toList());
+
+        elements.forEach(nodeEntityMap::remove);
+        new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> elements.contains(e.getValue()))
+                .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
+        elements.forEach(e -> chunkNodeMap.remove(locationToChunkIntPair(retrieveFrom(e))));
+    }
 
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {
     PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);

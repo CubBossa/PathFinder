@@ -5,20 +5,15 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 public class VisualizerPath<PlayerT> extends ArrayList<Node> {
@@ -73,18 +68,16 @@ public class VisualizerPath<PlayerT> extends ArrayList<Node> {
   }
 
   public void run(PathPlayer<PlayerT> player) {
-    prepare(this, player);
-    Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-      cancelSync();
+      prepare(this, player);
+      cancel();
       this.active = true;
 
       AtomicInteger interval = new AtomicInteger(0);
       for (SubPath<?, PlayerT> path : paths) {
-        path.task = Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
-          play(path, player, interval);
-        }, 0L, path.visualizer.getInterval());
+          path.task = runTask(() -> {
+              play(path, player, interval);
+          }, 0L, path.visualizer.getInterval());
       }
-    });
   }
 
   private <DataT> void play(SubPath<DataT, PlayerT> path, PathPlayer<PlayerT> player,
@@ -95,29 +88,42 @@ public class VisualizerPath<PlayerT> extends ArrayList<Node> {
   }
 
   public void cancel() {
-    Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> cancelSync());
+      paths.forEach(this::cancel);
   }
 
-  public void cancelSync() {
-    paths.forEach(this::cancelSync);
-  }
+    private <DataT> void cancel(SubPath<DataT, PlayerT> path) {
+        if (path.task == null) {
+            return;
+        }
+        cancelTask(path.task);
+        this.active = false;
 
-  private <DataT> void cancelSync(SubPath<DataT, PlayerT> path) {
-    if (path.task == null) {
-      return;
+        path.visualizer.destruct(player, path.data);
     }
-    Bukkit.getScheduler().cancelTask(path.task.getTaskId());
-    this.active = false;
 
-    path.visualizer.destruct(player, path.data);
-  }
+    @RequiredArgsConstructor
+    @Accessors(fluent = true)
+    private static class SubPath<DataT, PlayerT> {
+        private final List<Node> path;
+        private final PathVisualizer<DataT, PlayerT> visualizer;
+        private final DataT data;
+        private Task task;
+    }
 
-  @RequiredArgsConstructor
-  @Accessors(fluent = true)
-  private static class SubPath<DataT, PlayerT> {
-    private final List<Node> path;
-    private final PathVisualizer<DataT, PlayerT> visualizer;
-    private final DataT data;
-    private BukkitTask task;
-  }
+    public Task runTask(Runnable task, long delay, long interval) {
+        int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(PathFinderPlugin.getInstance(), task, delay, interval);
+        return new BukkitTask(id);
+    }
+
+    public void cancelTask(Task task) {
+        if (task instanceof BukkitTask b) {
+            Bukkit.getScheduler().cancelTask(b.id());
+        }
+    }
+
+    interface Task {
+    }
+
+    record BukkitTask(int id) implements Task {
+    }
 }

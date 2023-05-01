@@ -3,18 +3,21 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.nbo.LinkedHashMapBuilder;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.commands.CustomArgs;
-import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
+
 import java.util.Map;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -52,43 +55,43 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
         .build());
   }
 
-  @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
-    return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
-        .then(CustomArgs.literal("particle")
-            .then(new ParticleArgument("particle")
-                .executes((commandSender, objects) -> {
-                  ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-                  onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset],
-                      null, null, null);
-                })
-                .then(CustomArgs.integer("amount", 1)
-                    .executes((commandSender, objects) -> {
-                      ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-                      onSetParticle(commandSender, visualizer,
-                          (ParticleData) objects[argumentOffset],
-                          (Integer) objects[argumentOffset + 1], null, null);
-                    })
+    @Override
+    public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                         int argumentOffset) {
+        return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
+                .then(CustomArgs.literal("particle")
+                        .then(new ParticleArgument("particle")
+                                .executes((commandSender, args) -> {
+                                    ParticleVisualizer visualizer = args.getUnchecked(visualizerIndex);
+                                    onSetParticle(commandSender, visualizer, args.getUnchecked(argumentOffset),
+                                            null, null, null);
+                                })
+                                .then(CustomArgs.integer("amount", 1)
+                                        .executes((commandSender, args) -> {
+                                            ParticleVisualizer visualizer = args.getUnchecked(visualizerIndex);
+                                            onSetParticle(commandSender, visualizer,
+                                                    args.getUnchecked(argumentOffset),
+                                                    args.getUnchecked(argumentOffset + 1), null, null);
+                                        })
                     .then(new FloatArgument("speed", 0)
-                        .executes((commandSender, objects) -> {
-                          ParticleVisualizer visualizer =
-                              (ParticleVisualizer) objects[visualizerIndex];
-                          onSetParticle(commandSender, visualizer,
-                              (ParticleData) objects[argumentOffset],
-                              (Integer) objects[argumentOffset + 1],
-                              (Float) objects[argumentOffset + 2], null);
-                        })
-                        .then(CustomArgs.location("offset")
-                            .executes((commandSender, objects) -> {
-                              ParticleVisualizer visualizer =
-                                  (ParticleVisualizer) objects[visualizerIndex];
-                              onSetParticle(commandSender, visualizer,
-                                  (ParticleData) objects[argumentOffset],
-                                  (Integer) objects[argumentOffset + 1],
-                                  (Float) objects[argumentOffset + 2],
-                                  ((Location) objects[argumentOffset + 3]).toVector());
+                            .executes((commandSender, args) -> {
+                                ParticleVisualizer visualizer =
+                                        args.getUnchecked(visualizerIndex);
+                                onSetParticle(commandSender, visualizer,
+                                        args.getUnchecked(argumentOffset),
+                                        args.getUnchecked(argumentOffset + 1),
+                                        args.getUnchecked(argumentOffset + 2), null);
                             })
+                        .then(CustomArgs.location("offset")
+                                .executes((commandSender, args) -> {
+                                    ParticleVisualizer visualizer =
+                                            args.getUnchecked(visualizerIndex);
+                                    onSetParticle(commandSender, visualizer,
+                                            args.getUnchecked(argumentOffset),
+                                            args.getUnchecked(argumentOffset + 1),
+                                            args.getUnchecked(argumentOffset + 2),
+                                            (args.<Location>getUnchecked(argumentOffset + 3)).toVector());
+                                })
                         )
                     )
                 )
@@ -100,26 +103,26 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   private <T> void onSetParticle(CommandSender sender, ParticleVisualizer visualizer,
                                  ParticleData<T> particle, @Nullable Integer amount,
                                  @Nullable Float speed, @Nullable Vector offset) {
-    VisualizerHandler.getInstance()
-        .setProperty(sender, visualizer, particle.particle(), "particle", true,
-            visualizer::getParticle, visualizer::setParticle);
-    VisualizerHandler.getInstance()
-        .setProperty(sender, visualizer, particle.data(), "particle-data", true,
-            visualizer::getParticleData, visualizer::setParticleData);
-    if (amount != null) {
       VisualizerHandler.getInstance()
-          .setProperty(sender, visualizer, amount, "amount", true, visualizer::getAmount,
-              visualizer::setAmount);
+              .setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle", true,
+                      visualizer::getParticle, visualizer::setParticle);
+      VisualizerHandler.getInstance()
+              .setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data", true,
+                      visualizer::getParticleData, visualizer::setParticleData);
+    if (amount != null) {
+        VisualizerHandler.getInstance()
+                .setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", true, visualizer::getAmount,
+                        visualizer::setAmount);
     }
     if (speed != null) {
-      VisualizerHandler.getInstance()
-          .setProperty(sender, visualizer, speed, "speed", true, visualizer::getSpeed,
-              visualizer::setSpeed);
+        VisualizerHandler.getInstance()
+                .setProperty(BukkitUtils.wrap(sender), visualizer, speed, "speed", true, visualizer::getSpeed,
+                        visualizer::setSpeed);
     }
     if (offset != null) {
-      VisualizerHandler.getInstance()
-          .setProperty(sender, visualizer, offset, "speed", true, visualizer::getOffset,
-              visualizer::setOffset);
+        VisualizerHandler.getInstance()
+                .setProperty(BukkitUtils.wrap(sender), visualizer, offset, "speed", true, visualizer::getOffset,
+                        visualizer::setOffset);
     }
   }
 

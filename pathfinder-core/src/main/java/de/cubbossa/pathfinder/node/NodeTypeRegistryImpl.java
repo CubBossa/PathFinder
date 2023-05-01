@@ -6,11 +6,12 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.util.HashedRegistry;
+
 import java.util.Collection;
 
 public class NodeTypeRegistryImpl implements NodeTypeRegistry {
 
-  private final KeyedRegistry<NodeType<? extends Node>> types;
+  private final KeyedRegistry<NodeType<?>> types;
 
   public NodeTypeRegistryImpl() {
     this.types = new HashedRegistry<>();
@@ -26,10 +27,10 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry {
     return types.keySet();
   }
 
-  @Override
-  public Collection<NodeType<? extends Node>> getTypes() {
-    return types.values();
-  }
+    @Override
+    public Collection<NodeType<?>> getTypes() {
+        return types.values();
+    }
 
   @Override
   public <N extends Node> void register(NodeType<N> type) {

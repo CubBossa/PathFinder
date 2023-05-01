@@ -2,16 +2,17 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
+import de.cubbossa.pathfinder.util.FutureUtils;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import de.cubbossa.pathfinder.util.VectorUtils;
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -19,41 +20,54 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
-    implements GraphRenderer<Player> {
+        implements GraphRenderer<Player> {
 
-  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
-  private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
+    public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
+    public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
+    private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
-  private final ItemStack nodeHead =
-      ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
+    private final ItemStack nodeHead =
+            ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
-  public EdgeArmorStandRenderer(PathPlugin plugin) {
-    super(plugin);
-  }
+    public EdgeArmorStandRenderer(CommonPathFinder plugin) {
+        super(plugin);
+    }
 
   @Override
   Location retrieveFrom(Edge element) {
-    Location start = VectorUtils.toBukkit(element.resolveStart().join().getLocation());
-    Location end = VectorUtils.toBukkit(element.resolveEnd().join().getLocation());
-    return LerpUtils.lerp(start, end, .3d).add(ARMORSTAND_CHILD_OFFSET);
+      return FutureUtils
+              .both(
+                      element.resolveStart().thenApply(Node::getLocation).thenApply(VectorUtils::toBukkit),
+                      element.resolveEnd().thenApply(Node::getLocation).thenApply(VectorUtils::toBukkit)
+              )
+              .thenApply(e -> LerpUtils.lerp(e.getKey(), e.getValue(), .3d).add(ARMORSTAND_CHILD_OFFSET))
+              .join();
   }
 
-  @Override
-  Action<TargetContext<Edge>> handleInteract(Player player, int slot, boolean left) {
-    return left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
-  }
+    @Override
+    Action<TargetContext<Edge>> handleInteract(Player player, int slot, boolean left) {
+        return left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
+    }
 
-  @Override
-  ItemStack head(Edge element) {
-    return nodeHead.clone();
-  }
+    @Override
+    boolean equals(Edge a, Edge b) {
+        return a.getStart().equals(b.getStart()) && a.getEnd().equals(b.getEnd());
+    }
 
-  @Override
-  public void showElement(Edge element, Player player) {
-    super.showElement(element, player);
-    setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
+    @Override
+    ItemStack head(Edge element) {
+        return nodeHead.clone();
+    }
+
+    @Override
+    public void showElement(Edge element, Player player) {
+        super.showElement(element, player);
+        setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
       Node end = element.resolveEnd().join();
       return VectorUtils.toBukkit(
           end.getLocation().clone().subtract(start.getLocation()).asVector());
@@ -80,9 +94,18 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
 
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
-    showElements(nodes.stream().flatMap(n -> n.getEdges().stream()).toList(), player.unwrap());
-    players.add(player);
-    return CompletableFuture.completedFuture(null);
+
+      // all edges from rendered nodes to adjacent nodes
+      Collection<Edge> toRender = nodes.stream()
+              .map(Node::getEdges).flatMap(Collection::stream)
+              .collect(Collectors.toSet());
+      // all edges from adjacent nodes to rendered nodes
+      Storage storage = PathFinderProvider.get().getStorage();
+      toRender.addAll(storage.loadEdgesTo(nodes).join());
+
+      showElements(toRender, player.unwrap());
+      players.add(player);
+      return CompletableFuture.completedFuture(null);
   }
 
   @Override

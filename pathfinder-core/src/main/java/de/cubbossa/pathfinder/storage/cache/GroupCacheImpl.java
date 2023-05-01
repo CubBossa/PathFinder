@@ -10,12 +10,9 @@ import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.GroupCache;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
-import de.cubbossa.pathfinder.util.CommandUtils;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.util.CollectionUtils;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -52,8 +49,8 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
                                    Function<Pagination, List<NodeGroup>> loader) {
     if (cachedAll) {
       List<NodeGroup> present = cache.asMap().values().stream().toList();
-      return CommandUtils.subList(present, pagination.getOffset(),
-          pagination.getOffset() + pagination.getLimit());
+        return CollectionUtils.subList(present, pagination.getOffset(),
+                pagination.getOffset() + pagination.getLimit());
     }
     return loader.apply(pagination);
   }

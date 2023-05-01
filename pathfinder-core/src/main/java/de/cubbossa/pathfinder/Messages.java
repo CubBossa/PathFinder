@@ -1,19 +1,11 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
-import de.cubbossa.translations.FormattedMessage;
-import de.cubbossa.translations.Message;
-import de.cubbossa.translations.MessageFile;
-import de.cubbossa.translations.MessageMeta;
-import de.cubbossa.translations.TranslationHandler;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import de.cubbossa.translations.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -31,15 +23,21 @@ import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @MessageFile
 public class Messages {
 
-  @MessageMeta("<offset>PathFinder</offset> <dark_gray>»</dark_gray> <gray>")
-  public static final Message PREFIX = new Message("prefix");
-  @MessageMeta("<offset_light>true</offset_light>")
-  public static final Message GEN_TRUE = new Message("general.true");
-  @MessageMeta("<offset_light>false</offset_light>")
-  public static final Message GEN_FALSE = new Message("general.false");
+    @MessageMeta("<offset>PathFinder</offset> <dark_gray>»</dark_gray> <gray>")
+    public static final Message PREFIX = new Message("prefix");
+    @MessageMeta("<offset_light>true</offset_light>")
+    public static final Message GEN_TRUE = new Message("general.true");
+    @MessageMeta("<offset_light>false</offset_light>")
+    public static final Message GEN_FALSE = new Message("general.false");
   @MessageMeta(value = "<offset_light><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></offset_light>",
       placeholders = {"x", "y", "z"},
       comment = "The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
@@ -498,25 +496,29 @@ public class Messages {
   }
 
   public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
-    return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
-        node -> Component.text("#" + node));
+      return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
+              node -> Component.text("#" + node));
   }
 
-  public static Component formatNodeGroups(CommandSender sender,
-                                           Collection<SimpleNodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups,
-        g -> Component.text(g.getKey().toString()));
-  }
+    public static Component formatNodeGroups(CommandSender sender,
+                                             Collection<SimpleNodeGroup> groups) {
+        return formatGroupInHover(sender, GEN_GROUP_SEL, groups,
+                g -> Component.text(g.getKey().toString()));
+    }
 
-  public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
-                                                Collection<T> collection,
-                                                Function<T, ComponentLike> converter) {
-    return placeHolder.format(
-        Placeholder.unparsed("amount", collection.size() + ""),
-        Placeholder.component("list",
-            Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-                collection.stream().map(converter).collect(Collectors.toList())))
-    ).asComponent(sender);
+    public static Component formatModifiers(CommandSender sender, Collection<Modifier> modifiers) {
+        return Component.text("TODO");
+    }
+
+    public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
+                                                  Collection<T> collection,
+                                                  Function<T, ComponentLike> converter) {
+        return placeHolder.format(
+                Placeholder.unparsed("amount", collection.size() + ""),
+                Placeholder.component("list",
+                        Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+                                collection.stream().map(converter).collect(Collectors.toList())))
+        ).asComponent(sender);
   }
 
   public static <T> Component formatGroupInHover(CommandSender sender, Message placeHolder,

@@ -1,21 +1,25 @@
 package de.cubbossa.pathapi.misc;
 
 import java.util.UUID;
+
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 
 public interface PathPlayer<P> {
 
-  UUID getUniqueId();
+    UUID getUniqueId();
 
-  Class<P> getPlayerClass();
+    Class<P> getPlayerClass();
 
-  String getName();
+    String getName();
 
-  Location getLocation();
+    Component getDisplayName();
 
-  boolean hasPermission(String permission);
+    Location getLocation();
 
-  P unwrap();
+    boolean hasPermission(String permission);
 
-  void sendMessage(ComponentLike message);
+    P unwrap();
+
+    void sendMessage(ComponentLike message);
 }

@@ -3,14 +3,15 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.commands.CustomArgs;
-import de.cubbossa.pathfinder.commands.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.commands.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.events.visualizer.CombinedVisualizerChangedEvent;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.arguments.Argument;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -46,53 +47,53 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
     );
   }
 
-  @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
-    return tree
-        .then(CustomArgs.literal("add")
-            .then(CustomArgs.pathVisualizerArgument("child")
-                .executes((sender, objects) -> {
-                  CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-                  PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
-                  vis.addVisualizer(target);
-                  Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
-                      Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
-                          CombinedVisualizerChangedEvent.Action.ADD,
-                          Collections.singleton(target))));
-                  TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_ADD.format(
-                      Placeholder.component("visualizer", vis.getDisplayName()),
-                      Placeholder.component("child", target.getDisplayName())
-                  ), sender);
-                })))
+    @Override
+    public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                         int argumentOffset) {
+        return tree
+                .then(CustomArgs.literal("add")
+                        .then(CustomArgs.pathVisualizerArgument("child")
+                                .executes((sender, args) -> {
+                                    CombinedVisualizer vis = args.getUnchecked(0);
+                                    PathVisualizer<?, ?> target = args.getUnchecked(1);
+                                    vis.addVisualizer(target);
+                                    Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () ->
+                                            Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+                                                    CombinedVisualizerChangedEvent.Action.ADD,
+                                                    Collections.singleton(target))));
+                                    TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_ADD.format(
+                                            Placeholder.component("visualizer", vis.getDisplayName()),
+                                            Placeholder.component("child", target.getDisplayName())
+                                    ), sender);
+                                })))
         .then(CustomArgs.literal("remove")
             .then(CustomArgs.pathVisualizerArgument("child")
-                .executes((sender, objects) -> {
-                  CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-                  PathVisualizer<?, ?> target = (PathVisualizer<?, ?>) objects[1];
-                  vis.removeVisualizer(target);
-                  Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
-                      Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
-                          CombinedVisualizerChangedEvent.Action.REMOVE,
-                          Collections.singleton(target))));
-                  TranslationHandler.getInstance()
-                      .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.format(
-                          Placeholder.component("visualizer", vis.getDisplayName()),
-                          Placeholder.component("child", target.getDisplayName())
-                      ), sender);
+                    .executes((sender, args) -> {
+                        CombinedVisualizer vis = args.getUnchecked(0);
+                        PathVisualizer<?, ?> target = args.getUnchecked(1);
+                        vis.removeVisualizer(target);
+                        Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () ->
+                                Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+                                        CombinedVisualizerChangedEvent.Action.REMOVE,
+                                        Collections.singleton(target))));
+                        TranslationHandler.getInstance()
+                                .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.format(
+                                        Placeholder.component("visualizer", vis.getDisplayName()),
+                                        Placeholder.component("child", target.getDisplayName())
+                                ), sender);
                 })))
         .then(CustomArgs.literal("clear")
-            .executes((commandSender, objects) -> {
-              CombinedVisualizer vis = (CombinedVisualizer) objects[0];
-              Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();
-              vis.clearVisualizers();
-              Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () ->
-                  Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
-                      CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
-              TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.format(
-                  Placeholder.component("visualizer", vis.getDisplayName())
-              ), commandSender);
-            }));
+                .executes((commandSender, args) -> {
+                    CombinedVisualizer vis = args.getUnchecked(0);
+                    Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();
+                    vis.clearVisualizers();
+                    Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () ->
+                            Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
+                                    CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
+                    TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.format(
+                            Placeholder.component("visualizer", vis.getDisplayName())
+                    ), commandSender);
+                }));
   }
 
   @Override

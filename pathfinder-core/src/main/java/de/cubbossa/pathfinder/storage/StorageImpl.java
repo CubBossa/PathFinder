@@ -7,6 +7,7 @@ import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.CacheLayer;
@@ -18,12 +19,12 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -31,9 +32,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
@@ -82,17 +80,17 @@ public class StorageImpl implements Storage {
 
   // Node Type
 
-  @Override
-  public <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(
-      UUID node) {
-    return asyncFuture(() -> implementation.loadNodeType(node));
-  }
+    @Override
+    public <N extends Node> CompletableFuture<NodeType<N>> loadNodeType(
+            UUID node) {
+        return asyncFuture(() -> cache.getNodeTypeCache().getType(node, implementation::loadNodeType));
+    }
 
-  @Override
-  public CompletableFuture<Map<UUID, NodeType<? extends Node>>> loadNodeTypes(
-      Collection<UUID> nodes) {
-    return asyncFuture(() -> implementation.loadNodeTypes(nodes));
-  }
+    @Override
+    public CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(
+            Collection<UUID> nodes) {
+        return asyncFuture(() -> cache.getNodeTypeCache().getTypes(nodes, implementation::loadNodeTypes));
+    }
 
   // Nodes
   @Override
@@ -101,8 +99,9 @@ public class StorageImpl implements Storage {
     debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
       N node = implementation.createAndLoadNode(type, location);
-      cache.getNodeCache().write(node);
-      eventDispatcher().ifPresent(e -> e.dispatchNodeCreate(node));
+        cache.getNodeCache().write(node);
+        cache.getNodeTypeCache().write(node.getNodeId(), type);
+        eventDispatcher().ifPresent(e -> e.dispatchNodeCreate(node));
       return node;
     });
   }
@@ -111,7 +110,7 @@ public class StorageImpl implements Storage {
   public <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id) {
     debug("Storage: 'loadNode(" + id + ")'");
     return asyncFuture(() -> {
-      Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
+        Optional<N> opt = cache.getNodeCache().getNode(id);
       if (opt.isPresent()) {
         return opt;
       }
@@ -125,7 +124,7 @@ public class StorageImpl implements Storage {
   public <N extends Node> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
     debug("Storage: 'loadNode(" + type.getKey() + ", " + id + ")'");
     return asyncFuture(() -> {
-      Optional<N> opt = (Optional<N>) cache.getNodeCache().getNode(id);
+        Optional<N> opt = cache.getNodeCache().getNode(id);
       if (opt.isPresent()) {
         return opt;
       }
@@ -177,25 +176,35 @@ public class StorageImpl implements Storage {
   public CompletableFuture<Void> deleteNodes(Collection<Node> nodes) {
     Collection<UUID> uuids = nodes.stream().map(Node::getNodeId).toList();
     debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString)
-        .collect(Collectors.joining(",")) + ")'");
+            .collect(Collectors.joining(",")) + ")'");
 
-    return asyncFuture(() -> {
-      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
-      implementation.deleteNodes(nodes);
-      uuids.forEach(cache.getNodeCache()::invalidate);
-      nodes.forEach(cache.getGroupCache()::invalidate);
-    });
+      return asyncFuture(() -> {
+          eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
+          implementation.deleteNodes(nodes);
+          uuids.forEach(cache.getNodeCache()::invalidate);
+          nodes.forEach(cache.getGroupCache()::invalidate);
+          uuids.forEach(cache.getNodeTypeCache()::invalidate);
+      });
   }
 
-  // Groups
-  @Override
-  public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
-    debug("Storage: 'createAndLoadGroup(" + key + ")'");
-    return asyncFuture(() -> {
-      NodeGroup group = implementation.createAndLoadGroup(key);
-      cache.getGroupCache().write(group);
-      return group;
-    });
+    @Override
+    public CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes) {
+        return asyncFuture(() -> nodes.stream().parallel()
+                .map(Node::getNodeId)
+                .map(node -> implementation.loadEdgesTo(node))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()));
+    }
+
+    // Groups
+    @Override
+    public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
+        debug("Storage: 'createAndLoadGroup(" + key + ")'");
+        return asyncFuture(() -> {
+            NodeGroup group = implementation.createAndLoadGroup(key);
+            cache.getGroupCache().write(group);
+            return group;
+        });
   }
 
   @Override

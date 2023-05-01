@@ -13,22 +13,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConfigFileLoader {
 
-  private final File dataFolder;
-  private final BiConsumer<String, Boolean> saveResource;
-  private Version configRegenerationVersion = new Version("3.0.0");
+    private final File dataFolder;
+    private final BiConsumer<String, Boolean> saveResource;
+    private Version configRegenerationVersion = new Version("3.0.0");
 
-  public PathPluginConfig loadConfig() {
-    PathPluginConfig configuration;
+    public PathFinderConf loadConfig() {
+        PathFinderConf configuration;
 
-    File configFile = new File(dataFolder, "config.yml");
-    YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-        .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
-        .createParentDirectories(true)
-        .header("""
-            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-            #                                                               #
-            #       _____      _   _     ______ _           _               #
-            #      |  __ \\    | | | |   |  ____(_)         | |              #
+        File configFile = new File(dataFolder, "config.yml");
+        YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
+                .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+                .createParentDirectories(true)
+                .header("""
+                        #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+                        #                                                               #
+                        #       _____      _   _     ______ _           _               #
+                        #      |  __ \\    | | | |   |  ____(_)         | |              #
             #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
             #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
             #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
@@ -41,13 +41,13 @@ public class ConfigFileLoader {
         .build();
 
     if (!configFile.exists()) {
-      configuration = new PathPluginConfig();
-      YamlConfigurations.save(configFile.toPath(), PathPluginConfig.class, configuration,
-          properties);
-      return configuration;
+        configuration = new PathFinderConf();
+        YamlConfigurations.save(configFile.toPath(), PathFinderConf.class, configuration,
+                properties);
+        return configuration;
     }
-    configuration =
-        YamlConfigurations.load(configFile.toPath(), PathPluginConfig.class, properties);
+        configuration =
+                YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
 

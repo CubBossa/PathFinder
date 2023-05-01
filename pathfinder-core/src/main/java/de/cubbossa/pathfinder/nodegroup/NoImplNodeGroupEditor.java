@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class NoImplNodeGroupEditor implements NodeGroupEditor<Object> {
 
   @Getter
-  private final NamespacedKey key;
+  private final NamespacedKey groupKey;
 
   @Override
   public void dispose() {

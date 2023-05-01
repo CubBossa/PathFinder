@@ -1,14 +1,7 @@
 package de.cubbossa.pathfinder.util.location;
 
+import de.cubbossa.pathfinder.util.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.Triple;
-import java.util.AbstractMap;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
@@ -17,15 +10,19 @@ import org.bukkit.block.Block;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
+
 @RequiredArgsConstructor
 @AllArgsConstructor
 @With
 public class RaycastLocationWeightSolver<T> implements LocationWeightSolver<T> {
 
-  private final Function<T, Location> mapper;
-  private int raycastCount = 10;
-  private double blockCollisionWeight = 10_000d;
-  private double startLocationDirectionWeight = 1;
+    private final Function<T, Location> mapper;
+    private int raycastCount = 10;
+    private double blockCollisionWeight = 10_000d;
+    private double startLocationDirectionWeight = 1;
   private double scopeLocationDirectionWeight = 0;
 
   @Override

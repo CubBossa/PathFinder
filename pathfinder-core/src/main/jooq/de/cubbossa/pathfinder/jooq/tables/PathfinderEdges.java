@@ -8,8 +8,10 @@ import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
+
 import java.util.UUID;
 import java.util.function.Function;
+
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function3;
@@ -34,147 +36,139 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * The reference instance of <code>pathfinder_edges</code>
-   */
-  public static final PathfinderEdges PATHFINDER_EDGES = new PathfinderEdges();
+    /**
+     * The reference instance of <code>pathfinder_edges</code>
+     */
+    public static final PathfinderEdges PATHFINDER_EDGES = new PathfinderEdges();
 
-  /**
-   * The class holding records for this type
-   */
-  @Override
-  public Class<PathfinderEdgesRecord> getRecordType() {
-    return PathfinderEdgesRecord.class;
-  }
+    /**
+     * The class holding records for this type
+     */
+    @Override
+    public Class<PathfinderEdgesRecord> getRecordType() {
+        return PathfinderEdgesRecord.class;
+    }
 
-  /**
-   * The column <code>pathfinder_edges.start_id</code>.
-   */
-  public final TableField<PathfinderEdgesRecord, UUID> START_ID =
-      createField(DSL.name("start_id"), SQLDataType.VARCHAR(36).nullable(false), this, "",
-          new UUIDConverter());
+    /**
+     * The column <code>pathfinder_edges.start_id</code>.
+     */
+    public final TableField<PathfinderEdgesRecord, UUID> START_ID = createField(DSL.name("start_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
-  /**
-   * The column <code>pathfinder_edges.end_id</code>.
-   */
-  public final TableField<PathfinderEdgesRecord, UUID> END_ID =
-      createField(DSL.name("end_id"), SQLDataType.VARCHAR(36).nullable(false), this, "",
-          new UUIDConverter());
+    /**
+     * The column <code>pathfinder_edges.end_id</code>.
+     */
+    public final TableField<PathfinderEdgesRecord, UUID> END_ID = createField(DSL.name("end_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
-  /**
-   * The column <code>pathfinder_edges.weight</code>.
-   */
-  public final TableField<PathfinderEdgesRecord, Double> WEIGHT = createField(DSL.name("weight"),
-      SQLDataType.DOUBLE.defaultValue(DSL.field("1", SQLDataType.DOUBLE)), this, "");
+    /**
+     * The column <code>pathfinder_edges.weight</code>.
+     */
+    public final TableField<PathfinderEdgesRecord, Double> WEIGHT = createField(DSL.name("weight"), SQLDataType.DOUBLE.defaultValue(DSL.field("1", SQLDataType.DOUBLE)), this, "");
 
-  private PathfinderEdges(Name alias, Table<PathfinderEdgesRecord> aliased) {
-    this(alias, aliased, null);
-  }
+    private PathfinderEdges(Name alias, Table<PathfinderEdgesRecord> aliased) {
+        this(alias, aliased, null);
+    }
 
-  private PathfinderEdges(Name alias, Table<PathfinderEdgesRecord> aliased, Field<?>[] parameters) {
-    super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
-  }
+    private PathfinderEdges(Name alias, Table<PathfinderEdgesRecord> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
+    }
 
-  /**
-   * Create an aliased <code>pathfinder_edges</code> table reference
-   */
-  public PathfinderEdges(String alias) {
-    this(DSL.name(alias), PATHFINDER_EDGES);
-  }
+    /**
+     * Create an aliased <code>pathfinder_edges</code> table reference
+     */
+    public PathfinderEdges(String alias) {
+        this(DSL.name(alias), PATHFINDER_EDGES);
+    }
 
-  /**
-   * Create an aliased <code>pathfinder_edges</code> table reference
-   */
-  public PathfinderEdges(Name alias) {
-    this(alias, PATHFINDER_EDGES);
-  }
+    /**
+     * Create an aliased <code>pathfinder_edges</code> table reference
+     */
+    public PathfinderEdges(Name alias) {
+        this(alias, PATHFINDER_EDGES);
+    }
 
-  /**
-   * Create a <code>pathfinder_edges</code> table reference
-   */
-  public PathfinderEdges() {
-    this(DSL.name("pathfinder_edges"), null);
-  }
+    /**
+     * Create a <code>pathfinder_edges</code> table reference
+     */
+    public PathfinderEdges() {
+        this(DSL.name("pathfinder_edges"), null);
+    }
 
-  public <O extends Record> PathfinderEdges(Table<O> child,
-                                            ForeignKey<O, PathfinderEdgesRecord> key) {
-    super(child, key, PATHFINDER_EDGES);
-  }
+    public <O extends Record> PathfinderEdges(Table<O> child, ForeignKey<O, PathfinderEdgesRecord> key) {
+        super(child, key, PATHFINDER_EDGES);
+    }
 
-  @Override
-  public Schema getSchema() {
-    return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
-  }
+    @Override
+    public Schema getSchema() {
+        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+    }
 
-  @Override
-  public UniqueKey<PathfinderEdgesRecord> getPrimaryKey() {
-    return Keys.PATHFINDER_EDGES__PATHFINDER_EDGES_PK;
-  }
+    @Override
+    public UniqueKey<PathfinderEdgesRecord> getPrimaryKey() {
+        return Keys.PATHFINDER_EDGES__PATHFINDER_EDGES_PK;
+    }
 
-  @Override
-  public PathfinderEdges as(String alias) {
-    return new PathfinderEdges(DSL.name(alias), this);
-  }
+    @Override
+    public PathfinderEdges as(String alias) {
+        return new PathfinderEdges(DSL.name(alias), this);
+    }
 
-  @Override
-  public PathfinderEdges as(Name alias) {
-    return new PathfinderEdges(alias, this);
-  }
+    @Override
+    public PathfinderEdges as(Name alias) {
+        return new PathfinderEdges(alias, this);
+    }
 
-  @Override
-  public PathfinderEdges as(Table<?> alias) {
-    return new PathfinderEdges(alias.getQualifiedName(), this);
-  }
+    @Override
+    public PathfinderEdges as(Table<?> alias) {
+        return new PathfinderEdges(alias.getQualifiedName(), this);
+    }
 
-  /**
-   * Rename this table
-   */
-  @Override
-  public PathfinderEdges rename(String name) {
-    return new PathfinderEdges(DSL.name(name), null);
-  }
+    /**
+     * Rename this table
+     */
+    @Override
+    public PathfinderEdges rename(String name) {
+        return new PathfinderEdges(DSL.name(name), null);
+    }
 
-  /**
-   * Rename this table
-   */
-  @Override
-  public PathfinderEdges rename(Name name) {
-    return new PathfinderEdges(name, null);
-  }
+    /**
+     * Rename this table
+     */
+    @Override
+    public PathfinderEdges rename(Name name) {
+        return new PathfinderEdges(name, null);
+    }
 
-  /**
-   * Rename this table
-   */
-  @Override
-  public PathfinderEdges rename(Table<?> name) {
-    return new PathfinderEdges(name.getQualifiedName(), null);
-  }
+    /**
+     * Rename this table
+     */
+    @Override
+    public PathfinderEdges rename(Table<?> name) {
+        return new PathfinderEdges(name.getQualifiedName(), null);
+    }
 
-  // -------------------------------------------------------------------------
-  // Row3 type methods
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Row3 type methods
+    // -------------------------------------------------------------------------
 
-  @Override
-  public Row3<UUID, UUID, Double> fieldsRow() {
-    return (Row3) super.fieldsRow();
-  }
+    @Override
+    public Row3<UUID, UUID, Double> fieldsRow() {
+        return (Row3) super.fieldsRow();
+    }
 
-  /**
-   * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
-   */
-  public <U> SelectField<U> mapping(
-      Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
-    return convertFrom(Records.mapping(from));
-  }
+    /**
+     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     */
+    public <U> SelectField<U> mapping(Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
+        return convertFrom(Records.mapping(from));
+    }
 
-  /**
-   * Convenience mapping calling {@link SelectField#convertFrom(Class,
-   * Function)}.
-   */
-  public <U> SelectField<U> mapping(Class<U> toType,
-                                    Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
-    return convertFrom(toType, Records.mapping(from));
-  }
+    /**
+     * Convenience mapping calling {@link SelectField#convertFrom(Class,
+     * Function)}.
+     */
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
+        return convertFrom(toType, Records.mapping(from));
+    }
 }

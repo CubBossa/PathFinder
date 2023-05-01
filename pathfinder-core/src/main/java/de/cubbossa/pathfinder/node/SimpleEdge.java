@@ -2,15 +2,16 @@ package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.Location;
 
 @Getter
 @Setter

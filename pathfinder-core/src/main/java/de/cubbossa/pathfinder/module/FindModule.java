@@ -3,17 +3,20 @@ package de.cubbossa.pathfinder.module;
 import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.commands.CancelPathCommand;
-import de.cubbossa.pathfinder.commands.FindCommand;
-import de.cubbossa.pathfinder.commands.FindLocationCommand;
+import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.command.CancelPathCommand;
+import de.cubbossa.pathfinder.command.FindCommand;
+import de.cubbossa.pathfinder.command.FindLocationCommand;
 import de.cubbossa.pathfinder.events.visualizer.PathStartEvent;
 import de.cubbossa.pathfinder.events.visualizer.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
@@ -27,9 +30,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,19 +55,19 @@ public class FindModule implements Listener, PathFinderExtension {
   @Getter
   private static FindModule instance;
 
-  @Getter
-  private final NamespacedKey key = PathPlugin.pathfinder("navigation");
-  private final Map<PathPlayer<Player>, SearchInfo> activePaths;
-  private final PathPlugin plugin;
-  private final List<Predicate<NavigationRequestContext>> navigationFilter;
+    @Getter
+    private final NamespacedKey key = CommonPathFinder.pathfinder("navigation");
+    private final Map<PathPlayer<Player>, SearchInfo> activePaths;
+    private final PathFinder pathFinder;
+    private final List<Predicate<NavigationRequestContext>> navigationFilter;
   private FindCommand findCommand;
   private FindLocationCommand findLocationCommand;
   private CancelPathCommand cancelPathCommand;
   private NavigationListener listener;
 
   public FindModule() {
-    instance = this;
-    this.plugin = PathPlugin.getInstance();
+      instance = this;
+      this.pathFinder = PathFinderProvider.get();
 
     this.activePaths = new HashMap<>();
     this.navigationFilter = new ArrayList<>();
@@ -87,16 +88,19 @@ public class FindModule implements Listener, PathFinderExtension {
   @Override
   public void onLoad(PathFinder pathPlugin) {
 
-    if (!plugin.getConfiguration().moduleConfig.navigationModule) {
-      plugin.getExtensionRegistry().unregisterExtension(this);
-    }
-    findCommand = new FindCommand(pathPlugin);
-    findLocationCommand = new FindLocationCommand(pathPlugin);
-    cancelPathCommand = new CancelPathCommand(pathPlugin);
+      if (!pathFinder.getConfiguration().getModuleConfig().isNavigationModule()) {
+          pathFinder.getExtensionRegistry().unregisterExtension(this);
+      }
+      findCommand = new FindCommand(pathPlugin);
+      findLocationCommand = new FindLocationCommand(pathPlugin);
+      cancelPathCommand = new CancelPathCommand(pathPlugin);
 
-    plugin.getCommandRegistry().registerCommand(findCommand);
-    plugin.getCommandRegistry().registerCommand(findLocationCommand);
-    plugin.getCommandRegistry().registerCommand(cancelPathCommand);
+      if (pathPlugin instanceof BukkitPathFinder bpf) {
+          // TODO
+          bpf.getCommandRegistry().registerCommand(findCommand);
+          bpf.getCommandRegistry().registerCommand(findLocationCommand);
+          bpf.getCommandRegistry().registerCommand(cancelPathCommand);
+      }
   }
 
   @Override
@@ -127,6 +131,7 @@ public class FindModule implements Listener, PathFinderExtension {
   }
 
   public void registerListener() {
+      PathFinderPlugin plugin = PathFinderPlugin.getInstance();
     listener = new NavigationListener();
     Bukkit.getPluginManager().registerEvents(listener, plugin);
     Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -149,24 +154,22 @@ public class FindModule implements Listener, PathFinderExtension {
   }
 
   public CompletableFuture<NavigateResult> findPath(PathPlayer<Player> player, Location location) {
-    double maxDist =
-        PathPlugin.getInstance().getConfiguration().navigation.findLocation.maxDistance;
-    return findPath(player, location, maxDist);
+      return findPath(player, location, pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance());
   }
 
   public CompletableFuture<NavigateResult> findPath(PathPlayer<Player> player, Location location,
                                                     double maxDist) {
-    return plugin.getStorage().loadNodes().thenApply(nodes -> {
-      double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
-      // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
-      Location _location = location.equals(player.getLocation())
-          ? location.add(0, 0.01, 0) : location;
+      return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+          double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
+          // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
+          Location _location = location.equals(player.getLocation())
+                  ? location.add(0, 0.01, 0) : location;
 
-      Node closest = null;
-      double dist = Double.MAX_VALUE;
-      for (Node node : nodes) {
-        double curDist = node.getLocation().distance(_location);
-        if (curDist < dist && curDist < _maxDist) {
+          Node closest = null;
+          double dist = Double.MAX_VALUE;
+          for (Node node : nodes) {
+              double curDist = node.getLocation().distance(_location);
+              if (curDist < dist && curDist < _maxDist) {
           closest = node;
           dist = curDist;
         }
@@ -194,17 +197,17 @@ public class FindModule implements Listener, PathFinderExtension {
     PlayerNode playerNode = new PlayerNode(player);
 
     return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
-      return plugin.getStorage().loadNodes().thenApply(nodes -> {
+        return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
-        PathSolver<Node> pathSolver = new SimpleDijkstra<>();
-        List<Node> path;
-        try {
-          // TODO whats going on
-          path = pathSolver.solvePath(graph, playerNode, targets.stream()
-              .map(node -> nodes.stream().filter(n -> n.equals(node)).findAny().get())
-              .map(node -> (Node) node)
-              .collect(Collectors.toList()));
-        } catch (NoPathFoundException e) {
+            PathSolver<Node> pathSolver = new SimpleDijkstra<>();
+            List<Node> path;
+            try {
+                // TODO whats going on
+                path = pathSolver.solvePath(graph, playerNode, targets.stream()
+                        .map(node -> nodes.stream().filter(n -> n.equals(node)).findAny().get())
+                        .map(node -> (Node) node)
+                        .collect(Collectors.toList()));
+            } catch (NoPathFoundException e) {
           return NavigateResult.FAIL_BLOCKED;
         }
 
@@ -226,10 +229,7 @@ public class FindModule implements Listener, PathFinderExtension {
         if (result == NavigateResult.SUCCESS) {
           // Refresh cancel-path command so that it is visible
           cancelPathCommand.refresh(player);
-          EffectHandler.getInstance()
-              .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_started",
-                  player.unwrap(),
-                  VectorUtils.toBukkit(player.getLocation()));
+            // TODO event
         }
         return result;
       }).join();
@@ -240,11 +240,7 @@ public class FindModule implements Listener, PathFinderExtension {
     unsetPath(info);
     PathTargetFoundEvent event = new PathTargetFoundEvent(info.player(), info.path());
     Bukkit.getPluginManager().callEvent(event);
-
-    Player player = info.player().unwrap();
-    EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_finished", player,
-            player.getLocation());
+      //TODO internal event
   }
 
   public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path,
@@ -277,9 +273,7 @@ public class FindModule implements Listener, PathFinderExtension {
 
     Player player = info.player().unwrap();
     cancelPathCommand.refresh(info.player());
-    EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_stopped", player,
-            player.getLocation());
+      // TODO internal path stopped event
   }
 
   public void cancelPath(PathPlayer<?> playerId) {
@@ -291,9 +285,7 @@ public class FindModule implements Listener, PathFinderExtension {
   public void cancelPath(SearchInfo info) {
     unsetPath(info);
     Player player = info.player().unwrap();
-    EffectHandler.getInstance()
-        .playEffect(PathPlugin.getInstance().getEffectsFile(), "path_cancelled", player,
-            player.getLocation());
+      // TODO internal path cancelled event
   }
 
   public enum NavigateResult {

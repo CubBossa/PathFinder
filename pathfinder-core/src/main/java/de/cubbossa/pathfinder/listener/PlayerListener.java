@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.listener;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,7 +13,7 @@ public class PlayerListener implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-    PathPlayer<Player> player = PathPlugin.wrap(event.getPlayer());
+      PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
 
     NamespacedKey currentlyEdited = NodeHandler.getInstance().getEdited(player);
     if (currentlyEdited != null) {

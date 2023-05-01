@@ -1,29 +1,27 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class PlayerNode implements Node {
 
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
-      PathPlugin.pathfinder("player"),
-      "empty",
-      new ItemStack(Material.DIRT),
-      PathPlugin.getInstance().getMiniMessage()
+          CommonPathFinder.pathfinder("player"),
+          "empty",
+          PathFinderProvider.get().getMiniMessage()
   ) {
     @Override
     public PlayerNode createAndLoadNode(Context context) {

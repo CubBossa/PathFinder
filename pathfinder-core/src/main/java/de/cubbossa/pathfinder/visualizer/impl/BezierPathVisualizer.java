@@ -6,16 +6,11 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifier;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -23,14 +18,20 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 @Getter
 @Setter
 public abstract class BezierPathVisualizer
-    extends BukkitVisualizer<BezierPathVisualizer.BezierData>
-    implements PathVisualizer<BezierPathVisualizer.BezierData, Player> {
+        extends BukkitVisualizer<BezierPathVisualizer.BezierData>
+        implements PathVisualizer<BezierPathVisualizer.BezierData, Player> {
 
-  private float pointDistance = .2f;
-  private int bezierSamplingRate = 16;
+    private float pointDistance = .2f;
+    private int bezierSamplingRate = 16;
 
   public BezierPathVisualizer(NamespacedKey key, String nameFormat) {
     super(key, nameFormat);
@@ -90,13 +91,13 @@ public abstract class BezierPathVisualizer
   }
 
   private List<Vector> interpolate(Spline bezierVectors) {
-    return PathPlugin.SPLINES.newCurveBuilder(bezierVectors)
-        .withClosedPath(false)
-        .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
-        .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))
-        .buildAndConvert().stream()
-        .map(vector -> new Vector(vector.getX(), vector.getY(), vector.getZ()))
-        .collect(Collectors.toList());
+      return CommonPathFinder.SPLINES.newCurveBuilder(bezierVectors)
+              .withClosedPath(false)
+              .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
+              .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))
+              .buildAndConvert().stream()
+              .map(vector -> new Vector(vector.getX(), vector.getY(), vector.getZ()))
+              .collect(Collectors.toList());
   }
 
   private List<Vector> transform(List<Vector> curve) {

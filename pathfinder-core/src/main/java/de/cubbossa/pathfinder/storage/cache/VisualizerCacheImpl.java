@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.PathPlugin;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -50,10 +50,10 @@ public class VisualizerCacheImpl
     if (cachedAll || cachedTypes.contains(type.getKey())) {
       return cache.asMap().values().stream()
           .filter(
-              visualizer -> PathPlugin.getInstance().getStorage()
-                  .loadVisualizerType(visualizer.getKey())
-                  .join()
-                  .equals(type))
+                  visualizer -> PathFinderProvider.get().getStorage()
+                          .loadVisualizerType(visualizer.getKey())
+                          .join()
+                          .equals(type))
           .map(visualizer -> (T) visualizer)
           .toList();
     }

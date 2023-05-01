@@ -1,0 +1,187 @@
+package de.cubbossa.pathfinder.command;
+
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.ModifierType;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.translations.TranslationHandler;
+import dev.jorel.commandapi.arguments.Argument;
+import dev.jorel.commandapi.arguments.StringArgument;
+
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.command.CommandSender;
+
+/**
+ * A command to manage NodeGroups.
+ */
+public class NodeGroupCommand extends Command {
+
+  /**
+   * A command to manage NodeGroups.
+   */
+  public NodeGroupCommand(PathFinder pathFinder) {
+    super(pathFinder, "nodegroup");
+    withGeneratedHelp();
+
+    withRequirement(sender -> sender.hasPermission(PathPerms.PERM_CMD_NG_LIST)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_INFO)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_CREATE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_DELETE)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_SET_MOD)
+        || sender.hasPermission(PathPerms.PERM_CMD_NG_UNSET_MOD)
+    );
+
+    then(CustomArgs.literal("info")
+        .withPermission(PathPerms.PERM_CMD_NG_INFO)
+        .then(CustomArgs.nodeGroupArgument("group")
+                .executes((commandSender, args) -> {
+                    showGroup(commandSender, args.getUnchecked(0));
+                })
+        )
+    );
+    then(CustomArgs.literal("list")
+        .withPermission(PathPerms.PERM_CMD_NG_LIST)
+        .executes((sender, objects) -> {
+          listGroups(sender, Pagination.page(0, 10));
+        })
+        .then(CustomArgs.pagination(10)
+            .displayAsOptional()
+            .executes((sender, args) -> {
+                listGroups(sender, args.getUnchecked(0));
+            })));
+
+    then(CustomArgs.literal("create")
+        .withGeneratedHelp()
+        .withPermission(PathPerms.PERM_CMD_NG_CREATE)
+        .then(new StringArgument("name")
+            .executes((sender, args) -> {
+                createGroup(sender, args.getUnchecked(0));
+            })));
+
+      then(CustomArgs.literal("delete")
+              .withGeneratedHelp()
+              .withPermission(PathPerms.PERM_CMD_NG_DELETE)
+              .then(CustomArgs.nodeGroupArgument("group")
+                      .executes((sender, args) -> {
+                          deleteGroup(sender, args.getUnchecked(0));
+                      })));
+
+      Argument<?> set = CustomArgs.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
+      Argument<?> unset =
+              CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
+      for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getTypes()) {
+          if (!(modifier instanceof ModifierCommandExtension<?> cmdExt)) {
+              continue;
+          }
+          Argument<?> lit = CustomArgs.literal(modifier.getSubCommandLiteral());
+          lit = cmdExt.registerAddCommand(lit, mod -> (commandSender, args) -> {
+              addModifier(commandSender, args.getUnchecked(0), mod);
+          });
+          set = set.then(lit);
+          unset = unset.then(CustomArgs.literal(modifier.getSubCommandLiteral())
+                  .executes((commandSender, args) -> {
+                      removeModifier(commandSender, args.getUnchecked(0),
+                              modifier.getModifierClass());
+                  })
+          );
+      }
+    then(CustomArgs.literal("modify")
+        .then(CustomArgs.nodeGroupArgument("group")
+            .then(set)
+            .then(unset)
+        )
+    );
+  }
+
+  private void listGroups(CommandSender sender, Pagination pagination) {
+    getPathfinder().getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+      sender.sendMessage(nodeGroups.stream().map(NodeGroup::getKey).map(NamespacedKey::getKey)
+          .collect(Collectors.joining(", ")));
+    });
+    getPathfinder().getStorage().loadGroups(pagination).thenApply(nodeGroups -> {
+      CommandUtils.printList(
+          sender,
+          pagination,
+          p -> getPathfinder().getStorage().loadGroups(p).join().stream().toList(),
+          group -> {
+            TagResolver r = TagResolver.builder()
+                .resolver(Placeholder.component("key", Component.text(group.getKey().toString())))
+                .resolver(Placeholder.component("size", Component.text(group.size())))
+                .build();
+            TranslationHandler.getInstance()
+                .sendMessage(Messages.CMD_NG_LIST_LINE.format(r), sender);
+          },
+          Messages.CMD_NG_LIST_HEADER,
+          Messages.CMD_NG_LIST_FOOTER
+      );
+      return nodeGroups;
+    });
+  }
+
+  private void showGroup(CommandSender sender, SimpleNodeGroup group) {
+    TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_INFO.format(TagResolver.builder()
+            .tag("key", Messages.formatKey(group.getKey()))
+            .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
+            .resolver(Formatter.number("weight", group.getWeight()))
+            .resolver(Placeholder.component("modifiers", Messages.formatModifiers(sender, group.getModifiers())))
+        .build()), sender);
+  }
+
+  private void createGroup(CommandSender sender, String name) {
+      NamespacedKey key = CommonPathFinder.pathfinder(name);
+      if (getPathfinder().getStorage().loadGroup(key).join().isPresent()) {
+          TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_ALREADY_EXISTS.format(
+                  Placeholder.parsed("name", name)
+          ), sender);
+          return;
+      }
+
+      getPathfinder().getStorage()
+              .createAndLoadGroup(CommonPathFinder.pathfinder(name))
+              .thenAccept(group -> {
+                  TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE.format(
+                          TagResolver.resolver("name", Messages.formatKey(group.getKey()))
+                  ), sender);
+              })
+              .exceptionally(throwable -> {
+                  TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_CREATE_FAIL, sender);
+                  getPathfinder().getLogger().log(Level.SEVERE, "Could not create nodegroup.", throwable);
+                  return null;
+              });
+  }
+
+  private void deleteGroup(CommandSender sender, SimpleNodeGroup group) {
+    getPathfinder().getStorage().deleteGroup(group).thenRun(() -> {
+      TranslationHandler.getInstance().sendMessage(Messages.CMD_NG_DELETE.format(
+          Placeholder.parsed("name", group.getKey().toString())
+      ), sender);
+    });
+  }
+
+  private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {
+    group.addModifier(modifier);
+    getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
+      // TODO message
+    });
+  }
+
+  private void removeModifier(CommandSender sender, SimpleNodeGroup group,
+                              Class<? extends Modifier> mod) {
+    group.removeModifier(mod);
+    getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
+      // TODO message
+    });
+  }
+}

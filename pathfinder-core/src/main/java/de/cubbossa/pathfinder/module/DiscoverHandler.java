@@ -4,14 +4,15 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.PathPlugin;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.events.discovering.PlayerForgetEvent;
 import de.cubbossa.pathfinder.listener.DiscoverListener;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.serializedeffects.EffectHandler;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
@@ -19,27 +20,26 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import lombok.Getter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class DiscoverHandler {
 
-  @Getter
-  private static DiscoverHandler instance;
-  private PathPlugin plugin;
+    @Getter
+    private static DiscoverHandler instance;
+    private CommonPathFinder plugin;
 
-  public DiscoverHandler(PathPlugin plugin) {
-    instance = this;
-    this.plugin = plugin;
+    public DiscoverHandler(CommonPathFinder plugin) {
+        instance = this;
+        this.plugin = plugin;
 
-    if (!plugin.getConfiguration().moduleConfig.discoveryModule) {
-      return;
-    }
-    Bukkit.getPluginManager().registerEvents(new DiscoverListener(this.plugin), plugin);
+        if (!plugin.getConfiguration().moduleConfig.discoveryModule) {
+            return;
+        }
+        Bukkit.getPluginManager().registerEvents(new DiscoverListener(this.plugin), PathFinderPlugin.getInstance());
 
-    if (plugin.getConfiguration().navigation.requireDiscovery) {
-      FindModule.getInstance().registerFindPredicate(context -> {
+        if (plugin.getConfiguration().navigation.requireDiscovery) {
+            FindModule.getInstance().registerFindPredicate(context -> {
         if (!(context.node() instanceof Groupable groupable)) {
           return true;
         }
@@ -63,12 +63,6 @@ public class DiscoverHandler {
     if (player == null) {
       throw new IllegalStateException("Player is null");
     }
-    EffectHandler.getInstance().playEffect(
-        plugin.getEffectsFile(),
-        "discover",
-        player,
-        player.getLocation(),
-        Placeholder.component("name", discoverable.getDisplayName()));
   }
 
   public boolean fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
@@ -101,20 +95,19 @@ public class DiscoverHandler {
       return;
     }
     plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
-      if (discoverInfo.isPresent()) {
-        return;
-      }
-      PlayerDiscoverEvent event = new PlayerDiscoverEvent(playerId, group, date);
-      Bukkit.getPluginManager().callEvent(event);
-      if (event.isCancelled()) {
-        return;
-      }
-      DiscoverableModifier discoverable = group.getModifier(DiscoverableModifier.class);
+        if (discoverInfo.isPresent()) {
+            return;
+        }
+        PlayerDiscoverEvent event = new PlayerDiscoverEvent(playerId, group, date);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        DiscoverableModifier discoverable = group.getModifier(DiscoverableModifier.class);
 
-      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date)
-          .thenAccept(info -> {
+        plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date).thenAccept(info -> {
             playDiscovery(playerId, discoverable);
-          });
+        });
     });
   }
 
@@ -127,14 +120,14 @@ public class DiscoverHandler {
       if (discoverInfo.isEmpty()) {
         return;
       }
-      Bukkit.getScheduler().runTask(plugin, () -> {
-        PlayerForgetEvent event = new PlayerForgetEvent(playerId, group);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-          return;
-        }
-        plugin.getStorage().deleteDiscoverInfo(discoverInfo.get());
-      });
+        Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+            PlayerForgetEvent event = new PlayerForgetEvent(playerId, group);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            plugin.getStorage().deleteDiscoverInfo(discoverInfo.get());
+        });
     });
   }
 

@@ -20,29 +20,22 @@ import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
-import de.cubbossa.pathfinder.util.CommandUtils;
+import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.util.WorldImpl;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
@@ -161,20 +154,20 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   public void shutdown() {
   }
 
-  @Override
-  public void saveNodeType(UUID node, NodeType<? extends Node> type) {
-    workOnFile(fileNodeTypes(), cfg -> {
-      cfg.set(node.toString(), type.getKey().toString());
-    });
-  }
+    @Override
+    public void saveNodeType(UUID node, NodeType<?> type) {
+        workOnFile(fileNodeTypes(), cfg -> {
+            cfg.set(node.toString(), type.getKey().toString());
+        });
+    }
 
-  @Override
-  public void saveNodeTypes(Map<UUID, NodeType<? extends Node>> typeMapping) {
-    workOnFile(fileNodeTypes(), cfg -> {
-      typeMapping.forEach(
-          (uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
-    });
-  }
+    @Override
+    public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
+        workOnFile(fileNodeTypes(), cfg -> {
+            typeMapping.forEach(
+                    (uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
+        });
+    }
 
   @Override
   public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
@@ -188,18 +181,18 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     });
   }
 
-  @Override
-  public Map<UUID, NodeType<? extends Node>> loadNodeTypes(Collection<UUID> nodes) {
-    return workOnFile(fileNodeTypes(), cfg -> {
-      Map<UUID, NodeType<?>> types = new HashMap<>();
-      for (UUID node : nodes) {
-        String keyString = cfg.getString(node.toString());
-        if (keyString != null) {
-          types.put(node, nodeTypeRegistry.getType(NamespacedKey.fromString(keyString)));
-        }
-      }
-      return types;
-    });
+    @Override
+    public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
+        return workOnFile(fileNodeTypes(), cfg -> {
+            Map<UUID, NodeType<?>> types = new HashMap<>();
+            for (UUID node : nodes) {
+                String keyString = cfg.getString(node.toString());
+                if (keyString != null) {
+                    types.put(node, nodeTypeRegistry.getType(NamespacedKey.fromString(keyString)));
+                }
+            }
+            return types;
+        });
   }
 
   Optional<Edge> readEdge(UUID start, UUID end, ConfigurationSection startSection) {
@@ -312,15 +305,15 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
 
   @Override
   public List<NodeGroup> loadGroups(Pagination pagination) {
-    return CommandUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(),
-            pagination.getOffset(), pagination.getLimit())
-        .stream()
-        .map(f -> workOnFile(f, cfg -> {
-          return loadGroup(cfg);
-        }))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(Collectors.toList());
+      return CollectionUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(),
+                      pagination.getOffset(), pagination.getLimit())
+              .stream()
+              .map(f -> workOnFile(f, cfg -> {
+                  return loadGroup(cfg);
+              }))
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(Collectors.toList());
   }
 
   @Override

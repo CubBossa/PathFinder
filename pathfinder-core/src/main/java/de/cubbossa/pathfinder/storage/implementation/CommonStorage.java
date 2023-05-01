@@ -4,11 +4,7 @@ import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
@@ -17,28 +13,25 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 @RequiredArgsConstructor
 public abstract class CommonStorage implements StorageImplementation, WaypointDataStorage {
 
-  final NodeTypeRegistry nodeTypeRegistry;
-  final VisualizerTypeRegistry visualizerTypeRegistry;
-  final ModifierRegistry modifierRegistry;
-  @Getter
-  @Setter
-  CacheLayer cache;
+    final NodeTypeRegistry nodeTypeRegistry;
+    final VisualizerTypeRegistry visualizerTypeRegistry;
+    final ModifierRegistry modifierRegistry;
+    @Getter
+    @Setter
+    CacheLayer cache;
   @Getter
   @Setter
   private @Nullable Logger logger;
@@ -114,19 +107,23 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   private <N extends Node> void saveNodeTyped(N node) {
-    NodeType<N> type = cache.getNodeTypeCache().<N>getType(node.getNodeId(), this::loadNodeType);
-    N before = type.loadNode(node.getNodeId()).orElseThrow();
-    type.saveNode(node);
+      NodeType<N> type = cache.getNodeTypeCache().<N>getType(node.getNodeId(), this::loadNodeType);
+      N before = type.loadNode(node.getNodeId()).orElseThrow();
+      type.saveNode(node);
 
-    if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
-      StorageImpl.ComparisonResult<NodeGroup> cmp =
-          StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
-      cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
-      cmp.toDeleteIfPresent(
-          nodeGroups -> unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
-    }
-    StorageImpl.ComparisonResult<Edge> cmp =
-        StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
+      if (node == before) {
+          throw new IllegalStateException("Cannot have compared elements be the same object instance!");
+      }
+
+      if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
+          StorageImpl.ComparisonResult<NodeGroup> cmp =
+                  StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
+          cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
+          cmp.toDeleteIfPresent(
+                  nodeGroups -> unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
+      }
+      StorageImpl.ComparisonResult<Edge> cmp =
+              StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
     cmp.toInsertIfPresent(edges -> {
       for (Edge edge : edges) {
         createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
