@@ -45,6 +45,13 @@ public interface Storage {
 
   void setCache(CacheLayer cacheLayer);
 
+
+  /**
+   * Check if global group exists and if not create.
+   * Global group will use default visualizer, so if default visualizer has been deleted, it will be recreated.
+   */
+  CompletableFuture<NodeGroup> createGlobalNodeGroup(VisualizerType<?> defaultVisualizerType);
+
   /**
    * Loads the node type for a node with given {@link UUID}.
    *
@@ -54,14 +61,14 @@ public interface Storage {
    */
   <N extends Node> CompletableFuture<NodeType<N>> loadNodeType(UUID node);
 
-    /**
-     * Loads the node type for multiple nodes by their {@link UUID}s.
-     *
-     * @param nodes A set of {@link UUID}s to retrieve {@link NodeType}s for.
-     * @return A map of all uuids with their found node types. If no type was found, it is not included
-     * in the map. Therefore, the size of the return map must not be equal to the size of the input collection.
-     */
-    CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(Collection<UUID> nodes);
+  /**
+   * Loads the node type for multiple nodes by their {@link UUID}s.
+   *
+   * @param nodes A set of {@link UUID}s to retrieve {@link NodeType}s for.
+   * @return A map of all uuids with their found node types. If no type was found, it is not included
+   * in the map. Therefore, the size of the return map must not be equal to the size of the input collection.
+   */
+  CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
 
@@ -106,29 +113,29 @@ public interface Storage {
    */
   CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids);
 
-    /**
-     * Deletes a collection of nodes from storage asynchronously.
-     * A call of this method must fire the according {@link NodeDeleteEvent}.
-     * After successfull completion, all given {@link Node}s, all according {@link Edge}s,
-     * {@link NodeGroup}- and {@link NodeType} mappings must be deleted.
-     *
-     * @param nodes A collection of nodes to delete.
-     * @return A {@link CompletableFuture} indicating the completion of the process.
-     */
-    CompletableFuture<Void> deleteNodes(Collection<Node> nodes);
+  /**
+   * Deletes a collection of nodes from storage asynchronously.
+   * A call of this method must fire the according {@link NodeDeleteEvent}.
+   * After successfull completion, all given {@link Node}s, all according {@link Edge}s,
+   * {@link NodeGroup}- and {@link NodeType} mappings must be deleted.
+   *
+   * @param nodes A collection of nodes to delete.
+   * @return A {@link CompletableFuture} indicating the completion of the process.
+   */
+  CompletableFuture<Void> deleteNodes(Collection<Node> nodes);
 
-    CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes);
+  CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes);
 
-    // Groups
-    CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
+  // Groups
+  CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
 
-    CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key);
+  CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key);
 
-    CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination);
+  CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination);
 
-    CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys);
+  CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys);
 
-    CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);
+  CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);
 
   <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier);
 

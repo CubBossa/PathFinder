@@ -248,7 +248,7 @@ public class FindModule implements Listener, PathFinderExtension {
     if (current != null) {
       current.path().cancel();
     }
-    path.run(player);
+    path.run();
     return NavigateResult.SUCCESS;
   }
 

@@ -214,10 +214,9 @@ public class CustomArgs {
       }
       return (PathVisualizer<?, ?>) vis.get();
     })).includeSuggestions(suggestNamespacedKeys(sender ->
-        PathFinderProvider.get().getStorage().loadVisualizers()
-            .thenApply(pathVisualizers -> pathVisualizers.stream()
-                .map(Keyed::getKey)
-                .toList()))
+        PathFinderProvider.get().getStorage().loadVisualizers().thenApply(v -> v.stream()
+            .map(Keyed::getKey)
+            .toList()))
     );
   }
 
@@ -384,10 +383,14 @@ public class CustomArgs {
 
       try {
         Map<Node, NavigableModifier> map = storage.loadNodes(NavigableModifier.class).join();
-        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.get(n).getSearchTerms());
+        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> {
+          NavigableModifier mod = map.get(n);
+          return mod == null ? Collections.emptySet() : mod.getSearchTerms();
+        });
         return new NodeSelection(target);
       } catch (Throwable t) {
-        throw new CustomArgument.CustomArgumentException(t.getMessage());
+        t.printStackTrace();
+        throw new RuntimeException(t);
       }
     }))
         .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {

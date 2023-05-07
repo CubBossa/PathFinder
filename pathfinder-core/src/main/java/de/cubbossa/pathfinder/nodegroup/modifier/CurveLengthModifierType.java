@@ -24,18 +24,18 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
     return "curve-length";
   }
 
-    @Override
-    public Argument<?> registerAddCommand(Argument<?> tree, Function<CurveLengthModifier, CommandExecutor> consumer) {
-        return tree.then(new FloatArgument("curve-length").executes((commandSender, objects) -> {
-            consumer.apply(new CurveLengthModifier(objects.getUnchecked(1))).run(commandSender, objects);
-        }));
-    }
+  @Override
+  public Argument<?> registerAddCommand(Argument<?> tree, Function<CurveLengthModifier, CommandExecutor> consumer) {
+    return tree.then(new FloatArgument("curve-length").executes((commandSender, objects) -> {
+      consumer.apply(new CurveLengthModifier(objects.getUnchecked(1))).run(commandSender, objects);
+    }));
+  }
 
   @Override
   public Map<String, Object> serialize(CurveLengthModifier modifier) {
-      LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-      map.put("curve-length", modifier.curveLength());
-      return map;
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    map.put("curve-length", modifier.curveLength());
+    return map;
   }
 
   @Override

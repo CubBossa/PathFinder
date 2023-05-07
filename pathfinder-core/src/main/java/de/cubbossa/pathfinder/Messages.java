@@ -243,6 +243,11 @@ public class Messages {
       .withDefault("<ins:prefix><gray>Node group deleted: <name>.</gray>")
       .withPlaceholders("name")
       .build();
+  public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
+      .withDefault("<negative>You cannot delete the global node group.</negative>")
+      .withTranslation(Locale.GERMAN, "<negative>Du kannst die globale Wegpunktgruppe nicht löschen.</negative>")
+      .withComment("Indicates, that the global nodegroup cannot be deleted by command.")
+      .build();
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
       .withDefault("""
           <offset>Group '<key>'</offset>

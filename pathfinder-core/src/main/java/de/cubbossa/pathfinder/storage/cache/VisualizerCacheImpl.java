@@ -7,6 +7,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -29,8 +30,8 @@ public class VisualizerCacheImpl
 
   @Override
   public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                    Function<NamespacedKey, T> loader) {
-    return Optional.ofNullable((T) cache.get(key, loader));
+                                                                    Function<NamespacedKey, Optional<T>> loader) {
+    return Optional.ofNullable((T) cache.get(key, k -> loader.apply(k).orElse(null)));
   }
 
   @Override

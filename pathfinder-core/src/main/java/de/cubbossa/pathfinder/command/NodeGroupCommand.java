@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
@@ -162,8 +163,13 @@ public class NodeGroupCommand extends Command {
   }
 
   private void deleteGroup(CommandSender sender, SimpleNodeGroup group) {
+    PathPlayer<?> p = BukkitUtils.wrap(sender);
+    if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+      p.sendMessage(Messages.CMD_NG_DELETE_GLOBAL);
+      return;
+    }
     getPathfinder().getStorage().deleteGroup(group).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_DELETE.formatted(
+      p.sendMessage(Messages.CMD_NG_DELETE.formatted(
           Placeholder.parsed("name", group.getKey().toString())
       ));
     });

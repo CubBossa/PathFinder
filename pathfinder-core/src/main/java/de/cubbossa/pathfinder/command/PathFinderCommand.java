@@ -79,7 +79,7 @@ public class PathFinderCommand extends Command {
     then(CustomArgs.literal("editmode")
         .executesPlayer((player, args) -> {
           NodeHandler.getInstance()
-              .toggleNodeGroupEditor(BukkitUtils.wrap(player), NodeHandler.GROUP_GLOBAL);
+              .toggleNodeGroupEditor(BukkitUtils.wrap(player), CommonPathFinder.globalGroupKey());
         })
         .then(CustomArgs.nodeGroupArgument("group")
             .executesPlayer((player, args) -> {

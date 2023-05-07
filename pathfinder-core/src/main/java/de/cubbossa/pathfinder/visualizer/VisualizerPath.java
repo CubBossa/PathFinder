@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Getter
 public class VisualizerPath<PlayerT> extends ArrayList<Node> {
 
-  private final PathPlayer<PlayerT> player;
-  private final Collection<SubPath<?, PlayerT>> paths;
-  private boolean active;
+  protected final PathPlayer<PlayerT> player;
+  protected final Collection<SubPath<?>> paths;
+  protected boolean active;
 
   public VisualizerPath(PathPlayer<PlayerT> player) {
     this.player = player;
@@ -28,9 +28,9 @@ public class VisualizerPath<PlayerT> extends ArrayList<Node> {
     this.active = false;
   }
 
-  public void prepare(List<Node> path, PathPlayer<PlayerT> player) {
+  public void prepare(List<Node> path) {
     // build sub paths for every visualizer change
-    SortedMap<Node, Collection<PathVisualizer<?, ?>>> nodeVisualizerMap = new TreeMap<>();
+    SortedMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new TreeMap<>();
     for (Node node : path) {
       if (!(node instanceof Groupable groupable)) {
         // this node cannot be rendered, it cannot be grouped
@@ -44,43 +44,73 @@ public class VisualizerPath<PlayerT> extends ArrayList<Node> {
       if (mod == null) {
         continue;
       }
-      nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add(mod.visualizer());
+      nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) mod.visualizer());
     }
 
-    // create SubPaths from map
+    // holds the current visualizer selection path
+    List<Node> subPathCollection = new ArrayList<>();
+
+    // reduce collection with each iteration until no subpaths are left
     while (!nodeVisualizerMap.isEmpty()) {
 
-      // skip all leading nodes that do not have a visualizer
-      while (nodeVisualizerMap.get(nodeVisualizerMap.firstKey()).isEmpty()) {
-        nodeVisualizerMap.remove(nodeVisualizerMap.firstKey());
+      // Choose random Visualizer from first node and create subpath by adding each next node until it does not have
+      // the visualizer applied.
+
+      int index = 0;
+      PathVisualizer<?, PlayerT> selection = null;
+
+      // Start iterating from first node and break, as soon as current does not contain selected visualizer
+      while (index < nodeVisualizerMap.size()) {
+        Node current = nodeVisualizerMap.keySet().toArray(Node[]::new)[index];
+        Collection<PathVisualizer<?, PlayerT>> present = nodeVisualizerMap.get(current);
+
+        if (selection == null) {
+          // First iteration, select one random visualizer
+          selection = present.iterator().next();
+        } else if (!present.contains(selection)) {
+          // Visualizer is not null -> we had another node before, but the current node does not contain
+          // our selected visualizer -> end of path.
+          // break, save and start new one.
+          break;
+        }
+        // our node will be added to the path, therefore remove the visualizer
+        present.remove(selection);
+        subPathCollection.add(current);
+        index++;
       }
 
       // follow one visualizer along path
-      paths.add(new SubPath<>(null, null, null)); //TODO
+      paths.add(new SubPath<>(subPathCollection, selection));
+      subPathCollection.clear();
+
+      // skip all leading nodes that do not have a visualizer
+      while (!nodeVisualizerMap.isEmpty() && nodeVisualizerMap.get(nodeVisualizerMap.firstKey()).isEmpty()) {
+        nodeVisualizerMap.remove(nodeVisualizerMap.firstKey());
+      }
     }
-    for (SubPath<?, PlayerT> subPath : paths) {
-      subPath.visualizer.prepare(subPath.path, player);
+    for (SubPath<?> subPath : paths) {
+      prepareSubPath(subPath);
     }
+  }
+
+  private <DataT> void prepareSubPath(SubPath<DataT> subPath) {
+    subPath.data = subPath.visualizer.prepare(subPath.path, player);
   }
 
   public void run() {
-    run(player);
+    prepare(this);
+    cancel();
+    this.active = true;
+
+    AtomicInteger interval = new AtomicInteger(0);
+    for (SubPath<?> path : paths) {
+      path.task = runTask(() -> {
+        play(path, player, interval);
+      }, 0L, path.visualizer.getInterval());
+    }
   }
 
-  public void run(PathPlayer<PlayerT> player) {
-      prepare(this, player);
-      cancel();
-      this.active = true;
-
-      AtomicInteger interval = new AtomicInteger(0);
-      for (SubPath<?, PlayerT> path : paths) {
-          path.task = runTask(() -> {
-              play(path, player, interval);
-          }, 0L, path.visualizer.getInterval());
-      }
-  }
-
-  private <DataT> void play(SubPath<DataT, PlayerT> path, PathPlayer<PlayerT> player,
+  private <DataT> void play(SubPath<DataT> path, PathPlayer<PlayerT> player,
                             AtomicInteger interval) {
     long fullTime = 0; //TODO player..getWorld().getFullTime();
     path.visualizer.play(new PathVisualizer.VisualizerContext<>(Lists.newArrayList(player),
@@ -88,42 +118,42 @@ public class VisualizerPath<PlayerT> extends ArrayList<Node> {
   }
 
   public void cancel() {
-      paths.forEach(this::cancel);
+    paths.forEach(this::cancel);
   }
 
-    private <DataT> void cancel(SubPath<DataT, PlayerT> path) {
-        if (path.task == null) {
-            return;
-        }
-        cancelTask(path.task);
-        this.active = false;
-
-        path.visualizer.destruct(player, path.data);
+  private <DataT> void cancel(SubPath<DataT> path) {
+    if (path.task == null) {
+      return;
     }
+    cancelTask(path.task);
+    this.active = false;
 
-    @RequiredArgsConstructor
-    @Accessors(fluent = true)
-    private static class SubPath<DataT, PlayerT> {
-        private final List<Node> path;
-        private final PathVisualizer<DataT, PlayerT> visualizer;
-        private final DataT data;
-        private Task task;
-    }
+    path.visualizer.destruct(player, path.data);
+  }
 
-    public Task runTask(Runnable task, long delay, long interval) {
-        int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(PathFinderPlugin.getInstance(), task, delay, interval);
-        return new BukkitTask(id);
-    }
+  @RequiredArgsConstructor
+  @Accessors(fluent = true)
+  public class SubPath<DataT> {
+    protected final List<Node> path;
+    protected final PathVisualizer<DataT, PlayerT> visualizer;
+    protected DataT data;
+    protected Task task;
+  }
 
-    public void cancelTask(Task task) {
-        if (task instanceof BukkitTask b) {
-            Bukkit.getScheduler().cancelTask(b.id());
-        }
-    }
+  public Task runTask(Runnable task, long delay, long interval) {
+    int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(PathFinderPlugin.getInstance(), task, delay, interval);
+    return new BukkitTask(id);
+  }
 
-    interface Task {
+  public void cancelTask(Task task) {
+    if (task instanceof BukkitTask b) {
+      Bukkit.getScheduler().cancelTask(b.id());
     }
+  }
 
-    record BukkitTask(int id) implements Task {
-    }
+  interface Task {
+  }
+
+  record BukkitTask(int id) implements Task {
+  }
 }

@@ -1,189 +1,51 @@
 package de.cubbossa.pathfinder.storage;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
-import de.cubbossa.pathfinder.node.SimpleEdge;
-import de.cubbossa.pathfinder.node.WaypointType;
+import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
-import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
-import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.WorldImpl;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
 import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import lombok.SneakyThrows;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class StorageTest {
+public abstract class StorageTest extends PathFinderTest {
 
-  protected static MiniMessage miniMessage;
-  protected static World world;
-  protected static Logger logger = Logger.getLogger("TESTS");
   protected boolean useCaches = false;
-  protected StorageImpl storage;
-  protected NodeTypeRegistryImpl nodeTypeRegistry;
-  protected VisualizerTypeRegistry visualizerTypeRegistry;
-  protected ModifierRegistry modifierRegistry;
-  protected NodeType<Waypoint> waypointNodeType;
-  protected AbstractVisualizerType<ParticleVisualizer> visualizerType;
-
-  @BeforeAll
-  static void beforeAll() {
-    miniMessage = MiniMessage.miniMessage();
-    ServerMock mock = MockBukkit.mock();
-    org.bukkit.World bukkitWorld = mock.addSimpleWorld("test");
-    world = new WorldImpl(bukkitWorld.getUID());
-  }
-
-  @AfterAll
-  static void afterAll() {
-    MockBukkit.unmock();
-  }
 
   abstract StorageImplementation storage(NodeTypeRegistry registry,
                                          ModifierRegistry modifierRegistry,
                                          VisualizerTypeRegistry visualizerTypeRegistry);
 
-  @AfterEach
-  void afterEach() {
-    storage.shutdown();
+
+  public StorageTest() {
+    setupMiniMessage();
+    setupWorldMock("test");
   }
 
   @BeforeEach
-  void beforeEach() throws Exception {
-    nodeTypeRegistry = new NodeTypeRegistryImpl();
-    modifierRegistry = new ModifierRegistryImpl();
-    modifierRegistry.registerModifierType(new PermissionModifierType());
-    visualizerTypeRegistry = new VisualizerHandler();
-
-    storage = new StorageImpl();
-    StorageImplementation implementation =
-        storage(nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
-
-    storage.setImplementation(implementation);
-    storage.setLogger(logger);
-    storage.setCache(useCaches ? new CacheLayerImpl() : CacheLayerImpl.empty());
-
-    waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
-    nodeTypeRegistry.register(waypointNodeType);
-
-    visualizerType = new ParticleVisualizerType(CommonPathFinder.pathfinder("particle"));
-    if (implementation instanceof InternalVisualizerDataStorage visualizerDataStorage) {
-      visualizerType.setStorage(new InternalVisualizerStorage<>(visualizerType, visualizerDataStorage));
-    }
-    visualizerTypeRegistry.registerVisualizerType(visualizerType);
-
-    storage.init();
+  void beforeEach() {
+    setupStorage(useCaches, () -> storage(nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry));
   }
 
-  protected <T> T assertResult(Supplier<CompletableFuture<T>> supplier) {
-    CompletableFuture<T> future = supplier.get();
-    T element = future.join();
-
-    assertFalse(future.isCompletedExceptionally());
-    assertNotNull(element);
-    return element;
-  }
-
-  protected void assertFuture(Supplier<CompletableFuture<Void>> supplier) {
-    CompletableFuture<Void> future = supplier.get();
-    future.join();
-    assertFalse(future.isCompletedExceptionally());
-  }
-
-  protected <T> T assertOptResult(Supplier<CompletableFuture<Optional<T>>> supplier) {
-    return assertResult(supplier).orElseThrow();
-  }
-
-  protected Waypoint makeWaypoint() {
-    return assertResult(() -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
-  }
-
-  protected void deleteWaypoint(Waypoint waypoint) {
-    assertFuture(() -> storage.deleteNodes(List.of(waypoint)));
-  }
-
-  protected <N extends Node> N assertNodeExists(UUID node) {
-    return (N) storage.loadNode(node).join().orElseThrow();
-  }
-
-  protected void assertNodeNotExists(UUID node) {
-    assertThrows(Exception.class,
-        () -> storage.loadNode(node).join().orElseThrow());
-  }
-
-  protected void assertNodeCount(int count) {
-    Collection<Node> nodesAfter = storage.loadNodes().join();
-    assertEquals(count, nodesAfter.size());
-  }
-
-  protected Edge makeEdge(Waypoint start, Waypoint end) {
-    Edge edge = new SimpleEdge(start.getNodeId(), end.getNodeId(), 1.23f);
-    assertFuture(() -> storage.modifyNode(start.getNodeId(), node -> {
-      node.getEdges().add(edge);
-    }));
-    assertEdge(start.getNodeId(), end.getNodeId());
-    return edge;
-  }
-
-  protected void assertEdge(UUID start, UUID end) {
-    assertTrue(storage.loadNode(start).join().orElseThrow().hasConnection(end));
-  }
-
-  protected void assertNoEdge(UUID start, UUID end) {
-    Optional<Node> node = storage.loadNode(start).join();
-    if (node.isEmpty()) {
-      return;
-    }
-    assertFalse(node.get().hasConnection(end));
-  }
-
-  protected NodeGroup makeGroup(NamespacedKey key) {
-    return assertResult(() -> storage.createAndLoadGroup(key));
-  }
-
-  protected void deleteGroup(NamespacedKey key) {
-    assertFuture(() -> storage.loadGroup(key)
-        .thenAccept(group -> storage.deleteGroup(group.orElseThrow()).join()));
-  }
-
-  protected NodeGroup assertGroupExists(NamespacedKey key) {
-    return assertOptResult(() -> storage.loadGroup(key));
-  }
-
-  protected void assertGroupNotExists(NamespacedKey key) {
-    assertThrows(Exception.class,
-        () -> storage.loadGroup(key).join().orElseThrow());
-  }
-
-  protected ParticleVisualizer makeVisualizer(NamespacedKey key) {
-    return assertResult(() -> storage.createAndLoadVisualizer(visualizerType, key));
+  @AfterEach
+  void afterEach() {
+    shutdownStorage();
   }
 
   @Test
@@ -305,8 +167,8 @@ public abstract class StorageTest {
     Collection<NamespacedKey> keys = assertResult(() -> storage.loadAllGroups()
         .thenApply(nodeGroups -> nodeGroups.stream()
             .map(NodeGroup::getKey)
-            .collect(Collectors.toList())));
-    assertEquals(List.of(a, b), keys);
+            .collect(Collectors.toSet())));
+    assertEquals(Set.of(a, b, CommonPathFinder.globalGroupKey()), keys);
   }
 
   @Test

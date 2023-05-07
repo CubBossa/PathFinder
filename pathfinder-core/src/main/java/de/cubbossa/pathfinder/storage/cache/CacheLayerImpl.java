@@ -189,8 +189,8 @@ public class CacheLayerImpl implements CacheLayer {
     }, new VisualizerCache() {
       @Override
       public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                        Function<NamespacedKey, T> loader) {
-        return Optional.ofNullable(loader.apply(key));
+                                                                        Function<NamespacedKey, Optional<T>> loader) {
+        return loader.apply(key);
       }
 
       @Override

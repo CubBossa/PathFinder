@@ -11,6 +11,7 @@ import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
@@ -38,12 +39,20 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   @Setter
   private @Nullable Logger logger;
 
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolve(VisualizerT visualizer) {
-    return resolve(visualizer.getKey());
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(VisualizerT visualizer) {
+    return resolveOptVisualizerType(visualizer.getKey());
   }
 
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolve(NamespacedKey key) {
-    return (VisualizerType<VisualizerT>) cache.getVisualizerTypeCache().getType(key, this::loadVisualizerType).orElseThrow(() -> {
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(NamespacedKey key) {
+    return cache.getVisualizerTypeCache().<VisualizerT>getType(key, this::loadVisualizerType);
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(VisualizerT visualizer) {
+    return resolveVisualizerType(visualizer.getKey());
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(NamespacedKey key) {
+    return (VisualizerType<VisualizerT>) resolveOptVisualizerType(key).orElseThrow(() -> {
       return new IllegalStateException("Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
   }
@@ -52,6 +61,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     if (node instanceof Groupable groupable) {
       debug(" > Storage Implementation: 'insertGroups(" + node.getNodeId() + ")'");
       loadGroups(node.getNodeId()).forEach(groupable::addGroup);
+      loadGroup(CommonPathFinder.globalGroupKey()).ifPresent(groupable::addGroup);
     }
     return node;
   }
@@ -64,9 +74,11 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
 
   @Override
   public <N extends Node> N createAndLoadNode(NodeType<N> type, Location location) {
-    debug(
-        " > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
+    debug(" > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
     N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
+    if (node instanceof Groupable groupable) {
+      cache.getGroupCache().getGroup(CommonPathFinder.globalGroupKey(), key -> loadGroup(key).get()).ifPresent(groupable::addGroup);
+    }
     saveNodeType(node.getNodeId(), type);
     return node;
   }
@@ -118,6 +130,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     }
 
     if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
+      loadGroup(CommonPathFinder.globalGroupKey()).ifPresent(gAfter::addGroup);
       StorageImpl.ComparisonResult<NodeGroup> cmp =
           StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
       cmp.toInsertIfPresent(nodeGroups -> assignToGroups(nodeGroups, List.of(node.getNodeId())));
@@ -166,12 +179,12 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void deleteVisualizer(VisualizerT visualizer) {
-    resolve(visualizer).getStorage().deleteVisualizer(visualizer);
+    resolveVisualizerType(visualizer).getStorage().deleteVisualizer(visualizer);
   }
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizer(VisualizerT visualizer) {
-    resolve(visualizer).getStorage().saveVisualizer(visualizer);
+    resolveVisualizerType(visualizer).getStorage().saveVisualizer(visualizer);
   }
 
   @Override
@@ -181,6 +194,10 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
 
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadVisualizer(NamespacedKey key) {
-    return (Optional<VisualizerT>) resolve(key).getStorage().loadVisualizer(key);
+    Optional<VisualizerType<VisualizerT>> opt = resolveOptVisualizerType(key);
+    return opt
+        .map(VisualizerType::getStorage)
+        .map(s -> s.loadVisualizer(key))
+        .filter(Optional::isPresent).map(Optional::get);
   }
 }

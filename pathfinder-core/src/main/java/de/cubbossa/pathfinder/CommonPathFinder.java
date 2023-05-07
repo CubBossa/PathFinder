@@ -47,6 +47,8 @@ import java.util.Set;
 @Getter
 public abstract class CommonPathFinder implements PathFinder {
 
+  private static final NamespacedKey GLOBAL_GROUP_KEY = pathfinder("global");
+  private static final NamespacedKey DEFAULT_VISUALIZER_KEY = pathfinder("default_visualizer");
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
 
   private NodeTypeRegistry nodeTypeRegistry;
@@ -63,6 +65,15 @@ public abstract class CommonPathFinder implements PathFinder {
   private PathFinderConf configuration;
   private EventDispatcher eventDispatcher;
   private PluginTranslations translations;
+
+
+  public static NamespacedKey globalGroupKey() {
+    return GLOBAL_GROUP_KEY;
+  }
+
+  public static NamespacedKey defaultVisualizerKey() {
+    return DEFAULT_VISUALIZER_KEY;
+  }
 
   public static NamespacedKey pathfinder(String key) {
     return new NamespacedKey("pathfinder", key);
@@ -83,6 +94,7 @@ public abstract class CommonPathFinder implements PathFinder {
     modifierRegistry.registerModifierType(new DiscoverableModifierType());
     modifierRegistry.registerModifierType(new FindDistanceModifierType());
     modifierRegistry.registerModifierType(new CurveLengthModifierType());
+    modifierRegistry.registerModifierType(new VisualizerModifierType());
 
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     commandRegistry = new CommandRegistry(this);
@@ -111,6 +123,7 @@ public abstract class CommonPathFinder implements PathFinder {
     translations = Translations.builder("PathFinder")
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
         .withEnabledLocales(Locale.getAvailableLocales())
+        .withPreferClientLanguage()
         .withLogger(getLogger())
         .withPropertiesStorage(new File(getDataFolder(), "lang"))
         .build();
@@ -152,8 +165,9 @@ public abstract class CommonPathFinder implements PathFinder {
         miniMessage
     ));
 
+    ParticleVisualizerType particleVisualizerType = new ParticleVisualizerType(pathfinder("particle"));
     Set.<AbstractVisualizerType<?>>of(
-        new ParticleVisualizerType(pathfinder("particle")),
+        particleVisualizerType,
         new CombinedVisualizerType(pathfinder("combined")),
         new CompassVisualizerType(pathfinder("compass"))
     ).forEach(vt -> {
@@ -168,6 +182,8 @@ public abstract class CommonPathFinder implements PathFinder {
 
     commandRegistry.enableCommands(this);
     extensionRegistry.enableExtensions(this);
+
+    storage.createGlobalNodeGroup(particleVisualizerType).join();
   }
 
   @SneakyThrows

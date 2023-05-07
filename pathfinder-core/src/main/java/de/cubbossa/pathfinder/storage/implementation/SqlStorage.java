@@ -707,7 +707,13 @@ public abstract class SqlStorage extends CommonStorage {
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
     debug(" > Storage Implementation: 'assignNodeGroupModifier(" + group.getKey() + ")'");
     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(""));
-    ModifierType<M> type = modifierRegistry.getType((Class<M>) modifier.getClass()).orElseThrow();
+    Optional<ModifierType<M>> opt = modifierRegistry.getType((Class<M>) modifier.getClass());
+    if (opt.isEmpty()) {
+      getLogger().log(Level.SEVERE, "Tried to apply modifier '" + modifier.getClass()
+          + "', but could not find according modifier type in type registry.");
+      return;
+    }
+    ModifierType<M> type = opt.orElseThrow();
     type.serialize(modifier).forEach(cfg::set);
     create
         .insertInto(PATHFINDER_GROUP_MODIFIER_RELATION)
@@ -749,7 +755,7 @@ public abstract class SqlStorage extends CommonStorage {
             PATHFINDER_VISUALIZER.DATA
         )
         .values(
-            visualizer.getKey(), resolve(visualizer).getKey(),
+            visualizer.getKey(), resolveVisualizerType(visualizer).getKey(),
             visualizer.getNameFormat(), visualizer.getPermission(),
             visualizer.getInterval(), dataString
         )
@@ -780,7 +786,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   private <VisualizerT extends PathVisualizer<?, ?>> Map<String, Object> serialize(
       VisualizerT pathVisualizer) {
-    VisualizerType<VisualizerT> type = resolve(pathVisualizer);
+    VisualizerType<VisualizerT> type = resolveVisualizerType(pathVisualizer);
     return type.serialize(pathVisualizer);
   }
 
@@ -805,13 +811,13 @@ public abstract class SqlStorage extends CommonStorage {
             PATHFINDER_VISUALIZER.DATA
         )
         .values(
-            visualizer.getKey(), resolve(visualizer).getKey(),
+            visualizer.getKey(), resolveVisualizerType(visualizer).getKey(),
             visualizer.getNameFormat(), visualizer.getPermission(),
             visualizer.getInterval(), dataString
         )
         .onDuplicateKeyUpdate()
         .set(PATHFINDER_VISUALIZER.KEY, visualizer.getKey())
-        .set(PATHFINDER_VISUALIZER.TYPE, resolve(visualizer).getKey())
+        .set(PATHFINDER_VISUALIZER.TYPE, resolveVisualizerType(visualizer).getKey())
         .set(PATHFINDER_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
         .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
         .set(PATHFINDER_VISUALIZER.INTERVAL, visualizer.getInterval())

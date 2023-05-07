@@ -21,8 +21,6 @@ import java.util.concurrent.CompletableFuture;
 
 public class NodeHandler {
 
-  public static final NamespacedKey GROUP_GLOBAL = NamespacedKey.fromString("pathfinder:global");
-
   @Getter
   private static NodeHandler instance;
 
