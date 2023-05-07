@@ -7,7 +7,7 @@ import de.cubbossa.pathfinder.command.PathFinderCommand;
 import de.cubbossa.pathfinder.command.PathVisualizerCommand;
 import de.cubbossa.pathfinder.command.WaypointCommand;
 import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandAPIConfig;
+import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import dev.jorel.commandapi.CommandTree;
 
 import java.util.ArrayList;
@@ -31,26 +31,28 @@ public class CommandRegistry {
     externalCommands.add(command);
   }
 
-    public void unregisterCommand(CommandTree command) {
-        externalCommands.remove(command);
-    }
+  public void unregisterCommand(CommandTree command) {
+    externalCommands.remove(command);
+  }
 
-    public void loadCommands() {
-        CommandAPI.onLoad(new CommandAPIConfig());
-    }
+  public void loadCommands() {
+    CommandAPI.onLoad(new CommandAPIBukkitConfig(PathFinderPlugin.getInstance())
+        .shouldHookPaperReload(true)
+        .missingExecutorImplementationMessage("Wrong command usage, use /help."));
+  }
 
-    public void enableCommands(CommonPathFinder plugin) {
-        CommandAPI.onEnable(PathFinderPlugin.getInstance());
-        pathFinderCommand = new PathFinderCommand(pathFinder);
-        pathFinderCommand.register();
-        nodeGroupCommand = new NodeGroupCommand(pathFinder);
-        nodeGroupCommand.register();
-        pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
-        pathVisualizerCommand.register();
-        NodeType<?> type = plugin.getNodeTypeRegistry().getType(CommonPathFinder.pathfinder("waypoint"));
-        waypointCommand = new WaypointCommand(pathFinder, () -> type);
-        waypointCommand.register();
-        externalCommands.forEach(CommandTree::register);
+  public void enableCommands(CommonPathFinder plugin) {
+    CommandAPI.onEnable();
+    pathFinderCommand = new PathFinderCommand(pathFinder);
+    pathFinderCommand.register();
+    nodeGroupCommand = new NodeGroupCommand(pathFinder);
+    nodeGroupCommand.register();
+    pathVisualizerCommand = new PathVisualizerCommand(pathFinder);
+    pathVisualizerCommand.register();
+    NodeType<?> type = plugin.getNodeTypeRegistry().getType(CommonPathFinder.pathfinder("waypoint"));
+    waypointCommand = new WaypointCommand(pathFinder, () -> type);
+    waypointCommand.register();
+    externalCommands.forEach(CommandTree::register);
   }
 
   public void unregisterCommands() {

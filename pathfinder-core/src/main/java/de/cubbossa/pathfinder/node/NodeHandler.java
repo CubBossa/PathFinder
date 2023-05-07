@@ -13,14 +13,11 @@ import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.nodegroup.NoImplNodeGroupEditor;
 import de.cubbossa.pathfinder.util.LocationWeightSolver;
 import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
 import lombok.Getter;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class NodeHandler {
 
@@ -31,19 +28,19 @@ public class NodeHandler {
 
   private final PathFinder pathFinder;
 
-    private final NodeGroupEditorFactory editModeFactory;
-    @Getter
-    private final Map<NamespacedKey, NodeGroupEditor> editors;
+  private final NodeGroupEditorFactory editModeFactory;
+  @Getter
+  private final Map<NamespacedKey, NodeGroupEditor> editors;
 
   public NodeHandler(PathFinder pathFinder) {
     instance = this;
     this.pathFinder = pathFinder;
 
-      editors = new HashMap<>();
+    editors = new HashMap<>();
 
-      ServiceLoader<NodeGroupEditorFactory> loader = ServiceLoader.load(NodeGroupEditorFactory.class,
-              PathFinderProvider.get().getClass().getClassLoader());
-      NodeGroupEditorFactory factory = loader.findFirst().orElse(null);
+    ServiceLoader<NodeGroupEditorFactory> loader = ServiceLoader.load(NodeGroupEditorFactory.class,
+        PathFinderProvider.get().getClass().getClassLoader());
+    NodeGroupEditorFactory factory = loader.findFirst().orElse(null);
     editModeFactory = Objects.requireNonNullElseGet(factory,
         () -> g -> new NoImplNodeGroupEditor(g.getKey()));
   }
@@ -65,10 +62,10 @@ public class NodeHandler {
 
       if (player != null) {
         graph.addNode(player);
-          LocationWeightSolver<Node> solver =
-                  LocationWeightSolverPreset.fromConfig(PathFinderProvider.get()
-                          .getConfiguration().getNavigation().getNearestLocationSolver());
-          Map<Node, Double> weighted = solver.solve(player, graph);
+        LocationWeightSolver<Node> solver =
+            LocationWeightSolverPreset.fromConfig(PathFinderProvider.get()
+                .getConfiguration().getNavigation().getNearestLocationSolver());
+        Map<Node, Double> weighted = solver.solve(player, graph);
 
         weighted.forEach((node, weight) -> graph.connect(player, node, weight));
       }
@@ -80,8 +77,8 @@ public class NodeHandler {
 
   public @Nullable NamespacedKey getEdited(PathPlayer<?> player) {
     return editors.values().stream()
-            .filter(e -> e.isEditing(player))
-            .map(NodeGroupEditor::getGroupKey)
+        .filter(e -> e.isEditing(player))
+        .map(NodeGroupEditor::getGroupKey)
         .findFirst().orElse(null);
   }
 
@@ -96,12 +93,12 @@ public class NodeHandler {
     NodeGroupEditor<PlayerT> editor = editors.get(key);
     if (editor == null) {
       pathFinder.getStorage().loadGroup(key).thenAccept(g -> {
-          NodeGroupEditor e = editModeFactory.apply(
-                  g.orElseThrow(() -> new IllegalArgumentException(
-                          "No group exists with key '" + key + "'. Cannot create editor."))
-          );
-          editors.put(key, e);
-          future.complete(e);
+        NodeGroupEditor e = editModeFactory.apply(
+            g.orElseThrow(() -> new IllegalArgumentException(
+                "No group exists with key '" + key + "'. Cannot create editor."))
+        );
+        editors.put(key, e);
+        future.complete(e);
       });
     } else {
       future.complete(editor);

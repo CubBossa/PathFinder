@@ -32,7 +32,7 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
 
   @Override
   public Message getInfoMessage(PlaceholderVisualizer element) {
-    return Messages.CMD_VIS_PAPI_INFO.format(TagResolver.builder()
+    return Messages.CMD_VIS_PAPI_INFO.formatted(TagResolver.builder()
         .resolver(Placeholder.parsed("format-north", element.getNorth()))
         .resolver(Placeholder.parsed("format-northeast", element.getNorthEast()))
         .resolver(Placeholder.parsed("format-east", element.getEast()))

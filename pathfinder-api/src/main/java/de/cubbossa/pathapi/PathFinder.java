@@ -5,11 +5,11 @@ import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import net.kyori.adventure.platform.AudienceProvider;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
 import java.util.logging.Logger;
-
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * The main handler of the PathFinder application.
@@ -73,13 +73,15 @@ public interface PathFinder {
 
     void runSynchronized(Runnable runnable);
 
-    PathFinderConfig getConfiguration();
+  PathFinderConfig getConfiguration();
 
-    String getVersion();
+  String getVersion();
 
-    File getDataFolder();
+  File getDataFolder();
 
-    ClassLoader getClassLoader();
+  ClassLoader getClassLoader();
 
-    MiniMessage getMiniMessage();
+  MiniMessage getMiniMessage();
+
+  AudienceProvider getAudiences();
 }

@@ -11,6 +11,7 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.WaypointType;
@@ -22,15 +23,16 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
+import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
+import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.junit.jupiter.api.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -49,6 +51,7 @@ public abstract class StorageTest {
   protected VisualizerTypeRegistry visualizerTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
+  protected AbstractVisualizerType<ParticleVisualizer> visualizerType;
 
   @BeforeAll
   static void beforeAll() {
@@ -90,6 +93,12 @@ public abstract class StorageTest {
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
 
+    visualizerType = new ParticleVisualizerType(CommonPathFinder.pathfinder("particle"));
+    if (implementation instanceof InternalVisualizerDataStorage visualizerDataStorage) {
+      visualizerType.setStorage(new InternalVisualizerStorage<>(visualizerType, visualizerDataStorage));
+    }
+    visualizerTypeRegistry.registerVisualizerType(visualizerType);
+
     storage.init();
   }
 
@@ -113,8 +122,7 @@ public abstract class StorageTest {
   }
 
   protected Waypoint makeWaypoint() {
-    return assertResult(
-        () -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
+    return assertResult(() -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
   }
 
   protected void deleteWaypoint(Waypoint waypoint) {
@@ -174,6 +182,10 @@ public abstract class StorageTest {
         () -> storage.loadGroup(key).join().orElseThrow());
   }
 
+  protected ParticleVisualizer makeVisualizer(NamespacedKey key) {
+    return assertResult(() -> storage.createAndLoadVisualizer(visualizerType, key));
+  }
+
   @Test
   @Order(1)
   void createNode() {
@@ -194,8 +206,8 @@ public abstract class StorageTest {
   @Test
   @Order(3)
   <N extends Node> void getNodeType() {
-      Waypoint waypoint = makeWaypoint();
-      NodeType<N> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
+    Waypoint waypoint = makeWaypoint();
+    NodeType<N> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
     assertEquals(waypointNodeType, type);
   }
 
@@ -212,6 +224,30 @@ public abstract class StorageTest {
 
   @Test
   @Order(6)
+  void testLoadNodesByModifier() {
+    NamespacedKey gk = CommonPathFinder.pathfinder("testxy");
+    Waypoint a = makeWaypoint();
+    Waypoint b = makeWaypoint();
+    NodeGroup g = makeGroup(gk);
+    Modifier m = new PermissionModifier("abc");
+    assertFuture(() -> storage.modifyGroup(gk, group -> {
+      group.add(a.getNodeId());
+      group.addModifier(m);
+    }));
+    NodeGroup after = assertGroupExists(gk);
+    assertTrue(after.hasModifier(PermissionModifier.class));
+    assertTrue(after.contains(a.getNodeId()));
+
+    Map<Node, PermissionModifier> nodes = assertResult(() -> storage.loadNodes(PermissionModifier.class));
+    assertEquals(1, nodes.size());
+    assertTrue(nodes.containsKey(a));
+    assertFalse(nodes.containsKey(b));
+    assertNotNull(nodes.get(a));
+    assertEquals(m, nodes.get(a));
+  }
+
+  @Test
+  @Order(6)
   void testConnectNodes() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
@@ -224,17 +260,17 @@ public abstract class StorageTest {
   @Test
   @Order(7)
   void disconnectNodes() {
-      Waypoint a = makeWaypoint();
-      Waypoint b = makeWaypoint();
-      assertNoEdge(a.getNodeId(), b.getNodeId());
+    Waypoint a = makeWaypoint();
+    Waypoint b = makeWaypoint();
+    assertNoEdge(a.getNodeId(), b.getNodeId());
 
-      Edge edge = makeEdge(a, b);
-      assertEdge(a.getNodeId(), b.getNodeId());
+    Edge edge = makeEdge(a, b);
+    assertEdge(a.getNodeId(), b.getNodeId());
 
-      assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
-          node.disconnect(edge.getEnd());
-      }));
-      assertNoEdge(a.getNodeId(), b.getNodeId());
+    assertFuture(() -> storage.modifyNode(edge.getStart(), node -> {
+      node.disconnect(edge.getEnd());
+    }));
+    assertNoEdge(a.getNodeId(), b.getNodeId());
   }
 
   @Test
@@ -387,7 +423,8 @@ public abstract class StorageTest {
 
   @Test
   void createVisualizer() {
-
+    NamespacedKey key = CommonPathFinder.pathfinder("abc");
+    ParticleVisualizer visualizer = makeVisualizer(key);
   }
 
   @Test

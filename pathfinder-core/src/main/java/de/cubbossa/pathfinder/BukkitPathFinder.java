@@ -5,16 +5,15 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.PlayerListener;
-
-import java.io.File;
-import java.util.logging.Logger;
-
 import lombok.Getter;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.util.logging.Logger;
 
 public class BukkitPathFinder extends CommonPathFinder {
 
@@ -39,11 +38,13 @@ public class BukkitPathFinder extends CommonPathFinder {
 
   @Override
   public void onLoad() {
+    super.onLoad();
     bstatsLoader = new BStatsLoader(this);
   }
 
   @Override
   public void onEnable() {
+    super.onEnable();
     bstatsLoader.registerStatistics(javaPlugin);
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
@@ -51,6 +52,7 @@ public class BukkitPathFinder extends CommonPathFinder {
 
   @Override
   public void onDisable() {
+    super.onDisable();
   }
 
   @Override

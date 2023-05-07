@@ -22,6 +22,7 @@ java {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://repo.codemc.org/repository/maven-public/")
@@ -40,7 +41,6 @@ dependencies {
     // Configuration
     api("de.cubbossa:NBO-Core:1.0")
     api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")
-    runtimeOnly("org.snakeyaml:snakeyaml-engine:2.4")
 
     // Commands
     api("dev.jorel:commandapi-bukkit-shade:9.0.0")
@@ -81,7 +81,7 @@ dependencies {
     testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 
     // UI
-    api("de.cubbossa:Translations:1.1")
+    api("de.cubbossa:Translations:2.2")
 
     // Utility
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
@@ -96,7 +96,7 @@ bukkit {
     author = "CubBossa"
     authors = listOf("LooFifteen")
 
-    main = "de.cubbossa.pathfinder.PathPlugin"
+    main = "de.cubbossa.pathfinder.PathFinderPlugin"
 
     val versionSplit = minecraftVersion.split(".")
     apiVersion = minecraftVersion[0] + "." + 13.coerceAtLeast(versionSplit[1].toInt())
@@ -206,7 +206,7 @@ tasks {
             include(dependency("de.cubbossa:SerializedEffects:.*"))
             include(dependency("org.bstats:.*"))
             include(dependency("xyz.xenondevs:particle:.*"))
-            include(dependency("de.cubbossa:commandapi-shade:.*"))
+            include(dependency("dev.jorel:commandapi-bukkit-shade:.*"))
             include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
             include(dependency("org.ow2.asm:asm:.*"))
             include(dependency("org.ow2.asm:asm-util:.*"))

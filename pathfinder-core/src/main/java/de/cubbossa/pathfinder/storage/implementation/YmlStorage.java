@@ -19,8 +19,8 @@ import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.DataStorageException;
-import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import de.cubbossa.pathfinder.util.CollectionUtils;
+import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class YmlStorage extends CommonStorage implements WaypointDataStorage {
+public class YmlStorage extends CommonStorage {
 
   private static final String FILE_NODE_TYPES = "node_types.yml";
   private static final String FILE_VIS_TYPES = "visualizer_types.yml";
@@ -445,7 +445,7 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     });
   }
 
-  private <VisualizerT extends PathVisualizer<?, ?>> void writeVisualizer(VisualizerT visualizer) {
+  private <VisualizerT extends PathVisualizer<?, ?>> void writeInternalVisualizer(VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
       VisualizerType<VisualizerT> type = visualizerTypeRegistry.getType(visualizer).orElseThrow();
       cfg.set("type", type.getKey().toString());
@@ -454,9 +454,9 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     });
   }
 
-  private <T extends PathVisualizer<?, ?>> T readVisualizer(VisualizerType<T> type,
-                                                            NamespacedKey key,
-                                                            ConfigurationSection cfg) {
+  private <T extends PathVisualizer<?, ?>> T readInternalVisualizer(VisualizerType<T> type,
+                                                                    NamespacedKey key,
+                                                                    ConfigurationSection cfg) {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
@@ -467,16 +467,19 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
-                                                                    NamespacedKey key) {
-    T visualizer = type.create(key, ""); //TODO
-    writeVisualizer(visualizer);
+  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
+    VisualizerT visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
+    writeInternalVisualizer(visualizer);
     return visualizer;
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadVisualizers(
-      VisualizerType<T> type) {
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
+    return workOnFileIfExists(fileVisualizer(key), cfg -> readInternalVisualizer(type, key, cfg));
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(VisualizerType<VisualizerT> type) {
     Collection<NamespacedKey> keys = new HashSet<>();
     workOnFile(fileVisualizerTypes(), cfg -> {
       String typeString = type.getKey().toString();
@@ -489,24 +492,18 @@ public class YmlStorage extends CommonStorage implements WaypointDataStorage {
     return keys.stream()
         .map(this::fileVisualizer)
         .map(file -> workOnFile(file, cfg -> {
-          return readVisualizer(type, fromFileName(file.getName()), cfg);
+          return readInternalVisualizer(type, fromFileName(file.getName()), cfg);
         }))
         .collect(Collectors.toMap(Keyed::getKey, Function.identity()));
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
-                                                                     NamespacedKey key) {
-    return workOnFileIfExists(fileVisualizer(key), cfg -> readVisualizer(type, key, cfg));
+  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerT visualizer) {
+    writeInternalVisualizer(visualizer);
   }
 
   @Override
-  public void saveVisualizer(PathVisualizer<?, ?> visualizer) {
-    writeVisualizer(visualizer);
-  }
-
-  @Override
-  public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
+  public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
     File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
     file.deleteOnExit();
   }

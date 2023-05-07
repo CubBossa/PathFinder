@@ -7,17 +7,14 @@ import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathapi.visualizer.query.SearchTermHolder;
 import de.cubbossa.pathfinder.navigationquery.FindQueryException;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.*;
+import java.util.function.BiFunction;
 
 class FindQueryParserTest {
 
@@ -179,6 +176,21 @@ class FindQueryParserTest {
   public static class SimpleSearchTermHolder implements SearchTermHolder {
 
     private final HashSet<SearchTerm> searchTerms;
+
+    @Override
+    public void addSearchTerms(Collection<SearchTerm> searchTerms) {
+      this.searchTerms.addAll(searchTerms);
+    }
+
+    @Override
+    public void removeSearchTerms(Collection<SearchTerm> searchTerms) {
+      this.searchTerms.removeAll(searchTerms);
+    }
+
+    @Override
+    public void clearSearchTerms() {
+      this.searchTerms.clear();
+    }
 
     @Override
     public boolean matches(SearchTerm searchTerm) {

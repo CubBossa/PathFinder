@@ -22,6 +22,7 @@ import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -49,12 +50,12 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_
 
 public abstract class SqlStorage extends CommonStorage {
 
-    private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper;
-    private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
-            record -> {
-                UUID startId = record.getStartId();
-                UUID endId = record.getEndId();
-                double weight = record.getWeight();
+  private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper;
+  private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
+      record -> {
+        UUID startId = record.getStartId();
+        UUID endId = record.getEndId();
+        double weight = record.getWeight();
 
         return new SimpleEdge(startId, endId, (float) weight);
       };
@@ -129,6 +130,7 @@ public abstract class SqlStorage extends CommonStorage {
             .withRenderSchema(dialect != SQLDialect.SQLITE));
 
     createPathVisualizerTable();
+    createPathVisualizerTypeTable();
     createNodeTable();
     createNodeGroupTable();
     createNodeGroupNodesTable();
@@ -139,74 +141,83 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   private void createNodeTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_WAYPOINTS)
-              .columns(PATHFINDER_WAYPOINTS.fields())
-              .primaryKey(PATHFINDER_WAYPOINTS.ID)
+    create
+        .createTableIfNotExists(PATHFINDER_WAYPOINTS)
+        .columns(PATHFINDER_WAYPOINTS.fields())
+        .primaryKey(PATHFINDER_WAYPOINTS.ID)
         .execute();
     debug("Table created: 'pathfinder_waypoints'");
   }
 
   private void createEdgeTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_EDGES)
-              .columns(PATHFINDER_EDGES.fields())
-              .primaryKey(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID)
+    create
+        .createTableIfNotExists(PATHFINDER_EDGES)
+        .columns(PATHFINDER_EDGES.fields())
+        .primaryKey(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID)
         .execute();
     debug("Table created: 'pathfinder_edges'");
   }
 
   private void createNodeGroupTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_NODEGROUPS)
-              .columns(PATHFINDER_NODEGROUPS.fields())
-              .primaryKey(PATHFINDER_NODEGROUPS.KEY)
+    create
+        .createTableIfNotExists(PATHFINDER_NODEGROUPS)
+        .columns(PATHFINDER_NODEGROUPS.fields())
+        .primaryKey(PATHFINDER_NODEGROUPS.KEY)
         .execute();
     debug("Table created: 'pathfinder_nodegroups'");
   }
 
   private void createNodeGroupNodesTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
-              .columns(PATHFINDER_NODEGROUP_NODES.fields())
-              .primaryKey(PATHFINDER_NODEGROUP_NODES.fields())
+    create
+        .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
+        .columns(PATHFINDER_NODEGROUP_NODES.fields())
+        .primaryKey(PATHFINDER_NODEGROUP_NODES.fields())
         .execute();
     debug("Table created: 'pathfinder_nodegroup_nodes'");
   }
 
   private void createPathVisualizerTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_VISUALIZER)
-              .columns(PATHFINDER_VISUALIZER.fields())
-              .primaryKey(PATHFINDER_VISUALIZER.KEY)
+    create
+        .createTableIfNotExists(PATHFINDER_VISUALIZER)
+        .columns(PATHFINDER_VISUALIZER.fields())
+        .primaryKey(PATHFINDER_VISUALIZER.KEY)
         .execute();
     debug("Table created: 'pathfinder_path_visualizer'");
   }
 
+  private void createPathVisualizerTypeTable() {
+    create
+        .createTableIfNotExists(PATHFINDER_VISUALIZER_TYPE_RELATION)
+        .columns(PATHFINDER_VISUALIZER_TYPE_RELATION.fields())
+        .primaryKey(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY, PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
+        .execute();
+    debug("Table created: 'pathfinder_visualizer_type_relation'");
+  }
+
   private void createDiscoverInfoTable() {
-      create
-              .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
-              .columns(PATHFINDER_DISCOVERINGS.fields())
-              .primaryKey(PATHFINDER_DISCOVERINGS.PLAYER_ID, PATHFINDER_DISCOVERINGS.DISCOVER_KEY)
+    create
+        .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
+        .columns(PATHFINDER_DISCOVERINGS.fields())
+        .primaryKey(PATHFINDER_DISCOVERINGS.PLAYER_ID, PATHFINDER_DISCOVERINGS.DISCOVER_KEY)
         .execute();
     debug("Table created: 'pathfinder_discoverings'");
   }
 
 
   private void createNodeTypeRelation() {
-      create
-              .createTableIfNotExists(PATHFINDER_NODE_TYPE_RELATION)
-              .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
-              .primaryKey(PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
+    create
+        .createTableIfNotExists(PATHFINDER_NODE_TYPE_RELATION)
+        .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
+        .primaryKey(PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
         .execute();
     debug("Table created: 'pathfinder_node_type_relation'");
   }
 
   private void createModifierGroupRelation() {
-      create
-              .createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
-              .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
-              .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS)
+    create
+        .createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
+        .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
+        .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS)
         .execute();
     debug("Table created: 'pathfinder_group_modifier_relation'");
   }
@@ -221,45 +232,45 @@ public abstract class SqlStorage extends CommonStorage {
     return resultSet.stream().findFirst();
   }
 
-    @Override
-    public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
-        Map<UUID, NodeType<?>> result = new HashMap<>();
-        create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
-                .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
-                .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
-        debug(" > Storage Implementation: 'loadNodeTypes(Collection<UUID>): Map<UUID, NodeType<N>>'");
-        return result;
-    }
+  @Override
+  public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
+    Map<UUID, NodeType<?>> result = new HashMap<>();
+    create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
+        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
+        .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
+    debug(" > Storage Implementation: 'loadNodeTypes(Collection<UUID>): Map<UUID, NodeType<N>>'");
+    return result;
+  }
 
-    @Override
-    public void saveNodeType(UUID node, NodeType<?> type) {
-        debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
-        create
-                .insertInto(PATHFINDER_NODE_TYPE_RELATION)
-                .values(node, type.getKey())
-                .execute();
-    }
+  @Override
+  public void saveNodeType(UUID node, NodeType<?> type) {
+    debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
+    create
+        .insertInto(PATHFINDER_NODE_TYPE_RELATION)
+        .values(node, type.getKey())
+        .execute();
+  }
 
-    @Override
-    public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
-        debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
-                .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
-                .collect(Collectors.joining(", ")) + ")'");
-        create.batched(configuration -> {
-            typeMapping.forEach((uuid, nodeType) -> {
-                create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
-                        .values(uuid, nodeType)
-                        .execute();
-            });
-        });
+  @Override
+  public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
+    debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
+        .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
+        .collect(Collectors.joining(", ")) + ")'");
+    create.batched(configuration -> {
+      typeMapping.forEach((uuid, nodeType) -> {
+        create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
+            .values(uuid, nodeType)
+            .execute();
+      });
+    });
   }
 
   @Override
   public void deleteNodes(Collection<Node> nodes) {
     debug(" > Storage Implementation: 'deleteNodes(" + nodes.stream()
         .map(Node::getNodeId).map(UUID::toString).collect(Collectors.joining(",")) + ")'");
-      Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-      Map<UUID, NodeType<?>> types = loadNodeTypes(ids);
+    Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
+    Map<UUID, NodeType<?>> types = loadNodeTypes(ids);
     create
         .deleteFrom(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
@@ -280,9 +291,9 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
-      create.insertInto(PATHFINDER_EDGES)
-              .values(start, end, weight)
-              .onDuplicateKeyIgnore()
+    create.insertInto(PATHFINDER_EDGES)
+        .values(start, end, weight)
+        .onDuplicateKeyIgnore()
         .execute();
     debug(" > Storage Implementation: 'createAndLoadEdge(" + start + ", " + end + ")'");
     return new SimpleEdge(start, end, (float) weight);
@@ -442,6 +453,7 @@ public abstract class SqlStorage extends CommonStorage {
         .fetch(record -> {
           SimpleNodeGroup group = new SimpleNodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
           group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT).floatValue());
+          loadModifiers(group.getKey()).forEach(group::addModifier);
           group.addAll(loadGroupNodes(group));
           return group;
         });
@@ -694,7 +706,7 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
     debug(" > Storage Implementation: 'assignNodeGroupModifier(" + group.getKey() + ")'");
-    YamlConfiguration cfg = new YamlConfiguration();
+    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(""));
     ModifierType<M> type = modifierRegistry.getType((Class<M>) modifier.getClass()).orElseThrow();
     type.serialize(modifier).forEach(cfg::set);
     create
@@ -716,14 +728,37 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> T createAndLoadVisualizer(VisualizerType<T> type,
-                                                                    NamespacedKey key) {
-    return null;
+  public <T extends PathVisualizer<?, ?>> T createAndLoadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
+    T visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
+    Map<String, Object> data = serialize(visualizer);
+    if (data == null) {
+      throw new IllegalStateException("Could not serialize internal visualizer '" + key + "', data is null.");
+    }
+    YamlConfiguration cfg = new YamlConfiguration();
+    data.forEach(cfg::set);
+    String dataString = cfg.saveToString();
+
+    create
+        .insertInto(PATHFINDER_VISUALIZER)
+        .columns(
+            PATHFINDER_VISUALIZER.KEY,
+            PATHFINDER_VISUALIZER.TYPE,
+            PATHFINDER_VISUALIZER.NAME_FORMAT,
+            PATHFINDER_VISUALIZER.PERMISSION,
+            PATHFINDER_VISUALIZER.INTERVAL,
+            PATHFINDER_VISUALIZER.DATA
+        )
+        .values(
+            visualizer.getKey(), resolve(visualizer).getKey(),
+            visualizer.getNameFormat(), visualizer.getPermission(),
+            visualizer.getInterval(), dataString
+        )
+        .execute();
+    return visualizer;
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Optional<T> loadVisualizer(VisualizerType<T> type,
-                                                                     NamespacedKey key) {
+  public <T extends PathVisualizer<?, ?>> Optional<T> loadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
     return create
         .selectFrom(PATHFINDER_VISUALIZER)
         .where(PATHFINDER_VISUALIZER.KEY.eq(key))
@@ -732,8 +767,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadVisualizers(
-      VisualizerType<T> type) {
+  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadInternalVisualizers(VisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
         .selectFrom(PATHFINDER_VISUALIZER)
@@ -751,7 +785,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void saveVisualizer(PathVisualizer<?, ?> visualizer) {
+  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerT visualizer) {
     Map<String, Object> data = serialize(visualizer);
     if (data == null) {
       return;
@@ -786,7 +820,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void deleteVisualizer(PathVisualizer<?, ?> visualizer) {
+  public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
     create
         .deleteFrom(PATHFINDER_VISUALIZER)
         .where(PATHFINDER_VISUALIZER.KEY.eq(visualizer.getKey()))
@@ -805,12 +839,17 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
       NamespacedKey key) {
-    return create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
+    Optional<NamespacedKey> typeKey = create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
         .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.eq(key))
         .fetch(PathfinderVisualizerTypeRelationRecord::getTypeKey)
-        .stream().findAny()
-        .map(nodeTypeRegistry::getType)
-        .map(t -> (VisualizerType<VisualizerT>) t);
+        .stream().findAny();
+    if (typeKey.isEmpty()) {
+      return Optional.empty();
+    }
+    return typeKey
+        .map(visualizerTypeRegistry::<VisualizerT>getType)
+        .filter(Optional::isPresent)
+        .map(Optional::get);
   }
 
   @Override

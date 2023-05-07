@@ -3,27 +3,17 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.command.ConsoleCommandSender;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.UUID;
 
-public class BukkitPathPlayer implements PathPlayer<Player> {
-
-  private final UUID uuid;
-  private @Nullable Player player;
-
-  public BukkitPathPlayer(UUID playerId) {
-    this.uuid = playerId;
-  }
+public class BukkitPathSender implements PathPlayer<ConsoleCommandSender> {
 
   @Override
   public int hashCode() {
@@ -38,18 +28,18 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    BukkitPathPlayer that = (BukkitPathPlayer) o;
-    return Objects.equals(uuid, that.uuid);
+    BukkitPathSender that = (BukkitPathSender) o;
+    return Objects.equals(getUniqueId(), that.getUniqueId());
   }
 
   @Override
   public UUID getUniqueId() {
-    return uuid;
+    return new UUID(0, 0);
   }
 
   @Override
-  public Class<Player> getPlayerClass() {
-    return Player.class;
+  public Class<ConsoleCommandSender> getPlayerClass() {
+    return ConsoleCommandSender.class;
   }
 
   @Override
@@ -59,12 +49,12 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
 
   @Override
   public Component getDisplayName() {
-    return BukkitPathFinder.getInstance().getAudiences().player(uuid).getOrDefault(Identity.DISPLAY_NAME, Component.text(unwrap().getName()));
+    return Component.text(getName());
   }
 
   @Override
   public Location getLocation() {
-    return VectorUtils.toInternal(unwrap().getLocation());
+    return new Location(0, 0, 0, null);
   }
 
   @Override
@@ -73,16 +63,13 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
   }
 
   @Override
-  public Player unwrap() {
-    if (player == null) {
-      player = Bukkit.getPlayer(uuid);
-    }
-    return player;
+  public ConsoleCommandSender unwrap() {
+    return Bukkit.getConsoleSender();
   }
 
   @Override
   public void sendMessage(ComponentLike message) {
-    Audience audience = PathFinderProvider.get().getAudiences().player(unwrap().getUniqueId());
+    Audience audience = PathFinderProvider.get().getAudiences().console();
     ComponentLike resolved = message;
     if (message instanceof Message msg) {
       resolved = msg.asComponent(audience);

@@ -2,9 +2,11 @@ package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.FindModule;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import org.bukkit.entity.Player;
 
 public class FindLocationCommand extends Command {
 
@@ -16,12 +18,12 @@ public class FindLocationCommand extends Command {
 
     then(CustomArgs.location("location")
         .executesPlayer((player, args) -> {
-            Location target = args.getUnchecked(0);
+          Location target = args.getUnchecked(0);
 
-            FindModule.getInstance().findPath(BukkitUtils.wrap(player), target)
-              .thenAccept(navigateResult -> {
-                FindModule.printResult(navigateResult, player);
-              });
+          PathPlayer<Player> p = BukkitUtils.wrap(player);
+          FindModule.getInstance().findPath(p, target).thenAccept(result -> {
+            FindModule.printResult(result, p);
+          });
         })
     );
   }

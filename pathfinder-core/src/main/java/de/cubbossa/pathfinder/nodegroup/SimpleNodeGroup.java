@@ -6,15 +6,12 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
@@ -101,5 +98,14 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
   @Override
   public int compareTo(@NotNull NodeGroup o) {
     return Double.compare(weight, o.getWeight());
+  }
+
+  @Override
+  public String toString() {
+    return "SimpleNodeGroup{"
+        + ", key=" + key
+        + ", modifiers=" + modifiers
+        + ", weight=" + weight
+        + '}';
   }
 }

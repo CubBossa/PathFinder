@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.FindModule;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class FindCommand extends Command {
 
@@ -18,14 +18,15 @@ public class FindCommand extends Command {
 
     then(CustomArgs.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
-            Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
-                NodeSelection targets = args.getUnchecked(0);
+          NodeSelection targets = args.getUnchecked(0);
+          if (targets == null) {
+            return;
+          }
 
-                FindModule.getInstance().findPath(BukkitPathFinder.wrap(player), targets)
-                        .thenAccept(navigateResult -> {
-                            FindModule.printResult(navigateResult, player);
-                        });
-            });
+          PathPlayer<Player> p = BukkitPathFinder.wrap(player);
+          FindModule.getInstance().findPath(p, targets).thenAccept(result -> {
+            FindModule.printResult(result, p);
+          });
         })
     );
   }

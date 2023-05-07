@@ -6,26 +6,23 @@ import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
+import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
-import de.cubbossa.translations.TranslationHandler;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -37,28 +34,34 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
 public class EditModeMenu {
 
   private final PathFinder pathFinder;
   private final NamespacedKey key;
-    private final Collection<NamespacedKey> multiTool = new HashSet<>();
-    private final Collection<NodeType<?>> types;
-    private UUID edgeStart = null;
+  private final Collection<NamespacedKey> multiTool = new HashSet<>();
+  private final Collection<NodeType<?>> types;
+  private UUID edgeStart = null;
   private Boolean undirectedEdges = false;
 
-    public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
-                        Collection<NodeType<?>> types) {
-        this.pathFinder = pathFinder;
-        this.key = group;
-        this.types = types;
-    }
+  public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
+                      Collection<NodeType<?>> types) {
+    this.pathFinder = pathFinder;
+    this.key = group;
+    this.types = types;
+  }
 
   public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
     BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
-        Bukkit.getScheduler().runTaskLater(PathFinderProvider.get(),
-                () -> editor.setEditMode(CommonPathFinder.wrap(c.getPlayer()), false), 1L);
+      Bukkit.getScheduler().runTaskLater(PathFinderPlugin.getInstance(),
+          () -> editor.setEditMode(BukkitUtils.wrap(c.getPlayer()), false), 1L);
     });
 
     menu.setButton(0, Button.builder()
@@ -73,7 +76,7 @@ public class EditModeMenu {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
           if (types.size() <= 1) {
-              NodeType<?> type = types.stream().findAny().orElse(null);
+            NodeType<?> type = types.stream().findAny().orElse(null);
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
@@ -138,24 +141,21 @@ public class EditModeMenu {
           // switch mode
           if (edgeStart == null) {
             undirectedEdges = !undirectedEdges;
-            TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
-                .format(TagResolver.resolver("value",
-                    Tag.inserting(Messages.formatBool(!undirectedEdges)))), player);
+            BukkitUtils.wrap(player).sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
+                .formatted(TagResolver.resolver("value",
+                    Tag.inserting(Messages.formatBool(!undirectedEdges)))));
             return;
           }
           // cancel creation
           edgeStart = null;
-          TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_CANCELLED, player);
+          BukkitUtils.wrap(player).sendMessage(Messages.E_EDGE_TOOL_CANCELLED);
           context.getMenu().refresh(context.getSlot());
 
         })
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
-          Player player = context.getPlayer();
           pathFinder.getStorage().modifyNode(context.getTarget().getStart(), node -> {
             node.disconnect(context.getTarget().getEnd());
           });
-            EffectHandler.getInstance().playEffect(PathFinderProvider.get().getEffectsFile(),
-                    "editor_edge_disconnect", player, player.getLocation());
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player player = context.getPlayer();
@@ -169,30 +169,32 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-            pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
+          pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
 
-                double dist = -1;
-                Node nearest = null;
-                Location pLoc = context.getPlayer().getLocation();
-                for (Node node : nodes) {
-                    double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
-                    if (dist == -1 || d < dist) {
-                        nearest = node;
-                        dist = d;
-                    }
-                }
-                if (nearest == null) {
-                    return;
-                }
-                Player p = context.getPlayer();
-                Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
-                        .setDirection(p.getLocation().getDirection());
-                p.teleport(newLoc);
-                p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
-            }).exceptionally(throwable -> {
-                throwable.printStackTrace();
-                return null;
+            double dist = -1;
+            Node nearest = null;
+            Location pLoc = context.getPlayer().getLocation();
+            for (Node node : nodes) {
+              double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
+              if (dist == -1 || d < dist) {
+                nearest = node;
+                dist = d;
+              }
+            }
+            if (nearest == null) {
+              return;
+            }
+            Player p = context.getPlayer();
+            Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
+                .setDirection(p.getLocation().getDirection());
+            PathFinderProvider.get().runSynchronized(() -> {
+              p.teleport(newLoc);
+              p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
             });
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+          });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
     menu.setButton(3, Button.builder()
@@ -253,7 +255,7 @@ public class EditModeMenu {
 
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
+      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
       for (NodeGroup group : nodeGroups) {
@@ -267,8 +269,8 @@ public class EditModeMenu {
               ItemStack stack = new LocalizedItem.Builder(new ItemStack(
                   group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
                       : Material.FURNACE_MINECART))
-                  .withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
-                  .withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
+                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
+                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
                   .createItem(player);
               if (group.contains(groupable.getNodeId())) {
                 stack = ItemStackUtils.setGlow(stack);
@@ -320,7 +322,7 @@ public class EditModeMenu {
   private void openMultiToolMenu(Player player) {
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
+      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
       for (NodeGroup group : nodeGroups) {
@@ -334,8 +336,8 @@ public class EditModeMenu {
               ItemStack stack = new LocalizedItem.Builder(new ItemStack(
                   group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
                       : Material.FURNACE_MINECART))
-                  .withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
-                  .withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
+                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
+                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
                   .createItem(player);
               if (multiTool.contains(group.getKey())) {
                 stack = ItemStackUtils.setGlow(stack);
@@ -345,23 +347,23 @@ public class EditModeMenu {
             .withClickHandler(Action.LEFT, c -> {
               if (!multiTool.contains(group.getKey())) {
 
-                  Bukkit.getScheduler().runTask(PathFinderProvider.get(), () -> {
-                      multiTool.add(group.getKey());
-                      c.getPlayer()
-                              .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                      menu.refresh(menu.getListSlots());
-                  });
+                Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+                  multiTool.add(group.getKey());
+                  c.getPlayer()
+                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                  menu.refresh(menu.getListSlots());
+                });
               }
             })
             .withClickHandler(Action.RIGHT, c -> {
               if (multiTool.contains(group.getKey())) {
 
-                  Bukkit.getScheduler().runTask(PathFinderProvider.get(), () -> {
-                      multiTool.remove(group.getKey());
-                      c.getPlayer()
-                              .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                      menu.refresh(menu.getListSlots());
-                  });
+                Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+                  multiTool.remove(group.getKey());
+                  c.getPlayer()
+                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+                  menu.refresh(menu.getListSlots());
+                });
               }
             }));
       }

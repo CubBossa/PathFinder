@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.misc.Named;
-import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 
@@ -19,6 +19,6 @@ public class DiscoverableModifier implements Modifier, Named {
   @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
-    this.displayName = TranslationHandler.getInstance().getMiniMessage().deserialize(nameFormat);
+    this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
   }
 }

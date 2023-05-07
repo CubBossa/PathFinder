@@ -8,6 +8,7 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.CacheLayer;
@@ -307,7 +308,9 @@ public class StorageImpl implements Storage {
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerType<VisualizerT>> loadVisualizerType(
       NamespacedKey key) {
     return asyncFuture(() -> {
-      return cache.getVisualizerTypeCache().getType(key, implementation::loadVisualizerType);
+      return (VisualizerType<VisualizerT>) cache.getVisualizerTypeCache().getType(key, implementation::loadVisualizerType).orElseThrow(() -> {
+        return new IllegalStateException("Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
+      });
     });
   }
 
@@ -334,8 +337,8 @@ public class StorageImpl implements Storage {
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     return asyncFuture(() -> {
+      saveVisualizerType(key, type).join();
       VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(key);
-      saveVisualizerType(key, type);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });
@@ -398,6 +401,28 @@ public class StorageImpl implements Storage {
     if (logger != null) {
       logger.log(Level.INFO, message);
     }
+  }
+
+  public <M extends Modifier> CompletableFuture<Map<Node, M>> loadNodes(Class<M> modifier) {
+    return loadNodes().thenApply(nodes -> {
+      Map<Node, TreeMap<Float, M>> results = new HashMap<>();
+      nodes.stream()
+          .filter(node -> node instanceof Groupable)
+          .map(node -> (Groupable) node)
+          .forEach(groupable -> {
+            for (NodeGroup group : groupable.getGroups()) {
+              if (group.hasModifier(modifier)) {
+                results.computeIfAbsent(groupable, g -> new TreeMap<>())
+                    .put(group.getWeight(), group.getModifier(modifier));
+              }
+            }
+          });
+      Map<Node, M> result = new HashMap<>();
+      for (Map.Entry<Node, TreeMap<Float, M>> e : results.entrySet()) {
+        result.put(e.getKey(), e.getValue().lastEntry().getValue());
+      }
+      return result;
+    });
   }
 
   public record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {

@@ -8,26 +8,16 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.cache.DiscoverInfoCache;
-import de.cubbossa.pathapi.storage.cache.GroupCache;
-import de.cubbossa.pathapi.storage.cache.NodeCache;
-import de.cubbossa.pathapi.storage.cache.NodeTypeCache;
-import de.cubbossa.pathapi.storage.cache.StorageCache;
-import de.cubbossa.pathapi.storage.cache.VisualizerCache;
-import de.cubbossa.pathapi.storage.cache.VisualizerTypeCache;
+import de.cubbossa.pathapi.storage.cache.*;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class CacheLayerImpl implements CacheLayer {
@@ -269,10 +259,9 @@ public class CacheLayerImpl implements CacheLayer {
       }
 
       @Override
-      public <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getType(
-          NamespacedKey key,
-          Function<NamespacedKey, Optional<VisualizerType<VisualizerT>>> loader) {
-        return loader.apply(key).orElseThrow();
+      public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
+          NamespacedKey key, Function<NamespacedKey, Optional<VisualizerType<VisualizerT>>> loader) {
+        return loader.apply(key);
       }
 
       @Override

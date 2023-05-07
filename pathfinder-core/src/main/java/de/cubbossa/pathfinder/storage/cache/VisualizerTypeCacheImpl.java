@@ -4,11 +4,8 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.cache.VisualizerTypeCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,17 +44,15 @@ public class VisualizerTypeCacheImpl implements VisualizerTypeCache {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getType(
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
       NamespacedKey key, Function<NamespacedKey, Optional<VisualizerType<VisualizerT>>> loader) {
     VisualizerType<VisualizerT> type = (VisualizerType<VisualizerT>) types.get(key);
-    if (type == null) {
-      type = loader.apply(key).orElseThrow(() ->
-          new IllegalStateException(
-              "Could not find visualizer-type-mapping for visualizer '" + key + "'.")
-      );
-      types.put(key, type);
+    if (type != null) {
+      return Optional.of(type);
     }
-    return type;
+    Optional<VisualizerType<VisualizerT>> opt = loader.apply(key);
+    opt.ifPresent(visualizerType -> types.put(key, visualizerType));
+    return opt;
   }
 
   @Override

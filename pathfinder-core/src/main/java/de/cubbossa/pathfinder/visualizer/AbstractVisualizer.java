@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -31,8 +31,8 @@ public abstract class AbstractVisualizer<DataT, PlayerT>
   }
 
   public void setNameFormat(String nameFormat) {
-      this.nameFormat = nameFormat;
-      this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
+    this.nameFormat = nameFormat;
+    this.displayName = StringUtils.deserialize(nameFormat);
   }
 
   public interface Property<VisualizerT extends PathVisualizer<?, ?>, TypeT> {

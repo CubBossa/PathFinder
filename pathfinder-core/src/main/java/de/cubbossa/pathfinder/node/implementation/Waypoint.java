@@ -7,14 +7,10 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.node.SimpleEdge;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.*;
 
 @Getter
 @Setter
@@ -41,8 +37,7 @@ public class Waypoint implements Node, Groupable {
     if (!(o instanceof Waypoint waypoint)) {
       return false;
     }
-
-    return nodeId == waypoint.nodeId;
+    return nodeId.equals(waypoint.nodeId);
   }
 
   @Override

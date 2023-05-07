@@ -1,9 +1,8 @@
-package de.cubbossa.pathfinder.modifier;
+package de.cubbossa.pathfinder.nodegroup.modifier;
 
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 

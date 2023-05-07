@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
 import dev.jorel.commandapi.CommandTree;
 
 public class Command extends CommandTree {
@@ -15,14 +14,14 @@ public class Command extends CommandTree {
 
   public Command withGeneratedHelp() {
     executes((sender, args) -> {
-      CommandUtils.sendHelp(sender, this);
+      //CommandUtils.sendHelp(sender, this);
     });
     return this;
   }
 
   public Command withGeneratedHelp(int depth) {
     executes((sender, args) -> {
-      CommandUtils.sendHelp(sender, this, depth);
+      //CommandUtils.sendHelp(sender, this, depth);
     });
     return this;
   }

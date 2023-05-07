@@ -121,18 +121,15 @@ public interface StorageImplementation {
 
   Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key);
 
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadVisualizer(
-      VisualizerType<VisualizerT> type,
-      NamespacedKey key);
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadVisualizer(VisualizerType<VisualizerT> type,
+                                                                                 NamespacedKey key);
 
   <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadVisualizers(
       VisualizerType<VisualizerT> type);
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadVisualizer(
-      VisualizerType<VisualizerT> type,
-      NamespacedKey key);
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadVisualizer(NamespacedKey key);
 
-  void saveVisualizer(PathVisualizer<?, ?> visualizer);
+  <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizer(VisualizerT visualizer);
 
-  void deleteVisualizer(PathVisualizer<?, ?> visualizer);
+  <VisualizerT extends PathVisualizer<?, ?>> void deleteVisualizer(VisualizerT visualizer);
 }

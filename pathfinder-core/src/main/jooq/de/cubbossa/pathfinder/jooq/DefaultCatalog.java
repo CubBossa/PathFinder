@@ -4,12 +4,12 @@
 package de.cubbossa.pathfinder.jooq;
 
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.jooq.Constants;
 import org.jooq.Schema;
 import org.jooq.impl.CatalogImpl;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -40,7 +40,7 @@ public class DefaultCatalog extends CatalogImpl {
     @Override
     public final List<Schema> getSchemas() {
         return Arrays.asList(
-                DefaultSchema.DEFAULT_SCHEMA
+            DefaultSchema.DEFAULT_SCHEMA
         );
     }
 

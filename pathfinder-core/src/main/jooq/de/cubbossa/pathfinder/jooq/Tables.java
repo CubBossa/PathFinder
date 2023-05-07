@@ -4,17 +4,7 @@
 package de.cubbossa.pathfinder.jooq;
 
 
-import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderVisualizer;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderVisualizerTypeRelation;
-import de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints;
-import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
+import de.cubbossa.pathfinder.jooq.tables.*;
 
 
 /**

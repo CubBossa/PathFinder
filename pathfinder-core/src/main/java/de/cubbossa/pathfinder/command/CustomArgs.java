@@ -10,8 +10,10 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -19,7 +21,7 @@ import de.cubbossa.pathfinder.module.FindModule;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
-import de.cubbossa.pathfinder.storage.StorageAssistant;
+import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import de.cubbossa.pathfinder.util.VectorUtils;
@@ -50,9 +52,9 @@ import static de.cubbossa.pathfinder.command.CommandArgument.arg;
 @UtilityClass
 public class CustomArgs {
 
-    private static final Collection<String> TAGS =
-            Lists.newArrayList("<rainbow>", "<gradient>", "<click>", "<hover>",
-                    "<rainbow:", "<gradient:", "<click:", "<hover:");
+  private static final Collection<String> TAGS =
+      Lists.newArrayList("<rainbow>", "<gradient>", "<click>", "<hover>",
+          "<rainbow:", "<gradient:", "<click:", "<hover:");
   private static final Pattern MINI_FINISH = Pattern.compile(".*(</?[^<>]*)");
   private static final Pattern MINI_CLOSE = Pattern.compile(".*<([^/<>:]+)(:[^/<>]+)?>[^/<>]*");
   private static final List<Character> LIST_SYMBOLS = Lists.newArrayList('!', '&', '|', ')', '(');
@@ -68,6 +70,12 @@ public class CustomArgs {
 
   public CommandArgument<Player, PlayerArgument> player(String node) {
     return new CommandArgument<>(new PlayerArgument(node));
+  }
+
+  public CommandArgument<PathPlayer<Player>, CustomArgument<PathPlayer<Player>, Player>> pathPlayer(String node) {
+    return new CommandArgument<>(new CustomArgument<>(new PlayerArgument(node), info -> {
+      return BukkitUtils.wrap(info.currentInput());
+    }));
   }
 
   public CommandArgument<de.cubbossa.pathapi.misc.Location, CustomArgument<de.cubbossa.pathapi.misc.Location, Location>> location(
@@ -198,8 +206,8 @@ public class CustomArgs {
   public Argument<? extends PathVisualizer<?, ?>> pathVisualizerArgument(String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
       Optional<?> vis =
-              PathFinderProvider.get().getStorage()
-                      .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput()))
+          PathFinderProvider.get().getStorage()
+              .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput()))
               .join();
       if (vis.isEmpty()) {
         throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
@@ -225,8 +233,8 @@ public class CustomArgs {
   public <T extends PathVisualizer<?, ?>> Argument<T> pathVisualizerArgument(String nodeName,
                                                                              VisualizerType<T> type) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-        Optional<T> vis = (Optional<T>) PathFinderProvider.get().getStorage()
-                .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput())).join();
+      Optional<T> vis = (Optional<T>) PathFinderProvider.get().getStorage()
+          .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput())).join();
       if (vis.isEmpty()) {
         throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
       }
@@ -245,7 +253,7 @@ public class CustomArgs {
    *
    * @return the argument suggestions object to insert
    */
-  public ArgumentSuggestions suggestNamespacedKeys(
+  public ArgumentSuggestions<CommandSender> suggestNamespacedKeys(
       Function<CommandSender, CompletableFuture<Collection<NamespacedKey>>> keysSupplierFuture) {
     return (suggestionInfo, suggestionsBuilder) -> {
       return keysSupplierFuture.apply(suggestionInfo.sender()).thenApply(keys -> {
@@ -275,17 +283,17 @@ public class CustomArgs {
   public <N extends Node> Argument<NodeType<N>> nodeTypeArgument(
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
-        NodeType<N> type =
-                PathFinderProvider.get().getNodeTypeRegistry()
-                        .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
-        if (type == null) {
-            throw new CustomArgument.CustomArgumentException(
-                    "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
-        }
-        return type;
+      NodeType<N> type =
+          PathFinderProvider.get().getNodeTypeRegistry()
+              .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
+      if (type == null) {
+        throw new CustomArgument.CustomArgumentException(
+            "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
+      }
+      return type;
     })).includeSuggestions(
-            suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(
-                    PathFinderProvider.get().getNodeTypeRegistry().getTypeKeys())));
+        suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(
+            PathFinderProvider.get().getNodeTypeRegistry().getTypeKeys())));
   }
 
   /**
@@ -327,12 +335,12 @@ public class CustomArgs {
     return (CommandArgument<NodeGroup, CustomArgument<NodeGroup, NamespacedKey>>) arg(
         new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
           return PathFinderProvider.get().getStorage()
-                  .loadGroup(BukkitPathFinder.convert(info.currentInput())).join()
+              .loadGroup(BukkitPathFinder.convert(info.currentInput())).join()
               .orElseThrow();
         })
     ).replaceSuggestions(suggestNamespacedKeys(
-            sender -> PathFinderProvider.get().getStorage().loadAllGroups().thenApply(nodeGroups ->
-                    nodeGroups.stream().map(NodeGroup::getKey).toList())
+        sender -> PathFinderProvider.get().getStorage().loadAllGroups().thenApply(nodeGroups ->
+            nodeGroups.stream().map(NodeGroup::getKey).toList())
     ));
   }
 
@@ -345,12 +353,12 @@ public class CustomArgs {
   public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName),
-            i -> BukkitPathFinder.convert(i.currentInput())).includeSuggestions(
-            suggestNamespacedKeys(sender -> PathFinderProvider.get().getStorage().loadAllGroups()
-                    .thenApply(nodeGroups -> nodeGroups.stream()
-                            .filter(g -> g.hasModifier(DiscoverableModifier.class))
-                            .map(NodeGroup::getKey)
-                            .collect(Collectors.toList())))));
+        i -> BukkitPathFinder.convert(i.currentInput())).includeSuggestions(
+        suggestNamespacedKeys(sender -> PathFinderProvider.get().getStorage().loadAllGroups()
+            .thenApply(nodeGroups -> nodeGroups.stream()
+                .filter(g -> g.hasModifier(DiscoverableModifier.class))
+                .map(NodeGroup::getKey)
+                .collect(Collectors.toList())))));
   }
 
   /**
@@ -364,21 +372,19 @@ public class CustomArgs {
       if (!(context.sender() instanceof Player player)) {
         throw new CustomArgument.CustomArgumentException("Only for players");
       }
-        String search = context.currentInput();
-        List<Node> scope = PathFinderProvider.get().getStorage().loadNodes().join().stream()
-                .filter(node -> {
-                    FindModule.NavigationRequestContext c =
-                            new FindModule.NavigationRequestContext(player.getUniqueId(), node);
-                    return FindModule.getInstance().getNavigationFilter().stream()
-                            .allMatch(predicate -> predicate.test(c));
-                })
-                .toList();
+      String search = context.currentInput();
+      Storage storage = PathFinderProvider.get().getStorage();
+      List<Node> scope = storage.loadNodes().join().stream().filter(node -> {
+        // Create context for request
+        FindModule.NavigationRequestContext c = new FindModule.NavigationRequestContext(player.getUniqueId(), node);
+        // Find a node that matches all required filters
+        // return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
+        return true;
+      }).toList();
 
       try {
-        Map<Node, NavigableModifier> map =
-            StorageAssistant.loadNodes(NavigableModifier.class).join();
-        Collection<Node> target =
-            new FindQueryParser().parse(search, scope, n -> map.get(n).getSearchTerms());
+        Map<Node, NavigableModifier> map = storage.loadNodes(NavigableModifier.class).join();
+        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.get(n).getSearchTerms());
         return new NodeSelection(target);
       } catch (Throwable t) {
         throw new CustomArgument.CustomArgumentException(t.getMessage());
@@ -406,7 +412,7 @@ public class CustomArgs {
           String inRange = finalRange.get(input);
 
           Collection<String> allTerms = new HashSet<>();
-          StorageAssistant.loadNodes(NavigableModifier.class).thenAccept(map -> {
+          PathFinderProvider.get().getStorage().loadNodes(NavigableModifier.class).thenAccept(map -> {
             map.forEach((node, navigableModifier) -> {
               allTerms.addAll(navigableModifier.getSearchTermStrings());
             });
@@ -439,16 +445,16 @@ public class CustomArgs {
       String nodeName) {
     return arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
-        Optional<VisualizerType<PathVisualizer<?, ?>>> type =
-                VisualizerHandler.getInstance()
-                        .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
+      Optional<VisualizerType<PathVisualizer<?, ?>>> type =
+          VisualizerHandler.getInstance()
+              .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
       if (type.isEmpty()) {
         throw new CustomArgument.CustomArgumentException(
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");
       }
       return type.get();
-    })).includeSuggestions(suggestNamespacedKeys(
-        sender -> CompletableFuture.completedFuture(
-            VisualizerHandler.getInstance().getTypes().keySet())));
+    })).includeSuggestions(suggestNamespacedKeys(sender -> {
+      return CompletableFuture.completedFuture(PathFinderProvider.get().getVisualizerTypeRegistry().getTypes().keySet());
+    }));
   }
 }

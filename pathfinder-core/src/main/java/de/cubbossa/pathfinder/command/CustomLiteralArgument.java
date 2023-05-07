@@ -6,7 +6,7 @@ import de.cubbossa.pathfinder.command.util.CommandUtils;
 import dev.jorel.commandapi.arguments.CommandAPIArgumentType;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.BadLiteralException;
-import dev.jorel.commandapi.nms.NMS;
+import dev.jorel.commandapi.executors.CommandArguments;
 
 public class CustomLiteralArgument extends LiteralArgument {
 
@@ -36,28 +36,14 @@ public class CustomLiteralArgument extends LiteralArgument {
     return new dev.jorel.commandapi.arguments.LiteralArgument(literal);
   }
 
-  @Override
-  public Class<String> getPrimitiveType() {
-    return String.class;
-  }
-
   public String getLiteral() {
     return literal;
   }
 
   @Override
-  public CommandAPIArgumentType getArgumentType() {
-    return CommandAPIArgumentType.LITERAL;
-  }
-
-  @Override
-  public <CommandListenerWrapper> String parseArgument(NMS<CommandListenerWrapper> nms,
-                                                       CommandContext<CommandListenerWrapper> cmdCtx,
-                                                       String key, Object[] previousArgs)
-      throws CommandSyntaxException {
+  public <Source> String parseArgument(CommandContext<Source> cmdCtx, String key, CommandArguments previousArgs) throws CommandSyntaxException {
     return literal;
   }
-
 
   public CustomLiteralArgument withGeneratedHelp() {
     executes((sender, args) -> {

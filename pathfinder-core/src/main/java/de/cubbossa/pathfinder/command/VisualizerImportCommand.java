@@ -6,7 +6,7 @@ import de.cubbossa.pathfinder.ExamplesHandler;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.storage.ExamplesReader;
-import de.cubbossa.translations.TranslationHandler;
+import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -40,23 +40,21 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
               .orElse(null);
 
           if (file == null) {
-            TranslationHandler.getInstance()
-                .sendMessage(Messages.CMD_VIS_IMPORT_NOT_EXISTS, commandSender);
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_NOT_EXISTS);
             return;
           }
           NamespacedKey key =
               NamespacedKey.fromString(file.name().replace(".yml", "").replace("$", ":"));
           if (pathFinder.getStorage().loadVisualizer(key) != null) {
-            TranslationHandler.getInstance()
-                .sendMessage(Messages.CMD_VIS_IMPORT_EXISTS, commandSender);
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_EXISTS);
             return;
           }
           ExamplesHandler.getInstance().loadVisualizer(file).thenAccept(visualizer -> {
             // pathFinder.getStorage().createAndLoadVisualizer(visualizer);
-            TranslationHandler.getInstance().sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.format(
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.formatted(
                 TagResolver.resolver("key", Messages.formatKey(key)),
                 Placeholder.component("name", visualizer.getDisplayName())
-            ), commandSender);
+            ));
           });
         })
     );

@@ -1,10 +1,9 @@
-package de.cubbossa.pathfinder.modifier;
+package de.cubbossa.pathfinder.nodegroup.modifier;
 
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.navigationquery.SimpleSearchTerm;
-import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
