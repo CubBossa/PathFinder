@@ -121,8 +121,8 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   private <N extends Node> void saveNodeTyped(N node) {
-    NodeType<N> type = cache.getNodeTypeCache().<N>getType(node.getNodeId(), this::loadNodeType);
-    N before = type.loadNode(node.getNodeId()).orElseThrow();
+    NodeType<N> type = cache.getNodeTypeCache().getType(node.getNodeId(), this::loadNodeType);
+    N before = (N) loadNode(node.getNodeId()).orElseThrow();
     type.saveNode(node);
 
     if (node == before) {
