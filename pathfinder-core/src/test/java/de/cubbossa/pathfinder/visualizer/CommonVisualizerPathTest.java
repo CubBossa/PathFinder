@@ -21,11 +21,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class VisualizerPathTest extends PathFinderTest {
+class CommonVisualizerPathTest extends PathFinderTest {
 
   private final Map<PathVisualizer<?, ?>, NodeGroup> groupMap;
 
-  public VisualizerPathTest() {
+  public CommonVisualizerPathTest() {
     groupMap = new HashMap<>();
     setupMiniMessage();
     setupWorldMock("test");
@@ -74,14 +74,15 @@ class VisualizerPathTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    VisualizerPath<Object> visPath = new VisualizerPath<>(p);
+    CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>();
     assertFalse(visPath.isActive());
     assertEquals(0, visPath.paths.size());
 
-    visPath.prepare(path);
+    visPath.prepare(path, p);
     assertFalse(visPath.isActive());
     assertEquals(1, visPath.paths.size());
     assertEquals(vis.getKey(), visPath.paths.stream().findAny().orElseThrow().visualizer.getKey());
+    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
   }
 
   @Test
@@ -95,11 +96,11 @@ class VisualizerPathTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    VisualizerPath<Object> visPath = new VisualizerPath<>(p);
+    CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>();
     assertFalse(visPath.isActive());
     assertEquals(0, visPath.paths.size());
 
-    visPath.prepare(path);
+    visPath.prepare(path, p);
     assertFalse(visPath.isActive());
     assertEquals(2, visPath.paths.size());
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(a)));
@@ -117,14 +118,15 @@ class VisualizerPathTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    VisualizerPath<Object> visPath = new VisualizerPath<>(p);
+    CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>();
     assertFalse(visPath.isActive());
     assertEquals(0, visPath.paths.size());
 
-    visPath.prepare(path);
+    visPath.prepare(path, p);
     assertFalse(visPath.isActive());
     assertEquals(3, visPath.paths.size());
     assertEquals(2, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(a)).count());
     assertEquals(1, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(b)).count());
+    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 1));
   }
 }

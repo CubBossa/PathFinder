@@ -30,7 +30,8 @@ import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.translations.Message;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -202,7 +203,7 @@ public class FindModule implements Listener, PathFinderExtension {
           return NavigateResult.FAIL_BLOCKED;
         }
 
-        VisualizerPath<Player> visualizerPath = new VisualizerPath<>(player);
+        CommonVisualizerPath<Player> visualizerPath = new CommonVisualizerPath<>();
         visualizerPath.addAll(path);
 
         Groupable last = (Groupable) visualizerPath.get(visualizerPath.size() - 1);
@@ -234,21 +235,18 @@ public class FindModule implements Listener, PathFinderExtension {
     //TODO internal event
   }
 
-  public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path,
-                                Location target,
-                                float distance) {
+  public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path, Location target, float distance) {
     PathStartEvent event = new PathStartEvent(player, path, target, distance);
     Bukkit.getPluginManager().callEvent(event);
     if (event.isCancelled()) {
       return NavigateResult.FAIL_EVENT_CANCELLED;
     }
 
-    SearchInfo current =
-        activePaths.put(player, new SearchInfo(player, path, target, distance));
+    SearchInfo current = activePaths.put(player, new SearchInfo(player, path, target, distance));
     if (current != null) {
-      current.path().cancel();
+      current.path().cancel(player);
     }
-    path.run();
+    path.run(player);
     return NavigateResult.SUCCESS;
   }
 
@@ -260,7 +258,7 @@ public class FindModule implements Listener, PathFinderExtension {
 
   public void unsetPath(SearchInfo info) {
     activePaths.remove(info.player());
-    info.path().cancel();
+    info.path().cancel(info.player());
 
     Player player = info.player().unwrap();
     cancelPathCommand.refresh(info.player());
@@ -287,6 +285,6 @@ public class FindModule implements Listener, PathFinderExtension {
   public record NavigationRequestContext(UUID playerId, Node node) {
   }
 
-  public record SearchInfo(PathPlayer<Player> player, VisualizerPath<?> path, Location target, float distance) {
+  public record SearchInfo(PathPlayer<Player> player, VisualizerPath<Player> path, Location target, float distance) {
   }
 }

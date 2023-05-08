@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.visualizer;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -13,9 +13,9 @@ public class PathTargetFoundEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
 
   private final PathPlayer<Player> playerId;
-  private final VisualizerPath<?> path;
+  private final VisualizerPath<Player> path;
 
-  public PathTargetFoundEvent(PathPlayer<Player> playerId, VisualizerPath<?> path) {
+  public PathTargetFoundEvent(PathPlayer<Player> playerId, VisualizerPath<Player> path) {
     this.playerId = playerId;
     this.path = path;
   }

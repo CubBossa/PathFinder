@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.events.visualizer;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
