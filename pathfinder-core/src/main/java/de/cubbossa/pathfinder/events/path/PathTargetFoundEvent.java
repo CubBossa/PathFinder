@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.events.visualizer;
+package de.cubbossa.pathfinder.events.path;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;

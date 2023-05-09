@@ -10,6 +10,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
@@ -17,8 +18,7 @@ import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.CancelPathCommand;
 import de.cubbossa.pathfinder.command.FindCommand;
 import de.cubbossa.pathfinder.command.FindLocationCommand;
-import de.cubbossa.pathfinder.events.visualizer.PathStartEvent;
-import de.cubbossa.pathfinder.events.visualizer.PathTargetFoundEvent;
+import de.cubbossa.pathfinder.events.path.PathTargetFoundEvent;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
@@ -31,7 +31,6 @@ import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
-import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.translations.Message;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -203,20 +202,17 @@ public class FindModule implements Listener, PathFinderExtension {
           return NavigateResult.FAIL_BLOCKED;
         }
 
-        CommonVisualizerPath<Player> visualizerPath = new CommonVisualizerPath<>();
-        visualizerPath.addAll(path);
+        Groupable first = (Groupable) path.get(1);
+        first.getGroups().forEach(playerNode::addGroup);
 
-        Groupable last = (Groupable) visualizerPath.get(visualizerPath.size() - 1);
+        Groupable last = (Groupable) path.get(path.size() - 1);
         NodeGroup highest = last.getGroups().stream()
             .filter(g -> g.hasModifier(FindDistanceModifier.class))
             .max(NodeGroup::compareTo).orElse(null);
 
-        double findDist =
-            highest == null ? 1.5 : highest.getModifier(FindDistanceModifier.class).distance();
+        double findDist = highest == null ? 1.5 : highest.getModifier(FindDistanceModifier.class).distance();
 
-        NavigateResult result =
-            setPath(player, visualizerPath, path.get(path.size() - 1).getLocation(),
-                (float) findDist);
+        NavigateResult result = setPath(player, path, path.get(path.size() - 1).getLocation(), (float) findDist);
 
         if (result == NavigateResult.SUCCESS) {
           // Refresh cancel-path command so that it is visible
@@ -235,18 +231,20 @@ public class FindModule implements Listener, PathFinderExtension {
     //TODO internal event
   }
 
-  public NavigateResult setPath(PathPlayer<Player> player, @NotNull VisualizerPath<Player> path, Location target, float distance) {
-    PathStartEvent event = new PathStartEvent(player, path, target, distance);
-    Bukkit.getPluginManager().callEvent(event);
-    if (event.isCancelled()) {
+  public NavigateResult setPath(PathPlayer<Player> player, @NotNull List<Node> pathNodes, Location target, float distance) {
+    VisualizerPath<Player> visualizerPath = new CommonVisualizerPath<>();
+    visualizerPath.prepare(pathNodes, player);
+
+    boolean success = PathFinderProvider.get().getEventDispatcher().dispatchPathStart(player, visualizerPath, target, distance);
+    if (!success) {
       return NavigateResult.FAIL_EVENT_CANCELLED;
     }
 
-    SearchInfo current = activePaths.put(player, new SearchInfo(player, path, target, distance));
+    SearchInfo current = activePaths.put(player, new SearchInfo(player, visualizerPath, target, distance));
     if (current != null) {
       current.path().cancel(player);
     }
-    path.run(player);
+    visualizerPath.run(player);
     return NavigateResult.SUCCESS;
   }
 

@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.events.visualizer;
+package de.cubbossa.pathfinder.events.path;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -12,17 +12,17 @@ import org.bukkit.event.HandlerList;
 
 @Getter
 @Setter
-public class PathStartEvent extends Event implements Cancellable {
+public class PathStartEvent extends Event implements Cancellable, de.cubbossa.pathapi.event.PathStartEvent<Player> {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final PathPlayer<?> player;
-  private final VisualizerPath<?> path;
+  private final PathPlayer<Player> player;
+  private final VisualizerPath<Player> path;
   private Location target;
   private float distance;
   private boolean cancelled = false;
 
-  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<?> path, Location target,
+  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<Player> path, Location target,
                         float distance) {
     this.player = player;
     this.path = path;

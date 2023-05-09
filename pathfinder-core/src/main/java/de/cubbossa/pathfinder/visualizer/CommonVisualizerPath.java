@@ -8,16 +8,13 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Common implementation of the {@link VisualizerPath} interface.
@@ -25,7 +22,7 @@ import org.bukkit.Bukkit;
  * @param <PlayerT> The abstract path player type.
  */
 @Getter
-public class CommonVisualizerPath<PlayerT> extends ArrayList<Node> implements VisualizerPath<PlayerT> {
+public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
 
   protected PathPlayer<PlayerT> renderingTarget;
   protected HashSet<PathPlayer<PlayerT>> viewers;
@@ -39,6 +36,7 @@ public class CommonVisualizerPath<PlayerT> extends ArrayList<Node> implements Vi
   @Override
   public void prepare(List<Node> path, PathPlayer<PlayerT> player) {
     cancelAll();
+    renderingTarget = player;
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();

@@ -3,16 +3,21 @@ package de.cubbossa.pathfinder.events;
 import de.cubbossa.pathapi.event.Listener;
 import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.events.node.NodeDeletedEvent;
 import de.cubbossa.pathfinder.events.node.NodeSavedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupCreatedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupDeleteEvent;
+import de.cubbossa.pathfinder.events.path.PathStartEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -28,7 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
-public class BukkitEventDispatcher implements EventDispatcher {
+public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   private final Map<Listener<?>, org.bukkit.event.Listener> listenerMap = new HashMap<>();
   private final Map<Class<? extends PathFinderEvent>, Class<? extends Event>> classMapping = Map.of(
@@ -44,30 +49,27 @@ public class BukkitEventDispatcher implements EventDispatcher {
     logger.log(Level.INFO, message);
   }
 
-  private void dispatchEvent(Event event) {
+  private boolean dispatchEvent(Event event) {
     try {
-      dispatchEventWithFuture(event).get(1, TimeUnit.SECONDS);
+      return dispatchEventWithFuture(event).get(1, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  private CompletableFuture<Void> dispatchEventWithFuture(Event event) {
+  private CompletableFuture<Boolean> dispatchEventWithFuture(Event event) {
     log("Dispatching Event '" + event.getClass().getSimpleName() + "'.");
-    CompletableFuture<Void> future = new CompletableFuture<>();
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
     if (Bukkit.isPrimaryThread()) {
       Bukkit.getPluginManager().callEvent(event);
-      if (event instanceof Cancellable cancellable && cancellable.isCancelled()) {
-        future.completeExceptionally(new RuntimeException("Event cancelled."));
-        return future;
-      }
-      future.complete(null);
+      boolean cancelled = event instanceof Cancellable cancellable && cancellable.isCancelled();
+      future.complete(!cancelled);
       return future;
     }
-      Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
-          dispatchEventWithFuture(event).join();
-          future.complete(null);
-      });
+    Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+      boolean c = dispatchEventWithFuture(event).join();
+      future.complete(c);
+    });
     return future.exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
@@ -120,6 +122,11 @@ public class BukkitEventDispatcher implements EventDispatcher {
     dispatchEvent(new GroupDeleteEvent(group));
   }
 
+  @Override
+  public boolean dispatchPathStart(PathPlayer<Player> player, VisualizerPath<Player> path, Location target, float findDistanceRadius) {
+    return dispatchEvent(new PathStartEvent(player, path, target, findDistanceRadius));
+  }
+
   @SneakyThrows
   @Override
   public <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType,
@@ -141,7 +148,7 @@ public class BukkitEventDispatcher implements EventDispatcher {
             throw new RuntimeException(e);
           }
         },
-            PathFinderPlugin.getInstance()
+        PathFinderPlugin.getInstance()
     );
     Listener<E> internalListener = new Listener<>(UUID.randomUUID(), eventType, event);
     listenerMap.put(internalListener, listener);

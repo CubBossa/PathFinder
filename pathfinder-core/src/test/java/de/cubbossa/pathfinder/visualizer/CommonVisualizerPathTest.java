@@ -129,4 +129,23 @@ class CommonVisualizerPathTest extends PathFinderTest {
     assertEquals(1, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(b)).count());
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 1));
   }
+
+  @Test
+  void prepare4() {
+    ParticleVisualizer vis = particle("a");
+    List<Node> path = List.of(
+        pathNode(vis),
+        pathNode(vis)
+    );
+
+    PathPlayer<Object> p = new TestPlayer();
+    CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>();
+    assertFalse(visPath.isActive());
+    assertEquals(0, visPath.paths.size());
+
+    visPath.prepare(path, p);
+    assertFalse(visPath.isActive());
+    assertEquals(1, visPath.paths.size());
+    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
+  }
 }

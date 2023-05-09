@@ -2,7 +2,7 @@ package de.cubbossa.pathapi.visualizer;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @param <PlayerT> The type of the player object.
  */
-public interface VisualizerPath<PlayerT> extends Collection<Node> {
+public interface VisualizerPath<PlayerT> {
 
   /**
    * May run all excessive calculation of visualizers in beforehand to cache the results.

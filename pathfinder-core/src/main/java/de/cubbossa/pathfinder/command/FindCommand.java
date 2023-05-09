@@ -26,6 +26,9 @@ public class FindCommand extends Command {
           PathPlayer<Player> p = BukkitPathFinder.wrap(player);
           FindModule.getInstance().findPath(p, targets).thenAccept(result -> {
             FindModule.printResult(result, p);
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
     );

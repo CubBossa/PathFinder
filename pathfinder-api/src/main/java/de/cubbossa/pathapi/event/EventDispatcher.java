@@ -1,11 +1,15 @@
 package de.cubbossa.pathapi.event;
 
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
+
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public interface EventDispatcher {
+public interface EventDispatcher<PlayerT> {
 
   <N extends Node> void dispatchNodeCreate(N node);
 
@@ -24,6 +28,8 @@ public interface EventDispatcher {
   void dispatchGroupCreate(NodeGroup group);
 
   void dispatchGroupDelete(NodeGroup group);
+
+  boolean dispatchPathStart(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target, float findDistanceRadius);
 
   <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType, Consumer<? super E> event);
 

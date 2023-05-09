@@ -100,7 +100,7 @@ public abstract class StorageTest extends PathFinderTest {
     assertTrue(after.hasModifier(PermissionModifier.class));
     assertTrue(after.contains(a.getNodeId()));
 
-    Map<Node, PermissionModifier> nodes = assertResult(() -> storage.loadNodes(PermissionModifier.class));
+    Map<Node, Collection<PermissionModifier>> nodes = assertResult(() -> storage.loadNodes(PermissionModifier.class));
     assertEquals(1, nodes.size());
     assertTrue(nodes.containsKey(a));
     assertFalse(nodes.containsKey(b));

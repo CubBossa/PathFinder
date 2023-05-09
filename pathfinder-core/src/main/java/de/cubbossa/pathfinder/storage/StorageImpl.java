@@ -419,25 +419,20 @@ public class StorageImpl implements Storage {
     }
   }
 
-  public <M extends Modifier> CompletableFuture<Map<Node, M>> loadNodes(Class<M> modifier) {
+  public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(Class<M> modifier) {
     return loadNodes().thenApply(nodes -> {
-      Map<Node, TreeMap<Float, M>> results = new HashMap<>();
+      Map<Node, Collection<M>> results = new HashMap<>();
       nodes.stream()
           .filter(node -> node instanceof Groupable)
           .map(node -> (Groupable) node)
           .forEach(groupable -> {
             for (NodeGroup group : groupable.getGroups()) {
               if (group.hasModifier(modifier)) {
-                results.computeIfAbsent(groupable, g -> new TreeMap<>())
-                    .put(group.getWeight(), group.getModifier(modifier));
+                results.computeIfAbsent(groupable, g -> new HashSet<>()).add(group.getModifier(modifier));
               }
             }
           });
-      Map<Node, M> result = new HashMap<>();
-      for (Map.Entry<Node, TreeMap<Float, M>> e : results.entrySet()) {
-        result.put(e.getKey(), e.getValue().lastEntry().getValue());
-      }
-      return result;
+      return results;
     });
   }
 

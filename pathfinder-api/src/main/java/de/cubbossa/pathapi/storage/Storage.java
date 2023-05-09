@@ -99,7 +99,7 @@ public interface Storage {
 
   CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids);
 
-  <M extends Modifier> CompletableFuture<Map<Node, M>> loadNodes(Class<M> modifier);
+  <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(Class<M> modifier);
 
   CompletableFuture<Void> saveNode(Node node);
 

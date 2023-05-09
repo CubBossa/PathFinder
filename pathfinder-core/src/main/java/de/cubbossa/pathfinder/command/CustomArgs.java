@@ -382,11 +382,11 @@ public class CustomArgs {
       }).toList();
 
       try {
-        Map<Node, NavigableModifier> map = storage.loadNodes(NavigableModifier.class).join();
-        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> {
-          NavigableModifier mod = map.get(n);
-          return mod == null ? Collections.emptySet() : mod.getSearchTerms();
-        });
+        Map<Node, Collection<NavigableModifier>> map = storage.loadNodes(NavigableModifier.class).join();
+        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.getOrDefault(n, new HashSet<>()).stream()
+            .map(NavigableModifier::getSearchTerms)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet()));
         return new NodeSelection(target);
       } catch (Throwable t) {
         t.printStackTrace();
@@ -417,7 +417,10 @@ public class CustomArgs {
           Collection<String> allTerms = new HashSet<>();
           PathFinderProvider.get().getStorage().loadNodes(NavigableModifier.class).thenAccept(map -> {
             map.forEach((node, navigableModifier) -> {
-              allTerms.addAll(navigableModifier.getSearchTermStrings());
+              allTerms.addAll(navigableModifier.stream()
+                  .map(NavigableModifier::getSearchTermStrings)
+                  .flatMap(Collection::stream)
+                  .toList());
             });
           }).join();
 

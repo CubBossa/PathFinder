@@ -29,24 +29,24 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRenderer<Player> {
 
-    private final PathFinder pathFinder;
-    private final NamespacedKey groupKey;
+  private final PathFinder pathFinder;
+  private final NamespacedKey groupKey;
 
-    private final Map<PathPlayer<Player>, BottomInventoryMenu> editingPlayers;
+  private final Map<PathPlayer<Player>, BottomInventoryMenu> editingPlayers;
   private final Map<PathPlayer<Player>, GameMode> preservedGameModes;
 
   private final Collection<GraphRenderer<Player>> renderers;
 
 
   public DefaultNodeGroupEditor(NodeGroup group) {
-      this.pathFinder = PathFinderProvider.get();
-      this.groupKey = group.getKey();
+    this.pathFinder = PathFinderProvider.get();
+    this.groupKey = group.getKey();
 
     this.renderers = new ArrayList<>();
     this.editingPlayers = new HashMap<>();
     this.preservedGameModes = new HashMap<>();
 
-      EventDispatcher eventDispatcher = PathFinderProvider.get().getEventDispatcher();
+    EventDispatcher<?> eventDispatcher = PathFinderProvider.get().getEventDispatcher();
 
     Consumer<Node> erase = node -> {
       for (PathPlayer<Player> player : editingPlayers.keySet()) {
@@ -54,10 +54,10 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
       }
     };
     Consumer<NodeEvent> render = event -> {
-        if (!renders(event.getNode())) {
-            erase.accept(event.getNode());
-            return;
-        }
+      if (!renders(event.getNode())) {
+        erase.accept(event.getNode());
+        return;
+      }
       for (PathPlayer<Player> player : editingPlayers.keySet()) {
         renderNodes(player, List.of(event.getNode()));
       }
@@ -67,32 +67,32 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     eventDispatcher.listen(NodeDeleteEvent.class, e -> erase.accept(e.getNode()));
 
     eventDispatcher.listen(NodeGroupDeleteEvent.class, nodeGroupDeleteEvent -> {
-        if (!nodeGroupDeleteEvent.getGroup().getKey().equals(groupKey)) {
-            return;
-        }
-        for (PathPlayer<Player> player : editingPlayers.keySet()) {
-            setEditMode(player, false);
-            player.sendMessage(Messages.EDITM_NG_DELETED);
-        }
-        dispose();
+      if (!nodeGroupDeleteEvent.getGroup().getKey().equals(groupKey)) {
+        return;
+      }
+      for (PathPlayer<Player> player : editingPlayers.keySet()) {
+        setEditMode(player, false);
+        player.sendMessage(Messages.EDITM_NG_DELETED);
+      }
+      dispose();
     });
   }
 
-    private boolean renders(Node node) {
-        return node instanceof Groupable groupable && groupable.getGroups().stream()
-                .map(NodeGroup::getKey)
-                .anyMatch(groupKey::equals);
-    }
+  private boolean renders(Node node) {
+    return node instanceof Groupable groupable && groupable.getGroups().stream()
+        .map(NodeGroup::getKey)
+        .anyMatch(groupKey::equals);
+  }
 
-    public void dispose() {
-    }
+  public void dispose() {
+  }
 
-    public boolean isEdited() {
-        return !editingPlayers.isEmpty();
-    }
+  public boolean isEdited() {
+    return !editingPlayers.isEmpty();
+  }
 
-    public boolean toggleEditMode(PathPlayer<Player> player) {
-        boolean isEditing = isEditing(player);
+  public boolean toggleEditMode(PathPlayer<Player> player) {
+    boolean isEditing = isEditing(player);
     setEditMode(player, !isEditing);
     return !isEditing;
   }
@@ -114,24 +114,24 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     Player bukkitPlayer = player.unwrap();
 
     if (activate) {
-        if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
-            return;
-        }
+      if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
+        return;
+      }
 
-        BottomInventoryMenu menu = new EditModeMenu(pathFinder, groupKey,
-                PathFinderProvider.get().getNodeTypeRegistry().getTypes()).createHotbarMenu(this,
-                bukkitPlayer);
-        editingPlayers.put(player, menu);
-        menu.openSync(bukkitPlayer);
+      BottomInventoryMenu menu = new EditModeMenu(pathFinder, groupKey,
+          PathFinderProvider.get().getNodeTypeRegistry().getTypes()).createHotbarMenu(this,
+          bukkitPlayer);
+      editingPlayers.put(player, menu);
+      menu.openSync(bukkitPlayer);
 
-        preservedGameModes.put(player, bukkitPlayer.getGameMode());
-        bukkitPlayer.setGameMode(GameMode.CREATIVE);
+      preservedGameModes.put(player, bukkitPlayer.getGameMode());
+      bukkitPlayer.setGameMode(GameMode.CREATIVE);
 
-        pathFinder.getStorage().loadGroup(groupKey).thenAccept(group -> {
-            pathFinder.getStorage().loadNodes(group.orElseThrow()).thenAccept(n -> {
-                renderNodes(player, n);
-            });
+      pathFinder.getStorage().loadGroup(groupKey).thenAccept(group -> {
+        pathFinder.getStorage().loadNodes(group.orElseThrow()).thenAccept(n -> {
+          renderNodes(player, n);
         });
+      });
     } else {
 
       if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
