@@ -54,6 +54,9 @@ public abstract class BezierPathVisualizer
       }
       open.add(node);
     }
+    if (!open.isEmpty()) {
+      segments.add(new PathSegment(last, new ArrayList<>(open)));
+    }
 
     // make a smooth spline for each segment and append them.
     List<Location> calculatedPoints = new ArrayList<>();
