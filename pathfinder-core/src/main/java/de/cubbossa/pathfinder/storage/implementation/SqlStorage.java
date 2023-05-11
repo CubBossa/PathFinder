@@ -223,17 +223,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
-    List<NodeType<N>> resultSet = create
-        .selectFrom(PATHFINDER_NODE_TYPE_RELATION)
-        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.eq(node))
-        .fetch(t -> nodeTypeRegistry.getType(t.getNodeType()));
-    debug(" > Storage Implementation: 'loadNodeType(UUID): Optional<NodeType<N>>'");
-    return resultSet.stream().findFirst();
-  }
-
-  @Override
-  public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
+  public Map<UUID, NodeType<?>> loadNodeTypeMapping(Collection<UUID> nodes) {
     Map<UUID, NodeType<?>> result = new HashMap<>();
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
@@ -243,26 +233,24 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void saveNodeType(UUID node, NodeType<?> type) {
-    debug(" > Storage Implementation: 'saveNodeType(" + node + ", " + type.getKey() + ")'");
-    create
-        .insertInto(PATHFINDER_NODE_TYPE_RELATION)
-        .values(node, type.getKey())
-        .execute();
-  }
-
-  @Override
-  public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
+  public void saveNodeTypeMapping(Map<UUID, NodeType<?>> typeMapping) {
     debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
         .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
         .collect(Collectors.joining(", ")) + ")'");
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
-            .values(uuid, nodeType)
+            .values(uuid, nodeType.getKey())
             .execute();
       });
     });
+  }
+
+  @Override
+  public void deleteNodeTypeMapping(Collection<UUID> nodes) {
+    create.deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
+        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
+        .execute();
   }
 
   @Override
@@ -462,6 +450,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void saveGroup(NodeGroup group) {
+    // TODO logic belongs to Storage to make use of caching
     debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
     NodeGroup before = loadGroup(group.getKey()).orElseThrow();
     create
@@ -480,6 +469,7 @@ public abstract class SqlStorage extends CommonStorage {
         mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
   }
 
+  @Override
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
     debug(" > Storage Implementation: 'assignToGroups("
         + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
@@ -502,6 +492,7 @@ public abstract class SqlStorage extends CommonStorage {
     });
   }
 
+  @Override
   public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
     debug(" > Storage Implementation: 'unassignFromGroups("
         + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
@@ -712,7 +703,7 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public <T extends PathVisualizer<?, ?>> T createAndLoadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
     T visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
-    Map<String, Object> data = serialize(visualizer);
+    Map<String, Object> data = type.serialize(visualizer);
     if (data == null) {
       throw new IllegalStateException("Could not serialize internal visualizer '" + key + "', data is null.");
     }
@@ -731,7 +722,7 @@ public abstract class SqlStorage extends CommonStorage {
             PATHFINDER_VISUALIZER.DATA
         )
         .values(
-            visualizer.getKey(), resolveVisualizerType(visualizer).getKey(),
+            visualizer.getKey(), type.getKey(),
             visualizer.getNameFormat(), visualizer.getPermission(),
             visualizer.getInterval(), dataString
         )
@@ -760,15 +751,10 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
 
-  private <VisualizerT extends PathVisualizer<?, ?>> Map<String, Object> serialize(
-      VisualizerT pathVisualizer) {
-    VisualizerType<VisualizerT> type = resolveVisualizerType(pathVisualizer);
-    return type.serialize(pathVisualizer);
-  }
-
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerT visualizer) {
-    Map<String, Object> data = serialize(visualizer);
+  public <VisualizerT extends PathVisualizer<?, ?>>
+  void saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer) {
+    Map<String, Object> data = type.serialize(visualizer);
     if (data == null) {
       return;
     }
@@ -778,22 +764,8 @@ public abstract class SqlStorage extends CommonStorage {
 
     create
         .insertInto(PATHFINDER_VISUALIZER)
-        .columns(
-            PATHFINDER_VISUALIZER.KEY,
-            PATHFINDER_VISUALIZER.TYPE,
-            PATHFINDER_VISUALIZER.NAME_FORMAT,
-            PATHFINDER_VISUALIZER.PERMISSION,
-            PATHFINDER_VISUALIZER.INTERVAL,
-            PATHFINDER_VISUALIZER.DATA
-        )
-        .values(
-            visualizer.getKey(), resolveVisualizerType(visualizer).getKey(),
-            visualizer.getNameFormat(), visualizer.getPermission(),
-            visualizer.getInterval(), dataString
-        )
-        .onDuplicateKeyUpdate()
         .set(PATHFINDER_VISUALIZER.KEY, visualizer.getKey())
-        .set(PATHFINDER_VISUALIZER.TYPE, resolveVisualizerType(visualizer).getKey())
+        .set(PATHFINDER_VISUALIZER.TYPE, type.getKey())
         .set(PATHFINDER_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
         .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
         .set(PATHFINDER_VISUALIZER.INTERVAL, visualizer.getInterval())
@@ -810,32 +782,20 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
-                                                                            VisualizerType<VisualizerT> type) {
-    create
-        .insertInto(PATHFINDER_VISUALIZER_TYPE_RELATION)
-        .values(key, type.getKey())
-        .execute();
+  public void saveVisualizerTypeMapping(Map<NamespacedKey, VisualizerType<?>> typeMapping) {
+    create.batched(configuration -> {
+      for (Map.Entry<NamespacedKey, VisualizerType<?>> e : typeMapping.entrySet()) {
+        configuration.dsl()
+            .insertInto(PATHFINDER_VISUALIZER_TYPE_RELATION)
+            .columns(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY, PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
+            .values(e.getKey(), e.getValue().getKey())
+            .execute();
+      }
+    });
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
-      NamespacedKey key) {
-    Optional<NamespacedKey> typeKey = create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
-        .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.eq(key))
-        .fetch(PathfinderVisualizerTypeRelationRecord::getTypeKey)
-        .stream().findAny();
-    if (typeKey.isEmpty()) {
-      return Optional.empty();
-    }
-    return typeKey
-        .map(visualizerTypeRegistry::<VisualizerT>getType)
-        .filter(Optional::isPresent)
-        .map(Optional::get);
-  }
-
-  @Override
-  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key) {
+  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypeMapping(Collection<NamespacedKey> key) {
     Map<NamespacedKey, VisualizerType<?>> map = new HashMap<>();
     create.selectFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
         .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.in(key))
@@ -843,5 +803,12 @@ public abstract class SqlStorage extends CommonStorage {
           map.put(r.getVisualizerKey(), t);
         }));
     return map;
+  }
+
+  @Override
+  public void deleteVisualizerTypeMapping(Collection<NamespacedKey> keys) {
+    create.deleteFrom(PATHFINDER_VISUALIZER_TYPE_RELATION)
+        .where(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY.in(keys))
+        .execute();
   }
 }

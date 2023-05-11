@@ -8,7 +8,6 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
@@ -22,20 +21,27 @@ import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
 import de.cubbossa.pathfinder.util.WorldImpl;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YmlStorage extends CommonStorage {
 
@@ -154,45 +160,32 @@ public class YmlStorage extends CommonStorage {
   public void shutdown() {
   }
 
-    @Override
-    public void saveNodeType(UUID node, NodeType<?> type) {
-        workOnFile(fileNodeTypes(), cfg -> {
-            cfg.set(node.toString(), type.getKey().toString());
-        });
-    }
-
-    @Override
-    public void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping) {
-        workOnFile(fileNodeTypes(), cfg -> {
-            typeMapping.forEach(
-                    (uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
-        });
-    }
-
   @Override
-  public <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node) {
-    return workOnFile(fileNodeTypes(), cfg -> {
-      String keyString = cfg.getString(node.toString());
-      if (keyString == null) {
-        return Optional.empty();
-      }
-      NamespacedKey key = NamespacedKey.fromString(keyString);
-      return Optional.ofNullable(nodeTypeRegistry.getType(key));
+  public void saveNodeTypeMapping(Map<UUID, NodeType<?>> typeMapping) {
+    workOnFile(fileNodeTypes(), cfg -> {
+      typeMapping.forEach((uuid, nodeType) -> cfg.set(uuid.toString(), nodeType.getKey().toString()));
     });
   }
 
-    @Override
-    public Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes) {
-        return workOnFile(fileNodeTypes(), cfg -> {
-            Map<UUID, NodeType<?>> types = new HashMap<>();
-            for (UUID node : nodes) {
-                String keyString = cfg.getString(node.toString());
-                if (keyString != null) {
-                    types.put(node, nodeTypeRegistry.getType(NamespacedKey.fromString(keyString)));
-                }
-            }
-            return types;
-        });
+  @Override
+  public Map<UUID, NodeType<?>> loadNodeTypeMapping(Collection<UUID> nodes) {
+    return workOnFile(fileNodeTypes(), cfg -> {
+      Map<UUID, NodeType<?>> types = new HashMap<>();
+      for (UUID node : nodes) {
+        String keyString = cfg.getString(node.toString());
+        if (keyString != null) {
+          types.put(node, nodeTypeRegistry.getType(NamespacedKey.fromString(keyString)));
+        }
+      }
+      return types;
+    });
+  }
+
+  @Override
+  public void deleteNodeTypeMapping(Collection<UUID> nodes) {
+    workOnFile(fileNodeTypes(), cfg -> {
+      nodes.forEach(n -> cfg.set(n.toString(), null));
+    });
   }
 
   Optional<Edge> readEdge(UUID start, UUID end, ConfigurationSection startSection) {
@@ -305,15 +298,15 @@ public class YmlStorage extends CommonStorage {
 
   @Override
   public List<NodeGroup> loadGroups(Pagination pagination) {
-      return CollectionUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(),
-                      pagination.getOffset(), pagination.getLimit())
-              .stream()
-              .map(f -> workOnFile(f, cfg -> {
-                  return loadGroup(cfg);
-              }))
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(Collectors.toList());
+    return CollectionUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(),
+            pagination.getOffset(), pagination.getLimit())
+        .stream()
+        .map(f -> workOnFile(f, cfg -> {
+          return loadGroup(cfg);
+        }))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -406,42 +399,37 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
-                                                                            VisualizerType<VisualizerT> type) {
+  public void saveVisualizerTypeMapping(Map<NamespacedKey, VisualizerType<?>> types) {
     workOnFile(fileVisualizerTypes(), cfg -> {
-      cfg.set(key.toString(), type.getKey().toString());
+      types.forEach((key, type) -> {
+        cfg.set(key.toString(), type.getKey().toString());
+      });
     });
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
-      NamespacedKey key) {
-    return workOnFile(fileVisualizerTypes(), cfg -> {
-      try {
-        return visualizerTypeRegistry.getType(
-            NamespacedKey.fromString(cfg.getString(key.toString())));
-      } catch (Throwable t) {
-        return Optional.empty();
-      }
-    });
-  }
-
-  @Override
-  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> keys) {
+  public Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypeMapping(Collection<NamespacedKey> keys) {
     return workOnFile(fileVisualizerTypes(), cfg -> {
       Map<NamespacedKey, VisualizerType<?>> result = new HashMap<>();
       for (NamespacedKey key : keys) {
         try {
+          if (!cfg.contains(key.toString())) {
+            continue;
+          }
           visualizerTypeRegistry.getType(NamespacedKey.fromString(cfg.getString(key.toString())))
-              .ifPresent(type -> {
-                result.put(key, type);
-              });
+              .ifPresent(type -> result.put(key, type));
         } catch (Throwable t) {
-          throw new DataStorageException(
-              "Error while retrieving visualizer type for '" + key + "'.", t);
+          throw new DataStorageException("Error while retrieving visualizer type for '" + key + "'.", t);
         }
       }
       return result;
+    });
+  }
+
+  @Override
+  public void deleteVisualizerTypeMapping(Collection<NamespacedKey> keys) {
+    workOnFile(fileVisualizerTypes(), cfg -> {
+      keys.forEach(key -> cfg.set(key.toString(), null));
     });
   }
 
@@ -467,19 +455,22 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
+  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(
+      VisualizerType<VisualizerT> type, NamespacedKey key) {
     VisualizerT visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
     writeInternalVisualizer(visualizer);
     return visualizer;
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
+  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(
+      VisualizerType<VisualizerT> type, NamespacedKey key) {
     return workOnFileIfExists(fileVisualizer(key), cfg -> readInternalVisualizer(type, key, cfg));
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(VisualizerType<VisualizerT> type) {
+  public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(
+      VisualizerType<VisualizerT> type) {
     Collection<NamespacedKey> keys = new HashSet<>();
     workOnFile(fileVisualizerTypes(), cfg -> {
       String typeString = type.getKey().toString();
@@ -498,7 +489,8 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerT visualizer) {
+  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type,
+                                                                                VisualizerT visualizer) {
     writeInternalVisualizer(visualizer);
   }
 

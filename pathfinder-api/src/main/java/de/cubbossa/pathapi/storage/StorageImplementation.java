@@ -5,13 +5,15 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
@@ -35,16 +37,20 @@ public interface StorageImplementation {
 
   void setLogger(Logger logger);
 
-  // Node Type
-  void saveNodeType(UUID node, NodeType<?> type);
+  // ################################
+  // #   Node Types
+  // ################################
 
-  void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping);
+  void saveNodeTypeMapping(Map<UUID, NodeType<?>> typeMapping);
 
-  <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node);
+  Map<UUID, NodeType<?>> loadNodeTypeMapping(Collection<UUID> nodes);
 
-  Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
+  void deleteNodeTypeMapping(Collection<UUID> nodes);
 
-  // Edges
+  // ################################
+  // #   Edges
+  // ################################
+
   Edge createAndLoadEdge(UUID start, UUID end, double weight);
 
   Collection<Edge> loadEdgesFrom(UUID start);
@@ -57,10 +63,15 @@ public interface StorageImplementation {
 
   void deleteEdge(Edge edge);
 
-  // Groups
+  // ################################
+  // #   Groups
+  // ################################
+
   NodeGroup createAndLoadGroup(NamespacedKey key);
 
-  Optional<NodeGroup> loadGroup(NamespacedKey key);
+  default Optional<NodeGroup> loadGroup(NamespacedKey key) {
+    return loadGroups(Set.of(key)).stream().findAny();
+  }
 
   Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key);
 
@@ -86,32 +97,23 @@ public interface StorageImplementation {
 
   <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier);
 
-  // Find Data
+  // ################################
+  // #   Find Data
+  // ################################
+
   DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time);
 
   Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key);
 
   void deleteDiscoverInfo(DiscoverInfo info);
 
-  // Visualizer
+  // ################################
+  // #   Visualizer Types
+  // ################################
 
-  <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizerType(NamespacedKey key,
-                                                                     VisualizerType<VisualizerT> type);
+  void saveVisualizerTypeMapping(Map<NamespacedKey, VisualizerType<?>> types);
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> loadVisualizerType(
-      NamespacedKey key);
+  Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypeMapping(Collection<NamespacedKey> keys);
 
-  Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypes(Collection<NamespacedKey> key);
-
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadVisualizer(VisualizerType<VisualizerT> type,
-                                                                                 NamespacedKey key);
-
-  <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadVisualizers(
-      VisualizerType<VisualizerT> type);
-
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadVisualizer(NamespacedKey key);
-
-  <VisualizerT extends PathVisualizer<?, ?>> void saveVisualizer(VisualizerT visualizer);
-
-  <VisualizerT extends PathVisualizer<?, ?>> void deleteVisualizer(VisualizerT visualizer);
+  void deleteVisualizerTypeMapping(Collection<NamespacedKey> keys);
 }

@@ -15,7 +15,7 @@ public interface InternalVisualizerDataStorage {
 
   <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(VisualizerType<VisualizerT> type);
 
-  <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerT visualizer);
+  <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer);
 
   <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer);
 }

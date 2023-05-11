@@ -110,7 +110,8 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(cached);
     }
     return asyncFuture(() -> {
-      Optional<NodeType<N>> type = implementation.loadNodeType(node);
+      Map<UUID, NodeType<?>> typeMapping = implementation.loadNodeTypeMapping(Set.of(node));
+      Optional<NodeType<N>> type = Optional.ofNullable((NodeType<N>) typeMapping.get(node));
       type.ifPresent(t -> cache.getNodeTypeCache().write(node, t));
       return type;
     });
@@ -126,7 +127,7 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(result);
     }
     return asyncFuture(() -> {
-      Map<UUID, NodeType<?>> newResult = implementation.loadNodeTypes(map.absent());
+      Map<UUID, NodeType<?>> newResult = implementation.loadNodeTypeMapping(map.absent());
       result.putAll(newResult);
       newResult.forEach(cache.getNodeTypeCache()::write);
       return result;
@@ -142,7 +143,7 @@ public class StorageImpl implements Storage {
       if (node instanceof Groupable groupable) {
         loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(groupable::addGroup);
       }
-      implementation.saveNodeType(node.getNodeId(), type);
+      implementation.saveNodeTypeMapping(Map.of(node.getNodeId(), type));
       cache.getNodeTypeCache().write(node.getNodeId(), type);
 
       cache.getNodeCache().write(node);
@@ -313,7 +314,7 @@ public class StorageImpl implements Storage {
         node.getEdges().forEach(implementation::deleteEdge);
         // TODO delete edges to
       }
-      // TODO remove Type mapping, remove edge mapping
+      implementation.deleteNodeTypeMapping(uuids);
 
       uuids.forEach(cache.getNodeCache()::invalidate);
       nodes.forEach(cache.getGroupCache()::invalidate);
@@ -429,8 +430,7 @@ public class StorageImpl implements Storage {
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       cache.getGroupCache().write(group);
-      cache.getNodeCache()
-          .write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
+      cache.getNodeCache().write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
     });
   }
 
@@ -491,7 +491,8 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(cached);
     }
     return asyncFuture(() -> {
-      Optional<VisualizerType<VisualizerT>> loaded = implementation.loadVisualizerType(key);
+      Map<NamespacedKey, VisualizerType<?>> types = implementation.loadVisualizerTypeMapping(Set.of(key));
+      Optional<VisualizerType<VisualizerT>> loaded = Optional.ofNullable((VisualizerType<VisualizerT>) types.get(key));
       loaded.ifPresent(type -> cache.getVisualizerTypeCache().write(key, type));
       return loaded;
     });
@@ -505,7 +506,7 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(result);
     }
     return asyncFuture(() -> {
-      Map<NamespacedKey, VisualizerType<?>> loaded = implementation.loadVisualizerTypes(map.absent());
+      Map<NamespacedKey, VisualizerType<?>> loaded = implementation.loadVisualizerTypeMapping(map.absent());
       result.putAll(loaded);
       loaded.entrySet().forEach(cache.getVisualizerTypeCache()::write);
       return result;
@@ -516,7 +517,7 @@ public class StorageImpl implements Storage {
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Void> saveVisualizerType(
       NamespacedKey key, VisualizerType<VisualizerT> type) {
     return asyncFuture(() -> {
-      implementation.saveVisualizerType(key, type);
+      implementation.saveVisualizerTypeMapping(Map.of(key, type));
       cache.getVisualizerTypeCache().write(key, type);
     });
   }
@@ -528,7 +529,7 @@ public class StorageImpl implements Storage {
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     return asyncFuture(() -> {
       saveVisualizerType(key, type).join();
-      VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(key);
+      VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(type, key);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });
@@ -545,16 +546,15 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(
-      VisualizerType<VisualizerT> type) {
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(VisualizerType<VisualizerT> type) {
 
     Optional<Collection<VisualizerT>> cached = cache.getVisualizerCache().getVisualizers(type);
     return cached
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> {
-          Map<NamespacedKey, VisualizerT> loaded = implementation.loadVisualizers(type);
-          cache.getVisualizerCache().writeAll(type, loaded.values());
-          return loaded.values();
+          Collection<VisualizerT> visualizers = type.getStorage().loadVisualizers(type).values();
+          cache.getVisualizerCache().writeAll(type, visualizers);
+          return visualizers;
         }));
   }
 
@@ -565,7 +565,11 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(cached);
     }
     return asyncFuture(() -> {
-      Optional<VisualizerT> loaded = implementation.loadVisualizer(key);
+      Optional<VisualizerType<VisualizerT>> type = this.resolveOptVisualizerType(key);
+      if (type.isEmpty()) {
+        return Optional.empty();
+      }
+      Optional<VisualizerT> loaded = type.get().getStorage().loadVisualizer(type.get(), key);
       loaded.ifPresent(visualizer -> cache.getVisualizerCache().write(visualizer));
       return loaded;
     });
@@ -574,17 +578,29 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
     return asyncFuture(() -> {
-      implementation.saveVisualizer(visualizer);
+
+      VisualizerType<?> type = resolveVisualizerType(visualizer.getKey());
+      saveVisualizerUnsafe(type, visualizer);
       cache.getVisualizerCache().write(visualizer);
     });
+  }
+
+  private void saveVisualizerUnsafe(VisualizerType type, PathVisualizer visualizer) {
+    type.getStorage().saveVisualizer(type, visualizer);
   }
 
   @Override
   public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     return asyncFuture(() -> {
-      implementation.deleteVisualizer(visualizer);
+      VisualizerType<?> type = resolveVisualizerType(visualizer.getKey());
+      deleteVisualizerUnsafe(type, visualizer);
       cache.getVisualizerCache().invalidate(visualizer);
+      implementation.deleteVisualizerTypeMapping(Set.of(visualizer.getKey()));
     });
+  }
+
+  private void deleteVisualizerUnsafe(VisualizerType type, PathVisualizer vis) {
+    type.getStorage().deleteVisualizer(type, vis);
   }
 
   private void debug(String message) {
@@ -607,6 +623,24 @@ public class StorageImpl implements Storage {
             }
           });
       return results;
+    });
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(VisualizerT visualizer) {
+    return resolveOptVisualizerType(visualizer.getKey());
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(NamespacedKey key) {
+    return this.<VisualizerT>loadVisualizerType(key).join();
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(VisualizerT visualizer) {
+    return resolveVisualizerType(visualizer.getKey());
+  }
+
+  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(NamespacedKey key) {
+    return this.<VisualizerT>resolveOptVisualizerType(key).orElseThrow(() -> {
+      return new IllegalStateException("Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
   }
 

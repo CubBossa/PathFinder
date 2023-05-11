@@ -4,13 +4,23 @@
 package de.cubbossa.pathfinder.jooq;
 
 
-import de.cubbossa.pathfinder.jooq.tables.*;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderSearchTerms;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderVisualizer;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderVisualizerTypeRelation;
+import de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints;
+import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
 
 
 /**
  * Convenience access to all tables in the default schema.
  */
-@SuppressWarnings({"all", "unchecked", "rawtypes"})
+@SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
 
     /**
