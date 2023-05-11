@@ -254,6 +254,7 @@ public class EditModeMenu {
   private void openGroupMenu(Player player, Groupable groupable) {
 
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+      System.out.println("Loaded groups, thread: " + Thread.currentThread().getName());
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
@@ -278,12 +279,13 @@ public class EditModeMenu {
               return stack;
             })
             .withClickHandler(Action.LEFT, c -> {
+              System.out.println("Handle click, thread: " + Thread.currentThread().getName());
               if (!group.contains(groupable.getNodeId())) {
                 groupable.addGroup(group);
-                pathFinder.getStorage().saveNode(groupable).join();
-
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                pathFinder.getStorage().saveNode(groupable).thenRun(() -> {
+                  System.out.println("After save, thread: " + Thread.currentThread().getName());
+                  c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                });
                 menu.refresh(menu.getListSlots());
               }
             })
@@ -292,8 +294,7 @@ public class EditModeMenu {
                 groupable.removeGroup(group.getKey());
                 pathFinder.getStorage().saveNode(groupable).join();
 
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+                c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
                 menu.refresh(menu.getListSlots());
               }
             }));

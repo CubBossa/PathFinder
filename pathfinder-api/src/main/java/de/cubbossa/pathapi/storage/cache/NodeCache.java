@@ -6,17 +6,16 @@ import de.cubbossa.pathapi.node.Node;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface NodeCache extends StorageCache<Node> {
 
-    <N extends Node> Optional<N> getNode(UUID uuid);
+  <N extends Node> Optional<N> getNode(UUID uuid);
 
-  Collection<Node> getAllNodes(Supplier<Collection<Node>> loader);
+  Optional<Collection<Node>> getAllNodes();
 
-  Collection<Node> getNodes(Collection<UUID> ids,
-                            Function<Collection<UUID>, Collection<? extends Node>> loader);
+  CacheCollection<UUID, Node> getNodes(Collection<UUID> ids);
+
+  void writeAll(Collection<Node> nodes);
 
   void write(NodeGroup group, Collection<UUID> deleted);
 

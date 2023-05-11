@@ -14,21 +14,21 @@ public class RemoteSqlStorage extends SqlStorage {
 
   private final HikariDataSource dataSource;
 
-    public RemoteSqlStorage(PathFinderConfig.SqlStorageConfig configuration,
-                            NodeTypeRegistry nodeTypeRegistry,
-                            ModifierRegistry modifierRegistry,
-                            VisualizerTypeRegistry visualizerTypeRegistry) {
-        super(SQLDialect.valueOf(configuration.getDialect()), nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
+  public RemoteSqlStorage(PathFinderConfig.SqlStorageConfig configuration,
+                          NodeTypeRegistry nodeTypeRegistry,
+                          ModifierRegistry modifierRegistry,
+                          VisualizerTypeRegistry visualizerTypeRegistry) {
+    super(SQLDialect.valueOf(configuration.getDialect()), nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
 
-        HikariConfig config = new HikariConfig();
-        config.setUsername(configuration.getUsername());
-        config.setPassword(configuration.getPassword());
-        config.setAutoCommit(false);
-        config.setJdbcUrl(configuration.getJdbcUrl());
-        config.setMaximumPoolSize(2);
-        config.setMinimumIdle(1);
-        dataSource = new HikariDataSource(config);
-    }
+    HikariConfig config = new HikariConfig();
+    config.setUsername(configuration.getUsername());
+    config.setPassword(configuration.getPassword());
+    config.setAutoCommit(false);
+    config.setJdbcUrl(configuration.getJdbcUrl());
+    config.setMaximumPoolSize(2);
+    config.setMinimumIdle(1);
+    dataSource = new HikariDataSource(config);
+  }
 
   @Override
   public void shutdown() {

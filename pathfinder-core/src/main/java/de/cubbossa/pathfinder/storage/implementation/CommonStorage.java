@@ -5,8 +5,8 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.*;
-import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.NodeDataStorage;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -17,7 +17,6 @@ import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
 import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
@@ -26,25 +25,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 public abstract class CommonStorage implements StorageImplementation, WaypointDataStorage, InternalVisualizerDataStorage {
 
   final NodeTypeRegistry nodeTypeRegistry;
   final VisualizerTypeRegistry visualizerTypeRegistry;
   final ModifierRegistry modifierRegistry;
-  @Getter
   @Setter
-  CacheLayer cache;
+  @Getter
+  Storage storage;
   @Getter
   @Setter
   private @Nullable Logger logger;
+
+  public CommonStorage(NodeTypeRegistry nodeTypeRegistry, VisualizerTypeRegistry visualizerTypeRegistry, ModifierRegistry modifierRegistry) {
+    this.nodeTypeRegistry = nodeTypeRegistry;
+    this.visualizerTypeRegistry = visualizerTypeRegistry;
+    this.modifierRegistry = modifierRegistry;
+  }
 
   <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(VisualizerT visualizer) {
     return resolveOptVisualizerType(visualizer.getKey());
   }
 
   <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(NamespacedKey key) {
-    return cache.getVisualizerTypeCache().<VisualizerT>getType(key, this::loadVisualizerType);
+    return storage.<VisualizerT>loadVisualizerType(key).join();
   }
 
   <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(VisualizerT visualizer) {
@@ -52,24 +56,9 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(NamespacedKey key) {
-    return (VisualizerType<VisualizerT>) resolveOptVisualizerType(key).orElseThrow(() -> {
+    return this.<VisualizerT>resolveOptVisualizerType(key).orElseThrow(() -> {
       return new IllegalStateException("Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
-  }
-
-  private Node insertGroups(Node node) {
-    if (node instanceof Groupable groupable) {
-      debug(" > Storage Implementation: 'insertGroups(" + node.getNodeId() + ")'");
-      loadGroups(node.getNodeId()).forEach(groupable::addGroup);
-      loadGroup(CommonPathFinder.globalGroupKey()).ifPresent(groupable::addGroup);
-    }
-    return node;
-  }
-
-  private Node insertEdges(Node node) {
-    debug(" > Storage Implementation: 'insertEdges(" + node.getNodeId() + ")'");
-    node.getEdges().addAll(loadEdgesFrom(node.getNodeId()));
-    return node;
   }
 
   @Override
@@ -77,7 +66,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     debug(" > Storage Implementation: 'createAndLoadNode(" + type.getKey() + ", " + location + ")'");
     N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
     if (node instanceof Groupable groupable) {
-      cache.getGroupCache().getGroup(CommonPathFinder.globalGroupKey(), key -> loadGroup(key).get()).ifPresent(groupable::addGroup);
+      storage.loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(groupable::addGroup);
     }
     saveNodeType(node.getNodeId(), type);
     return node;
@@ -86,9 +75,9 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   @Override
   public <N extends Node> Optional<N> loadNode(UUID id) {
     debug(" > Storage Implementation: 'loadNode(" + id + ")'");
-    Optional<NodeType<N>> type = loadNodeType(id);
+    Optional<NodeType<N>> type = storage.<N>loadNodeType(id).join();
     if (type.isPresent()) {
-      return (Optional<N>) type.get().loadNode(id).map(this::insertEdges).map(this::insertGroups);
+      return type.get().loadNode(id);
     }
     throw new IllegalStateException("No type found for node with UUID '" + id + "'.");
   }
@@ -98,9 +87,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     debug(" > Storage Implementation: 'loadNodes()'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadAllNodes().stream())
-        .map(this::insertEdges)
-        .map(this::insertGroups)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -109,9 +96,7 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
         .map(UUID::toString).collect(Collectors.joining(", ")) + ")'");
     return nodeTypeRegistry.getTypes().stream()
         .flatMap(nodeType -> nodeType.loadNodes(ids).stream())
-        .map(this::insertEdges)
-        .map(this::insertGroups)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -121,12 +106,13 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   }
 
   private <N extends Node> void saveNodeTyped(N node) {
-    NodeType<N> type = cache.getNodeTypeCache().getType(node.getNodeId(), this::loadNodeType);
-    N before = (N) loadNode(node.getNodeId()).orElseThrow();
+    NodeType<N> type = storage.<N>loadNodeType(node.getNodeId()).join().orElseThrow();
+    // actually hard load and not cached to make sure that nodes are comparable
+    N before = this.<N>loadNode(node.getNodeId()).orElseThrow();
     type.saveNode(node);
 
     if (node == before) {
-      throw new IllegalStateException("Cannot have compared elements be the same object instance!");
+      throw new IllegalStateException("Comparing node instance with itself while saving!");
     }
 
     if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {

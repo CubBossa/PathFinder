@@ -6,17 +6,16 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface VisualizerCache extends StorageCache<PathVisualizer<?, ?>> {
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> getVisualizer(NamespacedKey key,
-                                                                                 Function<NamespacedKey, Optional<VisualizerT>> loader);
 
-  Collection<PathVisualizer<?, ?>> getVisualizers(
-      Supplier<Collection<PathVisualizer<?, ?>>> loader);
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> getVisualizer(NamespacedKey key);
 
-  <VisualizerT extends PathVisualizer<?, ?>> Collection<VisualizerT> getVisualizers(
-      VisualizerType<VisualizerT> type,
-      Function<VisualizerType<VisualizerT>, Collection<VisualizerT>> loader);
+  Optional<Collection<PathVisualizer<?, ?>>> getVisualizers();
+
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<Collection<VisualizerT>> getVisualizers(VisualizerType<VisualizerT> type);
+
+  <VisualizerT extends PathVisualizer<?, ?>> void writeAll(VisualizerType<VisualizerT> type, Collection<VisualizerT> v);
+
+  void writeAll(Collection<PathVisualizer<?, ?>> visualizers);
 }

@@ -6,64 +6,63 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.storage.cache.DiscoverInfoCache;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 public class DiscoverInfoCacheImpl implements StorageCache<DiscoverInfo>, DiscoverInfoCache {
 
-  private final Cache<Key, DiscoverInfo> cache;
+  private final Map<UUID, Cache<NamespacedKey, DiscoverInfo>> cache;
 
   public DiscoverInfoCacheImpl() {
-    cache = Caffeine.newBuilder()
-        .expireAfterAccess(10, TimeUnit.MINUTES)
-        .maximumSize(1000)
-        .build();
+    cache = new HashMap<>();
+  }
+
+  private Cache<NamespacedKey, DiscoverInfo> playerCache(UUID uuid) {
+    return cache.computeIfAbsent(uuid, uuid1 -> {
+      return Caffeine.newBuilder()
+          .expireAfterAccess(10, TimeUnit.MINUTES)
+          .maximumSize(1000)
+          .build();
+    });
   }
 
   @Override
-  public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key,
-                                             BiFunction<UUID, NamespacedKey, DiscoverInfo> loader) {
-    return Optional.ofNullable(cache.get(new Key(player, key), k -> loader.apply(k.uuid, k.key)));
+  public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key) {
+    return Optional.ofNullable(playerCache(player).asMap().get(key));
   }
 
   @Override
-  public Collection<DiscoverInfo> getDiscovery(UUID player) {
-    return cache.asMap().values().stream()
-        .filter(info -> info.playerId().equals(player))
-        .collect(Collectors.toList());
+  public Optional<Collection<DiscoverInfo>> getDiscovery(UUID player) {
+    if (!cache.containsKey(player)) {
+      return Optional.empty();
+    }
+    return Optional.of(new HashSet<>(playerCache(player).asMap().values()));
   }
 
   @Override
   public void write(DiscoverInfo info) {
-    cache.put(new Key(info.playerId(), info.discoverable()), info);
+    playerCache(info.playerId()).put(info.discoverable(), info);
   }
 
   @Override
   public void invalidate(DiscoverInfo info) {
-    cache.invalidate(new Key(info.playerId(), info.discoverable()));
+    if (!cache.containsKey(info.playerId())) {
+      return;
+    }
+    cache.get(info.playerId()).invalidate(info.discoverable());
+    if (cache.get(info.playerId()).asMap().size() == 0) {
+      cache.remove(info.playerId());
+    }
   }
 
   @Override
   public void invalidate(UUID player) {
-    cache.invalidateAll(
-        cache.asMap().keySet().stream().filter(key -> key.uuid.equals(player)).toList());
+    cache.remove(player);
   }
 
   @Override
   public void invalidateAll() {
-    cache.invalidateAll();
-  }
-
-  @EqualsAndHashCode
-  @RequiredArgsConstructor
-  private static class Key {
-    private final UUID uuid;
-    private final NamespacedKey key;
+    cache.clear();
   }
 }

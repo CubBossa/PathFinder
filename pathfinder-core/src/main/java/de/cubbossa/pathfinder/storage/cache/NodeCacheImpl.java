@@ -4,16 +4,8 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.NodeCache;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
+
+import java.util.*;
 
 public class NodeCacheImpl implements NodeCache {
 
@@ -25,42 +17,37 @@ public class NodeCacheImpl implements NodeCache {
     nodeCache = new HashMap<>();
   }
 
-  public Optional<Node> getNode(UUID uuid) {
-    Node node = nodeCache.get(uuid);
-    return node == null ? Optional.empty() : Optional.of(node);
+  @Override
+  public <N extends Node> Optional<N> getNode(UUID uuid) {
+    return Optional.ofNullable((N) nodeCache.get(uuid));
   }
 
-  public Collection<Node> getAllNodes(Supplier<Collection<Node>> loader) {
-    if (!allCached) {
-      Collection<Node> result = loader.get();
-      result.forEach(this::write);
-      allCached = true;
+  @Override
+  public Optional<Collection<Node>> getAllNodes() {
+    return Optional.ofNullable(allCached ? new HashSet<>(nodeCache.values()) : null);
+  }
+
+  @Override
+  public CacheCollection<UUID, Node> getNodes(Collection<UUID> ids) {
+    if (allCached) {
+      return new CacheCollection<>(new HashSet<>(nodeCache.values()), new HashSet<>());
     }
-    return nodeCache.values();
-  }
-
-  public Collection<Node> getNodes(Collection<UUID> ids,
-                                   Function<Collection<UUID>, Collection<? extends Node>> loader) {
     Collection<Node> result = new HashSet<>();
-    SortedSet<UUID> sortedIds = new TreeSet<>(ids);
+    Collection<UUID> absent = new HashSet<>();
+    for (UUID id : ids) {
+      if (!nodeCache.containsKey(id)) {
+        absent.add(id);
+      } else {
+        result.add(nodeCache.get(id));
+      }
+    }
+    return new CacheCollection<>(result, absent);
+  }
 
-    if (!allCached) {
-      Collection<UUID> notPreset = new HashSet<>();
-      for (UUID id : ids) {
-        if (!nodeCache.containsKey(id)) {
-          notPreset.add(id);
-        }
-      }
-      if (notPreset.size() > 0) {
-        loader.apply(notPreset).forEach(this::write);
-      }
-    }
-    for (Node value : nodeCache.values()) {
-      if (sortedIds.contains(value.getNodeId())) {
-        result.add(value);
-      }
-    }
-    return result;
+  @Override
+  public void writeAll(Collection<Node> nodes) {
+    allCached = true;
+    nodes.forEach(node -> nodeCache.put(node.getNodeId(), node));
   }
 
   public void write(Node node) {

@@ -36,18 +36,14 @@ public interface StorageImplementation {
 
   void setLogger(Logger logger);
 
-  CacheLayer getCache();
+  // Node Type
+  void saveNodeType(UUID node, NodeType<?> type);
 
-  void setCache(CacheLayer cacheLayer);
-
-    // Node Type
-    void saveNodeType(UUID node, NodeType<?> type);
-
-    void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping);
+  void saveNodeTypes(Map<UUID, NodeType<?>> typeMapping);
 
   <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node);
 
-    Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
+  Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
 
   // Nodes
   <N extends Node> N createAndLoadNode(NodeType<N> type, Location location);

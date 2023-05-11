@@ -167,6 +167,7 @@ public class PathVisualizerCommand extends Command {
           .resolver(Placeholder.component("type",
               Component.text(
                   getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).join()
+                      .orElseThrow()
                       .getCommandName())))
           .build()));
     });
@@ -191,7 +192,7 @@ public class PathVisualizerCommand extends Command {
   public <T extends PathVisualizer<?, ?>> void onInfo(CommandSender sender,
                                                       T visualizer) {
     if (!(getPathfinder().getStorage().loadVisualizerType(visualizer.getKey())
-        .join() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
+        .join().orElseThrow() instanceof VisualizerTypeMessageExtension<?> msgExt)) {
       return;
     }
     // can be safely assumed, the type was extracted from the visualizer

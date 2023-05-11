@@ -240,7 +240,7 @@ public class CustomArgs {
       return (T) vis.get();
     })).includeSuggestions(suggestNamespacedKeys(sender ->
         PathFinderProvider.get().getStorage().loadVisualizers(type)
-            .thenApply(pathVisualizers -> pathVisualizers.values().stream()
+            .thenApply(pathVisualizers -> pathVisualizers.stream()
                 .map(Keyed::getKey)
                 .toList()))
     );

@@ -40,7 +40,7 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
 
   @Override
   public CurveLengthModifier deserialize(Map<String, Object> values) throws IOException {
-    if (values.containsKey("curve-length") && values.get("curve-length") instanceof Float f) {
+    if (values.containsKey("curve-length") && values.get("curve-length") instanceof Double f) {
       return new CurveLengthModifier(f);
     }
     throw new IOException(

@@ -17,6 +17,7 @@ import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.*;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
+import de.cubbossa.pathfinder.storage.implementation.CommonStorage;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -63,7 +64,7 @@ public abstract class CommonPathFinder implements PathFinder {
   private StorageImpl storage;
   @Setter
   private PathFinderConf configuration;
-  private EventDispatcher eventDispatcher;
+  private EventDispatcher<?> eventDispatcher;
   private PluginTranslations translations;
 
 
@@ -150,6 +151,10 @@ public abstract class CommonPathFinder implements PathFinder {
 //      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
     };
     impl.setLogger(getLogger());
+    // TODO bad style
+    if (impl instanceof CommonStorage cm) {
+      cm.setStorage(storage);
+    }
     storage.setImplementation(impl);
     storage.setEventDispatcher(eventDispatcher);
     storage.setLogger(getLogger());

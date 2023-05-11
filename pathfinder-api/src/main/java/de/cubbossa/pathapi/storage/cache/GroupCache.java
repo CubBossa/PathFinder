@@ -4,30 +4,38 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface GroupCache extends StorageCache<NodeGroup> {
 
-  Optional<NodeGroup> getGroup(NamespacedKey key, Function<NamespacedKey, NodeGroup> loader);
+  Optional<NodeGroup> getGroup(NamespacedKey key);
 
-  <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier, Function<Class<M>, Collection<NodeGroup>> loader);
+  <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier);
 
-  List<NodeGroup> getGroups(Pagination pagination, Function<Pagination, List<NodeGroup>> loader);
+  CacheCollection<NamespacedKey, NodeGroup> getGroups(Collection<NamespacedKey> keys);
 
-  Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
-                                  Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader);
+  Optional<Collection<NodeGroup>> getGroups();
 
-  Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader);
+  Optional<Collection<NodeGroup>> getGroups(UUID node);
 
-  Collection<NodeGroup> getGroups(UUID node, Function<UUID, Collection<NodeGroup>> loader);
+  Optional<Collection<NodeGroup>> getGroups(Pagination pagination);
 
-  void write(Node node);
+  default void write(Node node) {
+    if (node instanceof Groupable groupable) {
+      write(groupable.getNodeId(), groupable.getGroups());
+    }
+  }
+
+  <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups);
+
+  void write(UUID node, Collection<NodeGroup> groups);
+
+  void writeAll(Collection<NodeGroup> groups);
 
   void invalidate(Node node);
 }

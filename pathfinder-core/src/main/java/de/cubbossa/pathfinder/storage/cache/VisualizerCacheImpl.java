@@ -2,25 +2,18 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.*;
 
 public class VisualizerCacheImpl
-    implements StorageCache<PathVisualizer<?, ?>>,
-    de.cubbossa.pathapi.storage.cache.VisualizerCache {
+    implements de.cubbossa.pathapi.storage.cache.VisualizerCache {
 
   private final Cache<NamespacedKey, PathVisualizer<?, ?>> cache;
   private boolean cachedAll = false;
-  private Collection<NamespacedKey> cachedTypes = new HashSet<>();
+  private Map<NamespacedKey, Collection<PathVisualizer<?, ?>>> cachedTypes = new HashMap<>();
 
   public VisualizerCacheImpl() {
     cache = Caffeine.newBuilder()
@@ -29,39 +22,30 @@ public class VisualizerCacheImpl
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                    Function<NamespacedKey, Optional<T>> loader) {
-    return Optional.ofNullable((T) cache.get(key, k -> loader.apply(k).orElse(null)));
+  public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key) {
+    return Optional.ofNullable((T) cache.asMap().get(key));
   }
 
   @Override
-  public Collection<PathVisualizer<?, ?>> getVisualizers(
-      Supplier<Collection<PathVisualizer<?, ?>>> loader) {
-    if (cachedAll) {
-      return cache.asMap().values();
-    }
-    loader.get().forEach(e -> cache.put(e.getKey(), e));
+  public Optional<Collection<PathVisualizer<?, ?>>> getVisualizers() {
+    return Optional.ofNullable(cachedAll ? new HashSet<>(cache.asMap().values()) : null);
+  }
+
+  @Override
+  public <T extends PathVisualizer<?, ?>> Optional<Collection<T>> getVisualizers(VisualizerType<T> type) {
+    return Optional.ofNullable((Collection<T>) cachedTypes.get(type));
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> void writeAll(VisualizerType<VisualizerT> type, Collection<VisualizerT> v) {
+    v.forEach(vis -> cache.put(vis.getKey(), vis));
+    cachedTypes.put(type.getKey(), (Collection<PathVisualizer<?, ?>>) v);
+  }
+
+  @Override
+  public void writeAll(Collection<PathVisualizer<?, ?>> visualizers) {
+    visualizers.forEach(v -> cache.put(v.getKey(), v));
     cachedAll = true;
-    return cache.asMap().values();
-  }
-
-  @Override
-  public <T extends PathVisualizer<?, ?>> Collection<T> getVisualizers(VisualizerType<T> type,
-                                                                       Function<VisualizerType<T>, Collection<T>> loader) {
-    if (cachedAll || cachedTypes.contains(type.getKey())) {
-      return cache.asMap().values().stream()
-          .filter(
-                  visualizer -> PathFinderProvider.get().getStorage()
-                          .loadVisualizerType(visualizer.getKey())
-                          .join()
-                          .equals(type))
-          .map(visualizer -> (T) visualizer)
-          .toList();
-    }
-    Collection<T> loaded = loader.apply(type);
-    loaded.forEach(v -> cache.put(v.getKey(), v));
-    cachedTypes.add(type.getKey());
-    return loaded;
   }
 
   @Override

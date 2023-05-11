@@ -59,7 +59,7 @@ public interface Storage {
    * @param <N>  The Node type.
    * @return The {@link NodeType} instance wrapped in {@link CompletableFuture}.
    */
-  <N extends Node> CompletableFuture<NodeType<N>> loadNodeType(UUID node);
+  <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node);
 
   /**
    * Loads the node type for multiple nodes by their {@link UUID}s.
@@ -157,7 +157,7 @@ public interface Storage {
 
   // Visualizer
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerType<VisualizerT>> loadVisualizerType(
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerType<VisualizerT>>> loadVisualizerType(
       NamespacedKey key);
 
   CompletableFuture<Map<NamespacedKey, VisualizerType<?>>> loadVisualizerTypes(
@@ -171,7 +171,7 @@ public interface Storage {
 
   CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers();
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Map<NamespacedKey, VisualizerT>> loadVisualizers(
+  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(
       VisualizerType<VisualizerT> type);
 
   <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerT>> loadVisualizer(

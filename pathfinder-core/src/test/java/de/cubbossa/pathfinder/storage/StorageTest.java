@@ -69,8 +69,9 @@ public abstract class StorageTest extends PathFinderTest {
   @Order(3)
   <N extends Node> void getNodeType() {
     Waypoint waypoint = makeWaypoint();
-    NodeType<N> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
-    assertEquals(waypointNodeType, type);
+    Optional<NodeType<N>> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
+    assertTrue(type.isPresent());
+    assertEquals(waypointNodeType, type.get());
   }
 
   @Test
@@ -105,7 +106,7 @@ public abstract class StorageTest extends PathFinderTest {
     assertTrue(nodes.containsKey(a));
     assertFalse(nodes.containsKey(b));
     assertNotNull(nodes.get(a));
-    assertEquals(m, nodes.get(a));
+    assertEquals(Set.of(m), nodes.get(a));
   }
 
   @Test

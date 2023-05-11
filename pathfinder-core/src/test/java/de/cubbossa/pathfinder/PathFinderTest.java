@@ -21,6 +21,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
+import de.cubbossa.pathfinder.storage.implementation.CommonStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.WorldImpl;
@@ -96,6 +97,9 @@ public abstract class PathFinderTest {
 
     storage = new StorageImpl();
     StorageImplementation implementation = factory.get();
+    if (implementation instanceof CommonStorage cms) {
+      cms.setStorage(storage);
+    }
 
     storage.setImplementation(implementation);
     storage.setLogger(logger);

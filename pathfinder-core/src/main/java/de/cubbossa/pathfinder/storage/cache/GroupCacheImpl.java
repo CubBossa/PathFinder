@@ -12,14 +12,17 @@ import de.cubbossa.pathapi.storage.cache.GroupCache;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   private final Cache<NamespacedKey, NodeGroup> cache;
   private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
+  private final Cache<Class<Modifier>, Collection<NodeGroup>> modifierGroupCache;
   private boolean cachedAll = false;
 
   public GroupCacheImpl() {
@@ -28,36 +31,41 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
         .build();
     this.nodeGroupCache = Caffeine.newBuilder()
         .build();
+    this.modifierGroupCache = Caffeine.newBuilder()
+        .build();
   }
 
   @Override
-  public Optional<NodeGroup> getGroup(NamespacedKey key,
-                                      Function<NamespacedKey, NodeGroup> loader) {
-    return Optional.ofNullable(cache.get(key, loader));
+  public Optional<NodeGroup> getGroup(NamespacedKey key) {
+    return Optional.ofNullable(cache.get(key, key1 -> null));
   }
 
   @Override
-  public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier,
-                                                              Function<Class<M>, Collection<NodeGroup>> loader) {
-    return cachedAll
-        ? cache.asMap().values().stream().filter(group -> group.hasModifier(modifier)).toList()
-        : loader.apply(modifier);
-  }
-
-  @Override
-  public List<NodeGroup> getGroups(Pagination pagination,
-                                   Function<Pagination, List<NodeGroup>> loader) {
-    if (cachedAll) {
-      List<NodeGroup> present = cache.asMap().values().stream().toList();
-        return CollectionUtils.subList(present, pagination.getOffset(),
-                pagination.getOffset() + pagination.getLimit());
+  public <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier) {
+    if (modifierGroupCache.asMap().containsKey(modifier)) {
+      return Optional.of(modifierGroupCache.asMap().get(modifier));
     }
-    return loader.apply(pagination);
+    if (cachedAll) {
+      Collection<NodeGroup> newCache = cache.asMap().values().stream()
+          .filter(group -> group.hasModifier(modifier))
+          .collect(Collectors.toSet());
+      write(modifier, newCache);
+      return Optional.of(newCache);
+    }
+    return Optional.empty();
   }
 
   @Override
-  public Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
-                                         Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
+  public Optional<Collection<NodeGroup>> getGroups(Pagination pagination) {
+    if (!cachedAll) {
+      return Optional.empty();
+    }
+    return Optional.of(CollectionUtils.subList(cache.asMap().values().stream().toList(), pagination.getOffset(),
+        pagination.getOffset() + pagination.getLimit()));
+  }
+
+  @Override
+  public CacheCollection<NamespacedKey, NodeGroup> getGroups(Collection<NamespacedKey> keys) {
     Collection<NodeGroup> result = new HashSet<>();
     Collection<NamespacedKey> toLoad = new HashSet<>();
     for (NamespacedKey key : keys) {
@@ -68,24 +76,20 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
         toLoad.add(key);
       }
     }
-    result.addAll(loader.apply(toLoad));
-    return result;
+    return new CacheCollection<>(result, toLoad);
   }
 
   @Override
-  public Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader) {
+  public Optional<Collection<NodeGroup>> getGroups() {
     if (cachedAll) {
-      return new HashSet<>(cache.asMap().values());
+      return Optional.of(new HashSet<>(cache.asMap().values()));
     }
-    Collection<NodeGroup> loaded = loader.get();
-    loaded.forEach(g -> cache.put(g.getKey(), g));
-    cachedAll = true;
-    return loaded;
+    return Optional.empty();
   }
 
   @Override
-  public Collection<NodeGroup> getGroups(UUID node, Function<UUID, Collection<NodeGroup>> loader) {
-    return nodeGroupCache.get(node, loader);
+  public Optional<Collection<NodeGroup>> getGroups(UUID node) {
+    return Optional.ofNullable(nodeGroupCache.asMap().get(node));
   }
 
   public void write(NodeGroup group) {
@@ -104,6 +108,22 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
         }
       }
     }
+  }
+
+  @Override
+  public <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups) {
+    modifierGroupCache.put((Class<Modifier>) modifier, groups);
+  }
+
+  @Override
+  public void write(UUID node, Collection<NodeGroup> groups) {
+    nodeGroupCache.put(node, groups);
+  }
+
+  @Override
+  public void writeAll(Collection<NodeGroup> groups) {
+    groups.forEach(group -> cache.put(group.getKey(), group));
+    cachedAll = true;
   }
 
   public void invalidate(NodeGroup group) {

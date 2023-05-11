@@ -19,6 +19,8 @@ import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,29 +53,36 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   private boolean dispatchEvent(Event event) {
     try {
-      return dispatchEventWithFuture(event).get(1, TimeUnit.SECONDS);
+      CompletableFuture<Boolean> future = dispatchEventWithFuture(event);
+      return future.get(500, TimeUnit.MILLISECONDS);
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Calling event " + event.getEventName() + " took more than 500 milli seconds - skipping.", e);
     }
   }
 
   private CompletableFuture<Boolean> dispatchEventWithFuture(Event event) {
     log("Dispatching Event '" + event.getClass().getSimpleName() + "'.");
-    CompletableFuture<Boolean> future = new CompletableFuture<>();
     if (Bukkit.isPrimaryThread()) {
-      Bukkit.getPluginManager().callEvent(event);
-      boolean cancelled = event instanceof Cancellable cancellable && cancellable.isCancelled();
-      future.complete(!cancelled);
-      return future;
+      return CompletableFuture.completedFuture(dispatchEventInMainThread(event));
     }
-    Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
-      boolean c = dispatchEventWithFuture(event).join();
-      future.complete(c);
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    JavaPlugin pl = PathFinderPlugin.getInstance();
+    new BukkitRunnable() {
+      @Override
+      public void run() {
+        boolean cancelled = dispatchEventInMainThread(event);
+        future.complete(cancelled);
+      }
+    }.runTask(PathFinderPlugin.getInstance());
+    Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
+
     });
-    return future.exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
-    });
+    return future;
+  }
+
+  private boolean dispatchEventInMainThread(Event event) {
+    Bukkit.getPluginManager().callEvent(event);
+    return event instanceof Cancellable cancellable && cancellable.isCancelled();
   }
 
   @Override

@@ -694,7 +694,7 @@ public abstract class SqlStorage extends CommonStorage {
             if (getLogger() != null) {
               getLogger().log(Level.WARNING,
                   "Could not load modifier with class name '" + record.getModifierClass()
-                      + "', skipping.");
+                      + "', skipping.", t);
             } else {
               throw new RuntimeException(t);
             }

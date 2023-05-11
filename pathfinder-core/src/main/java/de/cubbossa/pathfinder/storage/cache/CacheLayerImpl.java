@@ -15,9 +15,6 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 @Getter
 public class CacheLayerImpl implements CacheLayer {
@@ -50,42 +47,69 @@ public class CacheLayerImpl implements CacheLayer {
   }
 
   public static CacheLayer empty() {
-    return new CacheLayerImpl(new NodeTypeCache() {
-      @Override
-      public <N extends Node> NodeType<N> getType(UUID uuid,
-                                                  Function<UUID, Optional<NodeType<N>>> loader) {
-        return loader.apply(uuid).orElseThrow(
-            () -> new RuntimeException("Could not access type of node '" + uuid + "'.")
-        );
-      }
+    return new CacheLayerImpl(
+        new NodeTypeCache() {
+          @Override
+          public <N extends Node> Optional<NodeType<N>> getType(UUID uuid) {
+            return Optional.empty();
+          }
 
-      @Override
-      public Map<UUID, NodeType<?>> getTypes(Collection<UUID> uuids,
-                                             Function<Collection<UUID>, Map<UUID, NodeType<?>>> loader) {
-        return loader.apply(uuids);
-      }
+          @Override
+          public CacheMap<UUID, NodeType<?>> getTypes(Collection<UUID> uuids) {
+            return CacheMap.empty(uuids);
+          }
 
-      @Override
-      public void write(UUID uuid, NodeType<?> type) {
+          @Override
+          public void write(UUID uuid, NodeType<?> type) {
 
-      }
+          }
 
-      @Override
-      public void write(UUID uuid) {
+          @Override
+          public void write(UUID uuid) {
 
-      }
+          }
 
-      @Override
-      public void invalidate(UUID uuid) {
+          @Override
+          public void invalidate(UUID uuid) {
 
-      }
+          }
 
-      @Override
-      public void invalidateAll() {
+          @Override
+          public void invalidateAll() {
 
-      }
-    },
+          }
+        },
         new NodeCache() {
+          @Override
+          public <N extends Node> Optional<N> getNode(UUID uuid) {
+            return Optional.empty();
+          }
+
+          @Override
+          public Optional<Collection<Node>> getAllNodes() {
+            return Optional.empty();
+          }
+
+          @Override
+          public CacheCollection<UUID, Node> getNodes(Collection<UUID> ids) {
+            return CacheCollection.empty(ids);
+          }
+
+          @Override
+          public void writeAll(Collection<Node> nodes) {
+
+          }
+
+          @Override
+          public void write(NodeGroup group, Collection<UUID> deleted) {
+
+          }
+
+          @Override
+          public void invalidate(UUID uuid) {
+
+          }
+
           @Override
           public void write(Node node) {
 
@@ -100,193 +124,177 @@ public class CacheLayerImpl implements CacheLayer {
           public void invalidateAll() {
 
           }
+        },
+        new GroupCache() {
+          @Override
+          public void write(NodeGroup group) {
+
+          }
 
           @Override
-          public Optional<Node> getNode(UUID uuid) {
+          public void invalidate(NodeGroup group) {
+
+          }
+
+          @Override
+          public void invalidateAll() {
+
+          }
+
+          @Override
+          public Optional<NodeGroup> getGroup(NamespacedKey key) {
             return Optional.empty();
           }
 
           @Override
-          public Collection<Node> getAllNodes(Supplier<Collection<Node>> loader) {
-            return loader.get();
+          public <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier) {
+            return Optional.empty();
           }
 
           @Override
-          public Collection<Node> getNodes(Collection<UUID> ids,
-                                           Function<Collection<UUID>, Collection<? extends Node>> loader) {
-            return (Collection<Node>) loader.apply(ids);
+          public CacheCollection<NamespacedKey, NodeGroup> getGroups(Collection<NamespacedKey> keys) {
+            return CacheCollection.empty(keys);
           }
 
           @Override
-          public void write(NodeGroup group, Collection<UUID> deleted) {
+          public Optional<Collection<NodeGroup>> getGroups() {
+            return Optional.empty();
+          }
+
+          @Override
+          public Optional<Collection<NodeGroup>> getGroups(UUID node) {
+            return Optional.empty();
+          }
+
+          @Override
+          public Optional<Collection<NodeGroup>> getGroups(Pagination pagination) {
+            return Optional.empty();
+          }
+
+          @Override
+          public <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups) {
 
           }
 
           @Override
-          public void invalidate(UUID uuid) {
+          public void write(UUID node, Collection<NodeGroup> groups) {
 
           }
-        }, new GroupCache() {
-      @Override
-      public Optional<NodeGroup> getGroup(NamespacedKey key,
-                                          Function<NamespacedKey, NodeGroup> loader) {
-        return Optional.ofNullable(loader.apply(key));
-      }
 
-      @Override
-      public <M extends Modifier> Collection<NodeGroup> getGroups(Class<M> modifier,
-                                                                  Function<Class<M>, Collection<NodeGroup>> loader) {
-        return loader.apply(modifier);
-      }
+          @Override
+          public void writeAll(Collection<NodeGroup> groups) {
 
-      @Override
-      public List<NodeGroup> getGroups(Pagination pagination,
-                                       Function<Pagination, List<NodeGroup>> loader) {
-        return loader.apply(pagination);
-      }
+          }
 
-      @Override
-      public Collection<NodeGroup> getGroups(Collection<NamespacedKey> keys,
-                                             Function<Collection<NamespacedKey>, Collection<NodeGroup>> loader) {
-        return loader.apply(keys);
-      }
+          @Override
+          public void invalidate(Node node) {
 
-      @Override
-      public Collection<NodeGroup> getGroups(Supplier<Collection<NodeGroup>> loader) {
-        return loader.get();
-      }
+          }
+        },
+        new VisualizerCache() {
+          @Override
+          public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> getVisualizer(NamespacedKey key) {
+            return Optional.empty();
+          }
 
-      @Override
-      public Collection<NodeGroup> getGroups(UUID node,
-                                             Function<UUID, Collection<NodeGroup>> loader) {
-        return loader.apply(node);
-      }
+          @Override
+          public Optional<Collection<PathVisualizer<?, ?>>> getVisualizers() {
+            return Optional.empty();
+          }
 
-      @Override
-      public void write(Node node) {
+          @Override
+          public <VisualizerT extends PathVisualizer<?, ?>> Optional<Collection<VisualizerT>> getVisualizers(VisualizerType<VisualizerT> type) {
+            return Optional.empty();
+          }
 
-      }
+          @Override
+          public <VisualizerT extends PathVisualizer<?, ?>> void writeAll(VisualizerType<VisualizerT> type, Collection<VisualizerT> v) {
 
-      @Override
-      public void invalidate(Node node) {
+          }
 
-      }
+          @Override
+          public void writeAll(Collection<PathVisualizer<?, ?>> visualizers) {
 
-      @Override
-      public void write(NodeGroup group) {
+          }
 
-      }
+          @Override
+          public void write(PathVisualizer<?, ?> pathVisualizer) {
 
-      @Override
-      public void invalidate(NodeGroup group) {
+          }
 
-      }
+          @Override
+          public void invalidate(PathVisualizer<?, ?> pathVisualizer) {
 
-      @Override
-      public void invalidateAll() {
+          }
 
-      }
-    }, new VisualizerCache() {
-      @Override
-      public <T extends PathVisualizer<?, ?>> Optional<T> getVisualizer(NamespacedKey key,
-                                                                        Function<NamespacedKey, Optional<T>> loader) {
-        return loader.apply(key);
-      }
+          @Override
+          public void invalidateAll() {
 
-      @Override
-      public Collection<PathVisualizer<?, ?>> getVisualizers(
-          Supplier<Collection<PathVisualizer<?, ?>>> loader) {
-        return loader.get();
-      }
+          }
+        },
+        new DiscoverInfoCache() {
+          @Override
+          public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key) {
+            return Optional.empty();
+          }
 
-      @Override
-      public <T extends PathVisualizer<?, ?>> Collection<T> getVisualizers(
-          VisualizerType<T> type,
-          Function<VisualizerType<T>, Collection<T>> loader) {
-        return loader.apply(type);
-      }
+          @Override
+          public Optional<Collection<DiscoverInfo>> getDiscovery(UUID player) {
+            return Optional.empty();
+          }
 
-      @Override
-      public void write(PathVisualizer<?, ?> visualizer) {
+          @Override
+          public void invalidate(UUID player) {
 
-      }
+          }
 
-      @Override
-      public void invalidate(PathVisualizer<?, ?> visualizer) {
+          @Override
+          public void write(DiscoverInfo discoverInfo) {
 
-      }
+          }
 
-      @Override
-      public void invalidateAll() {
+          @Override
+          public void invalidate(DiscoverInfo discoverInfo) {
 
-      }
-    }, new DiscoverInfoCache() {
-      @Override
-      public Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key,
-                                                 BiFunction<UUID, NamespacedKey, DiscoverInfo> loader) {
-        return Optional.ofNullable(loader.apply(player, key));
-      }
+          }
 
-      @Override
-      public Collection<DiscoverInfo> getDiscovery(UUID player) {
-        return null;
-      }
+          @Override
+          public void invalidateAll() {
 
-      @Override
-      public void invalidate(UUID player) {
+          }
+        },
+        new VisualizerTypeCache() {
+          @Override
+          public CacheMap<NamespacedKey, VisualizerType<?>> getTypes(Collection<NamespacedKey> keys) {
+            return CacheMap.empty(keys);
+          }
 
-      }
+          @Override
+          public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(NamespacedKey key) {
+            return Optional.empty();
+          }
 
-      @Override
-      public void write(DiscoverInfo discoverInfo) {
+          @Override
+          public <VisualizerT extends PathVisualizer<?, ?>> void write(NamespacedKey key, VisualizerType<VisualizerT> type) {
 
-      }
+          }
 
-      @Override
-      public void invalidate(DiscoverInfo discoverInfo) {
+          @Override
+          public void write(Map.Entry<NamespacedKey, VisualizerType<?>> namespacedKeyVisualizerTypeEntry) {
 
-      }
+          }
 
-      @Override
-      public void invalidateAll() {
+          @Override
+          public void invalidate(Map.Entry<NamespacedKey, VisualizerType<?>> namespacedKeyVisualizerTypeEntry) {
 
-      }
-    }, new VisualizerTypeCache() {
-      @Override
-      public Map<NamespacedKey, VisualizerType<?>> getTypes(Collection<NamespacedKey> key,
-                                                            Function<Collection<NamespacedKey>, Map<NamespacedKey, VisualizerType<?>>> loader) {
-        return loader.apply(key);
-      }
+          }
 
-      @Override
-      public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
-          NamespacedKey key, Function<NamespacedKey, Optional<VisualizerType<VisualizerT>>> loader) {
-        return loader.apply(key);
-      }
+          @Override
+          public void invalidateAll() {
 
-      @Override
-      public <VisualizerT extends PathVisualizer<?, ?>> void write(NamespacedKey key,
-                                                                   VisualizerType<VisualizerT> type) {
-
-      }
-
-      @Override
-      public void write(
-          Map.Entry<NamespacedKey, VisualizerType<?>> namespacedKeyVisualizerTypeEntry) {
-
-      }
-
-      @Override
-      public void invalidate(
-          Map.Entry<NamespacedKey, VisualizerType<?>> namespacedKeyVisualizerTypeEntry) {
-
-      }
-
-      @Override
-      public void invalidateAll() {
-
-      }
-    });
+          }
+        }
+    );
   }
 
   @NotNull

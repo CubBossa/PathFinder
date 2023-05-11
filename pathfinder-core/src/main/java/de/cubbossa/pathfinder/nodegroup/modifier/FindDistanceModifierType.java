@@ -40,10 +40,9 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
 
   @Override
   public FindDistanceModifier deserialize(Map<String, Object> values) throws IOException {
-    if (values.containsKey("find-distance") && values.get("find-distance") instanceof Float f) {
+    if (values.containsKey("find-distance") && values.get("find-distance") instanceof Double f) {
       return new FindDistanceModifier(f);
     }
-    throw new IOException(
-        "Could not deserialize FindDistanceModifier, missing 'find-distance' attribute.");
+    throw new IOException("Could not deserialize FindDistanceModifier, missing 'find-distance' attribute.");
   }
 }

@@ -99,6 +99,7 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
         Placeholder.component("name", visualizer.getDisplayName()),
         Placeholder.component("type", Component.text(
             PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).join()
+                .orElseThrow()
                 .getCommandName())),
         Placeholder.parsed("property", property),
         formatter.apply("old-value", old),
