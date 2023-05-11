@@ -2,7 +2,6 @@ package de.cubbossa.pathapi.storage;
 
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
@@ -44,19 +43,6 @@ public interface StorageImplementation {
   <N extends Node> Optional<NodeType<N>> loadNodeType(UUID node);
 
   Map<UUID, NodeType<?>> loadNodeTypes(Collection<UUID> nodes);
-
-  // Nodes
-  <N extends Node> N createAndLoadNode(NodeType<N> type, Location location);
-
-  <N extends Node> Optional<N> loadNode(UUID id);
-
-  Collection<Node> loadNodes();
-
-  Collection<Node> loadNodes(Collection<UUID> ids);
-
-  void saveNode(Node node);
-
-  void deleteNodes(Collection<Node> node);
 
   // Edges
   Edge createAndLoadEdge(UUID start, UUID end, double weight);

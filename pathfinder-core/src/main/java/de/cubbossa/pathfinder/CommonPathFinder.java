@@ -84,11 +84,11 @@ public abstract class CommonPathFinder implements PathFinder {
   public void onLoad() {
     PathFinderProvider.setPathFinder(this);
 
-    storage = new StorageImpl();
-
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     visualizerTypeRegistry = new VisualizerHandler();
     modifierRegistry = new ModifierRegistryImpl();
+
+    storage = new StorageImpl(nodeTypeRegistry);
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
     modifierRegistry.registerModifierType(new NavigableModifierType());

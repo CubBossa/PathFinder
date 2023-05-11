@@ -6,14 +6,8 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.CacheLayer;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.node.*;
+import de.cubbossa.pathapi.storage.*;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -46,8 +40,11 @@ public class StorageImpl implements Storage {
   private @Nullable Logger logger;
   private StorageImplementation implementation;
 
-  public StorageImpl() {
+  private final NodeTypeRegistry nodeTypeRegistry;
+
+  public StorageImpl(NodeTypeRegistry nodeTypeRegistry) {
     cache = new CacheLayerImpl();
+    this.nodeTypeRegistry = nodeTypeRegistry;
   }
 
   private Optional<EventDispatcher<?>> eventDispatcher() {
@@ -141,9 +138,14 @@ public class StorageImpl implements Storage {
   public <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location) {
     debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
-      N node = implementation.createAndLoadNode(type, location);
-      cache.getNodeCache().write(node);
+      N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
+      if (node instanceof Groupable groupable) {
+        loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(groupable::addGroup);
+      }
+      implementation.saveNodeType(node.getNodeId(), type);
       cache.getNodeTypeCache().write(node.getNodeId(), type);
+
+      cache.getNodeCache().write(node);
       eventDispatcher().ifPresent(e -> e.dispatchNodeCreate(node));
       return node;
     });
@@ -157,7 +159,8 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(opt);
     }
     return asyncFuture(() -> {
-      Optional<N> node = implementation.<N>loadNode(id).map(this::prepareLoadedNode);
+      NodeType<N> type = this.<N>loadNodeType(id).join().orElseThrow();
+      Optional<N> node = type.loadNode(id).map(this::prepareLoadedNode);
       node.ifPresent(cache.getNodeCache()::write);
       return node;
     });
@@ -203,7 +206,8 @@ public class StorageImpl implements Storage {
     return cache.getNodeCache().getAllNodes()
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> {
-          Collection<Node> all = implementation.loadNodes().stream()
+          Collection<Node> all = nodeTypeRegistry.getTypes().stream()
+              .flatMap(nodeType -> nodeType.loadAllNodes().stream())
               .map(this::prepareLoadedNode)
               .collect(Collectors.toSet());
           cache.getNodeCache().writeAll(all);
@@ -220,11 +224,18 @@ public class StorageImpl implements Storage {
       return CompletableFuture.completedFuture(result);
     }
     return asyncFuture(() -> {
-      Collection<Node> nodes = implementation.loadNodes(col.absent()).stream()
-          .map(this::prepareLoadedNode)
-          .collect(Collectors.toSet());
-      nodes.forEach(cache.getNodeCache()::write);
-      result.addAll(nodes);
+      Map<UUID, NodeType<?>> types = loadNodeTypes(col.absent()).join();
+      Map<NodeType<?>, Collection<UUID>> revert = new HashMap<>();
+      types.forEach((uuid, nodeType) -> {
+        revert.computeIfAbsent(nodeType, id -> new HashSet<>()).add(uuid);
+      });
+      revert.forEach((nodeType, uuids) -> {
+        Collection<Node> nodes = nodeType.loadNodes(uuids).stream()
+            .map(this::prepareLoadedNode)
+            .collect(Collectors.toSet());
+        nodes.forEach(cache.getNodeCache()::write);
+        result.addAll(nodes);
+      });
       return result;
     });
   }
@@ -240,9 +251,34 @@ public class StorageImpl implements Storage {
           cache.getGroupCache().write(node);
           return before;
         })
-        .thenAcceptAsync(before -> {
-          implementation.saveNode(node);
-        });
+        .thenAcceptAsync(before -> saveNodeTypeSafeBlocking(node));
+  }
+
+  private <N extends Node> void saveNodeTypeSafeBlocking(N node) {
+    NodeType<N> type = this.<N>loadNodeType(node.getNodeId()).join().orElseThrow();
+    // actually hard load and not cached to make sure that nodes are comparable
+    N before = type.loadNode(node.getNodeId()).map(this::prepareLoadedNode).orElseThrow();
+    type.saveNode(node);
+
+    if (node == before) {
+      throw new IllegalStateException("Comparing node instance with itself while saving!");
+    }
+
+    if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
+      loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(gAfter::addGroup);
+
+      StorageImpl.ComparisonResult<NodeGroup> cmp =
+          StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
+      cmp.toInsertIfPresent(nodeGroups -> implementation.assignToGroups(nodeGroups, List.of(node.getNodeId())));
+      cmp.toDeleteIfPresent(nodeGroups -> implementation.unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
+    }
+    StorageImpl.ComparisonResult<Edge> cmp = StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
+    cmp.toInsertIfPresent(edges -> {
+      for (Edge edge : edges) {
+        implementation.createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
+      }
+    });
+    cmp.toDeleteIfPresent(edges -> edges.forEach(implementation::deleteEdge));
   }
 
   @Override
@@ -265,13 +301,28 @@ public class StorageImpl implements Storage {
     debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString)
         .collect(Collectors.joining(",")) + ")'");
 
+    eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
     return asyncFuture(() -> {
-      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
-      implementation.deleteNodes(nodes);
+
+      Map<UUID, NodeType<?>> types = loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).join();
+      for (Node node : nodes) {
+        if (node instanceof Groupable groupable) {
+          implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
+        }
+        deleteNode(node, types.get(node.getNodeId()));
+        node.getEdges().forEach(implementation::deleteEdge);
+        // TODO delete edges to
+      }
+      // TODO remove Type mapping, remove edge mapping
+
       uuids.forEach(cache.getNodeCache()::invalidate);
       nodes.forEach(cache.getGroupCache()::invalidate);
       uuids.forEach(cache.getNodeTypeCache()::invalidate);
     });
+  }
+
+  private void deleteNode(Node node, NodeType type) {
+    type.deleteNode(node);
   }
 
   @Override

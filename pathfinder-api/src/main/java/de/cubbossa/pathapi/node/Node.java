@@ -1,10 +1,11 @@
 package de.cubbossa.pathapi.node;
 
 import de.cubbossa.pathapi.misc.Location;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A node instance is the main structure of the virtual graph that is managed by PathFinder.
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see Edge serves as connecting structure.
  */
-public interface Node extends Comparable<Node> {
+public interface Node extends Comparable<Node>, Cloneable {
 
   /**
    * The UUID of nodes must be unique for each node and serves as primary key.
@@ -85,4 +86,6 @@ public interface Node extends Comparable<Node> {
   default int compareTo(@NotNull Node o) {
     return getNodeId().compareTo(o.getNodeId());
   }
+
+  Node clone();
 }

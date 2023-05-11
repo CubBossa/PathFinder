@@ -266,30 +266,6 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public void deleteNodes(Collection<Node> nodes) {
-    debug(" > Storage Implementation: 'deleteNodes(" + nodes.stream()
-        .map(Node::getNodeId).map(UUID::toString).collect(Collectors.joining(",")) + ")'");
-    Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-    Map<UUID, NodeType<?>> types = loadNodeTypes(ids);
-    create
-        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
-        .execute();
-    create
-        .deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.in(ids))
-        .or(PATHFINDER_EDGES.END_ID.in(ids))
-        .execute();
-    for (Node node : nodes) {
-      deleteNode(node, types.get(node.getNodeId()));
-    }
-    create
-        .deleteFrom(PATHFINDER_NODE_TYPE_RELATION)
-        .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(ids))
-        .execute();
-  }
-
-  @Override
   public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
     create.insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)

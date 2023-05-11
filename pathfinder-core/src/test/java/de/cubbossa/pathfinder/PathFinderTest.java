@@ -95,7 +95,7 @@ public abstract class PathFinderTest {
     modifierRegistry.registerModifierType(new PermissionModifierType());
     visualizerTypeRegistry = new VisualizerHandler();
 
-    storage = new StorageImpl();
+    storage = new StorageImpl(nodeTypeRegistry);
     StorageImplementation implementation = factory.get();
     if (implementation instanceof CommonStorage cms) {
       cms.setStorage(storage);

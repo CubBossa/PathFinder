@@ -19,9 +19,9 @@ import java.util.UUID;
 public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
-          CommonPathFinder.pathfinder("empty"),
-          "empty",
-          PathFinderProvider.get().getMiniMessage()
+      CommonPathFinder.pathfinder("empty"),
+      "empty",
+      PathFinderProvider.get().getMiniMessage()
   ) {
 
     @Override
@@ -31,12 +31,17 @@ public class EmptyNode implements Node {
     }
   };
 
-  private final UUID uuid = UUID.randomUUID();
+  private final UUID uuid;
   @Getter
   private final Location location;
 
   public EmptyNode(World world) {
-      this.location = new Location(0, 0, 0, world);
+    this(UUID.randomUUID(), world);
+  }
+
+  public EmptyNode(UUID id, World world) {
+    this.uuid = id;
+    this.location = new Location(0, 0, 0, world);
   }
 
   @Override
@@ -62,6 +67,15 @@ public class EmptyNode implements Node {
   @Override
   public int compareTo(@NotNull Node o) {
     return 0;
+  }
+
+  @Override
+  public Node clone() {
+    try {
+      return (Node) super.clone();
+    } catch (CloneNotSupportedException e) {
+      return new EmptyNode(uuid, location.getWorld());
+    }
   }
 
   @Override

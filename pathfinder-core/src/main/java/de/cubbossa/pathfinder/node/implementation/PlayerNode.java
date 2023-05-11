@@ -73,6 +73,15 @@ public class PlayerNode implements Groupable {
   }
 
   @Override
+  public Node clone() {
+    try {
+      return (Node) super.clone();
+    } catch (CloneNotSupportedException e) {
+      return new PlayerNode(player);
+    }
+  }
+
+  @Override
   public String toString() {
     return "PlayerNode{" +
         "player=" + player.getName() +
