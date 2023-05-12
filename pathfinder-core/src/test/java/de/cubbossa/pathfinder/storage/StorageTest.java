@@ -179,9 +179,9 @@ public abstract class StorageTest extends PathFinderTest {
     Waypoint a = makeWaypoint();
     makeWaypoint();
     assertNodeCount(2);
-    assertFuture(() -> storage.deleteNodes(List.of(a)));
+    assertFuture(() -> storage.deleteNodes(new NodeSelection(a).ids()));
     assertNodeCount(1);
-    assertFuture(() -> storage.deleteNodesById(List.of(UUID.randomUUID())));
+    assertFuture(() -> storage.deleteNodes(List.of(UUID.randomUUID())));
     assertNodeCount(1);
   }
 
@@ -191,6 +191,8 @@ public abstract class StorageTest extends PathFinderTest {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
+
+    System.out.println("#".repeat(30));
 
     assertFuture(() -> storage.modifyNode(a.getNodeId(), n -> {
       if (n instanceof Groupable groupable) {
@@ -242,7 +244,7 @@ public abstract class StorageTest extends PathFinderTest {
         groupable.addGroup(g);
       }
     }));
-    assertFuture(() -> storage.deleteNodes(new NodeSelection(a)));
+    assertFuture(() -> storage.deleteNodes(new NodeSelection(a).ids()));
 
     NodeGroup g1 = assertGroupExists(gk);
     assertEquals(0, g1.size());

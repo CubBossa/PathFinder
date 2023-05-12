@@ -308,6 +308,13 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
+  public void deleteEdgesTo(Collection<UUID> end) {
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.END_ID.in(end))
+        .execute();
+  }
+
+  @Override
   public Waypoint createAndLoadWaypoint(Location l) {
     UUID uuid = UUID.randomUUID();
     create

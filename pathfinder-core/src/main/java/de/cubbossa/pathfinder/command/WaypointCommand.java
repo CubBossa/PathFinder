@@ -258,7 +258,7 @@ public class WaypointCommand extends Command {
   }
 
   private void deleteNode(CommandSender sender, NodeSelection nodes) {
-    getPathfinder().getStorage().deleteNodes(nodes).thenRun(() -> {
+    getPathfinder().getStorage().deleteNodes(nodes.ids()).thenRun(() -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.formatted(
           Placeholder.component("selection", Messages.formatNodeSelection(sender, nodes))
       ));

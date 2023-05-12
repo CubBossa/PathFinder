@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
+import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Location;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -253,6 +255,15 @@ public class YmlStorage extends CommonStorage {
     });
   }
 
+  @Override
+  public void deleteEdgesTo(Collection<UUID> end) {
+    workOnFile(fileEdges(), cfg -> {
+      for (String inner : cfg.getKeys(false)) {
+        end.forEach(uuid -> cfg.set(inner + "." + uuid, null));
+      }
+    });
+  }
+
   private Optional<NodeGroup> loadGroup(YamlConfiguration cfg) {
     try {
       NamespacedKey k = NamespacedKey.fromString(cfg.getString("key"));
@@ -260,6 +271,19 @@ public class YmlStorage extends CommonStorage {
       group.setWeight((float) cfg.getDouble("weight"));
       group.addAll(cfg.getStringList("nodes").stream()
           .map(UUID::fromString).toList());
+
+      ConfigurationSection modifiers = cfg.getConfigurationSection("modifier");
+      if (modifiers != null) {
+        for (String key : modifiers.getKeys(false)) {
+          Optional<ModifierType<Modifier>> type = modifierRegistry.getType(key.replace("_", "."));
+          if (type.isEmpty()) {
+            logger.log(Level.WARNING, "Could not load modifier, no registered type by name '" + key + "'.");
+            continue;
+          }
+          group.addModifier(type.get().deserialize(modifiers.getConfigurationSection(key).getValues(false)));
+        }
+      }
+
       return Optional.of(group);
     } catch (Throwable t) {
       t.printStackTrace();
@@ -271,8 +295,21 @@ public class YmlStorage extends CommonStorage {
     workOnFile(fileGroup(group.getKey()), cfg -> {
       cfg.set("key", group.getKey().toString());
       cfg.set("weight", group.getWeight());
-      cfg.set("nodes", group.stream().map(UUID::toString).toList());
+      writeGroupNodes(cfg, group);
+      cfg.set("modifier", null);
+      group.getModifiers().forEach(modifier -> {
+        Optional<ModifierType<Modifier>> type = modifierRegistry.getType((Class<Modifier>) modifier.getClass());
+        if (type.isEmpty()) {
+          logger.log(Level.WARNING, "Could not store modifier of type '" + modifier.getClass() + "'.");
+          return;
+        }
+        cfg.set("modifier." + modifier.getClass().getName().replace(".", "_"), type.get().serialize(modifier));
+      });
     });
+  }
+
+  private void writeGroupNodes(ConfigurationSection cfg, NodeGroup group) {
+    cfg.set("nodes", group.stream().map(UUID::toString).toList());
   }
 
   @Override
@@ -318,7 +355,9 @@ public class YmlStorage extends CommonStorage {
 
   @Override
   public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
-    return null;
+    return loadAllGroups().stream()
+        .filter(g -> g.hasModifier(modifier))
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -350,22 +389,30 @@ public class YmlStorage extends CommonStorage {
 
   @Override
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    // Not required, nodes are already handled within group file
+    groups.forEach(uuids -> {
+      workOnFile(fileGroup(uuids.getKey()), cfg -> {
+        uuids.addAll(nodes);
+        writeGroupNodes(cfg, uuids);
+      });
+    });
   }
 
   @Override
   public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    // Not required, nodes are already handled within group file
+    groups.forEach(uuids -> {
+      workOnFile(fileGroup(uuids.getKey()), cfg -> {
+        uuids.removeAll(nodes);
+        writeGroupNodes(cfg, uuids);
+      });
+    });
   }
 
   @Override
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
-
   }
 
   @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group,
-                                                             Class<M> modifier) {
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
 
   }
 
@@ -433,9 +480,9 @@ public class YmlStorage extends CommonStorage {
     });
   }
 
-  private <VisualizerT extends PathVisualizer<?, ?>> void writeInternalVisualizer(VisualizerT visualizer) {
+  private <VisualizerT extends PathVisualizer<?, ?>> void writeInternalVisualizer(VisualizerType<VisualizerT> type,
+                                                                                  VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
-      VisualizerType<VisualizerT> type = visualizerTypeRegistry.getType(visualizer).orElseThrow();
       cfg.set("type", type.getKey().toString());
       cfg.set("display-name", visualizer.getNameFormat());
       type.serialize(visualizer).forEach(cfg::set);
@@ -458,7 +505,7 @@ public class YmlStorage extends CommonStorage {
   public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     VisualizerT visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
-    writeInternalVisualizer(visualizer);
+    writeInternalVisualizer(type, visualizer);
     return visualizer;
   }
 
@@ -491,7 +538,7 @@ public class YmlStorage extends CommonStorage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type,
                                                                                 VisualizerT visualizer) {
-    writeInternalVisualizer(visualizer);
+    writeInternalVisualizer(type, visualizer);
   }
 
   @Override

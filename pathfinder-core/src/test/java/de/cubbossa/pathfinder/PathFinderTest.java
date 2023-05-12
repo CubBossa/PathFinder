@@ -24,6 +24,7 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.CommonStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
+import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
@@ -183,7 +184,7 @@ public abstract class PathFinderTest {
   }
 
   protected void deleteWaypoint(Waypoint waypoint) {
-    assertFuture(() -> storage.deleteNodes(List.of(waypoint)));
+    assertFuture(() -> storage.deleteNodes(new NodeSelection(waypoint).ids()));
   }
 
   protected <N extends Node> N assertNodeExists(UUID node) {

@@ -69,7 +69,7 @@ public class EditModeMenu {
             Messages.E_NODE_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          pathFinder.getStorage().deleteNodesById(List.of(context.getTarget().getNodeId()))
+          pathFinder.getStorage().deleteNodes(List.of(context.getTarget().getNodeId()))
               .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
         })
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {

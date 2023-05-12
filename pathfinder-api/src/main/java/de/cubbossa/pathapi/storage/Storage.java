@@ -104,16 +104,6 @@ public interface Storage {
   CompletableFuture<Void> saveNode(Node node);
 
   /**
-   * A wrapper for {@link #deleteNodes(Collection)} that first resolves the input collection of
-   * {@link UUID}s to their according {@link Node}s.
-   *
-   * @param uuids A collection of {@link UUID}s to delete.
-   * @return A {@link CompletableFuture} indicating the completion of the process.
-   * @see #deleteNodes(Collection)
-   */
-  CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids);
-
-  /**
    * Deletes a collection of nodes from storage asynchronously.
    * A call of this method must fire the according {@link NodeDeleteEvent}.
    * After successfull completion, all given {@link Node}s, all according {@link Edge}s,
@@ -122,7 +112,7 @@ public interface Storage {
    * @param nodes A collection of nodes to delete.
    * @return A {@link CompletableFuture} indicating the completion of the process.
    */
-  CompletableFuture<Void> deleteNodes(Collection<Node> nodes);
+  CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
 
   CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes);
 

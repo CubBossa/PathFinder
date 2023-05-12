@@ -6,8 +6,16 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.*;
-import de.cubbossa.pathapi.storage.*;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.storage.CacheLayer;
+import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.NodeDataStorage;
+import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -17,12 +25,15 @@ import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import lombok.Getter;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -30,6 +41,9 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -266,7 +280,10 @@ public class StorageImpl implements Storage {
     }
 
     if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
-      loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(gAfter::addGroup);
+      // insert global group if not present
+      if (gAfter.getGroups().stream().noneMatch(g -> g.getKey().equals(CommonPathFinder.globalGroupKey()))) {
+        loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(gAfter::addGroup);
+      }
 
       StorageImpl.ComparisonResult<NodeGroup> cmp =
           StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
@@ -285,22 +302,18 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater) {
     debug("Storage: 'modifyNode(" + id + ")'");
-    return loadNode(id).thenApply(n -> {
-      updater.accept(n.orElseThrow());
-      return n;
-    }).thenCompose(n -> saveNode(n.orElseThrow()));
+    return loadNode(id)
+        .thenApply(n -> {
+          Node node = n.orElseThrow();
+          updater.accept(node);
+          return node;
+        }).thenCompose(this::saveNode);
   }
 
   @Override
-  public CompletableFuture<Void> deleteNodesById(Collection<UUID> uuids) {
-    return loadNodes(uuids).thenAccept(this::deleteNodes);
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteNodes(Collection<Node> nodes) {
-    Collection<UUID> uuids = nodes.stream().map(Node::getNodeId).toList();
-    debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString)
-        .collect(Collectors.joining(",")) + ")'");
+  public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
+    Collection<Node> nodes = loadNodes(uuids).join();
+    debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
 
     eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
     return asyncFuture(() -> {
@@ -312,9 +325,9 @@ public class StorageImpl implements Storage {
         }
         deleteNode(node, types.get(node.getNodeId()));
         node.getEdges().forEach(implementation::deleteEdge);
-        // TODO delete edges to
       }
       implementation.deleteNodeTypeMapping(uuids);
+      implementation.deleteEdgesTo(uuids);
 
       uuids.forEach(cache.getNodeCache()::invalidate);
       nodes.forEach(cache.getGroupCache()::invalidate);
@@ -546,7 +559,8 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(VisualizerType<VisualizerT> type) {
+  public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(
+      VisualizerType<VisualizerT> type) {
 
     Optional<Collection<VisualizerT>> cached = cache.getVisualizerCache().getVisualizers(type);
     return cached
@@ -626,7 +640,8 @@ public class StorageImpl implements Storage {
     });
   }
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(VisualizerT visualizer) {
+  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(
+      VisualizerT visualizer) {
     return resolveOptVisualizerType(visualizer.getKey());
   }
 
@@ -640,7 +655,8 @@ public class StorageImpl implements Storage {
 
   <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(NamespacedKey key) {
     return this.<VisualizerT>resolveOptVisualizerType(key).orElseThrow(() -> {
-      return new IllegalStateException("Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
+      return new IllegalStateException(
+          "Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
   }
 

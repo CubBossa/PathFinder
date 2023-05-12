@@ -40,15 +40,8 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
 
   @Override
   public @Nullable <T extends PathVisualizer<?, ?>> Optional<VisualizerType<T>> getType(
-      NamespacedKey key) {
-    return Optional.ofNullable((VisualizerType<T>) visualizerTypes.get(key));
-  }
-
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(
-      VisualizerT visualizer) {
-    return Optional.ofNullable(
-        (VisualizerType<VisualizerT>) visualizerTypes.get(visualizer.getKey()));
+      NamespacedKey typeKey) {
+    return Optional.ofNullable((VisualizerType<T>) visualizerTypes.get(typeKey));
   }
 
   @Override

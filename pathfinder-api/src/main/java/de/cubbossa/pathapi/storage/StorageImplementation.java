@@ -63,6 +63,8 @@ public interface StorageImplementation {
 
   void deleteEdge(Edge edge);
 
+  void deleteEdgesTo(Collection<UUID> end);
+
   // ################################
   // #   Groups
   // ################################
