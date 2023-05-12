@@ -5,6 +5,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -81,7 +84,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     visPath.prepare(path, p);
     assertFalse(visPath.isActive());
     assertEquals(1, visPath.paths.size());
-    assertEquals(vis.getKey(), visPath.paths.stream().findAny().orElseThrow().visualizer.getKey());
+    assertEquals(Set.of(CommonPathFinder.defaultVisualizerKey(), vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
   }
 
