@@ -8,14 +8,12 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.events.visualizer.VisualizerPropertyChangedEvent;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -84,9 +82,10 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter, BiFunction<String, T, TagResolver> formatter) {
     T old = getter.get();
+    if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
+      return;
+    }
     setter.accept(value);
-    Bukkit.getPluginManager()
-        .callEvent(new VisualizerPropertyChangedEvent<>(visualizer, property, visual, old, value));
     sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
         TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
         Placeholder.component("name", visualizer.getDisplayName()),

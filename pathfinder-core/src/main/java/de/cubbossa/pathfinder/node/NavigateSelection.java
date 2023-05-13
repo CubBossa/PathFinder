@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathapi.node.Node;
-import java.util.Collection;
-import java.util.HashSet;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 @RequiredArgsConstructor
 @Getter

@@ -1,0 +1,236 @@
+package de.cubbossa.pathfinder.module;
+
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.graph.PathSolver;
+import de.cubbossa.pathfinder.graph.SimpleDijkstra;
+import de.cubbossa.pathfinder.node.NodeHandler;
+import de.cubbossa.pathfinder.node.implementation.PlayerNode;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
+import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
+import de.cubbossa.translations.Message;
+import lombok.Getter;
+import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderExtension {
+
+  @Getter
+  private static AbstractNavigationHandler<?> instance;
+
+  public enum NavigateResult {
+    SUCCESS, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
+    FAIL_TOO_FAR_AWAY;
+  }
+
+  public record NavigationRequestContext(UUID playerId, Node node) {
+  }
+
+  public record SearchInfo<PlayerT>(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target,
+                                    float distance) {
+  }
+
+  protected final Map<PathPlayer<PlayerT>, SearchInfo<PlayerT>> activePaths;
+  protected final PathFinder pathFinder;
+  protected final EventDispatcher<PlayerT> eventDispatcher;
+  protected final List<Predicate<NavigationRequestContext>> navigationFilter;
+  @Getter
+  private final NamespacedKey key = CommonPathFinder.pathfinder("navigation");
+
+  public AbstractNavigationHandler() {
+    this.activePaths = new HashMap<>();
+    this.pathFinder = PathFinderProvider.get();
+    this.navigationFilter = new ArrayList<>();
+    this.eventDispatcher = (EventDispatcher<PlayerT>) pathFinder.getEventDispatcher();
+    instance = this;
+  }
+
+  public static <PlayerT> void printResult(NavigateResult result, PathPlayer<PlayerT> player) {
+    Message message = switch (result) {
+      case SUCCESS -> Messages.CMD_FIND;
+      case FAIL_BLOCKED, FAIL_EVENT_CANCELLED -> Messages.CMD_FIND_BLOCKED;
+      case FAIL_EMPTY -> Messages.CMD_FIND_EMPTY;
+      case FAIL_TOO_FAR_AWAY -> Messages.CMD_FIND_TOO_FAR;
+    };
+    player.sendMessage(message);
+  }
+
+  public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
+    navigationFilter.add(filter);
+  }
+
+  public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
+    return new ArrayList<>(navigationFilter);
+  }
+
+  public @Nullable SearchInfo<PlayerT> getActivePath(PathPlayer<PlayerT> player) {
+    return activePaths.get(player);
+  }
+
+  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Location location) {
+    return findPath(player, location, pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance());
+  }
+
+  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Location location, double maxDist) {
+    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+      double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
+      // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
+      Location _location = location.equals(player.getLocation())
+          ? location.add(0, 0.01, 0) : location;
+
+      Node closest = null;
+      double dist = Double.MAX_VALUE;
+      for (Node node : nodes) {
+        double curDist = node.getLocation().distance(_location);
+        if (curDist < dist && curDist < _maxDist) {
+          closest = node;
+          dist = curDist;
+        }
+      }
+      if (closest == null) {
+        return NavigateResult.FAIL_TOO_FAR_AWAY;
+      }
+      final Node fClosest = closest;
+      Waypoint waypoint = new Waypoint(UUID.randomUUID());
+      waypoint.setLocation(_location);
+      // we can savely add edges because the fClosest object is only a representation of the stored node.
+      fClosest.connect(waypoint);
+
+      return findPath(player, new NodeSelection(waypoint)).join();
+    });
+  }
+
+  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, NodeSelection targets) {
+
+    if (targets.size() == 0) {
+      return CompletableFuture.completedFuture(NavigateResult.FAIL_EMPTY);
+    }
+
+    PlayerNode playerNode = new PlayerNode(player);
+
+    return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
+      return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+
+        PathSolver<Node> pathSolver = new SimpleDijkstra<>();
+        List<Node> path;
+        try {
+          path = pathSolver.solvePath(graph, playerNode, targets.stream()
+              .filter(nodes::contains)
+              .collect(Collectors.toList()));
+        } catch (NoPathFoundException e) {
+          return NavigateResult.FAIL_BLOCKED;
+        }
+
+        Groupable first = (Groupable) path.get(1);
+        first.getGroups().forEach(playerNode::addGroup);
+
+        Groupable last = (Groupable) path.get(path.size() - 1);
+        NodeGroup highest = last.getGroups().stream()
+            .filter(g -> g.hasModifier(FindDistanceModifier.class))
+            .max(NodeGroup::compareTo).orElse(null);
+
+        double findDist = highest == null ? 1.5 : highest.getModifier(FindDistanceModifier.class).distance();
+        return setPath(player, path, path.get(path.size() - 1).getLocation(), (float) findDist);
+      }).join();
+    });
+  }
+
+  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<Node> pathNodes, Location target, float distance) {
+    VisualizerPath<PlayerT> visualizerPath = new CommonVisualizerPath<>();
+    visualizerPath.prepare(pathNodes, player);
+
+    boolean success = eventDispatcher.dispatchPathStart(player, visualizerPath, target, distance);
+    if (!success) {
+      return NavigateResult.FAIL_EVENT_CANCELLED;
+    }
+
+    SearchInfo<PlayerT> current = activePaths.put(player, new SearchInfo<>(player, visualizerPath, target, distance));
+    if (current != null) {
+      current.path().cancel(player);
+    }
+    visualizerPath.run(player);
+    return NavigateResult.SUCCESS;
+  }
+
+  public void unsetPath(PathPlayer<PlayerT> playerId) {
+    if (activePaths.containsKey(playerId)) {
+      unsetPath(activePaths.get(playerId));
+    }
+  }
+
+  public void unsetPath(SearchInfo<PlayerT> info) {
+    activePaths.remove(info.player());
+    info.path().cancel(info.player());
+
+    eventDispatcher.dispatchPathStopped(info.player, info.path, info.target, info.distance);
+  }
+
+  public void cancelPath(PathPlayer<PlayerT> playerId) {
+    if (activePaths.containsKey(playerId)) {
+      cancelPath(activePaths.get(playerId));
+    }
+  }
+
+  public void cancelPath(SearchInfo<PlayerT> info) {
+    if (!eventDispatcher.dispatchPathCancel(info.player, info.path, info.target, info.distance)) {
+      return;
+    }
+    unsetPath(info);
+  }
+
+  public void reachTarget(SearchInfo<PlayerT> info) {
+
+    if (!eventDispatcher.dispatchPathTargetReached(info.player(), info.path())) {
+      return;
+    }
+    unsetPath(info);
+  }
+
+  public void onLoad(PathFinder pathPlugin) {
+
+    if (!pathFinder.getConfiguration().getModuleConfig().isNavigationModule()) {
+      pathFinder.getExtensionRegistry().unregisterExtension(this);
+    }
+  }
+
+  public void onEnable(PathFinder pathPlugin) {
+
+    registerFindPredicate(c -> {
+      if (!(c.node() instanceof Groupable groupable)) {
+        return true;
+      }
+      PathPlayer<?> player = CommonPathFinder.getInstance().wrap(c.playerId);
+      Collection<NodeGroup> groups = groupable.getGroups();
+
+      return groups.stream()
+          .allMatch(g -> {
+            PermissionModifier mod = g.getModifier(PermissionModifier.class);
+            return player.unwrap() == null || mod == null || player.hasPermission(mod.permission());
+          })
+          && groups.stream()
+          .anyMatch(g -> g.hasModifier(NavigableModifier.class));
+    });
+  }
+}

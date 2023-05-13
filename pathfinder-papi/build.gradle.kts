@@ -12,6 +12,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 val minecraftVersion = project.property("minecraft_version") as String
@@ -28,7 +29,7 @@ repositories {
 
 dependencies {
 
-    compileOnly(project(":pathfinder-core"))
+    compileOnly(project(":pathfinder-bukkit"))
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")

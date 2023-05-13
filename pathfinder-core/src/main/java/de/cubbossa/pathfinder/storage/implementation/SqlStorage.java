@@ -15,7 +15,11 @@ import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.jooq.tables.records.*;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -23,7 +27,6 @@ import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.StringUtils;
-import de.cubbossa.pathfinder.util.WorldImpl;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.*;
@@ -88,7 +91,7 @@ public abstract class SqlStorage extends CommonStorage {
       UUID worldUid = record.getWorld();
 
       Waypoint node = new Waypoint(id);
-      node.setLocation(new Location(x, y, z, new WorldImpl(worldUid)));
+      node.setLocation(new Location(x, y, z, CommonPathFinder.getInstance().getWorld(worldUid)));
       return node;
     };
   }

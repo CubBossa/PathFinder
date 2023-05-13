@@ -4,6 +4,7 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.navigationquery.SimpleSearchTerm;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

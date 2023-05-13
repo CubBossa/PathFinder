@@ -6,7 +6,6 @@ import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Groupable;
@@ -185,9 +184,8 @@ public class EditModeMenu {
               return;
             }
             Player p = context.getPlayer();
-            Location newLoc = VectorUtils.toBukkit(nearest.getLocation())
-                .setDirection(p.getLocation().getDirection());
-            PathFinderProvider.get().runSynchronized(() -> {
+            Location newLoc = VectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
+            Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
               p.teleport(newLoc);
               p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
             });

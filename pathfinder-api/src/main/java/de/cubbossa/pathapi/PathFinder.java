@@ -2,6 +2,8 @@ package de.cubbossa.pathapi;
 
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
+import de.cubbossa.pathapi.misc.LocationWeightSolverRegistry;
+import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
@@ -43,7 +45,7 @@ public interface PathFinder {
    *
    * @return The EventDispatcher instance.
    */
-  EventDispatcher getEventDispatcher();
+  EventDispatcher<?> getEventDispatcher();
 
   /**
    * The modifier registry handles different modifier types that are valid for group modification.
@@ -62,16 +64,16 @@ public interface PathFinder {
    */
   NodeTypeRegistry getNodeTypeRegistry();
 
-    /**
-     * The visualizer type registry handles different visualizer types.
-     * Register new visualizer types in the loading phase of your application to allow the storage to load
-     * visualizers of such type.
-     *
-     * @return The VisualizerTypeRegistry instance.
-     */
-    VisualizerTypeRegistry getVisualizerTypeRegistry();
+  /**
+   * The visualizer type registry handles different visualizer types.
+   * Register new visualizer types in the loading phase of your application to allow the storage to load
+   * visualizers of such type.
+   *
+   * @return The VisualizerTypeRegistry instance.
+   */
+  VisualizerTypeRegistry getVisualizerTypeRegistry();
 
-    void runSynchronized(Runnable runnable);
+  LocationWeightSolverRegistry<?> getLocationWeightSolverRegistry();
 
   PathFinderConfig getConfiguration();
 
@@ -84,4 +86,8 @@ public interface PathFinder {
   MiniMessage getMiniMessage();
 
   AudienceProvider getAudiences();
+
+  Task repeatingTask(Runnable runnable, long delay, long interval);
+
+  void cancelTask(Task task);
 }

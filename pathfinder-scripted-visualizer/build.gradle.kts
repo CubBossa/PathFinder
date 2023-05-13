@@ -28,7 +28,7 @@ repositories {
 
 dependencies {
 
-    compileOnly(project(":pathfinder-core"))
+    compileOnly(project(":pathfinder-bukkit"))
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")

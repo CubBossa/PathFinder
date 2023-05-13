@@ -1,4 +1,8 @@
 package de.cubbossa.pathapi.event;
 
-public interface PathStoppedEvent {
+import de.cubbossa.pathapi.misc.PathPlayer;
+
+public interface PathStoppedEvent<PlayerT> extends PathEvent<PlayerT> {
+
+  PathPlayer<PlayerT> getPlayer();
 }

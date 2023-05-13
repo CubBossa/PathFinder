@@ -59,4 +59,8 @@ public interface DumpWriter {
   void setNodes(Map<NamespacedKey, Collection<Node>> nodes);
 
   void setVisualizers(Map<NamespacedKey, Collection<PathVisualizer<?, ?>>> visualizers);
+
+  String toString();
+
+  void save(File file);
 }

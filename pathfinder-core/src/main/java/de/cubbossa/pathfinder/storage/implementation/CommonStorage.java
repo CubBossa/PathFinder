@@ -1,22 +1,16 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
-import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

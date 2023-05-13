@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.storage.DatabaseType;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset.LocationWeightSolverPresetEnum;
+import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import lombok.Getter;
@@ -135,7 +135,7 @@ public class PathFinderConf implements PathFinderConfig {
         Define an algorithm to find the nearest node to a certain location.
         SIMPLE: Finds the absolute nearest node.
         RAYCAST: Sends multiple raycasts to find the nearest node that is not obstructed by walls.""")
-    public String algorithm = LocationWeightSolverPresetEnum.RAYCAST.toString();
+    public String algorithm = CommonLocationWeightSolverRegistry.KEY_RAYCAST;
     public SimpleLocationWeightSolverConf simpleConfig = new SimpleLocationWeightSolverConf();
     public RaycastLocationWeightSolverConf raycastConfig = new RaycastLocationWeightSolverConf();
   }

@@ -1,17 +1,17 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.collect.Lists;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
-import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import org.bukkit.Bukkit;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -164,19 +164,10 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
   }
 
   Task runTask(Runnable task, long delay, long interval) {
-    int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(PathFinderPlugin.getInstance(), task, delay, interval);
-    return new BukkitTask(id);
+    return PathFinderProvider.get().repeatingTask(task, delay, interval);
   }
 
   void cancelTask(Task task) {
-    if (task instanceof BukkitTask b) {
-      Bukkit.getScheduler().cancelTask(b.id());
-    }
-  }
-
-  interface Task {
-  }
-
-  record BukkitTask(int id) implements Task {
+    PathFinderProvider.get().cancelTask(task);
   }
 }

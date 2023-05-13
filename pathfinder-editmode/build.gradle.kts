@@ -11,6 +11,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://repo.codemc.org/repository/maven-public/")
 }
 
 val minecraftVersion = project.property("minecraft_version") as String
@@ -27,8 +28,8 @@ repositories {
 
 dependencies {
 
-    compileOnly(project(":pathfinder-core"))
-    testImplementation(project(":pathfinder-core"))
+    compileOnly(project(":pathfinder-bukkit"))
+    testImplementation(project(":pathfinder-bukkit"))
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")

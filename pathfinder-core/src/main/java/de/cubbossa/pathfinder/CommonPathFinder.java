@@ -4,31 +4,21 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.misc.*;
+import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.module.DiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
-import de.cubbossa.pathfinder.nodegroup.modifier.*;
-import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
+import de.cubbossa.pathfinder.storage.ExamplesLoader;
 import de.cubbossa.pathfinder.storage.StorageImpl;
-import de.cubbossa.pathfinder.storage.implementation.CommonStorage;
-import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
-import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
-import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
+import de.cubbossa.pathfinder.storage.implementation.*;
+import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
-import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.translations.PluginTranslations;
 import de.cubbossa.translations.Translations;
@@ -43,29 +33,35 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
 import java.util.Locale;
-import java.util.Set;
+import java.util.UUID;
 
 @Getter
 public abstract class CommonPathFinder implements PathFinder {
+
+  private static CommonPathFinder instance;
+
+  public static CommonPathFinder getInstance() {
+    return instance;
+  }
 
   private static final NamespacedKey GLOBAL_GROUP_KEY = pathfinder("global");
   private static final NamespacedKey DEFAULT_VISUALIZER_KEY = pathfinder("default_visualizer");
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
 
-  private NodeTypeRegistry nodeTypeRegistry;
-  private VisualizerTypeRegistry visualizerTypeRegistry;
-  private ModifierRegistry modifierRegistry;
-  private ExtensionsRegistry extensionRegistry;
-  private CommandRegistry commandRegistry;
-  private ConfigFileLoader configFileLoader;
-  private AudienceProvider audiences;
-  private MiniMessage miniMessage;
-  private File effectsFile;
-  private StorageImpl storage;
+  protected NodeTypeRegistry nodeTypeRegistry;
+  protected VisualizerTypeRegistry visualizerTypeRegistry;
+  protected ModifierRegistry modifierRegistry;
+  protected ExtensionsRegistry extensionRegistry;
+  protected ConfigFileLoader configFileLoader;
+  protected AudienceProvider audiences;
+  protected MiniMessage miniMessage;
+  protected File effectsFile;
+  protected StorageImpl storage;
+  protected LocationWeightSolverRegistry<Node> locationWeightSolverRegistry;
   @Setter
-  private PathFinderConf configuration;
-  private EventDispatcher<?> eventDispatcher;
-  private PluginTranslations translations;
+  protected PathFinderConf configuration;
+  protected EventDispatcher<?> eventDispatcher;
+  protected PluginTranslations translations;
 
 
   public static NamespacedKey globalGroupKey() {
@@ -80,33 +76,31 @@ public abstract class CommonPathFinder implements PathFinder {
     return new NamespacedKey("pathfinder", key);
   }
 
+  public abstract World getWorld(UUID worldId);
+
+  public abstract <PlayerT> PathPlayer<PlayerT> wrap(UUID playerId);
+
+  public abstract <PlayerT> PathPlayer<PlayerT> wrap(PlayerT player);
+
   @SneakyThrows
   public void onLoad() {
+    instance = this;
     PathFinderProvider.setPathFinder(this);
 
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     visualizerTypeRegistry = new VisualizerHandler();
     modifierRegistry = new ModifierRegistryImpl();
+    locationWeightSolverRegistry = new CommonLocationWeightSolverRegistry<>();
 
     storage = new StorageImpl(nodeTypeRegistry);
 
-    modifierRegistry.registerModifierType(new PermissionModifierType());
-    modifierRegistry.registerModifierType(new NavigableModifierType());
-    modifierRegistry.registerModifierType(new DiscoverableModifierType());
-    modifierRegistry.registerModifierType(new FindDistanceModifierType());
-    modifierRegistry.registerModifierType(new CurveLengthModifierType());
-    modifierRegistry.registerModifierType(new VisualizerModifierType());
-
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
-    commandRegistry = new CommandRegistry(this);
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());
     eventDispatcher = provideEventDispatcher();
 
-    YamlUtils.registerClasses();
     loadConfig();
 
-    commandRegistry.loadCommands();
     extensionRegistry.loadExtensions(this);
   }
 
@@ -119,7 +113,7 @@ public abstract class CommonPathFinder implements PathFinder {
     miniMessage = MiniMessage.miniMessage();
 
     // Data
-    new ExamplesHandler(getLogger()).fetchExamples();
+    new ExamplesLoader(getLogger()).fetchExamples();
 
     translations = Translations.builder("PathFinder")
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
@@ -147,8 +141,8 @@ public abstract class CommonPathFinder implements PathFinder {
           modifierRegistry, visualizerTypeRegistry);
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
           modifierRegistry, visualizerTypeRegistry);
-      default -> null;
-//      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry);
+      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
+          visualizerTypeRegistry, modifierRegistry);
     };
     impl.setLogger(getLogger());
     // TODO bad style
@@ -160,7 +154,7 @@ public abstract class CommonPathFinder implements PathFinder {
     storage.setLogger(getLogger());
     storage.init();
 
-    ExamplesHandler examples = ExamplesHandler.getInstance();
+    ExamplesLoader examples = ExamplesLoader.getInstance();
     examples.afterFetch(() -> {
       examples.getExamples().forEach(examples::loadVisualizer);
     });
@@ -170,36 +164,16 @@ public abstract class CommonPathFinder implements PathFinder {
         miniMessage
     ));
 
-    ParticleVisualizerType particleVisualizerType = new ParticleVisualizerType(pathfinder("particle"));
-    Set.<AbstractVisualizerType<?>>of(
-        particleVisualizerType,
-        new CombinedVisualizerType(pathfinder("combined")),
-        new CompassVisualizerType(pathfinder("compass"))
-    ).forEach(vt -> {
-      visualizerTypeRegistry.registerVisualizerType(vt);
-      if (impl instanceof InternalVisualizerDataStorage visStorage) {
-        vt.setStorage(new InternalVisualizerStorage(vt, visStorage));
-      }
-    });
-
     new NodeHandler(this);
-    new DiscoverHandler(this);
-
-    commandRegistry.enableCommands(this);
     extensionRegistry.enableExtensions(this);
 
-    storage.createGlobalNodeGroup(particleVisualizerType).join();
   }
 
   @SneakyThrows
   public void onDisable() {
-
     NodeHandler.getInstance().cancelAllEditModes();
-
     extensionRegistry.disableExtensions(this);
-
     storage.shutdown();
-    commandRegistry.unregisterCommands();
   }
 
   public void loadConfig() {

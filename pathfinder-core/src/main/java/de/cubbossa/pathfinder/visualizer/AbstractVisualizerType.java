@@ -5,15 +5,16 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.storage.DataStorageException;
-import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
-import java.util.Map;
-import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -56,21 +57,21 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
-    protected <A, V extends PathVisualizer<?, ?>> Argument<?> subCommand(String node,
-                                                                         Argument<A> argument,
-                                                                         AbstractVisualizer.Property<V, A> property) {
-        return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
-            if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-                VisualizerHandler.getInstance()
-                        .setProperty(BukkitUtils.wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
-            } else {
-                throw new WrapperCommandSyntaxException(new CommandSyntaxException(
-                        CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),
-                        () -> "Wrong usage. First argument has to be a path visualizer."
-                ));
-            }
-        }));
-    }
+  protected <A, V extends PathVisualizer<?, ?>> Argument<?> subCommand(String node,
+                                                                       Argument<A> argument,
+                                                                       AbstractVisualizer.Property<V, A> property) {
+    return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
+      if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
+        VisualizerHandler.getInstance()
+            .setProperty(CommonPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+      } else {
+        throw new WrapperCommandSyntaxException(new CommandSyntaxException(
+            CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),
+            () -> "Wrong usage. First argument has to be a path visualizer."
+        ));
+      }
+    }));
+  }
 
   protected <A, V extends PathVisualizer<?, ?>> void loadProperty(Map<String, Object> values,
                                                                   V visualizer,

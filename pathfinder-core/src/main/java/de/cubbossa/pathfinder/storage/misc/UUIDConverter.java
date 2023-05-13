@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder.storage.misc;
 
-import java.util.UUID;
 import org.jooq.Converter;
+
+import java.util.UUID;
 
 public class UUIDConverter implements Converter<String, UUID> {
 

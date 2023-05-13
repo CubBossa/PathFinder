@@ -4,6 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.NodeGroupEditor;
 import de.cubbossa.pathapi.editor.NodeGroupEditorFactory;
+import de.cubbossa.pathapi.misc.LocationWeightSolver;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
@@ -11,8 +12,6 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.nodegroup.NoImplNodeGroupEditor;
-import de.cubbossa.pathfinder.util.LocationWeightSolver;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
@@ -60,9 +59,9 @@ public class NodeHandler {
 
       if (player != null) {
         graph.addNode(player);
-        LocationWeightSolver<Node> solver =
-            LocationWeightSolverPreset.fromConfig(PathFinderProvider.get()
-                .getConfiguration().getNavigation().getNearestLocationSolver());
+        LocationWeightSolver<Node> solver = (LocationWeightSolver<Node>) pathFinder.getLocationWeightSolverRegistry().get(
+            PathFinderProvider.get().getConfiguration().getNavigation().getNearestLocationSolver().getAlgorithm()
+        );
         Map<Node, Double> weighted = solver.solve(player, graph);
 
         weighted.forEach((node, weight) -> graph.connect(player, node, weight));

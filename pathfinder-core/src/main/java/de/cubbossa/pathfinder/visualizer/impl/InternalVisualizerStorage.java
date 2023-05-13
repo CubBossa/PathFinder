@@ -5,8 +5,8 @@ import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import lombok.RequiredArgsConstructor;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 
 import java.util.Map;
 import java.util.Optional;

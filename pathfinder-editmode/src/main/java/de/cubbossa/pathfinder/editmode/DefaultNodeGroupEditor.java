@@ -11,9 +11,9 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
-import de.cubbossa.pathfinder.util.BukkitUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -151,7 +151,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   }
 
   public boolean isEditing(Player player) {
-    return isEditing(BukkitUtils.wrap(player));
+    return isEditing(CommonPathFinder.getInstance().wrap(player));
   }
 
   @Override

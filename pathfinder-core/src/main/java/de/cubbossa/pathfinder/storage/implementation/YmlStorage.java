@@ -15,35 +15,28 @@ import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.util.StringUtils;
-import de.cubbossa.pathfinder.util.WorldImpl;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YmlStorage extends CommonStorage {
 
@@ -561,7 +554,7 @@ public class YmlStorage extends CommonStorage {
     double z = sec.getDouble("z");
     UUID world = UUID.fromString(sec.getString("world"));
     de.cubbossa.pathapi.misc.Location location =
-        new de.cubbossa.pathapi.misc.Location(x, y, z, new WorldImpl(world));
+        new de.cubbossa.pathapi.misc.Location(x, y, z, CommonPathFinder.getInstance().getWorld(world));
 
     Waypoint waypoint = new Waypoint(id);
     waypoint.setLocation(location);

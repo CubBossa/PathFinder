@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 public class Version implements Comparable<Version> {
 

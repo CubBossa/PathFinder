@@ -4,6 +4,7 @@ import de.cubbossa.pathapi.storage.NodeDataStorage;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

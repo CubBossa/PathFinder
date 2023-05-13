@@ -4,20 +4,21 @@ import de.cubbossa.pathfinder.util.Version;
 import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
-import java.io.File;
-import java.util.function.BiConsumer;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+
+import java.io.File;
+import java.util.function.BiConsumer;
 
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class ConfigFileLoader {
 
-    private final File dataFolder;
-    private final BiConsumer<String, Boolean> saveResource;
-    private Version configRegenerationVersion = new Version("3.0.0");
+  private final File dataFolder;
+  private final BiConsumer<String, Boolean> saveResource;
+  private Version configRegenerationVersion = new Version("3.0.0");
 
-    public PathFinderConf loadConfig() {
+  public PathFinderConf loadConfig() {
         PathFinderConf configuration;
 
         File configFile = new File(dataFolder, "config.yml");
