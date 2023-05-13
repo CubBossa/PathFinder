@@ -7,8 +7,6 @@ plugins {
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
-    id("xyz.jpenilla.run-paper") version "2.0.1"
-    id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
     id("nu.studer.jooq") version "8.1"
 }
 
@@ -53,8 +51,6 @@ dependencies {
     api("de.cubbossa:splinelib:1.0")
 
     // Plugins
-    runtimeOnly(project(":pathfinder-editmode"))
-    runtimeOnly(project(":pathfinder-scripted-visualizer"))
     api(project(":pathfinder-api"))
     implementation(project(":pathfinder-graph"))
 
@@ -100,40 +96,19 @@ tasks {
             include(project(":pathfinder-api"))
             include(project(":pathfinder-graph"))
             include(dependency("net.kyori:.*"))
-            include(dependency("de.cubbossa:MenuFramework:.*"))
             include(dependency("de.cubbossa:Translations:.*"))
             include(dependency("de.cubbossa:splinelib:.*"))
-            include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
             include(dependency("org.ow2.asm:asm:.*"))
             include(dependency("org.ow2.asm:asm-util:.*"))
             include(dependency("org.antlr:antlr4-runtime:.*"))
             include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
             include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
-            include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
             include(dependency("org.jooq:jooq:.*"))
             include(dependency("org.reactivestreams:reactive-streams:.*"))
             include(dependency("io.r2dbc:r2dbc-spi:.*"))
             include(dependency("com.zaxxer:HikariCP:.*"))
             include(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
         }
-
-        fun relocate(from: String, to: String) {
-            relocate(from, "de.cubbossa.pathfinder.lib.$to", null)
-        }
-
-        relocate("com.zaxxer.hikari", "hikari")
-        relocate("de.cubbossa.serializedeffects", "serializedeffects")
-        relocate("de.cubbossa.nbo", "nbo")
-        relocate("net.kyori", "kyori")
-        relocate("de.cubbossa.menuframework", "gui")
-        relocate("de.cubbossa.translations", "translations")
-        relocate("de.cubbossa.splinelib", "splinelib")
-        relocate("xyz.xenondevs.particle", "particle")
-        relocate("dev.jorel.commandapi", "commandapi")
-        relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
-        relocate("org.antlr", "antlr")
-        relocate("org.jooq", "jooq")
-        relocate("de.exlll", "exlll")
     }
     test {
         useJUnitPlatform()

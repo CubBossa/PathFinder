@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
@@ -8,7 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 
 import java.util.List;
 

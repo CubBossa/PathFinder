@@ -57,6 +57,11 @@ tasks {
         )
     }
     shadowJar {
+
+        dependencies {
+            include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
+        }
+
         fun relocate(from: String, to: String) {
             relocate(from, "de.cubbossa.pathfinder.lib.$to", null)
         }

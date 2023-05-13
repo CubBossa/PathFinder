@@ -5,9 +5,9 @@ plugins {
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
-    id("java-test-fixtures")
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
+    id("java-test-fixtures")
 }
 
 group = "de.cubbossa"
@@ -32,9 +32,10 @@ repositories {
 
 dependencies {
 
+    api(project(":pathfinder-api"))
     api(project(path = ":pathfinder-core", configuration = "shadow"))
-    api(project(path = ":pathfinder-editmode", configuration = "shadow"))
-    api(project(":pathfinder-scripted-visualizer"))
+    runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
+    runtimeOnly(project(path = ":pathfinder-scripted-visualizer", configuration = "shadow"))
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -54,7 +55,10 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:3.0.1")
 
     // Tests
-    testImplementation(project(":pathfinder-core"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testFixturesCompileOnly(project(":pathfinder-core"))
     testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
     testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
     testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
@@ -197,9 +201,20 @@ tasks {
         }
 
         relocate("org.bstats", "bstats")
-        relocate("net.kyori", "kyori")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
+
+        // relocations of common:
+        relocate("com.zaxxer.hikari", "hikari")
+        relocate("de.cubbossa.serializedeffects", "serializedeffects")
+        relocate("de.cubbossa.nbo", "nbo")
+        relocate("de.cubbossa.translations", "translations")
+        relocate("de.cubbossa.splinelib", "splinelib")
+        relocate("xyz.xenondevs.particle", "particle")
+        relocate("dev.jorel.commandapi", "commandapi")
+        relocate("org.antlr", "antlr")
+        relocate("org.jooq", "jooq")
+        relocate("de.exlll", "exlll")
     }
     test {
         useJUnitPlatform()
