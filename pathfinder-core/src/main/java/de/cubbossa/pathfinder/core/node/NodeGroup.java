@@ -8,9 +8,6 @@ import de.cubbossa.pathfinder.module.visualizing.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTerm;
 import de.cubbossa.pathfinder.module.visualizing.query.SearchTermHolder;
 import de.cubbossa.pathfinder.module.visualizing.query.SimpleSearchTerm;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.logging.Level;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -18,6 +15,11 @@ import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.logging.Level;
 
 @Getter
 @Setter
@@ -120,11 +122,15 @@ public class NodeGroup extends HashSet<Groupable<?>>
         PathPlugin.getInstance().getLogger().log(Level.SEVERE, "Node is null");
         continue;
       }
-      float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), node);
-      if (node.getLocation().getX() - player.getLocation().getX() > dist) {
+      if (!Objects.equals(node.getLocation().getWorld(), player.getLocation().getWorld())) {
         continue;
       }
-      if (node.getLocation().distance(player.getLocation()) > dist) {
+      float dist = DiscoverHandler.getInstance().getDiscoveryDistance(player.getUniqueId(), node);
+      if (node.getLocation().getX() - player.getLocation().getX() > dist
+              || node.getLocation().getY() - player.getLocation().getY() > dist) {
+        continue;
+      }
+      if (node.getLocation().distanceSquared(player.getLocation()) > Math.pow(dist, 2)) {
         continue;
       }
       return true;

@@ -100,7 +100,7 @@ bukkit {
     val versionSplit = minecraftVersion.split(".")
     apiVersion = minecraftVersion[0] + "." + 13.coerceAtLeast(versionSplit[1].toInt())
 
-    softDepend = listOf("PlaceholderAPI")
+    softDepend = listOf("PlaceholderAPI", "Multiverse-Core")
 
     defaultPermission = BukkitPluginDescription.Permission.Default.OP
     permissions {
