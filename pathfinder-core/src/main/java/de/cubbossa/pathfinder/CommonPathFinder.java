@@ -15,7 +15,10 @@ import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.storage.ExamplesLoader;
 import de.cubbossa.pathfinder.storage.StorageImpl;
-import de.cubbossa.pathfinder.storage.implementation.*;
+import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
+import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
+import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
+import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
@@ -144,11 +147,9 @@ public abstract class CommonPathFinder implements PathFinder {
       default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
           visualizerTypeRegistry, modifierRegistry);
     };
+    impl.setWorldLoader(this::getWorld);
     impl.setLogger(getLogger());
-    // TODO bad style
-    if (impl instanceof CommonStorage cm) {
-      cm.setStorage(storage);
-    }
+
     storage.setImplementation(impl);
     storage.setEventDispatcher(eventDispatcher);
     storage.setLogger(getLogger());

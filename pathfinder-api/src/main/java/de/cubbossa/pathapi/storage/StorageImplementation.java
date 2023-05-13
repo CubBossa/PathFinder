@@ -7,13 +7,9 @@ import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -36,6 +32,8 @@ public interface StorageImplementation {
   Logger getLogger();
 
   void setLogger(Logger logger);
+
+  void setWorldLoader(WorldLoader worldLoader);
 
   // ################################
   // #   Node Types

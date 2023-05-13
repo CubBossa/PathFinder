@@ -1,8 +1,8 @@
-package de.cubbossa.pathfinder.test;
+package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.WorldImpl;
+import de.cubbossa.pathapi.misc.World;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 
@@ -42,7 +42,17 @@ public class TestPlayer implements PathPlayer<Object> {
 
   @Override
   public Location getLocation() {
-    return new Location(0, 0, 0, new WorldImpl(UUID.randomUUID()));
+    return new Location(0, 0, 0, new World() {
+      @Override
+      public UUID getUniqueId() {
+        return UUID.randomUUID();
+      }
+
+      @Override
+      public String getName() {
+        return "testworld";
+      }
+    });
   }
 
   @Override

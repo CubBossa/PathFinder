@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.storage.WorldLoader;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
@@ -19,9 +19,12 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
   final NodeTypeRegistry nodeTypeRegistry;
   final VisualizerTypeRegistry visualizerTypeRegistry;
   final ModifierRegistry modifierRegistry;
-  @Setter
+
   @Getter
-  Storage storage;
+  @Setter
+  WorldLoader worldLoader = uuid -> {
+    throw new IllegalStateException("No WorldLoader registered for storage " + getClass().getSimpleName());
+  };
   @Getter
   @Setter
   private @Nullable Logger logger;

@@ -15,7 +15,6 @@ import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
@@ -91,7 +90,7 @@ public abstract class SqlStorage extends CommonStorage {
       UUID worldUid = record.getWorld();
 
       Waypoint node = new Waypoint(id);
-      node.setLocation(new Location(x, y, z, CommonPathFinder.getInstance().getWorld(worldUid)));
+      node.setLocation(new Location(x, y, z, worldLoader.loadWorld(worldUid)));
       return node;
     };
   }

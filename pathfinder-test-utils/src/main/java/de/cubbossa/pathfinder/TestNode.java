@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.test;
+package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;

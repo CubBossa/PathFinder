@@ -1,7 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
@@ -11,32 +9,28 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.storage.WorldLoader;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifierType;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
-import de.cubbossa.pathfinder.storage.implementation.CommonStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.WorldImpl;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
+import org.junit.jupiter.api.Assertions;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -48,11 +42,24 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public abstract class PathFinderTest {
 
-  protected ServerMock serverMock;
+  public static final WorldLoader WORLD_LOADER = uuid -> new World() {
+    @Override
+    public UUID getUniqueId() {
+      return uuid;
+    }
+
+    @Override
+    public String getName() {
+      return getUniqueId().toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof World w && uuid.equals(w.getUniqueId());
+    }
+  };
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
   protected static MiniMessage miniMessage;
@@ -61,27 +68,11 @@ public abstract class PathFinderTest {
   protected VisualizerTypeRegistry visualizerTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
-  protected AbstractVisualizerType<ParticleVisualizer> visualizerType;
+  protected TestVisualizerType visualizerType;
 
-  public PathFinderTest() {
-    if (!MockBukkit.isMocked()) {
-      serverMock = MockBukkit.mock();
-    } else {
-      serverMock = MockBukkit.getMock();
-    }
-  }
-
-  public static void runAfterAll() {
-    MockBukkit.unmock();
-  }
-
-  public void setupWorldMock(String name) {
-    if (serverMock == null || !MockBukkit.isMocked()) {
-      serverMock = MockBukkit.mock();
-    }
-
-    org.bukkit.World bukkitWorld = serverMock.addSimpleWorld(name);
-    world = new WorldImpl(bukkitWorld.getUID());
+  public void setupWorldMock() {
+    UUID uuid = UUID.randomUUID();
+    world = WORLD_LOADER.loadWorld(uuid);
   }
 
   public void setupMiniMessage() {
@@ -92,14 +83,13 @@ public abstract class PathFinderTest {
   public void setupStorage(boolean cached, Supplier<StorageImplementation> factory) {
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
-    modifierRegistry.registerModifierType(new PermissionModifierType());
+    modifierRegistry.registerModifierType(new TestModifierType());
     visualizerTypeRegistry = new VisualizerHandler();
 
     storage = new StorageImpl(nodeTypeRegistry);
     StorageImplementation implementation = factory.get();
-    if (implementation instanceof CommonStorage cms) {
-      cms.setStorage(storage);
-    }
+    implementation.setLogger(logger);
+    implementation.setWorldLoader(WORLD_LOADER);
 
     storage.setImplementation(implementation);
     storage.setLogger(logger);
@@ -108,7 +98,7 @@ public abstract class PathFinderTest {
     waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
     nodeTypeRegistry.register(waypointNodeType);
 
-    visualizerType = new ParticleVisualizerType(CommonPathFinder.pathfinder("particle"));
+    visualizerType = new TestVisualizerType(CommonPathFinder.pathfinder("particle"));
     if (implementation instanceof InternalVisualizerDataStorage visualizerDataStorage) {
       visualizerType.setStorage(new InternalVisualizerStorage<>(visualizerType, visualizerDataStorage));
     }
@@ -167,15 +157,15 @@ public abstract class PathFinderTest {
     CompletableFuture<T> future = supplier.get();
     T element = future.join();
 
-    assertFalse(future.isCompletedExceptionally());
-    assertNotNull(element);
+    Assertions.assertFalse(future.isCompletedExceptionally());
+    Assertions.assertNotNull(element);
     return element;
   }
 
   protected void assertFuture(Supplier<CompletableFuture<Void>> supplier) {
     CompletableFuture<Void> future = supplier.get();
     future.join();
-    assertFalse(future.isCompletedExceptionally());
+    Assertions.assertFalse(future.isCompletedExceptionally());
   }
 
   protected Waypoint makeWaypoint() {
@@ -191,13 +181,13 @@ public abstract class PathFinderTest {
   }
 
   protected void assertNodeNotExists(UUID node) {
-    assertThrows(Exception.class,
+    Assertions.assertThrows(Exception.class,
         () -> storage.loadNode(node).join().orElseThrow());
   }
 
   protected void assertNodeCount(int count) {
     Collection<Node> nodesAfter = storage.loadNodes().join();
-    assertEquals(count, nodesAfter.size());
+    Assertions.assertEquals(count, nodesAfter.size());
   }
 
   protected Edge makeEdge(Waypoint start, Waypoint end) {
@@ -210,7 +200,7 @@ public abstract class PathFinderTest {
   }
 
   protected void assertEdge(UUID start, UUID end) {
-    assertTrue(storage.loadNode(start).join().orElseThrow().hasConnection(end));
+    Assertions.assertTrue(storage.loadNode(start).join().orElseThrow().hasConnection(end));
   }
 
   protected void assertNoEdge(UUID start, UUID end) {
@@ -218,7 +208,7 @@ public abstract class PathFinderTest {
     if (node.isEmpty()) {
       return;
     }
-    assertFalse(node.get().hasConnection(end));
+    Assertions.assertFalse(node.get().hasConnection(end));
   }
 
   protected NodeGroup makeGroup(NamespacedKey key) {
@@ -235,11 +225,11 @@ public abstract class PathFinderTest {
   }
 
   protected void assertGroupNotExists(NamespacedKey key) {
-    assertThrows(Exception.class,
+    Assertions.assertThrows(Exception.class,
         () -> storage.loadGroup(key).join().orElseThrow());
   }
 
-  protected ParticleVisualizer makeVisualizer(NamespacedKey key) {
+  protected TestVisualizer makeVisualizer(NamespacedKey key) {
     return assertResult(() -> storage.createAndLoadVisualizer(visualizerType, key));
   }
 

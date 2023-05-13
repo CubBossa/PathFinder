@@ -1,13 +1,13 @@
-package de.cubbossa.pathfinder.util.nodeselection;
+package de.cubbossa.pathfinder.nodeselection;
 
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
-import de.cubbossa.pathfinder.nodeselection.SelectionVisitor;
-import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 class SelectionVisitorTest {
 

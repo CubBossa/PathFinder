@@ -28,15 +28,13 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> {
   private FindLocationCommand findLocationCommand;
   private CancelPathCommand cancelPathCommand;
 
-  public BukkitNavigationHandler() {
-    super();
-    instance = this;
-    Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
-  }
-
   @Override
   public void onLoad(PathFinder pathPlugin) {
+    instance = this;
+    Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+
     super.onLoad(pathPlugin);
+
     findCommand = new FindCommand(pathPlugin);
     findLocationCommand = new FindLocationCommand(pathPlugin);
     cancelPathCommand = new CancelPathCommand(pathPlugin);

@@ -7,7 +7,6 @@ plugins {
     id("io.freefair.lombok") version "6.6.2"
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
-    id("java-test-fixtures")
 }
 
 group = "de.cubbossa"
@@ -55,14 +54,11 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:3.0.1")
 
     // Tests
+    testImplementation(project(":pathfinder-test-utils"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
-    testFixturesCompileOnly(project(":pathfinder-core"))
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
     testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
-    testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
-    testImplementation("com.h2database:h2:2.1.214")
     testImplementation("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 
     // Utility

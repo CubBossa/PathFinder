@@ -15,7 +15,6 @@ import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -554,7 +553,7 @@ public class YmlStorage extends CommonStorage {
     double z = sec.getDouble("z");
     UUID world = UUID.fromString(sec.getString("world"));
     de.cubbossa.pathapi.misc.Location location =
-        new de.cubbossa.pathapi.misc.Location(x, y, z, CommonPathFinder.getInstance().getWorld(world));
+        new de.cubbossa.pathapi.misc.Location(x, y, z, worldLoader.loadWorld(world));
 
     Waypoint waypoint = new Waypoint(id);
     waypoint.setLocation(location);

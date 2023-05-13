@@ -5,6 +5,7 @@ plugins {
     antlr
     `java-library`
     `maven-publish`
+    `java-test-fixtures`
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
     id("nu.studer.jooq") version "8.1"
@@ -67,6 +68,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
+    testImplementation("com.h2database:h2:2.1.214")
+    testImplementation(project(":pathfinder-test-utils"))
 
     // UI
     api("de.cubbossa:Translations:2.2")

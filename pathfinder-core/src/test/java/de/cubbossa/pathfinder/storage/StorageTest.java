@@ -9,10 +9,10 @@ import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderTest;
+import de.cubbossa.pathfinder.TestModifier;
+import de.cubbossa.pathfinder.TestVisualizer;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +35,7 @@ public abstract class StorageTest extends PathFinderTest {
 
   public StorageTest() {
     setupMiniMessage();
-    setupWorldMock("test");
+    setupWorldMock();
   }
 
   @BeforeEach
@@ -92,16 +92,16 @@ public abstract class StorageTest extends PathFinderTest {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
     NodeGroup g = makeGroup(gk);
-    Modifier m = new PermissionModifier("abc");
+    Modifier m = new TestModifier("abc");
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.add(a.getNodeId());
       group.addModifier(m);
     }));
     NodeGroup after = assertGroupExists(gk);
-    assertTrue(after.hasModifier(PermissionModifier.class));
+    assertTrue(after.hasModifier(TestModifier.class));
     assertTrue(after.contains(a.getNodeId()));
 
-    Map<Node, Collection<PermissionModifier>> nodes = assertResult(() -> storage.loadNodes(PermissionModifier.class));
+    Map<Node, Collection<TestModifier>> nodes = assertResult(() -> storage.loadNodes(TestModifier.class));
     assertEquals(1, nodes.size());
     assertTrue(nodes.containsKey(a));
     assertFalse(nodes.containsKey(b));
@@ -270,26 +270,26 @@ public abstract class StorageTest extends PathFinderTest {
   void setModifier() {
     NamespacedKey gk = NamespacedKey.fromString("test:abc");
     NodeGroup g = makeGroup(gk);
-    Modifier mod = new PermissionModifier("abc");
+    Modifier mod = new TestModifier("abc");
 
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.addModifier(mod);
     }));
     NodeGroup g1 = assertGroupExists(gk);
-    assertTrue(g1.hasModifier(PermissionModifier.class));
-    assertEquals("abc", g1.getModifier(PermissionModifier.class).permission());
+    assertTrue(g1.hasModifier(TestModifier.class));
+    assertEquals("abc", g1.getModifier(TestModifier.class).data());
 
     assertFuture(() -> storage.modifyGroup(gk, group -> {
-      group.removeModifier(PermissionModifier.class);
+      group.removeModifier(TestModifier.class);
     }));
     NodeGroup g2 = assertGroupExists(gk);
-    assertFalse(g2.hasModifier(PermissionModifier.class));
+    assertFalse(g2.hasModifier(TestModifier.class));
   }
 
   @Test
   void createVisualizer() {
     NamespacedKey key = CommonPathFinder.pathfinder("abc");
-    ParticleVisualizer visualizer = makeVisualizer(key);
+    TestVisualizer visualizer = makeVisualizer(key);
   }
 
   @Test

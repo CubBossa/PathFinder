@@ -60,6 +60,7 @@ tasks {
 
         dependencies {
             include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
+            include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
         }
 
         fun relocate(from: String, to: String) {

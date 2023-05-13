@@ -1,12 +1,9 @@
-package de.cubbossa.pathfinder.util.nodeselection;
+package de.cubbossa.pathfinder.nodeselection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import de.cubbossa.pathfinder.nodeselection.NumberRange;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class NumberRangeTest {
 

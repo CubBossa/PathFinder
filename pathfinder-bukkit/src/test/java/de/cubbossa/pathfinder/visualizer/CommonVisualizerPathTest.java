@@ -7,11 +7,10 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderTest;
+import de.cubbossa.pathfinder.TestPlayer;
+import de.cubbossa.pathfinder.TestVisualizer;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
-import de.cubbossa.pathfinder.test.TestPlayer;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class CommonVisualizerPathTest extends PathFinderTest {
 
   private final Map<PathVisualizer<?, ?>, NodeGroup> groupMap;
@@ -29,7 +30,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
   public CommonVisualizerPathTest() {
     groupMap = new HashMap<>();
     setupMiniMessage();
-    setupWorldMock("test");
+    setupWorldMock();
   }
 
   private Waypoint pathNode(PathVisualizer<?, ?>... visualizers) {
@@ -47,13 +48,8 @@ class CommonVisualizerPathTest extends PathFinderTest {
     return waypoint;
   }
 
-  private ParticleVisualizer particle(String key) {
-    return new ParticleVisualizer(NamespacedKey.fromString("pathfinder:" + key), "test");
-  }
-
-  @AfterAll
-  public static void afterAll() {
-    runAfterAll();
+  private TestVisualizer visualizer(String key) {
+    return new TestVisualizer(NamespacedKey.fromString("pathfinder:" + key), "test");
   }
 
   @BeforeEach
@@ -68,7 +64,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
   @Test
   void prepare1() {
-    ParticleVisualizer vis = particle("a");
+    TestVisualizer vis = visualizer("a");
     List<Node> path = List.of(
         pathNode(vis),
         pathNode(vis)
@@ -88,8 +84,8 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
   @Test
   void prepare2() {
-    ParticleVisualizer a = particle("a");
-    ParticleVisualizer b = particle("b");
+    TestVisualizer a = visualizer("a");
+    TestVisualizer b = visualizer("b");
     List<Node> path = List.of(
         pathNode(a),
         pathNode(a, b),
@@ -110,8 +106,8 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
   @Test
   void prepare3() {
-    ParticleVisualizer a = particle("a");
-    ParticleVisualizer b = particle("b");
+    TestVisualizer a = visualizer("a");
+    TestVisualizer b = visualizer("b");
     List<Node> path = List.of(
         pathNode(a),
         pathNode(b),
@@ -133,7 +129,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
   @Test
   void prepare4() {
-    ParticleVisualizer vis = particle("a");
+    TestVisualizer vis = visualizer("a");
     List<Node> path = List.of(
         pathNode(vis),
         pathNode(vis)
