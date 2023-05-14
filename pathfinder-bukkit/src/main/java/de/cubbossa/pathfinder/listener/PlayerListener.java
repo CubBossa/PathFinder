@@ -13,7 +13,7 @@ public class PlayerListener implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-      PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
+    PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
 
     NamespacedKey currentlyEdited = NodeHandler.getInstance().getEdited(player);
     if (currentlyEdited != null) {

@@ -31,7 +31,6 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> {
   @Override
   public void onLoad(PathFinder pathPlugin) {
     instance = this;
-    Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
 
     super.onLoad(pathPlugin);
 
@@ -45,7 +44,13 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> {
       bpf.getCommandRegistry().registerCommand(findLocationCommand);
       bpf.getCommandRegistry().registerCommand(cancelPathCommand);
     }
+  }
 
+  @Override
+  public void onEnable(PathFinder pathPlugin) {
+    super.onEnable(pathPlugin);
+
+    Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
     eventDispatcher.listen(PathStartEvent.class, e -> cancelPathCommand.refresh(e.getPlayer()));
     eventDispatcher.listen(PathStoppedEvent.class, e -> cancelPathCommand.refresh(e.getPlayer()));
   }

@@ -34,10 +34,7 @@ dependencies {
     api(project(":pathfinder-api"))
     api(project(path = ":pathfinder-core", configuration = "shadow"))
     runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
-    runtimeOnly(project(path = ":pathfinder-scripted-visualizer", configuration = "shadow"))
-
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    runtimeOnly(project(":pathfinder-scripted-visualizer"))
 
     // Spigot
     compileOnlyApi("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
@@ -79,7 +76,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-
 bukkit {
     name = "PathFinder"
     version = rootProject.version.toString()
@@ -94,6 +90,10 @@ bukkit {
     apiVersion = minecraftVersion[0] + "." + 13.coerceAtLeast(versionSplit[1].toInt())
 
     softDepend = listOf("PlaceholderAPI")
+    libraries = listOf(
+            "org.openjdk.nashorn:nashorn-core:15.4",
+            "org.snakeyaml:snakeyaml-engine:2.0"
+    )
 
     defaultPermission = BukkitPluginDescription.Permission.Default.OP
     permissions {

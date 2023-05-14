@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.events.path;
 
-import de.cubbossa.pathapi.event.PathCancelledEvent;
+import de.cubbossa.pathapi.event.PathStoppedEvent;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.BukkitPathPlayer;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,16 +15,16 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class PathCancelEvent extends Event implements Cancellable, PathCancelledEvent<Player> {
+public class PathStopEvent extends Event implements Cancellable, PathStoppedEvent<Player> {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final UUID playerId;
+  private final PathPlayer<Player> player;
   private final CommonVisualizerPath<Player> path;
   private boolean cancelled = false;
 
-  public PathCancelEvent(UUID playerId, CommonVisualizerPath<Player> path) {
-    this.playerId = playerId;
+  public PathStopEvent(UUID playerId, CommonVisualizerPath<Player> path) {
+    this.player = new BukkitPathPlayer(playerId);
     this.path = path;
   }
 

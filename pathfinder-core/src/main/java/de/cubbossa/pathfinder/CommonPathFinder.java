@@ -167,7 +167,6 @@ public abstract class CommonPathFinder implements PathFinder {
 
     new NodeHandler(this);
     extensionRegistry.enableExtensions(this);
-
   }
 
   @SneakyThrows

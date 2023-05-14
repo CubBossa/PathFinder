@@ -38,7 +38,7 @@ public class PathFinderCommand extends Command {
    * The basic command of this plugin, which handles things like reload, export, import, etc.
    */
   public PathFinderCommand(PathFinder pathFinder) {
-    super(pathFinder, "de/cubbossa/pathfinder");
+    super(pathFinder, "pathfinder");
     withAliases("pf");
 
     withRequirement(sender ->

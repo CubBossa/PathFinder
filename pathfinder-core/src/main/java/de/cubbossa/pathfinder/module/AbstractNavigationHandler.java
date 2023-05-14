@@ -54,16 +54,15 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   protected final Map<PathPlayer<PlayerT>, SearchInfo<PlayerT>> activePaths;
   protected final PathFinder pathFinder;
-  protected final EventDispatcher<PlayerT> eventDispatcher;
   protected final List<Predicate<NavigationRequestContext>> navigationFilter;
   @Getter
   private final NamespacedKey key = CommonPathFinder.pathfinder("navigation");
+  protected EventDispatcher<PlayerT> eventDispatcher;
 
   public AbstractNavigationHandler() {
     this.activePaths = new HashMap<>();
     this.pathFinder = PathFinderProvider.get();
     this.navigationFilter = new ArrayList<>();
-    this.eventDispatcher = (EventDispatcher<PlayerT>) pathFinder.getEventDispatcher();
     instance = this;
   }
 
@@ -213,6 +212,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     if (!pathFinder.getConfiguration().getModuleConfig().isNavigationModule()) {
       pathFinder.getExtensionRegistry().unregisterExtension(this);
     }
+    this.eventDispatcher = (EventDispatcher<PlayerT>) pathFinder.getEventDispatcher();
   }
 
   public void onEnable(PathFinder pathPlugin) {

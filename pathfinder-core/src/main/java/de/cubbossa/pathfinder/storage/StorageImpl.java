@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -104,7 +103,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node) {
-    debug("Storage: 'loadNodeType(" + node + ")'");
     Optional<NodeType<N>> cached = cache.getNodeTypeCache().getType(node);
     if (cached.isPresent()) {
       return CompletableFuture.completedFuture(cached);
@@ -119,7 +117,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(Collection<UUID> nodes) {
-    debug("Storage: 'loadNodeTypes(" + nodes + ")'");
     StorageCache.CacheMap<UUID, NodeType<?>> map = cache.getNodeTypeCache().getTypes(nodes);
     Map<UUID, NodeType<?>> result = new HashMap<>(map.present());
 
@@ -137,12 +134,8 @@ public class StorageImpl implements Storage {
   // Nodes
   @Override
   public <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location) {
-    debug("Storage: 'createAndLoadNode(" + location + ")'");
     return asyncFuture(() -> {
       N node = type.createAndLoadNode(new NodeDataStorage.Context(location));
-      if (node instanceof Groupable groupable) {
-        loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(groupable::addGroup);
-      }
       implementation.saveNodeTypeMapping(Map.of(node.getNodeId(), type));
       cache.getNodeTypeCache().write(node.getNodeId(), type);
 
@@ -154,7 +147,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id) {
-    debug("Storage: 'loadNode(" + id + ")'");
     Optional<N> opt = cache.getNodeCache().getNode(id);
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
@@ -171,10 +163,7 @@ public class StorageImpl implements Storage {
     if (!(node instanceof Groupable groupable)) {
       return node;
     }
-    CompletableFuture.allOf(
-        loadGroup(CommonPathFinder.globalGroupKey()).thenAccept(o -> o.ifPresent(groupable::addGroup)),
-        loadGroups(node.getNodeId()).thenAccept(g -> g.forEach(groupable::addGroup))
-    ).join();
+    loadGroups(node.getNodeId()).thenAccept(g -> g.forEach(groupable::addGroup)).join();
     return node;
   }
 
@@ -193,7 +182,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public <N extends Node> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id) {
-    debug("Storage: 'loadNode(" + type.getKey() + ", " + id + ")'");
     Optional<N> opt = cache.getNodeCache().getNode(id);
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
@@ -203,7 +191,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Collection<Node>> loadNodes() {
-    debug("Storage: 'loadNodes()'");
     return cache.getNodeCache().getAllNodes()
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> {
@@ -218,7 +205,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids) {
-    debug("Storage: 'loadNodes(" + ids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
     StorageCache.CacheCollection<UUID, Node> col = cache.getNodeCache().getNodes(ids);
     Collection<Node> result = new HashSet<>(col.present());
     if (col.absent().isEmpty()) {
@@ -243,16 +229,21 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> saveNode(Node node) {
-    debug("Storage: 'saveNode(" + node.getNodeId() + ")'");
     return loadNodeType(node.getNodeId())
         .thenCompose(type -> loadNode(type.orElseThrow(), node.getNodeId()))
-        .thenApply(before -> {
-          eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
-          cache.getNodeCache().write(node);
-          cache.getGroupCache().write(node);
-          return before;
+        .thenApply(nOpt -> {
+          Node n = nOpt.orElseThrow();
+          eventDispatcher().ifPresent(e -> e.dispatchNodeSave(n));
+          return n;
         })
-        .thenAcceptAsync(before -> saveNodeTypeSafeBlocking(node));
+        .thenApplyAsync(n -> {
+          saveNodeTypeSafeBlocking(n);
+          return n;
+        })
+        .thenAccept(n -> {
+          cache.getNodeCache().write(n);
+          cache.getGroupCache().write(n);
+        });
   }
 
   private <N extends Node> void saveNodeTypeSafeBlocking(N node) {
@@ -266,10 +257,6 @@ public class StorageImpl implements Storage {
     }
 
     if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
-      // insert global group if not present
-      if (gAfter.getGroups().stream().noneMatch(g -> g.getKey().equals(CommonPathFinder.globalGroupKey()))) {
-        loadGroup(CommonPathFinder.globalGroupKey()).join().ifPresent(gAfter::addGroup);
-      }
 
       StorageImpl.ComparisonResult<NodeGroup> cmp =
           StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
@@ -287,7 +274,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater) {
-    debug("Storage: 'modifyNode(" + id + ")'");
     return loadNode(id)
         .thenApply(n -> {
           Node node = n.orElseThrow();
@@ -299,7 +285,6 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
     Collection<Node> nodes = loadNodes(uuids).join();
-    debug("Storage: 'deleteNodes(" + uuids.stream().map(UUID::toString).collect(Collectors.joining(",")) + ")'");
 
     eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
     return asyncFuture(() -> {
@@ -337,7 +322,6 @@ public class StorageImpl implements Storage {
   // Groups
   @Override
   public CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key) {
-    debug("Storage: 'createAndLoadGroup(" + key + ")'");
     return asyncFuture(() -> {
       NodeGroup group = implementation.createAndLoadGroup(key);
       cache.getGroupCache().write(group);
@@ -347,7 +331,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key) {
-    debug("Storage: 'loadGroup(" + key + ")'");
     Optional<NodeGroup> group = cache.getGroupCache().getGroup(key);
     if (group.isPresent()) {
       return CompletableFuture.completedFuture(group);
@@ -361,7 +344,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
-    debug("Storage: 'loadGroups(" + pagination + ")'");
     return cache.getGroupCache().getGroups(pagination)
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> implementation.loadGroups(pagination)));
@@ -369,7 +351,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys) {
-    debug("Storage: 'loadGroups(" + keys.stream().map(NamespacedKey::toString).collect(Collectors.joining(",")) + ")'");
     StorageCache.CacheCollection<NamespacedKey, NodeGroup> cached = cache.getGroupCache().getGroups(keys);
     Collection<NodeGroup> result = new HashSet<>(cached.present());
     if (cached.absent().isEmpty()) {
@@ -385,7 +366,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node) {
-    debug("Storage: 'loadGroups(" + node + ")'");
     Optional<Collection<NodeGroup>> cached = cache.getGroupCache().getGroups(node);
     return cached
         .map(CompletableFuture::completedFuture)
@@ -398,21 +378,16 @@ public class StorageImpl implements Storage {
 
   @Override
   public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier) {
-    debug("Storage: 'loadGroups(" + modifier + ")'");
     Optional<Collection<NodeGroup>> cached = cache.getGroupCache().getGroups(modifier);
-    if (cached.isPresent()) {
-      return CompletableFuture.completedFuture(cached.get());
-    }
-    return asyncFuture(() -> {
+    return cached.map(CompletableFuture::completedFuture).orElseGet(() -> asyncFuture(() -> {
       Collection<NodeGroup> loaded = implementation.loadGroups(modifier);
       cache.getGroupCache().write(modifier, loaded);
       return loaded;
-    });
+    }));
   }
 
   @Override
   public CompletableFuture<Collection<NodeGroup>> loadAllGroups() {
-    debug("Storage: 'loadAllGroups()'");
     Optional<Collection<NodeGroup>> cached = cache.getGroupCache().getGroups();
     return cached
         .map(CompletableFuture::completedFuture)
@@ -425,7 +400,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> saveGroup(NodeGroup group) {
-    debug("Storage: 'saveGroup(" + group.getKey() + ")'");
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       cache.getGroupCache().write(group);
@@ -443,7 +417,6 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> deleteGroup(NodeGroup group) {
-    debug("Storage: 'deleteGroup(" + group.getKey() + ")'");
     return asyncFuture(() -> {
       implementation.deleteGroup(group);
       cache.getGroupCache().invalidate(group);
@@ -601,12 +574,6 @@ public class StorageImpl implements Storage {
 
   private void deleteVisualizerUnsafe(VisualizerType type, PathVisualizer vis) {
     type.getStorage().deleteVisualizer(type, vis);
-  }
-
-  private void debug(String message) {
-    if (logger != null) {
-      logger.log(Level.INFO, message);
-    }
   }
 
   public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(Class<M> modifier) {

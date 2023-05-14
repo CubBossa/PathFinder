@@ -12,10 +12,7 @@ import de.cubbossa.pathapi.storage.cache.GroupCache;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
@@ -43,7 +40,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   @Override
   public <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier) {
     if (modifierGroupCache.asMap().containsKey(modifier)) {
-      return Optional.of(modifierGroupCache.asMap().get(modifier));
+      return Optional.of(modifierGroupCache.asMap().get(modifier)).map(HashSet::new);
     }
     if (cachedAll) {
       Collection<NodeGroup> newCache = cache.asMap().values().stream()
@@ -89,7 +86,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   @Override
   public Optional<Collection<NodeGroup>> getGroups(UUID node) {
-    return Optional.ofNullable(nodeGroupCache.asMap().get(node));
+    return Optional.ofNullable(nodeGroupCache.asMap().get(node)).map(HashSet::new);
   }
 
   public void write(NodeGroup group) {
@@ -99,7 +96,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   @Override
   public void write(Node node) {
     if (node instanceof Groupable groupable) {
-      nodeGroupCache.put(node.getNodeId(), groupable.getGroups());
+      nodeGroupCache.put(node.getNodeId(), Set.copyOf(groupable.getGroups()));
       for (NodeGroup present : cache.asMap().values()) {
         if (groupable.getGroups().contains(present)) {
           present.add(groupable.getNodeId());

@@ -34,10 +34,4 @@ public abstract class CommonStorage implements StorageImplementation, WaypointDa
     this.visualizerTypeRegistry = visualizerTypeRegistry;
     this.modifierRegistry = modifierRegistry;
   }
-
-  protected void debug(String message) {
-    if (logger != null) {
-      logger.log(Level.INFO, message);
-    }
-  }
 }

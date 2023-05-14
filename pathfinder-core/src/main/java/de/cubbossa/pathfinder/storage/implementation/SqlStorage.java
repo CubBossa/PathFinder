@@ -38,7 +38,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
 import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER_TYPE_RELATION;
@@ -148,7 +147,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_WAYPOINTS.fields())
         .primaryKey(PATHFINDER_WAYPOINTS.ID)
         .execute();
-    debug("Table created: 'pathfinder_waypoints'");
   }
 
   private void createEdgeTable() {
@@ -157,7 +155,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_EDGES.fields())
         .primaryKey(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID)
         .execute();
-    debug("Table created: 'pathfinder_edges'");
   }
 
   private void createNodeGroupTable() {
@@ -166,7 +163,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_NODEGROUPS.fields())
         .primaryKey(PATHFINDER_NODEGROUPS.KEY)
         .execute();
-    debug("Table created: 'pathfinder_nodegroups'");
   }
 
   private void createNodeGroupNodesTable() {
@@ -175,7 +171,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_NODEGROUP_NODES.fields())
         .primaryKey(PATHFINDER_NODEGROUP_NODES.fields())
         .execute();
-    debug("Table created: 'pathfinder_nodegroup_nodes'");
   }
 
   private void createPathVisualizerTable() {
@@ -184,7 +179,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_VISUALIZER.fields())
         .primaryKey(PATHFINDER_VISUALIZER.KEY)
         .execute();
-    debug("Table created: 'pathfinder_path_visualizer'");
   }
 
   private void createPathVisualizerTypeTable() {
@@ -193,7 +187,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_VISUALIZER_TYPE_RELATION.fields())
         .primaryKey(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY, PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
         .execute();
-    debug("Table created: 'pathfinder_visualizer_type_relation'");
   }
 
   private void createDiscoverInfoTable() {
@@ -202,7 +195,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_DISCOVERINGS.fields())
         .primaryKey(PATHFINDER_DISCOVERINGS.PLAYER_ID, PATHFINDER_DISCOVERINGS.DISCOVER_KEY)
         .execute();
-    debug("Table created: 'pathfinder_discoverings'");
   }
 
 
@@ -212,7 +204,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
         .primaryKey(PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
         .execute();
-    debug("Table created: 'pathfinder_node_type_relation'");
   }
 
   private void createModifierGroupRelation() {
@@ -221,7 +212,6 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
         .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS)
         .execute();
-    debug("Table created: 'pathfinder_group_modifier_relation'");
   }
 
   @Override
@@ -230,15 +220,11 @@ public abstract class SqlStorage extends CommonStorage {
     create.selectFrom(PATHFINDER_NODE_TYPE_RELATION)
         .where(PATHFINDER_NODE_TYPE_RELATION.NODE_ID.in(nodes))
         .fetch(t -> result.put(t.getNodeId(), nodeTypeRegistry.getType(t.getNodeType())));
-    debug(" > Storage Implementation: 'loadNodeTypes(Collection<UUID>): Map<UUID, NodeType<N>>'");
     return result;
   }
 
   @Override
   public void saveNodeTypeMapping(Map<UUID, NodeType<?>> typeMapping) {
-    debug(" > Storage Implementation: 'saveNodeTypes(" + typeMapping.entrySet().stream()
-        .map(e -> "{" + e.getKey() + "; " + e.getValue().getKey() + "}")
-        .collect(Collectors.joining(", ")) + ")'");
     create.batched(configuration -> {
       typeMapping.forEach((uuid, nodeType) -> {
         create.insertInto(PATHFINDER_NODE_TYPE_RELATION)
@@ -261,13 +247,11 @@ public abstract class SqlStorage extends CommonStorage {
         .values(start, end, weight)
         .onDuplicateKeyIgnore()
         .execute();
-    debug(" > Storage Implementation: 'createAndLoadEdge(" + start + ", " + end + ")'");
     return new SimpleEdge(start, end, (float) weight);
   }
 
   @Override
   public Collection<Edge> loadEdgesFrom(UUID start) {
-    debug(" > Storage Implementation: 'loadEdgesFrom(" + start + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.START_ID.eq(start))
         .fetch(edgeMapper);
@@ -275,7 +259,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<Edge> loadEdgesTo(UUID end) {
-    debug(" > Storage Implementation: 'loadEdgesTo(" + end + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .fetch(edgeMapper);
@@ -283,7 +266,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Optional<Edge> loadEdge(UUID start, UUID end) {
-    debug(" > Storage Implementation: 'loadEdge(" + start + ", " + end + ")'");
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
         .and(PATHFINDER_EDGES.START_ID.eq(start))
@@ -297,7 +279,6 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
-    debug(" > Storage Implementation: 'saveEdge(" + edge + ")'");
   }
 
   @Override
@@ -306,7 +287,6 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
-    debug(" > Storage Implementation: 'deleteEdge(" + edge + ")'");
   }
 
   @Override
@@ -377,13 +357,11 @@ public abstract class SqlStorage extends CommonStorage {
         .insertInto(PATHFINDER_NODEGROUPS)
         .values(key, 1)
         .execute();
-    debug(" > Storage Implementation: 'createAndLoadGroup(" + key + ")'");
     return new SimpleNodeGroup(key);
   }
 
   @Override
   public Optional<NodeGroup> loadGroup(NamespacedKey key) {
-    debug(" > Storage Implementation: 'loadGroup(" + key + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(key))
         .fetch(groupMapper).stream().findAny();
@@ -391,7 +369,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<UUID> loadGroupNodes(NodeGroup group) {
-    debug(" > Storage Implementation: 'loadGroupNodes(" + group.getKey() + ")'");
     return create.select(PATHFINDER_NODEGROUP_NODES.NODE_ID)
         .from(PATHFINDER_NODEGROUP_NODES)
         .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
@@ -400,8 +377,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
-    debug(" > Storage Implementation: 'loadGroups(" + key.stream().map(NamespacedKey::toString)
-        .collect(Collectors.joining(",")) + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);
@@ -409,7 +384,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public List<NodeGroup> loadGroups(Pagination pagination) {
-    debug(" > Storage Implementation: 'loadGroups(" + pagination + ")'");
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .offset(pagination.getOffset())
         .limit(pagination.getLimit())
@@ -418,7 +392,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<NodeGroup> loadGroups(UUID node) {
-    debug(" > Storage Implementation: 'loadGroups(" + node + ")'");
     return create.select().from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_NODEGROUP_NODES)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))
@@ -434,7 +407,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
-    debug(" > Storage Implementation: 'loadGroups(" + modifier.getSimpleName() + ")'");
     return create
         .select()
         .from(PATHFINDER_NODEGROUPS)
@@ -453,14 +425,12 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<NodeGroup> loadAllGroups() {
-    debug(" > Storage Implementation: 'loadAllGroups()'");
     return create.selectFrom(PATHFINDER_NODEGROUPS).fetch(groupMapper);
   }
 
   @Override
   public void saveGroup(NodeGroup group) {
     // TODO logic belongs to Storage to make use of caching
-    debug(" > Storage Implementation: 'saveGroup(" + group.getKey() + ")'");
     NodeGroup before = loadGroup(group.getKey()).orElseThrow();
     create
         .update(PATHFINDER_NODEGROUPS)
@@ -480,10 +450,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    debug(" > Storage Implementation: 'assignToGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
-        .collect(Collectors.joining(",")) + "]"
-        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
     if (groups.isEmpty() || nodes.isEmpty()) {
       return;
     }
@@ -503,10 +469,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    debug(" > Storage Implementation: 'unassignFromGroups("
-        + "[" + groups.stream().map(NodeGroup::getKey).map(NamespacedKey::toString)
-        .collect(Collectors.joining(",")) + "]"
-        + ", [" + nodes.stream().map(UUID::toString).collect(Collectors.joining(",")) + "])'");
     if (groups.isEmpty() || nodes.isEmpty()) {
       return;
     }
@@ -530,7 +492,6 @@ public abstract class SqlStorage extends CommonStorage {
         .deleteFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
         .execute();
-    debug(" > Storage Implementation: 'deleteGroup(" + group.getKey() + ")'");
   }
 
   @Override
@@ -654,7 +615,6 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   public Collection<Modifier> loadModifiers(NamespacedKey group) {
-    debug(" > Storage Implementation: 'loadModifiers(" + group.getKey() + ")'");
     HashSet<Modifier> modifiers = new HashSet<>();
     create.selectFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
@@ -681,7 +641,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
-    debug(" > Storage Implementation: 'assignNodeGroupModifier(" + group.getKey() + ")'");
     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(""));
     Optional<ModifierType<M>> opt = modifierRegistry.getType((Class<M>) modifier.getClass());
     if (opt.isEmpty()) {
@@ -700,9 +659,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group,
-                                                             Class<M> modifier) {
-    debug(" > Storage Implementation: 'unassignNodeGroupModifier(" + group.getKey() + ")'");
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
     create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))

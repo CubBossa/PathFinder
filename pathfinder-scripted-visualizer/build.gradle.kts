@@ -40,35 +40,10 @@ dependencies {
 
     // JavaScript
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
+    implementation("org.snakeyaml:snakeyaml-engine:2.0")
 }
 
 tasks {
-    build {
-        dependsOn(shadowJar)
-    }
-    processResources {
-        // Replace tokens in plugin.yml
-        filter(
-            org.apache.tools.ant.filters.ReplaceTokens::class,
-            "tokens" to mapOf(
-                "version" to project.version.toString(),
-                "name" to rootProject.name
-            )
-        )
-    }
-    shadowJar {
-
-        dependencies {
-            include(dependency("org.snakeyaml:snakeyaml-engine:.*"))
-            include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
-        }
-
-        fun relocate(from: String, to: String) {
-            relocate(from, "de.cubbossa.pathfinder.lib.$to", null)
-        }
-
-        relocate("org.openjdk.nashorn", "nashorn")
-    }
     test {
         useJUnitPlatform()
     }

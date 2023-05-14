@@ -59,6 +59,16 @@ public abstract class StorageTest extends PathFinderTest {
 
   @Test
   @Order(2)
+  void createNodeWithDefaultGroup() {
+    Waypoint waypoint = makeWaypoint();
+    assertEquals(1, waypoint.getGroups().size());
+
+    Waypoint loaded = assertNodeExists(waypoint.getNodeId());
+    assertEquals(1, loaded.getGroups().size());
+  }
+
+  @Test
+  @Order(2)
   void getNodes() {
     assertNodeCount(0);
     makeWaypoint();

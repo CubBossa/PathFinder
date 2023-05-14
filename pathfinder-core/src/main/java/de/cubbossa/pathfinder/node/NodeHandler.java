@@ -61,7 +61,7 @@ public class NodeHandler {
         graph.addNode(player);
         LocationWeightSolver<Node> solver = (LocationWeightSolver<Node>) pathFinder.getLocationWeightSolverRegistry().get(
             PathFinderProvider.get().getConfiguration().getNavigation().getNearestLocationSolver().getAlgorithm()
-        );
+        ).get();
         Map<Node, Double> weighted = solver.solve(player, graph);
 
         weighted.forEach((node, weight) -> graph.connect(player, node, weight));

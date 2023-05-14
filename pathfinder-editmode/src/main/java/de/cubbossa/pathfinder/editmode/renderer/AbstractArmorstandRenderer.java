@@ -14,7 +14,6 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.IntPair;
@@ -31,7 +30,6 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.logging.Level;
 
 @Getter
 @Setter
@@ -151,7 +149,6 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
 
     Location location = retrieveFrom(element);
     int id = spawnArmorstand(player, location, getName(element), isSmall(element));
-    PathFinderProvider.get().getLogger().log(Level.INFO, "Spawned ArmorStand (" + element.getClass().getSimpleName() + ") with ID " + id + " at " + location);
 
     nodeEntityMap.put(element, id);
     entityNodeMap.put(id, element);

@@ -12,6 +12,7 @@ import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
@@ -79,14 +80,16 @@ public class EditModeMenu {
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
-            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(pos))
-                .thenAccept(node -> {
-                  if (!(node instanceof Groupable groupable)) {
+            pathFinder.getStorage()
+                .createAndLoadNode(type, VectorUtils.toInternal(pos))
+                .thenCompose(node -> pathFinder.getStorage().modifyNode(node.getNodeId(), n -> {
+                  if (!(n instanceof Groupable groupable)) {
                     return;
                   }
                   groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
-                  pathFinder.getStorage().saveNode(node);
-                }).exceptionally(throwable -> {
+                  groupable.addGroup(pathFinder.getStorage().loadGroup(CommonPathFinder.globalGroupKey()).join().orElseThrow());
+                }))
+                .exceptionally(throwable -> {
                   throwable.printStackTrace();
                   return null;
                 });
@@ -168,6 +171,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
+          //TODO of selected groups obviously
           pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
 
             double dist = -1;

@@ -10,8 +10,11 @@ import de.cubbossa.pathfinder.listener.PlayerListener;
 import de.cubbossa.pathfinder.module.BukkitDiscoverHandler;
 import de.cubbossa.pathfinder.nodegroup.modifier.*;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
+import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
+import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.util.YamlUtils;
+import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
@@ -29,6 +32,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.io.File;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 @Getter
@@ -36,8 +40,20 @@ public class BukkitPathFinder extends CommonPathFinder {
 
   @Getter
   private static BukkitPathFinder instance;
+  private static BukkitMainThreadExecutor executor;
   private BStatsLoader bstatsLoader;
   private CommandRegistry commandRegistry;
+
+  public static Executor mainThreadExecutor() {
+    if (executor == null) {
+      JavaPlugin plugin = PathFinderPlugin.getInstance();
+      if (plugin == null) {
+        throw new IllegalStateException("Aquired main thread executor before plugin was loaded");
+      }
+      executor = new BukkitMainThreadExecutor(plugin);
+    }
+    return executor;
+  }
 
   public static NamespacedKey convert(org.bukkit.NamespacedKey key) {
     return new NamespacedKey(key.getNamespace(), key.getKey());
@@ -76,11 +92,11 @@ public class BukkitPathFinder extends CommonPathFinder {
 
   @Override
   public void onLoad() {
+    commandRegistry = new CommandRegistry(this);
+    commandRegistry.loadCommands();
     super.onLoad();
     bstatsLoader = new BStatsLoader(this);
     YamlUtils.registerClasses();
-    commandRegistry = new CommandRegistry(this);
-    commandRegistry.loadCommands();
 
     modifierRegistry.registerModifierType(new PermissionModifierType());
     modifierRegistry.registerModifierType(new NavigableModifierType());
@@ -114,6 +130,9 @@ public class BukkitPathFinder extends CommonPathFinder {
     getStorage().createGlobalNodeGroup(particleVisualizerType).join();
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
+
+    locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_SIMPLE, () -> LocationWeightSolverPreset.SIMPLE.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.simpleConfig));
+    locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_RAYCAST, () -> LocationWeightSolverPreset.RAYCAST.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.raycastConfig));
   }
 
   @Override
