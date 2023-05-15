@@ -11,6 +11,7 @@ import lombok.Getter;
 import org.jooq.SQLDialect;
 
 import java.io.File;
+import java.util.ArrayList;
 
 @Getter
 @Configuration
@@ -22,6 +23,12 @@ public class PathFinderConf implements PathFinderConfig {
   public DatabaseConf database = new DatabaseConf();
   public NavigationConf navigation = new NavigationConf();
   public ModuleConf moduleConfig = new ModuleConf();
+  @Comment("""
+      A set of commands for different game events. Use <player> for players name and use
+      /execute as <player> run say hi
+      to execute commands as player. Commands are executed from console, be careful with commands like
+      /op <player>""")
+  public EffectsConf effects = new EffectsConf();
   @Comment("Don't change, specifies plugin version while generating config and helps to identify outdated files.")
   public String version = "-1";
 
@@ -171,5 +178,15 @@ public class PathFinderConf implements PathFinderConfig {
         will count as a distance of 20.000 blocks. While another node that is further away from the
         player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
     public double blockCollisionWeight = 10_000d;
+  }
+
+  @Configuration
+  public static class EffectsConf {
+    public ArrayList<String> onPathStart;
+    public ArrayList<String> onPathTargetReach;
+    public ArrayList<String> onPathStop;
+    public ArrayList<String> onPathCancel;
+    public ArrayList<String> onDiscover;
+    public ArrayList<String> onForget;
   }
 }

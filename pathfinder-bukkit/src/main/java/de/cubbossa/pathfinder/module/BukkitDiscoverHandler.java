@@ -3,10 +3,12 @@ package de.cubbossa.pathfinder.module;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -14,7 +16,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.time.LocalDateTime;
 
-public class BukkitDiscoverHandler extends AbstractDiscoverHandler implements Listener {
+public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
 
   private final PathFinder pathFinder;
 
@@ -27,13 +29,12 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler implements Li
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+      PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
       for (NodeGroup group : nodeGroups) {
-        if (!AbstractDiscoverHandler.getInstance()
-            .fulfillsDiscoveringRequirements(group, BukkitPathFinder.wrap(event.getPlayer()))) {
+        if (!super.fulfillsDiscoveringRequirements(group, player)) {
           continue;
         }
-        AbstractDiscoverHandler.getInstance()
-            .discover(event.getPlayer().getUniqueId(), group, LocalDateTime.now());
+        super.discover(player, group, LocalDateTime.now());
       }
     });
   }

@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
+import de.cubbossa.pathfinder.listener.BukkitEffects;
 import de.cubbossa.pathfinder.listener.PlayerListener;
 import de.cubbossa.pathfinder.module.BukkitDiscoverHandler;
 import de.cubbossa.pathfinder.nodegroup.modifier.*;
@@ -133,6 +134,8 @@ public class BukkitPathFinder extends CommonPathFinder {
 
     locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_SIMPLE, () -> LocationWeightSolverPreset.SIMPLE.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.simpleConfig));
     locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_RAYCAST, () -> LocationWeightSolverPreset.RAYCAST.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.raycastConfig));
+
+    new BukkitEffects((EventDispatcher<Player>) eventDispatcher, configuration.effects);
   }
 
   @Override

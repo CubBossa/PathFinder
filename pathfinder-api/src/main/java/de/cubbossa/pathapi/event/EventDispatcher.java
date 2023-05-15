@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.event;
 
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -32,7 +33,7 @@ public interface EventDispatcher<PlayerT> {
 
   void dispatchGroupDelete(NodeGroup group);
 
-  boolean dispatchPlayerFindEvent(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime findDate);
+  boolean dispatchPlayerFindEvent(PathPlayer<PlayerT> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate);
 
   boolean dispatchPlayerForgetEvent(PathPlayer<PlayerT> player, NamespacedKey group, LocalDateTime foundDate);
 

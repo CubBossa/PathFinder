@@ -8,7 +8,10 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.StringArgument;
@@ -17,9 +20,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -140,6 +140,7 @@ public class NodeGroupCommand extends Command {
   }
 
   private void createGroup(CommandSender sender, String name) {
+    name = name.toString().toLowerCase();
     NamespacedKey key = CommonPathFinder.pathfinder(name);
     if (getPathfinder().getStorage().loadGroup(key).join().isPresent()) {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.formatted(

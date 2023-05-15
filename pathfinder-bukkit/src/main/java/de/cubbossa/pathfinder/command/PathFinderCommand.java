@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -12,7 +13,6 @@ import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.translations.PluginTranslations;
 import net.kyori.adventure.text.Component;
@@ -220,7 +220,7 @@ public class PathFinderCommand extends Command {
             .withGeneratedHelp()
             .then(CustomArgs.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
-                  onForceFind(commandSender, args.getUnchecked(1), args.getUnchecked(2));
+                  onForceFind(commandSender, args.getUnchecked(0), args.getUnchecked(1));
                 }))));
     then(CustomArgs.literal("forceforget")
         .withGeneratedHelp()
@@ -229,7 +229,7 @@ public class PathFinderCommand extends Command {
             .withGeneratedHelp()
             .then(CustomArgs.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
-                  onForceForget(BukkitUtils.wrap(commandSender), args.getUnchecked(1), args.getUnchecked(2));
+                  onForceForget(BukkitUtils.wrap(commandSender), args.getUnchecked(0), args.getUnchecked(1));
                 }))));
   }
 
@@ -239,7 +239,7 @@ public class PathFinderCommand extends Command {
         .thenAccept(group -> {
           DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-          AbstractDiscoverHandler.getInstance().discover(target.getUniqueId(), group, LocalDateTime.now());
+          AbstractDiscoverHandler.<Player>getInstance().discover(target, group, LocalDateTime.now());
 
           BukkitUtils.wrap(sender).sendMessage(Messages.CMD_RM_FORCE_FIND.formatted(TagResolver.builder()
               .resolver(Placeholder.unparsed("name", target.getName()))
@@ -254,7 +254,7 @@ public class PathFinderCommand extends Command {
         .thenAccept(group -> {
           DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
 
-          AbstractDiscoverHandler.getInstance().forget(target.getUniqueId(), group);
+          AbstractDiscoverHandler.<Player>getInstance().forget(target, group);
 
           sender.sendMessage(Messages.CMD_RM_FORCE_FORGET.formatted(TagResolver.builder()
               .resolver(Placeholder.unparsed("name", target.getName()))

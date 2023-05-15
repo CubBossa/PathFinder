@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.events;
 
 import de.cubbossa.pathapi.event.Listener;
 import de.cubbossa.pathapi.event.*;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -11,6 +12,8 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
+import de.cubbossa.pathfinder.events.discovering.PlayerForgetEvent;
 import de.cubbossa.pathfinder.events.node.NodeCreatedEvent;
 import de.cubbossa.pathfinder.events.node.NodeDeletedEvent;
 import de.cubbossa.pathfinder.events.node.NodeSavedEvent;
@@ -19,6 +22,7 @@ import de.cubbossa.pathfinder.events.nodegroup.GroupDeleteEvent;
 import de.cubbossa.pathfinder.events.path.PathCancelEvent;
 import de.cubbossa.pathfinder.events.path.PathStartEvent;
 import de.cubbossa.pathfinder.events.path.PathStopEvent;
+import de.cubbossa.pathfinder.events.path.PathTargetFoundEvent;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -60,6 +64,10 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
     classMapping.put(de.cubbossa.pathapi.event.PathStartEvent.class, PathStartEvent.class);
     classMapping.put(PathCancelledEvent.class, PathCancelEvent.class);
     classMapping.put(PathStoppedEvent.class, PathStopEvent.class);
+    classMapping.put(PathTargetReachedEvent.class, PathTargetFoundEvent.class);
+
+    classMapping.put(PlayerDiscoverLocationEvent.class, PlayerDiscoverEvent.class);
+    classMapping.put(PlayerForgetLocationEvent.class, PlayerForgetEvent.class);
   }
 
   private void log(String message) {
@@ -135,8 +143,8 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
-  public boolean dispatchPlayerFindEvent(PathPlayer<Player> player, NodeGroup group, LocalDateTime findDate) {
-    return true;
+  public boolean dispatchPlayerFindEvent(PathPlayer<Player> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate) {
+    return dispatchEvent(new PlayerDiscoverEvent(player, group, modifier, findDate));
   }
 
   @Override
@@ -156,7 +164,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   @Override
   public boolean dispatchPathTargetReached(PathPlayer<Player> player, VisualizerPath<Player> path) {
-    return true;
+    return dispatchEvent(new PathTargetFoundEvent(player, path));
   }
 
   @Override
@@ -187,7 +195,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
           try {
             method.invoke(listener1, event1);
           } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error in event listener for event " + eventType, e.getCause());
           }
         },
         PathFinderPlugin.getInstance()

@@ -1,15 +1,16 @@
 package de.cubbossa.pathfinder.module;
 
+import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import lombok.Getter;
+import de.cubbossa.pathfinder.nodegroup.modifier.SimpleDiscoverableModifier;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -18,15 +19,20 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-public class AbstractDiscoverHandler {
+public class AbstractDiscoverHandler<PlayerT> {
 
-  @Getter
-  private static AbstractDiscoverHandler instance;
-  private CommonPathFinder plugin;
+  public static <T> AbstractDiscoverHandler<T> getInstance() {
+    return (AbstractDiscoverHandler<T>) instance;
+  }
+
+  private static AbstractDiscoverHandler<?> instance;
+  final CommonPathFinder plugin;
+  final EventDispatcher<PlayerT> eventDispatcher;
 
   public AbstractDiscoverHandler(CommonPathFinder plugin) {
     instance = this;
     this.plugin = plugin;
+    this.eventDispatcher = (EventDispatcher<PlayerT>) plugin.getEventDispatcher();
 
     if (!plugin.getConfiguration().moduleConfig.discoveryModule) {
       return;
@@ -40,7 +46,7 @@ public class AbstractDiscoverHandler {
         Collection<NodeGroup> groups = groupable.getGroups();
 
         for (NodeGroup group : groups) {
-          if (!group.hasModifier(DiscoverableModifier.class)) {
+          if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
             continue;
           }
           if (!hasDiscovered(context.playerId(), group).join()) {
@@ -50,10 +56,6 @@ public class AbstractDiscoverHandler {
         return true;
       });
     }
-  }
-
-  public void playDiscovery(UUID playerId, DiscoverableModifier discoverable) {
-    // TODO emit post event
   }
 
   public boolean fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
@@ -66,7 +68,7 @@ public class AbstractDiscoverHandler {
     }
     for (Node node : group.resolve().join()) {
       if (node == null) {
-        plugin.getLogger().log(Level.SEVERE, "Node is null");
+        plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO
         continue;
       }
       float dist = getDiscoveryDistance(player.getUniqueId(), node);
@@ -81,40 +83,37 @@ public class AbstractDiscoverHandler {
     return false;
   }
 
-  public void discover(UUID playerId, NodeGroup group, LocalDateTime date) {
-    if (!group.hasModifier(DiscoverableModifier.class)) {
+  public void discover(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime date) {
+    if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
       return;
     }
+    UUID playerId = player.getUniqueId();
     plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
       if (discoverInfo.isPresent()) {
         return;
       }
 
-      boolean notCancelled = plugin.getEventDispatcher().dispatchPlayerFindEvent(CommonPathFinder.getInstance().wrap(playerId), group, date);
-      if (!notCancelled) {
+      DiscoverableModifier discoverable = group.getModifier(SimpleDiscoverableModifier.class);
+
+      if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable, date)) {
         return;
       }
 
-      DiscoverableModifier discoverable = group.getModifier(DiscoverableModifier.class);
-
-      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date).thenAccept(info -> {
-        playDiscovery(playerId, discoverable);
-      });
+      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date);
     });
   }
 
-  public void forget(UUID playerId, NodeGroup group) {
-    if (!group.hasModifier(DiscoverableModifier.class)) {
+  public void forget(PathPlayer<PlayerT> player, NodeGroup group) {
+    if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
       return;
     }
 
-    plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
+    plugin.getStorage().loadDiscoverInfo(player.getUniqueId(), group.getKey()).thenAccept(discoverInfo -> {
       if (discoverInfo.isEmpty()) {
         return;
       }
       DiscoverInfo info = discoverInfo.get();
-      if (!plugin.getEventDispatcher().dispatchPlayerForgetEvent(
-          CommonPathFinder.getInstance().wrap(info.playerId()), info.discoverable(), info.foundDate())) {
+      if (!eventDispatcher.dispatchPlayerForgetEvent(player, info.discoverable(), info.foundDate())) {
         return;
       }
       plugin.getStorage().deleteDiscoverInfo(discoverInfo.get());
