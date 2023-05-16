@@ -6,8 +6,16 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.*;
-import de.cubbossa.pathapi.storage.*;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Groupable;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.storage.CacheLayer;
+import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.NodeDataStorage;
+import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -17,18 +25,24 @@ import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
-import lombok.Getter;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -65,7 +79,7 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<NodeGroup> createGlobalNodeGroup(VisualizerType<?> defaultVisualizerType) {
-    return loadGroup(CommonPathFinder.globalGroupKey()).thenApply(group -> {
+    return loadGroup(CommonPathFinder.globalGroupKey()).thenApplyAsync(group -> {
       if (group.isPresent()) {
         return group.get();
       }
@@ -151,33 +165,34 @@ public class StorageImpl implements Storage {
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
     }
-    return asyncFuture(() -> {
-      NodeType<N> type = this.<N>loadNodeType(id).join().orElseThrow();
-      Optional<N> node = type.loadNode(id).map(this::prepareLoadedNode);
+    return this.<N>loadNodeType(id).thenApply(Optional::orElseThrow).thenApplyAsync(type -> {
+      Optional<N> node = type.loadNode(id).map(this::prepareLoadedNode).map(CompletableFuture::join);
       node.ifPresent(cache.getNodeCache()::write);
       return node;
     });
   }
 
-  private <N extends Node> N insertGroups(N node) {
+  private <N extends Node> CompletableFuture<N> insertGroups(N node) {
     if (!(node instanceof Groupable groupable)) {
-      return node;
+      return CompletableFuture.completedFuture(node);
     }
-    loadGroups(node.getNodeId()).thenAccept(g -> g.forEach(groupable::addGroup)).join();
-    return node;
+    return loadGroups(node.getNodeId()).thenApply(g -> {
+      g.forEach(groupable::addGroup);
+      return node;
+    });
   }
 
-  private <N extends Node> N insertEdges(N node) {
-    node.getEdges().addAll(implementation.loadEdgesFrom(node.getNodeId()));
-    return node;
+  private <N extends Node> CompletableFuture<N> insertEdges(N node) {
+    return CompletableFuture.supplyAsync(() -> {
+      return implementation.loadEdgesFrom(node.getNodeId());
+    }).thenApply(edges -> {
+      node.getEdges().addAll(edges);
+      return node;
+    });
   }
 
-  private <N extends Node> Optional<N> prepareLoadedNode(Optional<N> node) {
-    return node.map(this::prepareLoadedNode);
-  }
-
-  private <N extends Node> N prepareLoadedNode(N node) {
-    return insertGroups(insertEdges(node));
+  private <N extends Node> CompletableFuture<N> prepareLoadedNode(N node) {
+    return insertGroups(node).thenCompose(this::insertEdges);
   }
 
   @Override
@@ -186,7 +201,7 @@ public class StorageImpl implements Storage {
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
     }
-    return asyncFuture(() -> prepareLoadedNode(type.loadNode(id)));
+    return asyncFuture(() -> type.loadNode(id).map(this::prepareLoadedNode).map(CompletableFuture::join));
   }
 
   @Override
@@ -197,6 +212,7 @@ public class StorageImpl implements Storage {
           Collection<Node> all = nodeTypeRegistry.getTypes().stream()
               .flatMap(nodeType -> nodeType.loadAllNodes().stream())
               .map(this::prepareLoadedNode)
+              .map(CompletableFuture::join)
               .collect(Collectors.toSet());
           cache.getNodeCache().writeAll(all);
           return all;
@@ -210,8 +226,7 @@ public class StorageImpl implements Storage {
     if (col.absent().isEmpty()) {
       return CompletableFuture.completedFuture(result);
     }
-    return asyncFuture(() -> {
-      Map<UUID, NodeType<?>> types = loadNodeTypes(col.absent()).join();
+    return loadNodeTypes(col.absent()).thenApply(types -> {
       Map<NodeType<?>, Collection<UUID>> revert = new HashMap<>();
       types.forEach((uuid, nodeType) -> {
         revert.computeIfAbsent(nodeType, id -> new HashSet<>()).add(uuid);
@@ -219,6 +234,7 @@ public class StorageImpl implements Storage {
       revert.forEach((nodeType, uuids) -> {
         Collection<Node> nodes = nodeType.loadNodes(uuids).stream()
             .map(this::prepareLoadedNode)
+            .map(CompletableFuture::join)
             .collect(Collectors.toSet());
         nodes.forEach(cache.getNodeCache()::write);
         result.addAll(nodes);
@@ -231,78 +247,78 @@ public class StorageImpl implements Storage {
   public CompletableFuture<Void> saveNode(Node node) {
     return loadNodeType(node.getNodeId())
         .thenCompose(type -> loadNode(type.orElseThrow(), node.getNodeId()))
-        .thenApply(nOpt -> {
-          Node n = nOpt.orElseThrow();
+        .thenApply(Optional::orElseThrow)
+        .thenApply(n -> {
           eventDispatcher().ifPresent(e -> e.dispatchNodeSave(n));
           return n;
         })
-        .thenApplyAsync(n -> {
-          saveNodeTypeSafeBlocking(n);
-          return n;
-        })
+        .thenComposeAsync(this::saveNodeTypeSafeBlocking)
         .thenAccept(n -> {
           cache.getNodeCache().write(n);
           cache.getGroupCache().write(n);
         });
   }
 
-  private <N extends Node> void saveNodeTypeSafeBlocking(N node) {
-    NodeType<N> type = this.<N>loadNodeType(node.getNodeId()).join().orElseThrow();
-    // actually hard load and not cached to make sure that nodes are comparable
-    N before = type.loadNode(node.getNodeId()).map(this::prepareLoadedNode).orElseThrow();
-    type.saveNode(node);
+  private <N extends Node> CompletableFuture<N> saveNodeTypeSafeBlocking(N node) {
+    return this.<N>loadNodeType(node.getNodeId()).thenApply(Optional::orElseThrow).thenApplyAsync(type -> {
+      // actually hard load and not cached to make sure that nodes are comparable
+      N before = type.loadNode(node.getNodeId()).map(this::prepareLoadedNode)
+          .map(CompletableFuture::join).orElseThrow();
+      type.saveNode(node);
 
-    if (node == before) {
-      throw new IllegalStateException("Comparing node instance with itself while saving!");
-    }
-
-    if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
-
-      StorageImpl.ComparisonResult<NodeGroup> cmp =
-          StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
-      cmp.toInsertIfPresent(nodeGroups -> implementation.assignToGroups(nodeGroups, List.of(node.getNodeId())));
-      cmp.toDeleteIfPresent(nodeGroups -> implementation.unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
-    }
-    StorageImpl.ComparisonResult<Edge> cmp = StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
-    cmp.toInsertIfPresent(edges -> {
-      for (Edge edge : edges) {
-        implementation.createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
+      if (node == before) {
+        throw new IllegalStateException("Comparing node instance with itself while saving!");
       }
+
+      if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
+
+        StorageImpl.ComparisonResult<NodeGroup> cmp =
+            StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
+        cmp.toInsertIfPresent(nodeGroups -> implementation.assignToGroups(nodeGroups, List.of(node.getNodeId())));
+        cmp.toDeleteIfPresent(nodeGroups -> implementation.unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
+      }
+      StorageImpl.ComparisonResult<Edge> cmp = StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
+      cmp.toInsertIfPresent(edges -> {
+        for (Edge edge : edges) {
+          implementation.createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
+        }
+      });
+      cmp.toDeleteIfPresent(edges -> edges.forEach(implementation::deleteEdge));
+      return node;
     });
-    cmp.toDeleteIfPresent(edges -> edges.forEach(implementation::deleteEdge));
   }
 
   @Override
   public CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater) {
     return loadNode(id)
+        .thenApply(Optional::orElseThrow)
         .thenApply(n -> {
-          Node node = n.orElseThrow();
-          updater.accept(node);
-          return node;
-        }).thenCompose(this::saveNode);
+          updater.accept(n);
+          return n;
+        })
+        .thenCompose(this::saveNode);
   }
 
   @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
-    Collection<Node> nodes = loadNodes(uuids).join();
+    return loadNodes(uuids).thenAcceptAsync(nodes -> {
+      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
 
-    eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
-    return asyncFuture(() -> {
-
-      Map<UUID, NodeType<?>> types = loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).join();
-      for (Node node : nodes) {
-        if (node instanceof Groupable groupable) {
-          implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
+      loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenAcceptAsync(types -> {
+        for (Node node : nodes) {
+          if (node instanceof Groupable groupable) {
+            implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
+          }
+          deleteNode(node, types.get(node.getNodeId()));
+          node.getEdges().forEach(implementation::deleteEdge);
         }
-        deleteNode(node, types.get(node.getNodeId()));
-        node.getEdges().forEach(implementation::deleteEdge);
-      }
-      implementation.deleteNodeTypeMapping(uuids);
-      implementation.deleteEdgesTo(uuids);
+        implementation.deleteNodeTypeMapping(uuids);
+        implementation.deleteEdgesTo(uuids);
 
-      uuids.forEach(cache.getNodeCache()::invalidate);
-      nodes.forEach(cache.getGroupCache()::invalidate);
-      uuids.forEach(cache.getNodeTypeCache()::invalidate);
+        uuids.forEach(cache.getNodeCache()::invalidate);
+        nodes.forEach(cache.getGroupCache()::invalidate);
+        uuids.forEach(cache.getNodeTypeCache()::invalidate);
+      }).join();
     });
   }
 
@@ -409,10 +425,12 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> modifyGroup(NamespacedKey key, Consumer<NodeGroup> update) {
-    return loadGroup(key).thenApply(Optional::orElseThrow).thenAccept(group -> {
-      update.accept(group);
-      saveGroup(group).join();
-    });
+    return loadGroup(key).thenApply(Optional::orElseThrow)
+        .thenApply(nodeGroup -> {
+          update.accept(nodeGroup);
+          return nodeGroup;
+        })
+        .thenCompose(this::saveGroup);
   }
 
   @Override
@@ -499,8 +517,7 @@ public class StorageImpl implements Storage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
-    return asyncFuture(() -> {
-      saveVisualizerType(key, type).join();
+    return saveVisualizerType(key, type).thenApplyAsync(u -> {
       VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(type, key);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;

@@ -128,7 +128,7 @@ public class BukkitPathFinder extends CommonPathFinder {
     });
 
     commandRegistry.enableCommands(this);
-    getStorage().createGlobalNodeGroup(particleVisualizerType).join();
+    getStorage().createGlobalNodeGroup(particleVisualizerType);
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
 
