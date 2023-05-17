@@ -42,7 +42,7 @@ dependencies {
     api("dev.jorel:commandapi-bukkit-shade:9.0.0")
 
     // Other
-    api("org.jooq:jooq:3.18.0")
+    api("org.jooq:jooq:3.18.4")
     jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
     implementation("org.reactivestreams:reactive-streams:1.0.4")
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
@@ -83,36 +83,10 @@ dependencies {
 tasks {
     build {
         dependsOn(checkstyleMain)
-        dependsOn(shadowJar)
     }
     generateGrammarSource {
         // Tell ANTLR to generate visitor classes
         arguments.plusAssign("-visitor")
-    }
-    shadowJar {
-
-        archiveFileName.set("PathFinder-${parent?.version}.jar")
-        mergeServiceFiles()
-
-        // "whitelist" approach, only include transitive dependencies that are truly necessary.
-        // otherwise jar grows from ~8mb to ~30mb
-        dependencies {
-            include(project(":pathfinder-api"))
-            include(project(":pathfinder-graph"))
-            include(dependency("net.kyori:.*"))
-            include(dependency("de.cubbossa:Translations:.*"))
-            include(dependency("de.cubbossa:splinelib:.*"))
-            include(dependency("org.ow2.asm:asm:.*"))
-            include(dependency("org.ow2.asm:asm-util:.*"))
-            include(dependency("org.antlr:antlr4-runtime:.*"))
-            include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
-            include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
-            include(dependency("org.jooq:jooq:.*"))
-            include(dependency("org.reactivestreams:reactive-streams:.*"))
-            include(dependency("io.r2dbc:r2dbc-spi:.*"))
-            include(dependency("com.zaxxer:HikariCP:.*"))
-            include(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
-        }
     }
     test {
         useJUnitPlatform()

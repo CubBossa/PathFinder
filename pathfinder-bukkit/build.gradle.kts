@@ -22,6 +22,7 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://libraries.minecraft.net/")
@@ -32,7 +33,7 @@ repositories {
 dependencies {
 
     api(project(":pathfinder-api"))
-    api(project(path = ":pathfinder-core", configuration = "shadow"))
+    api(project(":pathfinder-core"))
     runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
 
@@ -41,8 +42,6 @@ dependencies {
     testImplementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT")
     compileOnlyApi("com.mojang:brigadier:1.0.18")
     testImplementation("com.mojang:brigadier:1.0.18")
-
-    api("de.cubbossa:SerializedEffects:1.0")
 
     // Commands
     api("dev.jorel:commandapi-bukkit-shade:9.0.0")
@@ -92,7 +91,11 @@ bukkit {
     softDepend = listOf("PlaceholderAPI")
     libraries = listOf(
             "org.openjdk.nashorn:nashorn-core:15.4",
-            "org.snakeyaml:snakeyaml-engine:2.0"
+            "org.snakeyaml:snakeyaml-engine:2.0",
+            "com.zaxxer:HikariCP:5.0.1",
+            "org.antlr:antlr4-runtime:4.12.0",
+            "org.jooq:jooq:3.18.4",
+            "com.github.ben-manes.caffeine:caffeine:3.1.6"
     )
 
     defaultPermission = BukkitPluginDescription.Permission.Default.OP
@@ -181,9 +184,14 @@ tasks {
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
         // otherwise jar grows from ~8mb to ~30mb
         dependencies {
+            include(project(":pathfinder-api"))
             include(project(":pathfinder-core"))
+            include(project(":pathfinder-graph"))
             include(project(":pathfinder-editmode"))
             include(project(":pathfinder-scripted-visualizer"))
+            include(dependency("de.cubbossa:Translations:.*"))
+            include(dependency("de.cubbossa:splinelib:.*"))
+            include(dependency("net.kyori:.*"))
             include(dependency("net.kyori:.*"))
             include(dependency("org.bstats:.*"))
             include(dependency("xyz.xenondevs:particle:.*"))
@@ -199,17 +207,10 @@ tasks {
         relocate("org.bstats", "bstats")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
-
-        // relocations of common:
-        relocate("com.zaxxer.hikari", "hikari")
-        relocate("de.cubbossa.serializedeffects", "serializedeffects")
-        relocate("de.cubbossa.nbo", "nbo")
         relocate("de.cubbossa.translations", "translations")
         relocate("de.cubbossa.splinelib", "splinelib")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
-        relocate("org.antlr", "antlr")
-        relocate("org.jooq", "jooq")
         relocate("de.exlll", "exlll")
     }
     test {
