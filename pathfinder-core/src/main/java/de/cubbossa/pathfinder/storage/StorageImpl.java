@@ -6,43 +6,29 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.storage.CacheLayer;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.NodeDataStorage;
-import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathapi.storage.StorageImplementation;
+import de.cubbossa.pathapi.node.*;
+import de.cubbossa.pathapi.storage.*;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonCurveLengthModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonFindDistanceModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonVisualizerModifier;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
@@ -91,9 +77,9 @@ public class StorageImpl implements Storage {
 
       NodeGroup globalGroup = createAndLoadGroup(CommonPathFinder.globalGroupKey()).join();
       globalGroup.setWeight(0);
-      globalGroup.addModifier(new CurveLengthModifier(3));
-      globalGroup.addModifier(new FindDistanceModifier(1.5));
-      globalGroup.addModifier(new VisualizerModifier(vis));
+      globalGroup.addModifier(new CommonCurveLengthModifier(3));
+      globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
+      globalGroup.addModifier(new CommonVisualizerModifier(vis));
       saveGroup(globalGroup).join();
       return globalGroup;
     });
@@ -172,6 +158,20 @@ public class StorageImpl implements Storage {
     });
   }
 
+  @Override
+  public <N extends Node> CompletableFuture<N> insertGlobalGroupAndSave(N node) {
+    if (!(node instanceof Groupable)) {
+      return CompletableFuture.completedFuture(node);
+    }
+    return loadGroup(CommonPathFinder.globalGroupKey())
+        .thenApply(Optional::orElseThrow)
+        .thenCompose(group -> modifyNode(node.getNodeId(), n -> {
+          ((Groupable) n).addGroup(group);
+          // also modify the instance we currently work on to skip reloading the node from cache in next step
+          ((Groupable) node).addGroup(group);
+        }).thenApply(unused -> node));
+  }
+
   private <N extends Node> CompletableFuture<N> insertGroups(N node) {
     if (!(node instanceof Groupable groupable)) {
       return CompletableFuture.completedFuture(node);
@@ -245,17 +245,15 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> saveNode(Node node) {
-    return loadNodeType(node.getNodeId())
-        .thenCompose(type -> loadNode(type.orElseThrow(), node.getNodeId()))
-        .thenApply(Optional::orElseThrow)
-        .thenApply(n -> {
-          eventDispatcher().ifPresent(e -> e.dispatchNodeSave(n));
-          return n;
-        })
-        .thenComposeAsync(this::saveNodeTypeSafeBlocking)
+    eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
+    return saveNodeTypeSafeBlocking(node)
         .thenAccept(n -> {
           cache.getNodeCache().write(n);
           cache.getGroupCache().write(n);
+        })
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
         });
   }
 
@@ -296,7 +294,11 @@ public class StorageImpl implements Storage {
           updater.accept(n);
           return n;
         })
-        .thenCompose(this::saveNode);
+        .thenCompose(this::saveNode)
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        });
   }
 
   @Override
@@ -393,7 +395,7 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier) {
+  public <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(NamespacedKey modifier) {
     Optional<Collection<NodeGroup>> cached = cache.getGroupCache().getGroups(modifier);
     return cached.map(CompletableFuture::completedFuture).orElseGet(() -> asyncFuture(() -> {
       Collection<NodeGroup> loaded = implementation.loadGroups(modifier);
@@ -593,7 +595,7 @@ public class StorageImpl implements Storage {
     type.getStorage().deleteVisualizer(type, vis);
   }
 
-  public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(Class<M> modifier) {
+  public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier) {
     return loadNodes().thenApply(nodes -> {
       Map<Node, Collection<M>> results = new HashMap<>();
       nodes.stream()
@@ -601,9 +603,9 @@ public class StorageImpl implements Storage {
           .map(node -> (Groupable) node)
           .forEach(groupable -> {
             for (NodeGroup group : groupable.getGroups()) {
-              if (group.hasModifier(modifier)) {
-                results.computeIfAbsent(groupable, g -> new HashSet<>()).add(group.getModifier(modifier));
-              }
+              group.<M>getModifier(modifier).ifPresent(m -> {
+                results.computeIfAbsent(groupable, g -> new HashSet<>()).add(m);
+              });
             }
           });
       return results;

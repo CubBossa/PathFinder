@@ -1,6 +1,5 @@
 package de.cubbossa.pathapi.storage.cache;
 
-import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
@@ -15,7 +14,7 @@ public interface GroupCache extends StorageCache<NodeGroup> {
 
   Optional<NodeGroup> getGroup(NamespacedKey key);
 
-  <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier);
+  Optional<Collection<NodeGroup>> getGroups(NamespacedKey modifier);
 
   CacheCollection<NamespacedKey, NodeGroup> getGroups(Collection<NamespacedKey> keys);
 
@@ -31,7 +30,7 @@ public interface GroupCache extends StorageCache<NodeGroup> {
     }
   }
 
-  <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups);
+  void write(NamespacedKey modifier, Collection<NodeGroup> groups);
 
   void write(UUID node, Collection<NodeGroup> groups);
 

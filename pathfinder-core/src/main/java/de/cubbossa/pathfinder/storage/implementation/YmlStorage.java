@@ -267,7 +267,7 @@ public class YmlStorage extends CommonStorage {
       ConfigurationSection modifiers = cfg.getConfigurationSection("modifier");
       if (modifiers != null) {
         for (String key : modifiers.getKeys(false)) {
-          Optional<ModifierType<Modifier>> type = modifierRegistry.getType(key.replace("_", "."));
+          Optional<ModifierType<Modifier>> type = modifierRegistry.getType(NamespacedKey.fromString(key));
           if (type.isEmpty()) {
             logger.log(Level.WARNING, "Could not load modifier, no registered type by name '" + key + "'.");
             continue;
@@ -290,7 +290,7 @@ public class YmlStorage extends CommonStorage {
       writeGroupNodes(cfg, group);
       cfg.set("modifier", null);
       group.getModifiers().forEach(modifier -> {
-        Optional<ModifierType<Modifier>> type = modifierRegistry.getType((Class<Modifier>) modifier.getClass());
+        Optional<ModifierType<Modifier>> type = modifierRegistry.getType(modifier.getKey());
         if (type.isEmpty()) {
           logger.log(Level.WARNING, "Could not store modifier of type '" + modifier.getClass() + "'.");
           return;
@@ -346,7 +346,7 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
+  public <M extends Modifier> Collection<NodeGroup> loadGroups(NamespacedKey modifier) {
     return loadAllGroups().stream()
         .filter(g -> g.hasModifier(modifier))
         .collect(Collectors.toSet());
@@ -404,7 +404,7 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier) {
 
   }
 

@@ -19,7 +19,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   private final Cache<NamespacedKey, NodeGroup> cache;
   private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
-  private final Cache<Class<Modifier>, Collection<NodeGroup>> modifierGroupCache;
+  private final Cache<NamespacedKey, Collection<NodeGroup>> modifierGroupCache;
   private boolean cachedAll = false;
 
   public GroupCacheImpl() {
@@ -38,7 +38,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   }
 
   @Override
-  public <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier) {
+  public Optional<Collection<NodeGroup>> getGroups(NamespacedKey modifier) {
     if (modifierGroupCache.asMap().containsKey(modifier)) {
       return Optional.of(modifierGroupCache.asMap().get(modifier)).map(HashSet::new);
     }
@@ -108,8 +108,8 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   }
 
   @Override
-  public <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups) {
-    modifierGroupCache.put((Class<Modifier>) modifier, groups);
+  public void write(NamespacedKey modifier, Collection<NodeGroup> groups) {
+    modifierGroupCache.put(modifier, groups);
   }
 
   @Override

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.navigationquery.SimpleSearchTerm;
@@ -10,21 +10,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class NavigableModifier implements Modifier {
+public class CommonNavigableModifier implements NavigableModifier {
 
   private final Collection<SearchTerm> searchTerms;
 
-  public NavigableModifier(String... terms) {
+  public CommonNavigableModifier(String... terms) {
     this(Arrays.stream(terms)
         .map(SimpleSearchTerm::new)
         .collect(Collectors.toList()));
   }
 
-  public NavigableModifier(SearchTerm... terms) {
+  public CommonNavigableModifier(SearchTerm... terms) {
     this(Arrays.stream(terms).toList());
   }
 
-  public NavigableModifier(Collection<SearchTerm> terms) {
+  public CommonNavigableModifier(Collection<SearchTerm> terms) {
     this.searchTerms = new ArrayList<>(terms);
   }
 
@@ -44,18 +44,22 @@ public class NavigableModifier implements Modifier {
     return new ArrayList<>(searchTerms);
   }
 
+  @Override
   public Collection<String> getSearchTermStrings() {
     return searchTerms.stream().map(SearchTerm::getIdentifier).toList();
   }
 
+  @Override
   public void removeSearchTermStrings(Collection<String> terms) {
     searchTerms.removeIf(searchTerm -> terms.contains(searchTerm.getIdentifier()));
   }
 
+  @Override
   public void addSearchTermStrings(Collection<String> terms) {
     searchTerms.addAll(terms.stream().map(SimpleSearchTerm::new).toList());
   }
 
+  @Override
   public void clearSearchTermStrings() {
     searchTerms.clear();
   }

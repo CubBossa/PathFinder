@@ -1,5 +1,7 @@
 package de.cubbossa.pathapi.group;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -9,8 +11,5 @@ public interface ModifierRegistry {
 
   Collection<ModifierType<?>> getTypes();
 
-  <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName)
-      throws ClassNotFoundException;
-
-  <M extends Modifier> Optional<ModifierType<M>> getType(Class<M> clazz);
+  <M extends Modifier> Optional<ModifierType<M>> getType(NamespacedKey key);
 }

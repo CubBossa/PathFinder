@@ -79,7 +79,7 @@ public interface StorageImplementation {
 
   Collection<NodeGroup> loadGroups(UUID node);
 
-  <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier);
+  <M extends Modifier> Collection<NodeGroup> loadGroups(NamespacedKey modifier);
 
   Collection<NodeGroup> loadAllGroups();
 
@@ -95,7 +95,7 @@ public interface StorageImplementation {
 
   <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier);
 
-  <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier);
+  <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier);
 
   // ################################
   // #   Find Data

@@ -2,13 +2,13 @@ package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
-import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -46,9 +46,11 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
         continue;
       }
       VisualizerModifier mod = groupable.getGroups().stream()
-          .filter(g -> g.hasModifier(VisualizerModifier.class))
+          .filter(g -> g.hasModifier(VisualizerModifier.KEY))
           .sorted()
-          .map(g -> g.getModifier(VisualizerModifier.class))
+          .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
+          .filter(Optional::isPresent)
+          .map(Optional::get)
           .findFirst().orElse(null);
       if (mod == null) {
         continue;

@@ -93,13 +93,15 @@ public interface Storage {
 
   <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id);
 
+  <N extends Node> CompletableFuture<N> insertGlobalGroupAndSave(N node);
+
   <N extends Node> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id);
 
   CompletableFuture<Collection<Node>> loadNodes();
 
   CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids);
 
-  <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(Class<M> modifier);
+  <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier);
 
   CompletableFuture<Void> saveNode(Node node);
 
@@ -127,7 +129,7 @@ public interface Storage {
 
   CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);
 
-  <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(Class<M> modifier);
+  <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(NamespacedKey modifier);
 
   CompletableFuture<Collection<NodeGroup>> loadAllGroups();
 

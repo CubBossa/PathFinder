@@ -169,7 +169,9 @@ public abstract class PathFinderTest {
   }
 
   protected Waypoint makeWaypoint() {
-    return assertResult(() -> storage.createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world)));
+    return assertResult(() -> storage
+        .createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world))
+        .thenCompose(storage::insertGlobalGroupAndSave));
   }
 
   protected void deleteWaypoint(Waypoint waypoint) {

@@ -269,38 +269,15 @@ public class Messages {
       .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/nodegroup list <prev-page>>←</click> <page>/<pages> <click:run_command:/nodegroup list <next-page>>→</click> </gray>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
-  public static final Message CMD_NG_SET_NAME = new MessageBuilder("commands.node_group.set_name")
-      .withDefault("<ins:prefix>Displayname set for <key> from <name> to <new-name> (<value>).")
-      .withPlaceholders("key", "name", "old-value", "value")
+  public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
+      .withDefault("<ins:prefix>Added modifier '<type>' from froup '<group>'.")
+      .withPlaceholders("type", "group")
       .build();
-  public static final Message CMD_NG_SET_PERM = new MessageBuilder("commands.node_group.set_permission")
-      .withDefault("<ins:prefix>Permission set for <key> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "old-value", "value")
+  public static final Message CMD_NG_MODIFY_REMOVE = new MessageBuilder("commands.node_group.modify.remove")
+      .withDefault("<ins:prefix>Removed Group Modifier '<type>' to group '<group>'.")
+      .withPlaceholders("type", "group")
       .build();
-  public static final Message CMD_NG_SET_NAVIGABLE = new MessageBuilder("commands.node_group.set_navigable")
-      .withDefault("<ins:prefix>Navigability set for <key> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "old-value", "value")
-      .build();
-  public static final Message CMD_NG_SET_DISCOVERABLE = new MessageBuilder("commands.node_group.set_discoverable")
-      .withDefault("<ins:prefix>Discoverability set for <key> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "old-value", "value")
-      .build();
-  public static final Message CMD_NG_SET_FIND_DIST = new MessageBuilder("commands.node_group.set_find_distance")
-      .withDefault("<ins:prefix>Find distance set for <key> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "old-value", "value")
-      .build();
-  public static final Message CMD_NG_TERMS_LIST = new MessageBuilder("commands.node_group.terms.list")
-      .withDefault("<ins:prefix>Search terms for <name>:\n<dark_gray>» <offset_light><values></offset_light></dark_gray>")
-      .withPlaceholders("name", "values")
-      .build();
-  public static final Message CMD_NG_TERMS_ADD = new MessageBuilder("commands.node_group.terms.add")
-      .withDefault("<ins:prefix>Successfully added search terms to <name>: <offset_light><values></offset_light>")
-      .withPlaceholders("name", "values")
-      .build();
-  public static final Message CMD_NG_TERMS_REMOVE = new MessageBuilder("commands.node_group.terms.remove")
-      .withDefault("<ins:prefix>Successfully removed search terms from <name>: <offset_light><values></offset_light>")
-      .withPlaceholders("name", "values")
-      .build();
+
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
       .withDefault("<ins:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
       .build();

@@ -10,7 +10,7 @@ import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestPlayer;
 import de.cubbossa.pathfinder.TestVisualizer;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonVisualizerModifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     for (PathVisualizer<?, ?> vis : visualizers) {
       NodeGroup group = groupMap.computeIfAbsent(vis, v -> {
         NodeGroup g = makeGroup(v.getKey());
-        g.addModifier(new VisualizerModifier(v));
+        g.addModifier(new CommonVisualizerModifier(v));
         storage.saveGroup(g).join();
         return g;
       });

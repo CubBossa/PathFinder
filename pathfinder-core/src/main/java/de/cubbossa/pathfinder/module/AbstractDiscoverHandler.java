@@ -2,15 +2,15 @@ package de.cubbossa.pathfinder.module;
 
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
+import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.SimpleDiscoverableModifier;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -46,7 +46,7 @@ public class AbstractDiscoverHandler<PlayerT> {
         Collection<NodeGroup> groups = groupable.getGroups();
 
         for (NodeGroup group : groups) {
-          if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
+          if (!group.hasModifier(CommonDiscoverableModifier.class)) {
             continue;
           }
           if (!hasDiscovered(context.playerId(), group).join()) {
@@ -62,8 +62,8 @@ public class AbstractDiscoverHandler<PlayerT> {
     if (!group.hasModifier(DiscoverableModifier.class)) {
       return false;
     }
-    PermissionModifier perm = group.getModifier(PermissionModifier.class);
-    if (perm != null && !player.hasPermission(perm.permission())) {
+    Optional<PermissionModifier> perm = group.getModifier(PermissionModifier.KEY);
+    if (perm.isPresent() && !player.hasPermission(perm.get().permission())) {
       return false;
     }
     for (Node node : group.resolve().join()) {
@@ -84,7 +84,7 @@ public class AbstractDiscoverHandler<PlayerT> {
   }
 
   public void discover(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime date) {
-    if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
+    if (!group.hasModifier(DiscoverableModifier.KEY)) {
       return;
     }
     UUID playerId = player.getUniqueId();
@@ -93,9 +93,8 @@ public class AbstractDiscoverHandler<PlayerT> {
         return;
       }
 
-      DiscoverableModifier discoverable = group.getModifier(SimpleDiscoverableModifier.class);
-
-      if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable, date)) {
+      Optional<DiscoverableModifier> discoverable = group.getModifier(DiscoverableModifier.KEY);
+      if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable.get(), date)) {
         return;
       }
 
@@ -104,7 +103,7 @@ public class AbstractDiscoverHandler<PlayerT> {
   }
 
   public void forget(PathPlayer<PlayerT> player, NodeGroup group) {
-    if (!group.hasModifier(SimpleDiscoverableModifier.class)) {
+    if (!group.hasModifier(CommonDiscoverableModifier.class)) {
       return;
     }
 
@@ -130,10 +129,10 @@ public class AbstractDiscoverHandler<PlayerT> {
       return 1.5f;
     }
     FindDistanceModifier mod = groupable.getGroups().stream()
-        .filter(group -> group.hasModifier(FindDistanceModifier.class))
+        .filter(group -> group.hasModifier(FindDistanceModifier.KEY))
         .sorted()
         .findFirst()
-        .map(group -> group.getModifier(FindDistanceModifier.class))
+        .map(group -> group.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY).get())
         .orElse(null);
     return mod == null ? 1.5f : (float) mod.distance();
   }

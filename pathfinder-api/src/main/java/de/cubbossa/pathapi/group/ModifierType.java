@@ -1,11 +1,11 @@
 package de.cubbossa.pathapi.group;
 
+import de.cubbossa.pathapi.misc.Keyed;
+
 import java.io.IOException;
 import java.util.Map;
 
-public interface ModifierType<M extends Modifier> {
-
-  Class<M> getModifierClass();
+public interface ModifierType<M extends Modifier> extends Keyed {
 
   String getSubCommandLiteral();
 

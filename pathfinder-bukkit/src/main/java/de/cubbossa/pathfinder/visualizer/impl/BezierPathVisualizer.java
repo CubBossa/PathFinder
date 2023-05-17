@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
@@ -7,6 +8,7 @@ import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
 import lombok.Getter;
@@ -15,13 +17,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifier;
-import de.cubbossa.pathfinder.util.NodeUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -70,7 +67,8 @@ public abstract class BezierPathVisualizer
         CurveLengthModifier mod = groupable.getGroups().stream()
             .filter(g -> g.hasModifier(CurveLengthModifier.class))
             .sorted()
-            .map(g -> g.getModifier(CurveLengthModifier.class))
+            .map(g -> g.<CurveLengthModifier>getModifier(CurveLengthModifier.KEY))
+            .filter(Optional::isPresent).map(Optional::get)
             .findFirst().orElse(null);
 
         path.put(node, mod == null ? 1 : mod.curveLength());

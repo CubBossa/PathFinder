@@ -4,7 +4,10 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.group.FindDistanceModifier;
+import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -19,9 +22,6 @@ import de.cubbossa.pathfinder.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
-import de.cubbossa.pathfinder.nodegroup.modifier.PermissionModifier;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
@@ -147,10 +147,11 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
         Groupable last = (Groupable) path.get(path.size() - 1);
         NodeGroup highest = last.getGroups().stream()
-            .filter(g -> g.hasModifier(FindDistanceModifier.class))
+            .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
             .max(NodeGroup::compareTo).orElse(null);
 
-        double findDist = highest == null ? 1.5 : highest.getModifier(FindDistanceModifier.class).distance();
+        double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
+            .map(FindDistanceModifier::distance).orElse(1.5);
         return setPath(player, path, path.get(path.size() - 1).getLocation(), (float) findDist);
       }).join();
     });
@@ -226,11 +227,11 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
       return groups.stream()
           .allMatch(g -> {
-            PermissionModifier mod = g.getModifier(PermissionModifier.class);
-            return player.unwrap() == null || mod == null || player.hasPermission(mod.permission());
+            Optional<PermissionModifier> mod = g.<PermissionModifier>getModifier(PermissionModifier.KEY);
+            return player.unwrap() == null || mod.isEmpty() || player.hasPermission(mod.get().permission());
           })
           && groups.stream()
-          .anyMatch(g -> g.hasModifier(NavigableModifier.class));
+          .anyMatch(g -> g.hasModifier(NavigableModifier.KEY));
     });
   }
 }

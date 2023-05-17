@@ -1,12 +1,15 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
 import de.cubbossa.pathapi.group.ModifierType;
+import de.cubbossa.pathapi.group.NavigableModifier;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.navigationquery.SimpleSearchTerm;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,10 +21,8 @@ import java.util.stream.Collectors;
 public class NavigableModifierType implements ModifierType<NavigableModifier>,
     ModifierCommandExtension<NavigableModifier> {
 
-  @Override
-  public Class<NavigableModifier> getModifierClass() {
-    return NavigableModifier.class;
-  }
+  @Getter
+  private final NamespacedKey key = NamespacedKey.fromString("pathfinder:navigable");
 
   @Override
   public String getSubCommandLiteral() {
@@ -30,27 +31,27 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
 
   @Override
   public Map<String, Object> serialize(NavigableModifier modifier) {
-      LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-      map.put("search-terms", modifier.getSearchTerms().stream().map(SearchTerm::getIdentifier)
-              .collect(Collectors.joining(",")));
-      return map;
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    map.put("search-terms", modifier.getSearchTerms().stream().map(SearchTerm::getIdentifier)
+        .collect(Collectors.joining(",")));
+    return map;
   }
 
   @Override
   public NavigableModifier deserialize(Map<String, Object> values) throws IOException {
     if (values.containsKey("search-terms") && values.get("search-terms") instanceof String str) {
-      return new NavigableModifier(Arrays.stream(str.split(","))
+      return new CommonNavigableModifier(Arrays.stream(str.split(","))
           .map(SimpleSearchTerm::new).collect(Collectors.toSet()));
     }
     throw new IOException(
         "Could not deserialize NavigableModifier, missing 'search-terms' attribute.");
   }
 
-    @Override
-    public Argument<?> registerAddCommand(Argument<?> tree, Function<NavigableModifier, CommandExecutor> consumer) {
-        return tree.then(new GreedyStringArgument("search-terms").executes((commandSender, args) -> {
-            consumer.apply(new NavigableModifier(args.<String>getUnchecked(1).split(",")))
-                    .run(commandSender, args);
-        }));
-    }
+  @Override
+  public Argument<?> registerAddCommand(Argument<?> tree, Function<NavigableModifier, CommandExecutor> consumer) {
+    return tree.then(new GreedyStringArgument("search-terms").executes((commandSender, args) -> {
+      consumer.apply(new CommonNavigableModifier(args.<String>getUnchecked(1).split(",")))
+          .run(commandSender, args);
+    }));
+  }
 }

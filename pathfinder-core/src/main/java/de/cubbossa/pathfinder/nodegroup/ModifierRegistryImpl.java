@@ -3,26 +3,28 @@ package de.cubbossa.pathfinder.nodegroup;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
+import de.cubbossa.pathapi.misc.KeyedRegistry;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.util.HashedRegistry;
+
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class ModifierRegistryImpl implements ModifierRegistry {
 
-  private final Map<Class<? extends Modifier>, ModifierType<?>> modifiers;
+  private final KeyedRegistry<ModifierType<?>> modifiers;
 
   public ModifierRegistryImpl() {
-    modifiers = new HashMap<>();
+    modifiers = new HashedRegistry<>();
   }
 
   @Override
   public <M extends Modifier> void registerModifierType(ModifierType<M> modifierType) {
-    if (modifiers.containsKey(modifierType.getModifierClass())) {
+    if (modifiers.containsKey(modifierType.getKey())) {
       throw new IllegalArgumentException(
           "Another ModifierType with this modifier class has already been registered.");
     }
-    modifiers.put(modifierType.getModifierClass(), modifierType);
+    modifiers.put(modifierType.getKey(), modifierType);
   }
 
   @Override
@@ -31,14 +33,7 @@ public class ModifierRegistryImpl implements ModifierRegistry {
   }
 
   @Override
-  public <M extends Modifier> Optional<ModifierType<M>> getType(Class<M> clazz) {
-    ModifierType<M> type = (ModifierType<M>) modifiers.get(clazz);
-    return Optional.ofNullable(type);
-  }
-
-  @Override
-  public <M extends Modifier> Optional<ModifierType<M>> getType(String clazzName)
-      throws ClassNotFoundException {
-    return getType((Class<M>) Class.forName(clazzName));
+  public <M extends Modifier> Optional<ModifierType<M>> getType(NamespacedKey key) {
+    return Optional.of((ModifierType<M>) modifiers.get(key));
   }
 }

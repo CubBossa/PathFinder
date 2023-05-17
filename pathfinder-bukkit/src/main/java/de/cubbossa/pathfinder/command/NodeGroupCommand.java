@@ -93,8 +93,7 @@ public class NodeGroupCommand extends Command {
       set = set.then(lit);
       unset = unset.then(CustomArgs.literal(modifier.getSubCommandLiteral())
           .executes((commandSender, args) -> {
-            removeModifier(commandSender, args.getUnchecked(0),
-                modifier.getModifierClass());
+            removeModifier(commandSender, args.getUnchecked(0), modifier.getKey());
           })
       );
     }
@@ -179,15 +178,20 @@ public class NodeGroupCommand extends Command {
   private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      // TODO message
+      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
+          TagResolver.resolver("group", Messages.formatKey(group.getKey())),
+          TagResolver.resolver("type", Messages.formatKey(modifier.getKey()))
+      ));
     });
   }
 
-  private void removeModifier(CommandSender sender, SimpleNodeGroup group,
-                              Class<? extends Modifier> mod) {
+  private void removeModifier(CommandSender sender, SimpleNodeGroup group, NamespacedKey mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      // TODO message
+      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
+          TagResolver.resolver("group", Messages.formatKey(group.getKey())),
+          TagResolver.resolver("type", Messages.formatKey(mod))
+      ));
     });
   }
 }

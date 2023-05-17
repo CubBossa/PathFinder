@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.storage.cache;
 
-import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
@@ -127,27 +126,12 @@ public class CacheLayerImpl implements CacheLayer {
         },
         new GroupCache() {
           @Override
-          public void write(NodeGroup group) {
-
-          }
-
-          @Override
-          public void invalidate(NodeGroup group) {
-
-          }
-
-          @Override
-          public void invalidateAll() {
-
-          }
-
-          @Override
           public Optional<NodeGroup> getGroup(NamespacedKey key) {
             return Optional.empty();
           }
 
           @Override
-          public <M extends Modifier> Optional<Collection<NodeGroup>> getGroups(Class<M> modifier) {
+          public Optional<Collection<NodeGroup>> getGroups(NamespacedKey modifier) {
             return Optional.empty();
           }
 
@@ -172,7 +156,7 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
-          public <M extends Modifier> void write(Class<M> modifier, Collection<NodeGroup> groups) {
+          public void write(NamespacedKey modifier, Collection<NodeGroup> groups) {
 
           }
 
@@ -188,6 +172,21 @@ public class CacheLayerImpl implements CacheLayer {
 
           @Override
           public void invalidate(Node node) {
+
+          }
+
+          @Override
+          public void write(NodeGroup group) {
+
+          }
+
+          @Override
+          public void invalidate(NodeGroup group) {
+
+          }
+
+          @Override
+          public void invalidateAll() {
 
           }
         },

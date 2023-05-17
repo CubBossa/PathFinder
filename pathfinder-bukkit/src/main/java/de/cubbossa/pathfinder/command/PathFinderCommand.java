@@ -237,14 +237,17 @@ public class PathFinderCommand extends Command {
     getPathfinder().getStorage().loadGroup(discoverable)
         .thenApply(Optional::orElseThrow)
         .thenAccept(group -> {
-          DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+          Optional<DiscoverableModifier> mod = group.getModifier(DiscoverableModifier.KEY);
+          if (mod.isEmpty()) {
+            return;
+          }
 
           AbstractDiscoverHandler.<Player>getInstance().discover(target, group, LocalDateTime.now());
 
           BukkitUtils.wrap(sender).sendMessage(Messages.CMD_RM_FORCE_FIND.formatted(TagResolver.builder()
               .resolver(Placeholder.unparsed("name", target.getName()))
               .resolver(Placeholder.component("name", target.getDisplayName()))
-              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()));
+              .tag("discovery", Tag.inserting(mod.get().getDisplayName())).build()));
         });
   }
 
@@ -252,14 +255,17 @@ public class PathFinderCommand extends Command {
     getPathfinder().getStorage().loadGroup(discoverable)
         .thenApply(Optional::orElseThrow)
         .thenAccept(group -> {
-          DiscoverableModifier mod = group.getModifier(DiscoverableModifier.class);
+          Optional<DiscoverableModifier> mod = group.getModifier(DiscoverableModifier.KEY);
+          if (mod.isEmpty()) {
+            return;
+          }
 
           AbstractDiscoverHandler.<Player>getInstance().forget(target, group);
 
           sender.sendMessage(Messages.CMD_RM_FORCE_FORGET.formatted(TagResolver.builder()
               .resolver(Placeholder.unparsed("name", target.getName()))
               .resolver(Placeholder.component("name", target.getDisplayName()))
-              .tag("discovery", Tag.inserting(mod.getDisplayName())).build()));
+              .tag("discovery", Tag.inserting(mod.get().getDisplayName())).build()));
         });
   }
 }

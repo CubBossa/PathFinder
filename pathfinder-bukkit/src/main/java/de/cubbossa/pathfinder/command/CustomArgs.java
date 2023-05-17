@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
+import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -20,7 +21,6 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
-import de.cubbossa.pathfinder.nodegroup.modifier.NavigableModifier;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
@@ -380,7 +380,7 @@ public class CustomArgs {
       }).toList();
 
       try {
-        Map<Node, Collection<NavigableModifier>> map = storage.loadNodes(NavigableModifier.class).join();
+        Map<Node, Collection<NavigableModifier>> map = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
         Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.getOrDefault(n, new HashSet<>()).stream()
             .map(NavigableModifier::getSearchTerms)
             .flatMap(Collection::stream)
@@ -413,7 +413,7 @@ public class CustomArgs {
           String inRange = finalRange.get(input);
 
           Collection<String> allTerms = new HashSet<>();
-          PathFinderProvider.get().getStorage().loadNodes(NavigableModifier.class).thenAccept(map -> {
+          PathFinderProvider.get().getStorage().<NavigableModifier>loadNodes(NavigableModifier.KEY).thenAccept(map -> {
             map.forEach((node, navigableModifier) -> {
               allTerms.addAll(navigableModifier.stream()
                   .map(NavigableModifier::getSearchTermStrings)

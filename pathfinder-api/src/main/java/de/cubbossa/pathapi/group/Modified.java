@@ -1,20 +1,31 @@
 package de.cubbossa.pathapi.group;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
+
 import java.util.Collection;
+import java.util.Optional;
 
 public interface Modified {
 
   Collection<Modifier> getModifiers();
 
-  <C extends Modifier> boolean hasModifier(Class<C> modifierClass);
+  <M extends Modifier> boolean hasModifier(Class<M> modifierClass);
 
-  void addModifier(Modifier modifier);
+  <M extends Modifier> boolean hasModifier(NamespacedKey modifierType);
 
-  <C extends Modifier> C getModifier(Class<C> modifierClass);
+  default <M extends Modifier> void addModifier(M modifier) {
+    addModifier(modifier.getKey(), modifier);
+  }
 
-  <C extends Modifier> C removeModifier(Class<C> modifierClass);
+  void addModifier(NamespacedKey key, Modifier modifier);
 
-  <C extends Modifier> C removeModifier(C modifier);
+  <M extends Modifier> Optional<M> getModifier(NamespacedKey key);
+
+  <M extends Modifier> void removeModifier(Class<M> modifierClass);
+
+  <M extends Modifier> void removeModifier(M modifier);
+
+  <M extends Modifier> void removeModifier(NamespacedKey key);
 
   void clearModifiers();
 }

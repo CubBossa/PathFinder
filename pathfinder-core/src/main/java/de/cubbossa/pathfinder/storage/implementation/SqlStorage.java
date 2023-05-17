@@ -210,7 +210,7 @@ public abstract class SqlStorage extends CommonStorage {
     create
         .createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
         .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
-        .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS)
+        .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY)
         .execute();
   }
 
@@ -406,13 +406,13 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public <M extends Modifier> Collection<NodeGroup> loadGroups(Class<M> modifier) {
+  public <M extends Modifier> Collection<NodeGroup> loadGroups(NamespacedKey modifier) {
     return create
         .select()
         .from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_GROUP_MODIFIER_RELATION)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY))
-        .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))
+        .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY.eq(modifier))
         .fetch(r -> {
           SimpleNodeGroup group = new SimpleNodeGroup(
               r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
@@ -445,7 +445,7 @@ public abstract class SqlStorage extends CommonStorage {
         StorageImpl.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
     cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
     cmpMod.toDeleteIfPresent(
-        mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getClass())));
+        mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getKey())));
   }
 
   @Override
@@ -620,8 +620,7 @@ public abstract class SqlStorage extends CommonStorage {
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .forEach(record -> {
           try {
-            ModifierType<?> type =
-                modifierRegistry.getType(record.getModifierClass()).orElseThrow();
+            ModifierType<?> type = modifierRegistry.getType(record.getModifierKey()).orElseThrow();
             YamlConfiguration cfg =
                 YamlConfiguration.loadConfiguration(new StringReader(record.getData()));
             Modifier modifier = type.deserialize(cfg.getValues(false));
@@ -629,7 +628,7 @@ public abstract class SqlStorage extends CommonStorage {
           } catch (Throwable t) {
             if (getLogger() != null) {
               getLogger().log(Level.WARNING,
-                  "Could not load modifier with class name '" + record.getModifierClass()
+                  "Could not load modifier with class name '" + record.getModifierKey()
                       + "', skipping.", t);
             } else {
               throw new RuntimeException(t);
@@ -642,7 +641,7 @@ public abstract class SqlStorage extends CommonStorage {
   @Override
   public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(""));
-    Optional<ModifierType<M>> opt = modifierRegistry.getType((Class<M>) modifier.getClass());
+    Optional<ModifierType<M>> opt = modifierRegistry.getType(modifier.getKey());
     if (opt.isEmpty()) {
       getLogger().log(Level.SEVERE, "Tried to apply modifier '" + modifier.getClass()
           + "', but could not find according modifier type in type registry.");
@@ -653,16 +652,16 @@ public abstract class SqlStorage extends CommonStorage {
     create
         .insertInto(PATHFINDER_GROUP_MODIFIER_RELATION)
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, group)
-        .set(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS, type.getModifierClass().getName())
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY, type.getKey())
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.DATA, cfg.saveToString())
         .execute();
   }
 
   @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, Class<M> modifier) {
+  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier) {
     create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
-        .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_CLASS.eq(modifier.getName()))
+        .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY.eq(modifier))
         .execute();
   }
 

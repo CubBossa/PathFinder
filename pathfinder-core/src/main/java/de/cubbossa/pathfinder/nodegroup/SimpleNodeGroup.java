@@ -17,7 +17,7 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
   private final PathFinder pathFinder = PathFinderProvider.get();
   private final NamespacedKey key;
-  private final Map<Class<? extends Modifier>, Modifier> modifiers;
+  private final Map<NamespacedKey, Modifier> modifiers;
   @Getter
   @Setter
   private float weight = 1;
@@ -67,27 +67,36 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
   @Override
   public <C extends Modifier> boolean hasModifier(Class<C> modifierClass) {
-    return modifiers.containsKey(modifierClass);
+    return modifiers.values().stream().anyMatch(modifierClass::isInstance);
   }
 
   @Override
-  public void addModifier(Modifier modifier) {
-    modifiers.put(modifier.getClass(), modifier);
+  public <M extends Modifier> boolean hasModifier(NamespacedKey modifierType) {
+    return modifiers.containsKey(modifierType);
   }
 
   @Override
-  public <C extends Modifier> C getModifier(Class<C> modifierClass) {
-    return (C) modifiers.get(modifierClass);
+  public void addModifier(NamespacedKey key, Modifier modifier) {
+    modifiers.put(key, modifier);
   }
 
   @Override
-  public <C extends Modifier> C removeModifier(Class<C> modifierClass) {
-    return (C) modifiers.remove(modifierClass);
+  public <M extends Modifier> Optional<M> getModifier(NamespacedKey key) {
+    return Optional.ofNullable((M) modifiers.get(key));
   }
 
   @Override
-  public <C extends Modifier> C removeModifier(C modifier) {
-    return (C) modifiers.remove(modifier.getClass());
+  public <C extends Modifier> void removeModifier(Class<C> modifierClass) {
+    modifiers.values().removeIf(modifierClass::isInstance);
+  }
+
+  @Override
+  public <C extends Modifier> void removeModifier(C modifier) {
+    modifiers.values().remove(modifier);
+  }
+
+  @Override
+  public <C extends Modifier> void removeModifier(NamespacedKey key) {
   }
 
   @Override

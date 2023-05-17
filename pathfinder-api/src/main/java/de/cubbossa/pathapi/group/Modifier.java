@@ -1,4 +1,6 @@
 package de.cubbossa.pathapi.group;
 
-public interface Modifier {
+import de.cubbossa.pathapi.misc.Keyed;
+
+public interface Modifier extends Keyed {
 }
