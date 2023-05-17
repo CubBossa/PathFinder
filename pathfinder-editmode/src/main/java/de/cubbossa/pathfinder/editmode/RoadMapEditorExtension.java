@@ -5,14 +5,14 @@ import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.PathPluginExtension;
 import de.cubbossa.pathfinder.util.Version;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.UnknownDependencyException;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @AutoService(PathPluginExtension.class)
 public class RoadMapEditorExtension implements PathPluginExtension {
@@ -59,6 +59,11 @@ public class RoadMapEditorExtension implements PathPluginExtension {
     Version spigot = new Version(spigotVersion);
 
     if (spigot.compareTo(new Version("1.19")) >= 0) {
+      // newest protocollib, good to go with all 1.19
+      if (protocolLib.compareTo(new Version("5.0.0")) >= 0) {
+        return;
+      }
+
       // require 5.0.0 up to build 606
       if (protocolLib.compareTo(new Version("5")) < 0) {
         throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
