@@ -459,7 +459,20 @@ public class Messages {
   public static final Message E_NODE_TOOL_L = new MessageBuilder("editor.toolbar.node_tool.lore")
       .withDefault("""
           <gray>» <yellow>right-click:</yellow> Create node</gray>
-          <gray>» <yellow>left-click:</yellow> Delete clicked node</gray>""")
+          <gray>» <yellow>left-click:</yellow> Delete clicked node</gray>
+          <gray>» <yellow>left-click air:</yellow> Activate chain mode</gray>""")
+      .build();
+  public static final Message E_NODE_CHAIN_ON = new MessageBuilder("editor.node_tool.chain.on")
+      .withDefault("<ins:prefix>Chain mode activated. A new node is connected to the latter.")
+      .build();
+  public static final Message E_NODE_CHAIN_OFF = new MessageBuilder("editor.node_tool.chain.off")
+      .withDefault("<ins:prefix>Chain mode cancelled.")
+      .build();
+  public static final Message E_NODE_CHAIN_NEW = new MessageBuilder("editor.node_tool.chain.new")
+      .withDefault("<ins:prefix>New chain started - left-click again to turn off chain mode")
+      .build();
+  public static final Message E_NODE_CHAIN_START = new MessageBuilder("editor.node_tool.chain.new_start")
+      .withDefault("<ins:prefix>Chain start point set.")
       .build();
   public static final Message E_EDGE_TOOL_N = new MessageBuilder("editor.toolbar.edge_tool.name")
       .withDefault("<white><u>Edge Tool</u></white>")

@@ -9,6 +9,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
@@ -26,12 +27,10 @@ import de.cubbossa.pathfinder.util.VectorUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
@@ -47,7 +46,9 @@ public class EditModeMenu {
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
   private UUID edgeStart = null;
-  private Boolean undirectedEdges = false;
+  private Boolean undirectedEdgesMode = true;
+  private Boolean nodeChainMode = false;
+  private UUID chainEdgeStart = null;
 
   public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
                       Collection<NodeType<?>> types) {
@@ -65,12 +66,37 @@ public class EditModeMenu {
     });
 
     menu.setButton(0, Button.builder()
-        .withItemStack(new LocalizedItem(Material.NETHER_STAR, Messages.E_NODE_TOOL_N,
-            Messages.E_NODE_TOOL_L).createItem(editingPlayer))
+        .withItemStack(() -> {
+          ItemStack stack = new ItemStack(Material.FIREWORK_STAR);
+          FireworkEffectMeta meta = (FireworkEffectMeta) stack.getItemMeta();
+          meta.setEffect(FireworkEffect.builder()
+              // red if in edge chain mode, green in normal mode.
+              .withColor(Color.fromRGB(nodeChainMode ? 0xff0000 : 0x00ff00))
+              .build());
+          stack.setItemMeta(meta);
+
+          return new LocalizedItem(stack, Messages.E_NODE_TOOL_N, Messages.E_NODE_TOOL_L).createItem(editingPlayer);
+        })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
           pathFinder.getStorage().deleteNodes(List.of(context.getTarget().getNodeId()))
               .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
+        })
+        .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
+          PathPlayer<Player> p = CommonPathFinder.getInstance().wrap(context.getPlayer());
+          if (chainEdgeStart != null) {
+            chainEdgeStart = null;
+            p.sendMessage(Messages.E_NODE_CHAIN_NEW);
+            return;
+          }
+          p.sendMessage(nodeChainMode ? Messages.E_NODE_CHAIN_OFF : Messages.E_NODE_CHAIN_ON);
+          nodeChainMode = !nodeChainMode;
+        })
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          if (nodeChainMode) {
+            chainEdgeStart = context.getTarget().getNodeId();
+            CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_START);
+          }
         })
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
           Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
@@ -83,6 +109,17 @@ public class EditModeMenu {
             pathFinder.getStorage()
                 .createAndLoadNode(type, VectorUtils.toInternal(pos))
                 .thenCompose(node -> pathFinder.getStorage().modifyNode(node.getNodeId(), n -> {
+                  if (nodeChainMode) {
+                    if (chainEdgeStart != null) {
+                      pathFinder.getStorage().modifyNode(chainEdgeStart, o -> {
+                        o.connect(node);
+                      });
+                      if (undirectedEdgesMode) {
+                        n.connect(chainEdgeStart);
+                      }
+                    }
+                    chainEdgeStart = n.getNodeId();
+                  }
                   if (!(n instanceof Groupable groupable)) {
                     return;
                   }
@@ -101,8 +138,10 @@ public class EditModeMenu {
 
     menu.setButton(1, Button.builder()
         .withItemStack(() -> {
-          ItemStack stack = new LocalizedItem(Material.STICK, Messages.E_EDGE_TOOL_N,
-              Messages.E_EDGE_TOOL_L).createItem(editingPlayer);
+          ItemStack stack = new LocalizedItem(
+              undirectedEdgesMode ? Material.STICK : Material.BLAZE_ROD,
+              Messages.E_EDGE_TOOL_N, Messages.E_EDGE_TOOL_L
+          ).createItem(editingPlayer);
           if (edgeStart != null) {
             ItemStackUtils.setGlow(stack);
           }
@@ -124,7 +163,7 @@ public class EditModeMenu {
           futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> {
             node.connect(c.getTarget().getNodeId());
           }));
-          if (undirectedEdges) {
+          if (undirectedEdgesMode) {
             futures.add(pathFinder.getStorage().modifyNode(c.getTarget().getNodeId(), node -> {
               node.connect(edgeStart);
             }));
@@ -142,10 +181,10 @@ public class EditModeMenu {
 
           // switch mode
           if (edgeStart == null) {
-            undirectedEdges = !undirectedEdges;
+            undirectedEdgesMode = !undirectedEdgesMode;
             BukkitUtils.wrap(player).sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
                 .formatted(TagResolver.resolver("value",
-                    Tag.inserting(Messages.formatBool(!undirectedEdges)))));
+                    Tag.inserting(Messages.formatBool(!undirectedEdgesMode)))));
             return;
           }
           // cancel creation
