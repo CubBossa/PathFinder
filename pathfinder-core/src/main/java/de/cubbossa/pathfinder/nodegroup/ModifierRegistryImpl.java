@@ -34,6 +34,6 @@ public class ModifierRegistryImpl implements ModifierRegistry {
 
   @Override
   public <M extends Modifier> Optional<ModifierType<M>> getType(NamespacedKey key) {
-    return Optional.of((ModifierType<M>) modifiers.get(key));
+    return Optional.ofNullable((ModifierType<M>) modifiers.get(key));
   }
 }

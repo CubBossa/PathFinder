@@ -7,10 +7,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.PathFinderTest;
-import de.cubbossa.pathfinder.TestModifier;
-import de.cubbossa.pathfinder.TestVisualizer;
+import de.cubbossa.pathfinder.*;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.SneakyThrows;
@@ -111,7 +108,7 @@ public abstract class StorageTest extends PathFinderTest {
     assertTrue(after.hasModifier(TestModifier.class));
     assertTrue(after.contains(a.getNodeId()));
 
-    Map<Node, Collection<TestModifier>> nodes = assertResult(() -> storage.loadNodes(TestModifier.class));
+    Map<Node, Collection<TestModifier>> nodes = assertResult(() -> storage.loadNodes(TestModifierType.KEY));
     assertEquals(1, nodes.size());
     assertTrue(nodes.containsKey(a));
     assertFalse(nodes.containsKey(b));
@@ -287,7 +284,7 @@ public abstract class StorageTest extends PathFinderTest {
     }));
     NodeGroup g1 = assertGroupExists(gk);
     assertTrue(g1.hasModifier(TestModifier.class));
-    assertEquals("abc", g1.getModifier(TestModifier.class).data());
+    assertEquals("abc", g1.<TestModifier>getModifier(TestModifierType.KEY).orElseThrow().data());
 
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.removeModifier(TestModifier.class);

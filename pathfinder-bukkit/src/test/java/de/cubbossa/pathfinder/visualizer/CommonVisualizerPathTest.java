@@ -77,7 +77,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
     visPath.prepare(path, p);
     assertFalse(visPath.isActive());
-    assertEquals(1, visPath.paths.size());
+    assertEquals(2, visPath.paths.size());
     assertEquals(Set.of(CommonPathFinder.defaultVisualizerKey(), vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
   }
@@ -99,7 +99,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
     visPath.prepare(path, p);
     assertFalse(visPath.isActive());
-    assertEquals(2, visPath.paths.size());
+    assertEquals(3, visPath.paths.size());
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(a)));
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(b)));
   }
@@ -121,10 +121,12 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
     visPath.prepare(path, p);
     assertFalse(visPath.isActive());
-    assertEquals(3, visPath.paths.size());
+    assertEquals(4, visPath.paths.size());
     assertEquals(2, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(a)).count());
     assertEquals(1, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(b)).count());
-    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 1));
+    assertTrue(visPath.paths.stream()
+        .filter(subPath -> !subPath.visualizer.getKey().toString().contains("default"))
+        .allMatch(subPath -> subPath.path.size() == 1));
   }
 
   @Test
@@ -142,7 +144,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
     visPath.prepare(path, p);
     assertFalse(visPath.isActive());
-    assertEquals(1, visPath.paths.size());
+    assertEquals(2, visPath.paths.size());
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
   }
 }

@@ -45,17 +45,15 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
         // this node cannot be rendered, it cannot be grouped
         continue;
       }
-      VisualizerModifier mod = groupable.getGroups().stream()
+      groupable.getGroups().stream()
           .filter(g -> g.hasModifier(VisualizerModifier.KEY))
           .sorted()
           .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
           .filter(Optional::isPresent)
           .map(Optional::get)
-          .findFirst().orElse(null);
-      if (mod == null) {
-        continue;
-      }
-      nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) mod.visualizer());
+          .forEach(vis -> {
+            nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis.visualizer());
+          });
     }
 
 
