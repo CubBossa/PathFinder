@@ -62,6 +62,11 @@ public class RoadMapEditorExtension implements PathFinderExtension {
     Version spigot = new Version(spigotVersion);
 
     if (spigot.compareTo(new Version("1.19")) >= 0) {
+      // newest protocollib, good to go with all 1.19
+      if (protocolLib.compareTo(new Version("5.0.0")) >= 0) {
+        return;
+      }
+
       // require 5.0.0 up to build 606
       if (protocolLib.compareTo(new Version("5")) < 0) {
         throw new UnknownDependencyException(
