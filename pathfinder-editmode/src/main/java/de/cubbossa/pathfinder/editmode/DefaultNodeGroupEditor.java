@@ -118,17 +118,19 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
         return;
       }
 
-      BottomInventoryMenu menu = new EditModeMenu(pathFinder, groupKey,
-          PathFinderProvider.get().getNodeTypeRegistry().getTypes()).createHotbarMenu(this,
-          bukkitPlayer);
+      BottomInventoryMenu menu = new EditModeMenu(
+          pathFinder.getStorage(), groupKey,
+          pathFinder.getNodeTypeRegistry().getTypes(),
+          pathFinder.getConfiguration().getEditMode()
+      ).createHotbarMenu(this, bukkitPlayer);
       editingPlayers.put(player, menu);
       menu.openSync(bukkitPlayer);
 
       preservedGameModes.put(player, bukkitPlayer.getGameMode());
       bukkitPlayer.setGameMode(GameMode.CREATIVE);
 
-      pathFinder.getStorage().loadGroup(groupKey).thenAccept(group -> {
-        pathFinder.getStorage().loadNodes(group.orElseThrow()).thenAccept(n -> {
+      pathFinder.getStorage().loadGroup(groupKey).thenCompose(group -> {
+        return pathFinder.getStorage().loadNodes(group.orElseThrow()).thenAccept(n -> {
           renderNodes(player, n);
         });
       });

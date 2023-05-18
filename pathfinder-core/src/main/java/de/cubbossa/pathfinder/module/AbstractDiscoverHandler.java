@@ -14,6 +14,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -71,11 +72,15 @@ public class AbstractDiscoverHandler<PlayerT> {
         plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO
         continue;
       }
-      float dist = getDiscoveryDistance(player.getUniqueId(), node);
-      if (node.getLocation().getX() - player.getLocation().getX() > dist) {
+      if (!Objects.equals(node.getLocation().getWorld(), player.getLocation().getWorld())) {
         continue;
       }
-      if (node.getLocation().distance(player.getLocation()) > dist) {
+      float dist = getDiscoveryDistance(player.getUniqueId(), node);
+      if (node.getLocation().getX() - player.getLocation().getX() > dist
+          || node.getLocation().getY() - player.getLocation().getY() > dist) {
+        continue;
+      }
+      if (node.getLocation().distanceSquared(player.getLocation()) > Math.pow(dist, 2)) {
         continue;
       }
       return true;

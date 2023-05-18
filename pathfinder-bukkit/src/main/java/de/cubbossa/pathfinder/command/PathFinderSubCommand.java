@@ -1,25 +1,25 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathapi.PathFinder;
-import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.arguments.LiteralArgument;
 
-public class Command extends CommandTree {
+public class PathFinderSubCommand extends LiteralArgument {
 
   private PathFinder pathFinder;
 
-  public Command(PathFinder pathFinder, String commandName) {
+  public PathFinderSubCommand(PathFinder pathFinder, String commandName) {
     super(commandName);
     this.pathFinder = pathFinder;
   }
 
-  public Command withGeneratedHelp() {
+  public PathFinderSubCommand withGeneratedHelp() {
     executes((sender, args) -> {
       //CommandUtils.sendHelp(sender, this);
     });
     return this;
   }
 
-  public Command withGeneratedHelp(int depth) {
+  public PathFinderSubCommand withGeneratedHelp(int depth) {
     executes((sender, args) -> {
       //CommandUtils.sendHelp(sender, this, depth);
     });

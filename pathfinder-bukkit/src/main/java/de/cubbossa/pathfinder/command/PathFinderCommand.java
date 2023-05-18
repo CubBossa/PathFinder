@@ -6,15 +6,18 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.command.impl.*;
 import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.translations.PluginTranslations;
+import dev.jorel.commandapi.CommandTree;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -32,19 +35,41 @@ import java.util.logging.Level;
 /**
  * The basic command of this plugin, which handles things like reload, export, import, etc.
  */
-public class PathFinderCommand extends Command {
+public class PathFinderCommand extends CommandTree {
+
+  private final PathFinder pathFinder;
 
   /**
    * The basic command of this plugin, which handles things like reload, export, import, etc.
    */
   public PathFinderCommand(PathFinder pathFinder) {
-    super(pathFinder, "pathfinder");
+    super("pathfinder");
+    this.pathFinder = pathFinder;
+
     withAliases("pf");
+
+    then(new NodesCmd(pathFinder));
+    NodeType<?> type = pathFinder.getNodeTypeRegistry().getType(CommonPathFinder.pathfinder("waypoint"));
+    then(new CreateNodeCmd(pathFinder, () -> type));
+    then(new DeleteNodesCmd(pathFinder));
+    then(new ListNodesCmd(pathFinder));
+    then(new NodesCmd(pathFinder));
+
+    then(new CreateGroupCmd(pathFinder));
+    then(new DeleteGroupCmd(pathFinder));
+    then(new ListGroupsCmd(pathFinder));
+    then(new GroupCmd(pathFinder));
+
+    then(new CreateVisualizerCmd(pathFinder));
+    then(new DeleteVisualizerCmd(pathFinder));
+    then(new ImportVisualizerCmd(pathFinder));
+    then(new ListVisualizersCmd(pathFinder));
+    then(new VisualizerCmd(pathFinder));
 
     withRequirement(sender ->
         sender.hasPermission(PathPerms.PERM_CMD_PF_HELP)
             || sender.hasPermission(PathPerms.PERM_CMD_PF_INFO)
-            || sender.hasPermission(PathPerms.PERM_CMD_PF_IMPORT)
+            || sender.hasPermission(PathPerms.PERM_CMD_PF_IMPORT_VIS)
             || sender.hasPermission(PathPerms.PERM_CMD_PF_EXPORT)
             || sender.hasPermission(PathPerms.PERM_CMD_PF_RELOAD)
     );
@@ -92,11 +117,6 @@ public class PathFinderCommand extends Command {
         .executes((commandSender, objects) -> {
           BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_HELP);
         }));
-
-    then(CustomArgs.literal("import")
-        .withPermission(PathPerms.PERM_CMD_PF_IMPORT)
-        .then(new VisualizerImportCommand(pathFinder, "visualizer", 0))
-    );
 
     then(CustomArgs.literal("reload")
         .withPermission(PathPerms.PERM_CMD_PF_RELOAD)
@@ -234,7 +254,7 @@ public class PathFinderCommand extends Command {
   }
 
   private void onForceFind(CommandSender sender, PathPlayer<Player> target, NamespacedKey discoverable) {
-    getPathfinder().getStorage().loadGroup(discoverable)
+    pathFinder.getStorage().loadGroup(discoverable)
         .thenApply(Optional::orElseThrow)
         .thenAccept(group -> {
           Optional<DiscoverableModifier> mod = group.getModifier(DiscoverableModifier.KEY);
@@ -252,7 +272,7 @@ public class PathFinderCommand extends Command {
   }
 
   private void onForceForget(PathPlayer<CommandSender> sender, PathPlayer<Player> target, NamespacedKey discoverable) {
-    getPathfinder().getStorage().loadGroup(discoverable)
+    pathFinder.getStorage().loadGroup(discoverable)
         .thenApply(Optional::orElseThrow)
         .thenAccept(group -> {
           Optional<DiscoverableModifier> mod = group.getModifier(DiscoverableModifier.KEY);

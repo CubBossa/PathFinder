@@ -2,12 +2,10 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
@@ -69,8 +67,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     super.showElement(element, player);
     setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
       Node end = element.resolveEnd().join();
-      return VectorUtils.toBukkit(
-          end.getLocation().clone().subtract(start.getLocation()).asVector());
+      return VectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
     }).join());
   }
 
@@ -99,9 +96,6 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     Collection<Edge> toRender = nodes.stream()
         .map(Node::getEdges).flatMap(Collection::stream)
         .collect(Collectors.toSet());
-    // all edges from adjacent nodes to rendered nodes
-    Storage storage = PathFinderProvider.get().getStorage();
-    toRender.addAll(storage.loadEdgesTo(nodes).join());
 
     showElements(toRender, player.unwrap());
     players.add(player);

@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.Location;
@@ -8,6 +9,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathfinder.PathFinderConf;
 import de.cubbossa.pathfinder.util.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +26,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Getter
@@ -34,17 +38,19 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
 
   private final Collection<UUID> rendered;
   private final MultiMap<UUID, UUID, ParticleEdge> edges;
-  private Collection<Integer> editModeTasks;
-  private Color colorFrom = new Color(255, 0, 0);
-  private Color colorTo = new Color(0, 127, 255);
-  private float particleDistance = .3f;
-  private int tickDelay = 6;
+  private final Collection<Integer> editModeTasks;
+  private final PathFinderConf.EditModeConfig config;
 
   public ParticleEdgeRenderer() {
+    this(new PathFinderConf.EditModeConf());
+  }
+
+  public ParticleEdgeRenderer(PathFinderConfig.EditModeConfig editModeConfig) {
     pathFinder = PathFinderProvider.get();
     rendered = new HashSet<>();
     edges = new MultiMap<>();
     editModeTasks = new HashSet<>();
+    config = editModeConfig;
   }
 
   @Override
@@ -71,7 +77,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     toRender.addAll(storage.loadEdgesTo(nodes).join());
 
     for (Edge edge : toRender) {
-      FutureUtils.both(edge.resolveStart(), edge.resolveEnd()).thenAccept(entry -> {
+      var future = FutureUtils.both(edge.resolveStart(), edge.resolveEnd()).thenAccept(entry -> {
         Node startNode = entry.getKey();
         Node endNode = entry.getValue();
 
@@ -85,6 +91,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         }
         edges.put(edge.getStart(), edge.getEnd(), particleEdge);
       });
+      futures.add(future);
     }
     return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
         .thenRun(() -> updateRenderer(player));
@@ -106,7 +113,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
       var sched = Bukkit.getScheduler();
       editModeTasks.forEach(sched::cancelTask);
 
-      List<Object> packets = new ArrayList<>();
+      Map<org.bukkit.Location, Object> packets = new HashMap<>();
       Map<Color, ParticleBuilder> particles = new HashMap<>();
 
       for (var edge : edges.flatValues()) {
@@ -123,36 +130,48 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         Vector b = VectorUtils.toBukkit(edge.getEnd().asVector());
         double dist = a.distance(b);
 
-        for (float i = 0; i < dist; i += particleDistance) {
-          Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
+        for (float i = 0; i < dist; i += config.getEdgeParticleSpacing()) {
+          Color c = directed
+              ? LerpUtils.lerp(config.getEdgeParticleColorFrom(), config.getEdgeParticleColorTo(), i / dist)
+              : config.getEdgeParticleColorFrom();
 
-          ParticleBuilder builder = particles.computeIfAbsent(c,
-              k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-          packets.add(builder.setLocation(BukkitUtils.lerp(a, b, i / dist)
-                  .toLocation(Bukkit.getWorld(edge.getStart().getWorld().getUniqueId())))
-              .toPacket());
+          ParticleBuilder builder = particles.computeIfAbsent(c, k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
+          org.bukkit.Location loc = BukkitUtils.lerp(a, b, i / dist)
+              .toLocation(Bukkit.getWorld(edge.getStart().getWorld().getUniqueId()));
+          packets.put(loc, builder.setLocation(loc).toPacket());
         }
       }
-      editModeTasks.add(startTask(everyNth(packets, 2, 0), player.unwrap(), 0));
-      editModeTasks.add(startTask(everyNth(packets, 2, 1), player.unwrap(), tickDelay / 2));
+      Function<Integer, Supplier<List<Object>>> packetSupplier = i -> () -> {
+        Player p = player.unwrap();
+        if (p == null || !p.isOnline()) {
+          throw new IllegalStateException("Trying to render edit mode packets for offline player.");
+        }
+        List<Object> packet = new ArrayList<>();
+        double distSquared = Math.pow(config.getEdgeParticleRenderDistance(), 2);
+        packets.forEach((location, o) -> {
+          if (!Objects.equals(location.getWorld(), p.getWorld())) {
+            return;
+          }
+          if (location.distanceSquared(p.getLocation()) > distSquared) {
+            return;
+          }
+          packet.add(o);
+        });
+        return CollectionUtils.everyNth(packet, 2, i);
+      };
+
+      editModeTasks.add(startTask(packetSupplier.apply(0), player.unwrap(), 0));
+      editModeTasks.add(startTask(packetSupplier.apply(1), player.unwrap(), config.getEdgeParticleTickDelay() / 2));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
   }
 
-  private int startTask(List<Object> packets, Player player, int delay) {
+  private int startTask(Supplier<List<Object>> packets, Player player, int delay) {
     return Bukkit.getScheduler().runTaskTimerAsynchronously(ReflectionUtils.getPlugin(), () -> {
-      ParticleUtils.sendBulk(packets, player);
-    }, delay, tickDelay).getTaskId();
-  }
-
-  private <E> List<E> everyNth(List<E> in, int n, int offset) {
-    List<E> result = new ArrayList<>();
-    for (int i = offset % n; i < in.size(); i += n) {
-      result.add(in.get(i));
-    }
-    return result;
+      ParticleUtils.sendBulk(packets.get(), player);
+    }, delay, config.getEdgeParticleTickDelay()).getTaskId();
   }
 
   @Setter

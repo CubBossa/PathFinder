@@ -10,6 +10,7 @@ import de.exlll.configlib.Configuration;
 import lombok.Getter;
 import org.jooq.SQLDialect;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -29,6 +30,7 @@ public class PathFinderConf implements PathFinderConfig {
       to execute commands as player. Commands are executed from console, be careful with commands like
       /op <player>""")
   public EffectsConf effects = new EffectsConf();
+  public EditModeConf editMode = new EditModeConf();
   @Comment("Don't change, specifies plugin version while generating config and helps to identify outdated files.")
   public String version = "-1";
 
@@ -132,7 +134,7 @@ public class PathFinderConf implements PathFinderConfig {
         and connects it with the nearest waypoint around. The maximum distance can be set to
         not allow commands with locations far away from the actual roadmap. Default's set to 20.
         -1 can be set to disable a distance check.""")
-    public double maxDistance = 20.;
+    public float maxDistance = 20.f;
   }
 
   @Configuration
@@ -167,17 +169,17 @@ public class PathFinderConf implements PathFinderConfig {
     @Comment("""
         If nodes in the players view direction should be preferred.
         1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
-    public double startLocationDirectionWeight = 1;
+    public float startLocationDirectionWeight = 1;
     @Comment("""
         If the node location direction should have an effect on its closeness to the player. Similar
         to start-direction-weight but for nodes instead of player. Default: 0""")
-    public double scopeLocationDirectionWeight = 0;
+    public float scopeLocationDirectionWeight = 0;
     @Comment("""
         Each block between the player/a node and another node will count as the given amount of
         distance in blocks. Default of 10.000 means that two blocks between a player and a node
         will count as a distance of 20.000 blocks. While another node that is further away from the
         player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
-    public double blockCollisionWeight = 10_000d;
+    public float blockCollisionWeight = 10_000f;
   }
 
   @Configuration
@@ -188,5 +190,43 @@ public class PathFinderConf implements PathFinderConfig {
     public ArrayList<String> onPathCancel;
     public ArrayList<String> onDiscover;
     public ArrayList<String> onForget;
+  }
+
+  @Configuration
+  @Getter
+  public static class EditModeConf implements EditModeConfig {
+    @Comment("""
+        If the edit mode should start with the edges tool set to directed edges or undirected edges.
+        A directed edge only goes one way while undirected edges go in both directions.""")
+    public boolean directedEdgesByDefault = false;
+    @Comment("""
+        If the edit mode should start with the node tool set to chain mode. In chain mode, a new node
+        will have a connection the the node that was created before. The new edge will be directed if
+        the edge tool is set to directed edges.""")
+    public boolean nodeChainModeByDefault = false;
+    @Comment("""
+        The spacing of the particles that are used to display edit mode edges. A spacing of 0.3 blocks is default.
+        Increase this value if you are having client side performance issues while in edit mode.""")
+    public float edgeParticleSpacing = .3f;
+    @Comment("""
+        The delay in ticks to wait before showing an edge particle again.
+        1s = 20t""")
+    public int edgeParticleTickDelay = 6;
+    @Comment("The edge color that indicates an outgoing or undirected edge.")
+    public Color edgeParticleColorFrom = new Color(0xff0000);
+    @Comment("The edge color that indicates an incoming edge.")
+    public Color edgeParticleColorTo = new Color(0x0088ff);
+    @Comment("""
+        The distance up to which the player can see edit mode particles.
+        You may want to decrease this value if you run into client side performance issues.""")
+    public float edgeParticleRenderDistance = 100f;
+    @Comment("""
+        The distance up to which the player can see node armorstands.
+        You may want to decrease this value if you run into client side performance issues.""")
+    public float nodeArmorStandRenderDistance = 50f;
+    @Comment("""
+        The distance up to which the player can see edge armorstands.
+        You may want to decrease this value if you run into client side performance issues.""")
+    public float edgeArmorStandRenderDistance = 25f;
   }
 }

@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.editmode;
 
 import com.google.auto.service.AutoService;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.NodeGroupEditor;
 import de.cubbossa.pathapi.editor.NodeGroupEditorFactory;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -14,8 +16,9 @@ import org.bukkit.entity.Player;
 public class DefaultNodeGroupEditorFactory implements NodeGroupEditorFactory {
   @Override
   public NodeGroupEditor<Player> apply(NodeGroup group) {
+    PathFinder pathFinder = PathFinderProvider.get();
     DefaultNodeGroupEditor editor = new DefaultNodeGroupEditor(group);
-    editor.getRenderers().add(new ParticleEdgeRenderer());
+    editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));
     editor.getRenderers().add(new NodeArmorStandRenderer(PathFinderPlugin.getInstance()));
     editor.getRenderers().add(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
     return editor;

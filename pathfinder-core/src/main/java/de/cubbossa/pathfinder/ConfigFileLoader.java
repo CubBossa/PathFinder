@@ -2,11 +2,13 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.util.Version;
 import de.exlll.configlib.NameFormatters;
+import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.awt.*;
 import java.io.File;
 import java.util.function.BiConsumer;
 
@@ -19,17 +21,28 @@ public class ConfigFileLoader {
   private Version configRegenerationVersion = new Version("3.0.0");
 
   public PathFinderConf loadConfig() {
-        PathFinderConf configuration;
+    PathFinderConf configuration;
 
-        File configFile = new File(dataFolder, "config.yml");
-        YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-                .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
-                .createParentDirectories(true)
-                .header("""
-                        #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-                        #                                                               #
-                        #       _____      _   _     ______ _           _               #
-                        #      |  __ \\    | | | |   |  ____(_)         | |              #
+    File configFile = new File(dataFolder, "config.yml");
+    YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
+        .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+        .addSerializer(Color.class, new Serializer<Color, String>() {
+          @Override
+          public String serialize(Color element) {
+            return Integer.toHexString(element.getRGB() & 0xffffff);
+          }
+
+          @Override
+          public Color deserialize(String element) {
+            return new Color(Integer.parseInt(element, 16));
+          }
+        })
+        .createParentDirectories(true)
+        .header("""
+            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+            #                                                               #
+            #       _____      _   _     ______ _           _               #
+            #      |  __ \\    | | | |   |  ____(_)         | |              #
             #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
             #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
             #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
@@ -42,13 +55,11 @@ public class ConfigFileLoader {
         .build();
 
     if (!configFile.exists()) {
-        configuration = new PathFinderConf();
-        YamlConfigurations.save(configFile.toPath(), PathFinderConf.class, configuration,
-                properties);
-        return configuration;
+      configuration = new PathFinderConf();
+      YamlConfigurations.save(configFile.toPath(), PathFinderConf.class, configuration, properties);
+      return configuration;
     }
-        configuration =
-                YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
+    configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
 

@@ -5,7 +5,7 @@ public class PathPerms {
   public static final String PERM_CMD_PF_HELP = "pathfinder.command.pathfinder.help";
   public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
   public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";
-  public static final String PERM_CMD_PF_IMPORT = "pathfinder.command.pathfinder.import";
+  public static final String PERM_CMD_PF_IMPORT_VIS = "pathfinder.command.pathfinder.importvisualizer";
   public static final String PERM_CMD_PF_MODULES = "pathfinder.command.pathfinder.modules";
   public static final String PERM_CMD_PF_FORCEFIND = "pathfinder.command.pathfinder.forcefind";
   public static final String PERM_CMD_PF_FORCEFORGET = "pathfinder.command.pathfinder.forceforget";

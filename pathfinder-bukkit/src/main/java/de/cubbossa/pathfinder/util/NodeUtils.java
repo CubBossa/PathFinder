@@ -1,17 +1,58 @@
 package de.cubbossa.pathfinder.util;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.splinelib.util.BezierVector;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NodeUtils {
+
+  /**
+   * Lists all waypoints of a certain selection.
+   *
+   * @param page first page 1, not 0!
+   */
+  public static void onList(Player player, NodeSelection selection, int page) {
+
+    String selector;
+    if (selection.getMeta() != null) {
+      selector = selection.getMeta().selector();
+    } else {
+      selector = "@n";
+    }
+
+    TagResolver resolver = Placeholder.parsed("selector", selector);
+
+
+    CommandUtils.printList(
+        player, page, 10, new ArrayList<>(selection),
+        n -> {
+          Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
+          Collection<Node> resolvedNeighbours =
+              PathFinderProvider.get().getStorage().loadNodes(neighbours).join();
+
+          TagResolver r = TagResolver.builder()
+              .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
+              .resolver(Placeholder.component("position", Messages.formatVector(n.getLocation())))
+              .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
+              .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, resolvedNeighbours)))
+              .build();
+          BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_LIST_ELEMENT.formatted(r));
+        },
+        Messages.CMD_N_LIST_HEADER.formatted(resolver),
+        Messages.CMD_N_LIST_FOOTER.formatted(resolver));
+  }
 
   public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path,
                                             boolean shortenIfOverlapping) {

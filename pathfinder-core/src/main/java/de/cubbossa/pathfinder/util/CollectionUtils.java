@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.util;
 
 import lombok.experimental.UtilityClass;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
@@ -46,6 +47,14 @@ public class CollectionUtils {
      * @return A new list instance that is similar to the old list but only contains the given page.
      */
     public <T> List<T> subListPaginated(List<T> list, int page, int pageSize) {
-        return subList(list, page * pageSize, pageSize);
+      return subList(list, page * pageSize, pageSize);
     }
+
+  public static <E> List<E> everyNth(List<E> in, int n, int offset) {
+    List<E> result = new ArrayList<>();
+    for (int i = offset % n; i < in.size(); i += n) {
+      result.add(in.get(i));
+    }
+    return result;
+  }
 }

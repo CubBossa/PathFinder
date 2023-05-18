@@ -270,11 +270,11 @@ public class Messages {
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
-      .withDefault("<ins:prefix>Added modifier '<type>' from froup '<group>'.")
+      .withDefault("<ins:prefix>Added modifier '<type>' to froup '<group>'.")
       .withPlaceholders("type", "group")
       .build();
   public static final Message CMD_NG_MODIFY_REMOVE = new MessageBuilder("commands.node_group.modify.remove")
-      .withDefault("<ins:prefix>Removed Group Modifier '<type>' to group '<group>'.")
+      .withDefault("<ins:prefix>Removed modifier '<type>' from group '<group>'.")
       .withPlaceholders("type", "group")
       .build();
 

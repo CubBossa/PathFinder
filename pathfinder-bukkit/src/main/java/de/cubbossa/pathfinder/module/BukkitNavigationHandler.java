@@ -34,9 +34,9 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> {
 
     super.onLoad(pathPlugin);
 
-    findCommand = new FindCommand(pathPlugin);
-    findLocationCommand = new FindLocationCommand(pathPlugin);
-    cancelPathCommand = new CancelPathCommand(pathPlugin);
+    findCommand = new FindCommand();
+    findLocationCommand = new FindLocationCommand();
+    cancelPathCommand = new CancelPathCommand();
 
     if (pathPlugin instanceof BukkitPathFinder bpf) {
       // TODO

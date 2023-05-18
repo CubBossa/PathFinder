@@ -5,7 +5,7 @@ import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
-import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -13,6 +13,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.Messages;
@@ -41,20 +42,22 @@ import java.util.concurrent.CompletableFuture;
 
 public class EditModeMenu {
 
-  private final PathFinder pathFinder;
+  private final Storage storage;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
+  private Boolean undirectedEdgesMode;
+  private Boolean nodeChainMode;
   private UUID edgeStart = null;
-  private Boolean undirectedEdgesMode = true;
-  private Boolean nodeChainMode = false;
   private UUID chainEdgeStart = null;
 
-  public EditModeMenu(PathFinder pathFinder, NamespacedKey group,
-                      Collection<NodeType<?>> types) {
-    this.pathFinder = pathFinder;
+  public EditModeMenu(Storage storage, NamespacedKey group,
+                      Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
+    this.storage = storage;
     this.key = group;
     this.types = types;
+    this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
+    this.nodeChainMode = config.isNodeChainModeByDefault();
   }
 
   public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
@@ -71,7 +74,9 @@ public class EditModeMenu {
           FireworkEffectMeta meta = (FireworkEffectMeta) stack.getItemMeta();
           meta.setEffect(FireworkEffect.builder()
               // red if in edge chain mode, green in normal mode.
-              .withColor(Color.fromRGB(nodeChainMode ? 0xff0000 : 0x00ff00))
+              .withColor(Color.fromRGB(nodeChainMode
+                  ? chainEdgeStart == null ? 0x880000 : 0xff0000
+                  : 0x00ff00))
               .build());
           stack.setItemMeta(meta);
 
@@ -79,23 +84,46 @@ public class EditModeMenu {
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          pathFinder.getStorage().deleteNodes(List.of(context.getTarget().getNodeId()))
+          storage.deleteNodes(List.of(context.getTarget().getNodeId()))
               .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
         })
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
           PathPlayer<Player> p = CommonPathFinder.getInstance().wrap(context.getPlayer());
           if (chainEdgeStart != null) {
-            chainEdgeStart = null;
             p.sendMessage(Messages.E_NODE_CHAIN_NEW);
+            chainEdgeStart = null;
+            context.getMenu().refresh(context.getSlot());
             return;
           }
           p.sendMessage(nodeChainMode ? Messages.E_NODE_CHAIN_OFF : Messages.E_NODE_CHAIN_ON);
           nodeChainMode = !nodeChainMode;
+          context.getMenu().refresh(context.getSlot());
         })
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
           if (nodeChainMode) {
-            chainEdgeStart = context.getTarget().getNodeId();
-            CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_START);
+            if (chainEdgeStart == null) {
+              chainEdgeStart = context.getTarget().getNodeId();
+              context.getMenu().refresh(context.getSlot());
+              CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_START);
+            } else if (!chainEdgeStart.equals(context.getTarget().getNodeId())) {
+              Collection<CompletableFuture<?>> futures = new HashSet<>();
+              futures.add(storage.modifyNode(chainEdgeStart, node -> {
+                node.connect(context.getTarget().getNodeId());
+              }));
+              if (undirectedEdgesMode) {
+                futures.add(storage.modifyNode(context.getTarget().getNodeId(), node -> {
+                  node.connect(chainEdgeStart);
+                }));
+              }
+              CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+                chainEdgeStart = null;
+                context.getMenu().refresh(context.getSlot());
+                CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
+              }).exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+              });
+            }
           }
         })
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
@@ -106,12 +134,12 @@ public class EditModeMenu {
             if (type == null) {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
-            pathFinder.getStorage()
+            storage
                 .createAndLoadNode(type, VectorUtils.toInternal(pos))
-                .thenCompose(node -> pathFinder.getStorage().modifyNode(node.getNodeId(), n -> {
+                .thenCompose(node -> storage.modifyNode(node.getNodeId(), n -> {
                   if (nodeChainMode) {
                     if (chainEdgeStart != null) {
-                      pathFinder.getStorage().modifyNode(chainEdgeStart, o -> {
+                      storage.modifyNode(chainEdgeStart, o -> {
                         o.connect(node);
                       });
                       if (undirectedEdgesMode) {
@@ -123,8 +151,8 @@ public class EditModeMenu {
                   if (!(n instanceof Groupable groupable)) {
                     return;
                   }
-                  groupable.addGroup(pathFinder.getStorage().loadGroup(key).join().orElseThrow());
-                  groupable.addGroup(pathFinder.getStorage().loadGroup(CommonPathFinder.globalGroupKey()).join().orElseThrow());
+                  groupable.addGroup(storage.loadGroup(key).join().orElseThrow());
+                  groupable.addGroup(storage.loadGroup(CommonPathFinder.globalGroupKey()).join().orElseThrow());
                 }))
                 .exceptionally(throwable -> {
                   throwable.printStackTrace();
@@ -139,7 +167,7 @@ public class EditModeMenu {
     menu.setButton(1, Button.builder()
         .withItemStack(() -> {
           ItemStack stack = new LocalizedItem(
-              undirectedEdgesMode ? Material.STICK : Material.BLAZE_ROD,
+              !undirectedEdgesMode ? Material.STICK : Material.BLAZE_ROD,
               Messages.E_EDGE_TOOL_N, Messages.E_EDGE_TOOL_L
           ).createItem(editingPlayer);
           if (edgeStart != null) {
@@ -160,11 +188,11 @@ public class EditModeMenu {
             return;
           }
           Collection<CompletableFuture<?>> futures = new HashSet<>();
-          futures.add(pathFinder.getStorage().modifyNode(edgeStart, node -> {
+          futures.add(storage.modifyNode(edgeStart, node -> {
             node.connect(c.getTarget().getNodeId());
           }));
           if (undirectedEdgesMode) {
-            futures.add(pathFinder.getStorage().modifyNode(c.getTarget().getNodeId(), node -> {
+            futures.add(storage.modifyNode(c.getTarget().getNodeId(), node -> {
               node.connect(edgeStart);
             }));
           }
@@ -182,9 +210,10 @@ public class EditModeMenu {
           // switch mode
           if (edgeStart == null) {
             undirectedEdgesMode = !undirectedEdgesMode;
-            BukkitUtils.wrap(player).sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
-                .formatted(TagResolver.resolver("value",
-                    Tag.inserting(Messages.formatBool(!undirectedEdgesMode)))));
+            BukkitUtils.wrap(player).sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE.formatted(
+                TagResolver.resolver("value", Tag.inserting(Messages.formatBool(!undirectedEdgesMode)))
+            ));
+            context.getMenu().refresh(context.getSlot());
             return;
           }
           // cancel creation
@@ -194,15 +223,12 @@ public class EditModeMenu {
 
         })
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget().getStart(), node -> {
+          storage.modifyNode(context.getTarget().getStart(), node -> {
             node.disconnect(context.getTarget().getEnd());
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          Player player = context.getPlayer();
-          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), n -> {
-            n.disconnectAll();
-          });
+          storage.modifyNode(context.getTarget().getNodeId(), Node::disconnectAll);
         }));
 
 
@@ -211,7 +237,7 @@ public class EditModeMenu {
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
           //TODO of selected groups obviously
-          pathFinder.getStorage().loadNodes().thenAccept(nodes -> {
+          storage.loadNodes().thenAccept(nodes -> {
 
             double dist = -1;
             Node nearest = null;
@@ -242,14 +268,14 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N,
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
-          pathFinder.getStorage().loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
+          storage.loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
             if (node.isPresent() && node.get() instanceof Groupable groupable) {
               openGroupMenu(context.getPlayer(), groupable);
             }
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
+          storage.modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable groupable)) {
               return;
             }
@@ -266,11 +292,11 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
+          storage.modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable groupable)) {
               return;
             }
-            pathFinder.getStorage().loadGroups(multiTool).thenAccept(groups -> {
+            storage.loadGroups(multiTool).thenAccept(groups -> {
               groups.forEach(groupable::addGroup);
             });
             context.getPlayer().playSound(context.getPlayer().getLocation(),
@@ -278,7 +304,7 @@ public class EditModeMenu {
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          pathFinder.getStorage().modifyNode(context.getTarget().getNodeId(), node -> {
+          storage.modifyNode(context.getTarget().getNodeId(), node -> {
             if (!(node instanceof Groupable groupable)) {
               return;
             }
@@ -294,7 +320,7 @@ public class EditModeMenu {
 
   private void openGroupMenu(Player player, Groupable groupable) {
 
-    pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+    storage.loadAllGroups().thenAccept(nodeGroups -> {
       System.out.println("Loaded groups, thread: " + Thread.currentThread().getName());
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
@@ -323,7 +349,7 @@ public class EditModeMenu {
               System.out.println("Handle click, thread: " + Thread.currentThread().getName());
               if (!group.contains(groupable.getNodeId())) {
                 groupable.addGroup(group);
-                pathFinder.getStorage().saveNode(groupable).thenRun(() -> {
+                storage.saveNode(groupable).thenRun(() -> {
                   System.out.println("After save, thread: " + Thread.currentThread().getName());
                   c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                 });
@@ -333,7 +359,7 @@ public class EditModeMenu {
             .withClickHandler(Action.RIGHT, c -> {
               if (group.contains(groupable.getNodeId())) {
                 groupable.removeGroup(group.getKey());
-                pathFinder.getStorage().saveNode(groupable).join();
+                storage.saveNode(groupable).join();
 
                 c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
                 menu.refresh(menu.getListSlots());
@@ -346,7 +372,7 @@ public class EditModeMenu {
                 Messages.E_SUB_GROUP_RESET_L).createItem(player));
         presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
           groupable.clearGroups();
-          pathFinder.getStorage().saveNode(groupable).join();
+          storage.saveNode(groupable).join();
           menu.refresh(menu.getListSlots());
           c.getPlayer()
               .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f,
@@ -362,7 +388,7 @@ public class EditModeMenu {
   }
 
   private void openMultiToolMenu(Player player) {
-    pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+    storage.loadAllGroups().thenAccept(nodeGroups -> {
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
@@ -437,7 +463,7 @@ public class EditModeMenu {
       menu.addListEntry(Button.builder()
           .withItemStack(() -> new ItemStack(Material.CYAN_CONCRETE_POWDER))
           .withClickHandler(Action.RIGHT, c -> {
-            pathFinder.getStorage().createAndLoadNode(type, VectorUtils.toInternal(location));
+            storage.createAndLoadNode(type, VectorUtils.toInternal(location));
             menu.close(player);
           }));
     }

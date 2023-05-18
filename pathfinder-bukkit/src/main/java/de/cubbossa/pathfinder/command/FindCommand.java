@@ -1,21 +1,20 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.NodeSelection;
+import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
 
-public class FindCommand extends Command {
+public class FindCommand extends CommandTree {
 
-  public FindCommand(PathFinder pathFinder) {
-    super(pathFinder, "find");
+  public FindCommand() {
+    super("find");
     withAliases("gps", "navigate");
     withPermission(PathPerms.PERM_CMD_FIND);
-    withGeneratedHelp();
 
     then(CustomArgs.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
