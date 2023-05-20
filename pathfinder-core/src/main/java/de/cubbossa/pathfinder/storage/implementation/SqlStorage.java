@@ -441,11 +441,9 @@ public abstract class SqlStorage extends CommonStorage {
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
 
-    StorageImpl.ComparisonResult<Modifier> cmpMod =
-        StorageImpl.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
+    StorageImpl.ComparisonResult<Modifier> cmpMod = StorageImpl.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
     cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
-    cmpMod.toDeleteIfPresent(
-        mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getKey())));
+    cmpMod.toDeleteIfPresent(mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getKey())));
   }
 
   @Override
@@ -653,6 +651,8 @@ public abstract class SqlStorage extends CommonStorage {
         .insertInto(PATHFINDER_GROUP_MODIFIER_RELATION)
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, group)
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY, type.getKey())
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.DATA, cfg.saveToString())
+        .onDuplicateKeyUpdate()
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.DATA, cfg.saveToString())
         .execute();
   }

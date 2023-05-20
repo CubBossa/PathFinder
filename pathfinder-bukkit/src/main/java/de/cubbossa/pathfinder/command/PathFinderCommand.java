@@ -16,7 +16,7 @@ import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.translations.PluginTranslations;
+import de.cubbossa.translations.MessageBundle;
 import dev.jorel.commandapi.CommandTree;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -126,7 +126,7 @@ public class PathFinderCommand extends CommandTree {
 
           CompletableFuture.runAsync(() -> {
             CommonPathFinder pf = BukkitPathFinder.getInstance();
-            PluginTranslations translations = pf.getTranslations();
+            MessageBundle translations = pf.getTranslations();
 
             translations.clearCache();
             translations.writeLocale(Locale.ENGLISH); // TODO
@@ -153,7 +153,7 @@ public class PathFinderCommand extends CommandTree {
 
               CompletableFuture.runAsync(() -> {
                 CommonPathFinder pf = BukkitPathFinder.getInstance();
-                PluginTranslations translations = pf.getTranslations();
+                MessageBundle translations = pf.getTranslations();
 
                 translations.clearCache();
                 translations.writeLocale(Locale.ENGLISH); // TODO

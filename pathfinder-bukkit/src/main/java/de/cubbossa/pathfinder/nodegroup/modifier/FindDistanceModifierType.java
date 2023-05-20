@@ -3,11 +3,14 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -23,6 +26,11 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
   @Override
   public String getSubCommandLiteral() {
     return "find-distance";
+  }
+
+  @Override
+  public ComponentLike toComponents(FindDistanceModifier modifier) {
+    return Messages.CMD_NG_MOD_FINDDIST.formatted(Formatter.number("distance", modifier.distance()));
   }
 
   @Override

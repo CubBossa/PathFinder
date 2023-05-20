@@ -3,10 +3,13 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -24,6 +27,11 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
   @Override
   public String getSubCommandLiteral() {
     return "curve-length";
+  }
+
+  @Override
+  public ComponentLike toComponents(CurveLengthModifier modifier) {
+    return Messages.CMD_NG_MOD_CURVELEN.formatted(Formatter.number("length", modifier.curveLength()));
   }
 
   @Override

@@ -47,6 +47,7 @@ public class ListGroupsCmd extends PathFinderSubCommand {
             TagResolver r = TagResolver.builder()
                 .resolver(Placeholder.component("key", Component.text(group.getKey().toString())))
                 .resolver(Placeholder.component("size", Component.text(group.size())))
+                .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
                 .build();
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_LIST_LINE.formatted(r));
           },

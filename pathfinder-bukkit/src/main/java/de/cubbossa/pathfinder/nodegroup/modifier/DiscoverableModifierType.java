@@ -3,11 +3,14 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -23,6 +26,11 @@ public class DiscoverableModifierType implements ModifierType<DiscoverableModifi
   @Override
   public String getSubCommandLiteral() {
     return "discoverable";
+  }
+
+  @Override
+  public ComponentLike toComponents(DiscoverableModifier modifier) {
+    return Messages.CMD_NG_MOD_DISCOVER.formatted(Placeholder.component("name", modifier.getDisplayName()));
   }
 
   @Override

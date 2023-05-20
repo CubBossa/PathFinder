@@ -39,5 +39,5 @@ public class Keys {
   // FOREIGN KEY definitions
   // -------------------------------------------------------------------------
 
-    public static final ForeignKey<PathfinderSearchTermsRecord, PathfinderNodegroupsRecord> PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PATHFINDER_NODEGROUPS__PK = Internal.createForeignKey(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS, DSL.name("fk_pathfinder_search_terms_pathfinder_nodegroups__PK"), new TableField[] { PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.GROUP_KEY }, Keys.PATHFINDER_NODEGROUPS__PATHFINDER_NODEGROUPS__PK, new TableField[] { PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY }, true);
+  public static final ForeignKey<PathfinderSearchTermsRecord, PathfinderNodegroupsRecord> PATHFINDER_SEARCH_TERMS__FK_PATHFINDER_SEARCH_TERMS_PATHFINDER_NODEGROUPS__PK = Internal.createForeignKey(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS, DSL.name("fk_pathfinder_search_terms_pathfinder_nodegroups__PK"), new TableField[]{PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS.GROUP_KEY}, Keys.PATHFINDER_NODEGROUPS__PATHFINDER_NODEGROUPS__PK, new TableField[]{PathfinderNodegroups.PATHFINDER_NODEGROUPS.KEY}, true);
 }

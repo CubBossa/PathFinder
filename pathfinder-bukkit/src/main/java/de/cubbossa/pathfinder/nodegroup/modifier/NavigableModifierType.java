@@ -4,12 +4,16 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.navigationquery.SimpleSearchTerm;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,6 +49,13 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
     }
     throw new IOException(
         "Could not deserialize NavigableModifier, missing 'search-terms' attribute.");
+  }
+
+  @Override
+  public ComponentLike toComponents(NavigableModifier modifier) {
+    return Messages.CMD_NG_MOD_SEARCH.formatted(TagResolver.resolver("terms", Messages.formatList(
+        modifier.getSearchTermStrings(), Component::text
+    )));
   }
 
   @Override

@@ -12,7 +12,7 @@ public class CommonDiscoverableModifier implements DiscoverableModifier {
   private Component displayName;
 
   public CommonDiscoverableModifier(String nameFormat) {
-    this.nameFormat = nameFormat;
+    setNameFormat(nameFormat);
   }
 
   @Override

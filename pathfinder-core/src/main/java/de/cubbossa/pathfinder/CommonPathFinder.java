@@ -23,8 +23,8 @@ import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.translations.PluginTranslations;
-import de.cubbossa.translations.Translations;
+import de.cubbossa.translations.GlobalTranslations;
+import de.cubbossa.translations.MessageBundle;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -64,7 +64,7 @@ public abstract class CommonPathFinder implements PathFinder {
   @Setter
   protected PathFinderConf configuration;
   protected EventDispatcher<?> eventDispatcher;
-  protected PluginTranslations translations;
+  protected MessageBundle translations;
 
 
   public static NamespacedKey globalGroupKey() {
@@ -118,7 +118,7 @@ public abstract class CommonPathFinder implements PathFinder {
     // Data
     new ExamplesLoader(getLogger()).fetchExamples();
 
-    translations = Translations.builder("PathFinder")
+    translations = GlobalTranslations.builder("PathFinder")
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
         .withEnabledLocales(Locale.getAvailableLocales())
         .withPreferClientLanguage()
@@ -131,6 +131,17 @@ public abstract class CommonPathFinder implements PathFinder {
     translations.addStyle("main", Style.style(TextColor.color(0x6569EB)));
     translations.addStyle("main_light", Style.style(TextColor.color(0xA5A7F3)));
     translations.addStyle("main_dark", Style.style(TextColor.color(0x383EE5)));
+
+
+    translations.addStyle("offset", Style.style(TextColor.color(0x7B42F5)));
+    translations.addStyle("offset_light", Style.style(TextColor.color(0xAE8BF9)));
+    translations.addStyle("offset_dark", Style.style(TextColor.color(0x383EE5)));
+    translations.addStyle("accent", Style.style(TextColor.color(0xF26419)));
+    translations.addStyle("accent_light", Style.style(TextColor.color(0xF58B51)));
+    translations.addStyle("accent_dark", Style.style(TextColor.color(0xC14B0B)));
+    translations.addStyle("bg", Style.style(NamedTextColor.GRAY));
+    translations.addStyle("bg_light", Style.style(NamedTextColor.WHITE));
+    translations.addStyle("bg_dark", Style.style(NamedTextColor.DARK_GRAY));
 
     translations.addStyle("warm", Style.style(TextColor.color(0xE5D4C0)));
     translations.addStyle("empty", Style.style(TextColor.color(0x554640)));

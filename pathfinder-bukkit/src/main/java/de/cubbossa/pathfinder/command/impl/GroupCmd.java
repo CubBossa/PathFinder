@@ -75,7 +75,7 @@ public class GroupCmd extends PathFinderSubCommand {
         .tag("key", Messages.formatKey(group.getKey()))
         .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
         .resolver(Formatter.number("weight", group.getWeight()))
-        .resolver(Placeholder.component("modifiers", Messages.formatModifiers(sender, group.getModifiers())))
+        .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
         .build()));
   }
 
@@ -86,6 +86,9 @@ public class GroupCmd extends PathFinderSubCommand {
           TagResolver.resolver("group", Messages.formatKey(group.getKey())),
           TagResolver.resolver("type", Messages.formatKey(modifier.getKey()))
       ));
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
     });
   }
 
@@ -96,6 +99,9 @@ public class GroupCmd extends PathFinderSubCommand {
           TagResolver.resolver("group", Messages.formatKey(group.getKey())),
           TagResolver.resolver("type", Messages.formatKey(mod))
       ));
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
     });
   }
 }

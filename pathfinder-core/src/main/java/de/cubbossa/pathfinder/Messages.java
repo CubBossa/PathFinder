@@ -2,9 +2,11 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageBuilder;
@@ -32,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -81,19 +84,19 @@ public class Messages {
       .withPlaceholder("error")
       .build();
   public static final Message RELOAD_SUCCESS = new MessageBuilder("command.reload.success.general")
-      .withDefault("<ins:prefix>Successfully reloaded in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded in <offset_light><ms></offset_light><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_LANG = new MessageBuilder("command.reload.success.language")
-      .withDefault("<ins:prefix>Successfully reloaded language in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded language in <offset_light><ms></offset_light><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_FX = new MessageBuilder("command.reload.success.effects")
-      .withDefault("<ins:prefix>Successfully reloaded effects in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded effects in <offset_light><ms></offset_light><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_CFG = new MessageBuilder("command.reload.success.config")
-      .withDefault("<ins:prefix>Successfully reloaded config files in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded config files in <offset_light><ms></offset_light><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
 
@@ -111,7 +114,7 @@ public class Messages {
       .withDefault("""
           <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
           <gray>Require help? Checkout the <warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></warm>.
-          			
+                    
           <white>Commands:</white>
           <dark_gray>» </dark_gray><gray><warm>/roadmap</warm> - Group waypoints in roadmaps
           <dark_gray>» </dark_gray><gray><warm>/nodegroup</warm> - Add behaviour to multiple waypoints
@@ -148,25 +151,25 @@ public class Messages {
       .build();
 
   public static final Message CMD_RM_FORCE_FIND = new MessageBuilder("commands.roadmap.force_find")
-      .withDefault("<ins:prefix>Player <name> discovered <discovery>.")
+      .withDefault("<msg:prefix>Player <name> discovered <discovery>.")
       .withPlaceholder("name", "discovery")
       .build();
   public static final Message CMD_RM_FORCE_FORGET = new MessageBuilder("commands.roadmap.force_forget")
-      .withDefault("<ins:prefix>Player <name> forgot about <discovery>.")
+      .withDefault("<msg:prefix>Player <name> forgot about <discovery>.")
       .withPlaceholders("name", "discovery")
       .build();
 
   public static final Message CMD_N_CREATE = new MessageBuilder("commands.node.create")
-      .withDefault("<ins:prefix>Successfully created Node #<id>.")
-      .withTranslation(Locale.GERMAN, "<ins:prefix>Wegpunkt #<id> erfolgreich erstellt.")
+      .withDefault("<msg:prefix>Successfully created Node #<id>.")
+      .withTranslation(Locale.GERMAN, "<msg:prefix>Wegpunkt #<id> erfolgreich erstellt.")
       .withPlaceholders("id")
       .build();
   public static final Message CMD_N_DELETE = new MessageBuilder("commands.node.delete")
-      .withDefault("<ins:prefix>Successfully deleted <selection>.")
+      .withDefault("<msg:prefix>Successfully deleted <selection>.")
       .withPlaceholders("selection")
       .build();
   public static final Message CMD_N_UPDATED = new MessageBuilder("commands.node.moved")
-      .withDefault("<ins:prefix><gray>Updated <selection>.</gray>")
+      .withDefault("<msg:prefix>Updated <selection>.")
       .withPlaceholders("selection", "location")
       .build();
   public static final Message CMD_N_INFO = new MessageBuilder("commands.node.info")
@@ -183,19 +186,19 @@ public class Messages {
       .withDefault("<negative>No nodes found to display. Check your selection query.</negative>")
       .build();
   public static final Message CMD_N_SET_TANGENT = new MessageBuilder("commands.node.set_curve_length")
-      .withDefault("<ins:prefix>Curve-length set to <length> for <selection>.")
+      .withDefault("<msg:prefix>Curve-length set to <length> for <selection>.")
       .withPlaceholders("selection", "length")
       .build();
   public static final Message CMD_N_ADD_GROUP = new MessageBuilder("commands.node.add_group")
-      .withDefault("<ins:prefix>Added <nodes> to group <group>.")
+      .withDefault("<msg:prefix>Added <nodes> to group <group>.")
       .withPlaceholders("nodes", "group")
       .build();
   public static final Message CMD_N_REMOVE_GROUP = new MessageBuilder("commands.node.remove_groups")
-      .withDefault("<ins:prefix>Removed <nodes> from group <group>.")
+      .withDefault("<msg:prefix>Removed <nodes> from group <group>.")
       .withPlaceholders("nodes", "group")
       .build();
   public static final Message CMD_N_CLEAR_GROUPS = new MessageBuilder("commands.node.clear_groups")
-      .withDefault("<ins:prefix>Cleared all groups for <nodes>.")
+      .withDefault("<msg:prefix>Cleared all groups for <nodes>.")
       .withPlaceholders("nodes")
       .build();
 
@@ -212,7 +215,7 @@ public class Messages {
       .withPlaceholders("roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
-      .withDefault("<ins:prefix>Connected <start> to <end>.")
+      .withDefault("<msg:prefix>Connected <start> to <end>.")
       .withPlaceholders("start", "end")
       .build();
   public static final Message CMD_N_CONNECT_IDENTICAL = new MessageBuilder("commands.node.connect.identical")
@@ -224,7 +227,7 @@ public class Messages {
       .withPlaceholders("start", "end")
       .build();
   public static final Message CMD_N_DISCONNECT = new MessageBuilder("commands.node.disconnect.success")
-      .withDefault("<ins:prefix>Disconnected <start> from <end>.")
+      .withDefault("<msg:prefix>Disconnected <start> from <end>.")
       .withPlaceholders("start", "end")
       .build();
 
@@ -236,11 +239,11 @@ public class Messages {
       .withPlaceholders("name")
       .build();
   public static final Message CMD_NG_CREATE = new MessageBuilder("commands.node_group.create")
-      .withDefault("<ins:prefix><gray>Node group created: <name>.</gray>")
+      .withDefault("<msg:prefix>Node group created: <name>.")
       .withPlaceholders("name")
       .build();
   public static final Message CMD_NG_DELETE = new MessageBuilder("commands.node_group.delete")
-      .withDefault("<ins:prefix><gray>Node group deleted: <name>.</gray>")
+      .withDefault("<msg:prefix>Node group deleted: <name>.")
       .withPlaceholders("name")
       .build();
   public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
@@ -253,7 +256,7 @@ public class Messages {
           <offset>Group '<key>'</offset>
           <dark_gray>» </dark_gray><gray>Nodes: <main><nodes></main>
           <dark_gray>» </dark_gray><gray>Weight: <main><weight></main>
-          <dark_gray>» </dark_gray><gray>Modifiers: <main><curve-length></main>
+          <modifiers:"\n":"<dark_gray>» </dark_gray><gray>"/>
           """)
       .withPlaceholders("modifiers", "key", "nodes", "weight")
       .build();
@@ -270,31 +273,55 @@ public class Messages {
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
-      .withDefault("<ins:prefix>Added modifier '<type>' to froup '<group>'.")
+      .withDefault("<msg:prefix>Added modifier '<type>' to froup '<group>'.")
       .withPlaceholders("type", "group")
       .build();
   public static final Message CMD_NG_MODIFY_REMOVE = new MessageBuilder("commands.node_group.modify.remove")
-      .withDefault("<ins:prefix>Removed modifier '<type>' from group '<group>'.")
+      .withDefault("<msg:prefix>Removed modifier '<type>' from group '<group>'.")
       .withPlaceholders("type", "group")
+      .build();
+  public static final Message CMD_NG_MOD_CURVELEN = new MessageBuilder("commands.node_group.modifier.curvelength")
+      .withDefault("Curve length: <length:#.##>")
+      .withPlaceholder("length", "Use java number formatting to provide custom formatting.")
+      .build();
+  public static final Message CMD_NG_MOD_DISCOVER = new MessageBuilder("commands.node_group.modifier.discoverable")
+      .withDefault("Discover as: <name>")
+      .withPlaceholder("name", "The name that is being shown when discovering this group.")
+      .build();
+  public static final Message CMD_NG_MOD_FINDDIST = new MessageBuilder("commands.node_group.modifier.finddistance")
+      .withDefault("Find distance: <distance:#.##>")
+      .withPlaceholder("distance", "Use java number formatting to provide custom formatting.")
+      .build();
+  public static final Message CMD_NG_MOD_SEARCH = new MessageBuilder("commands.node_group.modifier.navigable")
+      .withDefault("Search terms: <terms:\"<gray>, </gray>\">")
+      .withPlaceholder("terms", "A list tag for all search terms, use <terms:between:beforeeach>")
+      .build();
+  public static final Message CMD_NG_MOD_PERM = new MessageBuilder("commands.node_group.modifier.permission")
+      .withDefault("Permission: <permission>")
+      .withPlaceholder("permission")
+      .build();
+  public static final Message CMD_NG_MOD_VIS = new MessageBuilder("commands.node_group.modifier.visualizer")
+      .withDefault("Visualizer: <visualizer>")
+      .withPlaceholder("visualizer")
       .build();
 
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
-      .withDefault("<ins:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
+      .withDefault("<msg:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
       .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
-      .withDefault("<ins:prefix>No matching waypoints could be found.")
+      .withDefault("<msg:prefix>No matching waypoints could be found.")
       .build();
   public static final Message CMD_FIND_TOO_FAR = new MessageBuilder("commands.find.too_far_away")
-      .withDefault("<ins:prefix>The given location is too far away from any waypoint.")
+      .withDefault("<msg:prefix>The given location is too far away from any waypoint.")
       .build();
   public static final Message CMD_FIND_BLOCKED = new MessageBuilder("commands.find.no_path_found")
-      .withDefault("<ins:prefix>No possible way could be found to reach that target.")
+      .withDefault("<msg:prefix>No possible way could be found to reach that target.")
       .build();
   public static final Message CMD_FIND_NO_VIS = new MessageBuilder("commands.find.no_visualizer_selected")
-      .withDefault("<ins:prefix>No visualizer is set for this roadmap.")
+      .withDefault("<msg:prefix>No visualizer is set for this roadmap.")
       .build();
   public static final Message CMD_CANCEL = new MessageBuilder("commands.cancel_path")
-      .withDefault("<ins:prefix>Navigation cancelled.")
+      .withDefault("<msg:prefix>Navigation cancelled.")
       .build();
 
 
@@ -312,29 +339,29 @@ public class Messages {
       .build();
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
-      .withDefault("<ins:prefix><gray>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.</gray>")
+      .withDefault("<msg:prefix>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.")
       .withPlaceholders("key", "name", "name-format", "type")
       .build();
   public static final Message CMD_VIS_NAME_EXISTS = new MessageBuilder("commands.path_visualizer.create.already_exists")
       .withDefault("<negative>Another visualizer with this name already exists.")
       .build();
   public static final Message CMD_VIS_DELETE_SUCCESS = new MessageBuilder("commands.path_visualizer.delete.success")
-      .withDefault("<ins:prefix><gray>Successfully deleted Visualizer <offset><name></offset>.</gray>")
+      .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><name></offset>.")
       .withPlaceholders("key", "name", "nameformat")
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_NAME = new MessageBuilder("commands.path_visualizer.set.name")
-      .withDefault("<ins:prefix><gray>Changed name of <old-value> to <value>.")
+      .withDefault("<msg:prefix>Changed name of <old-value> to <value>.")
       .withPlaceholders("key", "name", "type", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PERM = new MessageBuilder("commands.path_visualizer.set.perm")
-      .withDefault("<ins:prefix><gray>Changed permission of <name> from <old-value> to <value>.")
+      .withDefault("<msg:prefix>Changed permission of <name> from <old-value> to <value>.")
       .withPlaceholders("key", "name", "type", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set.interval")
-      .withDefault("<ins:prefix><gray>Changed <property> for <name> from <old-value> to <value>.")
+      .withDefault("<msg:prefix>Changed <property> for <name> from <old-value> to <value>.")
       .withPlaceholders("key", "name", "type", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_IMPORT_EXISTS = new MessageBuilder("commands.path_visualizer.import.already_exists")
@@ -344,7 +371,7 @@ public class Messages {
       .withDefault("<negative>Could not import file, there is no example file with this name.</negative>")
       .build();
   public static final Message CMD_VIS_IMPORT_SUCCESS = new MessageBuilder("commands.path_visualizer.import.successful")
-      .withDefault("<ins:prefix>Successfully imported Visualizer: <name>")
+      .withDefault("<msg:prefix>Successfully imported Visualizer: <name>")
       .withPlaceholders("key", "name")
       .build();
   public static final Message CMD_VIS_COMBINED_INFO = new MessageBuilder("commands.path_visualizer.type.combined.info")
@@ -356,14 +383,14 @@ public class Messages {
       .withPlaceholder("entries[:<separator>][:<prefix>][:<suffix>]")
       .build();
   public static final Message CMD_VIS_COMBINED_ADD = new MessageBuilder("commands.path_visualizer.type.combined.add")
-      .withDefault("<ins:prefix>Added <child> as child to <visualizer>.")
+      .withDefault("<msg:prefix>Added <child> as child to <visualizer>.")
       .withPlaceholders("child", "visualizer")
       .build();
   public static final Message CMD_VIS_COMBINED_REMOVE = new MessageBuilder("commands.path_visualizer.type.combined.remove")
-      .withDefault("<ins:prefix>Removed <child> from children for <visualizer>.")
+      .withDefault("<msg:prefix>Removed <child> from children for <visualizer>.")
       .build();
   public static final Message CMD_VIS_COMBINED_CLEAR = new MessageBuilder("commands.path_visualizer.type.combined.clear")
-      .withDefault("<ins:prefix>Cleared all children for <visualizer>.")
+      .withDefault("<msg:prefix>Cleared all children for <visualizer>.")
       .build();
   public static final Message CMD_VIS_INFO_PARTICLES = new MessageBuilder("commands.path_visualizer.type.particle_visualizer.info")
       .withDefault("""
@@ -463,16 +490,16 @@ public class Messages {
           <gray>» <yellow>left-click air:</yellow> Activate chain mode</gray>""")
       .build();
   public static final Message E_NODE_CHAIN_ON = new MessageBuilder("editor.node_tool.chain.on")
-      .withDefault("<ins:prefix>Chain mode activated. A new node is connected to the latter.")
+      .withDefault("<msg:prefix>Chain mode activated. A new node is connected to the latter.")
       .build();
   public static final Message E_NODE_CHAIN_OFF = new MessageBuilder("editor.node_tool.chain.off")
-      .withDefault("<ins:prefix>Chain mode cancelled.")
+      .withDefault("<msg:prefix>Chain mode cancelled.")
       .build();
   public static final Message E_NODE_CHAIN_NEW = new MessageBuilder("editor.node_tool.chain.new")
-      .withDefault("<ins:prefix>New chain started - left-click again to turn off chain mode")
+      .withDefault("<msg:prefix>New chain started - left-click again to turn off chain mode")
       .build();
   public static final Message E_NODE_CHAIN_START = new MessageBuilder("editor.node_tool.chain.new_start")
-      .withDefault("<ins:prefix>Chain start point set.")
+      .withDefault("<msg:prefix>Chain start point set.")
       .build();
   public static final Message E_EDGE_TOOL_N = new MessageBuilder("editor.toolbar.edge_tool.name")
       .withDefault("<white><u>Edge Tool</u></white>")
@@ -485,10 +512,10 @@ public class Messages {
           <gray>» <yellow>left-click air:</yellow> Toggle directed</gray>""")
       .build();
   public static final Message E_EDGE_TOOL_CANCELLED = new MessageBuilder("editor.toolbar.edge_tool.cancelled")
-      .withDefault("<ins:prefix>Node connection mode cancelled")
+      .withDefault("<msg:prefix>Node connection mode cancelled")
       .build();
   public static final Message E_EDGE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.edge_tool.directed")
-      .withDefault("<ins:prefix>Edges directed: <main><value><main>")
+      .withDefault("<msg:prefix>Edges directed: <main><value><main>")
       .withPlaceholders("value")
       .build();
   public static final Message E_GROUP_TOOL_N = new MessageBuilder("editor.toolbar.group_tool.name")
@@ -547,7 +574,7 @@ public class Messages {
           "navigable", "discoverable", "find-distance", "search-terms")
       .build();
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
-      .withDefault("<ins:prefix>Target reached.")
+      .withDefault("<msg:prefix>Target reached.")
       .build();
   public static final Message LOCATION_FOUND_SINGLE_RM_PERCENT_FORMAT = new MessageBuilder("general.target_discovered.percent")
       .withDefault("<roadmap>: <percent>")
@@ -594,8 +621,13 @@ public class Messages {
         g -> Component.text(g.getKey().toString()));
   }
 
-  public static Component formatModifiers(CommandSender sender, Collection<Modifier> modifiers) {
-    return Component.text("TODO");
+  public static TagResolver formatModifiers(String key, Collection<Modifier> modifiers) {
+    return TagResolver.resolver(key, Messages.formatList(modifiers, modifier -> {
+      Optional<ModifierType<Modifier>> type = PathFinderProvider.get().getModifierRegistry().getType(modifier.getKey());
+      return type.isPresent() && type.get() instanceof ModifierCommandExtension ext
+          ? ext.toComponents(modifier)
+          : Component.text("Unknown modifier '" + modifier.getKey() + "'.");
+    }));
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,

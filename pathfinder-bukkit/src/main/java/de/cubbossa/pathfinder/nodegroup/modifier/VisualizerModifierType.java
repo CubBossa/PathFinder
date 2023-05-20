@@ -5,11 +5,14 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -25,6 +28,11 @@ public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
   @Override
   public String getSubCommandLiteral() {
     return "visualizer";
+  }
+
+  @Override
+  public ComponentLike toComponents(VisualizerModifier modifier) {
+    return Messages.CMD_NG_MOD_VIS.formatted(Placeholder.component("visualizer", modifier.visualizer().getDisplayName()));
   }
 
   @Override
