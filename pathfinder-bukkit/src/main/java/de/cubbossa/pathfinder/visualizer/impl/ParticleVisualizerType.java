@@ -120,7 +120,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
     }
     if (offset != null) {
       VisualizerHandler.getInstance()
-          .setProperty(BukkitUtils.wrap(sender), visualizer, offset, "speed", true, visualizer::getOffset,
+          .setProperty(BukkitUtils.wrap(sender), visualizer, offset, "offset", true, visualizer::getOffset,
               visualizer::setOffset);
     }
   }

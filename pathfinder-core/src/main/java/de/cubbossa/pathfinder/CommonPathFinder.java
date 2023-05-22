@@ -116,7 +116,7 @@ public abstract class CommonPathFinder implements PathFinder {
     miniMessage = MiniMessage.miniMessage();
 
     // Data
-    new ExamplesLoader(getLogger()).fetchExamples();
+    new ExamplesLoader(visualizerTypeRegistry).getExampleFiles();
 
     translations = GlobalTranslations.builder("PathFinder")
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
@@ -165,11 +165,6 @@ public abstract class CommonPathFinder implements PathFinder {
     storage.setEventDispatcher(eventDispatcher);
     storage.setLogger(getLogger());
     storage.init();
-
-    ExamplesLoader examples = ExamplesLoader.getInstance();
-    examples.afterFetch(() -> {
-      examples.getExamples().forEach(examples::loadVisualizer);
-    });
 
     nodeTypeRegistry.register(new WaypointType(
         new WaypointStorage(storage),

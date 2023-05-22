@@ -36,7 +36,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<FindDistanceModifier, CommandExecutor> consumer) {
     return tree.then(new FloatArgument("find-distance", .1f).executes((commandSender, objects) -> {
-      consumer.apply(new CommonFindDistanceModifier(objects.getUnchecked(1))).run(commandSender, objects);
+      consumer.apply(new CommonFindDistanceModifier(objects.<Float>getUnchecked(1).doubleValue())).run(commandSender, objects);
     }));
   }
 

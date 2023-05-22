@@ -71,6 +71,10 @@ public class Messages {
   public static final Message GEN_NULL = new MessageBuilder("general.null")
       .withDefault("<main>null</main>")
       .build();
+  public static final Message GEN_NODE = new MessageBuilder("general.node")
+      .withDefault("(<world>; <location>)")
+      .withPlaceholders("id", "world", "location")
+      .build();
   public static final Message GEN_NODE_SEL = new MessageBuilder("general.selection.nodes")
       .withDefault("<white><u><amount> Nodes</u></white>")
       .withPlaceholders("amount")
@@ -185,10 +189,6 @@ public class Messages {
   public static final Message CMD_N_INFO_NO_SEL = new MessageBuilder("commands.node.info_no_selection")
       .withDefault("<negative>No nodes found to display. Check your selection query.</negative>")
       .build();
-  public static final Message CMD_N_SET_TANGENT = new MessageBuilder("commands.node.set_curve_length")
-      .withDefault("<msg:prefix>Curve-length set to <length> for <selection>.")
-      .withPlaceholders("selection", "length")
-      .build();
   public static final Message CMD_N_ADD_GROUP = new MessageBuilder("commands.node.add_group")
       .withDefault("<msg:prefix>Added <nodes> to group <group>.")
       .withPlaceholders("nodes", "group")
@@ -216,14 +216,6 @@ public class Messages {
       .build();
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
       .withDefault("<msg:prefix>Connected <start> to <end>.")
-      .withPlaceholders("start", "end")
-      .build();
-  public static final Message CMD_N_CONNECT_IDENTICAL = new MessageBuilder("commands.node.connect.identical")
-      .withDefault("<negative>Nodes cannot be connected to themselves: <start>>")
-      .withPlaceholders("start", "end")
-      .build();
-  public static final Message CMD_N_CONNECT_ALREADY_CONNECTED = new MessageBuilder("commands.node.connect.already_connected")
-      .withDefault("<negative><start> and <end> are already connected.")
       .withPlaceholders("start", "end")
       .build();
   public static final Message CMD_N_DISCONNECT = new MessageBuilder("commands.node.disconnect.success")
@@ -317,9 +309,6 @@ public class Messages {
   public static final Message CMD_FIND_BLOCKED = new MessageBuilder("commands.find.no_path_found")
       .withDefault("<msg:prefix>No possible way could be found to reach that target.")
       .build();
-  public static final Message CMD_FIND_NO_VIS = new MessageBuilder("commands.find.no_visualizer_selected")
-      .withDefault("<msg:prefix>No visualizer is set for this roadmap.")
-      .build();
   public static final Message CMD_CANCEL = new MessageBuilder("commands.cancel_path")
       .withDefault("<msg:prefix>Navigation cancelled.")
       .build();
@@ -351,14 +340,6 @@ public class Messages {
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
-      .build();
-  public static final Message CMD_VIS_SET_NAME = new MessageBuilder("commands.path_visualizer.set.name")
-      .withDefault("<msg:prefix>Changed name of <old-value> to <value>.")
-      .withPlaceholders("key", "name", "type", "value", "old-value")
-      .build();
-  public static final Message CMD_VIS_SET_PERM = new MessageBuilder("commands.path_visualizer.set.perm")
-      .withDefault("<msg:prefix>Changed permission of <name> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "type", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set.interval")
       .withDefault("<msg:prefix>Changed <property> for <name> from <old-value> to <value>.")
@@ -476,10 +457,6 @@ public class Messages {
       )
       .build();
 
-  public static final Message E_NODE_NAME = new MessageBuilder("editor.node_name")
-      .withDefault("<list>")
-      .withPlaceholders("list")
-      .build();
   public static final Message E_NODE_TOOL_N = new MessageBuilder("editor.toolbar.node_tool.name")
       .withDefault("<white><u>Node Tool</u></white>")
       .build();
@@ -576,22 +553,6 @@ public class Messages {
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
       .withDefault("<msg:prefix>Target reached.")
       .build();
-  public static final Message LOCATION_FOUND_SINGLE_RM_PERCENT_FORMAT = new MessageBuilder("general.target_discovered.percent")
-      .withDefault("<roadmap>: <percent>")
-      .withPlaceholders("roadmap", "percent")
-      .build();
-  public static final Message LOCATION_FOUND_TITLE_1 = new MessageBuilder("general.target_discovered.title")
-      .withDefault("")
-      .withPlaceholders("name", "roadmaps")
-      .build();
-  public static final Message LOCATION_FOUND_TITLE_2 = new MessageBuilder("general.target_discovered.subtitle")
-      .withDefault("You found <name>")
-      .withPlaceholders("name", "roadmaps")
-      .build();
-  public static final Message LOCATION_FOUND_AB = new MessageBuilder("general.target_discovered.actionbar")
-      .withDefault("Discovered: <name>")
-      .withPlaceholders("name")
-      .build();
 
   public static final Message EDITM_NG_DELETED = new MessageBuilder("editmode.group_deleted")
       .withDefault("<negative>Your currently edited group was deleted by another user.")
@@ -611,14 +572,18 @@ public class Messages {
   }
 
   public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
-    return formatGroupInHover(sender, GEN_NODE_SEL, nodes,
-        node -> Component.text("#" + node));
+    return formatGroupInHover(sender, GEN_NODE_SEL, nodes, node -> formatNode(sender, node));
   }
 
-  public static Component formatNodeGroups(CommandSender sender,
-                                           Collection<SimpleNodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups,
-        g -> Component.text(g.getKey().toString()));
+  public static Component formatNode(CommandSender sender, Node node) {
+    return GEN_NODE.formatted(
+        Placeholder.parsed("world", node.getLocation().getWorld().getName()),
+        Placeholder.component("location", formatVector(node.getLocation().asVector()))
+    ).asComponent(audienceSender(sender));
+  }
+
+  public static Component formatNodeGroups(CommandSender sender, Collection<SimpleNodeGroup> groups) {
+    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
   }
 
   public static TagResolver formatModifiers(String key, Collection<Modifier> modifiers) {
@@ -628,6 +593,10 @@ public class Messages {
           ? ext.toComponents(modifier)
           : Component.text("Unknown modifier '" + modifier.getKey() + "'.");
     }));
+  }
+
+  public static Component formatThrowable(Throwable throwable) {
+    return Component.text(throwable.getMessage(), NamedTextColor.RED);
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
@@ -685,8 +654,7 @@ public class Messages {
     return formatList(componentLikes);
   }
 
-  public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(
-      Collection<T> entries) {
+  public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries) {
     return (queue, context) -> {
       MiniMessage mm = PathFinderProvider.get().getMiniMessage();
       ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);

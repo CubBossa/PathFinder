@@ -67,7 +67,8 @@ public class VisualizerHandler implements VisualizerTypeRegistry {
   public <T> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T value,
                               String property, boolean visual, Supplier<T> getter,
                               Consumer<T> setter) {
-    setProperty(sender, visualizer, value, property, visual, getter, setter, t -> Component.text(t.toString()));
+    setProperty(sender, visualizer, value, property, visual, getter, setter, t ->
+        Component.text(t == null ? "null" : t.toString()));
   }
 
   public <T> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T value,

@@ -52,6 +52,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
   final Map<IntPair, Collection<T>> chunkNodeMap;
   final Map<T, Integer> nodeEntityMap;
   final Map<Integer, T> entityNodeMap;
+  final double renderDistance;
 
   public AbstractArmorstandRenderer(JavaPlugin plugin) {
     entityId = 0xffffabcd;
@@ -61,6 +62,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     nodeEntityMap = new HashMap<>();
     entityNodeMap = new HashMap<>();
     players = new HashSet<>();
+    renderDistance = 20;
 
     protocolManager.addPacketListener(new PacketAdapter(plugin,
         ListenerPriority.NORMAL,

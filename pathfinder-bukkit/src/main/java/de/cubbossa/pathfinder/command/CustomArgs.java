@@ -347,15 +347,16 @@ public class CustomArgs {
    * @param nodeName The name of the command argument in the command structure
    * @return The CustomArgument instance
    */
-  public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(
-      String nodeName) {
-    return CommandArgument.arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName),
-        i -> BukkitPathFinder.convert(i.currentInput())).includeSuggestions(
-        suggestNamespacedKeys(sender -> PathFinderProvider.get().getStorage().loadAllGroups()
-            .thenApply(nodeGroups -> nodeGroups.stream()
-                .filter(g -> g.hasModifier(DiscoverableModifier.class))
-                .map(NodeGroup::getKey)
-                .collect(Collectors.toList())))));
+  public CommandArgument<NamespacedKey, Argument<NamespacedKey>> discoverableArgument(String nodeName) {
+    return (CommandArgument<NamespacedKey, Argument<NamespacedKey>>) CommandArgument.arg(
+            new CustomArgument<>(new NamespacedKeyArgument(nodeName), i -> BukkitPathFinder.convert(i.currentInput())))
+        .includeSuggestions(suggestNamespacedKeys(sender -> PathFinderProvider.get().getStorage().loadAllGroups()
+                .thenApply(nodeGroups -> nodeGroups.stream()
+                    .filter(g -> g.hasModifier(DiscoverableModifier.KEY))
+                    .map(NodeGroup::getKey)
+                    .collect(Collectors.toList()))
+            )
+        );
   }
 
   /**
@@ -376,21 +377,21 @@ public class CustomArgs {
             BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
             // Find a node that matches all required filters
             // return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
-        return true;
-      }).toList();
+            return true;
+          }).toList();
 
-      try {
-        Map<Node, Collection<NavigableModifier>> map = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
-        Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.getOrDefault(n, new HashSet<>()).stream()
-            .map(NavigableModifier::getSearchTerms)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toSet()));
-        return new NodeSelection(target);
-      } catch (Throwable t) {
-        t.printStackTrace();
-        throw new RuntimeException(t);
-      }
-    }))
+          try {
+            Map<Node, Collection<NavigableModifier>> map = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
+            Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.getOrDefault(n, new HashSet<>()).stream()
+                .map(NavigableModifier::getSearchTerms)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()));
+            return new NodeSelection(target);
+          } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+          }
+        }))
         .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
           if (!(suggestionInfo.sender() instanceof Player)) {
             return suggestionsBuilder.buildFuture();

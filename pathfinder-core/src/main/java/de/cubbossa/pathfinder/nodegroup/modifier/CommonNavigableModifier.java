@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
@@ -80,5 +81,15 @@ public class CommonNavigableModifier implements NavigableModifier {
   public boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
     return searchTerms.stream()
         .anyMatch(t -> t.getIdentifier().equals(term) && t.matches(attributes));
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return !(obj instanceof Modifier mod) || getKey().equals(mod.getKey());
+  }
+
+  @Override
+  public int hashCode() {
+    return getKey().hashCode();
   }
 }

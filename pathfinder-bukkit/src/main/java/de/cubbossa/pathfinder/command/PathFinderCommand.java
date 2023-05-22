@@ -286,6 +286,10 @@ public class PathFinderCommand extends CommandTree {
               .resolver(Placeholder.unparsed("name", target.getName()))
               .resolver(Placeholder.component("name", target.getDisplayName()))
               .tag("discovery", Tag.inserting(mod.get().getDisplayName())).build()));
+        })
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
         });
   }
 }

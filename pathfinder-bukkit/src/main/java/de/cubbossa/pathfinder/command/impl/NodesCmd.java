@@ -167,6 +167,10 @@ public class NodesCmd extends PathFinderSubCommand {
         getPathfinder().getStorage().saveNode(s);
       }
     }
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DISCONNECT.formatted(
+        Placeholder.component("start", Messages.formatNodeSelection(sender, start)),
+        Placeholder.component("end", Messages.formatNodeSelection(sender, end))
+    ));
   }
 
   private void connectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
@@ -182,6 +186,10 @@ public class NodesCmd extends PathFinderSubCommand {
         getPathfinder().getStorage().saveNode(s);
       }
     }
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CONNECT.formatted(
+        Placeholder.component("start", Messages.formatNodeSelection(sender, start)),
+        Placeholder.component("end", Messages.formatNodeSelection(sender, end))
+    ));
   }
 
   private void teleportNodes(CommandSender sender, NodeSelection nodes, Location location) {

@@ -97,6 +97,7 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
 
   @Override
   public <C extends Modifier> void removeModifier(NamespacedKey key) {
+    modifiers.remove(key);
   }
 
   @Override
