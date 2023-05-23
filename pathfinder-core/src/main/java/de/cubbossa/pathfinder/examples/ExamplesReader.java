@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.examples;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

@@ -105,7 +105,7 @@ public abstract class StorageTest extends PathFinderTest {
       group.addModifier(m);
     }));
     NodeGroup after = assertGroupExists(gk);
-    assertTrue(after.hasModifier(TestModifier.class));
+    assertTrue(after.hasModifier(TestModifierType.KEY));
     assertTrue(after.contains(a.getNodeId()));
 
     Map<Node, Collection<TestModifier>> nodes = assertResult(() -> storage.loadNodes(TestModifierType.KEY));

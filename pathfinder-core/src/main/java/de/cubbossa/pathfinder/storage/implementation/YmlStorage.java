@@ -36,6 +36,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.units.qual.N;
+import org.jooq.impl.QOM;
 
 public class YmlStorage extends CommonStorage {
 
@@ -267,7 +269,14 @@ public class YmlStorage extends CommonStorage {
       ConfigurationSection modifiers = cfg.getConfigurationSection("modifier");
       if (modifiers != null) {
         for (String key : modifiers.getKeys(false)) {
-          Optional<ModifierType<Modifier>> type = modifierRegistry.getType(NamespacedKey.fromString(key));
+          NamespacedKey namespacedKey;
+          try {
+            namespacedKey = NamespacedKey.fromString(key);
+          } catch (Throwable t) {
+            getLogger().log(Level.SEVERE, "Error while loading group.", t);
+            continue;
+          }
+          Optional<ModifierType<Modifier>> type = modifierRegistry.getType(namespacedKey);
           if (type.isEmpty()) {
             logger.log(Level.WARNING, "Could not load modifier, no registered type by name '" + key + "'.");
             continue;
@@ -295,7 +304,7 @@ public class YmlStorage extends CommonStorage {
           logger.log(Level.WARNING, "Could not store modifier of type '" + modifier.getClass() + "'.");
           return;
         }
-        cfg.set("modifier." + modifier.getClass().getName().replace(".", "_"), type.get().serialize(modifier));
+        cfg.set("modifier." + modifier.getKey(), type.get().serialize(modifier));
       });
     });
   }

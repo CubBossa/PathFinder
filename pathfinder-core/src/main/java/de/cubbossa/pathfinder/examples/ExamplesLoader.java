@@ -1,22 +1,25 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.examples;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import lombok.Getter;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.StringReader;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class ExamplesLoader {
 
   private static final String LINK = "https://api.github.com/repos/CubBossa/PathFinder/contents/examples";
-  @Getter
-  private static ExamplesLoader instance;
   private final List<ExamplesReader.ExampleFile> files = new ArrayList<>();
   private final ExamplesReader reader;
   private final VisualizerTypeRegistry registry;
@@ -24,7 +27,6 @@ public class ExamplesLoader {
   private boolean cached = false;
 
   public ExamplesLoader(VisualizerTypeRegistry registry) {
-    instance = this;
     this.registry = registry;
     reader = new ExamplesReader();
   }
@@ -46,18 +48,21 @@ public class ExamplesLoader {
         .thenApply(exampleFiles -> exampleFiles.stream().parallel()
             .map(this::loadVisualizer)
             .map(CompletableFuture::join)
+            .map(Map.Entry::getKey)
             .collect(Collectors.toSet()));
   }
 
-  public CompletableFuture<PathVisualizer<?, ?>> loadVisualizer(ExamplesReader.ExampleFile file) {
+  public <V extends PathVisualizer<?, ?>>
+  CompletableFuture<Map.Entry<V, VisualizerType<V>>> loadVisualizer(ExamplesReader.ExampleFile file) {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values = YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
       String typeString = (String) values.get("type");
-      Optional<VisualizerType<PathVisualizer<?, ?>>> type = registry.getType(NamespacedKey.fromString(typeString));
+      Optional<VisualizerType<V>> type = registry.<V>getType(NamespacedKey.fromString(typeString));
       if (type.isEmpty()) {
-        throw new RuntimeException("Could not parse visualizer of type '" + typeString + "'. Are you missing some additional plugins?");
+        throw new RuntimeException(
+            "Could not parse visualizer of type '" + typeString + "'. Are you missing some additional plugins?");
       }
-      return parse(file, type.get(), values);
+      return new AbstractMap.SimpleEntry<>(parse(file, type.get(), values), type.get());
     });
   }
 

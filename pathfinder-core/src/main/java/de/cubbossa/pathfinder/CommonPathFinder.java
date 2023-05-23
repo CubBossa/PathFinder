@@ -13,7 +13,6 @@ import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
-import de.cubbossa.pathfinder.storage.ExamplesLoader;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
@@ -116,8 +115,6 @@ public abstract class CommonPathFinder implements PathFinder {
     miniMessage = MiniMessage.miniMessage();
 
     // Data
-    new ExamplesLoader(visualizerTypeRegistry).getExampleFiles();
-
     translations = GlobalTranslations.builder("PathFinder")
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
         .withEnabledLocales(Locale.getAvailableLocales())

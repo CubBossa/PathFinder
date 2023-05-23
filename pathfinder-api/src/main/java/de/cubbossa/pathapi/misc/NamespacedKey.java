@@ -1,11 +1,15 @@
 package de.cubbossa.pathapi.misc;
 
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import lombok.Getter;
 
 @Getter
 public final class NamespacedKey {
 
+  private static final Pattern PATTERN = Pattern.compile("[a-z0-9-]+:[a-z0-9-]+");
+  private static final Predicate<String> PATTERN_TEST = PATTERN.asMatchPredicate();
   private static final char SEPARATOR = ':';
   private final String namespace;
   private final String key;
@@ -16,6 +20,9 @@ public final class NamespacedKey {
   }
 
   public static NamespacedKey fromString(String value) {
+    if (!PATTERN_TEST.test(value)) {
+      throw new IllegalArgumentException("NamespacedKey must match pattern '" + PATTERN.pattern() + "'. Input: '" + value + "'.");
+    }
     String[] splits = value.split(":");
     return new NamespacedKey(splits[0], splits[1]);
   }
