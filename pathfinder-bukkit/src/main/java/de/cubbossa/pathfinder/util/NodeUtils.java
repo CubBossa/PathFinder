@@ -54,22 +54,19 @@ public class NodeUtils {
         Messages.CMD_N_LIST_FOOTER.formatted(resolver));
   }
 
-  public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path,
-                                            boolean shortenIfOverlapping) {
+  public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path, boolean shortenIfOverlapping) {
 
-    //TODO List<Collection<BezierVector>> für alle Weltsprünge neue splines
-
-    if (path.size() <= 1) {
-      throw new IllegalArgumentException("Path to modify must have at least two points.");
+    if (path.size() < 1) {
+      throw new IllegalArgumentException("Path to modify must have at least one point.");
     }
     List<BezierVector> vectors = new ArrayList<>();
 
-
     Node first = path.keySet().iterator().next();
-      vectors.add(new BezierVector(
-              CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-              CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-              CommonPathFinder.SPLINES.convertToVector(first.getLocation())));
+    vectors.add(new BezierVector(
+            CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+            CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+            CommonPathFinder.SPLINES.convertToVector(first.getLocation())
+    ));
 
     Node prev = null;
     double sPrev = 1;

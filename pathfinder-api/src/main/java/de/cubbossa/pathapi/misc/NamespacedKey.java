@@ -1,14 +1,15 @@
 package de.cubbossa.pathapi.misc;
 
+import lombok.Getter;
+
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import lombok.Getter;
 
 @Getter
 public final class NamespacedKey {
 
-  private static final Pattern PATTERN = Pattern.compile("[a-z0-9-]+:[a-z0-9-]+");
+  private static final Pattern PATTERN = Pattern.compile("[a-z0-9_-]+:[a-z0-9_-]+");
   private static final Predicate<String> PATTERN_TEST = PATTERN.asMatchPredicate();
   private static final char SEPARATOR = ':';
   private final String namespace;

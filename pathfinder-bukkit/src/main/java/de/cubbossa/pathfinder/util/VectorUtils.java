@@ -11,6 +11,10 @@ public class VectorUtils {
   public static final Vector SOUTH = new Vector(0, 0, 1);
   public static final Vector WEST = new Vector(-1, 0, 0);
 
+  public static double distancePointToLine(de.cubbossa.pathapi.misc.Vector point, de.cubbossa.pathapi.misc.Vector lineSupport, de.cubbossa.pathapi.misc.Vector lineTarget) {
+    return distancePointToLine(toBukkit(point), toBukkit(lineSupport), toBukkit(lineTarget));
+  }
+
   public static double distancePointToLine(Vector point, Vector lineSupport, Vector lineTarget) {
     Vector a = point.clone();
     Vector b = lineSupport.clone();
