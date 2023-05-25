@@ -12,10 +12,8 @@ import de.cubbossa.pathfinder.module.BukkitDiscoverHandler;
 import de.cubbossa.pathfinder.nodegroup.modifier.*;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
-import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.pathfinder.util.location.LocationWeightSolverPreset;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
 import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
@@ -131,9 +129,6 @@ public class BukkitPathFinder extends CommonPathFinder {
     getStorage().createGlobalNodeGroup(particleVisualizerType);
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
-
-    locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_SIMPLE, () -> LocationWeightSolverPreset.SIMPLE.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.simpleConfig));
-    locationWeightSolverRegistry.register(CommonLocationWeightSolverRegistry.KEY_RAYCAST, () -> LocationWeightSolverPreset.RAYCAST.getSolverFunction().apply(configuration.navigation.nearestLocationSolver.raycastConfig));
 
     new BukkitEffects((EventDispatcher<Player>) eventDispatcher, configuration.effects);
   }

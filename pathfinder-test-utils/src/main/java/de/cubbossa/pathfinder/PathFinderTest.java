@@ -22,7 +22,7 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -84,7 +84,7 @@ public abstract class PathFinderTest {
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
     modifierRegistry.registerModifierType(new TestModifierType());
-    visualizerTypeRegistry = new VisualizerHandler();
+    visualizerTypeRegistry = new VisualizerTypeRegistryImpl();
 
     storage = new StorageImpl(nodeTypeRegistry);
     StorageImplementation implementation = factory.get();

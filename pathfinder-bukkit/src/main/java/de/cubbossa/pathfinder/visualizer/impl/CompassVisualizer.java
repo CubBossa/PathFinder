@@ -3,14 +3,15 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.StringCompass;
-import de.cubbossa.pathfinder.util.VectorUtils;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -75,10 +76,10 @@ public class CompassVisualizer
     if (context.data().getCompass().getAngle() == null) {
       Player player = context.player().unwrap();
       context.data().getCompass().setAngle(() -> {
-        return VectorUtils.convertDirectionToXZAngle(player.getLocation());
+        return BukkitVectorUtils.convertDirectionToXZAngle(player.getLocation());
       });
       context.data().getCompass().addMarker("target", target, () -> {
-        return VectorUtils.convertDirectionToXZAngle(
+        return BukkitVectorUtils.convertDirectionToXZAngle(
             this.leadPoint.clone().subtract(player.getLocation()));
       });
     }

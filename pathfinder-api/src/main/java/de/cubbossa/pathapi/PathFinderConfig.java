@@ -71,8 +71,6 @@ public interface PathFinderConfig {
 
     FindLocationCommandConfig getFindLocation();
 
-    NearestLocationSolverConfig getNearestLocationSolver();
-
     /**
      * This setting decides whether a player has to have all permissions of all groups of a node
      * or just one matching permission. True means all, so the permission query is linked by AND
@@ -129,19 +127,6 @@ public interface PathFinderConfig {
      * -1 can be set to disable a distance check.
      */
     float getMaxDistance();
-  }
-
-  interface NearestLocationSolverConfig {
-    /**
-     * Define an algorithm to find the nearest node to a certain location.
-     * SIMPLE: Finds the absolute nearest node.
-     * RAYCAST: Sends multiple raycasts to find the nearest node that is not obstructed by walls.
-     */
-    String getAlgorithm();
-
-    SimpleLocationWeightSolverConfig getSimpleConfig();
-
-    RaycastLocationWeightSolverConfig getRaycastConfig();
   }
 
   interface SimpleLocationWeightSolverConfig {

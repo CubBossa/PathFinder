@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
@@ -64,7 +64,7 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
 
   @Override
   public Location getLocation() {
-    return VectorUtils.toInternal(unwrap().getLocation());
+    return BukkitVectorUtils.toInternal(unwrap().getLocation());
   }
 
   @Override

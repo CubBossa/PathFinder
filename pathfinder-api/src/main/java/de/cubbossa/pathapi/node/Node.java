@@ -88,4 +88,6 @@ public interface Node extends Comparable<Node>, Cloneable {
   }
 
   Node clone();
+
+  Node clone(UUID id);
 }

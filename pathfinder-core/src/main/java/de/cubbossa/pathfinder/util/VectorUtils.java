@@ -1,8 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.util.Vector;
+import de.cubbossa.pathapi.misc.Vector;
 
 public class VectorUtils {
 
@@ -10,10 +8,6 @@ public class VectorUtils {
   public static final Vector EAST = new Vector(1, 0, 0);
   public static final Vector SOUTH = new Vector(0, 0, 1);
   public static final Vector WEST = new Vector(-1, 0, 0);
-
-  public static double distancePointToLine(de.cubbossa.pathapi.misc.Vector point, de.cubbossa.pathapi.misc.Vector lineSupport, de.cubbossa.pathapi.misc.Vector lineTarget) {
-    return distancePointToLine(toBukkit(point), toBukkit(lineSupport), toBukkit(lineTarget));
-  }
 
   public static double distancePointToLine(Vector point, Vector lineSupport, Vector lineTarget) {
     Vector a = point.clone();
@@ -40,10 +34,6 @@ public class VectorUtils {
     return lineSupport.clone().add(dir.multiply(dotStart / dotEnd));
   }
 
-  public static double convertDirectionToXZAngle(Location location) {
-    return convertDirectionToXZAngle(location.getDirection());
-  }
-
   public static double convertDirectionToXZAngle(Vector vector) {
     Vector v = vector.clone().multiply(new Vector(1, 0, 1));
     return (Math.toDegrees(clockwiseXZAngle(NORTH, v)) + 360) % 360;
@@ -57,29 +47,7 @@ public class VectorUtils {
     return a.getX() * b.getZ() - a.getZ() * b.getX();
   }
 
-  public static double convertYawToAngle(Location location) {
-    return convertYawToAngle(location.getYaw());
-  }
-
   public static double convertYawToAngle(double yaw) {
     return (yaw + 180) % 360;
-  }
-
-  public static Location toBukkit(de.cubbossa.pathapi.misc.Location internal) {
-    return new Location(Bukkit.getWorld(internal.getWorld().getUniqueId()), internal.getX(),
-        internal.getY(), internal.getZ());
-  }
-
-  public static Vector toBukkit(de.cubbossa.pathapi.misc.Vector internal) {
-    return new Vector(internal.getX(), internal.getY(), internal.getZ());
-  }
-
-  public static de.cubbossa.pathapi.misc.Location toInternal(Location bukkit) {
-    return new de.cubbossa.pathapi.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(),
-        new WorldImpl(bukkit.getWorld().getUID()));
-  }
-
-  public static de.cubbossa.pathapi.misc.Vector toInternal(Vector bukkit) {
-    return new de.cubbossa.pathapi.misc.Vector(bukkit.getX(), bukkit.getY(), bukkit.getZ());
   }
 }

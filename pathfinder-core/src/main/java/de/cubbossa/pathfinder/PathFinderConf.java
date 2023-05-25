@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.storage.DatabaseType;
-import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import lombok.Getter;
@@ -82,7 +81,6 @@ public class PathFinderConf implements PathFinderConfig {
         been discovered first.""")
     public boolean requireDiscovery = false;
     public FindLocationCommandConf findLocation = new FindLocationCommandConf();
-    public NearestLocationSolverConf nearestLocationSolver = new NearestLocationSolverConf();
     @Comment("""
         This setting decides whether a player has to have all permissions of all groups of a node
         or just one matching permission. True means all, so the permission query is linked by AND
@@ -135,18 +133,6 @@ public class PathFinderConf implements PathFinderConfig {
         not allow commands with locations far away from the actual roadmap. Default's set to 20.
         -1 can be set to disable a distance check.""")
     public float maxDistance = 20.f;
-  }
-
-  @Configuration
-  @Getter
-  public static class NearestLocationSolverConf implements NearestLocationSolverConfig {
-    @Comment("""
-        Define an algorithm to find the nearest node to a certain location.
-        SIMPLE: Finds the absolute nearest node.
-        RAYCAST: Sends multiple raycasts to find the nearest node that is not obstructed by walls.""")
-    public String algorithm = CommonLocationWeightSolverRegistry.KEY_RAYCAST;
-    public SimpleLocationWeightSolverConf simpleConfig = new SimpleLocationWeightSolverConf();
-    public RaycastLocationWeightSolverConf raycastConfig = new RaycastLocationWeightSolverConf();
   }
 
   @Configuration

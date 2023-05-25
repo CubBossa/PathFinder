@@ -4,10 +4,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.util.VectorUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -15,6 +12,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -44,8 +45,8 @@ public abstract class EdgeBasedVisualizer<DataT extends EdgeBasedVisualizer.Data
         prev = node;
         continue;
       }
-      edges.add(new Edge(index++, VectorUtils.toBukkit(prev.getLocation()),
-          VectorUtils.toBukkit(node.getLocation())));
+      edges.add(new Edge(index++, BukkitVectorUtils.toBukkit(prev.getLocation()),
+          BukkitVectorUtils.toBukkit(node.getLocation())));
       prev = node;
     }
     return newData(player, nodes, edges);
@@ -68,7 +69,7 @@ public abstract class EdgeBasedVisualizer<DataT extends EdgeBasedVisualizer.Data
     Edge nearest = null;
     double edgeNearestDist = Double.MAX_VALUE;
     for (Edge edge : context.data().getEdges()) {
-      double dist = VectorUtils.distancePointToSegment(
+      double dist = BukkitVectorUtils.distancePointToSegment(
           player.getEyeLocation().toVector(),
           edge.support().toVector(),
           edge.target().toVector());
@@ -84,7 +85,7 @@ public abstract class EdgeBasedVisualizer<DataT extends EdgeBasedVisualizer.Data
     }
 
     // find the closest point on closest edge and move some blocks along in direction of target.
-    Vector closestPoint = VectorUtils.closestPointOnSegment(
+    Vector closestPoint = BukkitVectorUtils.closestPointOnSegment(
         player.getEyeLocation().toVector(),
         nearest.support().toVector(),
         nearest.target().toVector()

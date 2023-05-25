@@ -53,7 +53,7 @@ dependencies {
 
     // Plugins
     api(project(":pathfinder-api"))
-    implementation(project(":pathfinder-graph"))
+    api(project(":pathfinder-graph"))
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")

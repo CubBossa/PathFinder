@@ -70,12 +70,17 @@ public class EmptyNode implements Node {
   }
 
   @Override
-  public Node clone() {
+  public Node clone(UUID id) {
     try {
       return (Node) super.clone();
     } catch (CloneNotSupportedException e) {
       return new EmptyNode(uuid, location.getWorld());
     }
+  }
+
+  @Override
+  public Node clone() {
+    return clone(uuid);
   }
 
   @Override

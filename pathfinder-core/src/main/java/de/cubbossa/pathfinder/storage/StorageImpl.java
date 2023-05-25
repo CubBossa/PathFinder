@@ -16,7 +16,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.CommonCurveLengthModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonFindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonVisualizerModifier;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -529,7 +529,7 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers() {
     Collection<PathVisualizer<?, ?>> result = new HashSet<>();
-    return CompletableFuture.allOf(VisualizerHandler.getInstance().getTypes().values().stream()
+    return CompletableFuture.allOf(VisualizerTypeRegistryImpl.getInstance().getTypes().values().stream()
             .map(this::loadVisualizers)
             .map(c -> c.thenApply(result::addAll))
             .toArray(CompletableFuture[]::new))

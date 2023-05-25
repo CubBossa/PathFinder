@@ -14,10 +14,7 @@ import de.cubbossa.pathfinder.node.AbstractNodeType;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 public class PlayerNode implements Groupable {
@@ -82,10 +79,28 @@ public class PlayerNode implements Groupable {
   }
 
   @Override
+  public Node clone(UUID id) {
+    throw new IllegalStateException("Cannot clone a player node with ID parameter.");
+  }
+
+  @Override
   public String toString() {
     return "PlayerNode{" +
         "player=" + player.getName() +
         '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PlayerNode that = (PlayerNode) o;
+    return Objects.equals(getPlayer().getUniqueId(), that.getPlayer().getUniqueId());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getPlayer().getUniqueId());
   }
 
   @Override

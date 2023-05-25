@@ -6,9 +6,8 @@ import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
@@ -49,7 +48,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
         .resolver(Placeholder.component("amount", Component.text(element.getAmount())))
         .resolver(Formatter.number("speed", element.getSpeed()))
         .resolver(Placeholder.component("offset",
-            Messages.formatVector(VectorUtils.toInternal(element.getOffset()))))
+            Messages.formatVector(BukkitVectorUtils.toInternal(element.getOffset()))))
         .resolver(Formatter.number("point-distance", element.getPointDistance()))
         .build());
   }
@@ -102,26 +101,21 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   private <T> void onSetParticle(CommandSender sender, ParticleVisualizer visualizer,
                                  ParticleData<T> particle, @Nullable Integer amount,
                                  @Nullable Float speed, @Nullable Vector offset) {
-    VisualizerHandler.getInstance()
-        .setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle", true,
-            visualizer::getParticle, visualizer::setParticle);
-    VisualizerHandler.getInstance()
-        .setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data", true,
-            visualizer::getParticleData, visualizer::setParticleData);
+    setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle", true,
+        visualizer::getParticle, visualizer::setParticle);
+    setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data", true,
+        visualizer::getParticleData, visualizer::setParticleData);
     if (amount != null) {
-      VisualizerHandler.getInstance()
-          .setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", true, visualizer::getAmount,
-              visualizer::setAmount);
+      setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", true, visualizer::getAmount,
+          visualizer::setAmount);
     }
     if (speed != null) {
-      VisualizerHandler.getInstance()
-          .setProperty(BukkitUtils.wrap(sender), visualizer, speed, "speed", true, visualizer::getSpeed,
-              visualizer::setSpeed);
+      setProperty(BukkitUtils.wrap(sender), visualizer, speed, "speed", true, visualizer::getSpeed,
+          visualizer::setSpeed);
     }
     if (offset != null) {
-      VisualizerHandler.getInstance()
-          .setProperty(BukkitUtils.wrap(sender), visualizer, offset, "offset", true, visualizer::getOffset,
-              visualizer::setOffset);
+      setProperty(BukkitUtils.wrap(sender), visualizer, offset, "offset", true, visualizer::getOffset,
+          visualizer::setOffset);
     }
   }
 

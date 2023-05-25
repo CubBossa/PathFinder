@@ -23,8 +23,8 @@ import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -135,7 +135,7 @@ public class EditModeMenu {
               throw new IllegalStateException("Could not find any node type to generate node.");
             }
             storage
-                .createAndLoadNode(type, VectorUtils.toInternal(pos))
+                .createAndLoadNode(type, BukkitVectorUtils.toInternal(pos))
                 .thenCompose(node -> storage.modifyNode(node.getNodeId(), n -> {
                   if (nodeChainMode) {
                     if (chainEdgeStart != null) {
@@ -243,7 +243,7 @@ public class EditModeMenu {
             Node nearest = null;
             Location pLoc = context.getPlayer().getLocation();
             for (Node node : nodes) {
-              double d = node.getLocation().distance(VectorUtils.toInternal(pLoc));
+              double d = node.getLocation().distance(BukkitVectorUtils.toInternal(pLoc));
               if (dist == -1 || d < dist) {
                 nearest = node;
                 dist = d;
@@ -253,7 +253,7 @@ public class EditModeMenu {
               return;
             }
             Player p = context.getPlayer();
-            Location newLoc = VectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
+            Location newLoc = BukkitVectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
             Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
               p.teleport(newLoc);
               p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
@@ -463,7 +463,7 @@ public class EditModeMenu {
       menu.addListEntry(Button.builder()
           .withItemStack(() -> new ItemStack(Material.CYAN_CONCRETE_POWDER))
           .withClickHandler(Action.RIGHT, c -> {
-            storage.createAndLoadNode(type, VectorUtils.toInternal(location));
+            storage.createAndLoadNode(type, BukkitVectorUtils.toInternal(location));
             menu.close(player);
           }));
     }

@@ -18,21 +18,13 @@ public abstract class AbstractVisualizer<DataT, PlayerT>
     implements PathVisualizer<DataT, PlayerT> {
 
   private final NamespacedKey key;
-  private String nameFormat;
-  private Component displayName;
 
   @Nullable
   private String permission = null;
   private int interval = 1;
 
-  public AbstractVisualizer(NamespacedKey key, String nameFormat) {
+  public AbstractVisualizer(NamespacedKey key) {
     this.key = key;
-    setNameFormat(nameFormat);
-  }
-
-  public void setNameFormat(String nameFormat) {
-    this.nameFormat = nameFormat;
-    this.displayName = StringUtils.deserialize(nameFormat);
   }
 
   public interface Property<VisualizerT extends PathVisualizer<?, ?>, TypeT> {

@@ -4,8 +4,10 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.*;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
@@ -18,9 +20,8 @@ import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
-import de.cubbossa.pathfinder.util.CommonLocationWeightSolverRegistry;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.translations.GlobalTranslations;
 import de.cubbossa.translations.MessageBundle;
@@ -59,7 +60,6 @@ public abstract class CommonPathFinder implements PathFinder {
   protected MiniMessage miniMessage;
   protected File effectsFile;
   protected StorageImpl storage;
-  protected LocationWeightSolverRegistry<Node> locationWeightSolverRegistry;
   @Setter
   protected PathFinderConf configuration;
   protected EventDispatcher<?> eventDispatcher;
@@ -90,9 +90,8 @@ public abstract class CommonPathFinder implements PathFinder {
     PathFinderProvider.setPathFinder(this);
 
     nodeTypeRegistry = new NodeTypeRegistryImpl();
-    visualizerTypeRegistry = new VisualizerHandler();
+    visualizerTypeRegistry = new VisualizerTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
-    locationWeightSolverRegistry = new CommonLocationWeightSolverRegistry<>();
 
     storage = new StorageImpl(nodeTypeRegistry);
 
@@ -185,7 +184,7 @@ public abstract class CommonPathFinder implements PathFinder {
 
   @Override
   public VisualizerTypeRegistry getVisualizerTypeRegistry() {
-    return VisualizerHandler.getInstance();
+    return VisualizerTypeRegistryImpl.getInstance();
   }
 
   abstract AudienceProvider provideAudiences();

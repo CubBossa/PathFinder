@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
@@ -22,7 +22,7 @@ public class CreateNodeCmd extends PathFinderSubCommand {
     withPermission(PathPerms.PERM_CMD_WP_CREATE);
     executesPlayer((player, args) -> {
       createNode(player, fallbackWaypointType.get(),
-          VectorUtils.toInternal(player.getLocation()));
+          BukkitVectorUtils.toInternal(player.getLocation()));
     });
     then(CustomArgs.location("location")
         .displayAsOptional()
@@ -33,7 +33,7 @@ public class CreateNodeCmd extends PathFinderSubCommand {
     then(CustomArgs.nodeTypeArgument("type")
         .executesPlayer((player, args) -> {
           createNode(player, args.getUnchecked(0),
-              VectorUtils.toInternal(player.getLocation()));
+              BukkitVectorUtils.toInternal(player.getLocation()));
         })
         .then(CustomArgs.location("location")
             .executesPlayer((player, args) -> {

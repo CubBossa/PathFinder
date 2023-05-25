@@ -22,10 +22,10 @@ import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
@@ -79,7 +79,7 @@ public class CustomArgs {
   public CommandArgument<de.cubbossa.pathapi.misc.Location, CustomArgument<de.cubbossa.pathapi.misc.Location, Location>> location(
       String node, LocationType type) {
     return CommandArgument.arg(new CustomArgument<>(new LocationArgument(node, type), customArgumentInfo -> {
-      return VectorUtils.toInternal(customArgumentInfo.currentInput());
+      return BukkitVectorUtils.toInternal(customArgumentInfo.currentInput());
     }));
   }
 
@@ -451,7 +451,7 @@ public class CustomArgs {
     return CommandArgument.arg(new CustomArgument<>(new NamespacedKeyArgument(nodeName), customArgumentInfo -> {
 
       Optional<VisualizerType<PathVisualizer<?, ?>>> type =
-          VisualizerHandler.getInstance()
+          VisualizerTypeRegistryImpl.getInstance()
               .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
       if (type.isEmpty()) {
         throw new CustomArgument.CustomArgumentException(

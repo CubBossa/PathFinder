@@ -11,9 +11,9 @@ import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.NodeUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.LocationType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -56,7 +56,7 @@ public class NodesCmd extends PathFinderSubCommand {
         .then(CustomArgs.literal("tphere")
             .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
             .executesPlayer((player, args) -> {
-              teleportNodes(player, args.getUnchecked(0), VectorUtils.toInternal(player.getLocation()));
+              teleportNodes(player, args.getUnchecked(0), BukkitVectorUtils.toInternal(player.getLocation()));
             })
         )
         .then(CustomArgs.literal("tp")

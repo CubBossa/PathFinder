@@ -126,8 +126,8 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         }
         included.computeIfAbsent(edge.startId, x -> new HashSet<>()).add(edge.endId);
 
-        Vector a = VectorUtils.toBukkit(edge.getStart().asVector());
-        Vector b = VectorUtils.toBukkit(edge.getEnd().asVector());
+        Vector a = BukkitVectorUtils.toBukkit(edge.getStart().asVector());
+        Vector b = BukkitVectorUtils.toBukkit(edge.getEnd().asVector());
         double dist = a.distance(b);
 
         for (float i = 0; i < dist; i += config.getEdgeParticleSpacing()) {

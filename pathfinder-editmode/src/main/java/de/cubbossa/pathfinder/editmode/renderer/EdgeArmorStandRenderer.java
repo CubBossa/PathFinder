@@ -8,8 +8,8 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -40,8 +40,8 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   Location retrieveFrom(Edge element) {
     return FutureUtils
         .both(
-            element.resolveStart().thenApply(Node::getLocation).thenApply(VectorUtils::toBukkit),
-            element.resolveEnd().thenApply(Node::getLocation).thenApply(VectorUtils::toBukkit)
+            element.resolveStart().thenApply(Node::getLocation).thenApply(BukkitVectorUtils::toBukkit),
+            element.resolveEnd().thenApply(Node::getLocation).thenApply(BukkitVectorUtils::toBukkit)
         )
         .thenApply(e -> BukkitUtils.lerp(e.getKey(), e.getValue(), .3d).add(ARMORSTAND_CHILD_OFFSET))
         .join();
@@ -67,7 +67,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     super.showElement(element, player);
     setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
       Node end = element.resolveEnd().join();
-      return VectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
+      return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
     }).join());
   }
 

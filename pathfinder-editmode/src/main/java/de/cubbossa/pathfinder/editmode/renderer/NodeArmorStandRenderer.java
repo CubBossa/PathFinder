@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
-import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -33,7 +33,7 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
 
   @Override
   Location retrieveFrom(Node element) {
-    return VectorUtils.toBukkit(element.getLocation()).add(NODE_OFFSET);
+    return BukkitVectorUtils.toBukkit(element.getLocation()).add(NODE_OFFSET);
   }
 
   @Override

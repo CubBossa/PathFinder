@@ -2,7 +2,6 @@ package de.cubbossa.pathapi;
 
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.LocationWeightSolverRegistry;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
@@ -72,8 +71,6 @@ public interface PathFinder {
    * @return The VisualizerTypeRegistry instance.
    */
   VisualizerTypeRegistry getVisualizerTypeRegistry();
-
-  LocationWeightSolverRegistry<?> getLocationWeightSolverRegistry();
 
   PathFinderConfig getConfiguration();
 

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.module.papi;
 
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import lombok.Getter;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -31,8 +31,8 @@ public class PlaceholderHook extends PlaceholderExpansion {
         instance = this;
         this.plugin = plugin;
 
-        register();
-        VisualizerHandler.getInstance().registerVisualizerType(PLACEHOLDER_VISUALIZER_TYPE);
+      register();
+      VisualizerTypeRegistryImpl.getInstance().registerVisualizerType(PLACEHOLDER_VISUALIZER_TYPE);
     }
 
   public void register(String key, OfflinePlayer player, Supplier<String> placeholder) {

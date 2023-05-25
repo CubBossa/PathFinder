@@ -1,20 +1,30 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -51,10 +61,45 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
     return null;
   }
 
-  protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
-                                                            AbstractVisualizer.Property<V, ?> property,
-                                                            V visualizer) {
-    map.put(property.getKey(), property.getValue(visualizer));
+  public <V extends PathVisualizer<?, ?>, T2> void setProperty(PathPlayer<?> sender, V visualizer,
+                                                               AbstractVisualizer.Property<V, T2> prop,
+                                                               T2 val) {
+    setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
+        () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
+  }
+
+  public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
+                               String property, boolean visual, Supplier<T2> getter,
+                               Consumer<T2> setter) {
+    setProperty(sender, visualizer, value, property, visual, getter, setter, t ->
+        Component.text(t == null ? "null" : t.toString()));
+  }
+
+  public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
+                               String property, boolean visual, Supplier<T2> getter,
+                               Consumer<T2> setter, Function<T2, ComponentLike> formatter) {
+    setProperty(sender, visualizer, value, property, visual, getter, setter,
+        (s, t) -> Placeholder.component(s, formatter.apply(t)));
+  }
+
+  public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
+                               String property, boolean visual, Supplier<T2> getter,
+                               Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
+    T2 old = getter.get();
+    if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
+      return;
+    }
+    setter.accept(value);
+    sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
+        TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+        Placeholder.component("type", Component.text(
+            PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).join()
+                .orElseThrow()
+                .getCommandName())),
+        Placeholder.parsed("property", property),
+        formatter.apply("old-value", old),
+        formatter.apply("value", value)
+    ));
   }
 
   protected <A, V extends PathVisualizer<?, ?>> Argument<?> subCommand(String node,
@@ -62,8 +107,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
       if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-        VisualizerHandler.getInstance()
-            .setProperty(CommonPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+        setProperty(CommonPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),
@@ -99,5 +143,11 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
                                                       Class<A> expectedType, Consumer<A> loader) {
     loadProperty(values, key, String.class,
         s -> loader.accept(Enum.valueOf(expectedType, s.toUpperCase())));
+  }
+
+  protected <V extends PathVisualizer<?, ?>> void serialize(Map<String, Object> map,
+                                                            AbstractVisualizer.Property<V, ?> property,
+                                                            V visualizer) {
+    map.put(property.getKey(), property.getValue(visualizer));
   }
 }

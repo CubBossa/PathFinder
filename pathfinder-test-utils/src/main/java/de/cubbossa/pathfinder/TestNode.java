@@ -34,10 +34,15 @@ public class TestNode implements Node {
 
   @Override
   public Node clone() {
+    return clone(nodeId);
+  }
+
+  @Override
+  public Node clone(UUID id) {
     try {
       return (Node) super.clone();
     } catch (CloneNotSupportedException e) {
-      return new TestNode(nodeId, location.clone());
+      return new TestNode(id, location.clone());
     }
   }
 }

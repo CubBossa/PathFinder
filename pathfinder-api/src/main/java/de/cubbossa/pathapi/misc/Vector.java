@@ -1,7 +1,9 @@
 package de.cubbossa.pathapi.misc;
 
-import java.util.Objects;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 @AllArgsConstructor
 public class Vector implements Cloneable {
@@ -63,6 +65,20 @@ public class Vector implements Cloneable {
     return divide(length());
   }
 
+  public double dot(@NotNull Vector other) {
+    return this.x * other.x + this.y * other.y + this.z * other.z;
+  }
+
+  public Vector crossProduct(@NotNull Vector o) {
+    double newX = this.y * o.z - o.y * this.z;
+    double newY = this.z * o.x - o.z * this.x;
+    double newZ = this.x * o.y - o.x * this.y;
+    this.x = newX;
+    this.y = newY;
+    this.z = newZ;
+    return this;
+  }
+
   public double distanceSquared(Vector location) {
     return clone().subtract(location).lengthSquared();
   }
@@ -105,6 +121,10 @@ public class Vector implements Cloneable {
 
   public void setZ(double z) {
     this.z = z;
+  }
+
+  public Location toLocation(World world) {
+    return new Location(x, y, z, world);
   }
 
   @Override

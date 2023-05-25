@@ -326,6 +326,14 @@ public class Messages {
       .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
+  public static final Message CMD_VIS_NO_TYPE_FOUND = new MessageBuilder("commands.path_visualizer.info.no_type")
+      .withDefault("<negative>Could not show information to visualizer. Type could not be resolved.</negative>")
+      .withTranslation(Locale.GERMAN, "<negative>Konnte Visualizer nicht anzeigen. Keine Typ-Information gefunden.</negative>")
+      .build();
+  public static final Message CMD_VIS_NO_INFO = new MessageBuilder("commands.path_visualizer.info.no_info")
+      .withDefault("<negative>Could not show information to visualizer. No message layout provided.</negative>")
+      .withTranslation(Locale.GERMAN, "<negative>Konnte Visualizer nicht anzeigen. Kein Nachrichtenformat gefunden.</negative>")
+      .build();
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
       .withDefault("<msg:prefix>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.")

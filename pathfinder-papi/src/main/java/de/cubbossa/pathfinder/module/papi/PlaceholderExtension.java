@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.visualizer.VisualizerHandler;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,7 +29,7 @@ public class PlaceholderExtension implements PathFinderExtension {
     pathPlugin.getLogger().log(Level.INFO, "Found PlaceholderAPI, registered module.");
 
         PlaceholderHook hook = new PlaceholderHook(JavaPlugin.getPlugin(CommonPathFinder.class));
-    VisualizerHandler.getInstance()
+      VisualizerTypeRegistryImpl.getInstance()
         .registerVisualizerType(PlaceholderHook.PLACEHOLDER_VISUALIZER_TYPE);
   }
 }

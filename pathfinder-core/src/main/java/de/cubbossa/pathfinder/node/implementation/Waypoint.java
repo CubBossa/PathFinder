@@ -83,15 +83,20 @@ public class Waypoint implements Node, Groupable {
   }
 
   @Override
+  public Waypoint clone(UUID uuid) {
+    Waypoint clone = new Waypoint(uuid);
+    clone.location = location.clone();
+    clone.edges.addAll(this.edges);
+    clone.groups.putAll(groups);
+    return clone;
+  }
+
+  @Override
   public Waypoint clone() {
     try {
       return (Waypoint) super.clone();
     } catch (CloneNotSupportedException e) {
-      Waypoint clone = new Waypoint(nodeId);
-      clone.location = location.clone();
-      clone.edges.addAll(this.edges);
-      clone.groups.putAll(groups);
-      return clone;
+      return clone(nodeId);
     }
   }
 }
