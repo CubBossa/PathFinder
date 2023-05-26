@@ -39,11 +39,7 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
           visualizer -> {
             TagResolver r = TagResolver.builder()
                 .tag("key", Messages.formatKey(visualizer.getKey()))
-                .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-                .resolver(
-                    Placeholder.component("name-format",
-                        Component.text(visualizer.getNameFormat())))
-                .resolver(Placeholder.component("type", Component.text(visualizer.getNameFormat())))
+                .resolver(Placeholder.parsed("type", "TODO")) // TODO
                 .build();
 
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_LIST_ENTRY.formatted(r));

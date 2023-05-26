@@ -3,15 +3,17 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
-public abstract class IntervalVisualizerType<T extends IntervalVisualizerType.IntervalVisualizer>
+public abstract class IntervalVisualizerType<T extends IntervalVisualizerType.IntervalVisualizer<?, ?>>
     extends AbstractVisualizerType<T>
-    implements VisualizerTypeCommandExtension<T> {
+    implements VisualizerTypeCommandExtension {
 
 
   public IntervalVisualizerType(NamespacedKey key) {
@@ -25,16 +27,16 @@ public abstract class IntervalVisualizerType<T extends IntervalVisualizerType.In
         .then(CustomArgs.integer("ticks", 1)
             .executes((commandSender, args) -> {
               if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-                type.setProperty(BukkitUtils.wrap(commandSender), visualizer, args.getUnchecked(1), "interval",
+                setProperty(BukkitUtils.wrap(commandSender), visualizer, args.getUnchecked(1), "interval",
                     true, visualizer::getInterval, visualizer::setInterval, Formatter::number);
               }
             })));
   }
 
-  public static abstract class IntervalVisualizer<D, P> extends AbstractVisualizer<D, P> {
+  public abstract static class IntervalVisualizer<D, P> extends AbstractVisualizer<D, P> {
 
-    public IntervalVisualizer(NamespacedKey key, String nameFormat) {
-      super(key, nameFormat);
+    public IntervalVisualizer(NamespacedKey key) {
+      super(key);
     }
   }
 }

@@ -34,8 +34,8 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   }
 
   @Override
-  public ParticleVisualizer create(NamespacedKey key, String nameFormat) {
-    return new ParticleVisualizer(key, nameFormat);
+  public ParticleVisualizer create(NamespacedKey key) {
+    return new ParticleVisualizer(key);
   }
 
   @Override

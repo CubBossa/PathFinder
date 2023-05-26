@@ -30,8 +30,8 @@ public abstract class EdgeBasedVisualizer<DataT extends EdgeBasedVisualizer.Data
    */
   private double moveAhead = 5;
 
-  public EdgeBasedVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public EdgeBasedVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

@@ -23,8 +23,8 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   private int amount = 1;
   private Vector offset = new Vector(0.02f, 0.02f, 0.02f);
 
-  public ParticleVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public ParticleVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

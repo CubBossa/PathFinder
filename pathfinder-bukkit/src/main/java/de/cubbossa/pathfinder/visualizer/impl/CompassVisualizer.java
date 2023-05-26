@@ -55,13 +55,12 @@ public class CompassVisualizer
   private int radius = 20;
   private Location leadPoint = null;
 
-  public CompassVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public CompassVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges,
-                      BossBar bossBar) {
+  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
     compass.addMarker("E", east, 90.);

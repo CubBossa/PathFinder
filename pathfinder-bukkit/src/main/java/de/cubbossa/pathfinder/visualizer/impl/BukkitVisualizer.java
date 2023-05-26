@@ -8,8 +8,8 @@ import org.bukkit.entity.Player;
 public abstract class BukkitVisualizer<DataT>
     extends AbstractVisualizer<DataT, Player> {
 
-  public BukkitVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public BukkitVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

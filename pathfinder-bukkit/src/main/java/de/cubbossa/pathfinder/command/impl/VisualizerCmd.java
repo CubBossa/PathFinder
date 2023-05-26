@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -15,6 +16,7 @@ import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -46,10 +48,20 @@ public class VisualizerCmd extends PathFinderSubCommand {
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, args) -> {
                 if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-                  type.setProperty(BukkitUtils.wrap(commandSender), visualizer, args.getUnchecked(1), "permission",
-                      true,
-                      visualizer::getPermission, visualizer::setPermission,
-                      Messages::formatPermission);
+
+                  String old = visualizer.getPermission();
+                  String perm = args.getUnchecked(1);
+                  visualizer.setPermission(perm);
+
+                  pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
+                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(TagResolver.resolver(
+                        TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+                        TagResolver.resolver("type", Messages.formatKey(type.getKey())),
+                        Placeholder.parsed("property", "permission"),
+                        Placeholder.component("old-value", Messages.formatPermission(old)),
+                        Placeholder.component("value", Messages.formatPermission(perm))
+                    )));
+                  });
                 }
               })));
 

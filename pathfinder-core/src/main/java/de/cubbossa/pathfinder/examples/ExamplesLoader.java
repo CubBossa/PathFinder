@@ -73,9 +73,8 @@ public class ExamplesLoader {
     NamespacedKey name = NamespacedKey.fromString(file.name()
         .replace(".yml", "")
         .replace("$", ":"));
-    String displayName = (String) values.get("display-name");
 
-    VisualizerT visualizer = type.create(name, displayName);
+    VisualizerT visualizer = type.create(name);
     type.deserialize(visualizer, values);
     return visualizer;
   }

@@ -10,9 +10,11 @@ import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.events.visualizer.CombinedVisualizerChangedEvent;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -20,7 +22,7 @@ import org.bukkit.Bukkit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisualizer>
+public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CombinedVisualizer> {
 
   public CombinedVisualizerType(NamespacedKey key) {
@@ -28,8 +30,8 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
   }
 
   @Override
-  public CombinedVisualizer create(NamespacedKey key, String nameFormat) {
-    return new CombinedVisualizer(key, nameFormat);
+  public CombinedVisualizer create(NamespacedKey key) {
+    return new CombinedVisualizer(key);
   }
 
   @Override
@@ -37,11 +39,9 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
     return Messages.CMD_VIS_COMBINED_INFO.formatted(
         TagResolver.resolver("entries", Messages.formatList(
             element.getVisualizers(),
-            v -> v == null ? Component.text("undefined")
-                : v.getDisplayName() != null ? v.getDisplayName()
-                : Component.text(v.getNameFormat()))
+            v -> Component.text(v == null ? "undefined" : v.getKey().toString())
         )
-    );
+    ));
   }
 
   @Override
@@ -59,8 +59,8 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
                   CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD.formatted(
-                      Placeholder.component("visualizer", vis.getDisplayName()),
-                      Placeholder.component("child", target.getDisplayName())
+                      TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey())),
+                      TagResolver.resolver("child", Messages.formatKey(target.getKey()))
                   ));
                 })))
         .then(CustomArgs.literal("remove")
@@ -75,8 +75,8 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
                           Collections.singleton(target))));
                   CommonPathFinder.getInstance().wrap(sender)
                       .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.formatted(
-                          Placeholder.component("visualizer", vis.getDisplayName()),
-                          Placeholder.component("child", target.getDisplayName())
+                          TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey())),
+                          TagResolver.resolver("child", Messages.formatKey(target.getKey()))
                       ));
                 })))
         .then(CustomArgs.literal("clear")
@@ -88,7 +88,7 @@ public class CombinedVisualizerType extends InternalVisualizerType<CombinedVisua
                   Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                       CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
               BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.formatted(
-                  Placeholder.component("visualizer", vis.getDisplayName())
+                  TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey()))
               ));
             }));
   }

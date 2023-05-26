@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.bossbar.BossBar;
@@ -14,7 +15,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer>
+public class CompassVisualizerType extends AbstractVisualizerType<CompassVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {
 
   public CompassVisualizerType(NamespacedKey key) {
@@ -22,8 +23,8 @@ public class CompassVisualizerType extends InternalVisualizerType<CompassVisuali
   }
 
   @Override
-  public CompassVisualizer create(NamespacedKey key, String nameFormat) {
-    CompassVisualizer visualizer = new CompassVisualizer(key, nameFormat);
+  public CompassVisualizer create(NamespacedKey key) {
+    CompassVisualizer visualizer = new CompassVisualizer(key);
     visualizer.setInterval(1);
     return visualizer;
   }
@@ -39,8 +40,7 @@ public class CompassVisualizerType extends InternalVisualizerType<CompassVisuali
         .resolver(Placeholder.parsed("marker-south", element.getSouth()))
         .resolver(Placeholder.parsed("marker-west", element.getWest()))
         .resolver(Placeholder.parsed("marker-target", element.getTarget()))
-        .resolver(
-            Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius())))
+        .resolver(Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius())))
         .build()
     );
   }

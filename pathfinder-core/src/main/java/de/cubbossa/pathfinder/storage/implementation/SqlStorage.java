@@ -100,11 +100,8 @@ public abstract class SqlStorage extends CommonStorage {
       VisualizerType<T> type) {
     return record -> {
       // create visualizer object
-      T visualizer = type.create(record.getKey(),
-          record.getNameFormat());
+      T visualizer = type.create(record.getKey());
       visualizer.setPermission(record.getPermission());
-      Integer interval = record.getInterval();
-      visualizer.setInterval(interval == null ? 20 : interval);
 
       // inject data from map
       YamlConfiguration cfg = new YamlConfiguration();
@@ -667,7 +664,7 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public <T extends PathVisualizer<?, ?>> T createAndLoadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
-    T visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
+    T visualizer = type.create(key);
     Map<String, Object> data = type.serialize(visualizer);
     if (data == null) {
       throw new IllegalStateException("Could not serialize internal visualizer '" + key + "', data is null.");
@@ -681,15 +678,11 @@ public abstract class SqlStorage extends CommonStorage {
         .columns(
             PATHFINDER_VISUALIZER.KEY,
             PATHFINDER_VISUALIZER.TYPE,
-            PATHFINDER_VISUALIZER.NAME_FORMAT,
             PATHFINDER_VISUALIZER.PERMISSION,
-            PATHFINDER_VISUALIZER.INTERVAL,
             PATHFINDER_VISUALIZER.DATA
         )
         .values(
-            visualizer.getKey(), type.getKey(),
-            visualizer.getNameFormat(), visualizer.getPermission(),
-            visualizer.getInterval(), dataString
+            visualizer.getKey(), type.getKey(), visualizer.getPermission(), dataString
         )
         .execute();
     return visualizer;
@@ -731,9 +724,7 @@ public abstract class SqlStorage extends CommonStorage {
         .insertInto(PATHFINDER_VISUALIZER)
         .set(PATHFINDER_VISUALIZER.KEY, visualizer.getKey())
         .set(PATHFINDER_VISUALIZER.TYPE, type.getKey())
-        .set(PATHFINDER_VISUALIZER.NAME_FORMAT, visualizer.getNameFormat())
         .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
-        .set(PATHFINDER_VISUALIZER.INTERVAL, visualizer.getInterval())
         .set(PATHFINDER_VISUALIZER.DATA, dataString)
         .execute();
   }

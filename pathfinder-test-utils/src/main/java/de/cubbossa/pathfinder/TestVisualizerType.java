@@ -1,20 +1,20 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerType;
 
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestVisualizerType extends InternalVisualizerType<TestVisualizer> {
+public class TestVisualizerType extends AbstractVisualizerType<TestVisualizer> {
 
   public TestVisualizerType(NamespacedKey key) {
     super(key);
   }
 
   @Override
-  public TestVisualizer create(NamespacedKey key, String nameFormat) {
-    return new TestVisualizer(key, nameFormat);
+  public TestVisualizer create(NamespacedKey key) {
+    return new TestVisualizer(key);
   }
 
   @Override

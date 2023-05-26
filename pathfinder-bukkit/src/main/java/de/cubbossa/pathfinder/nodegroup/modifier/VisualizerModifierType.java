@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
     ModifierCommandExtension<VisualizerModifier> {
@@ -32,7 +33,9 @@ public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
 
   @Override
   public ComponentLike toComponents(VisualizerModifier modifier) {
-    return Messages.CMD_NG_MOD_VIS.formatted(Placeholder.component("visualizer", modifier.visualizer().getDisplayName()));
+    return Messages.CMD_NG_MOD_VIS.formatted(
+        TagResolver.resolver("visualizer", Messages.formatKey(modifier.visualizer().getKey()))
+    );
   }
 
   @Override

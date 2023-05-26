@@ -29,8 +29,8 @@ public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
   private Function<Context, Float> pathOffsetY = c -> (float) Math.cos(c.index() / 2.) * .3f;
   private Function<Context, Float> pathOffsetZ = c -> 0f;
 
-  public AdvancedParticleVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public AdvancedParticleVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

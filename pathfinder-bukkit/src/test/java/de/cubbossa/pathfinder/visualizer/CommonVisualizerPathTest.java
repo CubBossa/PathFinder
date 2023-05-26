@@ -49,7 +49,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
   }
 
   private TestVisualizer visualizer(String key) {
-    return new TestVisualizer(NamespacedKey.fromString("pathfinder:" + key), "test");
+    return new TestVisualizer(NamespacedKey.fromString("pathfinder:" + key));
   }
 
   @BeforeEach

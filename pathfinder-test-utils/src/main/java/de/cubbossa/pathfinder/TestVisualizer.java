@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 public class TestVisualizer extends AbstractVisualizer<TestVisualizer.Data, Logger> {
 
-  public TestVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public TestVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   record Data(List<Node> nodes) {

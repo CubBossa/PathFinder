@@ -19,8 +19,8 @@ public class CombinedVisualizer extends
   private final List<PathVisualizer<?, ?>> visualizers;
   private boolean referencesResolved = false;
 
-  public CombinedVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public CombinedVisualizer(NamespacedKey key) {
+    super(key);
     visualizerKeys = new ArrayList<>();
     visualizers = new ArrayList<>();
   }

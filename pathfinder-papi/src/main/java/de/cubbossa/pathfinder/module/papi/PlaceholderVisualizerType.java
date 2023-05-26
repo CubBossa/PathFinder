@@ -35,8 +35,8 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
     }
 
   @Override
-  public PlaceholderVisualizer create(NamespacedKey key, String nameFormat) {
-    return new PlaceholderVisualizer(key, nameFormat);
+  public PlaceholderVisualizer create(NamespacedKey key) {
+    return new PlaceholderVisualizer(key);
   }
 
   @Override

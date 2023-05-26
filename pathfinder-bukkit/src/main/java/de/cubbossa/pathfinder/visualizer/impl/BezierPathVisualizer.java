@@ -30,8 +30,8 @@ public abstract class BezierPathVisualizer
     private float pointDistance = .2f;
     private int bezierSamplingRate = 16;
 
-  public BezierPathVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public BezierPathVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

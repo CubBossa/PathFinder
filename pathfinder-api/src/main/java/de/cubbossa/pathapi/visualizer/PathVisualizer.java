@@ -7,8 +7,7 @@ import de.cubbossa.pathapi.node.Node;
 
 import java.util.List;
 
-public interface PathVisualizer<DataT, PlayerT>
-    extends Keyed, PermissionHolder {
+public interface PathVisualizer<DataT, PlayerT> extends Keyed, PermissionHolder {
 
   Class<PlayerT> getTargetType();
 

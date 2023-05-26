@@ -30,8 +30,8 @@ public abstract class BossBarVisualizer<DataT extends BossBarVisualizer.Data>
   private BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
   private Double progress = 1.;
 
-  public BossBarVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public BossBarVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override

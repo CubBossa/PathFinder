@@ -31,8 +31,6 @@ public class DeleteVisualizerCmd extends PathFinderSubCommand {
     getPathfinder().getStorage().deleteVisualizer(visualizer).thenRun(() -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_DELETE_SUCCESS.formatted(TagResolver.builder()
           .tag("key", Messages.formatKey(visualizer.getKey()))
-          .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-          .resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
           .build()));
     }).exceptionally(throwable -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_DELETE_ERROR);

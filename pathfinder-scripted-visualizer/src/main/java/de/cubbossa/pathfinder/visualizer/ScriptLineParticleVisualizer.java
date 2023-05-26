@@ -31,8 +31,8 @@ public class ScriptLineParticleVisualizer extends AdvancedParticleVisualizer {
 
   private ScriptEngine engine;
 
-  public ScriptLineParticleVisualizer(NamespacedKey key, String nameFormat, ScriptEngine engine) {
-    super(key, nameFormat);
+  public ScriptLineParticleVisualizer(NamespacedKey key, ScriptEngine engine) {
+    super(key);
 
     this.engine = engine;
     setParticle(context -> {

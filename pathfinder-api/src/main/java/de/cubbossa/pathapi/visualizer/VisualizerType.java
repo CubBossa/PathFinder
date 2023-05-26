@@ -8,7 +8,7 @@ import java.util.Map;
 public interface VisualizerType<VisualizerT extends PathVisualizer<?, ?>> extends Keyed {
   String getCommandName();
 
-  VisualizerT create(NamespacedKey key, String nameFormat);
+  VisualizerT create(NamespacedKey key);
 
   void deserialize(VisualizerT visualizer, Map<String, Object> values);
 

@@ -337,21 +337,21 @@ public class Messages {
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
       .withDefault("<msg:prefix>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.")
-      .withPlaceholders("key", "name", "name-format", "type")
+      .withPlaceholders("key", "type")
       .build();
   public static final Message CMD_VIS_NAME_EXISTS = new MessageBuilder("commands.path_visualizer.create.already_exists")
       .withDefault("<negative>Another visualizer with this name already exists.")
       .build();
   public static final Message CMD_VIS_DELETE_SUCCESS = new MessageBuilder("commands.path_visualizer.delete.success")
       .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><name></offset>.")
-      .withPlaceholders("key", "name", "nameformat")
+      .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set.interval")
       .withDefault("<msg:prefix>Changed <property> for <name> from <old-value> to <value>.")
-      .withPlaceholders("key", "name", "type", "property", "value", "old-value")
+      .withPlaceholders("key", "type", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_IMPORT_EXISTS = new MessageBuilder("commands.path_visualizer.import.already_exists")
       .withDefault("<negative>Could not import file, another visualizer with this key already exists.</negative>")
@@ -361,7 +361,7 @@ public class Messages {
       .build();
   public static final Message CMD_VIS_IMPORT_SUCCESS = new MessageBuilder("commands.path_visualizer.import.successful")
       .withDefault("<msg:prefix>Successfully imported Visualizer: <name>")
-      .withPlaceholders("key", "name")
+      .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_COMBINED_INFO = new MessageBuilder("commands.path_visualizer.type.combined.info")
       .withDefault("""

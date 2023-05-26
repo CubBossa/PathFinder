@@ -485,7 +485,6 @@ public class YmlStorage extends CommonStorage {
                                                                                   VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
       cfg.set("type", type.getKey().toString());
-      cfg.set("display-name", visualizer.getNameFormat());
       type.serialize(visualizer).forEach(cfg::set);
     });
   }
@@ -496,7 +495,7 @@ public class YmlStorage extends CommonStorage {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
-    T vis = type.create(key, cfg.getString("display-name"));
+    T vis = type.create(key);
     Map<String, Object> values = (Map<String, Object>) cfg.get("props");
     type.deserialize(vis, values == null ? new HashMap<>() : values);
     return vis;
@@ -505,7 +504,7 @@ public class YmlStorage extends CommonStorage {
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
-    VisualizerT visualizer = type.create(key, StringUtils.toDisplayNameFormat(key));
+    VisualizerT visualizer = type.create(key);
     writeInternalVisualizer(type, visualizer);
     return visualizer;
   }

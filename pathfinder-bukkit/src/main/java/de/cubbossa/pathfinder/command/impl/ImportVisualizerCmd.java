@@ -72,8 +72,7 @@ public class ImportVisualizerCmd extends PathFinderSubCommand {
           .thenCompose(v -> save(v.getValue(), v.getKey()))
           .thenAccept(visualizer -> {
             BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.formatted(
-                TagResolver.resolver("key", Messages.formatKey(key)),
-                Placeholder.component("name", visualizer.getDisplayName())
+                TagResolver.resolver("key", Messages.formatKey(key))
             ));
           })
           .exceptionally(throwable -> {

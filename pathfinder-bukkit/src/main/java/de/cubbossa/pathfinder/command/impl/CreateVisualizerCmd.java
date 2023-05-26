@@ -46,8 +46,6 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
       getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
         BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(TagResolver.builder()
             .tag("key", Messages.formatKey(visualizer.getKey()))
-            .resolver(Placeholder.component("name", visualizer.getDisplayName()))
-            .resolver(Placeholder.component("name-format", Component.text(visualizer.getNameFormat())))
             .resolver(Placeholder.component("type", Component.text(optType.orElseThrow().getCommandName())))
             .build()));
       });
