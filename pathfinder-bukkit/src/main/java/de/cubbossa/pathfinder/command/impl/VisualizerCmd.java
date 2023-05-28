@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -16,7 +15,6 @@ import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -48,6 +46,9 @@ public class VisualizerCmd extends PathFinderSubCommand {
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, args) -> {
                 if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
+
+                  // just what we do with internal visualizers, but we cannot use property objects here because
+                  // we want this code to be abstract and to work with all kind of visualizers.
 
                   String old = visualizer.getPermission();
                   String perm = args.getUnchecked(1);

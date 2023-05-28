@@ -88,9 +88,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
     if (Bukkit.isPrimaryThread()) {
       return CompletableFuture.completedFuture(dispatchEventInMainThread(event));
     }
-    return CompletableFuture.supplyAsync(() -> {
-      return dispatchEventInMainThread(event);
-    }, BukkitPathFinder.mainThreadExecutor());
+    return CompletableFuture.supplyAsync(() -> dispatchEventInMainThread(event), BukkitPathFinder.mainThreadExecutor());
   }
 
   private boolean dispatchEventInMainThread(Event event) {

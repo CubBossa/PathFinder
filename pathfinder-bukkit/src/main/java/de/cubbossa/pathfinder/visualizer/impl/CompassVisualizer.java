@@ -16,34 +16,34 @@ import java.util.List;
 @Getter
 @Setter
 public class CompassVisualizer
-    extends BossBarVisualizer<CompassVisualizer.Data> {
+    extends BossBarVisualizer<CompassVisualizer.CompassBossbarView> {
 
   public static final Property<CompassVisualizer, Integer> PROP_RADIUS =
-      new SimpleProperty<>("radius", Integer.class, true,
+      new SimpleProperty<>("radius", Integer.class,
           CompassVisualizer::getRadius, CompassVisualizer::setRadius);
 
   public static final Property<CompassVisualizer, String> PROP_BACKGROUND =
-      new SimpleProperty<>("background", String.class, true,
+      new SimpleProperty<>("background", String.class,
           CompassVisualizer::getBackgroundFormat, CompassVisualizer::setBackgroundFormat);
 
   public static final Property<CompassVisualizer, String> PROP_NORTH =
-      new SimpleProperty<>("marker-north", String.class, true,
+      new SimpleProperty<>("marker-north", String.class,
           CompassVisualizer::getNorth, CompassVisualizer::setNorth);
 
   public static final Property<CompassVisualizer, String> PROP_EAST =
-      new SimpleProperty<>("marker-east", String.class, true,
+      new SimpleProperty<>("marker-east", String.class,
           CompassVisualizer::getEast, CompassVisualizer::setEast);
 
   public static final Property<CompassVisualizer, String> PROP_SOUTH =
-      new SimpleProperty<>("marker-south", String.class, true,
+      new SimpleProperty<>("marker-south", String.class,
           CompassVisualizer::getSouth, CompassVisualizer::setSouth);
 
   public static final Property<CompassVisualizer, String> PROP_WEST =
-      new SimpleProperty<>("marker-west", String.class, true,
+      new SimpleProperty<>("marker-west", String.class,
           CompassVisualizer::getWest, CompassVisualizer::setWest);
 
   public static final Property<CompassVisualizer, String> PROP_TARGET =
-      new SimpleProperty<>("marker-target", String.class, true,
+      new SimpleProperty<>("marker-target", String.class,
           CompassVisualizer::getTarget, CompassVisualizer::setTarget);
   private String backgroundFormat =
       "<gray>" + "  |- · · · -+- · · · -|- · · · -+- · · · -| ".repeat(4);
@@ -53,46 +53,46 @@ public class CompassVisualizer
   private String west = "<red>W</red>";
   private String target = "<green>♦</green>";
   private int radius = 20;
-  private Location leadPoint = null;
 
   public CompassVisualizer(NamespacedKey key) {
     super(key);
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+  public CompassBossbarView createView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
     StringCompass compass = new StringCompass(backgroundFormat, radius, null);
     compass.addMarker("N", north, 0.);
     compass.addMarker("E", east, 90.);
     compass.addMarker("S", south, 180.);
     compass.addMarker("W", west, 270.);
-    return new Data(nodes, edges, bossBar, compass);
-  }
-
-  @Override
-  public void play(VisualizerContext<Data, Player> context, Location nearestPoint,
-                   Location leadPoint, Edge nearestEdge) {
-    if (context.data().getCompass().getAngle() == null) {
-      Player player = context.player().unwrap();
-      context.data().getCompass().setAngle(() -> {
-        return BukkitVectorUtils.convertDirectionToXZAngle(player.getLocation());
-      });
-      context.data().getCompass().addMarker("target", target, () -> {
-        return BukkitVectorUtils.convertDirectionToXZAngle(
-            this.leadPoint.clone().subtract(player.getLocation()));
-      });
-    }
-    this.leadPoint = leadPoint;
-    context.data().getBossBar().name(context.data().getCompass());
+    return new CompassBossbarView(nodes, edges, bossBar, compass);
   }
 
   @Getter
-  public static class Data extends BossBarVisualizer.Data {
+  public class CompassBossbarView extends BossBarVisualizer<CompassBossbarView>.BossbarView {
     private final StringCompass compass;
 
-    public Data(List<Node> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
+    public CompassBossbarView(List<Node> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
       super(nodes, edges, bossBar);
       this.compass = compass;
+    }
+
+    @Override
+    public void play(Location nearestPoint, Location leadPoint, Edge nearestEdge) {
+      if (compass.getAngle() == null) {
+        return;
+      }
+      Player player = getTargetViewer().unwrap();
+      if (player == null || !player.isOnline()) {
+        return;
+      }
+      compass.setAngle(() -> {
+        return BukkitVectorUtils.convertDirectionToXZAngle(player.getLocation());
+      });
+      compass.addMarker("target", target, () -> {
+        return BukkitVectorUtils.convertDirectionToXZAngle(leadPoint.clone().subtract(player.getLocation()));
+      });
+      getBossBar().name(compass);
     }
   }
 }

@@ -14,8 +14,6 @@ import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 

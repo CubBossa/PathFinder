@@ -16,11 +16,13 @@ import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.IntPair;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -30,6 +32,7 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
@@ -49,38 +52,49 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
   static int entityId = 10_000;
   protected final Collection<PathPlayer<Player>> players;
   final ProtocolManager protocolManager;
-  final Map<IntPair, Collection<T>> chunkNodeMap;
   final Map<T, Integer> nodeEntityMap;
   final Map<Integer, T> entityNodeMap;
-  final double renderDistance;
+  final Map<Player, Set<T>> hiddenNodes;
+  double renderDistance;
+  double renderDistanceSquared;
 
   public AbstractArmorstandRenderer(JavaPlugin plugin) {
     entityId = 0xffffabcd;
     protocolManager = ProtocolLibrary.getProtocolManager();
 
-    chunkNodeMap = new HashMap<>();
     nodeEntityMap = new HashMap<>();
     entityNodeMap = new HashMap<>();
     players = new HashSet<>();
-    renderDistance = 20;
+    hiddenNodes = new HashMap<>();
 
-    protocolManager.addPacketListener(new PacketAdapter(plugin,
-        ListenerPriority.NORMAL,
-        PacketType.Play.Server.MAP_CHUNK) {
-
-      @Override
-      public void onPacketSending(PacketEvent event) {
-        PacketContainer packet = event.getPacket();
-        int chunkX = packet.getIntegers().read(0);
-        int chunkY = packet.getIntegers().read(1);
-
-        var key = new IntPair(chunkX, chunkY);
-        Collection<T> elements = chunkNodeMap.get(key);
-        if (elements != null) {
-          showElements(elements, event.getPlayer());
+    Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+      for (PathPlayer<Player> player : players) {
+        Collection<CompletableFuture<?>> futures = new HashSet<>();
+        HashSet<T> show = new HashSet<>();
+        HashSet<T> hide = new HashSet<>();
+        for (T node : nodeEntityMap.keySet()) {
+          futures.add(retrieveFrom(node).thenAccept(location -> {
+            if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) > renderDistanceSquared) {
+              hide.add(node);
+            }
+          }));
         }
+        for (T node : hiddenNodes.getOrDefault(player.unwrap(), new HashSet<>())) {
+          futures.add(retrieveFrom(node).thenAccept(location -> {
+            if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) < renderDistanceSquared) {
+              show.add(node);
+            }
+          }));
+        }
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+          Collection<T> col = hiddenNodes.computeIfAbsent(player.unwrap(), u -> new HashSet<>());
+          col.addAll(show);
+          col.removeAll(hide);
+          showElements(show, player.unwrap());
+          hideElements(hide, player.unwrap());
+        });
       }
-    });
+    }, 1, 5);
 
     protocolManager.addPacketListener(new PacketAdapter(plugin,
         ListenerPriority.NORMAL,
@@ -113,15 +127,16 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     });
   }
 
-  public static IntPair locationToChunkIntPair(Location location) {
-    return new IntPair(location.getChunk().getX(), location.getChunk().getZ());
+  public void setRenderDistance(double renderDistance) {
+    this.renderDistance = renderDistance;
+    this.renderDistanceSquared = Math.pow(renderDistance, 2);
   }
 
   abstract boolean equals(T a, T b);
 
   abstract ItemStack head(T element);
 
-  abstract Location retrieveFrom(T element);
+  abstract CompletableFuture<Location> retrieveFrom(T element);
 
   abstract Action<TargetContext<T>> handleInteract(Player player, int slot, boolean left);
 
@@ -148,34 +163,28 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
       updateElement(element, player);
       return;
     }
+    retrieveFrom(element).thenAccept(location -> {
+      int id = spawnArmorstand(player, location, getName(element), isSmall(element));
 
-    Location location = retrieveFrom(element);
-    int id = spawnArmorstand(player, location, getName(element), isSmall(element));
+      nodeEntityMap.put(element, id);
+      entityNodeMap.put(id, element);
 
-    nodeEntityMap.put(element, id);
-    entityNodeMap.put(id, element);
+      IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
 
-    IntPair key = new IntPair(location.getChunk().getX(), location.getChunk().getZ());
-    chunkNodeMap.computeIfAbsent(key, intPair -> new HashSet<>()).add(element);
-
-    equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, head(element)});
+      equipArmorstand(player, id, new ItemStack[]{null, null, null, null, null, head(element)});
+    });
   }
 
   public void updateElement(T element, Player player) {
     T prev = nodeEntityMap.keySet().stream().filter(e -> equals(element, e)).findAny().orElseThrow();
-    Location prevLoc = retrieveFrom(prev);
-    Location loc = retrieveFrom(element);
-
-    // update position if position changed
-    if (!prevLoc.equals(loc)) {
-      teleportArmorstand(player, id(element).orElseThrow(), retrieveFrom(element));
-
-      // update chunk map
-      chunkNodeMap.computeIfAbsent(locationToChunkIntPair(prevLoc), p -> new HashSet<>())
-          .removeIf(element::equals);
-      chunkNodeMap.computeIfAbsent(locationToChunkIntPair(loc), p -> new HashSet<>())
-          .add(element);
-    }
+    retrieveFrom(prev).thenAccept(prevLoc -> {
+      retrieveFrom(element).thenAccept(loc -> {
+        // update position if position changed
+        if (!prevLoc.equals(loc)) {
+          teleportArmorstand(player, id(element).orElseThrow(), loc);
+        }
+      });
+    });
   }
 
   public void hideElements(Collection<T> elements, Player player) {
@@ -185,7 +194,6 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     elements.forEach(nodeEntityMap::remove);
     new HashMap<>(entityNodeMap).entrySet().stream().filter(e -> elements.contains(e.getValue()))
         .map(Map.Entry::getKey).forEach(entityNodeMap::remove);
-    elements.forEach(e -> chunkNodeMap.remove(locationToChunkIntPair(retrieveFrom(e))));
   }
 
   private void sendMeta(Player player, int id, WrappedDataWatcher watcher) {

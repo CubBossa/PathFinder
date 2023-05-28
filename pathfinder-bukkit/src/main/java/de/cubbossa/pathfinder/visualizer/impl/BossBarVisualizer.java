@@ -15,15 +15,15 @@ import java.util.List;
 
 @Getter
 @Setter
-public abstract class BossBarVisualizer<DataT extends BossBarVisualizer.Data>
-    extends EdgeBasedVisualizer<DataT> {
+public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.BossbarView>
+    extends EdgeBasedVisualizer<ViewT> {
 
   public static final AbstractVisualizer.Property<CompassVisualizer, BossBar.Color> PROP_COLOR =
-      new AbstractVisualizer.SimpleProperty<>("color", BossBar.Color.class, true,
+      new AbstractVisualizer.SimpleProperty<>("color", BossBar.Color.class,
           BossBarVisualizer::getColor, BossBarVisualizer::setColor);
 
   public static final AbstractVisualizer.Property<CompassVisualizer, BossBar.Overlay> PROP_OVERLAY =
-      new AbstractVisualizer.SimpleProperty<>("overlay", BossBar.Overlay.class, true,
+      new AbstractVisualizer.SimpleProperty<>("overlay", BossBar.Overlay.class,
           BossBarVisualizer::getOverlay, BossBarVisualizer::setOverlay);
 
   private BossBar.Color color = BossBar.Color.GREEN;
@@ -35,28 +35,33 @@ public abstract class BossBarVisualizer<DataT extends BossBarVisualizer.Data>
   }
 
   @Override
-  public DataT newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
+  public ViewT createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
-    PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).showBossBar(bossBar);
-    return newData(player, nodes, edges, bossBar);
+    return createView(player, nodes, edges, bossBar);
   }
 
-  public abstract DataT newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges,
-                                BossBar bossBar);
-
-  @Override
-  public void destruct(PathPlayer<Player> player, DataT data) {
-    super.destruct(player, data);
-    PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).hideBossBar(data.getBossBar());
-  }
+  public abstract ViewT createView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar);
 
   @Getter
-  public static class Data extends EdgeBasedVisualizer.Data {
+  public abstract class BossbarView extends EdgeBasedView {
+
     private final BossBar bossBar;
 
-    public Data(List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+    public BossbarView(List<Node> nodes, List<Edge> edges, BossBar bossBar) {
       super(nodes, edges);
       this.bossBar = bossBar;
+    }
+
+    @Override
+    public void addViewer(PathPlayer<Player> player) {
+      super.addViewer(player);
+      PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).showBossBar(bossBar);
+    }
+
+    @Override
+    public void removeViewer(PathPlayer<Player> player) {
+      super.removeViewer(player);
+      PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).hideBossBar(bossBar);
     }
   }
 }

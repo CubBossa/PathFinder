@@ -2,11 +2,9 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
@@ -15,7 +13,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -24,61 +21,13 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public abstract class BezierPathVisualizer
-        extends BukkitVisualizer<BezierPathVisualizer.BezierData>
-        implements PathVisualizer<BezierPathVisualizer.BezierData, Player> {
+    extends IntervalVisualizer<BezierPathVisualizer.BezierView> {
 
-    private float pointDistance = .2f;
-    private int bezierSamplingRate = 16;
+  private float pointDistance = .2f;
+  private int bezierSamplingRate = 16;
 
   public BezierPathVisualizer(NamespacedKey key) {
     super(key);
-  }
-
-  @Override
-  public BezierData prepare(List<Node> nodes, PathPlayer<Player> player) {
-
-    // split the path into segments for each appearing world change
-    List<PathSegment> segments = new ArrayList<>();
-    World last = null;
-    List<Node> open = new ArrayList<>();
-    for (Node node : nodes) {
-      if (!Objects.equals(last, node.getLocation().getWorld())) {
-        if (last != null) {
-          segments.add(new PathSegment(last, new ArrayList<>(open)));
-          open.clear();
-        }
-        last = node.getLocation().getWorld();
-      }
-      open.add(node);
-    }
-    if (!open.isEmpty()) {
-      segments.add(new PathSegment(last, new ArrayList<>(open)));
-    }
-
-    // make a smooth spline for each segment and append them.
-    List<Location> calculatedPoints = new ArrayList<>();
-    for (PathSegment segment : segments) {
-      LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
-      for (Node node : segment.nodes()) {
-        if (!(node instanceof Groupable groupable)) {
-          path.put(node, 1.);
-          continue;
-        }
-        CurveLengthModifier mod = groupable.getGroups().stream()
-            .filter(g -> g.hasModifier(CurveLengthModifier.class))
-            .sorted()
-            .map(g -> g.<CurveLengthModifier>getModifier(CurveLengthModifier.KEY))
-            .filter(Optional::isPresent).map(Optional::get)
-            .findFirst().orElse(null);
-
-        path.put(node, mod == null ? 1 : mod.curveLength());
-      }
-      Spline spline = makeSpline(path);
-      List<Vector> curve = transform(interpolate(spline));
-      org.bukkit.World world = Bukkit.getWorld(segment.world().getUniqueId());
-      calculatedPoints.addAll(curve.stream().map(vector -> vector.toLocation(world)).toList());
-    }
-    return new BezierData(calculatedPoints);
   }
 
   /**
@@ -92,24 +41,74 @@ public abstract class BezierPathVisualizer
   }
 
   private List<Vector> interpolate(Spline bezierVectors) {
-      return CommonPathFinder.SPLINES.newCurveBuilder(bezierVectors)
-              .withClosedPath(false)
-              .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
-              .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))
-              .buildAndConvert().stream()
-              .map(vector -> new Vector(vector.getX(), vector.getY(), vector.getZ()))
-              .collect(Collectors.toList());
+    return CommonPathFinder.SPLINES.newCurveBuilder(bezierVectors)
+        .withClosedPath(false)
+        .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
+        .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))
+        .buildAndConvert().stream()
+        .map(vector -> new Vector(vector.getX(), vector.getY(), vector.getZ()))
+        .collect(Collectors.toList());
   }
 
   private List<Vector> transform(List<Vector> curve) {
     return curve;
   }
 
-  @Override
-  public void destruct(PathPlayer<Player> player, BezierData data) {
-  }
+  @Getter
+  public abstract class BezierView extends IntervalVisualizer<BezierView>.IntervalView {
+    List<Location> points;
 
-  public record BezierData(List<Location> points) {
+    public BezierView(List<Location> points) {
+      this.points = points;
+    }
+
+    public BezierView(Node... nodes) {
+      super();
+
+      // split the path into segments for each appearing world change
+      List<PathSegment> segments = new ArrayList<>();
+      World last = null;
+      List<Node> open = new ArrayList<>();
+      for (Node node : nodes) {
+        if (!Objects.equals(last, node.getLocation().getWorld())) {
+          if (last != null) {
+            segments.add(new PathSegment(last, new ArrayList<>(open)));
+            open.clear();
+          }
+          last = node.getLocation().getWorld();
+        }
+        open.add(node);
+      }
+      if (!open.isEmpty()) {
+        segments.add(new PathSegment(last, new ArrayList<>(open)));
+      }
+
+      // make a smooth spline for each segment and append them.
+      List<Location> calculatedPoints = new ArrayList<>();
+      for (PathSegment segment : segments) {
+        LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
+        for (Node node : segment.nodes()) {
+          if (!(node instanceof Groupable groupable)) {
+            path.put(node, 1.);
+            continue;
+          }
+          CurveLengthModifier mod = groupable.getGroups().stream()
+              .filter(g -> g.hasModifier(CurveLengthModifier.class))
+              .sorted()
+              .map(g -> g.<CurveLengthModifier>getModifier(CurveLengthModifier.KEY))
+              .filter(Optional::isPresent).map(Optional::get)
+              .findFirst().orElse(null);
+
+          path.put(node, mod == null ? 1 : mod.curveLength());
+        }
+        Spline spline = makeSpline(path);
+        List<Vector> curve = transform(interpolate(spline));
+        org.bukkit.World world = Bukkit.getWorld(segment.world().getUniqueId());
+        calculatedPoints.addAll(curve.stream().map(vector -> vector.toLocation(world)).toList());
+      }
+
+      points = new ArrayList<>(calculatedPoints);
+    }
   }
 
   private record PathSegment(World world, List<Node> nodes) {

@@ -129,7 +129,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
     PlayerNode playerNode = new PlayerNode(player);
 
-    return NodeHandler.getInstance().createGraph(playerNode).thenApply(graph -> {
+    return NodeHandler.getInstance().createGraph(playerNode).thenCompose(graph -> {
       return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
         PathSolver<Node> pathSolver = new SimpleDijkstra<>();
@@ -153,13 +153,12 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
         double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
             .map(FindDistanceModifier::distance).orElse(1.5);
         return setPath(player, path, path.get(path.size() - 1).getLocation(), (float) findDist);
-      }).join();
+      });
     });
   }
 
   public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<Node> pathNodes, Location target, float distance) {
-    VisualizerPath<PlayerT> visualizerPath = new CommonVisualizerPath<>();
-    visualizerPath.prepare(pathNodes, player);
+    VisualizerPath<PlayerT> visualizerPath = new CommonVisualizerPath<>(pathNodes, player);
 
     boolean success = eventDispatcher.dispatchPathStart(player, visualizerPath, target, distance);
     if (!success) {
@@ -168,9 +167,9 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
     SearchInfo<PlayerT> current = activePaths.put(player, new SearchInfo<>(player, visualizerPath, target, distance));
     if (current != null) {
-      current.path().cancel(player);
+      current.path().removeViewer(player);
     }
-    visualizerPath.run(player);
+    visualizerPath.addViewer(player);
     return NavigateResult.SUCCESS;
   }
 
@@ -182,7 +181,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   public void unsetPath(SearchInfo<PlayerT> info) {
     activePaths.remove(info.player());
-    info.path().cancel(info.player());
+    info.path().removeViewer(info.player());
 
     eventDispatcher.dispatchPathStopped(info.player, info.path, info.target, info.distance);
   }

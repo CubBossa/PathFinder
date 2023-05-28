@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
@@ -29,11 +30,12 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
 
   public NodeArmorStandRenderer(JavaPlugin plugin) {
     super(plugin);
+    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getNodeArmorStandRenderDistance());
   }
 
   @Override
-  Location retrieveFrom(Node element) {
-    return BukkitVectorUtils.toBukkit(element.getLocation()).add(NODE_OFFSET);
+  CompletableFuture<Location> retrieveFrom(Node element) {
+    return CompletableFuture.completedFuture(BukkitVectorUtils.toBukkit(element.getLocation()).add(NODE_OFFSET));
   }
 
   @Override

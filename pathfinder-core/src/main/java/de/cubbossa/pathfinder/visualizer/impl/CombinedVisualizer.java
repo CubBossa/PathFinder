@@ -4,8 +4,12 @@ import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CombinedVisualizer extends
-    AbstractVisualizer<CombinedVisualizer.CombinedData, Object> {
+    AbstractVisualizer<CombinedVisualizer.CombinedView<Object>, Object> {
 
   private final List<NamespacedKey> visualizerKeys;
   private final List<PathVisualizer<?, ?>> visualizers;
@@ -67,24 +71,38 @@ public class CombinedVisualizer extends
   }
 
   @Override
-  public CombinedData prepare(List<Node> nodes, PathPlayer<Object> player) {
-    return new CombinedData(visualizers.stream()
-        .filter(v -> v.getTargetType().equals(player.getPlayerClass()))
+  public CombinedView<Object> createView(List<Node> nodes, PathPlayer<Object> player) {
+    return new CombinedView<Object>(visualizers.stream()
+        .filter(v -> v.getTargetType().isInstance(getTargetType()))
         // safely assume that the player type matches for all sub visualizers that matched the filter
-        .collect(Collectors.toMap(Keyed::getKey, v -> v.prepare(nodes, (PathPlayer) player))));
+        .collect(Collectors.toMap(Keyed::getKey, v -> v.createView(nodes, (PathPlayer) player))));
   }
 
-  @Override
-  public void play(VisualizerContext<CombinedData, Object> context) {
-    visualizers.forEach(visualizer -> visualizer.play(
-        new VisualizerContext(context.players(), context.interval(), context.time(),
-            context.data().childData().get(visualizer.getKey()))));
-  }
 
-  @Override
-  public void destruct(PathPlayer<Object> player, CombinedData data) {
-  }
+  @Getter
+  @RequiredArgsConstructor
+  public class CombinedView<T> extends AbstractVisualizer<CombinedView<T>, T>.AbstractView {
 
-  public record CombinedData(Map<NamespacedKey, Object> childData) {
+    private final Map<NamespacedKey, PathView<T>> childData;
+
+    @Override
+    public void addViewer(PathPlayer<T> player) {
+      childData.values().forEach(pathView -> pathView.addViewer(player));
+    }
+
+    @Override
+    public void removeViewer(PathPlayer<T> player) {
+      childData.values().forEach(pathView -> pathView.removeViewer(player));
+    }
+
+    @Override
+    public void removeAllViewers() {
+      childData.values().forEach(PathView::removeAllViewers);
+    }
+
+    @Override
+    public Collection<PathPlayer<T>> getViewers() {
+      return childData.values().stream().map(PathView::getViewers).flatMap(Collection::stream).collect(Collectors.toSet());
+    }
   }
 }

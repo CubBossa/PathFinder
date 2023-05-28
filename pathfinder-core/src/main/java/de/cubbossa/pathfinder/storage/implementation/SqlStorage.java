@@ -25,7 +25,6 @@ import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.StringUtils;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.*;
@@ -683,8 +682,7 @@ public abstract class SqlStorage extends CommonStorage {
         )
         .values(
             visualizer.getKey(), type.getKey(), visualizer.getPermission(), dataString
-        )
-        .execute();
+        );
     return visualizer;
   }
 
@@ -724,6 +722,9 @@ public abstract class SqlStorage extends CommonStorage {
         .insertInto(PATHFINDER_VISUALIZER)
         .set(PATHFINDER_VISUALIZER.KEY, visualizer.getKey())
         .set(PATHFINDER_VISUALIZER.TYPE, type.getKey())
+        .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
+        .set(PATHFINDER_VISUALIZER.DATA, dataString)
+        .onDuplicateKeyUpdate()
         .set(PATHFINDER_VISUALIZER.PERMISSION, visualizer.getPermission())
         .set(PATHFINDER_VISUALIZER.DATA, dataString)
         .execute();

@@ -24,14 +24,14 @@ public abstract class BezierVisualizerType<VisualizerT extends BezierPathVisuali
                 .executes((commandSender, args) -> {
                   if (args.get(0) instanceof AdvancedParticleVisualizer vis) { //TODO this should be in its own deriving class
                     setProperty(BukkitUtils.wrap(commandSender), vis, args.getUnchecked(1), "particle-steps",
-                        true, vis::getSchedulerSteps, vis::setSchedulerSteps);
+                        vis::getSchedulerSteps, vis::setSchedulerSteps);
                   }
                 })))
         .then(CustomArgs.literal("sample-rate")
             .then(CustomArgs.integer("sample-rate", 1, 64)
                 .executes((commandSender, args) -> {
                   if (args.get(0) instanceof BezierPathVisualizer vis) {
-                    setProperty(BukkitUtils.wrap(commandSender), vis, args.getUnchecked(1), "sample-rate", true,
+                    setProperty(BukkitUtils.wrap(commandSender), vis, args.getUnchecked(1), "sample-rate",
                         vis::getBezierSamplingRate, vis::setBezierSamplingRate);
                   }
                 })));

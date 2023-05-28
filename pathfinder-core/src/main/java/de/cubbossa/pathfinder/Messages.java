@@ -349,9 +349,13 @@ public class Messages {
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
-  public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set.interval")
+  public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set_property")
       .withDefault("<msg:prefix>Changed <property> for <name> from <old-value> to <value>.")
       .withPlaceholders("key", "type", "property", "value", "old-value")
+      .build();
+  public static final Message CMD_VIS_SET_PROP_ERROR = new MessageBuilder("commands.path_visualizer.set_property_error")
+      .withDefault("<negative>Could not set property <property> for visualizer.")
+      .withPlaceholders("key", "property")
       .build();
   public static final Message CMD_VIS_IMPORT_EXISTS = new MessageBuilder("commands.path_visualizer.import.already_exists")
       .withDefault("<negative>Could not import file, another visualizer with this key already exists.</negative>")

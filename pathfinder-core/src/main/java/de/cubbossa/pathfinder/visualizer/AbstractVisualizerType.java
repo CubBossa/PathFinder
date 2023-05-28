@@ -64,42 +64,56 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
   public <V extends PathVisualizer<?, ?>, T2> void setProperty(PathPlayer<?> sender, V visualizer,
                                                                AbstractVisualizer.Property<V, T2> prop,
                                                                T2 val) {
-    setProperty(sender, visualizer, val, prop.getKey(), prop.isVisible(),
+    setProperty(sender, visualizer, val, prop.getKey(),
         () -> prop.getValue(visualizer), v -> prop.setValue(visualizer, v));
   }
 
   public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
-                               String property, boolean visual, Supplier<T2> getter,
+                               String property, Supplier<T2> getter,
                                Consumer<T2> setter) {
-    setProperty(sender, visualizer, value, property, visual, getter, setter, t ->
+    setProperty(sender, visualizer, value, property, getter, setter, t ->
         Component.text(t == null ? "null" : t.toString()));
   }
 
   public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
-                               String property, boolean visual, Supplier<T2> getter,
+                               String property, Supplier<T2> getter,
                                Consumer<T2> setter, Function<T2, ComponentLike> formatter) {
-    setProperty(sender, visualizer, value, property, visual, getter, setter,
+    setProperty(sender, visualizer, value, property, getter, setter,
         (s, t) -> Placeholder.component(s, formatter.apply(t)));
   }
 
   public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
-                               String property, boolean visual, Supplier<T2> getter,
+                               String property, Supplier<T2> getter,
                                Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
     T2 old = getter.get();
     if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
+      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
+          TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+          Placeholder.parsed("property", property)
+      ));
       return;
     }
     setter.accept(value);
-    sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-        TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
-        Placeholder.component("type", Component.text(
-            PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).join()
-                .orElseThrow()
-                .getCommandName())),
-        Placeholder.parsed("property", property),
-        formatter.apply("old-value", old),
-        formatter.apply("value", value)
-    ));
+    PathFinderProvider.get().getStorage()
+        .saveVisualizer(visualizer)
+        .thenCompose(unused -> PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
+              TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+              Placeholder.component("type", Component.text(
+                  optType.map(VisualizerType::getCommandName).orElse("unknown"))),
+              Placeholder.parsed("property", property),
+              formatter.apply("old-value", old),
+              formatter.apply("value", value)
+          ));
+        }))
+        .exceptionally(throwable -> {
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
+              TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+              Placeholder.parsed("property", property)
+          ));
+          throwable.printStackTrace();
+          return null;
+        });
   }
 
   protected <A, V extends PathVisualizer<?, ?>> Argument<?> subCommand(String node,

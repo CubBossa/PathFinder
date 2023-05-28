@@ -23,18 +23,17 @@ public class CreateGroupCmd extends PathFinderSubCommand {
     withPermission(PathPerms.PERM_CMD_NG_CREATE);
     then(new StringArgument("name")
         .executes((sender, args) -> {
-          createGroup(sender, args.getUnchecked(0));
+          createGroup(sender, args.getUnchecked(0).toString().toLowerCase());
         })
     );
   }
 
   private void createGroup(CommandSender sender, String name) {
-    String finalName = name.toLowerCase();
     NamespacedKey key = CommonPathFinder.pathfinder(name);
     getPathfinder().getStorage().loadGroup(key).thenAccept(optGroup -> {
       if (optGroup.isPresent()) {
         BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.formatted(
-            Placeholder.parsed("name", finalName)
+            Placeholder.parsed("name", name)
         ));
         return;
       }

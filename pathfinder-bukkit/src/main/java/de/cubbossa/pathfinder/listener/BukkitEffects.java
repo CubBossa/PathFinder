@@ -15,17 +15,17 @@ public class BukkitEffects {
   public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConf.EffectsConf config) {
 
     dispatcher.listen(PathTargetReachedEvent.class, e -> {
-      e.getPath().getRenderingTarget().sendMessage(Messages.TARGET_FOUND);
-      runCommands(e.getPath().getRenderingTarget(), config.onPathTargetReach);
+      e.getPath().getTargetViewer().sendMessage(Messages.TARGET_FOUND);
+      runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach);
     });
 
     dispatcher.listen(PathCancelledEvent.class, e -> {
-      e.getPath().getRenderingTarget().sendMessage(Messages.CMD_CANCEL);
-      runCommands(e.getPath().getRenderingTarget(), config.onPathCancel);
+      e.getPath().getTargetViewer().sendMessage(Messages.CMD_CANCEL);
+      runCommands(e.getPath().getTargetViewer(), config.onPathCancel);
     });
 
     dispatcher.listen(PathStoppedEvent.class, e -> {
-      runCommands(e.getPath().getRenderingTarget(), config.onPathStop);
+      runCommands(e.getPath().getTargetViewer(), config.onPathStop);
     });
 
     dispatcher.listen(PlayerDiscoverLocationEvent.class, e -> {

@@ -22,35 +22,35 @@ public class PlaceholderVisualizer
 
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH =
       new SimpleProperty<>("format-north",
-          String.class, true, PlaceholderVisualizer::getNorth, PlaceholderVisualizer::setNorth);
+          String.class, PlaceholderVisualizer::getNorth, PlaceholderVisualizer::setNorth);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_EAST =
       new SimpleProperty<>("format-north-east",
-          String.class, true, PlaceholderVisualizer::getNorthEast,
+          String.class, PlaceholderVisualizer::getNorthEast,
           PlaceholderVisualizer::setNorthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_EAST =
       new SimpleProperty<>("format-east",
-          String.class, true, PlaceholderVisualizer::getEast, PlaceholderVisualizer::setEast);
+          String.class, PlaceholderVisualizer::getEast, PlaceholderVisualizer::setEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_EAST =
       new SimpleProperty<>("format-south-east",
-          String.class, true, PlaceholderVisualizer::getSouthEast,
+          String.class, PlaceholderVisualizer::getSouthEast,
           PlaceholderVisualizer::setSouthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH =
       new SimpleProperty<>("format-south",
-          String.class, true, PlaceholderVisualizer::getSouth, PlaceholderVisualizer::setSouth);
+          String.class, PlaceholderVisualizer::getSouth, PlaceholderVisualizer::setSouth);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_WEST =
       new SimpleProperty<>("format-south-west",
-          String.class, true, PlaceholderVisualizer::getSouthWest,
+          String.class, PlaceholderVisualizer::getSouthWest,
           PlaceholderVisualizer::setSouthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_WEST =
       new SimpleProperty<>("format-west",
-          String.class, true, PlaceholderVisualizer::getWest, PlaceholderVisualizer::setWest);
+          String.class, PlaceholderVisualizer::getWest, PlaceholderVisualizer::setWest);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_WEST =
       new SimpleProperty<>("format-north-west",
-          String.class, true, PlaceholderVisualizer::getNorthWest,
+          String.class, PlaceholderVisualizer::getNorthWest,
           PlaceholderVisualizer::setNorthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_DISTANCE =
       new SimpleProperty<>("format-distance",
-          String.class, true, PlaceholderVisualizer::getDistanceFormat,
+          String.class, PlaceholderVisualizer::getDistanceFormat,
           PlaceholderVisualizer::setDistanceFormat);
   public static final Property<PlaceholderVisualizer, String>[] PROPS = new Property[] {
       PROP_NORTH, PROP_NORTH_EAST, PROP_EAST, PROP_SOUTH_EAST, PROP_SOUTH, PROP_SOUTH_WEST,
@@ -81,8 +81,8 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public Data prepare(List<Node> nodes, PathPlayer<Player> player) {
-    Data data = super.prepare(nodes, player);
+  public Data createView(List<Node> nodes, PathPlayer<Player> player) {
+    Data data = super.createView(nodes, player);
     Player bp = player.unwrap();
     PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, data::getDirection);
     PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, bp, data::getDistance);

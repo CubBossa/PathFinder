@@ -101,20 +101,22 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   private <T> void onSetParticle(CommandSender sender, ParticleVisualizer visualizer,
                                  ParticleData<T> particle, @Nullable Integer amount,
                                  @Nullable Float speed, @Nullable Vector offset) {
-    setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle", true,
+    setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle",
         visualizer::getParticle, visualizer::setParticle);
-    setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data", true,
-        visualizer::getParticleData, visualizer::setParticleData);
+    if (particle.data() != null) {
+      setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data",
+          visualizer::getParticleData, visualizer::setParticleData);
+    }
     if (amount != null) {
-      setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", true, visualizer::getAmount,
+      setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", visualizer::getAmount,
           visualizer::setAmount);
     }
     if (speed != null) {
-      setProperty(BukkitUtils.wrap(sender), visualizer, speed, "speed", true, visualizer::getSpeed,
+      setProperty(BukkitUtils.wrap(sender), visualizer, speed, "speed", visualizer::getSpeed,
           visualizer::setSpeed);
     }
     if (offset != null) {
-      setProperty(BukkitUtils.wrap(sender), visualizer, offset, "offset", true, visualizer::getOffset,
+      setProperty(BukkitUtils.wrap(sender), visualizer, offset, "offset", visualizer::getOffset,
           visualizer::setOffset);
     }
   }

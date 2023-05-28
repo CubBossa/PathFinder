@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.NodeCache;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class NodeCacheImpl implements NodeCache {
 
@@ -30,7 +31,7 @@ public class NodeCacheImpl implements NodeCache {
   @Override
   public CacheCollection<UUID, Node> getNodes(Collection<UUID> ids) {
     if (allCached) {
-      return new CacheCollection<>(new HashSet<>(nodeCache.values()), new HashSet<>());
+      return new CacheCollection<>(new HashSet<>(ids.stream().map(nodeCache::get).collect(Collectors.toSet())), new HashSet<>());
     }
     Collection<Node> result = new HashSet<>();
     Collection<UUID> absent = new HashSet<>();

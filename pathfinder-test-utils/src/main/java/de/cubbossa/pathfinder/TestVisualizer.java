@@ -4,20 +4,16 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-public class TestVisualizer extends AbstractVisualizer<TestVisualizer.Data, Logger> {
+public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logger> {
 
   public TestVisualizer(NamespacedKey key) {
     super(key);
-  }
-
-  record Data(List<Node> nodes) {
   }
 
   @Override
@@ -26,22 +22,23 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.Data, Logg
   }
 
   @Override
-  public Data prepare(List<Node> nodes, PathPlayer<Logger> player) {
-    return new Data(nodes);
-  }
-
-  @Override
-  public void play(VisualizerContext<Data, Logger> context) {
-    context.player().unwrap().log(Level.FINE, context.data().nodes.stream().map(Node::getNodeId).map(UUID::toString).collect(Collectors.joining(",")));
-  }
-
-  @Override
-  public void destruct(PathPlayer<Logger> player, Data data) {
-
+  public View createView(List<Node> nodes, PathPlayer<Logger> player) {
+    return new View(nodes);
   }
 
   @Override
   public boolean equals(Object obj) {
     return obj instanceof TestVisualizer visualizer && getKey().equals(visualizer.getKey());
+  }
+
+  @Getter
+  @Setter
+  public class View extends AbstractVisualizer<View, Logger>.AbstractView {
+    List<Node> nodes;
+
+    public View(List<Node> nodes) {
+      super();
+      this.nodes = nodes;
+    }
   }
 }

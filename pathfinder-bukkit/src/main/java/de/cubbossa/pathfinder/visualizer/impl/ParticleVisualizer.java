@@ -2,18 +2,22 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Node;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.List;
 
 @Getter
 @Setter
 public class ParticleVisualizer extends BezierPathVisualizer {
 
   public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
-      new SimpleProperty<>("particle-steps", Integer.class, true,
+      new SimpleProperty<>("particle-steps", Integer.class,
           ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
 
   private int schedulerSteps = 50;
@@ -28,14 +32,20 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   }
 
   @Override
-  public void play(VisualizerContext<BezierData, Player> context) {
-    for (int i = context.interval() % getSchedulerSteps(); i < context.data().points().size();
-         i += getSchedulerSteps()) {
-      for (PathPlayer<Player> player : context.players()) {
-        Player bukkitPlayer = player.unwrap();
-        bukkitPlayer.spawnParticle(particle, context.data().points().get(i), amount, offset.getX(),
-            offset.getY(), offset.getZ(), speed, particleData);
+  public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
+    return new BezierView(nodes.toArray(Node[]::new)) {
+
+      @Override
+      void play(int interval) {
+        for (int i = interval % getSchedulerSteps(); i < points.size();
+             i += getSchedulerSteps()) {
+          for (PathPlayer<Player> player : getViewers()) {
+            Player bukkitPlayer = player.unwrap();
+            Location point = points.get(i);
+            bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, particleData);
+          }
+        }
       }
-    }
+    };
   }
 }

@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
@@ -29,22 +30,21 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
   private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
-  private final ItemStack nodeHead =
-      ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
+  private final ItemStack nodeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
 
   public EdgeArmorStandRenderer(JavaPlugin plugin) {
     super(plugin);
+    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getEdgeArmorStandRenderDistance());
   }
 
   @Override
-  Location retrieveFrom(Edge element) {
+  CompletableFuture<Location> retrieveFrom(Edge element) {
     return FutureUtils
         .both(
             element.resolveStart().thenApply(Node::getLocation).thenApply(BukkitVectorUtils::toBukkit),
             element.resolveEnd().thenApply(Node::getLocation).thenApply(BukkitVectorUtils::toBukkit)
         )
-        .thenApply(e -> BukkitUtils.lerp(e.getKey(), e.getValue(), .3d).add(ARMORSTAND_CHILD_OFFSET))
-        .join();
+        .thenApply(e -> BukkitUtils.lerp(e.getKey(), e.getValue(), .3d).add(ARMORSTAND_CHILD_OFFSET));
   }
 
   @Override
@@ -65,10 +65,12 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   @Override
   public void showElement(Edge element, Player player) {
     super.showElement(element, player);
-    setHeadRotation(player, nodeEntityMap.get(element), element.resolveStart().thenApply(start -> {
+    element.resolveStart().thenApply(start -> {
       Node end = element.resolveEnd().join();
       return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
-    }).join());
+    }).thenAccept(vector -> {
+      setHeadRotation(player, nodeEntityMap.get(element), vector);
+    });
   }
 
   @Override

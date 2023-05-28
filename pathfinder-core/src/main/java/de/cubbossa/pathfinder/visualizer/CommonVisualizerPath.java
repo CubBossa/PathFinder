@@ -1,20 +1,19 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import com.google.common.collect.Lists;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Common implementation of the {@link VisualizerPath} interface.
@@ -22,21 +21,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <PlayerT> The abstract path player type.
  */
 @Getter
+@Setter
 public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
 
-  protected PathPlayer<PlayerT> renderingTarget;
-  protected HashSet<PathPlayer<PlayerT>> viewers;
+  protected PathPlayer<PlayerT> targetViewer;
+  protected final HashSet<PathPlayer<PlayerT>> viewers;
   protected final Collection<SubPath<?>> paths;
 
-  public CommonVisualizerPath() {
+  public CommonVisualizerPath(List<Node> path, PathPlayer<PlayerT> player) {
     this.viewers = new HashSet<>();
     this.paths = new HashSet<>();
-  }
-
-  @Override
-  public void prepare(List<Node> path, PathPlayer<PlayerT> player) {
-    cancelAll();
-    renderingTarget = player;
+    targetViewer = player;
+    this.viewers.add(targetViewer);
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
@@ -99,49 +95,12 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
       }
     }
     for (SubPath<?> subPath : paths) {
-      prepareSubPath(subPath, player);
+      injectSubPathView(subPath, player);
     }
   }
 
-  private <DataT> void prepareSubPath(SubPath<DataT> subPath, PathPlayer<PlayerT> player) {
-    subPath.data = subPath.visualizer.prepare(subPath.path, player);
-  }
-
-  @Override
-  public void run(PathPlayer<PlayerT> player) {
-    if (renderingTarget == null) {
-      throw new IllegalStateException("A visualizer path must not be run before preparing its caches.");
-    }
-    AtomicInteger interval = new AtomicInteger(0);
-    for (SubPath<?> path : paths) {
-      path.task = runTask(() -> {
-        play(path, player, interval);
-      }, 0L, path.visualizer.getInterval());
-    }
-  }
-
-  private <DataT> void play(SubPath<DataT> path, PathPlayer<PlayerT> player, AtomicInteger interval) {
-    long fullTime = 0; //TODO player..getWorld().getFullTime();
-    path.visualizer.play(new PathVisualizer.VisualizerContext<>(Lists.newArrayList(player),
-        interval.getAndIncrement(), fullTime, path.data));
-  }
-
-  private void cancelAll() {
-    getViewers().forEach(this::cancel);
-  }
-
-  @Override
-  public void cancel(PathPlayer<PlayerT> player) {
-    paths.forEach(subPath -> cancel(player, subPath));
-  }
-
-  private <DataT> void cancel(PathPlayer<PlayerT> player, SubPath<DataT> path) {
-    if (path.task == null) {
-      return;
-    }
-    cancelTask(path.task);
-
-    path.visualizer.destruct(player, path.data);
+  private <ViewT extends PathView<PlayerT>> void injectSubPathView(SubPath<ViewT> subPath, PathPlayer<PlayerT> player) {
+    subPath.data = subPath.visualizer.createView(subPath.path, player);
   }
 
   @Override
@@ -154,20 +113,29 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
     return viewers.contains(player);
   }
 
+  @Override
+  public void addViewer(PathPlayer<PlayerT> player) {
+    viewers.add(player);
+    paths.forEach(subPath -> subPath.data.addViewer(player));
+  }
+
+  @Override
+  public void removeViewer(PathPlayer<PlayerT> player) {
+    viewers.remove(player);
+    paths.forEach(subPath -> subPath.data.removeViewer(player));
+  }
+
+  @Override
+  public void removeAllViewers() {
+    getViewers().forEach(this::removeViewer);
+  }
+
   @RequiredArgsConstructor
   @Accessors(fluent = true)
-  class SubPath<DataT> {
+  class SubPath<ViewT extends PathView<PlayerT>> {
     protected final List<Node> path;
-    protected final PathVisualizer<DataT, PlayerT> visualizer;
-    protected DataT data;
+    protected final PathVisualizer<ViewT, PlayerT> visualizer;
+    protected ViewT data;
     protected Task task;
-  }
-
-  Task runTask(Runnable task, long delay, long interval) {
-    return PathFinderProvider.get().repeatingTask(task, delay, interval);
-  }
-
-  void cancelTask(Task task) {
-    PathFinderProvider.get().cancelTask(task);
   }
 }

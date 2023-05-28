@@ -3,15 +3,16 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 @Getter
 @Setter
@@ -34,54 +35,52 @@ public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
   }
 
   @Override
-  public BezierData prepare(List<Node> nodes, PathPlayer<Player> player) {
-    BezierData bezierData = super.prepare(nodes, player);
+  public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
+    BezierView bezierView = new BezierView() {
+      @Override
+      void play(int interval) {
+      }
+    };
     List<Location> points = new ArrayList<>();
-    for (int i = 1; i < bezierData.points().size() - 1; i++) {
-      Location previous = bezierData.points().get(i - 1);
-      Location point = bezierData.points().get(i);
-      Location next = bezierData.points().get(i + 1);
+    for (int i = 1; i < bezierView.getPoints().size() - 1; i++) {
+      Location previous = bezierView.getPoints().get(i - 1);
+      Location point = bezierView.getPoints().get(i);
+      Location next = bezierView.getPoints().get(i + 1);
 
       Vector dir = next.toVector().subtract(previous.toVector()).normalize();
       Vector right = new Vector(0, 1, 0).crossProduct(dir).normalize();
       Vector up = dir.clone().crossProduct(right).normalize();
 
-      Context c = new Context(player, point, 0, 0, i, bezierData.points().size());
+      Context c = new Context(player, point, 0, 0, i, bezierView.getPoints().size());
       points.add(point.clone()
           .add(right.multiply(pathOffsetX.apply(c)))
           .add(up.multiply(pathOffsetY.apply(c)))
           .add(dir.multiply(pathOffsetZ.apply(c))));
     }
-    return new BezierData(points);
-  }
-
-  @Override
-  public void play(VisualizerContext<BezierData, Player> context) {
-    int step = context.interval() % schedulerSteps;
-    for (int i = step; i < context.data().points().size(); i += schedulerSteps) {
-      for (PathPlayer<Player> player : context.players()) {
-        Player bukkitPlayer = player.unwrap();
-        Location point = context.data().points().get(i);
-        Context c =
-            new Context(player, point, context.interval(), step, i, context.data().points().size());
-        Particle p = particle.apply(c);
-        Object data = particleData.apply(c);
-        if (data == null || !p.getDataType().equals(data.getClass())) {
-          bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
-              particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
-        } else {
-          bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
-              particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), data);
+    return new BezierView(points) {
+      @Override
+      void play(int interval) {
+        int step = interval % schedulerSteps;
+        for (int i = step; i < points.size(); i += schedulerSteps) {
+          for (PathPlayer<Player> player : getViewers()) {
+            Player bukkitPlayer = player.unwrap();
+            Location point = points.get(i);
+            Context c = new Context(player, point, interval, step, i, points.size());
+            Particle p = particle.apply(c);
+            Object data = particleData.apply(c);
+            if (data == null || !p.getDataType().equals(data.getClass())) {
+              bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+                  particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), null);
+            } else {
+              bukkitPlayer.spawnParticle(p, point, amount.apply(c), particleOffsetX.apply(c),
+                  particleOffsetY.apply(c), particleOffsetZ.apply(c), speed.apply(c), data);
+            }
+          }
         }
       }
-    }
+    };
   }
 
-  public record Context(PathPlayer<Player> player, Location point, int interval, int step,
-                        int index,
-                        int count) {
-
+  public record Context(PathPlayer<Player> player, Location point, int interval, int step, int index, int count) {
   }
-
-
 }

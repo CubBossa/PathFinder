@@ -102,7 +102,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     Collection<UUID> rendered = new HashSet<>(this.rendered);
     clear(player);
     rendered.removeAll(nodes.stream().map(Node::getNodeId).toList());
-    return renderNodes(player, pathFinder.getStorage().loadNodes(rendered).join());
+    return pathFinder.getStorage().loadNodes(rendered).thenCompose(n -> renderNodes(player, n));
   }
 
   private void updateRenderer(PathPlayer<Player> player) {

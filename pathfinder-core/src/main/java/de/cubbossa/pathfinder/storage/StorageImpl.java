@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,23 +66,24 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<NodeGroup> createGlobalNodeGroup(VisualizerType<?> defaultVisualizerType) {
-    return loadGroup(CommonPathFinder.globalGroupKey()).thenApplyAsync(group -> {
+    return loadGroup(CommonPathFinder.globalGroupKey()).thenCompose(group -> {
       if (group.isPresent()) {
-        return group.get();
+        return CompletableFuture.completedFuture(group.get());
       }
-      PathVisualizer<?, ?> vis = loadVisualizer(CommonPathFinder.defaultVisualizerKey()).thenApply(pathVisualizer -> {
+      return loadVisualizer(CommonPathFinder.defaultVisualizerKey()).thenApply(pathVisualizer -> {
         return pathVisualizer.orElseGet(() -> {
           return createAndLoadVisualizer(defaultVisualizerType, CommonPathFinder.defaultVisualizerKey()).join();
         });
-      }).join();
-
-      NodeGroup globalGroup = createAndLoadGroup(CommonPathFinder.globalGroupKey()).join();
-      globalGroup.setWeight(0);
-      globalGroup.addModifier(new CommonCurveLengthModifier(3));
-      globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
-      globalGroup.addModifier(new CommonVisualizerModifier(vis));
-      saveGroup(globalGroup).join();
-      return globalGroup;
+      }).thenApply(vis -> {
+        NodeGroup globalGroup = createAndLoadGroup(CommonPathFinder.globalGroupKey()).join();
+        globalGroup.setWeight(0);
+        globalGroup.addModifier(new CommonCurveLengthModifier(3));
+        globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
+        globalGroup.addModifier(new CommonVisualizerModifier(vis));
+        return globalGroup;
+      }).thenCompose(g -> {
+        return saveGroup(g).thenApply(unused -> g);
+      });
     });
   }
 
@@ -303,10 +305,10 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
-    return loadNodes(uuids).thenAcceptAsync(nodes -> {
+    return loadNodes(uuids).thenCompose(nodes -> {
       eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
 
-      loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenAcceptAsync(types -> {
+      return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenAcceptAsync(types -> {
         for (Node node : nodes) {
           if (node instanceof Groupable groupable) {
             implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
@@ -320,7 +322,7 @@ public class StorageImpl implements Storage {
         uuids.forEach(cache.getNodeCache()::invalidate);
         nodes.forEach(cache.getGroupCache()::invalidate);
         uuids.forEach(cache.getNodeTypeCache()::invalidate);
-      }).join();
+      });
     });
   }
 
