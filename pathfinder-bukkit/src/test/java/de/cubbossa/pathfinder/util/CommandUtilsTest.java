@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import org.junit.jupiter.api.Test;
 
@@ -60,18 +62,18 @@ class CommandUtilsTest {
 
   @Test
   void testSubList() {
-    assertEquals(List.of(3), CollectionUtils.subList(List.of(1, 2, 3), 2, 1));
-    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), 3, 1));
-    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), 10, 1));
-    assertEquals(List.of(2), CollectionUtils.subList(List.of(1, 2, 3), 1, 1));
-    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), 0, 0));
-    assertEquals(List.of(1, 2, 3), CollectionUtils.subList(List.of(1, 2, 3), 0, 10));
+    assertEquals(List.of(3), CollectionUtils.subList(List.of(1, 2, 3), Range.range(2, 1)));
+    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), Range.range(3, 1)));
+    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), Range.range(10, 1)));
+    assertEquals(List.of(2), CollectionUtils.subList(List.of(1, 2, 3), Range.range(1, 1)));
+    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), Range.range(0, 0)));
+    assertEquals(List.of(1, 2, 3), CollectionUtils.subList(List.of(1, 2, 3), Range.range(0, 10)));
   }
 
   @Test
   void subListPaginated() {
-    assertEquals(List.of(1, 2), CollectionUtils.subListPaginated(List.of(1, 2, 3), 0, 2));
-    assertEquals(List.of(3), CollectionUtils.subListPaginated(List.of(1, 2, 3), 1, 2));
-    assertEquals(new ArrayList<>(), CollectionUtils.subListPaginated(List.of(1, 2, 3), 2, 2));
+    assertEquals(List.of(1, 2), CollectionUtils.subList(List.of(1, 2, 3), Pagination.page(0, 2)));
+    assertEquals(List.of(3), CollectionUtils.subList(List.of(1, 2, 3), Pagination.page(1, 2)));
+    assertEquals(new ArrayList<>(), CollectionUtils.subList(List.of(1, 2, 3), Pagination.page(2, 2)));
   }
 }

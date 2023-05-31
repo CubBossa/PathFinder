@@ -174,13 +174,6 @@ public interface PathFinderConfig {
     boolean isDirectedEdgesByDefault();
 
     /**
-     * If the edit mode should start with the node tool set to chain mode. In chain mode, a new node
-     * will have a connection the the node that was created before. The new edge will be directed if
-     * the edge tool is set to directed edges.
-     */
-    boolean isNodeChainModeByDefault();
-
-    /**
      * The spacing of the particles that are used to display edit mode edges. A spacing of 0.3 blocks is default.
      * Increase this value if you are having client side performance issues while in edit mode.
      */

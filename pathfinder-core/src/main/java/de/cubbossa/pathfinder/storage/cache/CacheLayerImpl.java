@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.CacheLayer;
@@ -151,7 +151,7 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
-          public Optional<Collection<NodeGroup>> getGroups(Pagination pagination) {
+          public Optional<Collection<NodeGroup>> getGroups(Range range) {
             return Optional.empty();
           }
 

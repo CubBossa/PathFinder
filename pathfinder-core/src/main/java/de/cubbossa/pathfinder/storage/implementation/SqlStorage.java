@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
@@ -379,10 +379,10 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public List<NodeGroup> loadGroups(Pagination pagination) {
+  public List<NodeGroup> loadGroups(Range range) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
-        .offset(pagination.getOffset())
-        .limit(pagination.getLimit())
+        .offset(range.getOffset())
+        .limit(range.getLimit())
         .fetch(groupMapper);
   }
 

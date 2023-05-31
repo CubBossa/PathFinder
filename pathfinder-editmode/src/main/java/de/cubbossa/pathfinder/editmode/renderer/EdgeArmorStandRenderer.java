@@ -20,6 +20,7 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -106,7 +107,11 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
-    hideElements(nodes.stream().flatMap(n -> n.getEdges().stream()).toList(), player.unwrap());
+    Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).collect(Collectors.toSet());
+    Collection<Edge> toErase = nodeEntityMap.keySet().stream()
+        .filter(edge -> nodeIds.contains(edge.getStart()) || nodeIds.contains(edge.getEnd()))
+        .collect(Collectors.toSet());
+    hideElements(toErase, player.unwrap());
     return CompletableFuture.completedFuture(null);
   }
 }

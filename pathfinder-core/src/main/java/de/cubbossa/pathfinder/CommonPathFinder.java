@@ -11,6 +11,7 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;

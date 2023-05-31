@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder.messages;
 
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
@@ -31,10 +31,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,22 +39,23 @@ import java.util.stream.Collectors;
 @SuppressWarnings("checkstyle:LineLength")
 public class Messages {
 
+  private static final MessageFormatter formatter = new MessageFormatterImpl();
+
+  public static MessageFormatter formatter() {
+    return formatter;
+  }
+
   public static final Message PREFIX = new MessageBuilder("prefix")
       .withDefault("<offset>PathFinder</offset> <dark_gray>»</dark_gray> <gray>")
       .build();
-  public static final Message GEN_TRUE = new MessageBuilder("general.true")
-      .withDefault("<offset_light>true</offset_light>")
-      .build();
-  public static final Message GEN_FALSE = new MessageBuilder("general.false")
-      .withDefault("<offset_light>false</offset_light>")
+  public static final Message GEN_ERROR = new MessageBuilder("general.error")
+      .withDefault("<red><cause></red>")
+      .withPlaceholders("cause")
       .build();
   public static final Message GEN_VECTOR = new MessageBuilder("general.vector")
       .withDefault("<offset_light><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></offset_light>")
       .withPlaceholders("x", "y", "z")
       .withComment("The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
-      .build();
-  public static final Message GEN_PERMISSION = new MessageBuilder("general.permission")
-      .withDefault("<main><permission></main>")
       .build();
   public static final Message GEN_PARTICLE = new MessageBuilder("general.particle")
       .withDefault("<main><particle></main>")
@@ -246,9 +244,8 @@ public class Messages {
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
       .withDefault("""
           <offset>Group '<key>'</offset>
-          <dark_gray>» </dark_gray><gray>Nodes: <main><nodes></main>
-          <dark_gray>» </dark_gray><gray>Weight: <main><weight></main>
-          <modifiers:"\n":"<dark_gray>» </dark_gray><gray>"/>
+          <dark_gray>» </dark_gray><gray>Size: <main><nodes></main>
+          <dark_gray>» </dark_gray><gray>Weight: <main><weight></main><modifiers:"":"\n<dark_gray>» </dark_gray><gray>"/>
           """)
       .withPlaceholders("modifiers", "key", "nodes", "weight")
       .build();
@@ -257,8 +254,8 @@ public class Messages {
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_LIST_LINE = new MessageBuilder("commands.node_group.list.line")
-      .withDefault("<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>")
-      .withPlaceholders("page", "key", "name", "size", "discoverable")
+      .withDefault("<dark_gray> » </dark_gray><key> <gray>(Weight: <weight>)</gray>")
+      .withPlaceholders("page", "key", "weight", "modifiers")
       .build();
   public static final Message CMD_NG_LIST_FOOTER = new MessageBuilder("commands.node_group.list.footer")
       .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/nodegroup list <prev-page>>←</click> <page>/<pages> <click:run_command:/nodegroup list <next-page>>→</click> </gray>-------------</gradient>")
@@ -478,32 +475,13 @@ public class Messages {
           <gray>» <yellow>left-click:</yellow> Delete clicked node</gray>
           <gray>» <yellow>left-click air:</yellow> Activate chain mode</gray>""")
       .build();
-  public static final Message E_NODE_CHAIN_ON = new MessageBuilder("editor.node_tool.chain.on")
-      .withDefault("<msg:prefix>Chain mode activated. A new node is connected to the latter.")
-      .build();
-  public static final Message E_NODE_CHAIN_OFF = new MessageBuilder("editor.node_tool.chain.off")
-      .withDefault("<msg:prefix>Chain mode cancelled.")
-      .build();
   public static final Message E_NODE_CHAIN_NEW = new MessageBuilder("editor.node_tool.chain.new")
-      .withDefault("<msg:prefix>New chain started - left-click again to turn off chain mode")
+      .withDefault("<msg:prefix>Node chain completed.")
       .build();
   public static final Message E_NODE_CHAIN_START = new MessageBuilder("editor.node_tool.chain.new_start")
-      .withDefault("<msg:prefix>Chain start point set.")
+      .withDefault("<msg:prefix>Chain started.")
       .build();
-  public static final Message E_EDGE_TOOL_N = new MessageBuilder("editor.toolbar.edge_tool.name")
-      .withDefault("<white><u>Edge Tool</u></white>")
-      .build();
-  public static final Message E_EDGE_TOOL_L = new MessageBuilder("editor.toolbar.edge_tool.lore")
-      .withDefault("""
-          <gray>» <yellow>right-click node:</yellow> Connect nodes</gray>
-          <gray>» <yellow>left-click node:</yellow> Disconnect all edges</gray>
-          <gray>» <yellow>left-click edge:</yellow> Dissolve edge</gray>
-          <gray>» <yellow>left-click air:</yellow> Toggle directed</gray>""")
-      .build();
-  public static final Message E_EDGE_TOOL_CANCELLED = new MessageBuilder("editor.toolbar.edge_tool.cancelled")
-      .withDefault("<msg:prefix>Node connection mode cancelled")
-      .build();
-  public static final Message E_EDGE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.edge_tool.directed")
+  public static final Message E_NODE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.node_tool.directed")
       .withDefault("<msg:prefix>Edges directed: <main><value><main>")
       .withPlaceholders("value")
       .build();
@@ -547,20 +525,14 @@ public class Messages {
       .withDefault("<gray>Reset all groups for the\n<gray>selected node.")
       .build();
   public static final Message E_SUB_GROUP_ENTRY_N = new MessageBuilder("editor.groups.entry.name")
-      .withDefault("<name>")
-      .withPlaceholders("key", "name", "name-format", "discoverable", "search-terms")
+      .withDefault("<key>")
+      .withPlaceholders("key", "weight", "modifiers")
       .build();
   public static final Message E_SUB_GROUP_ENTRY_L = new MessageBuilder("editor.groups.entry.lore")
       .withDefault("""
-          <dark_gray>» </dark_gray><gray>Key: <key></gray>
-          <dark_gray>» </dark_gray><gray>Name: <name-format></gray>
-          <dark_gray>» </dark_gray><gray>Permission: <permission></gray>
-          <dark_gray>» </dark_gray><gray>Navigable: <navigable></gray>
-          <dark_gray>» </dark_gray><gray>Discoverable: <discoverable></gray>
-          <dark_gray>» </dark_gray><gray>Find distance: <find-distance:#.##></gray>
-          <dark_gray>» </dark_gray><gray>Search terms: <search-terms></gray>""")
-      .withPlaceholders("key", "name", "name-format", "permission",
-          "navigable", "discoverable", "find-distance", "search-terms")
+          <dark_gray>» </dark_gray><gray>Weight: <weight:#.##></gray>
+          <modifiers:"\n":"<dark_gray>» </dark_gray><gray>"/>""")
+      .withPlaceholders("key", "weight", "modifiers")
       .build();
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
       .withDefault("<msg:prefix>Target reached.")
@@ -579,8 +551,8 @@ public class Messages {
         : audiences.console();
   }
 
-  public static Message formatBool(boolean val) {
-    return val ? GEN_TRUE : GEN_FALSE;
+  public static Message throwable(Throwable throwable) {
+    return GEN_ERROR.formatted(formatter().throwable(throwable));
   }
 
   public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
@@ -590,7 +562,7 @@ public class Messages {
   public static Component formatNode(CommandSender sender, Node node) {
     return GEN_NODE.formatted(
         Placeholder.parsed("world", node.getLocation().getWorld().getName()),
-        Placeholder.component("location", formatVector(node.getLocation().asVector()))
+        Messages.formatter().vector("location", node.getLocation())
     ).asComponent(audienceSender(sender));
   }
 
@@ -605,10 +577,6 @@ public class Messages {
           ? ext.toComponents(modifier)
           : Component.text("Unknown modifier '" + modifier.getKey() + "'.");
     }));
-  }
-
-  public static Component formatThrowable(Throwable throwable) {
-    return Component.text(throwable.getMessage(), NamedTextColor.RED);
   }
 
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
@@ -641,20 +609,6 @@ public class Messages {
         .resolver(Placeholder.component("particle", Component.text(particle.toString())))
         .resolver(Placeholder.component("meta", Component.text(data.toString())))
         .build());
-  }
-
-  public static Message formatVector(Vector vector) {
-    return GEN_VECTOR.formatted(TagResolver.builder()
-        .resolver(Formatter.number("x", vector.getX()))
-        .resolver(Formatter.number("y", vector.getY()))
-        .resolver(Formatter.number("z", vector.getZ()))
-        .build());
-  }
-
-  public static Message formatPermission(@Nullable String permission) {
-    return permission == null
-        ? GEN_NULL.clone()
-        : GEN_PERMISSION.formatted(TagResolver.resolver("permission", Tag.inserting(Component.text(permission))));
   }
 
   public static <T> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries,
@@ -697,35 +651,105 @@ public class Messages {
     };
   }
 
-  public static BiFunction<ArgumentQueue, Context, Tag> formatKey(NamespacedKey key) {
-    return (queue, context) -> {
-      if (key == null) {
-        return Tag.selfClosingInserting(GEN_NULL.clone());
-      }
+  public static class MessageFormatterImpl implements MessageFormatter {
 
-      TextColor namespaceColor;
-      TextColor keyColor;
+    private final MiniMessage miniMessage;
+    private final TextColor textColor;
+    private final TextColor numberColor;
 
-      Component namespaceString = Component.text(key.getNamespace());
-      Component keyString = Component.text(key.getKey());
+    public MessageFormatterImpl() {
+      miniMessage = MiniMessage.miniMessage();
+      textColor = NamedTextColor.GREEN;
+      numberColor = NamedTextColor.DARK_GREEN;
+    }
 
-      if (queue.hasNext()) {
-        namespaceColor = TextColor.fromCSSHexString(queue.pop().value());
-        if (namespaceColor != null) {
-          namespaceString = namespaceString.color(namespaceColor);
-          keyString = keyString.color(namespaceColor);
+    @Override
+    public TagResolver throwable(Throwable throwable) {
+      return TagResolver.builder()
+          .tag("message", Tag.preProcessParsed(throwable.getMessage()))
+          .tag("cause", Tag.preProcessParsed(throwable.getCause().getMessage()))
+          .build();
+    }
+
+    @Override
+    public TagResolver choice(String key, boolean value) {
+      return Formatter.booleanChoice(key, value);
+    }
+
+    @Override
+    public TagResolver number(String key, Number value) {
+      return Formatter.number(key, value);
+    }
+
+    @Override
+    public TagResolver namespacedKey(String key, NamespacedKey namespacedKey) {
+      return TagResolver.resolver(key, (queue, context) -> {
+        if (namespacedKey == null) {
+          return Tag.selfClosingInserting(GEN_NULL.clone());
         }
+
+        TextColor namespaceColor;
+        TextColor keyColor;
+
+        Component namespaceString = Component.text(namespacedKey.getNamespace());
+        Component keyString = Component.text(namespacedKey.getKey());
+
         if (queue.hasNext()) {
-          keyColor = TextColor.fromCSSHexString(queue.pop().value());
-          if (keyColor != null) {
-            keyString = keyString.color(keyColor);
+          namespaceColor = TextColor.fromCSSHexString(queue.pop().value());
+          if (namespaceColor != null) {
+            namespaceString = namespaceString.color(namespaceColor);
+            keyString = keyString.color(namespaceColor);
+          }
+          if (queue.hasNext()) {
+            keyColor = TextColor.fromCSSHexString(queue.pop().value());
+            if (keyColor != null) {
+              keyString = keyString.color(keyColor);
+            }
           }
         }
-      }
-      return Tag.selfClosingInserting(Component.empty()
-          .append(namespaceString)
-          .append(Component.text(":"))
-          .append(keyString));
-    };
+        return Tag.selfClosingInserting(Component.empty()
+            .append(namespaceString)
+            .append(Component.text(":"))
+            .append(keyString));
+      });
+    }
+
+    @Override
+    public TagResolver permission(String key, @Nullable String permission) {
+      return TagResolver.resolver(key, (argumentQueue, context) -> {
+        String col = argumentQueue.hasNext() ? argumentQueue.pop().value() : null;
+        TextColor permColor = col == null ? textColor : TextColor.fromCSSHexString(col);
+
+        String nullVal = argumentQueue.hasNext() ? argumentQueue.pop().value() : "none";
+        return Tag.inserting(permission == null
+            ? miniMessage.deserialize(nullVal)
+            : Component.join(JoinConfiguration.separator(Component.text(".")), Arrays.stream(permission.split("\\."))
+            .map(s -> Component.text(s, permColor)).collect(Collectors.toList())));
+      });
+    }
+
+    @Override
+    public TagResolver vector(String key, Vector vector) {
+      return Placeholder.component(key, GEN_VECTOR.formatted(
+          number("x", vector.getX()),
+          number("y", vector.getY()),
+          number("z", vector.getZ())
+      ));
+    }
+
+    @Override
+    public TagResolver particle(String key, Particle particle, Object data) {
+      return null;
+    }
+
+    @Override
+    public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
+      return null;
+    }
+
+    @Override
+    public <C> TagResolver list(String key, Collection<C> entries, Function<C, ComponentLike> renderer) {
+      return null;
+    }
   }
 }

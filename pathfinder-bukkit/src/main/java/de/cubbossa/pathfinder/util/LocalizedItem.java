@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.translations.ComponentSplit;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -9,8 +10,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.List;
 
 public class LocalizedItem {
 
@@ -36,12 +35,12 @@ public class LocalizedItem {
       return stack.clone();
     }
     CommonPathFinder pf = BukkitPathFinder.getInstance();
-    ;
 
     ItemMeta meta = stack.getItemMeta();
     Audience audience = pf.getAudiences().player(player.getUniqueId());
     meta.setDisplayName(serializer.serialize(pf.getTranslations().translate(name, audience)));
-    meta.setLore(List.of(serializer.serialize(pf.getTranslations().translate(lore, audience))));
+    meta.setLore(ComponentSplit.split(pf.getTranslations().translate(lore, audience), "\n").stream()
+        .map(serializer::serialize).toList());
     stack.setItemMeta(meta);
     return stack;
   }

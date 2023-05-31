@@ -8,7 +8,7 @@ import de.cubbossa.pathapi.storage.VisualizerDataStorage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.Messages;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -88,7 +88,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
     T2 old = getter.get();
     if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
       sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-          TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+          Messages.formatter().namespacedKey("key", visualizer.getKey()),
           Placeholder.parsed("property", property)
       ));
       return;
@@ -98,7 +98,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
         .saveVisualizer(visualizer)
         .thenCompose(unused -> PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
           sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-              TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+              Messages.formatter().namespacedKey("key", visualizer.getKey()),
               Placeholder.component("type", Component.text(
                   optType.map(VisualizerType::getCommandName).orElse("unknown"))),
               Placeholder.parsed("property", property),
@@ -108,7 +108,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
         }))
         .exceptionally(throwable -> {
           sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-              TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
+              Messages.formatter().namespacedKey("key", visualizer.getKey()),
               Placeholder.parsed("property", property)
           ));
           throwable.printStackTrace();

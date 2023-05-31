@@ -5,11 +5,11 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
@@ -72,7 +72,7 @@ public class GroupCmd extends PathFinderSubCommand {
 
   private void showGroup(CommandSender sender, SimpleNodeGroup group) {
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(TagResolver.builder()
-        .tag("key", Messages.formatKey(group.getKey()))
+        .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
         .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
         .resolver(Formatter.number("weight", group.getWeight()))
         .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
@@ -83,8 +83,8 @@ public class GroupCmd extends PathFinderSubCommand {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
-          TagResolver.resolver("group", Messages.formatKey(group.getKey())),
-          TagResolver.resolver("type", Messages.formatKey(modifier.getKey()))
+          Messages.formatter().namespacedKey("group", group.getKey()),
+          Messages.formatter().namespacedKey("type", modifier.getKey())
       ));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
@@ -96,8 +96,8 @@ public class GroupCmd extends PathFinderSubCommand {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
-          TagResolver.resolver("group", Messages.formatKey(group.getKey())),
-          TagResolver.resolver("type", Messages.formatKey(mod))
+          Messages.formatter().namespacedKey("group", group.getKey()),
+          Messages.formatter().namespacedKey("type", mod)
       ));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();

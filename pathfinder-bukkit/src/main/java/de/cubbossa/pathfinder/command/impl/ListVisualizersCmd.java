@@ -2,13 +2,13 @@ package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import net.kyori.adventure.text.Component;
+import de.cubbossa.pathfinder.util.CollectionUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -24,7 +24,6 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
       onList(commandSender, Pagination.page(0, 10));
     });
     then(CustomArgs.pagination(10)
-        .displayAsOptional()
         .executes((commandSender, objects) -> {
           onList(commandSender, objects.getUnchecked(0));
         })
@@ -35,10 +34,10 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
     getPathfinder().getStorage().loadVisualizers().thenAccept(pathVisualizers -> {
       //TODO pagination in load
       CommandUtils.printList(sender, pagination,
-          pag -> new ArrayList<>(pathVisualizers).subList(pag.getStart(), pag.getEndExclusive()),
+          CollectionUtils.subList(new ArrayList<>(pathVisualizers), pagination),
           visualizer -> {
             TagResolver r = TagResolver.builder()
-                .tag("key", Messages.formatKey(visualizer.getKey()))
+                .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
                 .resolver(Placeholder.parsed("type", "TODO")) // TODO
                 .build();
 

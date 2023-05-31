@@ -3,8 +3,8 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
+import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
@@ -37,7 +37,7 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<CurveLengthModifier, CommandExecutor> consumer) {
     return tree.then(new FloatArgument("curve-length").executes((commandSender, objects) -> {
-      consumer.apply(new CommonCurveLengthModifier(objects.getUnchecked(1))).run(commandSender, objects);
+      consumer.apply(new CommonCurveLengthModifier(objects.<Float>getUnchecked(1).doubleValue())).run(commandSender, objects);
     }));
   }
 

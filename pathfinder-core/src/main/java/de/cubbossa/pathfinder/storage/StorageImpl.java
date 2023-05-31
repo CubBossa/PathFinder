@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.*;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -247,11 +246,13 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> saveNode(Node node) {
-    eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
     return saveNodeTypeSafeBlocking(node)
         .thenAccept(n -> {
           cache.getNodeCache().write(n);
           cache.getGroupCache().write(n);
+        })
+        .thenRun(() -> {
+          eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
         })
         .exceptionally(throwable -> {
           throwable.printStackTrace();
@@ -306,9 +307,7 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
     return loadNodes(uuids).thenCompose(nodes -> {
-      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
-
-      return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenAcceptAsync(types -> {
+      return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenApplyAsync(types -> {
         for (Node node : nodes) {
           if (node instanceof Groupable groupable) {
             implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
@@ -322,7 +321,10 @@ public class StorageImpl implements Storage {
         uuids.forEach(cache.getNodeCache()::invalidate);
         nodes.forEach(cache.getGroupCache()::invalidate);
         uuids.forEach(cache.getNodeTypeCache()::invalidate);
+        return nodes;
       });
+    }).thenAccept(nodes -> {
+      eventDispatcher().ifPresent(e -> e.dispatchNodesDelete(nodes));
     });
   }
 
@@ -363,10 +365,10 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination) {
-    return cache.getGroupCache().getGroups(pagination)
+  public CompletableFuture<Collection<NodeGroup>> loadGroups(Range range) {
+    return cache.getGroupCache().getGroups(range)
         .map(CompletableFuture::completedFuture)
-        .orElseGet(() -> asyncFuture(() -> implementation.loadGroups(pagination)));
+        .orElseGet(() -> asyncFuture(() -> implementation.loadGroups(range)));
   }
 
   @Override

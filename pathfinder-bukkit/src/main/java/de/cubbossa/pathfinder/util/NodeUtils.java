@@ -1,12 +1,13 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.splinelib.util.BezierVector;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -20,10 +21,8 @@ public class NodeUtils {
 
   /**
    * Lists all waypoints of a certain selection.
-   *
-   * @param page first page 1, not 0!
    */
-  public static void onList(Player player, NodeSelection selection, int page) {
+  public static void onList(Player player, NodeSelection selection, Pagination pagination) {
 
     String selector;
     if (selection.getMeta() != null) {
@@ -34,9 +33,8 @@ public class NodeUtils {
 
     TagResolver resolver = Placeholder.parsed("selector", selector);
 
-
     CommandUtils.printList(
-        player, page, 10, new ArrayList<>(selection),
+        player, pagination, new ArrayList<>(selection),
         n -> {
           Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
           Collection<Node> resolvedNeighbours =
@@ -44,7 +42,7 @@ public class NodeUtils {
 
           TagResolver r = TagResolver.builder()
               .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-              .resolver(Placeholder.component("position", Messages.formatVector(n.getLocation())))
+              .resolvers(Messages.formatter().vector("position", n.getLocation()))
               .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
               .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, resolvedNeighbours)))
               .build();
@@ -63,9 +61,9 @@ public class NodeUtils {
 
     Node first = path.keySet().iterator().next();
     vectors.add(new BezierVector(
-            CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-            CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-            CommonPathFinder.SPLINES.convertToVector(first.getLocation())
+        CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+        CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
+        CommonPathFinder.SPLINES.convertToVector(first.getLocation())
     ));
 
     Node prev = null;
@@ -88,10 +86,10 @@ public class NodeUtils {
       sCurr = sNext;
       vNext = next.getLocation();
     }
-      vectors.add(new BezierVector(
-              CommonPathFinder.SPLINES.convertToVector(vNext),
-              CommonPathFinder.SPLINES.convertToVector(vNext),
-              CommonPathFinder.SPLINES.convertToVector(vNext)));
+    vectors.add(new BezierVector(
+        CommonPathFinder.SPLINES.convertToVector(vNext),
+        CommonPathFinder.SPLINES.convertToVector(vNext),
+        CommonPathFinder.SPLINES.convertToVector(vNext)));
     return vectors;
   }
 
@@ -127,10 +125,10 @@ public class NodeUtils {
     }
 
     return new BezierVector(
-            CommonPathFinder.SPLINES.convertToVector(vCurrent),
-            CommonPathFinder.SPLINES.convertToVector(
-                    vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
-            CommonPathFinder.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
+        CommonPathFinder.SPLINES.convertToVector(vCurrent),
+        CommonPathFinder.SPLINES.convertToVector(
+            vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
+        CommonPathFinder.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
     );
   }
 

@@ -7,7 +7,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
@@ -20,7 +20,6 @@ import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.util.CollectionUtils;
-import de.cubbossa.pathfinder.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.ConfigurationSection;
@@ -36,8 +35,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.checkerframework.checker.units.qual.N;
-import org.jooq.impl.QOM;
 
 public class YmlStorage extends CommonStorage {
 
@@ -335,9 +332,8 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public List<NodeGroup> loadGroups(Pagination pagination) {
-    return CollectionUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(),
-            pagination.getOffset(), pagination.getLimit())
+  public List<NodeGroup> loadGroups(Range range) {
+    return CollectionUtils.subList(Arrays.stream(new File(dataDirectory, DIR_NG).listFiles()).toList(), range)
         .stream()
         .map(f -> workOnFile(f, cfg -> {
           return loadGroup(cfg);

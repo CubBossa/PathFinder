@@ -2,7 +2,7 @@ package de.cubbossa.pathapi.storage.cache;
 
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 
@@ -22,7 +22,7 @@ public interface GroupCache extends StorageCache<NodeGroup> {
 
   Optional<Collection<NodeGroup>> getGroups(UUID node);
 
-  Optional<Collection<NodeGroup>> getGroups(Pagination pagination);
+  Optional<Collection<NodeGroup>> getGroups(Range range);
 
   default void write(Node node) {
     if (node instanceof Groupable groupable) {

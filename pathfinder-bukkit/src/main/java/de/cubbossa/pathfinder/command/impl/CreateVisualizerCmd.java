@@ -5,15 +5,14 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.StringArgument;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 import java.util.Optional;
@@ -44,10 +43,10 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
     }
     getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
       getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
-        BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(TagResolver.builder()
-            .tag("key", Messages.formatKey(visualizer.getKey()))
-            .resolver(Placeholder.component("type", Component.text(optType.orElseThrow().getCommandName())))
-            .build()));
+        BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(
+            Messages.formatter().namespacedKey("key", visualizer.getKey()),
+            Placeholder.component("type", Component.text(optType.orElseThrow().getCommandName()))
+        ));
       });
     });
   }

@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.listener;
 
 import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinderConf;
+import de.cubbossa.pathfinder.messages.Messages;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

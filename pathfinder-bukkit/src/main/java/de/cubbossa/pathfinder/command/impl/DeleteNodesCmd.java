@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;

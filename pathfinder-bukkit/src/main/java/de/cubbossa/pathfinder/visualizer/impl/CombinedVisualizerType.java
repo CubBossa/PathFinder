@@ -3,12 +3,12 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.events.visualizer.CombinedVisualizerChangedEvent;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
@@ -57,8 +57,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
                   CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD.formatted(
-                      TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey())),
-                      TagResolver.resolver("child", Messages.formatKey(target.getKey()))
+                      Messages.formatter().namespacedKey("visualizer", vis.getKey()),
+                      Messages.formatter().namespacedKey("child", target.getKey())
                   ));
                 })))
         .then(CustomArgs.literal("remove")
@@ -73,8 +73,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           Collections.singleton(target))));
                   CommonPathFinder.getInstance().wrap(sender)
                       .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.formatted(
-                          TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey())),
-                          TagResolver.resolver("child", Messages.formatKey(target.getKey()))
+                          Messages.formatter().namespacedKey("visualizer", vis.getKey()),
+                          Messages.formatter().namespacedKey("child", target.getKey())
                       ));
                 })))
         .then(CustomArgs.literal("clear")
@@ -86,7 +86,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                   Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                       CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
               BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.formatted(
-                  TagResolver.resolver("visualizer", Messages.formatKey(vis.getKey()))
+                  Messages.formatter().namespacedKey("visualizer", vis.getKey())
               ));
             }));
   }

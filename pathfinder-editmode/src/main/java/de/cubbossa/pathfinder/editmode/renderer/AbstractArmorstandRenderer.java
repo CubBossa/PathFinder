@@ -74,7 +74,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         HashSet<T> hide = new HashSet<>();
         for (T node : nodeEntityMap.keySet()) {
           futures.add(retrieveFrom(node).thenAccept(location -> {
-            if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) > renderDistanceSquared) {
+            if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) >= renderDistanceSquared) {
               hide.add(node);
             }
           }));
@@ -88,10 +88,13 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         }
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
           Collection<T> col = hiddenNodes.computeIfAbsent(player.unwrap(), u -> new HashSet<>());
-          col.addAll(show);
-          col.removeAll(hide);
+          col.addAll(hide);
+          col.removeAll(show);
           showElements(show, player.unwrap());
           hideElements(hide, player.unwrap());
+        }).exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
         });
       }
     }, 1, 5);

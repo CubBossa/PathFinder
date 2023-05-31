@@ -4,12 +4,12 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.translations.Message;
@@ -55,13 +55,13 @@ public class VisualizerCmd extends PathFinderSubCommand {
                   visualizer.setPermission(perm);
 
                   pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
-                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(TagResolver.resolver(
-                        TagResolver.resolver("key", Messages.formatKey(visualizer.getKey())),
-                        TagResolver.resolver("type", Messages.formatKey(type.getKey())),
+                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
+                        Messages.formatter().namespacedKey("key", visualizer.getKey()),
+                        Messages.formatter().namespacedKey("type", type.getKey()),
                         Placeholder.parsed("property", "permission"),
-                        Placeholder.component("old-value", Messages.formatPermission(old)),
-                        Placeholder.component("value", Messages.formatPermission(perm))
-                    )));
+                        Messages.formatter().permission("old-value", old),
+                        Messages.formatter().permission("value", perm)
+                    ));
                   });
                 }
               })));
@@ -86,9 +86,9 @@ public class VisualizerCmd extends PathFinderSubCommand {
       }
 
       Message message = ext.getInfoMessage(visualizer).formatted(TagResolver.builder()
-          .tag("key", Messages.formatKey(visualizer.getKey()))
-          .tag("type", Messages.formatKey(type.get().getKey()))
-          .resolver(Placeholder.component("permission", Messages.formatPermission(visualizer.getPermission())))
+          .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
+          .resolver(Messages.formatter().namespacedKey("type", type.get().getKey()))
+          .resolver(Messages.formatter().permission("permission", visualizer.getPermission()))
           .build());
       p.sendMessage(message);
     });

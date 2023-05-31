@@ -2,10 +2,9 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.GroupCache;
@@ -53,12 +52,11 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   }
 
   @Override
-  public Optional<Collection<NodeGroup>> getGroups(Pagination pagination) {
+  public Optional<Collection<NodeGroup>> getGroups(Range range) {
     if (!cachedAll) {
       return Optional.empty();
     }
-    return Optional.of(CollectionUtils.subList(cache.asMap().values().stream().toList(), pagination.getOffset(),
-        pagination.getOffset() + pagination.getLimit()));
+    return Optional.of(CollectionUtils.subList(cache.asMap().values().stream().toList(), range));
   }
 
   @Override

@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
@@ -47,8 +47,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
             Placeholder.component("particle-steps", Component.text(element.getSchedulerSteps())))
         .resolver(Placeholder.component("amount", Component.text(element.getAmount())))
         .resolver(Formatter.number("speed", element.getSpeed()))
-        .resolver(Placeholder.component("offset",
-            Messages.formatVector(BukkitVectorUtils.toInternal(element.getOffset()))))
+        .resolver(Messages.formatter().vector("offset", BukkitVectorUtils.toInternal(element.getOffset())))
         .resolver(Formatter.number("point-distance", element.getPointDistance()))
         .build());
   }

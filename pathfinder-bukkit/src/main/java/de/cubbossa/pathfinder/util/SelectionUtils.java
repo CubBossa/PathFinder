@@ -10,17 +10,18 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.nodeselection.NodeSelectionParser;
+import de.cubbossa.pathfinder.nodeselection.NumberRange;
 import dev.jorel.commandapi.SuggestionInfo;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.nodeselection.NodeSelectionParser;
-import de.cubbossa.pathfinder.nodeselection.NumberRange;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -65,19 +66,19 @@ public class SelectionUtils {
               .map(World::getName)
               .collect(Collectors.toList()));
 
-    public static final NodeSelectionParser.Argument<Integer> LIMIT =
-            new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
-                    .execute(c -> CollectionUtils.subList(c.getScope(), 0, c.getValue()));
+  public static final NodeSelectionParser.Argument<Integer> LIMIT =
+      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
+          .execute(c -> CollectionUtils.subList(c.getScope(), Range.range(0, c.getValue())));
 
-    public static final NodeSelectionParser.Argument<Integer> OFFSET =
-            new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
-                    .execute(c -> CollectionUtils.subList(c.getScope(), c.getValue()));
-    public static final NodeSelectionParser.Argument<SortMethod> SORT =
-            new NodeSelectionParser.Argument<SortMethod>(
-                    r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
-                    .execute(c -> {
-                        Location playerLocation = c.getSender() instanceof Player player
-                                ? BukkitPathFinder.wrap(player).getLocation()
+  public static final NodeSelectionParser.Argument<Integer> OFFSET =
+      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
+          .execute(c -> CollectionUtils.subList(c.getScope(), c.getValue()));
+  public static final NodeSelectionParser.Argument<SortMethod> SORT =
+      new NodeSelectionParser.Argument<SortMethod>(
+          r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
+          .execute(c -> {
+            Location playerLocation = c.getSender() instanceof Player player
+                ? BukkitPathFinder.wrap(player).getLocation()
                                 : new Location(0, 0, 0, null);
                         return switch (c.getValue()) {
                             case NEAREST -> c.getScope().stream()

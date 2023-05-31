@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
@@ -123,7 +123,7 @@ public interface Storage {
 
   CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key);
 
-  CompletableFuture<Collection<NodeGroup>> loadGroups(Pagination pagination);
+  CompletableFuture<Collection<NodeGroup>> loadGroups(Range range);
 
   CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys);
 

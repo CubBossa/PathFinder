@@ -2,13 +2,14 @@ package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -122,7 +123,7 @@ public class NodesCmd extends PathFinderSubCommand {
     }
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP.formatted(TagResolver.builder()
         .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes)))
-        .tag("group", Messages.formatKey(group.getKey()))
+        .resolver(Messages.formatter().namespacedKey("group", group.getKey()))
         .build()));
   }
 
@@ -212,7 +213,7 @@ public class NodesCmd extends PathFinderSubCommand {
       return;
     }
     if (selection.size() > 1) {
-      NodeUtils.onList(player, selection, 1);
+      NodeUtils.onList(player, selection, Pagination.page(0, 10));
       return;
     }
     Node node = selection.get(0);
@@ -223,12 +224,9 @@ public class NodesCmd extends PathFinderSubCommand {
 
     Message message = Messages.CMD_N_INFO.formatted(TagResolver.builder()
         .resolver(Placeholder.parsed("id", node.getNodeId().toString()))
-        .resolver(
-            Placeholder.component("position",
-                Messages.formatVector(node.getLocation())))
+        .resolvers(Messages.formatter().vector("position", node.getLocation()))
         .resolver(Placeholder.unparsed("world", node.getLocation().getWorld().getName()))
-        .resolver(Placeholder.component("edges",
-            Messages.formatNodeSelection(player, resolvedNeighbours)))
+        .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, resolvedNeighbours)))
 //          .resolver(Placeholder.component("groups", Messages.formatNodeGroups(player,
 //              node instanceof Groupable groupable ? groupable.getGroups() : new ArrayList<>())))
         .build());

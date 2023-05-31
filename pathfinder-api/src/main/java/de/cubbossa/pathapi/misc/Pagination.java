@@ -1,37 +1,24 @@
 package de.cubbossa.pathapi.misc;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Pagination {
+public final class Pagination extends Range {
 
-  private final int offset;
-  private final int limit;
-
-  public static Pagination pagination(int offset, int limit) {
-    return new Pagination(offset, limit);
-  }
+  private final int page;
+  private final int size;
 
   public static Pagination page(int page, int size) {
-    return new Pagination(page * size, size);
+    return new Pagination(page, size);
   }
 
-  public int getStart() {
-    return offset;
+  Pagination(int page, int size) {
+    super(page * size, size);
+    this.page = page;
+    this.size = size;
   }
 
-  public int getEndExclusive() {
-    return offset + limit;
-  }
-
-  @Override
-  public String toString() {
-    return "Pagination{" +
-        "offset=" + offset +
-        ", limit=" + limit +
-        '}';
+  public int getPageCount(int elements) {
+    return (int) Math.ceil(elements / (float) size);
   }
 }

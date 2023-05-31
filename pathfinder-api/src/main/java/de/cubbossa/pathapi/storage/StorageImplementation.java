@@ -3,7 +3,7 @@ package de.cubbossa.pathapi.storage;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -75,7 +75,7 @@ public interface StorageImplementation {
 
   Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key);
 
-  List<NodeGroup> loadGroups(Pagination pagination);
+  List<NodeGroup> loadGroups(Range range);
 
   Collection<NodeGroup> loadGroups(UUID node);
 

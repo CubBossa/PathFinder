@@ -16,7 +16,6 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -80,56 +79,23 @@ public class CommandUtils {
     return Suggestions.create(command, result);
   }
 
-  public <T> void printList(CommandSender sender, Pagination pagination,
-                            Function<Pagination, List<T>> supplier,
+  public <T> void printList(CommandSender sender, Pagination pagination, List<T> elements,
                             Consumer<T> print, Message header, Message footer) {
 
-    /*supplier.apply(pagination).thenAccept(elements -> {
-      int maxPage = (int) Math.ceil(elements.size() / (float));
-      if (maxPage == 0) {
-        maxPage = 1;
-      }
-      page = Integer.min(page, maxPage);
-      int prevPage = Integer.max(page - 1, 1);
-      int nextPage = Integer.min(page + 1, maxPage);
-
-      TagResolver resolver = TagResolver.builder()
-          .resolver(Placeholder.parsed("page", page + ""))
-          .resolver(Placeholder.parsed("prev-page", prevPage + ""))
-          .resolver(Placeholder.parsed("next-page", nextPage + ""))
-          .resolver(Placeholder.parsed("pages", maxPage + ""))
-          .build();
-
-
-      TranslationHandler.getInstance().sendMessage(header.format(resolver), sender);
-      for (T element : CommandUtils.subListPaginated(elements, page - 1, pageSize)) {
-        print.accept(element);
-      }
-      TranslationHandler.getInstance().sendMessage(footer.format(resolver), sender);
-    });*/
-  }
-
-  public <T> void printList(CommandSender sender, int page, int pageSize, List<T> elements,
-                            Consumer<T> print, Message header, Message footer) {
-
-    int maxPage = (int) Math.ceil(elements.size() / (float) pageSize);
-    if (maxPage == 0) {
-      maxPage = 1;
-    }
-    page = Integer.min(page, maxPage);
+    int page = pagination.getPage() + 1;
+    int maxPage = pagination.getPageCount(elements.size()) + 1;
     int prevPage = Integer.max(page - 1, 1);
     int nextPage = Integer.min(page + 1, maxPage);
 
     TagResolver resolver = TagResolver.builder()
-        .resolver(Placeholder.parsed("page", page + ""))
+        .resolver(Placeholder.parsed("page", pagination.getPage() + ""))
         .resolver(Placeholder.parsed("prev-page", prevPage + ""))
         .resolver(Placeholder.parsed("next-page", nextPage + ""))
         .resolver(Placeholder.parsed("pages", maxPage + ""))
         .build();
 
-
     BukkitUtils.wrap(sender).sendMessage(header.formatted(resolver));
-    for (T element : CollectionUtils.subListPaginated(elements, page - 1, pageSize)) {
+    for (T element : CollectionUtils.subList(elements, pagination)) {
       print.accept(element);
     }
     BukkitUtils.wrap(sender).sendMessage(footer.formatted(resolver));

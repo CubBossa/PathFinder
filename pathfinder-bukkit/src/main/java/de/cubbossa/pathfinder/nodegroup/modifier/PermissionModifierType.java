@@ -3,14 +3,13 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
+import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -30,7 +29,7 @@ public class PermissionModifierType implements ModifierType<PermissionModifier>,
 
   @Override
   public ComponentLike toComponents(PermissionModifier modifier) {
-    return Messages.CMD_NG_MOD_PERM.formatted(Placeholder.component("permission", Messages.formatPermission(modifier.permission())));
+    return Messages.CMD_NG_MOD_PERM.formatted(Messages.formatter().permission("permission", modifier.permission()));
   }
 
   @Override
