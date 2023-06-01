@@ -10,26 +10,17 @@ import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.bukkit.entity.Player;
+
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.bukkit.entity.Player;
 
 public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>> {
 
@@ -49,7 +40,7 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
   }
 
   public <S> Collection<T> parse(String input, List<T> scope, BiFunction<S, List<T>, C> context)
-      throws ParseCancellationException, CommandSyntaxException {
+      throws ParseCancellationException {
 
     CharStream charStream = CharStreams.fromString(input);
     SelectionLanguageLexer lexer = new SelectionLanguageLexer(charStream);

@@ -19,7 +19,6 @@ import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -41,17 +40,17 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
 
   @Override
   public Message getInfoMessage(PlaceholderVisualizer element) {
-    return Messages.CMD_VIS_PAPI_INFO.formatted(TagResolver.builder()
-        .resolver(Placeholder.parsed("format-north", element.getNorth()))
-        .resolver(Placeholder.parsed("format-northeast", element.getNorthEast()))
-        .resolver(Placeholder.parsed("format-east", element.getEast()))
-        .resolver(Placeholder.parsed("format-southeast", element.getSouthEast()))
-        .resolver(Placeholder.parsed("format-south", element.getSouth()))
-        .resolver(Placeholder.parsed("format-southwest", element.getSouthWest()))
-        .resolver(Placeholder.parsed("format-west", element.getWest()))
-        .resolver(Placeholder.parsed("format-northwest", element.getNorthWest()))
-        .resolver(Placeholder.parsed("format-distance", element.getDistanceFormat()))
-        .build());
+    return Messages.CMD_VIS_PAPI_INFO.formatted(
+        Placeholder.parsed("format-north", element.getNorth()),
+        Placeholder.parsed("format-northeast", element.getNorthEast()),
+        Placeholder.parsed("format-east", element.getEast()),
+        Placeholder.parsed("format-southeast", element.getSouthEast()),
+        Placeholder.parsed("format-south", element.getSouth()),
+        Placeholder.parsed("format-southwest", element.getSouthWest()),
+        Placeholder.parsed("format-west", element.getWest()),
+        Placeholder.parsed("format-northwest", element.getNorthWest()),
+        Placeholder.parsed("format-distance", element.getDistanceFormat())
+    );
   }
 
   @Override

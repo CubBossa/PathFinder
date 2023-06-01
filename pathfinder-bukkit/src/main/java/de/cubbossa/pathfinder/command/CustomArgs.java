@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.command;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathapi.PathFinderProvider;
@@ -310,9 +309,8 @@ public class CustomArgs {
         new CustomArgument<>(new TextArgument(nodeName), info -> {
           if (info.sender() instanceof Player player) {
             try {
-              return SelectionUtils.getNodeSelection(player,
-                  info.input().substring(1, info.input().length() - 1));
-            } catch (CommandSyntaxException | ParseCancellationException e) {
+              return SelectionUtils.getNodeSelection(player, info.input().substring(1, info.input().length() - 1));
+            } catch (ParseCancellationException e) {
               throw new CustomArgument.CustomArgumentException(e.getMessage());
             }
           }

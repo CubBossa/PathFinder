@@ -8,7 +8,6 @@ import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -112,7 +111,7 @@ public class PlaceholderVisualizer
 
   public String resolveDistance(double distance) {
     return resolver.serialize(
-            resolver.deserialize(distanceFormat, Formatter.number("distance", distance)))
+            resolver.deserialize(distanceFormat, Messages.formatter().number("distance", distance)))
         .replace("\\<", "<");
   }
 

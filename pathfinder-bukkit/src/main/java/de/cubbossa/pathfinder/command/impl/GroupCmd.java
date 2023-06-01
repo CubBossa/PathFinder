@@ -13,9 +13,7 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -71,12 +69,12 @@ public class GroupCmd extends PathFinderSubCommand {
   }
 
   private void showGroup(CommandSender sender, SimpleNodeGroup group) {
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(TagResolver.builder()
-        .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-        .resolver(Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())))
-        .resolver(Formatter.number("weight", group.getWeight()))
-        .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
-        .build()));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(
+        Messages.formatter().namespacedKey("key", group.getKey()),
+        Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())),
+        Messages.formatter().number("weight", group.getWeight()),
+        Messages.formatter().modifiers("modifiers", group.getModifiers())
+    ));
   }
 
   private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {

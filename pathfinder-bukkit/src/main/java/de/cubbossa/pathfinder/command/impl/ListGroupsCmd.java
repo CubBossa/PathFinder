@@ -38,7 +38,7 @@ public class ListGroupsCmd extends PathFinderSubCommand {
                 Messages.formatter().namespacedKey("key", group.getKey()),
                 Messages.formatter().number("size", group.size()),
                 Messages.formatter().number("weight", group.getWeight()),
-                Messages.formatModifiers("modifiers", group.getModifiers())
+                Messages.formatter().modifiers("modifiers", group.getModifiers())
             ));
           },
           Messages.CMD_NG_LIST_HEADER,

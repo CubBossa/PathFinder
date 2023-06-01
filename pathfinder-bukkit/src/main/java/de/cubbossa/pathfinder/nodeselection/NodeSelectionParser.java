@@ -1,14 +1,14 @@
 package de.cubbossa.pathfinder.nodeselection;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathapi.node.Node;
-import java.util.Collection;
-import java.util.List;
 import lombok.Getter;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.Collection;
+import java.util.List;
 
 public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionParser.Context<?>> {
 
@@ -21,7 +21,7 @@ public class NodeSelectionParser extends SelectionParser<Node, NodeSelectionPars
   }
 
   public <S> Collection<Node> parse(Player player, String input, List<Node> scope)
-      throws ParseCancellationException, CommandSyntaxException {
+      throws ParseCancellationException {
     return super.<S>parse(input, scope, (o, nodes) -> new Context<>(o, scope, player));
   }
 

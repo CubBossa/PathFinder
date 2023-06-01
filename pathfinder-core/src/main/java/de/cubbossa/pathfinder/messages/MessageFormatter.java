@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.messages;
 
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import net.kyori.adventure.text.ComponentLike;
@@ -8,6 +9,7 @@ import org.bukkit.Particle;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.function.Function;
 
 public interface MessageFormatter {
@@ -17,6 +19,8 @@ public interface MessageFormatter {
   TagResolver choice(String key, boolean value);
 
   TagResolver number(String key, Number value);
+
+  TagResolver uuid(String key, UUID value);
 
   TagResolver namespacedKey(String key, NamespacedKey namespacedKey);
 
@@ -29,4 +33,6 @@ public interface MessageFormatter {
   <C extends ComponentLike> TagResolver list(String key, Collection<C> entries);
 
   <C> TagResolver list(String key, Collection<C> entries, Function<C, ComponentLike> renderer);
+
+  TagResolver modifiers(String key, Collection<Modifier> modifiers);
 }

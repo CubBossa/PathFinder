@@ -83,16 +83,16 @@ public class CommandUtils {
                             Consumer<T> print, Message header, Message footer) {
 
     int page = pagination.getPage() + 1;
-    int maxPage = pagination.getPageCount(elements.size()) + 1;
+    int maxPage = pagination.getPageCount(elements.size());
     int prevPage = Integer.max(page - 1, 1);
     int nextPage = Integer.min(page + 1, maxPage);
 
-    TagResolver resolver = TagResolver.builder()
-        .resolver(Placeholder.parsed("page", pagination.getPage() + ""))
-        .resolver(Placeholder.parsed("prev-page", prevPage + ""))
-        .resolver(Placeholder.parsed("next-page", nextPage + ""))
-        .resolver(Placeholder.parsed("pages", maxPage + ""))
-        .build();
+    TagResolver resolver = TagResolver.resolver(
+        Placeholder.parsed("page", page + ""),
+        Placeholder.parsed("prev-page", prevPage + ""),
+        Placeholder.parsed("next-page", nextPage + ""),
+        Placeholder.parsed("pages", maxPage + "")
+    );
 
     BukkitUtils.wrap(sender).sendMessage(header.formatted(resolver));
     for (T element : CollectionUtils.subList(elements, pagination)) {

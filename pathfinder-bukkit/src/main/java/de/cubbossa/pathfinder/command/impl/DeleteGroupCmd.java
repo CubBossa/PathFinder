@@ -9,7 +9,6 @@ import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 public class DeleteGroupCmd extends PathFinderSubCommand {
@@ -32,7 +31,7 @@ public class DeleteGroupCmd extends PathFinderSubCommand {
     }
     getPathfinder().getStorage().deleteGroup(group).thenRun(() -> {
       p.sendMessage(Messages.CMD_NG_DELETE.formatted(
-          Placeholder.parsed("name", group.getKey().toString())
+          Messages.formatter().namespacedKey("key", group.getKey())
       ));
     });
   }

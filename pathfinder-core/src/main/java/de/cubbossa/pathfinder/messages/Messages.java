@@ -16,13 +16,12 @@ import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.minimessage.Context;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -32,7 +31,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -152,11 +150,11 @@ public class Messages {
       .withPlaceholder("modules")
       .build();
 
-  public static final Message CMD_RM_FORCE_FIND = new MessageBuilder("commands.roadmap.force_find")
+  public static final Message CMD_RM_FORCE_FIND = new MessageBuilder("commands.force_find")
       .withDefault("<msg:prefix>Player <name> discovered <discovery>.")
       .withPlaceholder("name", "discovery")
       .build();
-  public static final Message CMD_RM_FORCE_FORGET = new MessageBuilder("commands.roadmap.force_forget")
+  public static final Message CMD_RM_FORCE_FORGET = new MessageBuilder("commands.force_forget")
       .withDefault("<msg:prefix>Player <name> forgot about <discovery>.")
       .withPlaceholders("name", "discovery")
       .build();
@@ -176,13 +174,13 @@ public class Messages {
       .build();
   public static final Message CMD_N_INFO = new MessageBuilder("commands.node.info")
       .withDefault("""
-          <offset>Node #<id></offset> <gray>(<roadmap>)</gray>
+          <offset>Node #<id></offset>
           <dark_gray>» </dark_gray><gray>Position: <main><position></main> (<world>)
           <dark_gray>» </dark_gray><gray>Curve-Length: <main><curve-length></main>
           <dark_gray>» </dark_gray><gray>Edges: <edges>
           <dark_gray>» </dark_gray><gray>Groups: <groups>
           """)
-      .withPlaceholders("id", "roadmap", "groups", "position", "world", "curve-length", "edges")
+      .withPlaceholders("id", "groups", "position", "world", "edges")
       .build();
   public static final Message CMD_N_INFO_NO_SEL = new MessageBuilder("commands.node.info_no_selection")
       .withDefault("<negative>No nodes found to display. Check your selection query.</negative>")
@@ -202,15 +200,15 @@ public class Messages {
 
   public static final Message CMD_N_LIST_HEADER = new MessageBuilder("commands.node.list.header")
       .withDefault("<gradient:black:dark_gray:black>------------ <offset>Waypoints</offset> ------------</gradient>")
-      .withPlaceholders("roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages")
+      .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_LIST_ELEMENT = new MessageBuilder("commands.node.list.element")
-      .withDefault("<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/waypoint info \"@n[id=<id>]\"><gray>#<id> at <position> (<world>)")
+      .withDefault("<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/pf nodes \"@n[id=<id>]\" info><gray>at <position> (<world>)")
       .withPlaceholders("id", "position", "world", "curve-length", "edges", "groups")
       .build();
   public static final Message CMD_N_LIST_FOOTER = new MessageBuilder("commands.node.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/waypoint list \"<selector>\" <prev-page>>←</click> <page>/<pages> <click:run_command:/waypoint list \"<selector>\" <next-page>>→</click> </gray>-------------</gradient>")
-      .withPlaceholders("roadmap-key", "roadmap-name", "page", "next-page", "prev-page", "pages")
+      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listnodes \"<selector>\" <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listnodes \"<selector>\" <next-page>>→</click> </gray>-------------</gradient>")
+      .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
       .withDefault("<msg:prefix>Connected <start> to <end>.")
@@ -258,7 +256,7 @@ public class Messages {
       .withPlaceholders("page", "key", "weight", "modifiers")
       .build();
   public static final Message CMD_NG_LIST_FOOTER = new MessageBuilder("commands.node_group.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/nodegroup list <prev-page>>←</click> <page>/<pages> <click:run_command:/nodegroup list <next-page>>→</click> </gray>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listgroups <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listgroups <next-page>>→</click> </gray>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
@@ -316,11 +314,11 @@ public class Messages {
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_VIS_LIST_ENTRY = new MessageBuilder("commands.path_visualizer.list.entry")
-      .withDefault("<dark_gray> » </dark_gray><name> <gray>(<key>)</gray>")
-      .withPlaceholders("key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer")
+      .withDefault("<dark_gray> » </dark_gray><key> <gray>(<type>)</gray>")
+      .withPlaceholders("key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer", "type")
       .build();
   public static final Message CMD_VIS_LIST_FOOTER = new MessageBuilder("commands.path_visualizer.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/roadmap list <prev-page>>←</click> <page>/<pages> <click:run_command:/roadmap list <next-page>>→</click> </gray>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listvisualizers <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listvisualizers <next-page>>→</click> </gray>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_VIS_NO_TYPE_FOUND = new MessageBuilder("commands.path_visualizer.info.no_type")
@@ -370,7 +368,7 @@ public class Messages {
           <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></main>
           <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
           <dark_gray>» </dark_gray><gray>Children:<entries:"":"<br><dark_gray>  » </dark_gray>"/>""")
-      .withPlaceholder("entries[:<separator>][:<prefix>][:<suffix>]")
+      .withPlaceholder("entries[:separator][:prefix][:suffix]")
       .build();
   public static final Message CMD_VIS_COMBINED_ADD = new MessageBuilder("commands.path_visualizer.type.combined.add")
       .withDefault("<msg:prefix>Added <child> as child to <visualizer>.")
@@ -482,7 +480,7 @@ public class Messages {
       .withDefault("<msg:prefix>Chain started.")
       .build();
   public static final Message E_NODE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.node_tool.directed")
-      .withDefault("<msg:prefix>Edges directed: <main><value><main>")
+      .withDefault("<msg:prefix>Edges directed: <main><value:true:false><main>")
       .withPlaceholders("value")
       .build();
   public static final Message E_GROUP_TOOL_N = new MessageBuilder("editor.toolbar.group_tool.name")
@@ -531,7 +529,7 @@ public class Messages {
   public static final Message E_SUB_GROUP_ENTRY_L = new MessageBuilder("editor.groups.entry.lore")
       .withDefault("""
           <dark_gray>» </dark_gray><gray>Weight: <weight:#.##></gray>
-          <modifiers:"\n":"<dark_gray>» </dark_gray><gray>"/>""")
+          <gray><modifiers:"\n":"<dark_gray>» </dark_gray>"/></gray>""")
       .withPlaceholders("key", "weight", "modifiers")
       .build();
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
@@ -570,15 +568,6 @@ public class Messages {
     return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
   }
 
-  public static TagResolver formatModifiers(String key, Collection<Modifier> modifiers) {
-    return TagResolver.resolver(key, Messages.formatList(modifiers, modifier -> {
-      Optional<ModifierType<Modifier>> type = PathFinderProvider.get().getModifierRegistry().getType(modifier.getKey());
-      return type.isPresent() && type.get() instanceof ModifierCommandExtension ext
-          ? ext.toComponents(modifier)
-          : Component.text("Unknown modifier '" + modifier.getKey() + "'.");
-    }));
-  }
-
   public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
                                                 Collection<T> collection,
                                                 Function<T, ComponentLike> converter) {
@@ -598,57 +587,6 @@ public class Messages {
         .hoverEvent(HoverEvent.showText(
             Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
                 collection.stream().map(converter).collect(Collectors.toList()))));
-  }
-
-  public static Message formatParticle(Particle particle, Object data) {
-    return data == null
-        ? GEN_PARTICLE.formatted(TagResolver.builder()
-        .resolver(Placeholder.component("particle", Component.text(particle.toString())))
-        .build())
-        : GEN_PARTICLE_META.formatted(TagResolver.builder()
-        .resolver(Placeholder.component("particle", Component.text(particle.toString())))
-        .resolver(Placeholder.component("meta", Component.text(data.toString())))
-        .build());
-  }
-
-  public static <T> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries,
-                                                                       Function<T, ComponentLike> formatter) {
-    Collection<ComponentLike> componentLikes = new ArrayList<>();
-    for (T entry : entries) {
-      componentLikes.add(formatter.apply(entry));
-    }
-    return formatList(componentLikes);
-  }
-
-  public static <T extends ComponentLike> BiFunction<ArgumentQueue, Context, Tag> formatList(Collection<T> entries) {
-    return (queue, context) -> {
-      MiniMessage mm = PathFinderProvider.get().getMiniMessage();
-      ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
-      ComponentLike prefix = null;
-      ComponentLike suffix = null;
-
-      if (queue.hasNext()) {
-        separator = mm.deserialize(queue.pop().value());
-      }
-      if (queue.hasNext()) {
-        prefix = mm.deserialize(queue.pop().value());
-      }
-      if (queue.hasNext()) {
-        suffix = mm.deserialize(queue.pop().value());
-      }
-      ComponentLike finalPrefix = prefix;
-      ComponentLike finalSuffix = suffix;
-      return Tag.selfClosingInserting(Component.join(JoinConfiguration.builder().separator(separator).build(),
-          entries.stream().map(c -> {
-            if (finalPrefix == null) {
-              return c;
-            }
-            if (finalSuffix == null) {
-              return Component.empty().append(finalPrefix).append(c);
-            }
-            return Component.empty().append(finalPrefix).append(c).append(finalSuffix);
-          }).collect(Collectors.toList())));
-    };
   }
 
   public static class MessageFormatterImpl implements MessageFormatter {
@@ -679,6 +617,26 @@ public class Messages {
     @Override
     public TagResolver number(String key, Number value) {
       return Formatter.number(key, value);
+    }
+
+    @Override
+    public TagResolver uuid(String key, UUID value) {
+      return TagResolver.resolver(key, (argumentQueue, context) -> {
+        if (!argumentQueue.hasNext()) {
+          return Tag.inserting(Component.text(value.toString())
+              .clickEvent(ClickEvent.copyToClipboard(value.toString())));
+        }
+        TextColor c = TextColor.fromCSSHexString(argumentQueue.pop().value());
+        boolean upperCase = argumentQueue.hasNext() && argumentQueue.pop().isTrue();
+        String uuidString = value.toString();
+        uuidString = upperCase ? uuidString.toUpperCase() : uuidString.toLowerCase();
+        List<Component> segments = Arrays.stream(uuidString.split("-"))
+            .map(Component::text)
+            .map(textComponent -> textComponent.color(c))
+            .collect(Collectors.toList());
+        return Tag.inserting(Component.join(JoinConfiguration.separator(Component.text("-")), segments)
+            .clickEvent(ClickEvent.copyToClipboard(uuidString)));
+      });
     }
 
     @Override
@@ -739,17 +697,65 @@ public class Messages {
 
     @Override
     public TagResolver particle(String key, Particle particle, Object data) {
-      return null;
+      return Placeholder.component(key, data == null
+          ? GEN_PARTICLE.formatted(TagResolver.builder()
+          .resolver(Placeholder.component("particle", Component.text(particle.toString())))
+          .build())
+          : GEN_PARTICLE_META.formatted(TagResolver.builder()
+          .resolver(Placeholder.component("particle", Component.text(particle.toString())))
+          .resolver(Placeholder.component("meta", Component.text(data.toString())))
+          .build()));
     }
 
     @Override
     public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
-      return null;
+      return TagResolver.resolver(key, (queue, context) -> {
+        MiniMessage mm = PathFinderProvider.get().getMiniMessage();
+        ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
+        ComponentLike prefix = null;
+        ComponentLike suffix = null;
+
+        if (queue.hasNext()) {
+          separator = mm.deserialize(queue.pop().value());
+        }
+        if (queue.hasNext()) {
+          prefix = mm.deserialize(queue.pop().value());
+        }
+        if (queue.hasNext()) {
+          suffix = mm.deserialize(queue.pop().value());
+        }
+        ComponentLike finalPrefix = prefix;
+        ComponentLike finalSuffix = suffix;
+        return Tag.selfClosingInserting(Component.join(JoinConfiguration.builder().separator(separator).build(),
+            entries.stream().map(c -> {
+              if (finalPrefix == null) {
+                return c;
+              }
+              if (finalSuffix == null) {
+                return Component.empty().append(finalPrefix).append(c);
+              }
+              return Component.empty().append(finalPrefix).append(c).append(finalSuffix);
+            }).collect(Collectors.toList())));
+      });
     }
 
     @Override
     public <C> TagResolver list(String key, Collection<C> entries, Function<C, ComponentLike> renderer) {
-      return null;
+      Collection<ComponentLike> componentLikes = new ArrayList<>();
+      for (C entry : entries) {
+        componentLikes.add(renderer.apply(entry));
+      }
+      return list(key, componentLikes);
+    }
+
+    @Override
+    public TagResolver modifiers(String key, Collection<Modifier> modifiers) {
+      return list(key, modifiers, modifier -> {
+        Optional<ModifierType<Modifier>> type = PathFinderProvider.get().getModifierRegistry().getType(modifier.getKey());
+        return type.isPresent() && type.get() instanceof ModifierCommandExtension ext
+            ? ext.toComponents(modifier)
+            : Component.text("Unknown modifier '" + modifier.getKey() + "'.");
+      });
     }
   }
 }

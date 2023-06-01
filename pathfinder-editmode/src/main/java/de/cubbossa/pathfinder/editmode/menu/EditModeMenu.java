@@ -26,7 +26,6 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -283,8 +282,8 @@ public class EditModeMenu {
 
         TagResolver resolver = TagResolver.builder()
             .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-            .resolver(Formatter.number("weight", group.getWeight()))
-            .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
+            .resolver(Messages.formatter().number("weight", group.getWeight()))
+            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
             .build();
 
         menu.addListEntry(Button.builder()
@@ -352,8 +351,8 @@ public class EditModeMenu {
 
         TagResolver resolver = TagResolver.builder()
             .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-            .resolver(Formatter.number("weight", group.getWeight()))
-            .resolver(Messages.formatModifiers("modifiers", group.getModifiers()))
+            .resolver(Messages.formatter().number("weight", group.getWeight()))
+            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
             .build();
 
         menu.addListEntry(Button.builder()

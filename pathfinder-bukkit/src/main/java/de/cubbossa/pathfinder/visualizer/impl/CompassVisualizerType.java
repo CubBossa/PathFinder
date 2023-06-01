@@ -10,7 +10,6 @@ import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,17 +30,16 @@ public class CompassVisualizerType extends AbstractVisualizerType<CompassVisuali
 
   @Override
   public Message getInfoMessage(CompassVisualizer element) {
-    return Messages.CMD_VIS_COMPASS_INFO.formatted(TagResolver.builder()
-        .resolver(Placeholder.unparsed("color", element.getColor().toString().toLowerCase()))
-        .resolver(Placeholder.unparsed("overlay", element.getOverlay().toString().toLowerCase()))
-        .resolver(Placeholder.parsed("background", element.getBackgroundFormat()))
-        .resolver(Placeholder.parsed("marker-north", element.getNorth()))
-        .resolver(Placeholder.parsed("marker-east", element.getEast()))
-        .resolver(Placeholder.parsed("marker-south", element.getSouth()))
-        .resolver(Placeholder.parsed("marker-west", element.getWest()))
-        .resolver(Placeholder.parsed("marker-target", element.getTarget()))
-        .resolver(Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius())))
-        .build()
+    return Messages.CMD_VIS_COMPASS_INFO.formatted(
+        Placeholder.unparsed("color", element.getColor().toString().toLowerCase()),
+        Placeholder.unparsed("overlay", element.getOverlay().toString().toLowerCase()),
+        Placeholder.parsed("background", element.getBackgroundFormat()),
+        Placeholder.parsed("marker-north", element.getNorth()),
+        Placeholder.parsed("marker-east", element.getEast()),
+        Placeholder.parsed("marker-south", element.getSouth()),
+        Placeholder.parsed("marker-west", element.getWest()),
+        Placeholder.parsed("marker-target", element.getTarget()),
+        Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius()))
     );
   }
 

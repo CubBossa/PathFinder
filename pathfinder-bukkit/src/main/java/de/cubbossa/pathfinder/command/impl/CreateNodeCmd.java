@@ -9,7 +9,6 @@ import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 import java.util.function.Supplier;
@@ -48,7 +47,7 @@ public class CreateNodeCmd extends PathFinderSubCommand {
   private void createNode(CommandSender sender, NodeType<?> type, Location location) {
     getPathfinder().getStorage().createAndLoadNode(type, location).thenAccept(n -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CREATE.formatted(
-          Placeholder.parsed("id", n.getNodeId().toString())
+          Messages.formatter().uuid("id", n.getNodeId())
       ));
     });
   }

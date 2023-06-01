@@ -13,10 +13,6 @@ import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
@@ -40,16 +36,14 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 
   @Override
   public Message getInfoMessage(ParticleVisualizer element) {
-    return Messages.CMD_VIS_INFO_PARTICLES.formatted(TagResolver.builder()
-        .resolver(Placeholder.component("particle",
-            Messages.formatParticle(element.getParticle(), element.getParticleData())))
-        .resolver(
-            Placeholder.component("particle-steps", Component.text(element.getSchedulerSteps())))
-        .resolver(Placeholder.component("amount", Component.text(element.getAmount())))
-        .resolver(Formatter.number("speed", element.getSpeed()))
-        .resolver(Messages.formatter().vector("offset", BukkitVectorUtils.toInternal(element.getOffset())))
-        .resolver(Formatter.number("point-distance", element.getPointDistance()))
-        .build());
+    return Messages.CMD_VIS_INFO_PARTICLES.formatted(
+        Messages.formatter().particle("particle", element.getParticle(), element.getParticleData()),
+        Messages.formatter().number("particle-steps", element.getSchedulerSteps()),
+        Messages.formatter().number("amount", element.getAmount()),
+        Messages.formatter().number("speed", element.getSpeed()),
+        Messages.formatter().vector("offset", BukkitVectorUtils.toInternal(element.getOffset())),
+        Messages.formatter().number("point-distance", element.getPointDistance())
+    );
   }
 
   @Override

@@ -10,7 +10,6 @@ import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -30,7 +29,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
 
   @Override
   public ComponentLike toComponents(FindDistanceModifier modifier) {
-    return Messages.CMD_NG_MOD_FINDDIST.formatted(Formatter.number("distance", modifier.distance()));
+    return Messages.CMD_NG_MOD_FINDDIST.formatted(Messages.formatter().number("distance", modifier.distance()));
   }
 
   @Override

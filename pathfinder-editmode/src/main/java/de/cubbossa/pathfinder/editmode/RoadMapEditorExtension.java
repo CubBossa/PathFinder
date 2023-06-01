@@ -26,7 +26,7 @@ public class RoadMapEditorExtension implements PathFinderExtension {
   @NotNull
   @Override
   public NamespacedKey getKey() {
-    return CommonPathFinder.pathfinder("roadmap-editor");
+    return CommonPathFinder.pathfinder("group-editor");
   }
 
   @Override

@@ -14,7 +14,6 @@ import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 
 import java.util.*;
@@ -35,11 +34,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
   @Override
   public Message getInfoMessage(CombinedVisualizer element) {
     return Messages.CMD_VIS_COMBINED_INFO.formatted(
-        TagResolver.resolver("entries", Messages.formatList(
-            element.getVisualizers(),
-            v -> Component.text(v == null ? "undefined" : v.getKey().toString())
-        )
-    ));
+        Messages.formatter().list("entries", element.getVisualizers(),
+            v -> Component.text(v == null ? "undefined" : v.getKey().toString()))
+    );
   }
 
   @Override
