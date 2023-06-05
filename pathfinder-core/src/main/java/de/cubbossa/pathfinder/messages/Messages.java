@@ -150,11 +150,11 @@ public class Messages {
       .withPlaceholder("modules")
       .build();
 
-  public static final Message CMD_RM_FORCE_FIND = new MessageBuilder("commands.force_find")
+  public static final Message CMD_FORCE_FIND = new MessageBuilder("commands.force_find")
       .withDefault("<msg:prefix>Player <name> discovered <discovery>.")
       .withPlaceholder("name", "discovery")
       .build();
-  public static final Message CMD_RM_FORCE_FORGET = new MessageBuilder("commands.force_forget")
+  public static final Message CMD_FORCE_FORGET = new MessageBuilder("commands.force_forget")
       .withDefault("<msg:prefix>Player <name> forgot about <discovery>.")
       .withPlaceholders("name", "discovery")
       .build();
@@ -223,16 +223,16 @@ public class Messages {
       .withDefault("<negative>Could not create Nodegroup. Check out console for details.")
       .build();
   public static final Message CMD_NG_ALREADY_EXISTS = new MessageBuilder("commands.node_group.already_exists")
-      .withDefault("<negative>A node group with this namespaced key (<name>) already exists.</negative>")
-      .withPlaceholders("name")
+      .withDefault("<negative>A node group <key> already exists.</negative>")
+      .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_CREATE = new MessageBuilder("commands.node_group.create")
-      .withDefault("<msg:prefix>Node group created: <name>.")
-      .withPlaceholders("name")
+      .withDefault("<msg:prefix>Node group created: <key>.")
+      .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_DELETE = new MessageBuilder("commands.node_group.delete")
-      .withDefault("<msg:prefix>Node group deleted: <name>.")
-      .withPlaceholders("name")
+      .withDefault("<msg:prefix>Node group deleted: <key>.")
+      .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
       .withDefault("<negative>You cannot delete the global node group.</negative>")
@@ -307,6 +307,11 @@ public class Messages {
   public static final Message CMD_CANCEL = new MessageBuilder("commands.cancel_path")
       .withDefault("<msg:prefix>Navigation cancelled.")
       .build();
+  public static final Message DISCOVERY_DISCOVER = new MessageBuilder("discovery.discover")
+      .withDefault("You discovered: <discoverable>")
+      .withTranslation(Locale.GERMAN, "Entdeckt: <discoverable>")
+      .withPlaceholders("player", "discoverable", "group")
+      .build();
 
 
   public static final Message CMD_VIS_LIST_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
@@ -331,21 +336,21 @@ public class Messages {
       .build();
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
-      .withDefault("<msg:prefix>Successfully created Visualizer <offset><name></offset> (<name-format>) of type '<type>'.")
+      .withDefault("<msg:prefix>Successfully created Visualizer <offset><key></offset> of type '<type>'.")
       .withPlaceholders("key", "type")
       .build();
   public static final Message CMD_VIS_NAME_EXISTS = new MessageBuilder("commands.path_visualizer.create.already_exists")
       .withDefault("<negative>Another visualizer with this name already exists.")
       .build();
   public static final Message CMD_VIS_DELETE_SUCCESS = new MessageBuilder("commands.path_visualizer.delete.success")
-      .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><name></offset>.")
+      .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><key></offset>.")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set_property")
-      .withDefault("<msg:prefix>Changed <property> for <name> from <old-value> to <value>.")
+      .withDefault("<msg:prefix>Changed <property> for <key> from <old-value> to <value>.")
       .withPlaceholders("key", "type", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP_ERROR = new MessageBuilder("commands.path_visualizer.set_property_error")
@@ -359,7 +364,7 @@ public class Messages {
       .withDefault("<negative>Could not import file, there is no example file with this name.</negative>")
       .build();
   public static final Message CMD_VIS_IMPORT_SUCCESS = new MessageBuilder("commands.path_visualizer.import.successful")
-      .withDefault("<msg:prefix>Successfully imported Visualizer: <name>")
+      .withDefault("<msg:prefix>Successfully imported Visualizer: <key>")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_COMBINED_INFO = new MessageBuilder("commands.path_visualizer.type.combined.info")

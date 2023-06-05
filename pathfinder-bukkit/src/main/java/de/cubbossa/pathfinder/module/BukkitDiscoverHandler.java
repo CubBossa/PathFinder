@@ -12,13 +12,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.UUID;
 
 public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
 
   private final PathFinder pathFinder;
+  private final Collection<UUID> playerLock = new HashSet<>();
 
   public BukkitDiscoverHandler(CommonPathFinder plugin) {
     super(plugin);
@@ -28,6 +31,11 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
 
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
+    UUID uuid = event.getPlayer().getUniqueId();
+    if (playerLock.contains(uuid)) {
+      return;
+    }
+    playerLock.add(uuid);
     pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
       PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
       for (NodeGroup group : nodeGroups) {
@@ -35,13 +43,8 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
           continue;
         }
         super.discover(player, group, LocalDateTime.now());
+        playerLock.remove(uuid);
       }
     });
-  }
-
-  @EventHandler
-  public void onQuit(PlayerQuitEvent event) {
-    pathFinder.getStorage().getCache().getDiscoverInfoCache()
-        .invalidate(event.getPlayer().getUniqueId());
   }
 }

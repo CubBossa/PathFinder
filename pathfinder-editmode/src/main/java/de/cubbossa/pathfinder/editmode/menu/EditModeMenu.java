@@ -273,7 +273,6 @@ public class EditModeMenu {
   private void openGroupMenu(Player player, Groupable groupable) {
 
     storage.loadAllGroups().thenAccept(nodeGroups -> {
-      System.out.println("Loaded groups, thread: " + Thread.currentThread().getName());
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
@@ -300,23 +299,21 @@ public class EditModeMenu {
               return stack;
             })
             .withClickHandler(Action.LEFT, c -> {
-              System.out.println("Handle click, thread: " + Thread.currentThread().getName());
               if (!group.contains(groupable.getNodeId())) {
                 groupable.addGroup(group);
                 storage.saveNode(groupable).thenRun(() -> {
-                  System.out.println("After save, thread: " + Thread.currentThread().getName());
                   c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+                  menu.refresh(menu.getListSlots());
                 });
-                menu.refresh(menu.getListSlots());
               }
             })
             .withClickHandler(Action.RIGHT, c -> {
               if (group.contains(groupable.getNodeId())) {
                 groupable.removeGroup(group.getKey());
-                storage.saveNode(groupable).join();
-
-                c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                menu.refresh(menu.getListSlots());
+                storage.saveNode(groupable).thenRun(() -> {
+                  c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+                  menu.refresh(menu.getListSlots());
+                });
               }
             }));
       }
@@ -326,11 +323,10 @@ public class EditModeMenu {
                 Messages.E_SUB_GROUP_RESET_L).createItem(player));
         presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
           groupable.clearGroups();
-          storage.saveNode(groupable).join();
-          menu.refresh(menu.getListSlots());
-          c.getPlayer()
-              .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f,
-                  1f);
+          storage.saveNode(groupable).thenRun(() -> {
+            menu.refresh(menu.getListSlots());
+            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+          });
         });
 
         presetApplier.addItemOnTop(3 * 9 + 4,

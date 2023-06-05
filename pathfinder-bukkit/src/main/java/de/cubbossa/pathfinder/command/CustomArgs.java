@@ -12,11 +12,13 @@ import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
@@ -364,32 +366,40 @@ public class CustomArgs {
    * @return The CustomArgument instance
    */
   public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
-    return CommandArgument.arg(new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
-          if (!(context.sender() instanceof Player player)) {
-            throw new CustomArgument.CustomArgumentException("Only for players");
-          }
-          String search = context.currentInput();
-          Storage storage = PathFinderProvider.get().getStorage();
-          List<Node> scope = storage.loadNodes().join().stream().filter(node -> {
-            // Create context for request
-            BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
-            // Find a node that matches all required filters
-            // return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
-            return true;
-          }).toList();
+    return CommandArgument.arg(new CustomArgument<>(new GreedyStringArgument(nodeName),
+            context -> {
+              if (!(context.sender() instanceof Player player)) {
+                throw new CustomArgument.CustomArgumentException("Only for players");
+              }
+              String search = context.currentInput();
+              Storage storage = PathFinderProvider.get().getStorage();
+              List<Node> scope = storage.loadNodes().join().stream().filter(node -> {
+                // Create context for request
+                BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
+                // Find a node that matches all required filters
+                // return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
+                return true;
+              }).toList();
 
-          try {
-            Map<Node, Collection<NavigableModifier>> map = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
-            Collection<Node> target = new FindQueryParser().parse(search, scope, n -> map.getOrDefault(n, new HashSet<>()).stream()
-                .map(NavigableModifier::getSearchTerms)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet()));
-            return new NodeSelection(target);
-          } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-          }
-        }))
+              try {
+                Function<Node, Collection<SearchTerm>> searchTermFunction = n -> {
+                  if (!(n instanceof Groupable groupable)) {
+                    return new ArrayList<>();
+                  }
+                  return groupable.getGroups().stream()
+                      .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
+                      .filter(Optional::isPresent).map(Optional::get)
+                      .map(NavigableModifier::getSearchTerms)
+                      .flatMap(Collection::stream)
+                      .collect(Collectors.toList());
+                };
+                Collection<Node> target = new FindQueryParser().parse(search, scope, searchTermFunction);
+                return new NodeSelection(target);
+              } catch (Throwable t) {
+                t.printStackTrace();
+                throw new RuntimeException(t);
+              }
+            }))
         .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
           if (!(suggestionInfo.sender() instanceof Player)) {
             return suggestionsBuilder.buildFuture();
@@ -406,34 +416,22 @@ public class CustomArgs {
               lastIndex + 1);
 
           StringRange range = StringRange.between(lastIndex, input.length());
-          List<Suggestion> suggestions = new ArrayList<>();
+          String inRange = range.get(input);
 
-          StringRange finalRange = range;
-          String inRange = finalRange.get(input);
-
-          Collection<String> allTerms = new HashSet<>();
-          PathFinderProvider.get().getStorage().<NavigableModifier>loadNodes(NavigableModifier.KEY).thenAccept(map -> {
-            map.forEach((node, navigableModifier) -> {
-              allTerms.addAll(navigableModifier.stream()
-                  .map(NavigableModifier::getSearchTermStrings)
-                  .flatMap(Collection::stream)
-                  .toList());
-            });
-          }).join();
-
-          allTerms.stream().filter(s -> s.startsWith(inRange))
-              .map(s -> new Suggestion(finalRange, s))
-              .forEach(suggestions::add);
-
-
-          if (suggestions.isEmpty()) {
-            range = StringRange.at(suggestionInfo.currentInput().length() - 1);
-            for (String s : LIST_SYMBOLS_STRING) {
-              suggestions.add(new Suggestion(range, s));
-            }
-          }
-
-          return CompletableFuture.completedFuture(new Suggestions(range, suggestions));
+          return PathFinderProvider.get().getStorage().<NavigableModifier>loadNodes(NavigableModifier.KEY).thenApply(map -> {
+            map.keySet().stream()
+                .filter(node -> node instanceof Groupable)
+                .map(node -> (Groupable) node)
+                .map(Groupable::getGroups)
+                .flatMap(Collection::stream)
+                .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
+                .filter(Optional::isPresent).map(Optional::get)
+                .map(NavigableModifier::getSearchTermStrings)
+                .flatMap(Collection::stream)
+                .filter(s -> s.startsWith(inRange))
+                .forEach(suggestionsBuilder::suggest);
+            return suggestionsBuilder.build();
+          });
         });
   }
 

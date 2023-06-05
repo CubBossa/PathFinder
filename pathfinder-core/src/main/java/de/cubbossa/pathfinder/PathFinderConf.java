@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import com.google.common.collect.Lists;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
@@ -168,13 +169,18 @@ public class PathFinderConf implements PathFinderConfig {
     public float blockCollisionWeight = 10_000f;
   }
 
+  // <player> <player-loc> <player-loc-x>
   @Configuration
   public static class EffectsConf {
     public ArrayList<String> onPathStart;
     public ArrayList<String> onPathTargetReach;
     public ArrayList<String> onPathStop;
     public ArrayList<String> onPathCancel;
-    public ArrayList<String> onDiscover;
+    public ArrayList<String> onDiscover = Lists.newArrayList(
+        "title <player> subtitle <msg:discovery.discover:json>",
+        "title <player> title {\"text\":\"\"}",
+        "playsound minecraft:entity.villager.work_cartographer neutral <player:name> <player:loc> 1 1"
+    );
     public ArrayList<String> onForget;
   }
 

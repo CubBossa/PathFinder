@@ -32,7 +32,7 @@ public class CreateGroupCmd extends PathFinderSubCommand {
     getPathfinder().getStorage().loadGroup(key).thenAccept(optGroup -> {
       if (optGroup.isPresent()) {
         BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.formatted(
-            Placeholder.parsed("name", name)
+            Placeholder.parsed("key", name)
         ));
         return;
       }
