@@ -25,6 +25,7 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
@@ -32,7 +33,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
-import org.bukkit.util.Vector;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -138,10 +138,15 @@ public class EditModeMenu {
         })
 
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
-          Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
 
+          Location view = context.getPlayer().getEyeLocation();
+          Location block = context.getTarget().getLocation();
+          BukkitVectorUtils.Orientation orientation = BukkitVectorUtils.getIntersection(view.toVector(), view.getDirection(), block.toVector());
+          Location pos = BukkitVectorUtils.toBukkit(VectorUtils.snap(BukkitVectorUtils.toInternal(orientation.location()), 2))
+              .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
           if (types.size() > 1) {
             openNodeTypeMenu(context.getPlayer(), pos);
+            return;
           }
 
           NodeType<?> type = types.stream().findAny().orElse(null);
@@ -176,6 +181,9 @@ public class EditModeMenu {
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
           storage.modifyNode(context.getTarget().getStart(), node -> {
             node.disconnect(context.getTarget().getEnd());
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
     );

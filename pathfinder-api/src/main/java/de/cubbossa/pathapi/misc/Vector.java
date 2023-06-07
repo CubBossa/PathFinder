@@ -128,6 +128,15 @@ public class Vector implements Cloneable {
   }
 
   @Override
+  public String toString() {
+    return "Vector{" +
+        "x=" + x +
+        ", y=" + y +
+        ", z=" + z +
+        '}';
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

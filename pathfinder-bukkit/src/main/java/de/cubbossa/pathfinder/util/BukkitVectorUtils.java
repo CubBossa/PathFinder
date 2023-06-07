@@ -6,13 +6,58 @@ import org.bukkit.util.Vector;
 
 public class BukkitVectorUtils {
 
+  public static final Vector UP = new Vector(0, 1, 0);
+  public static final Vector DOWN = new Vector(0, -1, 0);
   public static final Vector NORTH = new Vector(0, 0, -1);
   public static final Vector EAST = new Vector(1, 0, 0);
   public static final Vector SOUTH = new Vector(0, 0, 1);
   public static final Vector WEST = new Vector(-1, 0, 0);
 
-  public static double distancePointToLine(de.cubbossa.pathapi.misc.Vector point, de.cubbossa.pathapi.misc.Vector lineSupport, de.cubbossa.pathapi.misc.Vector lineTarget) {
-    return distancePointToLine(toBukkit(point), toBukkit(lineSupport), toBukkit(lineTarget));
+  public record Orientation(Vector location, Vector direction) {
+  }
+
+  public static Orientation getIntersection(Vector linePoint, Vector lineDirection, Vector block) {
+    // First check the three directions of the line and by that sort out the three block faces
+    // if the line is orthogonal to a block face, the value is null
+    Vector[] blockFaces = {
+        // put up first bc most likely player will be clicking from top. Will reduce by one iteration
+        lineDirection.getY() < 0 ? UP : lineDirection.getY() > 0 ? DOWN : null,
+        lineDirection.getX() < 0 ? EAST : lineDirection.getX() > 0 ? WEST : null,
+        lineDirection.getZ() < 0 ? SOUTH : lineDirection.getZ() > 0 ? NORTH : null
+    };
+    Vector blocKEnd = block.clone().add(new Vector(1, 1, 1));
+    for (Vector blockFace : blockFaces) {
+      if (blockFace == null) {
+        continue;
+      }
+      Vector faceShift = new Vector(1, 1, 1).multiply(.5).multiply(blockFace.clone().multiply(blockFace))
+          .add(blockFace.clone().multiply(.5));
+      Vector intersect = getIntersection(linePoint, lineDirection, block.clone().add(faceShift), blockFace);
+      if (intersect == null) {
+        continue;
+      }
+      // check if intersection is in 1x1 block face of plane
+      if (intersect.isInAABB(block, blocKEnd)) {
+        return new Orientation(intersect, blockFace);
+      }
+    }
+    return null;
+  }
+
+  public static double collapse(Vector vector) {
+    return vector.getX() + vector.getY() + vector.getZ();
+  }
+
+  public static Vector getIntersection(Vector linePoint, Vector lineDirection, Vector planeOrigin, Vector planeNormal) {
+    double epsilon = Math.pow(10, -6);
+
+    double dot = planeNormal.dot(lineDirection);
+    if (Math.abs(dot) < epsilon) {
+      return null;
+    }
+    Vector dir = linePoint.clone().subtract(planeOrigin);
+    double si = -planeNormal.dot(dir) / dot;
+    return planeOrigin.clone().add(dir).add(lineDirection.clone().multiply(si));
   }
 
   public static double distancePointToLine(Vector point, Vector lineSupport, Vector lineTarget) {

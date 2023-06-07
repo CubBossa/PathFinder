@@ -111,7 +111,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
       Map<UUID, Collection<UUID>> included = new HashMap<>();
 
       var sched = Bukkit.getScheduler();
-      editModeTasks.forEach(sched::cancelTask);
+      new HashSet<>(editModeTasks).forEach(sched::cancelTask);
 
       Map<org.bukkit.Location, Object> packets = new HashMap<>();
       Map<Color, ParticleBuilder> particles = new HashMap<>();
