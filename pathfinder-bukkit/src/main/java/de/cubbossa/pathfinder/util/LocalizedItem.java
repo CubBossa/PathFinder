@@ -13,8 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class LocalizedItem {
 
-  private static final LegacyComponentSerializer serializer =
-      LegacyComponentSerializer.builder().build();
+  private static final LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
   private final ItemStack stack;
   private final Message name;
   private final Message lore;

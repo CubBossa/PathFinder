@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.Message;
@@ -19,6 +20,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -44,28 +46,28 @@ public class Messages {
   }
 
   public static final Message PREFIX = new MessageBuilder("prefix")
-      .withDefault("<main>PathFinder</main> <dark_gray>»</dark_gray> <gray>")
+      .withDefault("<c-brand>PathFinder</c-brand><bg> › </bg><t>")
       .build();
   public static final Message GEN_ERROR = new MessageBuilder("general.error")
-      .withDefault("<red><cause></red>")
+      .withDefault("<c-negative><cause></c-negative>")
       .withPlaceholders("cause")
       .build();
   public static final Message GEN_VECTOR = new MessageBuilder("general.vector")
-      .withDefault("<offset_light><x:#.##><gray>,</gray> <y:#.##><gray>,</gray> <z:#.##></offset_light>")
+      .withDefault("<t-hl><x:#.##><t>,</t> <y:#.##><t>,</t> <z:#.##></t-hl>")
       .withPlaceholders("x", "y", "z")
       .withComment("The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
       .build();
   public static final Message GEN_PARTICLE = new MessageBuilder("general.particle")
-      .withDefault("<main><particle></main>")
+      .withDefault("<t-hl><particle></t-hl>")
       .withPlaceholders("particle", "meta")
       .build();
   public static final Message GEN_PARTICLE_META = new MessageBuilder("general.particle")
-      .withDefault("<main><particle> <gray>(<meta>)</gray></main>")
+      .withDefault("<t-hl><particle> <t>(<meta>)</t></t-hl>")
       .withPlaceholders("particle", "meta")
       .build();
 
   public static final Message GEN_NULL = new MessageBuilder("general.null")
-      .withDefault("<main>null</main>")
+      .withDefault("<t-hl>null</t-hl>")
       .build();
   public static final Message GEN_NODE = new MessageBuilder("general.node")
       .withDefault("(<world>; <location>)")
@@ -76,51 +78,51 @@ public class Messages {
       .withPlaceholders("amount")
       .build();
   public static final Message GEN_GROUP_SEL = new MessageBuilder("general.selection.groups")
-      .withDefault("<white><u><amount> Groups</u></white>")
+      .withDefault("<t-warm><u><amount> Groups</u></t-warm>")
       .withPlaceholders("amount")
       .build();
   public static final Message RELOAD_ERROR = new MessageBuilder("command.reload.error")
-      .withDefault("<negative>An error occurred while reloading: <error></negative>")
+      .withDefault("<c-negative>An error occurred while reloading: <error></c-negative>")
       .withPlaceholder("error")
       .build();
   public static final Message RELOAD_SUCCESS = new MessageBuilder("command.reload.success.general")
-      .withDefault("<msg:prefix>Successfully reloaded in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded in <t-hl><ms></t-hl><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_LANG = new MessageBuilder("command.reload.success.language")
-      .withDefault("<msg:prefix>Successfully reloaded language in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded language in <t-hl><ms></t-hl><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_FX = new MessageBuilder("command.reload.success.effects")
-      .withDefault("<msg:prefix>Successfully reloaded effects in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded effects in <t-hl><ms></t-hl><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_CFG = new MessageBuilder("command.reload.success.config")
-      .withDefault("<msg:prefix>Successfully reloaded config files in <offset_light><ms></offset_light><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded config files in <t-hl><ms></t-hl><offset>ms</offset>.")
       .withPlaceholders("ms")
       .build();
 
   public static final Message HELP = new MessageBuilder("general.help")
       .withDefault("""
-          <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
-          <gray>Running <offset>Pathfinder v<version></offset>.
+          <gradient:black:dark_gray:black>------------ <c-brand>Pathfinder</c-brand> ------------</gradient>
+          <t>Running <offset>Pathfinder v<version></offset>.
                 
-          <gray>Require help? Checkout the <warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></warm>.
-          <gray>Use <warm>/pf help</warm> to view available commands.
+          <t>Require help? Checkout the <t-warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></t-warm>.
+          <t>Use <t-warm>/pf help</t-warm> to view available commands.
           """)
       .withPlaceholder("version")
       .build();
   public static final Message CMD_HELP = new MessageBuilder("command.help")
       .withDefault("""
-          <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
-          <gray>Require help? Checkout the <warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></warm>.
+          <gradient:black:dark_gray:black>------------ <c-brand>Pathfinder</c-brand> ------------</gradient>
+          <t>Require help? Checkout the <t-warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></t-warm>.
                     
           <white>Commands:</white>
-          <dark_gray>» </dark_gray><gray><warm>/roadmap</warm> - Group waypoints in roadmaps
-          <dark_gray>» </dark_gray><gray><warm>/nodegroup</warm> - Add behaviour to multiple waypoints
-          <dark_gray>» </dark_gray><gray><warm>/waypoint</warm> - Create, edit and delete waypoints
-          <dark_gray>» </dark_gray><gray><warm>/pathvisualizer</warm> - Compass, particles, placeholders and more
-          <dark_gray>» </dark_gray><gray><warm>/gps</warm> - Find the shortest way to a nodegroup
+          <bg>» </bg><t><t-warm>/roadmap</t-warm> - Group waypoints in roadmaps
+          <bg>» </bg><t><t-warm>/nodegroup</t-warm> - Add behaviour to multiple waypoints
+          <bg>» </bg><t><t-warm>/waypoint</t-warm> - Create, edit and delete waypoints
+          <bg>» </bg><t><t-warm>/pathvisualizer</t-warm> - Compass, particles, placeholders and more
+          <bg>» </bg><t><t-warm>/gps</t-warm> - Find the shortest way to a nodegroup
           """)
       .build();
 
@@ -128,15 +130,15 @@ public class Messages {
       .withDefault("<red>Your command is incomplete. Use one of the syntaxes below:")
       .build();
   public static final Message CMD_INCOMPLETE_LINE = new MessageBuilder("command.error.incomplete.line")
-      .withDefault("<dark_gray>» </dark_gray><cmd>")
+      .withDefault("<bg>» </bg><cmd>")
       .withPlaceholders("cmd")
       .build();
 
   public static final Message INFO = new MessageBuilder("commands.info")
       .withDefault("""
-          <gradient:black:dark_gray:black>------------ <main>Pathfinder</main> ------------</gradient>
-          <dark_gray>» </dark_gray><gray>Current version: <warm><version></warm>
-          <dark_gray>» </dark_gray><gray>Spigot-Page: <warm><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></warm>
+          <gradient:black:dark_gray:black>------------ <c-brand>Pathfinder</c-brand> ------------</gradient>
+          <bg>» </bg><t>Current version: <t-warm><version></t-warm>
+          <bg>» </bg><t>Spigot-Page: <t-warm><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></t-warm>
           """)
       .withPlaceholders("authors", "version", "api-version")
       .build();
@@ -144,16 +146,16 @@ public class Messages {
   public static final Message MODULES = new MessageBuilder("commands.modules")
       .withDefault("""
           <offset>Active Modules:</offset>
-          <modules:"\n":"<dark_gray>» </dark_gray>">""")
+          <modules:"\n":"<bg>» </bg>">""")
       .withPlaceholder("modules")
       .build();
 
   public static final Message CMD_FORCE_FIND = new MessageBuilder("commands.force_find")
-      .withDefault("<msg:prefix>Player <name> discovered <discovery>.")
+      .withDefault("<msg:prefix>Player <name> discovered <t-hl><discovery></t-hl>.")
       .withPlaceholder("name", "discovery")
       .build();
   public static final Message CMD_FORCE_FORGET = new MessageBuilder("commands.force_forget")
-      .withDefault("<msg:prefix>Player <name> forgot about <discovery>.")
+      .withDefault("<msg:prefix>Player <name> forgot about <t-hl><discovery></t-hl>.")
       .withPlaceholders("name", "discovery")
       .build();
 
@@ -173,22 +175,22 @@ public class Messages {
   public static final Message CMD_N_INFO = new MessageBuilder("commands.node.info")
       .withDefault("""
           <offset>Node #<id></offset>
-          <dark_gray>» </dark_gray><gray>Position: <main><position></main> (<world>)
-          <dark_gray>» </dark_gray><gray>Curve-Length: <main><curve-length></main>
-          <dark_gray>» </dark_gray><gray>Edges: <edges>
-          <dark_gray>» </dark_gray><gray>Groups: <groups>
+          <bg>» </bg><t>Position: <t-hl><position></t-hl> (<world>)
+          <bg>» </bg><t>Curve-Length: <t-hl><curve-length></t-hl>
+          <bg>» </bg><t>Edges: <edges>
+          <bg>» </bg><t>Groups: <groups>
           """)
       .withPlaceholders("id", "groups", "position", "world", "edges")
       .build();
   public static final Message CMD_N_INFO_NO_SEL = new MessageBuilder("commands.node.info_no_selection")
-      .withDefault("<negative>No nodes found to display. Check your selection query.</negative>")
+      .withDefault("<c-negative>No nodes found to display. Check your selection query.</c-negative>")
       .build();
   public static final Message CMD_N_ADD_GROUP = new MessageBuilder("commands.node.add_group")
-      .withDefault("<msg:prefix>Added <nodes> to group <group>.")
+      .withDefault("<msg:prefix>Added <nodes> to group <t-hl><group></t-hl>.")
       .withPlaceholders("nodes", "group")
       .build();
   public static final Message CMD_N_REMOVE_GROUP = new MessageBuilder("commands.node.remove_groups")
-      .withDefault("<msg:prefix>Removed <nodes> from group <group>.")
+      .withDefault("<msg:prefix>Removed <nodes> from group <t-hl><group></t-hl>.")
       .withPlaceholders("nodes", "group")
       .build();
   public static final Message CMD_N_CLEAR_GROUPS = new MessageBuilder("commands.node.clear_groups")
@@ -197,15 +199,15 @@ public class Messages {
       .build();
 
   public static final Message CMD_N_LIST_HEADER = new MessageBuilder("commands.node.list.header")
-      .withDefault("<gradient:black:dark_gray:black>------------ <offset>Waypoints</offset> ------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Waypoints</c-brand-light> ------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_LIST_ELEMENT = new MessageBuilder("commands.node.list.element")
-      .withDefault("<dark_gray>» </dark_gray><hover:show_text:'<gray>Groups: <groups><newline><gray>Edges to: <edges><newline><gray>Click for more information'><click:run_command:/pf nodes \"@n[id=<id>]\" info><gray>at <position> (<world>)")
+      .withDefault("<bg>» </bg><hover:show_text:'<t>Groups: <groups><newline><t>Edges to: <edges><newline><t>Click for more information'><click:run_command:/pf nodes \"@n[id=<id>]\" info><t>at <position> (<world>)")
       .withPlaceholders("id", "position", "world", "curve-length", "edges", "groups")
       .build();
   public static final Message CMD_N_LIST_FOOTER = new MessageBuilder("commands.node.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listnodes \"<selector>\" <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listnodes \"<selector>\" <next-page>>→</click> </gray>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/pf listnodes \"<selector>\" <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listnodes \"<selector>\" <next-page>>→</click> </t>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
@@ -218,51 +220,51 @@ public class Messages {
       .build();
 
   public static final Message CMD_NG_CREATE_FAIL = new MessageBuilder("commands.node_group.create_fail")
-      .withDefault("<negative>Could not create Nodegroup. Check out console for details.")
+      .withDefault("<c-negative>Could not create Nodegroup. Check out console for details.")
       .build();
   public static final Message CMD_NG_ALREADY_EXISTS = new MessageBuilder("commands.node_group.already_exists")
-      .withDefault("<negative>A node group <key> already exists.</negative>")
+      .withDefault("<c-negative>A node group <key> already exists.</c-negative>")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_CREATE = new MessageBuilder("commands.node_group.create")
-      .withDefault("<msg:prefix>Node group created: <key>.")
+      .withDefault("<msg:prefix>Node group <t-hl><key></t-hl> created.")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_DELETE = new MessageBuilder("commands.node_group.delete")
-      .withDefault("<msg:prefix>Node group deleted: <key>.")
+      .withDefault("<msg:prefix>Node group <t-hl><key></t-hl> deleted.")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
-      .withDefault("<negative>You cannot delete the global node group.</negative>")
-      .withTranslation(Locale.GERMAN, "<negative>Du kannst die globale Wegpunktgruppe nicht löschen.</negative>")
+      .withDefault("<c-negative>You cannot delete the global node group.</c-negative>")
+      .withTranslation(Locale.GERMAN, "<c-negative>Du kannst die globale Wegpunktgruppe nicht löschen.</c-negative>")
       .withComment("Indicates, that the global nodegroup cannot be deleted by command.")
       .build();
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
       .withDefault("""
-          <offset>Group '<key>'</offset>
-          <dark_gray>» </dark_gray><gray>Size: <main><nodes></main>
-          <dark_gray>» </dark_gray><gray>Weight: <main><weight></main><modifiers:"":"\n<dark_gray>» </dark_gray><gray>"/>
+          <c-brand-light>Group '<key>'</c-brand-light>
+          <bg>» </bg><t>Size: <nodes>
+          <bg>» </bg><t>Weight: <t-hl><weight></t-hl><modifiers:"":"\n<bg>» </bg><t>"/>
           """)
       .withPlaceholders("modifiers", "key", "nodes", "weight")
       .build();
   public static final Message CMD_NG_LIST_HEADER = new MessageBuilder("commands.node_group.list.header")
-      .withDefault("<gradient:black:dark_gray:black>------------ <offset>Node-Groups</offset> ------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Node-Groups</c-brand-light> ------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_LIST_LINE = new MessageBuilder("commands.node_group.list.line")
-      .withDefault("<dark_gray> » </dark_gray><key> <gray>(Weight: <weight>)</gray>")
+      .withDefault("<dark_gray> » </dark_gray><key> <t>(Weight: <weight>)</t>")
       .withPlaceholders("page", "key", "weight", "modifiers")
       .build();
   public static final Message CMD_NG_LIST_FOOTER = new MessageBuilder("commands.node_group.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listgroups <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listgroups <next-page>>→</click> </gray>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/pf listgroups <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listgroups <next-page>>→</click></t> -------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
-      .withDefault("<msg:prefix>Added modifier '<type>' to froup '<group>'.")
+      .withDefault("<msg:prefix>Added modifier <t-hl><type></t-hl> to group <t-hl><group></t-hl>.")
       .withPlaceholders("type", "group")
       .build();
   public static final Message CMD_NG_MODIFY_REMOVE = new MessageBuilder("commands.node_group.modify.remove")
-      .withDefault("<msg:prefix>Removed modifier '<type>' from group '<group>'.")
+      .withDefault("<msg:prefix>Removed modifier <t-hl><type><t-hl> from group <t-hl><group></t-hl>.")
       .withPlaceholders("type", "group")
       .build();
   public static final Message CMD_NG_MOD_CURVELEN = new MessageBuilder("commands.node_group.modifier.curvelength")
@@ -278,7 +280,7 @@ public class Messages {
       .withPlaceholder("distance", "Use java number formatting to provide custom formatting.")
       .build();
   public static final Message CMD_NG_MOD_SEARCH = new MessageBuilder("commands.node_group.modifier.navigable")
-      .withDefault("Search terms: <terms:\"<gray>, </gray>\">")
+      .withDefault("Search terms: <terms:\"<t>, </t>\">")
       .withPlaceholder("terms", "A list tag for all search terms, use <terms:between:beforeeach>")
       .build();
   public static final Message CMD_NG_MOD_PERM = new MessageBuilder("commands.node_group.modifier.permission")
@@ -291,7 +293,7 @@ public class Messages {
       .build();
 
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
-      .withDefault("<msg:prefix>Navigation started.  [ <aqua><click:run_command:/cancelpath>CANCEL</click></aqua> ]")
+      .withDefault("<msg:prefix>Navigation started.  [ <t-hl><click:run_command:/cancelpath>Cancel</click></t-hl> ]")
       .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
       .withDefault("<msg:prefix>No matching waypoints could be found.")
@@ -313,64 +315,63 @@ public class Messages {
 
 
   public static final Message CMD_VIS_LIST_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
-      .withDefault("<gradient:black:dark_gray:black>------------ <offset>Visualizer</offset> ------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Visualizer</c-brand-light> ------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_VIS_LIST_ENTRY = new MessageBuilder("commands.path_visualizer.list.entry")
-      .withDefault("<dark_gray> » </dark_gray><key> <gray>(<type>)</gray>")
+      .withDefault("<dark_gray> » </dark_gray><key> <t>(<type>)</t>")
       .withPlaceholders("key", "name", "world", "discoverable", "find-distance", "curve-length", "path-visualizer", "type")
       .build();
   public static final Message CMD_VIS_LIST_FOOTER = new MessageBuilder("commands.path_visualizer.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<gray> <click:run_command:/pf listvisualizers <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listvisualizers <next-page>>→</click> </gray>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/pf listvisualizers <prev-page>>←</click> <page>/<pages> <click:run_command:/pf listvisualizers <next-page>>→</click> </t>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_VIS_NO_TYPE_FOUND = new MessageBuilder("commands.path_visualizer.info.no_type")
-      .withDefault("<negative>Could not show information to visualizer. Type could not be resolved.</negative>")
-      .withTranslation(Locale.GERMAN, "<negative>Konnte Visualizer nicht anzeigen. Keine Typ-Information gefunden.</negative>")
+      .withDefault("<c-negative>Could not show information to visualizer. Type could not be resolved.</c-negative>")
+      .withTranslation(Locale.GERMAN, "<c-negative>Konnte Visualizer nicht anzeigen. Keine Typ-Information gefunden.</c-negative>")
       .build();
   public static final Message CMD_VIS_NO_INFO = new MessageBuilder("commands.path_visualizer.info.no_info")
-      .withDefault("<negative>Could not show information to visualizer. No message layout provided.</negative>")
-      .withTranslation(Locale.GERMAN, "<negative>Konnte Visualizer nicht anzeigen. Kein Nachrichtenformat gefunden.</negative>")
+      .withDefault("<c-negative>Could not show information to visualizer. No message layout provided.</c-negative>")
+      .withTranslation(Locale.GERMAN, "<c-negative>Konnte Visualizer nicht anzeigen. Kein Nachrichtenformat gefunden.</c-negative>")
       .build();
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
-      .withDefault("<msg:prefix>Successfully created Visualizer <offset><key></offset> of type '<type>'.")
+      .withDefault("<msg:prefix>Successfully created Visualizer <t-hl><key></t-hl> of type <t-hl><type></t-hl>.")
       .withPlaceholders("key", "type")
       .build();
   public static final Message CMD_VIS_NAME_EXISTS = new MessageBuilder("commands.path_visualizer.create.already_exists")
-      .withDefault("<negative>Another visualizer with this name already exists.")
+      .withDefault("<c-negative>Another visualizer with this name already exists.")
       .build();
   public static final Message CMD_VIS_DELETE_SUCCESS = new MessageBuilder("commands.path_visualizer.delete.success")
       .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><key></offset>.")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
-      .withDefault("<negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
+      .withDefault("<c-negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set_property")
-      .withDefault("<msg:prefix>Changed <property> for <key> from <old-value> to <value>.")
+      .withDefault("<msg:prefix>Changed <property> for <t-hl><key></t-hl> from <t-hl><old-value></t-hl> to <value>.")
       .withPlaceholders("key", "type", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP_ERROR = new MessageBuilder("commands.path_visualizer.set_property_error")
-      .withDefault("<negative>Could not set property <property> for visualizer.")
+      .withDefault("<c-negative>Could not set property <property> for visualizer.")
       .withPlaceholders("key", "property")
       .build();
   public static final Message CMD_VIS_IMPORT_EXISTS = new MessageBuilder("commands.path_visualizer.import.already_exists")
-      .withDefault("<negative>Could not import file, another visualizer with this key already exists.</negative>")
+      .withDefault("<c-negative>Could not import file, another visualizer with this key already exists.</c-negative>")
       .build();
   public static final Message CMD_VIS_IMPORT_NOT_EXISTS = new MessageBuilder("commands.path_visualizer.import.file_doesnt_exist")
-      .withDefault("<negative>Could not import file, there is no example file with this name.</negative>")
+      .withDefault("<c-negative>Could not import file, there is no example file with this name.</c-negative>")
       .build();
   public static final Message CMD_VIS_IMPORT_SUCCESS = new MessageBuilder("commands.path_visualizer.import.successful")
-      .withDefault("<msg:prefix>Successfully imported Visualizer: <key>")
+      .withDefault("<msg:prefix>Successfully imported Visualizer <t-hl><key></t-hl>")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_COMBINED_INFO = new MessageBuilder("commands.path_visualizer.type.combined.info")
       .withDefault("""
-          <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
-          <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Children:<entries:"":"<br><dark_gray>  » </dark_gray>"/>""")
+          <c-brand-light>Visualizer: <key></c-brand-light>
+          <bg>» </bg><t>Permission: <t-hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></t-hl>
+          <bg>» </bg><t>Children:<entries:"":"<br><bg>  » </bg>"/>""")
       .withPlaceholder("entries[:separator][:prefix][:suffix]")
       .build();
   public static final Message CMD_VIS_COMBINED_ADD = new MessageBuilder("commands.path_visualizer.type.combined.add")
@@ -385,81 +386,77 @@ public class Messages {
       .build();
   public static final Message CMD_VIS_INFO_PARTICLES = new MessageBuilder("commands.path_visualizer.type.particle_visualizer.info")
       .withDefault("""
-          <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
-          <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit particle <key> name"><name-format></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval"><interval></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Point-Distance: <main><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance"><point-distance></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Particle: <main><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Particle-Steps: <main><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed"><speed></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Offset: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></main>""")
+          <c-brand-light>Visualizer: <key></c-brand-light>
+          <bg>» </bg><t>Permission: <t-hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission"><permission></click></hover></t-hl>
+          <bg>» </bg><t>Interval: <t-hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval"><interval></click></hover></t-hl>
+          <bg>» </bg><t>Point-Distance: <t-hl><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance"><point-distance></click></hover></t-hl>
+          <bg>» </bg><t>Particle: <t-hl><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><particle></click></hover></t-hl>
+          <bg>» </bg><t>Particle-Steps: <t-hl><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></t-hl>
+          <bg>» </bg><t>Amount: <t-hl><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></t-hl>
+          <bg>» </bg><t>Speed: <t-hl><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed"><speed></click></hover></t-hl>
+          <bg>» </bg><t>Offset: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></t-hl>""")
       .withPlaceholders(
-          "key", "name", "name-format", "type", "permission", "interval", "point-distance",
+          "key", "type", "permission", "interval", "point-distance",
           "particle", "particle-steps", "amount", "speed", "offset")
       .build();
 
 
   public static final Message CMD_VIS_COMPASS_INFO = new MessageBuilder("commands.path_visualizer.type.compass.info")
       .withDefault("""
-          <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
-          <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Marker:
-              <dark_gray>» </dark_gray><gray>Target: <marker-target>
-              <dark_gray>» </dark_gray><gray>North: <marker-north>
-              <dark_gray>» </dark_gray><gray>East: <marker-east>
-              <dark_gray>» </dark_gray><gray>South: <marker-south>
-              <dark_gray>» </dark_gray><gray>West: <marker-west>
-          <dark_gray>» </dark_gray><gray>Background: <background>
-          <dark_gray>» </dark_gray><gray>Color: <color>
-          <dark_gray>» </dark_gray><gray>Overlay: <overlay>""")
+          <c-brand-light>Visualizer: <key></c-brand-light>
+          <bg>» </bg><t>Permission: <t-hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></t-hl>
+          <bg>» </bg><t>Interval: <t-hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></t-hl>
+          <bg>» </bg><t>Marker:
+              <bg>» </bg><t>Target: <marker-target>
+              <bg>» </bg><t>North: <marker-north>
+              <bg>» </bg><t>East: <marker-east>
+              <bg>» </bg><t>South: <marker-south>
+              <bg>» </bg><t>West: <marker-west>
+          <bg>» </bg><t>Background: <background>
+          <bg>» </bg><t>Color: <color>
+          <bg>» </bg><t>Overlay: <overlay>""")
       .withPlaceholders("marker-north", "marker-south", "marker-east", "marker-west",
           "marker-target", "background", "color", "overlay")
       .build();
 
   public static final Message CMD_ADV_VIS_INFO_PARTICLES = new MessageBuilder("commands.path_visualizer.type.advanced_particle_visualizer.info")
       .withDefault("""
-          <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
-          <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Point-Distance: <main><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance"><point-distance></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Particle: <main><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><particle></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Particle-Data: <main><hover:show_text:"Click to change particle-Data"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle-data"><particle-data></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Amount: <main><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Speed: <main><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Offset:
-              <dark_gray>» </dark_gray><gray>X: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></main>
-              <dark_gray>» </dark_gray><gray>Y: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></main>
-              <dark_gray>» </dark_gray><gray>Z: <main><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Path Offset (e.g. to make Spirals):
-              <dark_gray>» </dark_gray><gray>X: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></main>
-              <dark_gray>» </dark_gray><gray>Y: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></main>
-              <dark_gray>» </dark_gray><gray>Z: <main><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></main>""")
-      .withPlaceholders("key", "name", "name-format", "type", "permission", "interval", "point-distance",
+          <c-brand-light>Visualizer: <key></c-brand-light>
+          <bg>» </bg><t>Permission: <t-hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></t-hl>
+          <bg>» </bg><t>Interval: <t-hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></t-hl>
+          <bg>» </bg><t>Point-Distance: <t-hl><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance"><point-distance></click></hover></t-hl>
+          <bg>» </bg><t>Particle: <t-hl><hover:show_text:"Click to change particle"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><particle></click></hover></t-hl>
+          <bg>» </bg><t>Particle-Data: <t-hl><hover:show_text:"Click to change particle-Data"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle-data"><particle-data></click></hover></t-hl>
+          <bg>» </bg><t>Amount: <t-hl><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></t-hl>
+          <bg>» </bg><t>Speed: <t-hl><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></t-hl>
+          <bg>» </bg><t>Offset:
+              <bg>» </bg><t>X: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></t-hl>
+              <bg>» </bg><t>Y: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></t-hl>
+              <bg>» </bg><t>Z: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></t-hl>
+          <bg>» </bg><t>Path Offset (e.g. to make Spirals):
+              <bg>» </bg><t>X: <t-hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></t-hl>
+              <bg>» </bg><t>Y: <t-hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></t-hl>
+              <bg>» </bg><t>Z: <t-hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z"><path-z></click></hover></t-hl>""")
+      .withPlaceholders("key", "type", "permission", "interval", "point-distance",
           "particle", "particle-steps", "amount", "speed", "offset-x", "offset-y", "offset-z",
           "path-x", "path-y", "path-z")
       .build();
 
   public static final Message CMD_VIS_PAPI_INFO = new MessageBuilder("commands.path_visualizer.type.placeholder_api.info")
       .withDefault("""
-          <offset>Visualizer:</offset> <name> <gray>(<key>)</gray>
-          <dark_gray>» </dark_gray><gray>Name: <main><hover:show_text:"Click to change name"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> name"><name-format></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Permission: <main><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Interval: <main><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></main>
-          <dark_gray>» </dark_gray><gray>Placeholder:</gray>
-              <dark_gray>» </dark_gray><gray>North: <main><hover:show_text:"Click to change format-north"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-north"><format-north></click></hover></main>
-              <dark_gray>» </dark_gray><gray>North-East: <main><hover:show_text:"Click to change format-northeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northeast"><format-northeast></click></hover></main>
-              <dark_gray>» </dark_gray><gray>East: <main><hover:show_text:"Click to change format-east"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-east"><format-east></click></hover></main>
-              <dark_gray>» </dark_gray><gray>South-East: <main><hover:show_text:"Click to change format-southeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southeast"><format-southeast></click></hover></main>
-              <dark_gray>» </dark_gray><gray>South: <main><hover:show_text:"Click to change format-south"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-south"><format-south></click></hover></main>
-              <dark_gray>» </dark_gray><gray>South-West: <main><hover:show_text:"Click to change format-southwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southwest"><format-southwest></click></hover></main>
-              <dark_gray>» </dark_gray><gray>West: <main><hover:show_text:"Click to change format-west"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-west"><format-west></click></hover></main>
-              <dark_gray>» </dark_gray><gray>North-West: <main><hover:show_text:"Click to change format-northwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northwest"><format-northwest></click></hover></main>
-              <dark_gray>» </dark_gray><gray>Distance: <main><hover:show_text:"Click to change format-distance"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-distance"><format-distance></click></hover></main>""")
+          <c-brand-light>Visualizer: <key></c-brand-light>
+          <bg>» </bg><t>Permission: <t-hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission"><permission></click></hover></t-hl>
+          <bg>» </bg><t>Interval: <t-hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval"><interval></click></hover></t-hl>
+          <bg>» </bg><t>Placeholder:</t>
+              <bg>» </bg><t>North: <t-hl><hover:show_text:"Click to change format-north"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-north"><format-north></click></hover></t-hl>
+              <bg>» </bg><t>North-East: <t-hl><hover:show_text:"Click to change format-northeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northeast"><format-northeast></click></hover></t-hl>
+              <bg>» </bg><t>East: <t-hl><hover:show_text:"Click to change format-east"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-east"><format-east></click></hover></t-hl>
+              <bg>» </bg><t>South-East: <t-hl><hover:show_text:"Click to change format-southeast"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southeast"><format-southeast></click></hover></t-hl>
+              <bg>» </bg><t>South: <t-hl><hover:show_text:"Click to change format-south"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-south"><format-south></click></hover></t-hl>
+              <bg>» </bg><t>South-West: <t-hl><hover:show_text:"Click to change format-southwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-southwest"><format-southwest></click></hover></t-hl>
+              <bg>» </bg><t>West: <t-hl><hover:show_text:"Click to change format-west"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-west"><format-west></click></hover></t-hl>
+              <bg>» </bg><t>North-West: <t-hl><hover:show_text:"Click to change format-northwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northwest"><format-northwest></click></hover></t-hl>
+              <bg>» </bg><t>Distance: <t-hl><hover:show_text:"Click to change format-distance"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-distance"><format-distance></click></hover></t-hl>""")
       .withPlaceholders(
           "key", "name", "name-format", "type", "permission", "interval", "format-north", "format-north-east",
           "format-east", "format-south-east", "format-south", "format-south-west", "format-west", "format-north-west",
@@ -468,13 +465,13 @@ public class Messages {
       .build();
 
   public static final Message E_NODE_TOOL_N = new MessageBuilder("editor.toolbar.node_tool.name")
-      .withDefault("<white><u>Node Tool</u></white>")
+      .withDefault("<t-light><u>Node Tool</u></t-light>")
       .build();
   public static final Message E_NODE_TOOL_L = new MessageBuilder("editor.toolbar.node_tool.lore")
       .withDefault("""
-          <gray>» <yellow>right-click:</yellow> Create node</gray>
-          <gray>» <yellow>left-click:</yellow> Delete clicked node</gray>
-          <gray>» <yellow>left-click air:</yellow> Activate chain mode</gray>""")
+          <t>» <c-accent>right-click:</c-accent> Create node</t>
+          <t>» <c-accent>left-click:</c-accent> Delete clicked node</t>
+          <t>» <c-accent>left-click air:</c-accent> Activate chain mode</t>""")
       .build();
   public static final Message E_NODE_CHAIN_NEW = new MessageBuilder("editor.node_tool.chain.new")
       .withDefault("<msg:prefix>Node chain completed.")
@@ -483,56 +480,55 @@ public class Messages {
       .withDefault("<msg:prefix>Chain started.")
       .build();
   public static final Message E_NODE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.node_tool.directed")
-      .withDefault("<msg:prefix>Edges directed: <main><value:true:false><main>")
+      .withDefault("<msg:prefix>Edges directed: <t-hl><value:true:false><t-hl>")
       .withPlaceholders("value")
       .build();
   public static final Message E_GROUP_TOOL_N = new MessageBuilder("editor.toolbar.group_tool.name")
-      .withDefault("<white><u>Assign Group</u></white>")
+      .withDefault("<t-light><u>Assign Group</u></t-light>")
       .build();
   public static final Message E_GROUP_TOOL_L = new MessageBuilder("editor.toolbar.group_tool.lore")
       .withDefault("")
       .build();
   public static final Message E_MULTI_GROUP_TOOL_N = new MessageBuilder("editor.toolbar.multi_group_tool.name")
-      .withDefault("<white><u>Mutli Group Tool</u></white>")
+      .withDefault("<t-light><u>Mutli Group Tool</u></t-light>")
       .build();
   public static final Message E_MULTI_GROUP_TOOL_L = new MessageBuilder("editor.toolbar.multi_group_tool.lore")
       .withDefault("""
-          <gray>Assign and remove multiple
-          <gray>groups at once.
+          <t>Assign and remove multiple
+          <t>groups at once.
                     
-          <gray>» <yellow>right-click air:</yellow> Open GUI</gray>
-          <gray>» <yellow>right-click node:</yellow> Add groups</gray>
-          <gray>» <yellow>right-click node:</yellow> Remove groups</gray>""")
+          <t>» <c-accent>right-click air:</c-accent> Open GUI</t>
+          <t>» <c-accent>right-click node:</c-accent> Add groups</t>
+          <t>» <c-accent>right-click node:</c-accent> Remove groups</t>""")
       .build();
   public static final Message E_TP_TOOL_N = new MessageBuilder("editor.toolbar.teleport_tool.name")
-      .withDefault("<white><u>Teleport Tool</u></white>")
+      .withDefault("<t-light><u>Teleport Tool</u></t-light>")
       .build();
   public static final Message E_TP_TOOL_L = new MessageBuilder("editor.toolbar.teleport_tool.lore")
-      .withDefault("<gray>Teleports you to the\n<gray>nearest node.")
+      .withDefault("<t>Teleports you to the\n<t>nearest node.")
       .build();
   public static final Message E_SUB_GROUP_TITLE = new MessageBuilder("editor.groups.title")
       .withDefault("Assign Node Groups")
       .build();
   public static final Message E_SUB_GROUP_INFO_N = new MessageBuilder("editor.groups.info.name")
-      .withDefault("<gold>Info</gold>")
+      .withDefault("<c-accent>Info</c-accent>")
       .build();
   public static final Message E_SUB_GROUP_INFO_L = new MessageBuilder("editor.groups.info.lore")
-      .withDefault("<gray>Create a new nodegroup with\n<gray>» <yellow>/nodegroup create <key>")
+      .withDefault("<t>Create a new nodegroup with\n<t>» <c-accent>/nodegroup create <key>")
       .build();
   public static final Message E_SUB_GROUP_RESET_N = new MessageBuilder("editor.groups.reset.name")
-      .withDefault("<negative>Reset Groups</negative>")
+      .withDefault("<c-negative>Reset Groups</c-negative>")
       .build();
   public static final Message E_SUB_GROUP_RESET_L = new MessageBuilder("editor.groups.reset.lore")
-      .withDefault("<gray>Reset all groups for the\n<gray>selected node.")
+      .withDefault("<t>Reset all groups for the\n<t>selected node.")
       .build();
   public static final Message E_SUB_GROUP_ENTRY_N = new MessageBuilder("editor.groups.entry.name")
-      .withDefault("<key>")
+      .withDefault("<c-brand-light><key></c-brand-light>")
       .withPlaceholders("key", "weight", "modifiers")
       .build();
   public static final Message E_SUB_GROUP_ENTRY_L = new MessageBuilder("editor.groups.entry.lore")
       .withDefault("""
-          <dark_gray>» </dark_gray><gray>Weight: <weight:#.##></gray>
-          <gray><modifiers:"\n":"<dark_gray>» </dark_gray>"/></gray>""")
+          <bg>» </bg><t>Weight: </t><t-hl><weight:#.##></t-hl><modifiers:"":"\n<bg>» </bg>"/></t>""")
       .withPlaceholders("key", "weight", "modifiers")
       .build();
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
@@ -540,7 +536,7 @@ public class Messages {
       .build();
 
   public static final Message EDITM_NG_DELETED = new MessageBuilder("editmode.group_deleted")
-      .withDefault("<negative>Your currently edited group was deleted by another user.")
+      .withDefault("<c-negative>Your currently edited group was deleted by another user.")
       .build();
 
   @Setter
@@ -595,13 +591,15 @@ public class Messages {
   public static class MessageFormatterImpl implements MessageFormatter {
 
     private final MiniMessage miniMessage;
-    private final TextColor textColor;
-    private final TextColor numberColor;
+    private final Style nullStyle;
+    private final Style textStyle;
+    private final Style numberStyle;
 
     public MessageFormatterImpl() {
       miniMessage = MiniMessage.miniMessage();
-      textColor = NamedTextColor.GREEN;
-      numberColor = NamedTextColor.DARK_GREEN;
+      nullStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset-dark");
+      textStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset");
+      numberStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset-light");
     }
 
     @Override
@@ -679,9 +677,11 @@ public class Messages {
     public TagResolver permission(String key, @Nullable String permission) {
       return TagResolver.resolver(key, (argumentQueue, context) -> {
         String col = argumentQueue.hasNext() ? argumentQueue.pop().value() : null;
-        TextColor permColor = col == null ? textColor : TextColor.fromCSSHexString(col);
-
         String nullVal = argumentQueue.hasNext() ? argumentQueue.pop().value() : "none";
+        Style permColor = col == null
+            ? permission == null ? nullStyle : textStyle
+            : Style.style(TextColor.fromCSSHexString(col));
+
         return Tag.inserting(permission == null
             ? miniMessage.deserialize(nullVal)
             : Component.join(JoinConfiguration.separator(Component.text(".")), Arrays.stream(permission.split("\\."))

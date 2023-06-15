@@ -125,25 +125,32 @@ public abstract class CommonPathFinder implements PathFinder {
     translations.addMessagesClass(Messages.class);
     translations.writeLocale(Locale.ENGLISH);
 
-    translations.addStyle("main", Style.style(TextColor.color(0x0C72C0)));
-    translations.addStyle("main_light", Style.style(TextColor.color(0x0C72C0)));
-    translations.addStyle("main_dark", Style.style(TextColor.color(0x3E4C5E)));
+    translations.addStyle("c-brand", Style.style(TextColor.color(0x0C72C0)));
+    translations.addStyle("c-brand-light", Style.style(TextColor.color(0x2c97e8)));
+    translations.addStyle("c-brand-dark", Style.style(TextColor.color(0x3E4C5E)));
 
+    translations.addStyle("c-offset", Style.style(TextColor.color(0xFF8C42)));
+    translations.addStyle("c-offset-light", Style.style(TextColor.color(0xffa266)));
+    translations.addStyle("c-offset-dark", Style.style(TextColor.color(0xF26419)));
 
-    translations.addStyle("offset", Style.style(TextColor.color(0xFF8C42)));
-    translations.addStyle("offset_light", Style.style(TextColor.color(0xFF8C42)));
-    translations.addStyle("offset_dark", Style.style(TextColor.color(0xFF8C42)));
-    translations.addStyle("accent", Style.style(TextColor.color(0xF26419)));
-    translations.addStyle("accent_light", Style.style(TextColor.color(0xF58B51)));
-    translations.addStyle("accent_dark", Style.style(TextColor.color(0xC14B0B)));
-    translations.addStyle("bg", Style.style(NamedTextColor.GRAY));
-    translations.addStyle("bg_light", Style.style(NamedTextColor.WHITE));
-    translations.addStyle("bg_dark", Style.style(NamedTextColor.DARK_GRAY));
+    translations.addStyle("c-accent", Style.style(TextColor.color(0xABDF75)));
+    translations.addStyle("c-accent-light", Style.style(TextColor.color(0xcaf79c)));
+    translations.addStyle("c-accent-dark", Style.style(TextColor.color(0x74b035)));
 
-    translations.addStyle("warm", Style.style(TextColor.color(0xE5D4C0)));
-    translations.addStyle("empty", Style.style(TextColor.color(0x554640)));
-    translations.addStyle("warn", Style.style(NamedTextColor.YELLOW));
-    translations.addStyle("negative", Style.style(NamedTextColor.RED));
+    translations.addStyle("t", Style.style(NamedTextColor.GRAY));
+    translations.addStyle("t-light", Style.style(NamedTextColor.WHITE));
+    translations.addStyle("t-dark", Style.style(NamedTextColor.DARK_GRAY));
+    translations.addStyle("t-warm", Style.style(TextColor.color(0xE5D4C0)));
+    translations.addStyle("t-highlight", translations.getStyles().get("c-offset"));
+    translations.addStyle("t-hl", translations.getStyles().get("c-offset"));
+
+    translations.addStyle("bg-light", Style.style(NamedTextColor.GRAY));
+    translations.addStyle("bg", Style.style(NamedTextColor.DARK_GRAY));
+    translations.addStyle("bg-dark", Style.style(NamedTextColor.BLACK));
+
+    translations.addStyle("c-empty", Style.style(TextColor.color(0x554640)));
+    translations.addStyle("c-warn", Style.style(NamedTextColor.YELLOW));
+    translations.addStyle("c-negative", Style.style(NamedTextColor.RED));
 
 
     new File(getDataFolder(), "data/").mkdirs();
