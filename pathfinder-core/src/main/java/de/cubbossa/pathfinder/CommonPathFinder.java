@@ -110,9 +110,10 @@ public abstract class CommonPathFinder implements PathFinder {
   public void onEnable() {
     effectsFile = new File(getDataFolder(), "effects.nbo");
 
+    miniMessage = MiniMessage.miniMessage();
+
     audiences = provideAudiences();
     Messages.setAudiences(audiences);
-    miniMessage = MiniMessage.miniMessage();
 
     // Data
     translations = GlobalTranslations.builder("PathFinder")
@@ -122,6 +123,11 @@ public abstract class CommonPathFinder implements PathFinder {
         .withLogger(getLogger())
         .withPropertiesStorage(new File(getDataFolder(), "lang"))
         .build();
+
+    miniMessage = MiniMessage.builder()
+        .editTags(builder -> builder.resolvers(translations.getResolvers()))
+        .build();
+
     translations.addMessagesClass(Messages.class);
     translations.writeLocale(Locale.ENGLISH);
 
@@ -152,6 +158,10 @@ public abstract class CommonPathFinder implements PathFinder {
     translations.addStyle("c-warn", Style.style(NamedTextColor.YELLOW));
     translations.addStyle("c-negative", Style.style(NamedTextColor.RED));
 
+    Messages.formatter().setMiniMessage(miniMessage);
+    Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));
+    Messages.formatter().setTextStyle(translations.getStyles().get("c-offset"));
+    Messages.formatter().setNumberStyle(translations.getStyles().get("c-offset-light"));
 
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {

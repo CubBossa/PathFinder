@@ -6,7 +6,6 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.translations.Message;
@@ -588,18 +587,15 @@ public class Messages {
                 collection.stream().map(converter).collect(Collectors.toList()))));
   }
 
+  @Setter
   public static class MessageFormatterImpl implements MessageFormatter {
 
-    private final MiniMessage miniMessage;
-    private final Style nullStyle;
-    private final Style textStyle;
-    private final Style numberStyle;
+    private MiniMessage miniMessage = MiniMessage.miniMessage();
+    private Style nullStyle = Style.empty();
+    private Style textStyle = Style.empty();
+    private Style numberStyle = Style.empty();
 
-    public MessageFormatterImpl() {
-      miniMessage = MiniMessage.miniMessage();
-      nullStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset-dark");
-      textStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset");
-      numberStyle = CommonPathFinder.getInstance().getTranslations().getStyles().get("c-offset-light");
+    private MessageFormatterImpl() {
     }
 
     @Override
@@ -678,14 +674,14 @@ public class Messages {
       return TagResolver.resolver(key, (argumentQueue, context) -> {
         String col = argumentQueue.hasNext() ? argumentQueue.pop().value() : null;
         String nullVal = argumentQueue.hasNext() ? argumentQueue.pop().value() : "none";
-        Style permColor = col == null
+        Style permStyle = col == null
             ? permission == null ? nullStyle : textStyle
             : Style.style(TextColor.fromCSSHexString(col));
 
         return Tag.inserting(permission == null
             ? miniMessage.deserialize(nullVal)
             : Component.join(JoinConfiguration.separator(Component.text(".")), Arrays.stream(permission.split("\\."))
-            .map(s -> Component.text(s, permColor)).collect(Collectors.toList())));
+            .map(s -> Component.text(s, permStyle)).collect(Collectors.toList())));
       });
     }
 
@@ -713,19 +709,18 @@ public class Messages {
     @Override
     public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
       return TagResolver.resolver(key, (queue, context) -> {
-        MiniMessage mm = PathFinderProvider.get().getMiniMessage();
         ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
         ComponentLike prefix = null;
         ComponentLike suffix = null;
 
         if (queue.hasNext()) {
-          separator = mm.deserialize(queue.pop().value());
+          separator = miniMessage.deserialize(queue.pop().value());
         }
         if (queue.hasNext()) {
-          prefix = mm.deserialize(queue.pop().value());
+          prefix = miniMessage.deserialize(queue.pop().value());
         }
         if (queue.hasNext()) {
-          suffix = mm.deserialize(queue.pop().value());
+          suffix = miniMessage.deserialize(queue.pop().value());
         }
         ComponentLike finalPrefix = prefix;
         ComponentLike finalSuffix = suffix;

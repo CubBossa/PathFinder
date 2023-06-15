@@ -4,6 +4,8 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Particle;
 
@@ -13,6 +15,14 @@ import java.util.UUID;
 import java.util.function.Function;
 
 public interface MessageFormatter {
+
+  void setNullStyle(Style style);
+
+  void setTextStyle(Style style);
+
+  void setNumberStyle(Style style);
+
+  void setMiniMessage(MiniMessage miniMessage);
 
   TagResolver throwable(Throwable throwable);
 

@@ -36,10 +36,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class EditModeMenu {
@@ -58,7 +55,7 @@ public class EditModeMenu {
     this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
 
     PathFinderProvider.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
-      if (chainEdgeStart.equals(e.getNode().getNodeId())) {
+      if (Objects.equals(chainEdgeStart, e.getNode().getNodeId())) {
         chainEdgeStart = null;
       }
     });
