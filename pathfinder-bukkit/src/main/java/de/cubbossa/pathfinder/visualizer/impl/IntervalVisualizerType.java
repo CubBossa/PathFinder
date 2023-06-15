@@ -18,9 +18,8 @@ public abstract class IntervalVisualizerType<T extends IntervalVisualizer<?>>
 
   @Override
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
-    return tree.then(CustomArgs.literal("interval")
+    return tree.then(subCommand("interval", CustomArgs.integer("ticks", 1), IntervalVisualizer.PROP_INTERVAL)
         .withPermission(PathPerms.PERM_CMD_PV_INTERVAL)
-        .then(subCommand("interval", CustomArgs.integer("ticks", 1), IntervalVisualizer.PROP_INTERVAL))
     );
   }
 }

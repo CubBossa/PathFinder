@@ -17,7 +17,7 @@ public abstract class IntervalVisualizer<ViewT extends IntervalVisualizer<ViewT>
       "interval", Integer.class, IntervalVisualizer::getInterval, IntervalVisualizer::setInterval
   );
 
-  private int interval;
+  private int interval = 10;
 
   public IntervalVisualizer(NamespacedKey key) {
     super(key);

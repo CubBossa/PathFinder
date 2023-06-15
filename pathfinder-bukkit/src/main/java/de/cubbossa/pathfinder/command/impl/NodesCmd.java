@@ -84,7 +84,7 @@ public class NodesCmd extends PathFinderSubCommand {
             )
 
         )
-        .then(CustomArgs.literal("group")
+        .then(CustomArgs.literal("groups")
             .then(CustomArgs.literal("add")
                 .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")

@@ -25,13 +25,6 @@ public class VisualizerCmd extends PathFinderSubCommand {
     super(pathFinder, "visualizer");
     withGeneratedHelp();
 
-    then(CustomArgs.literal("info")
-        .withGeneratedHelp()
-        .withPermission(PathPerms.PERM_CMD_PV_INFO)
-        .then(CustomArgs.pathVisualizerArgument("visualizer")
-            .executes((commandSender, objects) -> {
-              onInfo(commandSender, (PathVisualizer<?, ?>) objects.getUnchecked(0));
-            })));
 
     for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerTypeRegistryImpl.getInstance().getTypes()) {
 
@@ -39,10 +32,10 @@ public class VisualizerCmd extends PathFinderSubCommand {
         continue;
       }
 
-      LiteralArgument set = new LiteralArgument("set");
+      LiteralArgument set = (LiteralArgument) new LiteralArgument("set")
+          .withPermission(PathPerms.PERM_CMD_PV_MODIFY);
 
       set.then(CustomArgs.literal("permission")
-          .withPermission(PathPerms.PERM_CMD_PV_SET_PERMISSION)
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, args) -> {
                 if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
@@ -69,7 +62,15 @@ public class VisualizerCmd extends PathFinderSubCommand {
       cmdExt.appendEditCommand(set, 0, 1);
       then(new LiteralArgument(type.getCommandName())
           .then(CustomArgs.pathVisualizerArgument("visualizer", type)
-              .then(set)));
+              .then(set)
+              .then(CustomArgs.literal("info")
+                  .withPermission(PathPerms.PERM_CMD_PV_INFO)
+                  .executes((commandSender, objects) -> {
+                    onInfo(commandSender, (PathVisualizer<?, ?>) objects.getUnchecked(0));
+                  })
+              )
+          )
+      );
     }
   }
 

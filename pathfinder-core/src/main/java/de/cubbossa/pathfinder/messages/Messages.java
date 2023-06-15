@@ -44,7 +44,7 @@ public class Messages {
   }
 
   public static final Message PREFIX = new MessageBuilder("prefix")
-      .withDefault("<offset>PathFinder</offset> <dark_gray>»</dark_gray> <gray>")
+      .withDefault("<main>PathFinder</main> <dark_gray>»</dark_gray> <gray>")
       .build();
   public static final Message GEN_ERROR = new MessageBuilder("general.error")
       .withDefault("<red><cause></red>")
@@ -134,10 +134,8 @@ public class Messages {
 
   public static final Message INFO = new MessageBuilder("commands.info")
       .withDefault("""
-          <gradient:black:dark_gray:black>------------ <offset>Pathfinder</offset> ------------</gradient>
-          <dark_gray>» </dark_gray><gray>Authors: <warm><authors></warm>
+          <gradient:black:dark_gray:black>------------ <main>Pathfinder</main> ------------</gradient>
           <dark_gray>» </dark_gray><gray>Current version: <warm><version></warm>
-          <dark_gray>» </dark_gray><gray>Main Game version: <warm><api-version></warm>
           <dark_gray>» </dark_gray><gray>Spigot-Page: <warm><u><click:open_url:"https://www.spigotmc.org/resources/gps-pathfinder-minecraft-pathfinding-tool.104961/">https://www.spigotmc.org/...</click></u></warm>
           """)
       .withPlaceholders("authors", "version", "api-version")

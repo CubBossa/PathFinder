@@ -6,6 +6,8 @@ import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinderConfig;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.event.NodeDeleteEvent;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -47,15 +49,19 @@ public class EditModeMenu {
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
   private Boolean undirectedEdgesMode;
-  private UUID edgeStart = null;
   private UUID chainEdgeStart = null;
 
-  public EditModeMenu(Storage storage, NamespacedKey group,
-                      Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
+  public EditModeMenu(Storage storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
     this.storage = storage;
     this.key = group;
     this.types = types;
     this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
+
+    PathFinderProvider.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
+      if (chainEdgeStart.equals(e.getNode().getNodeId())) {
+        chainEdgeStart = null;
+      }
+    });
   }
 
   public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {

@@ -20,6 +20,7 @@ public class DefaultNodeGroupEditorFactory implements NodeGroupEditorFactory {
     DefaultNodeGroupEditor editor = new DefaultNodeGroupEditor(group);
     editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));
     editor.getRenderers().add(new NodeArmorStandRenderer(PathFinderPlugin.getInstance()));
+    // editor.getRenderers().add(new NodeDisplayRenderer());
     editor.getRenderers().add(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
     return editor;
   }

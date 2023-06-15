@@ -39,6 +39,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
     return Messages.CMD_VIS_INFO_PARTICLES.formatted(
         Messages.formatter().particle("particle", element.getParticle(), element.getParticleData()),
         Messages.formatter().number("particle-steps", element.getSchedulerSteps()),
+        Messages.formatter().number("interval", element.getInterval()),
         Messages.formatter().number("amount", element.getAmount()),
         Messages.formatter().number("speed", element.getSpeed()),
         Messages.formatter().vector("offset", BukkitVectorUtils.toInternal(element.getOffset())),

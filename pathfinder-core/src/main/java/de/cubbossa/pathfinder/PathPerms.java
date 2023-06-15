@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder;
 
 public class PathPerms {
+
   public static final String PERM_CMD_PF_INFO = "pathfinder.command.pathfinder.info";
   public static final String PERM_CMD_PF_HELP = "pathfinder.command.pathfinder.help";
   public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
@@ -34,9 +35,7 @@ public class PathPerms {
   public static final String PERM_CMD_PV_CREATE = "pathfinder.command.visualizer.create";
   public static final String PERM_CMD_PV_DELETE = "pathfinder.command.visualizer.delete";
   public static final String PERM_CMD_PV_INFO = "pathfinder.command.visualizer.info";
-  public static final String PERM_CMD_PV_SET_NAME = "pathfinder.command.visualizer.set_name";
-  public static final String PERM_CMD_PV_SET_PERMISSION =
-      "pathfinder.command.visualizer.set_permission";
+  public static final String PERM_CMD_PV_MODIFY = "pathfinder.command.visualizer.modify";
   public static final String PERM_CMD_PV_INTERVAL = "pathfinder.command.visualizer.set_interval";
   public static final String PERM_CMD_PV_EDIT = "pathfinder.command.visualizer.edit";
 }

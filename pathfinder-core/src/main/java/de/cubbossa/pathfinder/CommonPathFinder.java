@@ -125,14 +125,14 @@ public abstract class CommonPathFinder implements PathFinder {
     translations.addMessagesClass(Messages.class);
     translations.writeLocale(Locale.ENGLISH);
 
-    translations.addStyle("main", Style.style(TextColor.color(0x6569EB)));
-    translations.addStyle("main_light", Style.style(TextColor.color(0xA5A7F3)));
-    translations.addStyle("main_dark", Style.style(TextColor.color(0x383EE5)));
+    translations.addStyle("main", Style.style(TextColor.color(0x0C72C0)));
+    translations.addStyle("main_light", Style.style(TextColor.color(0x0C72C0)));
+    translations.addStyle("main_dark", Style.style(TextColor.color(0x3E4C5E)));
 
 
-    translations.addStyle("offset", Style.style(TextColor.color(0x7B42F5)));
-    translations.addStyle("offset_light", Style.style(TextColor.color(0xAE8BF9)));
-    translations.addStyle("offset_dark", Style.style(TextColor.color(0x383EE5)));
+    translations.addStyle("offset", Style.style(TextColor.color(0xFF8C42)));
+    translations.addStyle("offset_light", Style.style(TextColor.color(0xFF8C42)));
+    translations.addStyle("offset_dark", Style.style(TextColor.color(0xFF8C42)));
     translations.addStyle("accent", Style.style(TextColor.color(0xF26419)));
     translations.addStyle("accent_light", Style.style(TextColor.color(0xF58B51)));
     translations.addStyle("accent_dark", Style.style(TextColor.color(0xC14B0B)));

@@ -4,12 +4,11 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 
 public abstract class BezierVisualizerType<VisualizerT extends BezierPathVisualizer>
-    extends AbstractVisualizerType<VisualizerT>
+    extends IntervalVisualizerType<VisualizerT>
     implements VisualizerTypeCommandExtension {
 
   public BezierVisualizerType(NamespacedKey key) {
@@ -18,6 +17,7 @@ public abstract class BezierVisualizerType<VisualizerT extends BezierPathVisuali
 
   @Override
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
+    tree = super.appendEditCommand(tree, visualizerIndex, argumentOffset);
     return tree
         .then(CustomArgs.literal("point-distance")
             .then(new FloatArgument("distance", .02f, 100)

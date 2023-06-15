@@ -85,8 +85,7 @@ bukkit {
 
     main = "de.cubbossa.pathfinder.PathFinderPlugin"
 
-    val versionSplit = minecraftVersion.split(".")
-    apiVersion = minecraftVersion[0] + "." + 13.coerceAtLeast(versionSplit[1].toInt())
+    apiVersion = "1.18"
 
     softDepend = listOf("PlaceholderAPI")
     libraries = listOf(
