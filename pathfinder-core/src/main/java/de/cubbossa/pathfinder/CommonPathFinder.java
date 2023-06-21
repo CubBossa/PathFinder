@@ -24,15 +24,12 @@ import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.translations.GlobalTranslations;
+import de.cubbossa.translations.GlobalMessageBundle;
 import de.cubbossa.translations.MessageBundle;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
@@ -59,7 +56,6 @@ public abstract class CommonPathFinder implements PathFinder {
   protected ConfigFileLoader configFileLoader;
   protected AudienceProvider audiences;
   protected MiniMessage miniMessage;
-  protected File effectsFile;
   protected StorageImpl storage;
   @Setter
   protected PathFinderConf configuration;
@@ -108,55 +104,32 @@ public abstract class CommonPathFinder implements PathFinder {
 
   @SneakyThrows
   public void onEnable() {
-    effectsFile = new File(getDataFolder(), "effects.nbo");
-
     miniMessage = MiniMessage.miniMessage();
 
     audiences = provideAudiences();
     Messages.setAudiences(audiences);
 
+    saveResource("lang/styles.properties", false);
+
     // Data
-    translations = GlobalTranslations.builder("PathFinder")
+    translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
         .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
         .withEnabledLocales(Locale.getAvailableLocales())
-        .withPreferClientLanguage()
+        .withPreferClientLanguage(configuration.language.clientLanguage)
         .withLogger(getLogger())
         .withPropertiesStorage(new File(getDataFolder(), "lang"))
+        .withPropertiesStyles(new File(getDataFolder(), "lang/styles.properties"))
         .build();
 
     miniMessage = MiniMessage.builder()
-        .editTags(builder -> builder.resolvers(translations.getResolvers()))
+        .editTags(builder -> builder
+            .resolvers(translations.getBundleResolvers())
+            .resolvers(translations.getStylesResolver())
+        )
         .build();
 
     translations.addMessagesClass(Messages.class);
     translations.writeLocale(Locale.ENGLISH);
-
-    translations.addStyle("c-brand", Style.style(TextColor.color(0x0C72C0)));
-    translations.addStyle("c-brand-light", Style.style(TextColor.color(0x2c97e8)));
-    translations.addStyle("c-brand-dark", Style.style(TextColor.color(0x3E4C5E)));
-
-    translations.addStyle("c-offset", Style.style(TextColor.color(0xFF8C42)));
-    translations.addStyle("c-offset-light", Style.style(TextColor.color(0xffa266)));
-    translations.addStyle("c-offset-dark", Style.style(TextColor.color(0xF26419)));
-
-    translations.addStyle("c-accent", Style.style(TextColor.color(0xABDF75)));
-    translations.addStyle("c-accent-light", Style.style(TextColor.color(0xcaf79c)));
-    translations.addStyle("c-accent-dark", Style.style(TextColor.color(0x74b035)));
-
-    translations.addStyle("t", Style.style(NamedTextColor.GRAY));
-    translations.addStyle("t-light", Style.style(NamedTextColor.WHITE));
-    translations.addStyle("t-dark", Style.style(NamedTextColor.DARK_GRAY));
-    translations.addStyle("t-warm", Style.style(TextColor.color(0xE5D4C0)));
-    translations.addStyle("t-highlight", translations.getStyles().get("c-offset"));
-    translations.addStyle("t-hl", translations.getStyles().get("c-offset"));
-
-    translations.addStyle("bg-light", Style.style(NamedTextColor.GRAY));
-    translations.addStyle("bg", Style.style(NamedTextColor.DARK_GRAY));
-    translations.addStyle("bg-dark", Style.style(NamedTextColor.BLACK));
-
-    translations.addStyle("c-empty", Style.style(TextColor.color(0x554640)));
-    translations.addStyle("c-warn", Style.style(NamedTextColor.YELLOW));
-    translations.addStyle("c-negative", Style.style(NamedTextColor.RED));
 
     Messages.formatter().setMiniMessage(miniMessage);
     Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));

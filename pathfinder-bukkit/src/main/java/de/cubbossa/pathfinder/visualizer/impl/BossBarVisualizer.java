@@ -47,8 +47,8 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
 
     private final BossBar bossBar;
 
-    public BossbarView(List<Node> nodes, List<Edge> edges, BossBar bossBar) {
-      super(nodes, edges);
+    public BossbarView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+      super(player, nodes, edges);
       this.bossBar = bossBar;
     }
 

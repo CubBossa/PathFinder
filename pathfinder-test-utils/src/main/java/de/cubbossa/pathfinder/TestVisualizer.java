@@ -23,7 +23,7 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
 
   @Override
   public View createView(List<Node> nodes, PathPlayer<Logger> player) {
-    return new View(nodes);
+    return new View(player, nodes);
   }
 
   @Override
@@ -36,8 +36,8 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
   public class View extends AbstractVisualizer<View, Logger>.AbstractView {
     List<Node> nodes;
 
-    public View(List<Node> nodes) {
-      super();
+    public View(PathPlayer<Logger> player, List<Node> nodes) {
+      super(player);
       this.nodes = nodes;
     }
   }

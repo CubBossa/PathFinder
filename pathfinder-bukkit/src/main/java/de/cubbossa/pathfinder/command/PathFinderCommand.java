@@ -125,11 +125,14 @@ public class PathFinderCommand extends CommandTree {
 
           CompletableFuture.runAsync(() -> {
             CommonPathFinder pf = BukkitPathFinder.getInstance();
+            pf.loadConfig();
+
             MessageBundle translations = pf.getTranslations();
 
+            Locale fallback = Locale.forLanguageTag(pf.getConfiguration().getLanguage().getFallbackLanguage());
             translations.clearCache();
-            translations.writeLocale(Locale.ENGLISH); // TODO
-            translations.loadLocale(Locale.ENGLISH);
+            translations.writeLocale(fallback);
+            translations.loadLocale(fallback);
           }).whenComplete((unused, throwable) -> {
             if (throwable != null) {
               BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(Placeholder.component("error", Component.text(throwable.getMessage()
@@ -153,9 +156,10 @@ public class PathFinderCommand extends CommandTree {
                 CommonPathFinder pf = BukkitPathFinder.getInstance();
                 MessageBundle translations = pf.getTranslations();
 
+                Locale fallback = Locale.forLanguageTag(pf.getConfiguration().getLanguage().getFallbackLanguage());
                 translations.clearCache();
-                translations.writeLocale(Locale.ENGLISH); // TODO
-                translations.loadLocale(Locale.ENGLISH);
+                translations.writeLocale(fallback);
+                translations.loadLocale(fallback);
               }).whenComplete((unused, throwable) -> {
                 if (throwable != null) {
                   BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(
@@ -173,32 +177,6 @@ public class PathFinderCommand extends CommandTree {
             })
         )
 
-        .then(CustomArgs.literal("effects")
-            .executes((sender, objects) -> {
-              long now = System.currentTimeMillis();
-
-              CompletableFuture.runAsync(() -> {
-                try {
-                  // TODO
-                } catch (Throwable t) {
-                  throw new RuntimeException(t);
-                }
-              }).whenComplete((unused, throwable) -> {
-                if (throwable != null) {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(TagResolver.builder()
-                      .resolver(Placeholder.component("error", Component.text(throwable.getMessage()
-                          .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
-                      .build()));
-                  PathFinderProvider.get().getLogger()
-                      .log(Level.SEVERE, "Error occured while reloading files: ", throwable);
-                } else {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS_FX.formatted(
-                      Messages.formatter().number("ms", System.currentTimeMillis() - now)
-                  ));
-                }
-              });
-            })
-        )
         .then(CustomArgs.literal("config")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
@@ -222,7 +200,7 @@ public class PathFinderCommand extends CommandTree {
                           throwable);
                 } else {
                   BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS_CFG.formatted(
-                      Messages.formatter().number("ms", System.currentTimeMillis())
+                      Messages.formatter().number("ms", System.currentTimeMillis() - now)
                   ));
                 }
               });

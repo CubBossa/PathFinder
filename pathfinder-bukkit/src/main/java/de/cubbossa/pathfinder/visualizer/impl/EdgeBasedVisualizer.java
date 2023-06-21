@@ -58,14 +58,17 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
     private final List<Edge> edges;
     private Location lastPlayerLocation;
 
-    public EdgeBasedView(List<Node> nodes, List<Edge> edges) {
-      super();
+    public EdgeBasedView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
+      super(player);
       this.nodes = nodes;
       this.edges = edges;
     }
 
     @Override
     void play(int interval) {
+      if (getTargetViewer() == null) {
+        return;
+      }
       Player player = getTargetViewer().unwrap();
       if (player == null || !player.isOnline()) {
         return;

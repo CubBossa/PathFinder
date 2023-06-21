@@ -13,13 +13,11 @@ import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
-import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisualizer>
@@ -48,8 +46,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   }
 
   @Override
-  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
-                                       int argumentOffset) {
+  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
     return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
         .then(CustomArgs.literal("particle")
             .then(new ParticleArgument("particle")
@@ -82,7 +79,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                                   args.getUnchecked(argumentOffset),
                                   args.getUnchecked(argumentOffset + 1),
                                   args.getUnchecked(argumentOffset + 2),
-                                  (args.<Location>getUnchecked(argumentOffset + 3)).toVector());
+                                  (BukkitVectorUtils.toBukkit(args.getUnchecked(argumentOffset + 3))).toVector());
                             })
                         )
                     )
@@ -117,10 +114,8 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 
   @Override
   public Map<String, Object> serialize(ParticleVisualizer visualizer) {
-    super.serialize(visualizer);
-    Map<String, Object> map = new LinkedHashMap<>();
+    Map<String, Object> map = super.serialize(visualizer);
     map.put(ParticleVisualizer.PROP_SCHEDULER_STEPS.getKey(), visualizer.getSchedulerSteps());
-    map.put("interval", visualizer.getInterval());
     map.put("particle", visualizer.getParticle().toString());
     map.put("particle-data", YamlUtils.wrap(visualizer.getParticleData()));
     map.put("speed", visualizer.getSpeed());
@@ -135,9 +130,9 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   public void deserialize(ParticleVisualizer visualizer, Map<String, Object> values) {
     super.deserialize(visualizer, values);
     loadProperty(values, visualizer, ParticleVisualizer.PROP_SCHEDULER_STEPS);
-    if (values.containsKey("interval")) {
-      visualizer.setInterval((Integer) values.get("interval"));
-    }
+    loadProperty(values, visualizer, ParticleVisualizer.PROP_AMOUNT);
+    loadProperty(values, visualizer, ParticleVisualizer.PROP_OFFSET);
+    // TODO all
     if (values.containsKey("particle")) {
       visualizer.setParticle(Particle.valueOf((String) values.get("particle")));
     }
@@ -146,12 +141,6 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
     }
     if (values.containsKey("speed")) {
       visualizer.setSpeed(((Double) values.get("speed")).floatValue());
-    }
-    if (values.containsKey("amount")) {
-      visualizer.setAmount((Integer) values.get("amount"));
-    }
-    if (values.containsKey("offset")) {
-      visualizer.setOffset((Vector) values.get("offset"));
     }
     if (values.containsKey("sample-rate")) {
       visualizer.setBezierSamplingRate((Integer) values.get("sample-rate"));

@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -58,12 +60,13 @@ public abstract class BezierPathVisualizer
   public abstract class BezierView extends IntervalVisualizer<BezierView>.IntervalView {
     List<Location> points;
 
-    public BezierView(List<Location> points) {
+    public BezierView(PathPlayer<Player> player, List<Location> points) {
+      super(player);
       this.points = points;
     }
 
-    public BezierView(Node... nodes) {
-      super();
+    public BezierView(PathPlayer<Player> player, Node... nodes) {
+      super(player);
 
       // split the path into segments for each appearing world change
       List<PathSegment> segments = new ArrayList<>();

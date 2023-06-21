@@ -78,7 +78,7 @@ public class StorageImpl implements Storage {
         globalGroup.setWeight(0);
         globalGroup.addModifier(new CommonCurveLengthModifier(3));
         globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
-        globalGroup.addModifier(new CommonVisualizerModifier(vis));
+        globalGroup.addModifier(new CommonVisualizerModifier(vis.getKey()));
         return globalGroup;
       }).thenCompose(g -> {
         return saveGroup(g).thenApply(unused -> g);

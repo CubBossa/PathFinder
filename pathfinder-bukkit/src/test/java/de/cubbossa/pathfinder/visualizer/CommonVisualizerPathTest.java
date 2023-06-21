@@ -38,7 +38,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     for (PathVisualizer<?, ?> vis : visualizers) {
       NodeGroup group = groupMap.computeIfAbsent(vis, v -> {
         NodeGroup g = makeGroup(v.getKey());
-        g.addModifier(new CommonVisualizerModifier(v));
+        g.addModifier(new CommonVisualizerModifier(v.getKey()));
         storage.saveGroup(g).join();
         return g;
       });

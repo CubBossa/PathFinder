@@ -19,6 +19,12 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
       new SimpleProperty<>("particle-steps", Integer.class,
           ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
+  public static final Property<ParticleVisualizer, Integer> PROP_AMOUNT =
+      new SimpleProperty<>("amount", Integer.class,
+          ParticleVisualizer::getAmount, ParticleVisualizer::setAmount);
+  public static final Property<ParticleVisualizer, Vector> PROP_OFFSET =
+      new SimpleProperty<>("offset", Vector.class,
+          ParticleVisualizer::getOffset, ParticleVisualizer::setOffset);
 
   private int schedulerSteps = 50;
   private Particle particle = Particle.SCRAPE;
@@ -33,7 +39,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
 
   @Override
   public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
-    return new BezierView(nodes.toArray(Node[]::new)) {
+    return new BezierView(player, nodes.toArray(Node[]::new)) {
 
       @Override
       void play(int interval) {

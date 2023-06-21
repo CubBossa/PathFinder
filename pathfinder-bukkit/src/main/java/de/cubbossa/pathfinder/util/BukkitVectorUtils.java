@@ -90,7 +90,7 @@ public class BukkitVectorUtils {
   }
 
   public static double convertDirectionToXZAngle(Location location) {
-    return convertDirectionToXZAngle(location.getDirection());
+    return convertDirectionToXZAngle(location.toVector());
   }
 
   public static double convertDirectionToXZAngle(Vector vector) {

@@ -16,6 +16,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 import java.util.Optional;
+import java.util.logging.Level;
 
 public class CreateVisualizerCmd extends PathFinderSubCommand {
   public CreateVisualizerCmd(PathFinder pathFinder) {
@@ -42,12 +43,13 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
       return;
     }
     getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
-      getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
-        BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(
-            Messages.formatter().namespacedKey("key", visualizer.getKey()),
-            Placeholder.component("type", Component.text(optType.orElseThrow().getCommandName()))
-        ));
-      });
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(
+          Messages.formatter().namespacedKey("key", visualizer.getKey()),
+          Placeholder.component("type", Component.text(type.getCommandName()))
+      ));
+    }).exceptionally(throwable -> {
+      getPathfinder().getLogger().log(Level.SEVERE, "Error while creating new visualizer", throwable);
+      return null;
     });
   }
 }

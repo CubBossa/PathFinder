@@ -20,6 +20,7 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -58,7 +59,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
 
   @Override
   public Map<String, Object> serialize(T visualizer) {
-    return null;
+    return new LinkedHashMap<>();
   }
 
   public <V extends PathVisualizer<?, ?>, T2> void setProperty(PathPlayer<?> sender, V visualizer,

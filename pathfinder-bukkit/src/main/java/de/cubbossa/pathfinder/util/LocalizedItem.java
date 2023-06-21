@@ -37,7 +37,7 @@ public class LocalizedItem {
 
     ItemMeta meta = stack.getItemMeta();
     Audience audience = pf.getAudiences().player(player.getUniqueId());
-    meta.setDisplayName(serializer.serialize(pf.getTranslations().translate(name, audience)));
+    meta.setDisplayName(serializer.serialize(name.getTranslator().translate(name, audience)));
     meta.setLore(ComponentSplit.split(pf.getTranslations().translate(lore, audience), "\n").stream()
         .map(serializer::serialize).toList());
     stack.setItemMeta(meta);

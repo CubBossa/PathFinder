@@ -85,26 +85,26 @@ public class Messages {
       .withPlaceholder("error")
       .build();
   public static final Message RELOAD_SUCCESS = new MessageBuilder("command.reload.success.general")
-      .withDefault("<msg:prefix>Successfully reloaded in <t-hl><ms></t-hl><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded in <c-offset-light><ms></c-offset-light><c-offset>ms</c-offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_LANG = new MessageBuilder("command.reload.success.language")
-      .withDefault("<msg:prefix>Successfully reloaded language in <t-hl><ms></t-hl><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded language in <c-offset-light><ms></c-offset-light><c-offset>ms</c-offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_FX = new MessageBuilder("command.reload.success.effects")
-      .withDefault("<msg:prefix>Successfully reloaded effects in <t-hl><ms></t-hl><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded effects in <c-offset-light><ms></c-offset-light><c-offset>ms</c-offset>.")
       .withPlaceholders("ms")
       .build();
   public static final Message RELOAD_SUCCESS_CFG = new MessageBuilder("command.reload.success.config")
-      .withDefault("<msg:prefix>Successfully reloaded config files in <t-hl><ms></t-hl><offset>ms</offset>.")
+      .withDefault("<msg:prefix>Successfully reloaded config files in <c-offset-light><ms></c-offset-light><c-offset>ms</c-offset>.")
       .withPlaceholders("ms")
       .build();
 
   public static final Message HELP = new MessageBuilder("general.help")
       .withDefault("""
           <gradient:black:dark_gray:black>------------ <c-brand>Pathfinder</c-brand> ------------</gradient>
-          <t>Running <offset>Pathfinder v<version></offset>.
+          <t>Running <c-offset>Pathfinder v<version></c-offset>.
                 
           <t>Require help? Checkout the <t-warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></t-warm>.
           <t>Use <t-warm>/pf help</t-warm> to view available commands.
@@ -144,7 +144,7 @@ public class Messages {
 
   public static final Message MODULES = new MessageBuilder("commands.modules")
       .withDefault("""
-          <offset>Active Modules:</offset>
+          <c-offset>Active Modules:</c-offset>
           <modules:"\n":"<bg>» </bg>">""")
       .withPlaceholder("modules")
       .build();
@@ -173,7 +173,7 @@ public class Messages {
       .build();
   public static final Message CMD_N_INFO = new MessageBuilder("commands.node.info")
       .withDefault("""
-          <offset>Node #<id></offset>
+          <c-offset>Node #<id></c-offset>
           <bg>» </bg><t>Position: <t-hl><position></t-hl> (<world>)
           <bg>» </bg><t>Curve-Length: <t-hl><curve-length></t-hl>
           <bg>» </bg><t>Edges: <edges>
@@ -342,14 +342,14 @@ public class Messages {
       .withDefault("<c-negative>Another visualizer with this name already exists.")
       .build();
   public static final Message CMD_VIS_DELETE_SUCCESS = new MessageBuilder("commands.path_visualizer.delete.success")
-      .withDefault("<msg:prefix>Successfully deleted Visualizer <offset><key></offset>.")
+      .withDefault("<msg:prefix>Successfully deleted Visualizer <c-offset><key></c-offset>.")
       .withPlaceholders("key")
       .build();
   public static final Message CMD_VIS_DELETE_ERROR = new MessageBuilder("commands.path_visualizer.delete.error")
       .withDefault("<c-negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set_property")
-      .withDefault("<msg:prefix>Changed <property> for <t-hl><key></t-hl> from <t-hl><old-value></t-hl> to <value>.")
+      .withDefault("<msg:prefix>Changed <property> for <t-hl><key></t-hl> from <t-hl><old-value></t-hl> to <t-hl><value></t-hl>.")
       .withPlaceholders("key", "type", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP_ERROR = new MessageBuilder("commands.path_visualizer.set_property_error")
@@ -393,7 +393,7 @@ public class Messages {
           <bg>» </bg><t>Particle-Steps: <t-hl><hover:show_text:"Click to change particle-steps"><click:suggest_command:"/pathvisualizer edit particle-steps <key> particle"><particle-steps></click></hover></t-hl>
           <bg>» </bg><t>Amount: <t-hl><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><amount></click></hover></t-hl>
           <bg>» </bg><t>Speed: <t-hl><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed"><speed></click></hover></t-hl>
-          <bg>» </bg><t>Offset: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><offset></click></hover></t-hl>""")
+          <bg>» </bg><t>Offset: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle"><c-offset></click></hover></t-hl>""")
       .withPlaceholders(
           "key", "type", "permission", "interval", "point-distance",
           "particle", "particle-steps", "amount", "speed", "offset")
@@ -429,9 +429,9 @@ public class Messages {
           <bg>» </bg><t>Amount: <t-hl><hover:show_text:"Click to change amount"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><amount></click></hover></t-hl>
           <bg>» </bg><t>Speed: <t-hl><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> particle"><speed></click></hover></t-hl>
           <bg>» </bg><t>Offset:
-              <bg>» </bg><t>X: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><offset-x></click></hover></t-hl>
-              <bg>» </bg><t>Y: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><offset-y></click></hover></t-hl>
-              <bg>» </bg><t>Z: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><offset-z></click></hover></t-hl>
+              <bg>» </bg><t>X: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-x"><c-offset-x></click></hover></t-hl>
+              <bg>» </bg><t>Y: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-y"><c-offset-y></click></hover></t-hl>
+              <bg>» </bg><t>Z: <t-hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> offset-z"><c-offset-z></click></hover></t-hl>
           <bg>» </bg><t>Path Offset (e.g. to make Spirals):
               <bg>» </bg><t>X: <t-hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x"><path-x></click></hover></t-hl>
               <bg>» </bg><t>Y: <t-hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y"><path-y></click></hover></t-hl>

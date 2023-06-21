@@ -8,7 +8,6 @@ import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,7 +71,7 @@ public class CombinedVisualizer extends
 
   @Override
   public CombinedView<Object> createView(List<Node> nodes, PathPlayer<Object> player) {
-    return new CombinedView<Object>(visualizers.stream()
+    return new CombinedView<Object>(player, visualizers.stream()
         .filter(v -> v.getTargetType().isInstance(getTargetType()))
         // safely assume that the player type matches for all sub visualizers that matched the filter
         .collect(Collectors.toMap(Keyed::getKey, v -> v.createView(nodes, (PathPlayer) player))));
@@ -80,10 +79,14 @@ public class CombinedVisualizer extends
 
 
   @Getter
-  @RequiredArgsConstructor
   public class CombinedView<T> extends AbstractVisualizer<CombinedView<T>, T>.AbstractView {
 
     private final Map<NamespacedKey, PathView<T>> childData;
+
+    public CombinedView(PathPlayer<T> targetViewer, Map<NamespacedKey, PathView<T>> childData) {
+      super(targetViewer);
+      this.childData = childData;
+    }
 
     @Override
     public void addViewer(PathPlayer<T> player) {

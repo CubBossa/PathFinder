@@ -60,39 +60,44 @@ public class CompassVisualizer
 
   @Override
   public CompassBossbarView createView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
-    StringCompass compass = new StringCompass(backgroundFormat, radius, null);
-    compass.addMarker("N", north, 0.);
-    compass.addMarker("E", east, 90.);
-    compass.addMarker("S", south, 180.);
-    compass.addMarker("W", west, 270.);
-    return new CompassBossbarView(nodes, edges, bossBar, compass);
+    return new CompassBossbarView(player, nodes, edges, bossBar);
   }
 
   @Getter
   public class CompassBossbarView extends BossBarVisualizer<CompassBossbarView>.BossbarView {
     private final StringCompass compass;
+    private Location leadPoint = new Location(null, 0, 0, 0);
 
-    public CompassBossbarView(List<Node> nodes, List<Edge> edges, BossBar bossBar, StringCompass compass) {
-      super(nodes, edges, bossBar);
-      this.compass = compass;
+    public CompassBossbarView(PathPlayer<Player> p, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+      super(p, nodes, edges, bossBar);
+      this.compass = new StringCompass(backgroundFormat, radius, null);
+      compass.addMarker("N", north, 0.);
+      compass.addMarker("E", east, 90.);
+      compass.addMarker("S", south, 180.);
+      compass.addMarker("W", west, 270.);
+      compass.setAngle(() -> {
+        Player player = getTargetViewer().unwrap();
+        if (player == null || !player.isOnline()) {
+          return 0d;
+        }
+        return BukkitVectorUtils.convertYawToAngle(player.getLocation());
+      });
+      compass.addMarker("target", target, () -> {
+        Player player = getTargetViewer().unwrap();
+        if (player == null || !player.isOnline()) {
+          return 0.;
+        }
+        Location location = leadPoint.clone().subtract(player.getLocation());
+        return BukkitVectorUtils.convertDirectionToXZAngle(location);
+      });
     }
 
     @Override
     public void play(Location nearestPoint, Location leadPoint, Edge nearestEdge) {
-      if (compass.getAngle() == null) {
-        return;
-      }
-      Player player = getTargetViewer().unwrap();
-      if (player == null || !player.isOnline()) {
-        return;
-      }
-      compass.setAngle(() -> {
-        return BukkitVectorUtils.convertDirectionToXZAngle(player.getLocation());
-      });
-      compass.addMarker("target", target, () -> {
-        return BukkitVectorUtils.convertDirectionToXZAngle(leadPoint.clone().subtract(player.getLocation()));
-      });
+      this.leadPoint = leadPoint;
       getBossBar().name(compass);
     }
+
+
   }
 }

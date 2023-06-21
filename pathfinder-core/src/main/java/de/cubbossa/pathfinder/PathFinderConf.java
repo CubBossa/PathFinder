@@ -56,8 +56,10 @@ public class PathFinderConf implements PathFinderConfig {
         The input value is a string that refers to the name of the language file in the
         /pathfinder/lang/ directory.
                 
+        Make sure to make locales either two letters ('en', 'de', 'au'), or a locale key pair ('en-US', 'de-DE').
+        See also: https://www.oracle.com/java/technologies/javase/jdk8-jre8-suported-locales.html
         See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language""")
-    public String fallbackLanguage = "en_US";
+    public String fallbackLanguage = "en";
   }
 
   @Configuration

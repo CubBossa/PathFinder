@@ -1,10 +1,21 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.VisualizerModifier;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 
-public record CommonVisualizerModifier(PathVisualizer<?, ?> visualizer) implements Modifier, VisualizerModifier {
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+public class CommonVisualizerModifier implements Modifier, VisualizerModifier {
+
+  private final NamespacedKey visualizerKey;
+
+  public CommonVisualizerModifier(NamespacedKey visualizerKey) {
+    this.visualizerKey = visualizerKey;
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -14,5 +25,14 @@ public record CommonVisualizerModifier(PathVisualizer<?, ?> visualizer) implemen
   @Override
   public int hashCode() {
     return getKey().hashCode();
+  }
+
+  public NamespacedKey getVisualizerKey() {
+    return visualizerKey;
+  }
+
+  @Override
+  public CompletableFuture<PathVisualizer<?, ?>> getVisualizer() {
+    return PathFinderProvider.get().getStorage().loadVisualizer(visualizerKey).thenApply(Optional::orElseThrow);
   }
 }

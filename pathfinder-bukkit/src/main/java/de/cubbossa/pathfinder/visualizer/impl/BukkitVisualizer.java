@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import org.bukkit.entity.Player;
 
@@ -17,5 +18,8 @@ public abstract class BukkitVisualizer<ViewT extends BukkitVisualizer<ViewT>.Buk
   }
 
   public abstract class BukkitView extends AbstractVisualizer<ViewT, Player>.AbstractView {
+    public BukkitView(PathPlayer<Player> targetViewer) {
+      super(targetViewer);
+    }
   }
 }

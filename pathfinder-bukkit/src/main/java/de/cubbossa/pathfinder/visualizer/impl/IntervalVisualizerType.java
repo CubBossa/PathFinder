@@ -7,6 +7,8 @@ import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import dev.jorel.commandapi.arguments.Argument;
 
+import java.util.Map;
+
 public abstract class IntervalVisualizerType<T extends IntervalVisualizer<?>>
     extends AbstractVisualizerType<T>
     implements VisualizerTypeCommandExtension {
@@ -21,5 +23,18 @@ public abstract class IntervalVisualizerType<T extends IntervalVisualizer<?>>
     return tree.then(subCommand("interval", CustomArgs.integer("ticks", 1), IntervalVisualizer.PROP_INTERVAL)
         .withPermission(PathPerms.PERM_CMD_PV_INTERVAL)
     );
+  }
+
+  @Override
+  public Map<String, Object> serialize(T visualizer) {
+    Map<String, Object> map = super.serialize(visualizer);
+    map.put("interval", visualizer.getInterval());
+    return map;
+  }
+
+  @Override
+  public void deserialize(T visualizer, Map<String, Object> values) {
+    super.deserialize(visualizer, values);
+    loadProperty(values, visualizer, IntervalVisualizer.PROP_INTERVAL);
   }
 }

@@ -11,6 +11,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -32,17 +33,22 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
   @Setter
   public abstract class AbstractView implements PathView<PlayerT> {
 
+    private final UUID targetViewerUuid;
     private PathPlayer<PlayerT> targetViewer;
     Collection<PathPlayer<PlayerT>> viewers;
 
-    public AbstractView() {
-      targetViewer = null;
+    public AbstractView(PathPlayer<PlayerT> targetViewer) {
+      this.targetViewerUuid = targetViewer.getUniqueId();
+      this.targetViewer = targetViewer;
       viewers = new HashSet<>();
     }
 
     @Override
     public void addViewer(PathPlayer<PlayerT> player) {
       viewers.add(player);
+      if (targetViewer == null && player.getUniqueId().equals(targetViewerUuid)) {
+        targetViewer = player;
+      }
     }
 
     @Override

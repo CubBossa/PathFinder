@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +29,8 @@ public abstract class IntervalVisualizer<ViewT extends IntervalVisualizer<ViewT>
 
     private BukkitTask task;
 
-    public IntervalView() {
+    public IntervalView(PathPlayer<Player> player) {
+      super(player);
       start();
     }
 
@@ -43,6 +46,20 @@ public abstract class IntervalVisualizer<ViewT extends IntervalVisualizer<ViewT>
       if (task != null) {
         task.cancel();
       }
+    }
+
+    @Override
+    public void removeViewer(PathPlayer<Player> player) {
+      super.removeViewer(player);
+      if (getViewers().size() == 0) {
+        stop();
+      }
+    }
+
+    @Override
+    public void removeAllViewers() {
+      super.removeAllViewers();
+      stop();
     }
 
     abstract void play(int interval);

@@ -14,6 +14,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Common implementation of the {@link VisualizerPath} interface.
@@ -47,8 +48,10 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
           .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
           .filter(Optional::isPresent)
           .map(Optional::get)
+          .map(VisualizerModifier::getVisualizer)
+          .map(CompletableFuture::join)
           .forEach(vis -> {
-            nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis.visualizer());
+            nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
           });
     }
 

@@ -682,7 +682,8 @@ public abstract class SqlStorage extends CommonStorage {
         )
         .values(
             visualizer.getKey(), type.getKey(), visualizer.getPermission(), dataString
-        );
+        )
+        .execute();
     return visualizer;
   }
 

@@ -5,16 +5,14 @@ import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class CompassVisualizerType extends AbstractVisualizerType<CompassVisualizer>
+public class CompassVisualizerType extends IntervalVisualizerType<CompassVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {
 
   public CompassVisualizerType(NamespacedKey key) {
@@ -44,9 +42,8 @@ public class CompassVisualizerType extends AbstractVisualizerType<CompassVisuali
   }
 
   @Override
-  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
-                                       int argumentOffset) {
-    return tree
+  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
+    return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
         .then(subCommand("color", CustomArgs.enumArgument("value", BossBar.Color.class),
             BossBarVisualizer.PROP_COLOR))
         .then(subCommand("overlay", CustomArgs.enumArgument("value", BossBar.Overlay.class),
@@ -68,7 +65,7 @@ public class CompassVisualizerType extends AbstractVisualizerType<CompassVisuali
 
   @Override
   public Map<String, Object> serialize(CompassVisualizer visualizer) {
-    Map<String, Object> map = new LinkedHashMap<>();
+    Map<String, Object> map = super.serialize(visualizer);
     map.put(BossBarVisualizer.PROP_COLOR.getKey(), visualizer.getColor().toString());
     map.put(BossBarVisualizer.PROP_OVERLAY.getKey(), visualizer.getOverlay().toString());
     map.put(CompassVisualizer.PROP_BACKGROUND.getKey(), visualizer.getBackgroundFormat());
