@@ -3,10 +3,10 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizer;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import lombok.Getter;
@@ -38,7 +38,7 @@ public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<VisualizerModifier, CommandExecutor> consumer) {
     return tree.then(CustomArgs.pathVisualizerArgument("visualizer").executes((commandSender, objects) -> {
-      consumer.apply(new CommonVisualizerModifier(objects.<CompassVisualizer>getUnchecked(1).getKey())).run(commandSender, objects);
+      consumer.apply(new CommonVisualizerModifier(objects.<PathVisualizer<?, ?>>getUnchecked(1).getKey())).run(commandSender, objects);
     }));
   }
 

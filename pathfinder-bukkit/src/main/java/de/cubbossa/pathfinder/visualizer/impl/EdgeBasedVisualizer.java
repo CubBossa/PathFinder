@@ -9,7 +9,6 @@ import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +19,6 @@ import java.util.Objects;
 public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<ViewT>.EdgeBasedView>
     extends IntervalVisualizer<ViewT> {
 
-  private int interval = 10;
-  private @Nullable String permission;
   /**
    * The amount of blocks that the lead point should move ahead of the player.
    * The lead point serves as target for visualizers like entities or compasses.

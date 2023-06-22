@@ -436,10 +436,7 @@ public abstract class SqlStorage extends CommonStorage {
     StorageImpl.ComparisonResult<UUID> cmp = StorageImpl.ComparisonResult.compare(before, group);
     cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
     cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
-
-    StorageImpl.ComparisonResult<Modifier> cmpMod = StorageImpl.ComparisonResult.compare(before.getModifiers(), group.getModifiers());
-    cmpMod.toInsertIfPresent(mods -> mods.forEach(m -> assignNodeGroupModifier(group.getKey(), m)));
-    cmpMod.toDeleteIfPresent(mods -> mods.forEach(m -> unassignNodeGroupModifier(group.getKey(), m.getKey())));
+    group.getModifiers().forEach(m -> assignNodeGroupModifier(group.getKey(), m));
   }
 
   @Override
