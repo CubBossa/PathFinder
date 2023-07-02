@@ -27,7 +27,7 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
           return suggestionsBuilder.buildFuture();
         })
         .executes((commandSender, objects) -> {
-          if (objects[argumentOffset].equals("*")) {
+          if (objects.getUnchecked(argumentOffset).equals("*")) {
             ExamplesHandler eh = ExamplesHandler.getInstance();
             eh.getExamples().stream().map(eh::loadVisualizer).forEach(future ->
                 future.thenAccept(visualizer ->
@@ -36,7 +36,7 @@ public class VisualizerImportCommand extends CustomLiteralArgument {
             return;
           }
           ExamplesReader.ExampleFile file = ExamplesHandler.getInstance().getExamples().stream()
-              .filter(f -> f.name().equalsIgnoreCase((String) objects[argumentOffset])).findFirst()
+              .filter(f -> f.name().equalsIgnoreCase(objects.<String>getUnchecked(argumentOffset))).findFirst()
               .orElse(null);
 
           if (file == null) {

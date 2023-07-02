@@ -3,50 +3,35 @@ package de.cubbossa.pathfinder.editmode;
 import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.events.node.EdgesCreatedEvent;
-import de.cubbossa.pathfinder.core.events.node.EdgesDeletedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeCreatedEvent;
-import de.cubbossa.pathfinder.core.events.node.NodeTeleportEvent;
-import de.cubbossa.pathfinder.core.events.node.NodesDeletedEvent;
+import de.cubbossa.pathfinder.core.events.node.*;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupAssignedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupRemovedEvent;
 import de.cubbossa.pathfinder.core.events.nodegroup.NodeGroupSearchTermsChangedEvent;
 import de.cubbossa.pathfinder.core.events.roadmap.RoadMapDeletedEvent;
-import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
-import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.core.node.Edge;
 import de.cubbossa.pathfinder.core.node.Groupable;
 import de.cubbossa.pathfinder.core.node.Node;
 import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
+import de.cubbossa.pathfinder.core.roadmap.RoadMapEditor;
+import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
 import de.cubbossa.pathfinder.util.LerpUtils;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.util.Vector;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
-import xyz.xenondevs.particle.task.TaskManager;
+
+import java.awt.Color;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -193,8 +178,7 @@ public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
         }
       }
 
-      Map<Color, List<Object>> packets = new HashMap<>();
-      Map<Color, ParticleBuilder> particles = new HashMap<>();
+      LinkedHashMap<Location, org.bukkit.Color> colorMap = new LinkedHashMap<>();
 
       for (var entry : undirected.entrySet()) {
         if (!Objects.equals(entry.getKey().getStart().getLocation().getWorld(),
@@ -209,22 +193,19 @@ public class DefaultRoadMapEditor implements RoadMapEditor, Listener {
 
         for (float i = 0; i < dist; i += particleDistance) {
           Color c = directed ? LerpUtils.lerp(colorFrom, colorTo, i / dist) : colorFrom;
-
-          ParticleBuilder builder = particles.computeIfAbsent(c,
-              k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
-          packets.computeIfAbsent(c, x -> new ArrayList<>()).add(builder.setLocation(
-              LerpUtils.lerp(a, b, i / dist)
-                  .toLocation(entry.getKey().getStart().getLocation().getWorld())).toPacket());
+          Location l = LerpUtils.lerp(a, b, i / dist).toLocation(entry.getKey().getStart().getLocation().getWorld());
+          colorMap.put(l, org.bukkit.Color.fromRGB(c.getRGB() & 0xffffff));
         }
       }
-      for (var entry : packets.entrySet()) {
-        editModeTasks.add(TaskManager.startSuppliedTask(entry.getValue(), tickDelay,
-            () -> editingPlayers.keySet().stream()
-                .map(Bukkit::getPlayer)
-                .filter(Objects::nonNull)
-                .filter(Player::isOnline)
-                .collect(Collectors.toSet())));
-      }
+      Bukkit.getScheduler().runTaskTimer(PathPlugin.getInstance(), () -> {
+        for (Player player : editingPlayers.keySet().stream()
+            .map(Bukkit::getPlayer)
+            .filter(Objects::nonNull)
+            .filter(Player::isOnline)
+            .collect(Collectors.toSet())) {
+          colorMap.forEach((location, color) -> player.spawnParticle(Particle.REDSTONE, location, 1, new Particle.DustOptions(color, 1)));
+        }
+      }, 0, tickDelay);
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;

@@ -18,7 +18,7 @@ public class FindCommand extends Command {
     then(CustomArgs.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
           Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-            NodeSelection targets = (NodeSelection) args[0];
+            NodeSelection targets = args.<NodeSelection>getUnchecked(0);
             FindModule.printResult(FindModule.getInstance().findPath(player, targets), player);
           });
         })

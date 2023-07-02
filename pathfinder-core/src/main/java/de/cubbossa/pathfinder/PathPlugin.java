@@ -31,16 +31,7 @@ import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandAPIConfig;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.stream.IntStream;
+import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -52,6 +43,10 @@ import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+
+import java.io.File;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Getter
 public class PathPlugin extends JavaPlugin {
@@ -177,7 +172,7 @@ public class PathPlugin extends JavaPlugin {
     YamlUtils.registerClasses();
     loadConfig();
 
-    CommandAPI.onLoad(new CommandAPIConfig());
+    CommandAPI.onLoad(new CommandAPIBukkitConfig(this));
 
     new ArrayList<>(extensions).forEach(PathPluginExtension::onLoad);
   }
@@ -239,7 +234,7 @@ public class PathPlugin extends JavaPlugin {
 
     // Commands
 
-    CommandAPI.onEnable(this);
+    CommandAPI.onEnable();
     roadMapCommand = new RoadMapCommand();
     roadMapCommand.register();
     pathFinderCommand = new PathFinderCommand();

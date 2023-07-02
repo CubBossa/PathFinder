@@ -2,12 +2,7 @@ package de.cubbossa.pathfinder.core.commands;
 
 import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Edge;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.util.CommandUtils;
@@ -16,10 +11,6 @@ import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.DoubleArgument;
 import dev.jorel.commandapi.arguments.LocationType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -28,6 +19,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class WaypointCommand extends Command {
 
@@ -54,7 +50,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_INFO)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              onInfo(player, (NodeSelection) objects[0]);
+              onInfo(player, objects.<NodeSelection>getUnchecked(0));
             })
         )
     );
@@ -62,12 +58,12 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_LIST)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              onList(player, (NodeSelection) objects[0], 1);
+              onList(player, objects.<NodeSelection>getUnchecked(0), 1);
             })
             .then(CustomArgs.integer("page", 1)
                 .displayAsOptional()
                 .executesPlayer((player, objects) -> {
-                  onList(player, (NodeSelection) objects[0], (Integer) objects[1]);
+                  onList(player, objects.<NodeSelection>getUnchecked(0), objects.<Integer>getUnchecked(1));
                 })
             ))
     );
@@ -75,25 +71,25 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_CREATE)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executesPlayer((player, objects) -> {
-              onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
+              onCreate(player, objects.<RoadMap>getUnchecked(0), RoadMapHandler.WAYPOINT_TYPE,
                   player.getLocation().add(new Vector(0, 1, 0)));
             })
             .then(CustomArgs.location("location")
                 .displayAsOptional()
                 .executesPlayer((player, objects) -> {
-                  onCreate(player, (RoadMap) objects[0], RoadMapHandler.WAYPOINT_TYPE,
-                      (Location) objects[1]);
+                  onCreate(player, objects.<RoadMap>getUnchecked(0), RoadMapHandler.WAYPOINT_TYPE,
+                      objects.<Location>getUnchecked(1));
                 })
             )
             .then(CustomArgs.nodeTypeArgument("type")
                 .executesPlayer((player, objects) -> {
-                  onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
+                  onCreate(player, objects.<RoadMap>getUnchecked(0), objects.<NodeType<? extends Node>>getUnchecked(1),
                       player.getLocation().add(new Vector(0, 1, 0)));
                 })
                 .then(CustomArgs.location("location")
                     .executesPlayer((player, objects) -> {
-                      onCreate(player, (RoadMap) objects[0], (NodeType<? extends Node>) objects[1],
-                          (Location) objects[2]);
+                      onCreate(player, objects.<RoadMap>getUnchecked(0), objects.<NodeType<? extends Node>>getUnchecked(1),
+                          objects.<Location>getUnchecked(2));
                     })
                 )
             )
@@ -103,7 +99,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_DELETE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              onDelete(player, (NodeSelection) objects[0]);
+              onDelete(player, objects.<NodeSelection>getUnchecked(0));
             })
         )
     );
@@ -111,7 +107,7 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_TPHERE)
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .executesPlayer((player, objects) -> {
-              onTp(player, (NodeSelection) objects[0], player.getLocation());
+              onTp(player, objects.<NodeSelection>getUnchecked(0), player.getLocation());
             })
         )
     );
@@ -120,7 +116,7 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("nodes")
             .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, objects) -> {
-                  onTp(player, (NodeSelection) objects[0], (Location) objects[1]);
+                  onTp(player, objects.<NodeSelection>getUnchecked(0), objects.<Location>getUnchecked(1));
                 })
             )
         )
@@ -130,7 +126,7 @@ public class WaypointCommand extends Command {
         .then(CustomArgs.nodeSelectionArgument("start")
             .then(CustomArgs.nodeSelectionArgument("end")
                 .executesPlayer((player, objects) -> {
-                  onConnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
+                  onConnect(player, objects.<NodeSelection>getUnchecked(0), objects.<NodeSelection>getUnchecked(1));
                 })
             )
         )
@@ -139,12 +135,12 @@ public class WaypointCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_WP_DISCONNECT)
         .then(CustomArgs.nodeSelectionArgument("start")
             .executesPlayer((player, objects) -> {
-              onDisconnect(player, (NodeSelection) objects[0], null);
+              onDisconnect(player, objects.<NodeSelection>getUnchecked(0), null);
             })
             .then(CustomArgs.nodeSelectionArgument("end")
                 .displayAsOptional()
                 .executesPlayer((player, objects) -> {
-                  onDisconnect(player, (NodeSelection) objects[0], (NodeSelection) objects[1]);
+                  onDisconnect(player, objects.<NodeSelection>getUnchecked(0), objects.<NodeSelection>getUnchecked(1));
                 })
             )
         )
@@ -156,20 +152,20 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
                 .then(new DoubleArgument("length", 0.001)
                     .executesPlayer((player, objects) -> {
-                      onSetTangent(player, (NodeSelection) objects[0], (Double) objects[1]);
+                      onSetTangent(player, objects.<NodeSelection>getUnchecked(0), objects.<Double>getUnchecked(1));
                     })
                 )
             )
             .then(CustomArgs.literal("reset-curve-length")
                 .withPermission(PathPlugin.PERM_CMD_WP_SET_CURVE)
                 .executesPlayer((player, objects) -> {
-                  onSetTangent(player, (NodeSelection) objects[0], null);
+                  onSetTangent(player, objects.<NodeSelection>getUnchecked(0), null);
                 }))
             .then(CustomArgs.literal("addgroup")
                 .withPermission(PathPlugin.PERM_CMD_WP_ADD_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      onAddGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+                      onAddGroup(player, objects.<NodeSelection>getUnchecked(0), objects.<NodeGroup>getUnchecked(1));
                     })
                 )
             )
@@ -177,14 +173,14 @@ public class WaypointCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_WP_REMOVE_GROUP)
                 .then(CustomArgs.nodeGroupArgument("group")
                     .executesPlayer((player, objects) -> {
-                      onRemoveGroup(player, (NodeSelection) objects[0], (NodeGroup) objects[1]);
+                      onRemoveGroup(player, objects.<NodeSelection>getUnchecked(0), objects.<NodeGroup>getUnchecked(1));
                     })
                 )
             )
             .then(CustomArgs.literal("cleargroups")
                 .withPermission(PathPlugin.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, objects) -> {
-                  onClearGroups(player, (NodeSelection) objects[0]);
+                  onClearGroups(player, objects.<NodeSelection>getUnchecked(0));
                 })
             )
         )

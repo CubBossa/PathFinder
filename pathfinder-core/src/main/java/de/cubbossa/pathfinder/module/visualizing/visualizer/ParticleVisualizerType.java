@@ -6,11 +6,10 @@ import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
+import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
-import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -21,6 +20,8 @@ import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Map;
 
 public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisualizer> {
 
@@ -48,41 +49,41 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   }
 
   @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
+  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                       int argumentOffset) {
     return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
         .then(CustomArgs.literal("particle")
             .then(new ParticleArgument("particle")
                 .executes((commandSender, objects) -> {
-                  ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
-                  onSetParticle(commandSender, visualizer, (ParticleData) objects[argumentOffset],
+                  ParticleVisualizer visualizer = objects.<ParticleVisualizer>getUnchecked(visualizerIndex);
+                  onSetParticle(commandSender, visualizer, objects.<ParticleData>getUnchecked(argumentOffset),
                       null, null, null);
                 })
                 .then(CustomArgs.integer("amount", 1)
                     .executes((commandSender, objects) -> {
-                      ParticleVisualizer visualizer = (ParticleVisualizer) objects[visualizerIndex];
+                      ParticleVisualizer visualizer = objects.<ParticleVisualizer>getUnchecked(visualizerIndex);
                       onSetParticle(commandSender, visualizer,
-                          (ParticleData) objects[argumentOffset],
-                          (Integer) objects[argumentOffset + 1], null, null);
+                          objects.<ParticleData>getUnchecked(argumentOffset),
+                          objects.<Integer>getUnchecked(argumentOffset + 1), null, null);
                     })
                     .then(new FloatArgument("speed", 0)
                         .executes((commandSender, objects) -> {
                           ParticleVisualizer visualizer =
-                              (ParticleVisualizer) objects[visualizerIndex];
+                              objects.<ParticleVisualizer>getUnchecked(visualizerIndex);
                           onSetParticle(commandSender, visualizer,
-                              (ParticleData) objects[argumentOffset],
-                              (Integer) objects[argumentOffset + 1],
-                              (Float) objects[argumentOffset + 2], null);
+                              objects.<ParticleData>getUnchecked(argumentOffset),
+                              objects.<Integer>getUnchecked(argumentOffset + 1),
+                              objects.<Float>getUnchecked(argumentOffset + 2), null);
                         })
                         .then(CustomArgs.location("offset")
                             .executes((commandSender, objects) -> {
                               ParticleVisualizer visualizer =
-                                  (ParticleVisualizer) objects[visualizerIndex];
+                                  objects.<ParticleVisualizer>getUnchecked(visualizerIndex);
                               onSetParticle(commandSender, visualizer,
-                                  (ParticleData) objects[argumentOffset],
-                                  (Integer) objects[argumentOffset + 1],
-                                  (Float) objects[argumentOffset + 2],
-                                  ((Location) objects[argumentOffset + 3]).toVector());
+                                  objects.<ParticleData>getUnchecked(argumentOffset),
+                                  objects.<Integer>getUnchecked(argumentOffset + 1),
+                                  objects.<Float>getUnchecked(argumentOffset + 2),
+                                  (objects.<Location>getUnchecked(argumentOffset + 3)).toVector());
                             })
                         )
                     )

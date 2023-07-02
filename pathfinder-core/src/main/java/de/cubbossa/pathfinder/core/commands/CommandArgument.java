@@ -1,12 +1,11 @@
 package de.cubbossa.pathfinder.core.commands;
 
-import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathfinder.util.CommandUtils;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.CommandAPIArgumentType;
-import dev.jorel.commandapi.nms.NMS;
+import dev.jorel.commandapi.executors.CommandArguments;
 
 public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
 
@@ -25,13 +24,8 @@ public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
   }
 
   @Override
-  public String getNodeName() {
-    return argument.getNodeName();
-  }
-
-  @Override
-  public ArgumentType<?> getRawType() {
-    return argument.getRawType();
+  public <Source> S parseArgument(CommandContext<Source> cmdCtx, String key, CommandArguments previousArgs) throws CommandSyntaxException {
+    return argument.parseArgument(cmdCtx, key, previousArgs);
   }
 
   public CommandArgument<S, T> withGeneratedHelp() {
@@ -83,12 +77,5 @@ public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
   @Override
   public CommandAPIArgumentType getArgumentType() {
     return argument.getArgumentType();
-  }
-
-  @Override
-  public <CommandSourceStack> S parseArgument(NMS<CommandSourceStack> nms,
-                                              CommandContext<CommandSourceStack> cmdCtx, String key,
-                                              Object[] previousArgs) throws CommandSyntaxException {
-    return argument.parseArgument(nms, cmdCtx, key, previousArgs);
   }
 }

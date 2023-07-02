@@ -48,7 +48,7 @@ dependencies {
     runtimeOnly("org.snakeyaml:snakeyaml-engine:2.4")
 
     // Commands
-    api("de.cubbossa:commandapi-shade:8.8.0")
+    api("dev.jorel:commandapi-bukkit-shade:9.0.3")
 
     // Other
     implementation("org.jooq:jooq:3.18.0")
@@ -202,8 +202,7 @@ tasks {
             include(dependency("de.cubbossa:NBO-Core:.*"))
             include(dependency("de.cubbossa:SerializedEffects:.*"))
             include(dependency("org.bstats:.*"))
-            include(dependency("xyz.xenondevs:particle:.*"))
-            include(dependency("de.cubbossa:commandapi-shade:.*"))
+            include(dependency("dev.jorel:commandapi-bukkit-shade:.*"))
             include(dependency("org.openjdk.nashorn:nashorn-core:.*"))
             include(dependency("org.ow2.asm:asm:.*"))
             include(dependency("org.ow2.asm:asm-util:.*"))
@@ -230,7 +229,6 @@ tasks {
         relocate("de.cubbossa.menuframework", "gui")
         relocate("de.cubbossa.translations", "translations")
         relocate("de.cubbossa.splinelib", "splinelib")
-        relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
         relocate("org.antlr", "antlr")

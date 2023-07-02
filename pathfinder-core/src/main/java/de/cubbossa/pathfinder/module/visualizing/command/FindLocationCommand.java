@@ -16,7 +16,7 @@ public class FindLocationCommand extends Command {
 
     then(CustomArgs.location("location")
         .executesPlayer((player, args) -> {
-          Location target = (Location) args[0];
+          Location target = args.<Location>getUnchecked(0);
           FindModule.printResult(FindModule.getInstance().findPath(player, target), player);
         })
     );

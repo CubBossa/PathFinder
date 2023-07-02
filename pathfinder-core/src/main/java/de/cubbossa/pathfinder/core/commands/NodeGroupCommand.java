@@ -13,11 +13,6 @@ import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -27,6 +22,12 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * A command to manage NodeGroups.
@@ -64,7 +65,7 @@ public class NodeGroupCommand extends Command {
         .then(CustomArgs.integer("page", 1)
             .displayAsOptional()
             .executes((sender, objects) -> {
-              listGroups(sender, (int) objects[offset]);
+              listGroups(sender, objects.<Integer>getUnchecked(offset));
             })));
 
     then(CustomArgs.literal("create")
@@ -73,7 +74,7 @@ public class NodeGroupCommand extends Command {
         .then(new StringArgument("name")
             .executes((sender, args) -> {
               createGroup(sender,
-                  new NamespacedKey(PathPlugin.getInstance(), args[offset].toString()));
+                  new NamespacedKey(PathPlugin.getInstance(), args.<Integer>getUnchecked(offset).toString()));
             })));
 
     then(CustomArgs.literal("delete")
@@ -81,7 +82,7 @@ public class NodeGroupCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_NG_DELETE)
         .then(CustomArgs.nodeGroupArgument("group")
             .executes((sender, objects) -> {
-              deleteGroup(sender, (NodeGroup) objects[offset]);
+              deleteGroup(sender, objects.<NodeGroup>getUnchecked(offset));
             })));
 
     then(CustomArgs.literal("search-terms")
@@ -98,8 +99,8 @@ public class NodeGroupCommand extends Command {
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
                     .executes((sender, objects) -> {
-                      searchTermsAdd(sender, (NodeGroup) objects[offset],
-                          (String) objects[offset + 1]);
+                      searchTermsAdd(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<String>getUnchecked(offset + 1));
                     }))))
         .then(CustomArgs.literal("remove")
             .withGeneratedHelp()
@@ -107,15 +108,15 @@ public class NodeGroupCommand extends Command {
             .then(CustomArgs.nodeGroupArgument("group")
                 .then(CustomArgs.suggestCommaSeparatedList("search-terms")
                     .executes((sender, objects) -> {
-                      searchTermsRemove(sender, (NodeGroup) objects[offset],
-                          (String) objects[offset + 1]);
+                      searchTermsRemove(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<String>getUnchecked(offset + 1));
                     }))))
         .then(CustomArgs.literal("list")
             .withGeneratedHelp()
             .withPermission(PathPlugin.PERM_CMD_NG_ST_LIST)
             .then(CustomArgs.nodeGroupArgument("group")
                 .executes((sender, objects) -> {
-                  searchTermsList(sender, (NodeGroup) objects[offset]);
+                  searchTermsList(sender, objects.<NodeGroup>getUnchecked(offset));
                 }))));
     then(CustomArgs.literal("edit")
         .withGeneratedHelp()
@@ -131,10 +132,10 @@ public class NodeGroupCommand extends Command {
                 .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAME)
                 .then(CustomArgs.miniMessageArgument("name",
-                        i -> Lists.newArrayList(((NodeGroup) i.previousArgs()[0]).getNameFormat()))
+                        i -> Lists.newArrayList(((NodeGroup) i.previousArgs().getUnchecked(0)).getNameFormat()))
                     .executes((sender, objects) -> {
-                      renameGroup(sender, (NodeGroup) objects[offset],
-                          (String) objects[offset + 1]);
+                      renameGroup(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<String>getUnchecked(offset + 1));
                     })
                 ))
             .then(CustomArgs.literal("permission")
@@ -142,8 +143,8 @@ public class NodeGroupCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_PERM)
                 .then(new GreedyStringArgument("permission")
                     .executes((sender, objects) -> {
-                      setGroupPermission(sender, (NodeGroup) objects[offset],
-                          (String) objects[offset + 1]);
+                      setGroupPermission(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<String>getUnchecked(offset + 1));
                     })
                 ))
             .then(CustomArgs.literal("navigable")
@@ -151,8 +152,8 @@ public class NodeGroupCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_NAVIGABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
-                      setGroupNavigable(sender, (NodeGroup) objects[offset],
-                          (Boolean) objects[offset + 1]);
+                      setGroupNavigable(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<Boolean>getUnchecked(offset + 1));
                     })
                 ))
             .then(CustomArgs.literal("discoverable")
@@ -160,16 +161,16 @@ public class NodeGroupCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVERABLE)
                 .then(new BooleanArgument("value")
                     .executes((sender, objects) -> {
-                      setGroupDiscoverable(sender, (NodeGroup) objects[offset],
-                          (Boolean) objects[offset + 1]);
+                      setGroupDiscoverable(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<Boolean>getUnchecked(offset + 1));
                     })))
             .then(CustomArgs.literal("find-distance")
                 .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_NG_SET_DISCOVER_DIST)
                 .then(new FloatArgument("value", 0.01f)
                     .executes((sender, objects) -> {
-                      setGroupDiscoverDist(sender, (NodeGroup) objects[offset],
-                          (Float) objects[offset + 1]);
+                      setGroupDiscoverDist(sender, objects.<NodeGroup>getUnchecked(offset),
+                          objects.<Float>getUnchecked(offset + 1));
                     })))));
   }
 

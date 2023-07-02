@@ -1,53 +1,22 @@
 package de.cubbossa.pathfinder.editmode.utils;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import de.tr7zw.changeme.nbtapi.NBTContainer;
 import de.tr7zw.changeme.nbtapi.NBTItem;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @UtilityClass
 public class DataUtils {
 
   private static final Pattern PTN_ITEMSTACK =
       Pattern.compile("\\{id:\"([a-z:_])\",Count:([0-9]+)b,tag:(\\{.*})}");
-
-  public String serializeParticle(ParticleBuilder particle) {
-    JsonObject obj = new JsonObject();
-    obj.addProperty("type", "NONE");
-    return obj.toString();
-  }
-
-  public ParticleBuilder deserializeParticle(String input) {
-
-    JsonObject object = JsonParser.parseString(input).getAsJsonObject();
-    String type = object.get("type").getAsString();
-    int amount = object.get("amount").getAsInt();
-    JsonArray offsetArray = object.get("offset").getAsJsonArray();
-    Vector offset = new Vector(
-        offsetArray.get(0).getAsDouble(),
-        offsetArray.get(1).getAsDouble(),
-        offsetArray.get(2).getAsDouble());
-    float speed = object.get("speed").getAsFloat();
-    JsonObject data = object.get("data").getAsJsonObject();
-
-
-    return new ParticleBuilder(ParticleEffect.valueOf(type.toUpperCase()))
-        .setAmount(amount)
-        .setOffset(offset)
-        .setSpeed(speed);
-  }
 
   public String serializeItemStack(ItemStack stack) {
     return new NBTItem(stack).toString();

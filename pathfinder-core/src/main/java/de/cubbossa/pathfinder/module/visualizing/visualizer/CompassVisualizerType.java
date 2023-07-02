@@ -5,12 +5,13 @@ import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.pathfinder.core.commands.CustomArgs;
 import de.cubbossa.pathfinder.module.visualizing.InternalVisualizerType;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
-import java.util.Map;
+import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
+
+import java.util.Map;
 
 public class CompassVisualizerType extends InternalVisualizerType<CompassVisualizer> {
 
@@ -43,8 +44,8 @@ public class CompassVisualizerType extends InternalVisualizerType<CompassVisuali
   }
 
   @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
+  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                       int argumentOffset) {
     return tree
         .then(subCommand("color", CustomArgs.enumArgument("value", BossBar.Color.class),
             BossBarVisualizer.PROP_COLOR))

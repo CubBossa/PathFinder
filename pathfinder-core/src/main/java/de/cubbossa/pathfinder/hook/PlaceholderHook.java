@@ -8,15 +8,7 @@ import de.cubbossa.pathfinder.module.visualizing.VisualizerHandler;
 import de.cubbossa.pathfinder.module.visualizing.VisualizerType;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PlaceholderVisualizer;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Supplier;
+import dev.jorel.commandapi.arguments.Argument;
 import lombok.Getter;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -25,6 +17,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.function.Supplier;
 
 public class PlaceholderHook extends PlaceholderExpansion implements Dependency {
 
@@ -53,8 +48,8 @@ public class PlaceholderHook extends PlaceholderExpansion implements Dependency 
         }
 
         @Override
-        public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                              int argumentOffset) {
+        public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                             int argumentOffset) {
           Arrays.stream(PlaceholderVisualizer.PROPS).forEach(prop -> {
             tree.then(subCommand(prop.getKey(), CustomArgs.miniMessageArgument("format",
                 Objects.equals(prop.getKey(), PlaceholderVisualizer.PROP_DISTANCE.getKey())

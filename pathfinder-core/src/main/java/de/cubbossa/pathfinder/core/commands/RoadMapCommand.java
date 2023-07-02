@@ -13,10 +13,6 @@ import de.cubbossa.translations.FormattedMessage;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.DoubleArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
-import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -25,6 +21,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 /**
  * A command to manage all roadmap instances.
@@ -56,7 +55,7 @@ public class RoadMapCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_RM_INFO)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executes((commandSender, args) -> {
-              onInfo(commandSender, (RoadMap) args[0]);
+              onInfo(commandSender, args.getUnchecked(0));
             })));
 
     then(CustomArgs.literal("create")
@@ -64,7 +63,7 @@ public class RoadMapCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_RM_CREATE)
         .then(new StringArgument("key")
             .executes((player, args) -> {
-              onCreate(player, new NamespacedKey(PathPlugin.getInstance(), (String) args[0]));
+              onCreate(player, new NamespacedKey(PathPlugin.getInstance(), args.getUnchecked(0)));
             })));
 
     then(CustomArgs.literal("delete")
@@ -72,7 +71,7 @@ public class RoadMapCommand extends Command {
         .withPermission(PathPlugin.PERM_CMD_RM_DELETE)
         .then(CustomArgs.roadMapArgument("roadmap")
             .executes((commandSender, args) -> {
-              onDelete(commandSender, (RoadMap) args[0]);
+              onDelete(commandSender, (RoadMap) args.getUnchecked(0));
             })));
 
     then(CustomArgs.literal("editmode")
@@ -87,7 +86,7 @@ public class RoadMapCommand extends Command {
         })
         .then(CustomArgs.roadMapArgument("roadmap")
             .executesPlayer((player, objects) -> {
-              onEdit(player, (RoadMap) objects[0]);
+              onEdit(player, objects.<RoadMap>getUnchecked(0));
             })));
 
     then(CustomArgs.literal("list")
@@ -98,7 +97,7 @@ public class RoadMapCommand extends Command {
         .then(CustomArgs.integer("page", 1)
             .displayAsOptional()
             .executes((commandSender, args) -> {
-              onList(commandSender, (Integer) args[0]);
+              onList(commandSender, args.<Integer>getUnchecked(0));
             })));
 
     then(CustomArgs.literal("forcefind")
@@ -110,7 +109,7 @@ public class RoadMapCommand extends Command {
                 .withGeneratedHelp()
                 .then(CustomArgs.discoverableArgument("discovering")
                     .executes((commandSender, args) -> {
-                      onForceFind(commandSender, (Player) args[1], (Discoverable) args[2]);
+                      onForceFind(commandSender, args.<Player>getUnchecked(1), args.<Discoverable>getUnchecked(2));
                     })))));
     then(CustomArgs.literal("forceforget")
         .withGeneratedHelp()
@@ -121,7 +120,7 @@ public class RoadMapCommand extends Command {
                 .withGeneratedHelp()
                 .then(CustomArgs.discoverableArgument("discovering")
                     .executes((commandSender, args) -> {
-                      onForceForget(commandSender, (Player) args[1], (Discoverable) args[2]);
+                      onForceForget(commandSender, args.<Player>getUnchecked(1), args.<Discoverable>getUnchecked(2));
                     })))));
 
     then(CustomArgs.literal("edit")
@@ -138,7 +137,7 @@ public class RoadMapCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_VIS)
                 .then(CustomArgs.pathVisualizerArgument("visualizer")
                     .executes((commandSender, args) -> {
-                      onStyle(commandSender, (RoadMap) args[0], (PathVisualizer<?, ?>) args[1]);
+                      onStyle(commandSender, args.<RoadMap>getUnchecked(0), args.<PathVisualizer<?, ?>>getUnchecked(1));
                     })))
 
             .then(CustomArgs.literal("name")
@@ -146,14 +145,14 @@ public class RoadMapCommand extends Command {
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_NAME)
                 .then(CustomArgs.miniMessageArgument("name")
                     .executes((commandSender, args) -> {
-                      onRename(commandSender, (RoadMap) args[0], (String) args[1]);
+                      onRename(commandSender, args.<RoadMap>getUnchecked(0), args.<String>getUnchecked(1));
                     })))
             .then(CustomArgs.literal("curve-length")
                 .withGeneratedHelp()
                 .withPermission(PathPlugin.PERM_CMD_RM_SET_CURVE)
                 .then(new DoubleArgument("curvelength", 0)
                     .executes((commandSender, args) -> {
-                      onChangeTangentStrength(commandSender, (RoadMap) args[0], (Double) args[1]);
+                      onChangeTangentStrength(commandSender, args.<RoadMap>getUnchecked(0), args.<Double>getUnchecked(1));
                     })))));
   }
 

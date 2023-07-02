@@ -44,9 +44,6 @@ dependencies {
     // UI
     implementation("de.cubbossa:MenuFramework:1.2")
 
-    // Precompiled Particles
-    implementation("xyz.xenondevs:particle:1.8.3")
-
     // Client ArmorStands
     compileOnly("com.comphenix.protocol:ProtocolLib:5.0.0-SNAPSHOT")
 }
@@ -69,7 +66,6 @@ tasks {
 
         dependencies {
             include(dependency("de.cubbossa:MenuFramework:.*"))
-            include(dependency("xyz.xenondevs:particle:.*"))
             include(dependency("de.tr7zw:item-nbt-api:.*"))
         }
 
@@ -78,7 +74,6 @@ tasks {
         }
 
         relocate("de.cubbossa.menuframework", "gui")
-        relocate("xyz.xenondevs.particle", "particle")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
     }
     test {

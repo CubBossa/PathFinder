@@ -1,19 +1,11 @@
 package de.cubbossa.pathfinder.core.commands;
 
-import static de.cubbossa.pathfinder.core.commands.CommandArgument.arg;
-
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.core.node.Discoverable;
-import de.cubbossa.pathfinder.core.node.Navigable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.node.NodeTypeHandler;
+import de.cubbossa.pathfinder.core.node.*;
 import de.cubbossa.pathfinder.core.roadmap.RoadMap;
 import de.cubbossa.pathfinder.core.roadmap.RoadMapHandler;
 import de.cubbossa.pathfinder.module.visualizing.FindModule;
@@ -25,29 +17,7 @@ import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import dev.jorel.commandapi.SuggestionInfo;
-import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.CustomArgument;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.IntegerArgument;
-import dev.jorel.commandapi.arguments.LocationArgument;
-import dev.jorel.commandapi.arguments.LocationType;
-import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
-import dev.jorel.commandapi.arguments.PlayerArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
-import dev.jorel.commandapi.arguments.TextArgument;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import dev.jorel.commandapi.arguments.*;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -56,6 +26,16 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static de.cubbossa.pathfinder.core.commands.CommandArgument.arg;
 
 /**
  * A collection of custom command arguments for the CommandAPI.
@@ -121,7 +101,7 @@ public class CustomArgs {
       try {
         return Enum.valueOf(scope, info.input().toUpperCase());
       } catch (IllegalArgumentException e) {
-        throw new CustomArgument.CustomArgumentException("Invalid input value: " + info.input());
+        throw CustomArgument.CustomArgumentException.fromString("Invalid input value: " + info.input());
       }
     })).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
       Arrays.stream(scope.getEnumConstants())
@@ -205,7 +185,7 @@ public class CustomArgs {
           RoadMap roadMap =
               RoadMapHandler.getInstance().getRoadMap(customArgumentInfo.currentInput());
           if (roadMap == null) {
-            throw new CustomArgument.CustomArgumentException(
+            throw CustomArgument.CustomArgumentException.fromString(
                 "Unknown roadmap: '" + customArgumentInfo.currentInput() + "'.");
           }
           return roadMap;
@@ -227,7 +207,7 @@ public class CustomArgs {
       PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
           .get(customArgumentInfo.currentInput());
       if (vis == null) {
-        throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+        throw CustomArgument.CustomArgumentException.fromString("There is no visualizer with this key.");
       }
       return vis;
     })).includeSuggestions(suggestNamespacedKeys(sender ->
@@ -250,10 +230,10 @@ public class CustomArgs {
       PathVisualizer<?, ?> vis = VisualizerHandler.getInstance().getPathVisualizerMap()
           .get(customArgumentInfo.currentInput());
       if (vis == null) {
-        throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+        throw CustomArgument.CustomArgumentException.fromString("There is no visualizer with this key.");
       }
       if (!vis.getType().equals(type)) {
-        throw new CustomArgument.CustomArgumentException(
+        throw CustomArgument.CustomArgumentException.fromString(
             "Visualizer '" + customArgumentInfo.currentInput() + "' is not of type "
                 + type.getCommandName());
       }
@@ -273,7 +253,7 @@ public class CustomArgs {
    * @param keysSupplier Converts a command sender into a collection of namespaced keys
    * @return the argument suggestions object to insert
    */
-  public ArgumentSuggestions suggestNamespacedKeys(NamespacedSuggestions keysSupplier) {
+  public ArgumentSuggestions<CommandSender> suggestNamespacedKeys(NamespacedSuggestions keysSupplier) {
     return (suggestionInfo, suggestionsBuilder) -> {
 
       Collection<NamespacedKey> keys = keysSupplier.apply(suggestionInfo.sender());
@@ -318,7 +298,7 @@ public class CustomArgs {
       NodeType<T> type =
           NodeTypeHandler.getInstance().getNodeType(customArgumentInfo.currentInput());
       if (type == null) {
-        throw new CustomArgument.CustomArgumentException(
+        throw CustomArgument.CustomArgumentException.fromString(
             "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
       }
       return type;
@@ -346,7 +326,7 @@ public class CustomArgs {
               return SelectionUtils.getNodeSelection(player,
                   info.input().substring(1, info.input().length() - 1));
             } catch (CommandSyntaxException | ParseCancellationException e) {
-              throw new CustomArgument.CustomArgumentException(e.getMessage());
+              throw CustomArgument.CustomArgumentException.fromString(e.getMessage());
             }
           }
           return new NodeSelection();
@@ -366,7 +346,7 @@ public class CustomArgs {
         new CustomArgument<>(new NamespacedKeyArgument(nodeName), info -> {
           NodeGroup group = NodeGroupHandler.getInstance().getNodeGroup(info.currentInput());
           if (group == null) {
-            throw new CustomArgument.CustomArgumentException(
+            throw CustomArgument.CustomArgumentException.fromString(
                 "There is no nodegroup with this name.");
           }
           return group;
@@ -390,7 +370,7 @@ public class CustomArgs {
           NodeGroup group =
               NodeGroupHandler.getInstance().getNodeGroup(customArgumentInfo.currentInput());
           if (group == null) {
-            throw new CustomArgument.CustomArgumentException(
+            throw CustomArgument.CustomArgumentException.fromString(
                 "There is no discoverable object with this name.");
           }
           return group;
@@ -408,7 +388,7 @@ public class CustomArgs {
   public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
     return arg(new CustomArgument<>(new GreedyStringArgument(nodeName), context -> {
       if (!(context.sender() instanceof Player player)) {
-        throw new CustomArgument.CustomArgumentException("Only for players");
+        throw CustomArgument.CustomArgumentException.fromString("Only for players");
       }
       String search = context.currentInput();
       List<Node<?>> scope = RoadMapHandler.getInstance().getRoadMaps().values().stream()
@@ -425,7 +405,7 @@ public class CustomArgs {
         Collection<Node<?>> target = new FindQueryParser().parse(search, scope);
         return new NodeSelection(target);
       } catch (Throwable t) {
-        throw new CustomArgument.CustomArgumentException(t.getMessage());
+        throw CustomArgument.CustomArgumentException.fromString(t.getMessage());
       }
     }))
         .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
@@ -494,7 +474,7 @@ public class CustomArgs {
       VisualizerType<?> type =
           VisualizerHandler.getInstance().getVisualizerType(customArgumentInfo.currentInput());
       if (type == null) {
-        throw new CustomArgument.CustomArgumentException(
+        throw CustomArgument.CustomArgumentException.fromString(
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");
       }
       return type;

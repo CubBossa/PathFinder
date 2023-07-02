@@ -3,26 +3,25 @@ package de.cubbossa.pathfinder.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.Messages;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
-import dev.jorel.commandapi.ArgumentTreeLike;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandTree;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import dev.jorel.commandapi.arguments.Argument;
 import lombok.experimental.UtilityClass;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 @UtilityClass
 public class CommandUtils {
 
-  private CommandHelpGenerator generator = new CommandHelpGenerator();
+//  private CommandHelpGenerator generator = new CommandHelpGenerator();
 
   public void unregister(CommandTree tree) {
     if (tree != null) {
@@ -30,17 +29,17 @@ public class CommandUtils {
     }
   }
 
-  public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree) {
+  public void sendHelp(CommandSender sender, Argument<?> tree) {
     sendHelp(sender, tree, -1);
   }
 
-  public void sendHelp(CommandSender sender, ArgumentTreeLike<?, ?> tree, int depth) {
-    Audience audience = TranslationHandler.getInstance().getAudiences().sender(sender);
-    TranslationHandler.getInstance().sendMessage(Messages.CMD_INCOMPLETE, audience);
-    generator
-        .format(tree, depth).stream()
-        .map(c -> Messages.CMD_INCOMPLETE_LINE.format(Placeholder.component("cmd", c)))
-        .forEach(audience::sendMessage);
+  public void sendHelp(CommandSender sender, Argument<?> tree, int depth) {
+//    Audience audience = TranslationHandler.getInstance().getAudiences().sender(sender);
+//    TranslationHandler.getInstance().sendMessage(Messages.CMD_INCOMPLETE, audience);
+//    generator
+//        .format(tree, depth).stream()
+//        .map(c -> Messages.CMD_INCOMPLETE_LINE.format(Placeholder.component("cmd", c)))
+//        .forEach(audience::sendMessage);
   }
 
   /**

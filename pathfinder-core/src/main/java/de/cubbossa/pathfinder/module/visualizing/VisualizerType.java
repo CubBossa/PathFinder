@@ -1,21 +1,20 @@
 package de.cubbossa.pathfinder.module.visualizing;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.cubbossa.pathfinder.PathPlugin;
 import de.cubbossa.pathfinder.data.DataStorageException;
 import de.cubbossa.pathfinder.data.VisualizerDataStorage;
 import de.cubbossa.pathfinder.module.visualizing.visualizer.PathVisualizer;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
-import java.util.Map;
-import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -45,8 +44,8 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
 
   public abstract Message getInfoMessage(T element);
 
-  public abstract ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                                 int argumentOffset);
+  public abstract Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
+                                                int argumentOffset);
 
   public void deserialize(final T visualizer, Map<String, Object> values) {
   }
@@ -61,13 +60,13 @@ public abstract class VisualizerType<T extends PathVisualizer<T, ?>> implements 
     map.put(property.getKey(), property.getValue(visualizer));
   }
 
-  protected <A, V extends PathVisualizer<?, ?>> ArgumentTree subCommand(String node,
-                                                                        Argument<A> argument,
-                                                                        PathVisualizer.Property<V, A> property) {
+  protected <A, V extends PathVisualizer<?, ?>> Argument<?> subCommand(String node,
+                                                                       Argument<A> argument,
+                                                                       PathVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, objects) -> {
-      if (objects[0] instanceof PathVisualizer<?, ?> visualizer) {
+      if (objects.get(0) instanceof PathVisualizer<?, ?> visualizer) {
         VisualizerHandler.getInstance()
-            .setProperty(commandSender, (V) visualizer, property, (A) objects[1]);
+            .setProperty(commandSender, (V) visualizer, property, objects.<A>getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),

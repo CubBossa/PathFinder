@@ -13,10 +13,10 @@ public class MazeCommand extends CommandTree {
             .then(CustomArgs.integer("y")
                 .then(CustomArgs.roadMapArgument("roadmap")
                     .executesPlayer((player, objects) -> {
-                      Maze maze = new Maze((int) objects[0], (int) objects[1]);
+                      Maze maze = new Maze(objects.<Integer>getUnchecked(0), objects.<Integer>getUnchecked(1));
                       new MazeConverter(maze)
                           .convertMaze(new SimpleMazePattern(), player.getLocation())
-                          .convertMaze(new RoadMapMazePattern((RoadMap) objects[2]),
+                          .convertMaze(new RoadMapMazePattern(objects.<RoadMap>getUnchecked(2)),
                               player.getLocation());
                     })))));
   }

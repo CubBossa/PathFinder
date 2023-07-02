@@ -11,18 +11,18 @@ import de.cubbossa.pathfinder.module.visualizing.command.VisualizerImportCommand
 import de.cubbossa.serializedeffects.EffectHandler;
 import de.cubbossa.translations.TranslationHandler;
 import dev.jorel.commandapi.arguments.TextArgument;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.PluginDescriptionFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 /**
  * The basic command of this plugin, which handles things like reload, export, import, etc.
@@ -88,7 +88,7 @@ public class PathFinderCommand extends Command {
                   PathPlugin pl = PathPlugin.getInstance();
                   long now = System.currentTimeMillis();
                   Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String fileName = (String) objects[0];
+                    String fileName = objects.<String>getUnchecked(0);
                     if (!fileName.endsWith(".db")) {
                       fileName = fileName + ".db";
                     }
@@ -112,7 +112,7 @@ public class PathFinderCommand extends Command {
                   PathPlugin pl = PathPlugin.getInstance();
                   long now = System.currentTimeMillis();
                   Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                    String dir = (String) objects[0];
+                    String dir = objects.<String>getUnchecked(0);
                     if (!dir.startsWith("/")) {
                       dir = "/" + dir;
                     }
