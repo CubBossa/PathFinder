@@ -67,6 +67,7 @@ public class AbstractDiscoverHandler<PlayerT> {
     if (perm.isPresent() && !player.hasPermission(perm.get().permission())) {
       return false;
     }
+    // TODO join performance issues
     for (Node node : group.resolve().join()) {
       if (node == null) {
         plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO

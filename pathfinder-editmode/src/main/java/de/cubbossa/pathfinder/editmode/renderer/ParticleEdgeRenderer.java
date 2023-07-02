@@ -15,15 +15,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import xyz.xenondevs.particle.ParticleBuilder;
-import xyz.xenondevs.particle.ParticleEffect;
-import xyz.xenondevs.particle.utils.ParticleUtils;
 import xyz.xenondevs.particle.utils.ReflectionUtils;
 
-import java.awt.*;
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -74,7 +71,9 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
     Storage storage = PathFinderProvider.get().getStorage();
-    toRender.addAll(storage.loadEdgesTo(nodes).join());
+    toRender.addAll(storage.loadEdgesTo(nodes).join().stream()
+        .filter(edge -> rendered.contains(edge.getStart()))
+        .toList());
 
     for (Edge edge : toRender) {
       var future = FutureUtils.both(edge.resolveStart(), edge.resolveEnd()).thenAccept(entry -> {
@@ -113,8 +112,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
       var sched = Bukkit.getScheduler();
       new HashSet<>(editModeTasks).forEach(sched::cancelTask);
 
-      Map<org.bukkit.Location, Object> packets = new HashMap<>();
-      Map<Color, ParticleBuilder> particles = new HashMap<>();
+      Set<ParticleInfo> packets = new HashSet<>();
 
       for (var edge : edges.flatValues()) {
         if (!Objects.equals(edge.getStart().getWorld(), edge.getEnd().getWorld())) {
@@ -131,31 +129,31 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         double dist = a.distance(b);
 
         for (float i = 0; i < dist; i += config.getEdgeParticleSpacing()) {
-          Color c = directed
+          java.awt.Color c = directed
               ? LerpUtils.lerp(config.getEdgeParticleColorFrom(), config.getEdgeParticleColorTo(), i / dist)
               : config.getEdgeParticleColorFrom();
 
-          ParticleBuilder builder = particles.computeIfAbsent(c, k -> new ParticleBuilder(ParticleEffect.REDSTONE).setColor(k));
           org.bukkit.Location loc = BukkitUtils.lerp(a, b, i / dist)
               .toLocation(Bukkit.getWorld(edge.getStart().getWorld().getUniqueId()));
-          packets.put(loc, builder.setLocation(loc).toPacket());
+          // TODO conversion can be optimized
+          packets.add(new ParticleInfo(loc, Color.fromRGB(c.getRGB() & 0xffffff)));
         }
       }
-      Function<Integer, Supplier<List<Object>>> packetSupplier = i -> () -> {
+      Function<Integer, Supplier<Collection<ParticleInfo>>> packetSupplier = i -> () -> {
         Player p = player.unwrap();
         if (p == null || !p.isOnline()) {
           throw new IllegalStateException("Trying to render edit mode packets for offline player.");
         }
-        List<Object> packet = new ArrayList<>();
+        List<ParticleInfo> packet = new ArrayList<>();
         double distSquared = Math.pow(config.getEdgeParticleRenderDistance(), 2);
-        packets.forEach((location, o) -> {
-          if (!Objects.equals(location.getWorld(), p.getWorld())) {
+        packets.forEach((info) -> {
+          if (!Objects.equals(info.location().getWorld(), p.getWorld())) {
             return;
           }
-          if (location.distanceSquared(p.getLocation()) > distSquared) {
+          if (info.location().distanceSquared(p.getLocation()) > distSquared) {
             return;
           }
-          packet.add(o);
+          packet.add(info);
         });
         return CollectionUtils.everyNth(packet, 2, i);
       };
@@ -168,10 +166,15 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     });
   }
 
-  private int startTask(Supplier<List<Object>> packets, Player player, int delay) {
+  private int startTask(Supplier<Collection<ParticleInfo>> packets, Player player, int delay) {
     return Bukkit.getScheduler().runTaskTimerAsynchronously(ReflectionUtils.getPlugin(), () -> {
-      ParticleUtils.sendBulk(packets.get(), player);
+      for (ParticleInfo c : packets.get()) {
+        player.spawnParticle(Particle.REDSTONE, c.location(), 1, new Particle.DustOptions(c.color(), 1));
+      }
     }, delay, config.getEdgeParticleTickDelay()).getTaskId();
+  }
+
+  private record ParticleInfo(org.bukkit.Location location, Color color) {
   }
 
   @Setter

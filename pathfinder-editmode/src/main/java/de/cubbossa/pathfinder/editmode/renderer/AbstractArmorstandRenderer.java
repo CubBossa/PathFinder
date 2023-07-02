@@ -167,6 +167,11 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
       return;
     }
     retrieveFrom(element).thenAccept(location -> {
+      if (location.distanceSquared(player.getLocation()) > renderDistanceSquared) {
+        hiddenNodes.computeIfAbsent(player, player1 -> new HashSet<>()).add(element);
+        return;
+      }
+
       int id = spawnArmorstand(player, location, getName(element), isSmall(element));
 
       nodeEntityMap.put(element, id);

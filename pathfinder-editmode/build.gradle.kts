@@ -46,7 +46,7 @@ dependencies {
     implementation("de.cubbossa:MenuFramework:1.2")
 
     // Precompiled Particles
-    implementation("xyz.xenondevs:particle:1.8.3")
+    implementation("xyz.xenondevs:particle:1.8.4")
 
     // Client ArmorStands
     compileOnly("com.comphenix.protocol:ProtocolLib:5.0.0-SNAPSHOT")
