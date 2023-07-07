@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.node;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.misc.Location;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +33,8 @@ public interface Node extends Comparable<Node>, Cloneable {
   Location getLocation();
 
   void setLocation(Location location);
+
+  Changes<Edge> getEdgeChanges();
 
   Collection<Edge> getEdges();
 

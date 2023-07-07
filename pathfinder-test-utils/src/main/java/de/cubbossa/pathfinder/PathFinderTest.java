@@ -18,6 +18,7 @@ import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -106,6 +107,8 @@ public abstract class PathFinderTest {
 
     storage.init();
     storage.createGlobalNodeGroup(visualizerType).join();
+
+    StorageUtil.storage = storage;
   }
 
   public StorageImplementation inMemoryStorage() {
@@ -174,6 +177,14 @@ public abstract class PathFinderTest {
         .thenCompose(storage::insertGlobalGroupAndSave));
   }
 
+  protected Collection<NodeGroup> getGroups(Node node) {
+    return StorageUtil.getGroups(node);
+  }
+
+  protected Collection<NodeGroup> getGroups(UUID node) {
+    return StorageUtil.getGroups(node);
+  }
+
   protected void deleteWaypoint(Waypoint waypoint) {
     assertFuture(() -> storage.deleteNodes(new NodeSelection(waypoint).ids()));
   }
@@ -202,7 +213,8 @@ public abstract class PathFinderTest {
   }
 
   protected void assertEdge(UUID start, UUID end) {
-    Assertions.assertTrue(storage.loadNode(start).join().orElseThrow().hasConnection(end));
+    Node s = storage.loadNode(start).join().orElseThrow();
+    Assertions.assertTrue(s.hasConnection(end));
   }
 
   protected void assertNoEdge(UUID start, UUID end) {

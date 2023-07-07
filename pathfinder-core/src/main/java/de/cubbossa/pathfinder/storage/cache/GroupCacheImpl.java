@@ -5,13 +5,14 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.Groupable;
-import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.GroupCache;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
@@ -89,19 +90,9 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   public void write(NodeGroup group) {
     cache.put(group.getKey(), group);
-  }
-
-  @Override
-  public void write(Node node) {
-    if (node instanceof Groupable groupable) {
-      nodeGroupCache.put(node.getNodeId(), Set.copyOf(groupable.getGroups()));
-      for (NodeGroup present : cache.asMap().values()) {
-        if (groupable.getGroups().contains(present)) {
-          present.add(groupable.getNodeId());
-        } else {
-          present.remove(groupable.getNodeId());
-        }
-      }
+    for (UUID uuid : group) {
+      //TODO also remove?
+      nodeGroupCache.asMap().computeIfAbsent(uuid, uuid1 -> new HashSet<>()).add(group);
     }
   }
 
@@ -121,6 +112,11 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
     cachedAll = true;
   }
 
+  @Override
+  public void invalidate(UUID node) {
+    nodeGroupCache.invalidate(node);
+  }
+
   public void invalidate(NodeGroup group) {
     cache.invalidate(group.getKey());
     for (UUID nodeId : group) {
@@ -136,15 +132,5 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
     cache.invalidateAll();
     cachedAll = false;
     nodeGroupCache.invalidateAll();
-  }
-
-  @Override
-  public void invalidate(Node node) {
-    nodeGroupCache.invalidate(node.getNodeId());
-    if (node instanceof Groupable groupable) {
-      for (NodeGroup value : cache.asMap().values()) {
-        value.remove(groupable.getNodeId());
-      }
-    }
   }
 }

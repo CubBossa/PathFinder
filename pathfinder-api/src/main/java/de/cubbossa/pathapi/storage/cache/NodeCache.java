@@ -17,7 +17,7 @@ public interface NodeCache extends StorageCache<Node> {
 
   void writeAll(Collection<Node> nodes);
 
-  void write(NodeGroup group, Collection<UUID> deleted);
+  void write(NodeGroup group);
 
   void invalidate(UUID uuid);
 }

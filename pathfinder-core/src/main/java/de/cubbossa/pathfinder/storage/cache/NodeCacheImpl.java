@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.storage.cache;
 
 import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.cache.NodeCache;
 
@@ -48,24 +47,16 @@ public class NodeCacheImpl implements NodeCache {
   @Override
   public void writeAll(Collection<Node> nodes) {
     allCached = true;
-    nodes.forEach(node -> nodeCache.put(node.getNodeId(), node));
+    nodes.forEach(this::write);
+  }
+
+  @Override
+  public void write(NodeGroup group) {
+
   }
 
   public void write(Node node) {
     nodeCache.put(node.getNodeId(), node);
-  }
-
-  public void write(NodeGroup group, Collection<UUID> deleted) {
-    for (UUID uuid : group) {
-      if (nodeCache.get(uuid) instanceof Groupable groupable) {
-        groupable.addGroup(group);
-      }
-    }
-    for (UUID uuid : deleted) {
-      if (nodeCache.get(uuid) instanceof Groupable groupable) {
-        groupable.removeGroup(group.getKey());
-      }
-    }
   }
 
   public void invalidate(UUID uuid) {

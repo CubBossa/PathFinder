@@ -4,9 +4,9 @@ import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
@@ -91,11 +91,7 @@ public abstract class BezierPathVisualizer
       for (PathSegment segment : segments) {
         LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
         for (Node node : segment.nodes()) {
-          if (!(node instanceof Groupable groupable)) {
-            path.put(node, 1.);
-            continue;
-          }
-          CurveLengthModifier mod = groupable.getGroups().stream()
+          CurveLengthModifier mod = StorageUtil.getGroups(node).stream()
               .filter(g -> g.hasModifier(CurveLengthModifier.class))
               .sorted()
               .map(g -> g.<CurveLengthModifier>getModifier(CurveLengthModifier.KEY))

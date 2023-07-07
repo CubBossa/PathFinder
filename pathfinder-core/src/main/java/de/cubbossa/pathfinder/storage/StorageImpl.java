@@ -6,7 +6,10 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.*;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.*;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
@@ -25,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -161,26 +163,9 @@ public class StorageImpl implements Storage {
 
   @Override
   public <N extends Node> CompletableFuture<N> insertGlobalGroupAndSave(N node) {
-    if (!(node instanceof Groupable)) {
-      return CompletableFuture.completedFuture(node);
-    }
-    return loadGroup(CommonPathFinder.globalGroupKey())
-        .thenApply(Optional::orElseThrow)
-        .thenCompose(group -> modifyNode(node.getNodeId(), n -> {
-          ((Groupable) n).addGroup(group);
-          // also modify the instance we currently work on to skip reloading the node from cache in next step
-          ((Groupable) node).addGroup(group);
-        }).thenApply(unused -> node));
-  }
-
-  private <N extends Node> CompletableFuture<N> insertGroups(N node) {
-    if (!(node instanceof Groupable groupable)) {
-      return CompletableFuture.completedFuture(node);
-    }
-    return loadGroups(node.getNodeId()).thenApply(g -> {
-      g.forEach(groupable::addGroup);
-      return node;
-    });
+    return modifyGroup(CommonPathFinder.globalGroupKey(), group -> {
+      group.add(node.getNodeId());
+    }).thenApply(unused -> node);
   }
 
   private <N extends Node> CompletableFuture<N> insertEdges(N node) {
@@ -188,12 +173,13 @@ public class StorageImpl implements Storage {
       return implementation.loadEdgesFrom(node.getNodeId());
     }).thenApply(edges -> {
       node.getEdges().addAll(edges);
+      node.getEdgeChanges().flush();
       return node;
     });
   }
 
   private <N extends Node> CompletableFuture<N> prepareLoadedNode(N node) {
-    return insertGroups(node).thenCompose(this::insertEdges);
+    return insertEdges(node);
   }
 
   @Override
@@ -249,7 +235,6 @@ public class StorageImpl implements Storage {
     return saveNodeTypeSafeBlocking(node)
         .thenAccept(n -> {
           cache.getNodeCache().write(n);
-          cache.getGroupCache().write(n);
         })
         .thenRun(() -> {
           eventDispatcher().ifPresent(e -> e.dispatchNodeSave(node));
@@ -263,28 +248,7 @@ public class StorageImpl implements Storage {
   private <N extends Node> CompletableFuture<N> saveNodeTypeSafeBlocking(N node) {
     return this.<N>loadNodeType(node.getNodeId()).thenApply(Optional::orElseThrow).thenApplyAsync(type -> {
       // actually hard load and not cached to make sure that nodes are comparable
-      N before = type.loadNode(node.getNodeId()).map(this::prepareLoadedNode)
-          .map(CompletableFuture::join).orElseThrow();
       type.saveNode(node);
-
-      if (node == before) {
-        throw new IllegalStateException("Comparing node instance with itself while saving!");
-      }
-
-      if (before instanceof Groupable gBefore && node instanceof Groupable gAfter) {
-
-        StorageImpl.ComparisonResult<NodeGroup> cmp =
-            StorageImpl.ComparisonResult.compare(gBefore.getGroups(), gAfter.getGroups());
-        cmp.toInsertIfPresent(nodeGroups -> implementation.assignToGroups(nodeGroups, List.of(node.getNodeId())));
-        cmp.toDeleteIfPresent(nodeGroups -> implementation.unassignFromGroups(nodeGroups, List.of(node.getNodeId())));
-      }
-      StorageImpl.ComparisonResult<Edge> cmp = StorageImpl.ComparisonResult.compare(before.getEdges(), node.getEdges());
-      cmp.toInsertIfPresent(edges -> {
-        for (Edge edge : edges) {
-          implementation.createAndLoadEdge(edge.getStart(), edge.getEnd(), edge.getWeight());
-        }
-      });
-      cmp.toDeleteIfPresent(edges -> edges.forEach(implementation::deleteEdge));
       return node;
     });
   }
@@ -308,18 +272,14 @@ public class StorageImpl implements Storage {
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
     return loadNodes(uuids).thenCompose(nodes -> {
       return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenApplyAsync(types -> {
-        for (Node node : nodes) {
-          if (node instanceof Groupable groupable) {
-            implementation.unassignFromGroups(groupable.getGroups(), List.of(groupable.getNodeId()));
-          }
-          deleteNode(node, types.get(node.getNodeId()));
-          node.getEdges().forEach(implementation::deleteEdge);
-        }
         implementation.deleteNodeTypeMapping(uuids);
+        for (Node node : nodes) {
+          deleteNode(node, types.get(node.getNodeId()));
+        }
         implementation.deleteEdgesTo(uuids);
 
         uuids.forEach(cache.getNodeCache()::invalidate);
-        nodes.forEach(cache.getGroupCache()::invalidate);
+        uuids.forEach(cache.getGroupCache()::invalidate);
         uuids.forEach(cache.getNodeTypeCache()::invalidate);
         return nodes;
       });
@@ -425,7 +385,7 @@ public class StorageImpl implements Storage {
     return loadGroup(group.getKey()).thenAccept(g -> {
       implementation.saveGroup(group);
       cache.getGroupCache().write(group);
-      cache.getNodeCache().write(group, ComparisonResult.compare(g.orElseThrow(), group).toDelete());
+      cache.getNodeCache().write(group);
     });
   }
 
@@ -600,19 +560,21 @@ public class StorageImpl implements Storage {
   }
 
   public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier) {
-    return loadNodes().thenApply(nodes -> {
-      Map<Node, Collection<M>> results = new HashMap<>();
-      nodes.stream()
-          .filter(node -> node instanceof Groupable)
-          .map(node -> (Groupable) node)
-          .forEach(groupable -> {
-            for (NodeGroup group : groupable.getGroups()) {
-              group.<M>getModifier(modifier).ifPresent(m -> {
-                results.computeIfAbsent(groupable, g -> new HashSet<>()).add(m);
-              });
-            }
-          });
-      return results;
+    return loadGroups(modifier).thenCompose(groups -> {
+      return loadNodes(groups.stream().flatMap(Collection::stream).toList()).thenApply(nodes -> {
+        Map<Node, Collection<M>> results = new HashMap<>();
+        Map<UUID, Node> nodeMap = new HashMap<>();
+        nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
+
+        for (NodeGroup group : groups) {
+          for (UUID node : group) {
+            group.<M>getModifier(modifier).ifPresent(m -> {
+              results.computeIfAbsent(nodeMap.get(node), n -> new HashSet<>()).add(m);
+            });
+          }
+        }
+        return results;
+      });
     });
   }
 
@@ -634,33 +596,5 @@ public class StorageImpl implements Storage {
       return new IllegalStateException(
           "Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
-  }
-
-  public record ComparisonResult<T>(Collection<T> toDelete, Collection<T> toInsert) {
-
-    public static <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after) {
-      return compare(before, after, HashSet::new);
-    }
-
-    public static <T> ComparisonResult<T> compare(Collection<T> before, Collection<T> after,
-                                                  Function<Collection<T>, Collection<T>> collector) {
-      Collection<T> toDelete = collector.apply(before);
-      toDelete.removeAll(after);
-      Collection<T> toInsert = collector.apply(after);
-      toInsert.removeAll(before);
-      return new ComparisonResult<>(toDelete, toInsert);
-    }
-
-    public void toDeleteIfPresent(Consumer<Collection<T>> consumer) {
-      if (!toDelete.isEmpty()) {
-        consumer.accept(toDelete);
-      }
-    }
-
-    public void toInsertIfPresent(Consumer<Collection<T>> consumer) {
-      if (!toInsert.isEmpty()) {
-        consumer.accept(toInsert);
-      }
-    }
   }
 }

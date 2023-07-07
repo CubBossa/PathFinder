@@ -8,7 +8,6 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
@@ -22,9 +21,7 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
 import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
-import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.*;
@@ -35,7 +32,6 @@ import org.jooq.impl.DSL;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
@@ -68,8 +64,13 @@ public abstract class SqlStorage extends CommonStorage {
       record -> {
         NamespacedKey key = record.getKey();
         SimpleNodeGroup group = new SimpleNodeGroup(key);
+
         group.addAll(loadGroupNodes(group));
         loadModifiers(group.getKey()).forEach(group::addModifier);
+
+        group.getContentChanges().flush();
+        group.getModifierChanges().flush();
+
         group.setWeight(record.getWeight().floatValue());
         return group;
       };
@@ -237,7 +238,6 @@ public abstract class SqlStorage extends CommonStorage {
         .execute();
   }
 
-  @Override
   public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
     create.insertInto(PATHFINDER_EDGES)
         .values(start, end, weight)
@@ -260,7 +260,6 @@ public abstract class SqlStorage extends CommonStorage {
         .fetch(edgeMapper);
   }
 
-  @Override
   public Optional<Edge> loadEdge(UUID start, UUID end) {
     return create.selectFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(end))
@@ -268,18 +267,18 @@ public abstract class SqlStorage extends CommonStorage {
         .fetch(edgeMapper).stream().findAny();
   }
 
-  @Override
-  public void saveEdge(Edge edge) {
-    create.update(PATHFINDER_EDGES)
+  private void saveEdge(DSLContext ctx, Edge edge) {
+    ctx.insertInto(PATHFINDER_EDGES)
+        .values(edge.getStart(), edge.getEnd(), edge.getWeight())
+        .onDuplicateKeyUpdate()
         .set(PATHFINDER_EDGES.WEIGHT, (double) edge.getWeight())
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
   }
 
-  @Override
-  public void deleteEdge(Edge edge) {
-    create.deleteFrom(PATHFINDER_EDGES)
+  private void deleteEdge(DSLContext ctx, Edge edge) {
+    ctx.deleteFrom(PATHFINDER_EDGES)
         .where(PATHFINDER_EDGES.END_ID.eq(edge.getEnd()))
         .and(PATHFINDER_EDGES.START_ID.eq(edge.getStart()))
         .execute();
@@ -330,21 +329,45 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void saveWaypoint(Waypoint waypoint) {
-    create.update(PATHFINDER_WAYPOINTS)
-        .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
-        .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
-        .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
-        .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
-        .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
-        .execute();
+    create.transaction(configuration -> {
+      var ctx = configuration.dsl();
+      ctx.update(PATHFINDER_WAYPOINTS)
+          .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
+          .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
+          .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
+          .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
+          .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
+          .execute();
+      ctx.batched(conf -> {
+        var dsl = conf.dsl();
+        var changes = waypoint.getEdgeChanges();
+        for (Edge e : waypoint.getEdgeChanges().getAddList()) {
+          saveEdge(dsl, e);
+        }
+        for (Edge e : waypoint.getEdgeChanges().getRemoveList()) {
+          deleteEdge(dsl, e);
+        }
+        waypoint.getEdgeChanges().flush();
+      });
+    });
   }
 
   @Override
   public void deleteWaypoints(Collection<Waypoint> waypoints) {
     Collection<UUID> ids = waypoints.stream().map(Waypoint::getNodeId).toList();
-    create.deleteFrom(PATHFINDER_WAYPOINTS)
-        .where(PATHFINDER_WAYPOINTS.ID.in(ids))
-        .execute();
+    create.transaction(configuration -> {
+      var ctx = configuration.dsl();
+      ctx.deleteFrom(PATHFINDER_WAYPOINTS)
+          .where(PATHFINDER_WAYPOINTS.ID.in(ids))
+          .execute();
+      ctx.deleteFrom(PATHFINDER_EDGES)
+          .where(PATHFINDER_EDGES.START_ID.in(ids))
+          .or(PATHFINDER_EDGES.END_ID.in(ids))
+          .execute();
+      ctx.deleteFrom(PATHFINDER_NODEGROUP_NODES)
+          .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
+          .execute();
+    });
   }
 
   @Override
@@ -426,63 +449,52 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public void saveGroup(NodeGroup group) {
-    // TODO logic belongs to Storage to make use of caching
-    NodeGroup before = loadGroup(group.getKey()).orElseThrow();
-    create
-        .update(PATHFINDER_NODEGROUPS)
-        .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.getWeight())
-        .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
-        .execute();
-    StorageImpl.ComparisonResult<UUID> cmp = StorageImpl.ComparisonResult.compare(before, group);
-    cmp.toInsertIfPresent(uuids -> assignToGroups(List.of(group), uuids));
-    cmp.toDeleteIfPresent(uuids -> unassignFromGroups(List.of(group), uuids));
-    group.getModifiers().forEach(m -> assignNodeGroupModifier(group.getKey(), m));
-  }
-
-  @Override
-  public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    if (groups.isEmpty() || nodes.isEmpty()) {
-      return;
-    }
-    create.batched(configuration -> {
-      for (UUID nodeId : nodes) {
-        for (NodeGroup group : groups) {
-          DSL.using(configuration)
-              .insertInto(PATHFINDER_NODEGROUP_NODES)
-              .columns(PATHFINDER_NODEGROUP_NODES.GROUP_KEY, PATHFINDER_NODEGROUP_NODES.NODE_ID)
-              .values(group.getKey(), nodeId)
-              .onDuplicateKeyIgnore()
-              .execute();
-        }
+    create.transaction(configuration -> {
+      var ctx = configuration.dsl();
+      ctx
+          .update(PATHFINDER_NODEGROUPS)
+          .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.getWeight())
+          .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
+          .execute();
+      for (UUID nodeId : group.getContentChanges().getAddList()) {
+        ctx
+            .insertInto(PATHFINDER_NODEGROUP_NODES)
+            .columns(PATHFINDER_NODEGROUP_NODES.GROUP_KEY, PATHFINDER_NODEGROUP_NODES.NODE_ID)
+            .values(group.getKey(), nodeId)
+            .onDuplicateKeyIgnore()
+            .execute();
       }
+      ctx
+          .deleteFrom(PATHFINDER_NODEGROUP_NODES)
+          .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
+          .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(group.getContentChanges().getRemoveList()))
+          .execute();
+      group.getContentChanges().flush();
+      for (Modifier mod : group.getModifierChanges().getAddList()) {
+        assignNodeGroupModifier(ctx, group, mod);
+      }
+      for (Modifier mod : group.getModifierChanges().getRemoveList()) {
+        removeNodeGroupModifier(ctx, group.getKey(), mod.getKey());
+      }
+      group.getModifierChanges().flush();
     });
   }
 
   @Override
-  public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    if (groups.isEmpty() || nodes.isEmpty()) {
-      return;
-    }
-    Collection<NamespacedKey> keys = groups.stream().map(NodeGroup::getKey).toList();
-    create
-        .deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.in(keys))
-        .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(nodes))
-        .execute();
-  }
-
-  @Override
   public void deleteGroup(NodeGroup group) {
-    create.deleteFrom(PATHFINDER_NODEGROUP_NODES)
-        .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
-        .execute();
-    create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
-        .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group.getKey()))
-        .execute();
-    create
-        .deleteFrom(PATHFINDER_NODEGROUPS)
-        .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
-        .execute();
+    create.transaction(configuration -> {
+      var dsl = configuration.dsl();
+      dsl.deleteFrom(PATHFINDER_NODEGROUP_NODES)
+          .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
+          .execute();
+      dsl.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+          .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group.getKey()))
+          .execute();
+      dsl
+          .deleteFrom(PATHFINDER_NODEGROUPS)
+          .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
+          .execute();
+    });
   }
 
   @Override
@@ -520,91 +532,6 @@ public abstract class SqlStorage extends CommonStorage {
 
   // ###############################################################################################
 
-  public CompletableFuture<SimpleEdge> connectNodes(UUID start, UUID end, double weight) {
-    create
-        .insertInto(PATHFINDER_EDGES)
-        .values(start, end, weight)
-        .execute();
-    return CompletableFuture.completedFuture(new SimpleEdge(start, end, (float) weight));
-  }
-
-  public CompletableFuture<Collection<SimpleEdge>> connectNodes(NodeSelection start,
-                                                                NodeSelection end) {
-    CompletableFuture<Collection<SimpleEdge>> future = new CompletableFuture<>();
-    create.batched(configuration -> {
-      Collection<SimpleEdge> edges = new HashSet<>();
-      for (Node startNode : start) {
-        for (Node endNode : end) {
-          DSL.using(configuration)
-              .insertInto(PATHFINDER_EDGES)
-              .values(startNode.getNodeId(), endNode.getNodeId(), 1)
-              .execute();
-          edges.add(new SimpleEdge(startNode.getNodeId(), endNode.getNodeId(), 1));
-        }
-      }
-      future.complete(edges);
-    });
-    return future;
-  }
-
-  public CompletableFuture<Void> disconnectNodes(UUID start, UUID end) {
-    create
-        .deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.eq(start))
-        .and(PATHFINDER_EDGES.END_ID.eq(end))
-        .execute();
-    return CompletableFuture.completedFuture(null);
-  }
-
-  public CompletableFuture<Void> disconnectNodes(NodeSelection start, NodeSelection end) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    create.batched(configuration -> {
-      for (Node startNode : start) {
-        for (Node endNode : end) {
-          DSL.using(configuration)
-              .deleteFrom(PATHFINDER_EDGES)
-              .where(PATHFINDER_EDGES.START_ID.eq(startNode.getNodeId()))
-              .and(PATHFINDER_EDGES.END_ID.eq(endNode.getNodeId()))
-              .execute();
-        }
-      }
-      future.complete(null);
-    });
-    return future;
-  }
-
-  public CompletableFuture<Void> disconnectNodes(NodeSelection start) {
-    create
-        .deleteFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.in(start))
-        .execute();
-    return CompletableFuture.completedFuture(null);
-  }
-
-  public CompletableFuture<Collection<Edge>> getConnections(UUID start) {
-    Collection<Edge> edges = create
-        .selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.eq(start))
-        .fetch(edgeMapper);
-    return CompletableFuture.completedFuture(edges);
-  }
-
-  public CompletableFuture<Collection<Edge>> getConnectionsTo(UUID end) {
-    Collection<Edge> edges = create
-        .selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.END_ID.eq(end))
-        .fetch(edgeMapper);
-    return CompletableFuture.completedFuture(edges);
-  }
-
-  public CompletableFuture<Collection<Edge>> getConnectionsTo(NodeSelection end) {
-    Collection<Edge> edges = create
-        .selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.END_ID.in(end))
-        .fetch(edgeMapper);
-    return CompletableFuture.completedFuture(edges);
-  }
-
   public Collection<Modifier> loadModifiers(NamespacedKey group) {
     HashSet<Modifier> modifiers = new HashSet<>();
     create.selectFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
@@ -629,8 +556,7 @@ public abstract class SqlStorage extends CommonStorage {
     return modifiers;
   }
 
-  @Override
-  public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
+  private <M extends Modifier> void assignNodeGroupModifier(DSLContext ctx, NodeGroup group, M modifier) {
     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new StringReader(""));
     Optional<ModifierType<M>> opt = modifierRegistry.getType(modifier.getKey());
     if (opt.isEmpty()) {
@@ -640,9 +566,9 @@ public abstract class SqlStorage extends CommonStorage {
     }
     ModifierType<M> type = opt.orElseThrow();
     type.serialize(modifier).forEach(cfg::set);
-    create
+    ctx
         .insertInto(PATHFINDER_GROUP_MODIFIER_RELATION)
-        .set(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, group)
+        .set(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, group.getKey())
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY, type.getKey())
         .set(PATHFINDER_GROUP_MODIFIER_RELATION.DATA, cfg.saveToString())
         .onDuplicateKeyUpdate()
@@ -650,9 +576,8 @@ public abstract class SqlStorage extends CommonStorage {
         .execute();
   }
 
-  @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier) {
-    create.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+  private void removeNodeGroupModifier(DSLContext ctx, NamespacedKey group, NamespacedKey modifier) {
+    ctx.deleteFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY.eq(group))
         .and(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY.eq(modifier))
         .execute();

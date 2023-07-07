@@ -12,7 +12,6 @@ import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.Storage;
@@ -22,6 +21,7 @@ import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -119,7 +119,7 @@ public class CustomArgs {
       try {
         return Enum.valueOf(scope, info.input().toUpperCase());
       } catch (IllegalArgumentException e) {
-        throw new CustomArgument.CustomArgumentException("Invalid input value: " + info.input());
+        throw CustomArgument.CustomArgumentException.fromString("Invalid input value: " + info.input());
       }
     })).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
       Arrays.stream(scope.getEnumConstants())
@@ -209,7 +209,7 @@ public class CustomArgs {
               .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput()))
               .join();
       if (vis.isEmpty()) {
-        throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+        throw CustomArgument.CustomArgumentException.fromString("There is no visualizer with this key.");
       }
       return (PathVisualizer<?, ?>) vis.get();
     })).includeSuggestions(suggestNamespacedKeys(sender ->
@@ -234,7 +234,7 @@ public class CustomArgs {
       Optional<T> vis = (Optional<T>) PathFinderProvider.get().getStorage()
           .loadVisualizer(BukkitPathFinder.convert(customArgumentInfo.currentInput())).join();
       if (vis.isEmpty()) {
-        throw new CustomArgument.CustomArgumentException("There is no visualizer with this key.");
+        throw CustomArgument.CustomArgumentException.fromString("There is no visualizer with this key.");
       }
       return (T) vis.get();
     })).includeSuggestions(suggestNamespacedKeys(sender ->
@@ -285,7 +285,7 @@ public class CustomArgs {
           PathFinderProvider.get().getNodeTypeRegistry()
               .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
       if (type == null) {
-        throw new CustomArgument.CustomArgumentException(
+        throw CustomArgument.CustomArgumentException.fromString(
             "Node type with key '" + customArgumentInfo.currentInput() + "' does not exist.");
       }
       return type;
@@ -313,7 +313,7 @@ public class CustomArgs {
             try {
               return SelectionUtils.getNodeSelection(player, info.input().substring(1, info.input().length() - 1));
             } catch (ParseCancellationException e) {
-              throw new CustomArgument.CustomArgumentException(e.getMessage());
+              throw CustomArgument.CustomArgumentException.fromString(e.getMessage());
             }
           }
           return new NodeSelection();
@@ -369,7 +369,7 @@ public class CustomArgs {
     return CommandArgument.arg(new CustomArgument<>(new GreedyStringArgument(nodeName),
             context -> {
               if (!(context.sender() instanceof Player player)) {
-                throw new CustomArgument.CustomArgumentException("Only for players");
+                throw CustomArgument.CustomArgumentException.fromString("Only for players");
               }
               String search = context.currentInput();
               Storage storage = PathFinderProvider.get().getStorage();
@@ -383,10 +383,7 @@ public class CustomArgs {
 
               try {
                 Function<Node, Collection<SearchTerm>> searchTermFunction = n -> {
-                  if (!(n instanceof Groupable groupable)) {
-                    return new ArrayList<>();
-                  }
-                  return groupable.getGroups().stream()
+                  return storage.loadGroups(n.getNodeId()).join().stream()
                       .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
                       .filter(Optional::isPresent).map(Optional::get)
                       .map(NavigableModifier::getSearchTerms)
@@ -420,9 +417,7 @@ public class CustomArgs {
 
           return PathFinderProvider.get().getStorage().<NavigableModifier>loadNodes(NavigableModifier.KEY).thenApply(map -> {
             map.keySet().stream()
-                .filter(node -> node instanceof Groupable)
-                .map(node -> (Groupable) node)
-                .map(Groupable::getGroups)
+                .map(StorageUtil::getGroups)
                 .flatMap(Collection::stream)
                 .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
                 .filter(Optional::isPresent).map(Optional::get)
@@ -450,7 +445,7 @@ public class CustomArgs {
           VisualizerTypeRegistryImpl.getInstance()
               .getType(BukkitPathFinder.convert(customArgumentInfo.currentInput()));
       if (type.isEmpty()) {
-        throw new CustomArgument.CustomArgumentException(
+        throw CustomArgument.CustomArgumentException.fromString(
             "Unknown type: '" + customArgumentInfo.currentInput() + "'.");
       }
       return type.get();

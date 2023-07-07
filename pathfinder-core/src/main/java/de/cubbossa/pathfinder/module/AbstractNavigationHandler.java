@@ -11,7 +11,6 @@ import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.CommonPathFinder;
@@ -22,6 +21,7 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
@@ -142,11 +142,11 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
           return NavigateResult.FAIL_BLOCKED;
         }
 
-        Groupable first = (Groupable) path.get(1);
-        first.getGroups().forEach(playerNode::addGroup);
+        Node first = path.get(1);
+        // TODO first.getGroups().forEach(playerNode::addGroup);
 
-        Groupable last = (Groupable) path.get(path.size() - 1);
-        NodeGroup highest = last.getGroups().stream()
+        Node last = path.get(path.size() - 1);
+        NodeGroup highest = StorageUtil.getGroups(last).stream()
             .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
             .max(NodeGroup::compareTo).orElse(null);
 
@@ -218,11 +218,8 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   public void onEnable(PathFinder pathPlugin) {
 
     registerFindPredicate(c -> {
-      if (!(c.node() instanceof Groupable groupable)) {
-        return true;
-      }
       PathPlayer<?> player = CommonPathFinder.getInstance().wrap(c.playerId);
-      Collection<NodeGroup> groups = groupable.getGroups();
+      Collection<NodeGroup> groups = StorageUtil.getGroups(c.node());
 
       return groups.stream()
           .allMatch(g -> {

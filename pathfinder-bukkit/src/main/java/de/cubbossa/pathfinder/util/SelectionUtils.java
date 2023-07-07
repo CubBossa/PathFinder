@@ -10,12 +10,12 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.nodeselection.NodeSelectionParser;
 import de.cubbossa.pathfinder.nodeselection.NumberRange;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import dev.jorel.commandapi.SuggestionInfo;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
@@ -112,9 +112,7 @@ public class SelectionUtils {
         return groups;
       })
           .execute(c -> c.getScope().stream()
-              .filter(node -> node instanceof Groupable groupable
-                  && groupable.getGroups()
-                  .containsAll(c.getValue()))
+              .filter(node -> StorageUtil.getGroups(node).containsAll(c.getValue()))
               .collect(Collectors.toList()))
           .suggestStrings(c -> PathFinderProvider.get().getStorage().loadAllGroups().join().stream()
               .map(NodeGroup::getKey)

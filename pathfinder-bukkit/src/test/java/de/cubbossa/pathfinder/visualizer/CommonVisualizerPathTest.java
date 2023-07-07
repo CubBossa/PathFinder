@@ -36,15 +36,14 @@ class CommonVisualizerPathTest extends PathFinderTest {
   private Waypoint pathNode(PathVisualizer<?, ?>... visualizers) {
     Waypoint waypoint = makeWaypoint();
     for (PathVisualizer<?, ?> vis : visualizers) {
-      NodeGroup group = groupMap.computeIfAbsent(vis, v -> {
+      groupMap.computeIfAbsent(vis, v -> {
         NodeGroup g = makeGroup(v.getKey());
         g.addModifier(new CommonVisualizerModifier(v.getKey()));
+        g.add(waypoint.getNodeId());
         storage.saveGroup(g).join();
         return g;
       });
-      waypoint.addGroup(group);
     }
-    storage.saveNode(waypoint).join();
     return waypoint;
   }
 

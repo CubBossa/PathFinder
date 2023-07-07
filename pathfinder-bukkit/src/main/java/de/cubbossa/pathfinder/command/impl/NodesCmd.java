@@ -1,16 +1,18 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -112,14 +114,9 @@ public class NodesCmd extends PathFinderSubCommand {
   }
 
   private void addGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
-    for (Node node : nodes) {
-      if (!(node instanceof Groupable groupable)) {
-        continue;
-      }
-      groupable.addGroup(group);
-      getPathfinder().getStorage().saveNode(node);
+    group.addAll(nodes.ids());
+    getPathfinder().getStorage().saveGroup(group);
 
-    }
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP.formatted(
         Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes)),
         Messages.formatter().namespacedKey("group", group.getKey())
@@ -127,37 +124,25 @@ public class NodesCmd extends PathFinderSubCommand {
   }
 
   private void removeGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
-    for (Node node : nodes) {
-      if (!(node instanceof Groupable groupable)) {
-        continue;
-      }
-      if (!groupable.getGroups().contains(group)) {
-        continue;
-      }
-      groupable.removeGroup(group.getKey());
-      getPathfinder().getStorage().saveNode(node);
+    group.removeAll(nodes.ids());
+    getPathfinder().getStorage().saveGroup(group);
 
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.formatted(
-          Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes))
-      ));
-    }
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.formatted(
+        Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes))
+    ));
   }
 
   private void clearGroups(CommandSender sender, NodeSelection nodes) {
-    for (Node node : nodes) {
-      if (!(node instanceof Groupable groupable)) {
-        continue;
-      }
-      if (groupable.getGroups().isEmpty()) {
-        continue;
-      }
-      groupable.clearGroups();
-      getPathfinder().getStorage().saveNode(node);
+    Collection<NodeGroup> groups = nodes.stream().map(StorageUtil::getGroups).flatMap(Collection::stream).toList();
+    Storage storage = getPathfinder().getStorage();
+    groups.forEach(group -> {
+      nodes.ids().forEach(group::remove);
+      storage.saveGroup(group);
+    });
 
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CLEAR_GROUPS.formatted(
-          Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes))
-      ));
-    }
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CLEAR_GROUPS.formatted(
+        Placeholder.component("nodes", Messages.formatNodeSelection(sender, nodes))
+    ));
   }
 
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {

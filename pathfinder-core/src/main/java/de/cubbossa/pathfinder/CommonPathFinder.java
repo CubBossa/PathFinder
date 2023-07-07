@@ -17,6 +17,7 @@ import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.storage.StorageImpl;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -90,14 +91,18 @@ public abstract class CommonPathFinder implements PathFinder {
     visualizerTypeRegistry = new VisualizerTypeRegistryImpl();
     modifierRegistry = new ModifierRegistryImpl();
 
-    storage = new StorageImpl(nodeTypeRegistry);
-
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
+    loadConfig();
+
+    storage = new StorageImpl(nodeTypeRegistry);
+    if (!configuration.getDatabase().isCaching()) {
+      storage.setCache(null);
+    }
+    StorageUtil.storage = storage;
+
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());
     eventDispatcher = provideEventDispatcher();
-
-    loadConfig();
 
     extensionRegistry.loadExtensions(this);
   }

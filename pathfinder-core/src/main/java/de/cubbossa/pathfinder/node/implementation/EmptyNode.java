@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.World;
@@ -34,6 +35,8 @@ public class EmptyNode implements Node {
   private final UUID uuid;
   @Getter
   private final Location location;
+  @Getter
+  private final Changes<Edge> edgeChanges = new Changes<>();
 
   public EmptyNode(World world) {
     this(UUID.randomUUID(), world);

@@ -6,6 +6,8 @@ import dev.jorel.commandapi.arguments.MultiLiteralArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 class CommandHelpGeneratorTest {
 
   @Test
@@ -21,7 +23,7 @@ class CommandHelpGeneratorTest {
         )
         .withSubcommand(new CommandAPICommand("gamemode")
             .withFullDescription("bla3")
-            .withArguments(new MultiLiteralArgument("creative", "survival", "adventure"))
+            .withArguments(new MultiLiteralArgument("creative", List.of("survival", "adventure")))
             .executes((commandSender, objects) -> {
             })
         )

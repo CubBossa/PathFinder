@@ -193,7 +193,6 @@ public class YmlStorage extends CommonStorage {
     section.set(edge.getEnd().toString(), edge.getWeight());
   }
 
-  @Override
   public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
     return workOnFile(fileEdges(), cfg -> {
       SimpleEdge edge = new SimpleEdge(start, end, (float) weight);
@@ -222,21 +221,18 @@ public class YmlStorage extends CommonStorage {
     return null;
   }
 
-  @Override
   public Optional<Edge> loadEdge(UUID start, UUID end) {
     return workOnFile(fileEdges(), cfg -> {
       return readEdge(start, end, cfg.getConfigurationSection(start.toString()));
     });
   }
 
-  @Override
   public void saveEdge(Edge edge) {
     workOnFile(fileEdges(), cfg -> {
       writeEdge(edge, cfg.createSection(edge.getStart().toString()));
     });
   }
 
-  @Override
   public void deleteEdge(Edge edge) {
     workOnFile(fileEdges(), cfg -> {
       ConfigurationSection start = cfg.getConfigurationSection(edge.getStart().toString());
@@ -384,7 +380,6 @@ public class YmlStorage extends CommonStorage {
     fileGroup(group.getKey()).delete();
   }
 
-  @Override
   public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
     groups.forEach(uuids -> {
       workOnFile(fileGroup(uuids.getKey()), cfg -> {
@@ -394,7 +389,6 @@ public class YmlStorage extends CommonStorage {
     });
   }
 
-  @Override
   public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
     groups.forEach(uuids -> {
       workOnFile(fileGroup(uuids.getKey()), cfg -> {
@@ -402,15 +396,6 @@ public class YmlStorage extends CommonStorage {
         writeGroupNodes(cfg, uuids);
       });
     });
-  }
-
-  @Override
-  public <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier) {
-  }
-
-  @Override
-  public <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier) {
-
   }
 
   @Override

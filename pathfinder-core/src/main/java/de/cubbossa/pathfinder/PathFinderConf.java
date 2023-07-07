@@ -71,6 +71,9 @@ public class PathFinderConf implements PathFinderConfig {
                 
         See also: https://docs.leonardbausenwein.de/configuration/config.html#type""")
     public DatabaseType type = DatabaseType.SQLITE;
+    @Comment("""
+        This should be true to immensely boost performance and can only be disabled for testing purposes.""")
+    public boolean caching = true;
     public EmbeddedSqlStorageConf embeddedSql = new EmbeddedSqlStorageConf();
     public SqlStorageConf remoteSql = new SqlStorageConf();
   }

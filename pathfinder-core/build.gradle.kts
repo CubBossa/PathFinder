@@ -43,7 +43,8 @@ dependencies {
 
     // Other
     api("org.jooq:jooq:3.18.4")
-    jooqGenerator("org.xerial:sqlite-jdbc:3.41.0.0")
+    jooqGenerator("org.xerial:sqlite-jdbc:3.41.2.1")
+    implementation("org.xerial:sqlite-jdbc:3.41.2.1")
     implementation("org.reactivestreams:reactive-streams:1.0.4")
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     implementation("com.zaxxer:HikariCP:5.0.1")

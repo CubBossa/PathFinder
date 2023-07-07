@@ -1,32 +1,40 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.util.ModifiedHashSet;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
 
 @Getter
 @Setter
-public class Waypoint implements Node, Groupable {
+public class Waypoint implements Node {
 
   private final UUID nodeId;
-  private final HashSet<Edge> edges;
-  private final Map<NamespacedKey, NodeGroup> groups;
+  private final ModifiedHashSet<Edge> edges;
+  private final Collection<NodeGroup> groups;
 
   private Location location;
 
   public Waypoint(UUID databaseId) {
     this.nodeId = databaseId;
-    this.groups = new HashMap<>();
+    this.groups = new HashSet<>();
 
-    edges = new HashSet<>();
+    edges = new ModifiedHashSet<>();
+  }
+
+  @Override
+  public Changes<Edge> getEdgeChanges() {
+    return edges.getChanges();
   }
 
   @Override
@@ -46,22 +54,7 @@ public class Waypoint implements Node, Groupable {
   }
 
   public Collection<NodeGroup> getGroups() {
-    return new HashSet<>(groups.values());
-  }
-
-  @Override
-  public void addGroup(NodeGroup group) {
-    groups.put(group.getKey(), group);
-  }
-
-  @Override
-  public void removeGroup(NamespacedKey group) {
-    groups.remove(group);
-  }
-
-  @Override
-  public void clearGroups() {
-    groups.clear();
+    return new HashSet<>(groups);
   }
 
   @Override
@@ -87,7 +80,7 @@ public class Waypoint implements Node, Groupable {
     Waypoint clone = new Waypoint(uuid);
     clone.location = location.clone();
     clone.edges.addAll(this.edges);
-    clone.groups.putAll(groups);
+    clone.groups.addAll(groups);
     return clone;
   }
 

@@ -1,23 +1,29 @@
 package de.cubbossa.pathfinder.nodegroup;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.util.ModifiedHashMap;
+import de.cubbossa.pathfinder.util.ModifiedHashSet;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
+public class SimpleNodeGroup extends ModifiedHashSet<UUID> implements NodeGroup {
 
   private final PathFinder pathFinder = PathFinderProvider.get();
   private final NamespacedKey key;
-  private final Map<NamespacedKey, Modifier> modifiers;
+  private final ModifiedHashMap<NamespacedKey, Modifier> modifiers;
   @Getter
   @Setter
   private float weight = 1;
@@ -29,7 +35,17 @@ public class SimpleNodeGroup extends HashSet<UUID> implements NodeGroup {
   public SimpleNodeGroup(NamespacedKey key, Collection<Node> nodes) {
     super(nodes.stream().map(Node::getNodeId).toList());
     this.key = key;
-    this.modifiers = new HashMap<>();
+    this.modifiers = new ModifiedHashMap<>();
+  }
+
+  @Override
+  public Changes<Modifier> getModifierChanges() {
+    return modifiers.getChanges();
+  }
+
+  @Override
+  public Changes<UUID> getContentChanges() {
+    return getChanges();
   }
 
   @Override

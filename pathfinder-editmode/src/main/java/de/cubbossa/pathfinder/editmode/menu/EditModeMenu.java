@@ -12,7 +12,6 @@ import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.Storage;
@@ -24,6 +23,7 @@ import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
@@ -169,11 +169,8 @@ public class EditModeMenu {
                   }
                 }
                 chainEdgeStart = n.getNodeId();
-                if (!(n instanceof Groupable groupable)) {
-                  return;
-                }
-                groupable.addGroup(storage.loadGroup(key).join().orElseThrow());
-                groupable.addGroup(storage.loadGroup(CommonPathFinder.globalGroupKey()).join().orElseThrow());
+                storage.modifyGroup(key, group -> group.add(node.getNodeId()));
+                storage.modifyGroup(CommonPathFinder.globalGroupKey(), group -> group.add(node.getNodeId()));
               }))
               .exceptionally(throwable -> {
                 throwable.printStackTrace();
@@ -232,23 +229,13 @@ public class EditModeMenu {
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
           storage.loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
-            if (node.isPresent() && node.get() instanceof Groupable groupable) {
-              openGroupMenu(context.getPlayer(), groupable);
-            }
+            node.ifPresent(value -> openGroupMenu(context.getPlayer(), value));
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          storage.modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable groupable)) {
-              return;
-            }
-            if (groupable.getGroups().isEmpty()) {
-              return;
-            }
-            groupable.clearGroups();
-            context.getPlayer().playSound(context.getPlayer().getLocation(),
-                Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
-          });
+          StorageUtil.clearGroups(context.getTarget());
+          context.getPlayer().playSound(context.getPlayer().getLocation(),
+              Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
         }));
 
     menu.setButton(2, Button.builder()
@@ -256,11 +243,8 @@ public class EditModeMenu {
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
           storage.modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable groupable)) {
-              return;
-            }
             storage.loadGroups(multiTool).thenAccept(groups -> {
-              groups.forEach(groupable::addGroup);
+              StorageUtil.addGroups(groups, node.getNodeId());
             });
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.BLOCK_CHEST_CLOSE, 1, 1);
@@ -268,10 +252,9 @@ public class EditModeMenu {
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           storage.modifyNode(context.getTarget().getNodeId(), node -> {
-            if (!(node instanceof Groupable groupable)) {
-              return;
-            }
-            multiTool.forEach(groupable::removeGroup);
+            storage.loadGroups(multiTool).thenAccept(groups -> {
+              StorageUtil.removeGroups(groups, node.getNodeId());
+            });
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
           });
@@ -281,7 +264,7 @@ public class EditModeMenu {
     return menu;
   }
 
-  private void openGroupMenu(Player player, Groupable groupable) {
+  private void openGroupMenu(Player player, Node node) {
 
     storage.loadAllGroups().thenAccept(nodeGroups -> {
 
@@ -304,24 +287,24 @@ public class EditModeMenu {
                   .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
                   .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
                   .createItem(player);
-              if (group.contains(groupable.getNodeId())) {
+              if (group.contains(node.getNodeId())) {
                 stack = ItemStackUtils.setGlow(stack);
               }
               return stack;
             })
             .withClickHandler(Action.LEFT, c -> {
-              if (!group.contains(groupable.getNodeId())) {
-                groupable.addGroup(group);
-                storage.saveNode(groupable).thenRun(() -> {
+              if (!group.contains(node.getNodeId())) {
+                StorageUtil.addGroups(group, node.getNodeId());
+                storage.saveNode(node).thenRun(() -> {
                   c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
                   menu.refresh(menu.getListSlots());
                 });
               }
             })
             .withClickHandler(Action.RIGHT, c -> {
-              if (group.contains(groupable.getNodeId())) {
-                groupable.removeGroup(group.getKey());
-                storage.saveNode(groupable).thenRun(() -> {
+              if (group.contains(node.getNodeId())) {
+                StorageUtil.removeGroups(group, node.getNodeId());
+                storage.saveNode(node).thenRun(() -> {
                   c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
                   menu.refresh(menu.getListSlots());
                 });
@@ -333,8 +316,8 @@ public class EditModeMenu {
             new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
                 Messages.E_SUB_GROUP_RESET_L).createItem(player));
         presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
-          groupable.clearGroups();
-          storage.saveNode(groupable).thenRun(() -> {
+          StorageUtil.clearGroups(node);
+          storage.saveNode(node).thenRun(() -> {
             menu.refresh(menu.getListSlots());
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
           });

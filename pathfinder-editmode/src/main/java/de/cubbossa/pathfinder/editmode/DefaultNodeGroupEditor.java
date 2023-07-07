@@ -11,12 +11,12 @@ import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -105,7 +105,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   }
 
   private boolean renders(Node node) {
-    return node instanceof Groupable groupable && groupable.getGroups().stream()
+    return StorageUtil.getGroups(node).stream()
         .map(NodeGroup::getKey)
         .anyMatch(groupKey::equals);
   }

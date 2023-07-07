@@ -6,11 +6,11 @@ import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -41,10 +41,7 @@ public class AbstractDiscoverHandler<PlayerT> {
 
     if (plugin.getConfiguration().navigation.requireDiscovery) {
       AbstractNavigationHandler.getInstance().registerFindPredicate(context -> {
-        if (!(context.node() instanceof Groupable groupable)) {
-          return true;
-        }
-        Collection<NodeGroup> groups = groupable.getGroups();
+        Collection<NodeGroup> groups = StorageUtil.getGroups(context.node());
 
         for (NodeGroup group : groups) {
           if (!group.hasModifier(CommonDiscoverableModifier.class)) {
@@ -131,10 +128,7 @@ public class AbstractDiscoverHandler<PlayerT> {
   }
 
   public float getDiscoveryDistance(UUID playerId, Node node) {
-    if (!(node instanceof Groupable groupable)) {
-      return 1.5f;
-    }
-    FindDistanceModifier mod = groupable.getGroups().stream()
+    FindDistanceModifier mod = StorageUtil.getGroups(node).stream()
         .filter(group -> group.hasModifier(FindDistanceModifier.KEY))
         .sorted()
         .findFirst()

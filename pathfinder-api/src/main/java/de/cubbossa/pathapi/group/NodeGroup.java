@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.group;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.node.Node;
 
@@ -15,4 +16,8 @@ public interface NodeGroup extends Keyed, Modified, Set<UUID>, Comparable<NodeGr
   void setWeight(float weight);
 
   CompletableFuture<Collection<Node>> resolve();
+
+  public Changes<UUID> getContentChanges();
+
+  public Changes<Modifier> getModifierChanges();
 }

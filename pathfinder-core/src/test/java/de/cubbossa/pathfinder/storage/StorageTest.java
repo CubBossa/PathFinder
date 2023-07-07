@@ -4,7 +4,10 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.*;
+import de.cubbossa.pathapi.node.Edge;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.*;
@@ -58,10 +61,10 @@ public abstract class StorageTest extends PathFinderTest {
   @Order(2)
   void createNodeWithDefaultGroup() {
     Waypoint waypoint = makeWaypoint();
-    assertEquals(1, waypoint.getGroups().size());
+    assertEquals(1, getGroups(waypoint).size());
 
     Waypoint loaded = assertNodeExists(waypoint.getNodeId());
-    assertEquals(1, loaded.getGroups().size());
+    assertEquals(1, getGroups(loaded).size());
   }
 
   @Test
@@ -201,14 +204,12 @@ public abstract class StorageTest extends PathFinderTest {
 
     System.out.println("#".repeat(30));
 
-    assertFuture(() -> storage.modifyNode(a.getNodeId(), n -> {
-      if (n instanceof Groupable groupable) {
-        groupable.addGroup(g);
-      }
+    assertFuture(() -> storage.modifyGroup(gk, group -> {
+      group.add(a.getNodeId());
     }));
 
     Waypoint waypoint = assertNodeExists(a.getNodeId());
-    assertTrue(waypoint.getGroups().stream().map(NodeGroup::getKey).anyMatch(k -> k.equals(gk)));
+    assertTrue(getGroups(waypoint).stream().map(NodeGroup::getKey).anyMatch(k -> k.equals(gk)));
   }
 
   @Test
@@ -218,21 +219,17 @@ public abstract class StorageTest extends PathFinderTest {
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
 
-    assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable groupable) {
-        groupable.addGroup(g);
-      }
+    assertFuture(() -> storage.modifyGroup(gk, group -> {
+      group.add(a.getNodeId());
     }));
 
     Waypoint a1 = assertNodeExists(a.getNodeId());
-    assertTrue(a1.getGroups().stream().map(NodeGroup::getKey).anyMatch(gk::equals));
+    assertTrue(getGroups(a1).stream().map(NodeGroup::getKey).anyMatch(gk::equals));
     NodeGroup g1 = assertGroupExists(gk);
     assertTrue(g1.contains(a.getNodeId()));
 
-    assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable groupable) {
-        groupable.removeGroup(gk);
-      }
+    assertFuture(() -> storage.modifyGroup(gk, group -> {
+      group.remove(a.getNodeId());
     }));
 
     NodeGroup g2 = assertGroupExists(gk);
@@ -246,10 +243,8 @@ public abstract class StorageTest extends PathFinderTest {
     Waypoint a = makeWaypoint();
     NodeGroup g = makeGroup(gk);
 
-    assertFuture(() -> storage.modifyNode(a.getNodeId(), node -> {
-      if (node instanceof Groupable groupable) {
-        groupable.addGroup(g);
-      }
+    assertFuture(() -> storage.modifyGroup(gk, group -> {
+      group.remove(a.getNodeId());
     }));
     assertFuture(() -> storage.deleteNodes(new NodeSelection(a).ids()));
 

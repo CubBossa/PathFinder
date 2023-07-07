@@ -100,7 +100,7 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
-          public void write(NodeGroup group, Collection<UUID> deleted) {
+          public void write(NodeGroup group) {
 
           }
 
@@ -156,12 +156,12 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
-          public void write(NamespacedKey modifier, Collection<NodeGroup> groups) {
+          public void write(UUID node, Collection<NodeGroup> groups) {
 
           }
 
           @Override
-          public void write(UUID node, Collection<NodeGroup> groups) {
+          public void write(NamespacedKey modifier, Collection<NodeGroup> groups) {
 
           }
 
@@ -171,7 +171,7 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
-          public void invalidate(Node node) {
+          public void invalidate(UUID node) {
 
           }
 

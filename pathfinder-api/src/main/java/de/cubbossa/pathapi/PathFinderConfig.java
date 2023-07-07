@@ -56,6 +56,13 @@ public interface PathFinderConfig {
      */
     DatabaseType getType();
 
+    /**
+     * This should be true to immensely boost performance and can only be disabled for testing purposes.
+     *
+     * @return if data is being cached.
+     */
+    boolean isCaching();
+
     EmbeddedSqlStorageConfig getEmbeddedSql();
 
     SqlStorageConfig getRemoteSql();

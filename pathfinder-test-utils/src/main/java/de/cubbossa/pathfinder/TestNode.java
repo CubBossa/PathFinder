@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.Changes;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
@@ -21,6 +22,7 @@ public class TestNode implements Node {
 
   private final UUID nodeId;
   private Location location;
+  private final Changes<Edge> edgeChanges = new Changes<>();
 
   @Override
   public Collection<Edge> getEdges() {

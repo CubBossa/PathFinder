@@ -49,17 +49,9 @@ public interface StorageImplementation {
   // #   Edges
   // ################################
 
-  Edge createAndLoadEdge(UUID start, UUID end, double weight);
-
   Collection<Edge> loadEdgesFrom(UUID start);
 
   Collection<Edge> loadEdgesTo(UUID end);
-
-  Optional<Edge> loadEdge(UUID start, UUID end);
-
-  void saveEdge(Edge edge);
-
-  void deleteEdge(Edge edge);
 
   void deleteEdgesTo(Collection<UUID> end);
 
@@ -88,14 +80,6 @@ public interface StorageImplementation {
   void saveGroup(NodeGroup group);
 
   void deleteGroup(NodeGroup group);
-
-  void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
-
-  void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes);
-
-  <M extends Modifier> void assignNodeGroupModifier(NamespacedKey group, M modifier);
-
-  <M extends Modifier> void unassignNodeGroupModifier(NamespacedKey group, NamespacedKey modifier);
 
   // ################################
   // #   Find Data

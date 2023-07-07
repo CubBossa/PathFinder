@@ -3,11 +3,11 @@ package de.cubbossa.pathfinder.visualizer;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
-import de.cubbossa.pathapi.node.Groupable;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.storage.StorageUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -38,11 +38,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
     for (Node node : path) {
-      if (!(node instanceof Groupable groupable)) {
-        // this node cannot be rendered, it cannot be grouped
-        continue;
-      }
-      groupable.getGroups().stream()
+      StorageUtil.getGroups(node).stream()
           .filter(g -> g.hasModifier(VisualizerModifier.KEY))
           .sorted()
           .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
