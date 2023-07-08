@@ -19,9 +19,9 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
-import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -373,24 +373,21 @@ public class CustomArgs {
               }
               String search = context.currentInput();
               Storage storage = PathFinderProvider.get().getStorage();
-              List<Node> scope = storage.loadNodes().join().stream().filter(node -> {
+              Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join().entrySet().stream().filter(entry -> {
+                Node node = entry.getKey();
                 // Create context for request
                 BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
                 // Find a node that matches all required filters
-                // return FindModule.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
-                return true;
-              }).toList();
+                return AbstractNavigationHandler.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
+              }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
               try {
-                Function<Node, Collection<SearchTerm>> searchTermFunction = n -> {
-                  return storage.loadGroups(n.getNodeId()).join().stream()
-                      .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
-                      .filter(Optional::isPresent).map(Optional::get)
-                      .map(NavigableModifier::getSearchTerms)
-                      .flatMap(Collection::stream)
-                      .collect(Collectors.toList());
-                };
-                Collection<Node> target = new FindQueryParser().parse(search, scope, searchTermFunction);
+                Function<Node, Collection<SearchTerm>> searchTermFunction = n -> scope.get(n).stream()
+                    .map(NavigableModifier::getSearchTerms)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+
+                Collection<Node> target = new FindQueryParser().parse(search, new ArrayList<>(scope.keySet()), searchTermFunction);
                 return new NodeSelection(target);
               } catch (Throwable t) {
                 t.printStackTrace();
@@ -416,11 +413,8 @@ public class CustomArgs {
           String inRange = range.get(input);
 
           return PathFinderProvider.get().getStorage().<NavigableModifier>loadNodes(NavigableModifier.KEY).thenApply(map -> {
-            map.keySet().stream()
-                .map(StorageUtil::getGroups)
+            map.values().stream()
                 .flatMap(Collection::stream)
-                .map(g -> g.<NavigableModifier>getModifier(NavigableModifier.KEY))
-                .filter(Optional::isPresent).map(Optional::get)
                 .map(NavigableModifier::getSearchTermStrings)
                 .flatMap(Collection::stream)
                 .filter(s -> s.startsWith(inRange))

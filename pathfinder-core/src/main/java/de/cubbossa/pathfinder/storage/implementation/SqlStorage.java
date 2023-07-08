@@ -340,7 +340,6 @@ public abstract class SqlStorage extends CommonStorage {
           .execute();
       ctx.batched(conf -> {
         var dsl = conf.dsl();
-        var changes = waypoint.getEdgeChanges();
         for (Edge e : waypoint.getEdgeChanges().getAddList()) {
           saveEdge(dsl, e);
         }

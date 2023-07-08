@@ -27,6 +27,8 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 @Setter
 public class StorageImpl implements Storage {
 
+  private final Executor ioExecutor;
   private CacheLayer cache;
   private @Nullable EventDispatcher<?> eventDispatcher;
   private @Nullable Logger logger;
@@ -45,6 +48,7 @@ public class StorageImpl implements Storage {
 
   public StorageImpl(NodeTypeRegistry nodeTypeRegistry) {
     cache = new CacheLayerImpl();
+    ioExecutor = Executors.newFixedThreadPool(8);
     this.nodeTypeRegistry = nodeTypeRegistry;
   }
 
@@ -89,14 +93,15 @@ public class StorageImpl implements Storage {
   }
 
   private CompletableFuture<Void> asyncFuture(Runnable runnable) {
-    return CompletableFuture.runAsync(runnable).exceptionally(throwable -> {
+    return CompletableFuture.runAsync(runnable, ioExecutor).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
   }
 
   private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
-    return CompletableFuture.supplyAsync(supplier).exceptionally(throwable -> {
+
+    return CompletableFuture.supplyAsync(supplier, ioExecutor).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
@@ -171,7 +176,7 @@ public class StorageImpl implements Storage {
   private <N extends Node> CompletableFuture<N> insertEdges(N node) {
     return CompletableFuture.supplyAsync(() -> {
       return implementation.loadEdgesFrom(node.getNodeId());
-    }).thenApply(edges -> {
+    }, ioExecutor).thenApply(edges -> {
       node.getEdges().addAll(edges);
       node.getEdgeChanges().flush();
       return node;
