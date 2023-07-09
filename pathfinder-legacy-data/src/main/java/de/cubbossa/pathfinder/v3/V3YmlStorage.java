@@ -30,6 +30,7 @@ public class V3YmlStorage implements V3Storage {
   private File pathVisualizerDir;
   private File userDir;
 
+  @Deprecated(forRemoval = true)
   public V3YmlStorage(File dataDirectory) {
     if (!dataDirectory.isDirectory()) {
       throw new IllegalArgumentException("Data directory must be a directory!");

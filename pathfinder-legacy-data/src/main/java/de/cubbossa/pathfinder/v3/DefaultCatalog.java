@@ -4,7 +4,6 @@
 package de.cubbossa.pathfinder.v3;
 
 
-import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import org.jooq.Constants;
 import org.jooq.Schema;
 import org.jooq.impl.CatalogImpl;

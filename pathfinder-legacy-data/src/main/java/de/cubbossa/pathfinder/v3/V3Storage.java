@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.UUID;
 
+@Deprecated(forRemoval = true)
 public interface V3Storage {
 
   void connect();

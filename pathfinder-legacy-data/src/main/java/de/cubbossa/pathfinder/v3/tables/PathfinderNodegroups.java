@@ -5,8 +5,8 @@ package de.cubbossa.pathfinder.v3.tables;
 
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
+import de.cubbossa.pathfinder.v3.DefaultSchema;
 import de.cubbossa.pathfinder.v3.Keys;
 import de.cubbossa.pathfinder.v3.tables.records.PathfinderNodegroupsRecord;
 import org.jooq.Record;

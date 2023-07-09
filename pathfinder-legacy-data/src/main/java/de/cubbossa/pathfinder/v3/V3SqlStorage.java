@@ -8,18 +8,19 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.UUID;
 
 import static de.cubbossa.pathfinder.v3.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderEdges.PATHFINDER_EDGES;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
+import static de.cubbossa.pathfinder.v3.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderNodes.PATHFINDER_NODES;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderRoadmaps.PATHFINDER_ROADMAPS;
 import static de.cubbossa.pathfinder.v3.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
 
-@Deprecated
+@Deprecated(forRemoval = true)
 public abstract class V3SqlStorage implements V3Storage {
 
   abstract ConnectionProvider getConnectionProvider();
@@ -80,15 +81,12 @@ public abstract class V3SqlStorage implements V3Storage {
   }
 
   @Override
-  public Collection<> loadNodeGroupNodes() {
-    Map<Integer, HashSet<NamespacedKey>> result = new LinkedHashMap<>();
-    context
-        .selectFrom(PATHFINDER_NODEGROUP_NODES)
-        .fetch()
-        .forEach(record -> {
-          result.computeIfAbsent(record.getNodeId(), id -> new HashSet<>()).add(record.getGroupKey());
-        });
-    return result;
+  public Collection<V3GroupNode> loadGroupNodes() {
+    return context
+        .selectFrom(PATHFINDER_NODEGROUPS_NODES)
+        .fetch(record -> new V3GroupNode(
+            record.getNodeId(), record.getGroupKey()
+        ));
   }
 
   @Override

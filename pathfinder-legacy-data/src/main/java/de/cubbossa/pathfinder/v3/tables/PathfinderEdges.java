@@ -4,7 +4,7 @@
 package de.cubbossa.pathfinder.v3.tables;
 
 
-import de.cubbossa.pathfinder.jooq.DefaultSchema;
+import de.cubbossa.pathfinder.v3.DefaultSchema;
 import de.cubbossa.pathfinder.v3.Keys;
 import de.cubbossa.pathfinder.v3.tables.records.PathfinderEdgesRecord;
 import org.jooq.Record;

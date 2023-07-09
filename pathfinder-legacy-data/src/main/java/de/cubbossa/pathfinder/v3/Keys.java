@@ -4,8 +4,6 @@
 package de.cubbossa.pathfinder.v3;
 
 
-import de.cubbossa.pathfinder.legacydata.tables.*;
-import de.cubbossa.pathfinder.legacydata.tables.records.*;
 import de.cubbossa.pathfinder.v3.tables.*;
 import de.cubbossa.pathfinder.v3.tables.records.*;
 import org.jooq.ForeignKey;
