@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.v3;
+package de.cubbossa.pathfinder.storage.v3;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.DataStorageException;

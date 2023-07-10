@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.v3;
+package de.cubbossa.pathfinder.storage.v3;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
 
@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.UUID;
 
-@Deprecated(forRemoval = true)
 public interface V3Storage {
 
   void connect();

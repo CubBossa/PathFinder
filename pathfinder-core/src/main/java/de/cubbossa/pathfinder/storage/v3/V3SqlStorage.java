@@ -1,6 +1,7 @@
-package de.cubbossa.pathfinder.v3;
+package de.cubbossa.pathfinder.storage.v3;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.storage.v3.tables.*;
 import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -11,14 +12,8 @@ import org.jooq.impl.DSL;
 import java.util.Collection;
 import java.util.UUID;
 
-import static de.cubbossa.pathfinder.v3.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderEdges.PATHFINDER_EDGES;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderNodes.PATHFINDER_NODES;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderRoadmaps.PATHFINDER_ROADMAPS;
-import static de.cubbossa.pathfinder.v3.tables.PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS;
+import static de.cubbossa.pathfinder.storage.v3.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
+import static de.cubbossa.pathfinder.storage.v3.tables.PathfinderEdges.PATHFINDER_EDGES;
 
 @Deprecated(forRemoval = true)
 public abstract class V3SqlStorage implements V3Storage {
@@ -46,7 +41,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3RoadMap> loadRoadmaps() {
     return context
-        .selectFrom(PATHFINDER_ROADMAPS)
+        .selectFrom(PathfinderRoadmaps.PATHFINDER_ROADMAPS)
         .fetch(record -> new V3RoadMap(
             record.getKey(),
             record.getNameFormat(),
@@ -67,7 +62,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3Node> loadNodes() {
     return context
-        .selectFrom(PATHFINDER_NODES)
+        .selectFrom(PathfinderNodes.PATHFINDER_NODES)
         .fetch(record -> new V3Node(
             record.getId(),
             record.getType(),
@@ -83,7 +78,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3GroupNode> loadGroupNodes() {
     return context
-        .selectFrom(PATHFINDER_NODEGROUPS_NODES)
+        .selectFrom(PathfinderNodegroupsNodes.PATHFINDER_NODEGROUPS_NODES)
         .fetch(record -> new V3GroupNode(
             record.getNodeId(), record.getGroupKey()
         ));
@@ -92,7 +87,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3NodeGroup> loadNodeGroups() {
     return context
-        .selectFrom(PATHFINDER_NODEGROUPS)
+        .selectFrom(PathfinderNodegroups.PATHFINDER_NODEGROUPS)
         .fetch(record -> new V3NodeGroup(
             record.getKey(),
             record.getNameFormat(),
@@ -106,7 +101,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3SearchTerm> loadSearchTerms() {
     return context
-        .selectFrom(PATHFINDER_SEARCH_TERMS)
+        .selectFrom(PathfinderSearchTerms.PATHFINDER_SEARCH_TERMS)
         .fetch(record -> new V3SearchTerm(record.getGroupKey(), record.getSearchTerm()));
   }
 
@@ -122,7 +117,7 @@ public abstract class V3SqlStorage implements V3Storage {
   @Override
   public Collection<V3Visualizer> loadVisualizers() {
     return context
-        .selectFrom(PATHFINDER_PATH_VISUALIZER)
+        .selectFrom(PathfinderPathVisualizer.PATHFINDER_PATH_VISUALIZER)
         .fetch(record -> new V3Visualizer(
             record.getKey(),
             record.getType(),
