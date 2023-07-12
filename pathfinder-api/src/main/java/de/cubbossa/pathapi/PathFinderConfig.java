@@ -4,6 +4,7 @@ import de.cubbossa.pathapi.storage.DatabaseType;
 
 import java.awt.*;
 import java.io.File;
+import java.util.Locale;
 
 public interface PathFinderConfig {
 
@@ -42,7 +43,7 @@ public interface PathFinderConfig {
      * <p>
      * See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language
      */
-    String getFallbackLanguage();
+    Locale getFallbackLanguage();
   }
 
   interface DatabaseConfig {

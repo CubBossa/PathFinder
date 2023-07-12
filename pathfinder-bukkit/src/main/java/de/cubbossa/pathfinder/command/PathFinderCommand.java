@@ -129,7 +129,7 @@ public class PathFinderCommand extends CommandTree {
 
             MessageBundle translations = pf.getTranslations();
 
-            Locale fallback = Locale.forLanguageTag(pf.getConfiguration().getLanguage().getFallbackLanguage());
+            Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
             translations.clearCache();
             translations.writeLocale(fallback);
             translations.loadLocale(fallback);
@@ -156,7 +156,7 @@ public class PathFinderCommand extends CommandTree {
                 CommonPathFinder pf = BukkitPathFinder.getInstance();
                 MessageBundle translations = pf.getTranslations();
 
-                Locale fallback = Locale.forLanguageTag(pf.getConfiguration().getLanguage().getFallbackLanguage());
+                  Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
                 translations.clearCache();
                 translations.writeLocale(fallback);
                 translations.loadLocale(fallback);

@@ -18,20 +18,59 @@ import java.util.logging.Logger;
  */
 public interface PathFinder {
 
-  /**
-   * Return a logger that is used for the whole application.
-   */
-  Logger getLogger();
+    enum ApplicationState {
+        /**
+         * The application prepares for state RUNNING.
+         */
+        LOADING,
+        /**
+         * The application converts old config files into new config files.
+         */
+        CONFIG_CONVERSION,
+        /**
+         * The application converts older data into new data.
+         */
+        DATA_CONVERSION,
+        /**
+         * The application is running, runtime features are enabled.
+         */
+        RUNNING,
+        /**
+         * Something went wrong that stopped the application from working.
+         * Same as DISABLED but for an unexpected reason.
+         */
+        EXCEPTIONALLY,
+        /**
+         * An intended disable, for example when server stops.
+         */
+        DISABLED
+    }
 
-  /**
-   * The storage is the main class to handle read and write. Use it to load, modify and save PathFinder data.
-   *
-   * @return a storage instance.
-   */
-  Storage getStorage();
+    /**
+     * @return a logger that is used for the whole application.
+     */
+    Logger getLogger();
 
-  /**
-   * The extension registry handles all plugins to the PathFinder Application. There must be only one
+    /**
+     * @return the current application state.
+     */
+    ApplicationState getState();
+
+    void load();
+
+    void shutdown();
+
+    void shutdownExceptionally(Throwable t);
+
+    /**
+     * The storage is the main class to handle read and write. Use it to load, modify and save PathFinder data.
+     *
+     * @return a storage instance.
+     */
+    Storage getStorage();
+
+    /**
+     * The extension registry handles all plugins to the PathFinder Application. There must be only one
    * ExtensionRegistry instance for each application.
    *
    * @return The ExtensionRegistry instance.

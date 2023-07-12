@@ -5,6 +5,10 @@ package de.cubbossa.pathfinder.storage.v3;
 
 
 import de.cubbossa.pathfinder.jooq.tables.*;
+import de.cubbossa.pathfinder.storage.v3.tables.PathfinderNodegroupsNodes;
+import de.cubbossa.pathfinder.storage.v3.tables.PathfinderNodes;
+import de.cubbossa.pathfinder.storage.v3.tables.PathfinderPathVisualizer;
+import de.cubbossa.pathfinder.storage.v3.tables.PathfinderRoadmaps;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;

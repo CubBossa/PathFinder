@@ -22,6 +22,9 @@ import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
+import de.cubbossa.pathfinder.storage.v3.V3Converter;
+import de.cubbossa.pathfinder.storage.v3.V3SqliteStorage;
+import de.cubbossa.pathfinder.util.FileUtils;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.splinelib.SplineLib;
@@ -36,6 +39,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.io.File;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.logging.Level;
 
 @Getter
 public abstract class CommonPathFinder implements PathFinder {
@@ -49,6 +53,8 @@ public abstract class CommonPathFinder implements PathFinder {
   private static final NamespacedKey GLOBAL_GROUP_KEY = pathfinder("global");
   private static final NamespacedKey DEFAULT_VISUALIZER_KEY = pathfinder("default_visualizer");
   public static final SplineLib<Vector> SPLINES = new VectorSplineLib();
+
+  protected ApplicationState state;
 
   protected NodeTypeRegistry nodeTypeRegistry;
   protected VisualizerTypeRegistry visualizerTypeRegistry;
@@ -82,9 +88,19 @@ public abstract class CommonPathFinder implements PathFinder {
 
   public abstract <PlayerT> PathPlayer<PlayerT> wrap(PlayerT player);
 
+  @Override
+  public void load() {
+    if (!(state.equals(ApplicationState.DISABLED) || state.equals(ApplicationState.EXCEPTIONALLY))) {
+      throw new IllegalStateException("Trying to load PathFinder - Application already enabled.");
+    }
+    state = ApplicationState.LOADING;
+    onLoad();
+  }
+
   @SneakyThrows
   public void onLoad() {
     instance = this;
+    state = ApplicationState.LOADING;
     PathFinderProvider.setPathFinder(this);
 
     nodeTypeRegistry = new NodeTypeRegistryImpl();
@@ -118,7 +134,7 @@ public abstract class CommonPathFinder implements PathFinder {
 
     // Data
     translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
-        .withDefaultLocale(Locale.forLanguageTag(configuration.language.fallbackLanguage))
+            .withDefaultLocale(configuration.language.fallbackLanguage)
         .withEnabledLocales(Locale.getAvailableLocales())
         .withPreferClientLanguage(configuration.language.clientLanguage)
         .withLogger(getLogger())
@@ -127,14 +143,23 @@ public abstract class CommonPathFinder implements PathFinder {
         .build();
 
     miniMessage = MiniMessage.builder()
-        .editTags(builder -> builder
-            .resolvers(translations.getBundleResolvers())
-            .resolvers(translations.getStylesResolver())
-        )
-        .build();
+            .editTags(builder -> builder
+                    .resolvers(translations.getBundleResolvers())
+                    .resolvers(translations.getStylesResolver())
+            )
+            .build();
 
     translations.addMessagesClass(Messages.class);
     translations.writeLocale(Locale.ENGLISH);
+
+    if (configFileLoader.isVersionChange()) {
+      File data = new File(getDataFolder(), "data/");
+      File oldData = new File(getDataFolder(), "old_data/");
+      if (!FileUtils.renameTo(data, oldData)) {
+        shutdownExceptionally(new IllegalStateException("Could not store current data directory to old data."));
+        return;
+      }
+    }
 
     Messages.formatter().setMiniMessage(miniMessage);
     Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));
@@ -144,7 +169,7 @@ public abstract class CommonPathFinder implements PathFinder {
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
       case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry,
-          modifierRegistry, visualizerTypeRegistry);
+              modifierRegistry, visualizerTypeRegistry);
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
           modifierRegistry, visualizerTypeRegistry);
       default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
@@ -159,19 +184,65 @@ public abstract class CommonPathFinder implements PathFinder {
     storage.init();
 
     nodeTypeRegistry.register(new WaypointType(
-        new WaypointStorage(storage),
-        miniMessage
+            new WaypointStorage(storage),
+            miniMessage
     ));
 
     new NodeHandler(this);
     extensionRegistry.enableExtensions(this);
+
+    if (!configFileLoader.isVersionChange()) {
+      state = ApplicationState.RUNNING;
+    } else {
+
+      var conv = new V3Converter(
+              new V3SqliteStorage(new File(getDataFolder(), "old_data/database.db")),
+              storage,
+              nodeTypeRegistry,
+              visualizerTypeRegistry,
+              this::getWorld
+      );
+      Thread t = new Thread(conv);
+      t.start();
+
+      new Thread(() -> {
+        this.getLogger().log(Level.INFO, "Data conversion started.");
+        while (t.isAlive() && conv.progress < conv.estimate && conv.exception == null) {
+          this.getLogger().log(Level.INFO, "Data conversion progress: " + ((float) conv.progress * 100 / conv.estimate) + "%");
+          try {
+            Thread.sleep(250);
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        if (conv.exception != null) {
+          this.getLogger().log(Level.SEVERE, "Error while converting data: ", conv.exception);
+          return;
+        }
+        if (!t.isAlive()) {
+          this.getLogger().log(Level.INFO, "Data conversion completed.");
+        }
+        state = ApplicationState.RUNNING;
+      }).start();
+    }
   }
 
-  @SneakyThrows
-  public void onDisable() {
+  @Override
+  public void shutdown() {
+    if (state.equals(ApplicationState.DISABLED) || state.equals(ApplicationState.EXCEPTIONALLY)) {
+      throw new IllegalStateException("Trying to shutdown PathFinder - Application already disabled.");
+    }
+    state = ApplicationState.DISABLED;
+
     NodeHandler.getInstance().cancelAllEditModes();
     extensionRegistry.disableExtensions(this);
     storage.shutdown();
+  }
+
+  @Override
+  public void shutdownExceptionally(Throwable t) {
+    shutdown();
+    state = ApplicationState.EXCEPTIONALLY;
   }
 
   public void loadConfig() {
@@ -185,7 +256,7 @@ public abstract class CommonPathFinder implements PathFinder {
 
   abstract AudienceProvider provideAudiences();
 
-  abstract EventDispatcher provideEventDispatcher();
+  abstract EventDispatcher<?> provideEventDispatcher();
 
   abstract void saveResource(String name, boolean override);
 }

@@ -133,10 +133,9 @@ public class BukkitPathFinder extends CommonPathFinder {
     new BukkitEffects((EventDispatcher<Player>) eventDispatcher, configuration.effects);
   }
 
-  @Override
   public void onDisable() {
-    super.onDisable();
-    commandRegistry.unregisterCommands();
+    super.shutdown();
+      commandRegistry.unregisterCommands();
   }
 
   @Override

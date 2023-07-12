@@ -13,6 +13,7 @@ import org.jooq.SQLDialect;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Locale;
 
 @Getter
 @Configuration
@@ -49,17 +50,17 @@ public class PathFinderConf implements PathFinderConfig {
         See also: https://docs.leonardbausenwein.de/configuration/config.html#client-language""")
     public boolean clientLanguage = false;
     @Comment("""
-        The fallback language serves as default language for all users. If the client language
-        setting is enabled but no file for a client language is present the fallback language
-        will be used instead.
-                
-        The input value is a string that refers to the name of the language file in the
-        /pathfinder/lang/ directory.
-                
-        Make sure to make locales either two letters ('en', 'de', 'au'), or a locale key pair ('en-US', 'de-DE').
-        See also: https://www.oracle.com/java/technologies/javase/jdk8-jre8-suported-locales.html
-        See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language""")
-    public String fallbackLanguage = "en";
+            The fallback language serves as default language for all users. If the client language
+            setting is enabled but no file for a client language is present the fallback language
+            will be used instead.
+                    
+            The input value is a string that refers to the name of the language file in the
+            /pathfinder/lang/ directory.
+                    
+            Make sure to make locales either two letters ('en', 'de', 'au'), or a locale key pair ('en-US', 'de-DE').
+            See also: https://www.oracle.com/java/technologies/javase/jdk8-jre8-suported-locales.html
+            See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language""")
+    public Locale fallbackLanguage = Locale.ENGLISH;
   }
 
   @Configuration

@@ -4,7 +4,8 @@
 package de.cubbossa.pathfinder.storage.v3;
 
 
-import de.cubbossa.pathfinder.jooq.tables.*;
+import de.cubbossa.pathfinder.jooq.tables.SqliteSequence;
+import de.cubbossa.pathfinder.storage.v3.tables.*;
 
 
 /**

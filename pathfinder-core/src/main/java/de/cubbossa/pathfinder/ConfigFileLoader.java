@@ -6,10 +6,12 @@ import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.awt.*;
 import java.io.File;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 
 @AllArgsConstructor
@@ -18,14 +20,28 @@ public class ConfigFileLoader {
 
   private final File dataFolder;
   private final BiConsumer<String, Boolean> saveResource;
-  private Version configRegenerationVersion = new Version("3.0.0");
+  private Version configRegenerationVersion = new Version("4.0.0");
+
+  @Getter
+  private boolean versionChange;
 
   public PathFinderConf loadConfig() {
     PathFinderConf configuration;
 
     File configFile = new File(dataFolder, "config.yml");
     YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-        .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+            .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+            .addSerializer(Locale.class, new Serializer<Locale, String>() {
+              @Override
+              public String serialize(Locale element) {
+                return element.toLanguageTag();
+              }
+
+              @Override
+              public Locale deserialize(String element) {
+                return Locale.forLanguageTag(element.replace("_", "-"));
+              }
+            })
         .addSerializer(Color.class, new Serializer<Color, String>() {
           @Override
           public String serialize(Color element) {
@@ -62,11 +78,11 @@ public class ConfigFileLoader {
     configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
+      this.versionChange = true;
 
       saveFileAsOld(configFile, "config", ".yml");
       saveFileAsOld(new File(dataFolder, "effects.nbo"), "effects", ".nbo");
       loadConfig();
-      saveResource.accept("effects.nbo", true);
     }
     return configuration;
   }
