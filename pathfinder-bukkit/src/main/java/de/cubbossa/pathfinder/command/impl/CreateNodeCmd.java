@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -23,18 +23,18 @@ public class CreateNodeCmd extends PathFinderSubCommand {
       createNode(player, fallbackWaypointType.get(),
           BukkitVectorUtils.toInternal(player.getLocation()));
     });
-    then(CustomArgs.location("location")
+    then(Arguments.location("location")
         .displayAsOptional()
         .executesPlayer((player, args) -> {
           createNode(player, fallbackWaypointType.get(), args.getUnchecked(0));
         })
     );
-    then(CustomArgs.nodeTypeArgument("type")
+    then(Arguments.nodeTypeArgument("type")
         .executesPlayer((player, args) -> {
           createNode(player, args.getUnchecked(0),
               BukkitVectorUtils.toInternal(player.getLocation()));
         })
-        .then(CustomArgs.location("location")
+        .then(Arguments.location("location")
             .executesPlayer((player, args) -> {
               createNode(player, args.getUnchecked(0),
                   args.getUnchecked(1));

@@ -25,7 +25,12 @@ import java.util.stream.Collectors;
 public abstract class BezierPathVisualizer
     extends IntervalVisualizer<BezierPathVisualizer.BezierView> {
 
-  private float pointDistance = .2f;
+  public static final Property<BezierPathVisualizer, Double> PROP_POINT_DIST = new SimpleProperty<>("particle-distance",
+      Double.class, BezierPathVisualizer::getPointDistance, BezierPathVisualizer::setPointDistance);
+  public static final Property<BezierPathVisualizer, Integer> PROP_SAMPLE_RATE = new SimpleProperty<>("sample-rate",
+      Integer.class, BezierPathVisualizer::getBezierSamplingRate, BezierPathVisualizer::setBezierSamplingRate);
+
+  private double pointDistance = .2f;
   private int bezierSamplingRate = 16;
 
   public BezierPathVisualizer(NamespacedKey key) {

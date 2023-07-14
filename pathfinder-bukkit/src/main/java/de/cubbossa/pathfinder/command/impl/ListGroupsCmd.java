@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command.impl;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -20,7 +20,7 @@ public class ListGroupsCmd extends PathFinderSubCommand {
     executes((sender, args) -> {
       listGroups(sender, Pagination.page(0, 10));
     });
-    then(CustomArgs.pagination(10)
+    then(Arguments.pagination(10)
         .executes((sender, args) -> {
           listGroups(sender, args.getUnchecked(0));
         })

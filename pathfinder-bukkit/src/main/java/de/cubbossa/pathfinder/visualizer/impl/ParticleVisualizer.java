@@ -35,6 +35,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
 
   public ParticleVisualizer(NamespacedKey key) {
     super(key);
+    PROP_INTERVAL.setValue(this, 1);
   }
 
   @Override
@@ -48,7 +49,11 @@ public class ParticleVisualizer extends BezierPathVisualizer {
           for (PathPlayer<Player> player : getViewers()) {
             Player bukkitPlayer = player.unwrap();
             Location point = points.get(i);
-            bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, particleData);
+            var data = particleData;
+            if (!particleData.getClass().equals(particle.getDataType())) {
+              data = null;
+            }
+            bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, data);
           }
         }
       }

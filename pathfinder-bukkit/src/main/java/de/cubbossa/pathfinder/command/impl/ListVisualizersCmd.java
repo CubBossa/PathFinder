@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -24,7 +24,7 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
     executes((commandSender, objects) -> {
       onList(commandSender, Pagination.page(0, 10));
     });
-    then(CustomArgs.pagination(10)
+    then(Arguments.pagination(10)
         .executes((commandSender, objects) -> {
           onList(commandSender, objects.getUnchecked(0));
         })

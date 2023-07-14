@@ -8,7 +8,7 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
@@ -48,62 +48,62 @@ public class NodesCmd extends PathFinderSubCommand {
         || sender.hasPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
     );
 
-    then(CustomArgs.nodeSelectionArgument("nodes")
-        .then(CustomArgs.literal("info")
+    then(Arguments.nodeSelectionArgument("nodes")
+        .then(Arguments.literal("info")
             .withPermission(PathPerms.PERM_CMD_WP_INFO)
             .executesPlayer((player, args) -> {
               onInfo(player, args.getUnchecked(0));
             })
         )
-        .then(CustomArgs.literal("tphere")
+        .then(Arguments.literal("tphere")
             .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
             .executesPlayer((player, args) -> {
               teleportNodes(player, args.getUnchecked(0), BukkitVectorUtils.toInternal(player.getLocation()));
             })
         )
-        .then(CustomArgs.literal("tp")
+        .then(Arguments.literal("tp")
             .withPermission(PathPerms.PERM_CMD_WP_TP)
-            .then(CustomArgs.location("location", LocationType.PRECISE_POSITION)
+            .then(Arguments.location("location", LocationType.PRECISE_POSITION)
                 .executesPlayer((player, args) -> {
                   teleportNodes(player, args.getUnchecked(0), args.getUnchecked(1));
                 })
             )
         )
-        .then(CustomArgs.literal("connect")
+        .then(Arguments.literal("connect")
             .withPermission(PathPerms.PERM_CMD_WP_CONNECT)
-            .then(CustomArgs.nodeSelectionArgument("end")
+            .then(Arguments.nodeSelectionArgument("end")
                 .executesPlayer((player, args) -> {
                   connectNodes(player, args.getUnchecked(0), args.getUnchecked(1));
                 })
             )
         )
-        .then(CustomArgs.literal("disconnect")
+        .then(Arguments.literal("disconnect")
             .withPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
-            .then(CustomArgs.nodeSelectionArgument("end")
+            .then(Arguments.nodeSelectionArgument("end")
                 .executesPlayer((player, args) -> {
                   disconnectNodes(player, args.getUnchecked(0), args.getUnchecked(1));
                 })
             )
 
         )
-        .then(CustomArgs.literal("groups")
-            .then(CustomArgs.literal("add")
+        .then(Arguments.literal("groups")
+            .then(Arguments.literal("add")
                 .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
-                .then(CustomArgs.nodeGroupArgument("group")
+                .then(Arguments.nodeGroupArgument("group")
                     .executesPlayer((player, args) -> {
                       addGroup(player, args.getUnchecked(0), args.getUnchecked(1));
                     })
                 )
             )
-            .then(CustomArgs.literal("remove")
+            .then(Arguments.literal("remove")
                 .withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
-                .then(CustomArgs.nodeGroupArgument("group")
+                .then(Arguments.nodeGroupArgument("group")
                     .executesPlayer((player, args) -> {
                       removeGroup(player, args.getUnchecked(0), args.getUnchecked(1));
                     })
                 )
             )
-            .then(CustomArgs.literal("clear")
+            .then(Arguments.literal("clear")
                 .withPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
                 .executesPlayer((player, args) -> {
                   clearGroups(player, args.getUnchecked(0));

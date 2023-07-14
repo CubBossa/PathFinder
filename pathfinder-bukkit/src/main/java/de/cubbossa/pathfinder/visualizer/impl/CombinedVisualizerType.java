@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.events.visualizer.CombinedVisualizerChangedEvent;
@@ -43,8 +43,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex,
                                        int argumentOffset) {
     return tree
-        .then(CustomArgs.literal("add")
-            .then(CustomArgs.pathVisualizerArgument("child")
+        .then(Arguments.literal("add")
+            .then(Arguments.pathVisualizerArgument("child")
                 .executes((sender, args) -> {
                   CombinedVisualizer vis = args.getUnchecked(0);
                   PathVisualizer<?, ?> target = args.getUnchecked(1);
@@ -58,8 +58,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Messages.formatter().namespacedKey("child", target.getKey())
                   ));
                 })))
-        .then(CustomArgs.literal("remove")
-            .then(CustomArgs.pathVisualizerArgument("child")
+        .then(Arguments.literal("remove")
+            .then(Arguments.pathVisualizerArgument("child")
                 .executes((sender, args) -> {
                   CombinedVisualizer vis = args.getUnchecked(0);
                   PathVisualizer<?, ?> target = args.getUnchecked(1);
@@ -74,7 +74,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           Messages.formatter().namespacedKey("child", target.getKey())
                       ));
                 })))
-        .then(CustomArgs.literal("clear")
+        .then(Arguments.literal("clear")
             .executes((commandSender, args) -> {
               CombinedVisualizer vis = args.getUnchecked(0);
               Collection<PathVisualizer<?, ?>> targets = vis.getVisualizers();

@@ -4,7 +4,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -12,7 +12,6 @@ import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.ArgumentTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -26,12 +25,12 @@ import java.util.function.Consumer;
 @Getter
 @Setter
 public class PlaceholderVisualizerType extends AbstractVisualizerType<PlaceholderVisualizer>
-        implements VisualizerTypeCommandExtension,
-        VisualizerTypeMessageExtension<PlaceholderVisualizer> {
+    implements VisualizerTypeCommandExtension,
+    VisualizerTypeMessageExtension<PlaceholderVisualizer> {
 
-    public PlaceholderVisualizerType(NamespacedKey key) {
-        super(key);
-    }
+  public PlaceholderVisualizerType(NamespacedKey key) {
+    super(key);
+  }
 
   @Override
   public PlaceholderVisualizer create(NamespacedKey key) {
@@ -54,13 +53,12 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
   }
 
   @Override
-  public ArgumentTree appendEditCommand(ArgumentTree tree, int visualizerIndex,
-                                        int argumentOffset) {
-    Arrays.stream(PlaceholderVisualizer.PROPS).forEach(prop -> {
-      tree.then(subCommand(prop.getKey(), CustomArgs.miniMessageArgument("format",
+  public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
+    for (AbstractVisualizer.Property<PlaceholderVisualizer, String> prop : PlaceholderVisualizer.PROPS) {
+      tree = tree.then(subCommand(prop.getKey(), Arguments.miniMessageArgument("format",
           Objects.equals(prop.getKey(), PlaceholderVisualizer.PROP_DISTANCE.getKey())
               ? i -> Set.of("distance") : i -> new HashSet<>()), prop));
-    });
+    }
     return tree;
   }
 

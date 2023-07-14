@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.module.papi;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
 import lombok.Getter;
@@ -17,7 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 public class PlaceholderVisualizer
-    extends EdgeBasedVisualizer<PlaceholderVisualizer, PlaceholderVisualizer.Data> {
+    extends EdgeBasedVisualizer<PlaceholderVisualizer.PlaceholderView> {
 
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH =
       new SimpleProperty<>("format-north",
@@ -70,43 +71,22 @@ public class PlaceholderVisualizer
       {north, northEast, east, southEast, south, southWest, west, northWest};
   private String distanceFormat = "<distance:#.#> Blocks away";
 
-  public PlaceholderVisualizer(NamespacedKey key, String nameFormat) {
-    super(key, nameFormat);
+  public PlaceholderVisualizer(NamespacedKey key) {
+    super(key);
   }
 
   @Override
-  public Data newData(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
-    return new Data(nodes, edges);
-  }
-
-  @Override
-  public Data createView(List<Node> nodes, PathPlayer<Player> player) {
-    Data data = super.createView(nodes, player);
+  public PlaceholderView createView(List<Node> nodes, PathPlayer<Player> player) {
+    PlaceholderView placeholderView = super.createView(nodes, player);
     Player bp = player.unwrap();
-    PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, data::getDirection);
-    PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, bp, data::getDistance);
-    return data;
+    PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, placeholderView::getDirection);
+    PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, bp, placeholderView::getDistance);
+    return placeholderView;
   }
 
   @Override
-  public void play(VisualizerContext<Data, Player> context, Location nearestPoint,
-                   Location leadPoint,
-                   Edge nearestEdge) {
-    double distance = BukkitVectorUtils.toBukkit(context.player().getLocation()).distance(nearestPoint)
-        + nearestPoint.distance(
-        nearestEdge.target());
-    int nearestEdgeIndex = context.data().getEdges().indexOf(nearestEdge);
-    for (Edge edge : context.data().getEdges()
-        .subList(nearestEdgeIndex + 1, context.data().getEdges().size())) {
-      distance += edge.support().distance(edge.target());
-    }
-
-
-    double angle = BukkitVectorUtils.convertDirectionToXZAngle(
-        leadPoint.clone().subtract(BukkitVectorUtils.toBukkit(context.player().getLocation())));
-
-    context.data().direction = directions[(int) ((angle + 22.5) / 45) % 8];
-    context.data().distance = resolveDistance(distance);
+  public PlaceholderView createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player) {
+    return new PlaceholderView(player, nodes, edges);
   }
 
   public String resolveDistance(double distance) {
@@ -117,12 +97,30 @@ public class PlaceholderVisualizer
 
   @Getter
   @Setter
-  protected static class Data extends EdgeBasedVisualizer.Data {
+  protected class PlaceholderView extends EdgeBasedVisualizer<PlaceholderView>.EdgeBasedView {
 
     private String direction = "", distance = "";
 
-    public Data(List<Node> nodes, List<Edge> edges) {
-      super(nodes, edges);
+    public PlaceholderView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
+      super(player, nodes, edges);
+    }
+
+    @Override
+    public void play(Location nearestPoint, Location leadPoint, Edge nearestEdge) {
+      Location playerLoc = BukkitVectorUtils.toBukkit(getTargetViewer().getLocation());
+
+      double dist = playerLoc.distance(nearestPoint) + nearestPoint.distance(nearestEdge.target());
+      int nearestEdgeIndex = getEdges().indexOf(nearestEdge);
+      for (Edge edge : getEdges().subList(nearestEdgeIndex + 1, getEdges().size())) {
+        dist += edge.support().distance(edge.target());
+        dist += nearestEdge.support().distance(nearestEdge.target());
+      }
+
+      double angle = BukkitVectorUtils.convertDirectionToXZAngle(
+          leadPoint.clone().subtract(playerLoc));
+
+      direction = directions[(int) ((angle + 22.5) / 45) % 8];
+      distance = resolveDistance(dist);
     }
   }
 }

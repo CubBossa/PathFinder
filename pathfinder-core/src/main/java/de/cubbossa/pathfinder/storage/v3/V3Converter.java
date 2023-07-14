@@ -19,9 +19,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class V3Converter implements Runnable {
 
+  private final Logger logger;
   private final V3Storage oldStorage;
   private final Storage storage;
   private final NodeTypeRegistry nodeTypes;
@@ -32,7 +35,8 @@ public class V3Converter implements Runnable {
   public volatile int progress = 0;
   public volatile int estimate = Integer.MAX_VALUE;
 
-  public V3Converter(V3Storage oldStorage, Storage storage, NodeTypeRegistry nodeTypes, VisualizerTypeRegistry visualizerTypes, WorldLoader worldLoader) {
+  public V3Converter(Logger logger, V3Storage oldStorage, Storage storage, NodeTypeRegistry nodeTypes, VisualizerTypeRegistry visualizerTypes, WorldLoader worldLoader) {
+    this.logger = logger;
     this.oldStorage = oldStorage;
     this.storage = storage;
     this.nodeTypes = nodeTypes;
@@ -67,6 +71,11 @@ public class V3Converter implements Runnable {
       Map<NamespacedKey, NodeGroup> roadMapReplacements = new HashMap<>();
 
       for (V3Storage.V3RoadMap rm : v3RoadMaps) {
+        if (roadMapReplacements.containsKey(rm.key())) {
+          logger.log(Level.SEVERE, "Duplicate key conflict in roadmaps: '" + rm.key() + "'.");
+          continue;
+        }
+
         NodeGroup group = storage.createAndLoadGroup(rm.key()).join();
         group.addModifier(new CommonCurveLengthModifier(rm.curveLength()));
         if (rm.vis() != null) {
@@ -142,6 +151,13 @@ public class V3Converter implements Runnable {
 
       Map<NamespacedKey, NodeGroup> groups = new HashMap<>();
       for (V3Storage.V3NodeGroup group : v3NodeGroups) {
+        while (roadMapReplacements.containsKey(group.key()) || groups.containsKey(group.key())) {
+          logger.log(Level.SEVERE, "Duplicate key conflict with group '" + group.key() + "'");
+          group = new V3Storage.V3NodeGroup(
+              NamespacedKey.fromString(group.key().toString() + "_dupl"),
+              group.nameFormat(), group.perm(), group.navigable(), group.discoverable(), group.findDistance()
+          );
+        }
         NodeGroup newGroup;
         try {
           newGroup = storage.createAndLoadGroup(group.key()).join();

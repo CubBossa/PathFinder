@@ -79,7 +79,7 @@ public class PathFinderCommand extends CommandTree {
       ));
     });
 
-    then(CustomArgs.literal("info")
+    then(Arguments.literal("info")
         .withPermission(PathPerms.PERM_CMD_PF_INFO)
         .executes((commandSender, objects) -> {
           BukkitUtils.wrap(commandSender).sendMessage(Messages.INFO.formatted(
@@ -87,7 +87,7 @@ public class PathFinderCommand extends CommandTree {
           ));
         }));
 
-    then(CustomArgs.literal("modules")
+    then(Arguments.literal("modules")
         .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
           List<String> list =
@@ -100,24 +100,24 @@ public class PathFinderCommand extends CommandTree {
           ));
         }));
 
-    then(CustomArgs.literal("editmode")
+    then(Arguments.literal("editmode")
         .executesPlayer((player, args) -> {
           NodeHandler.getInstance()
               .toggleNodeGroupEditor(BukkitUtils.wrap(player), CommonPathFinder.globalGroupKey());
         })
-        .then(CustomArgs.nodeGroupArgument("group")
+        .then(Arguments.nodeGroupArgument("group")
             .executesPlayer((player, args) -> {
               NodeHandler.getInstance().toggleNodeGroupEditor(BukkitUtils.wrap(player),
                   ((SimpleNodeGroup) args.getUnchecked(0)).getKey());
             })));
 
-    then(CustomArgs.literal("help")
+    then(Arguments.literal("help")
         .withPermission(PathPerms.PERM_CMD_PF_HELP)
         .executes((commandSender, objects) -> {
           BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_HELP);
         }));
 
-    then(CustomArgs.literal("reload")
+    then(Arguments.literal("reload")
         .withPermission(PathPerms.PERM_CMD_PF_RELOAD)
 
         .executes((sender, objects) -> {
@@ -148,7 +148,7 @@ public class PathFinderCommand extends CommandTree {
           });
         })
 
-        .then(CustomArgs.literal("language")
+        .then(Arguments.literal("language")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
 
@@ -156,7 +156,7 @@ public class PathFinderCommand extends CommandTree {
                 CommonPathFinder pf = BukkitPathFinder.getInstance();
                 MessageBundle translations = pf.getTranslations();
 
-                  Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
+                Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
                 translations.clearCache();
                 translations.writeLocale(fallback);
                 translations.loadLocale(fallback);
@@ -177,7 +177,7 @@ public class PathFinderCommand extends CommandTree {
             })
         )
 
-        .then(CustomArgs.literal("config")
+        .then(Arguments.literal("config")
             .executes((sender, objects) -> {
               long now = System.currentTimeMillis();
 
@@ -208,21 +208,21 @@ public class PathFinderCommand extends CommandTree {
         )
     );
 
-    then(CustomArgs.literal("forcefind")
+    then(Arguments.literal("forcefind")
         .withGeneratedHelp()
         .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
-        .then(CustomArgs.pathPlayer("player")
+        .then(Arguments.pathPlayer("player")
             .withGeneratedHelp()
-            .then(CustomArgs.discoverableArgument("discovering")
+            .then(Arguments.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
                   onForceFind(commandSender, args.getUnchecked(0), args.getUnchecked(1));
                 }))));
-    then(CustomArgs.literal("forceforget")
+    then(Arguments.literal("forceforget")
         .withGeneratedHelp()
         .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
-        .then(CustomArgs.pathPlayer("player")
+        .then(Arguments.pathPlayer("player")
             .withGeneratedHelp()
-            .then(CustomArgs.discoverableArgument("discovering")
+            .then(Arguments.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
                   onForceForget(BukkitUtils.wrap(commandSender), args.getUnchecked(0), args.getUnchecked(1));
                 }))));

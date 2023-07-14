@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -24,7 +24,7 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
 
     withGeneratedHelp();
     withPermission(PathPerms.PERM_CMD_PV_CREATE);
-    then(CustomArgs.visualizerTypeArgument("type")
+    then(Arguments.visualizerTypeArgument("type")
         .then(new StringArgument("key")
             .executes((commandSender, objects) -> {
               onCreate(commandSender,

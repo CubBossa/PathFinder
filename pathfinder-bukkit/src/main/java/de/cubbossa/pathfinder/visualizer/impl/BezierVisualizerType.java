@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.command.CustomArgs;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.arguments.FloatArgument;
+import dev.jorel.commandapi.arguments.DoubleArgument;
+import dev.jorel.commandapi.arguments.IntegerArgument;
 
 public abstract class BezierVisualizerType<VisualizerT extends BezierPathVisualizer>
     extends IntervalVisualizerType<VisualizerT>
@@ -19,21 +18,7 @@ public abstract class BezierVisualizerType<VisualizerT extends BezierPathVisuali
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
     tree = super.appendEditCommand(tree, visualizerIndex, argumentOffset);
     return tree
-        .then(CustomArgs.literal("point-distance")
-            .then(new FloatArgument("distance", .02f, 100)
-                .executes((commandSender, args) -> {
-                  if (args.get(0) instanceof AdvancedParticleVisualizer vis) { //TODO this should be in its own deriving class
-                    setProperty(BukkitUtils.wrap(commandSender), vis, args.getUnchecked(1), "particle-steps",
-                        vis::getSchedulerSteps, vis::setSchedulerSteps);
-                  }
-                })))
-        .then(CustomArgs.literal("sample-rate")
-            .then(CustomArgs.integer("sample-rate", 1, 64)
-                .executes((commandSender, args) -> {
-                  if (args.get(0) instanceof BezierPathVisualizer vis) {
-                    setProperty(BukkitUtils.wrap(commandSender), vis, args.getUnchecked(1), "sample-rate",
-                        vis::getBezierSamplingRate, vis::setBezierSamplingRate);
-                  }
-                })));
+        .then(subCommand("point-distance", new DoubleArgument("distance", 0.02, 100), BezierPathVisualizer.PROP_POINT_DIST))
+        .then(subCommand("sample-rate", new IntegerArgument("distance", 1, 64), BezierPathVisualizer.PROP_SAMPLE_RATE));
   }
 }

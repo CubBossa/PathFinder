@@ -196,11 +196,12 @@ public abstract class CommonPathFinder implements PathFinder {
     } else {
 
       var conv = new V3Converter(
-              new V3SqliteStorage(new File(getDataFolder(), "old_data/database.db")),
-              storage,
-              nodeTypeRegistry,
-              visualizerTypeRegistry,
-              this::getWorld
+          getLogger(),
+          new V3SqliteStorage(new File(getDataFolder(), "old_data/database.db")),
+          storage,
+          nodeTypeRegistry,
+          visualizerTypeRegistry,
+          this::getWorld
       );
       Thread t = new Thread(conv);
       t.start();

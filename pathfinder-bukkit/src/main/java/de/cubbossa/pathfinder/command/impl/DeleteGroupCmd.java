@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -17,7 +17,7 @@ public class DeleteGroupCmd extends PathFinderSubCommand {
 
     withGeneratedHelp();
     withPermission(PathPerms.PERM_CMD_NG_DELETE);
-    then(CustomArgs.nodeGroupArgument("group")
+    then(Arguments.nodeGroupArgument("group")
         .executes((sender, args) -> {
           deleteGroup(sender, args.getUnchecked(0));
         }));

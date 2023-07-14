@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -36,27 +36,27 @@ public class GroupCmd extends PathFinderSubCommand {
         || sender.hasPermission(PathPerms.PERM_CMD_NG_UNSET_MOD)
     );
 
-    Argument<?> set = CustomArgs.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
-    Argument<?> unset = CustomArgs.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
+    Argument<?> set = Arguments.literal("set").withPermission(PathPerms.PERM_CMD_NG_SET_MOD);
+    Argument<?> unset = Arguments.literal("unset").withPermission(PathPerms.PERM_CMD_NG_UNSET_MOD);
 
     for (ModifierType<?> modifier : getPathfinder().getModifierRegistry().getTypes()) {
       if (!(modifier instanceof ModifierCommandExtension<?> cmdExt)) {
         continue;
       }
-      Argument<?> lit = CustomArgs.literal(modifier.getSubCommandLiteral());
+      Argument<?> lit = Arguments.literal(modifier.getSubCommandLiteral());
       lit = cmdExt.registerAddCommand(lit, mod -> (commandSender, args) -> {
         addModifier(commandSender, args.getUnchecked(0), mod);
       });
       set = set.then(lit);
-      unset = unset.then(CustomArgs.literal(modifier.getSubCommandLiteral())
+      unset = unset.then(Arguments.literal(modifier.getSubCommandLiteral())
           .executes((commandSender, args) -> {
             removeModifier(commandSender, args.getUnchecked(0), modifier.getKey());
           })
       );
     }
 
-    then(CustomArgs.nodeGroupArgument("group")
-        .then(CustomArgs.literal("info")
+    then(Arguments.nodeGroupArgument("group")
+        .then(Arguments.literal("info")
             .withPermission(PathPerms.PERM_CMD_NG_INFO)
             .executes((commandSender, args) -> {
               showGroup(commandSender, args.getUnchecked(0));

@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * A collection of custom command arguments for the CommandAPI.
  */
 @UtilityClass
-public class CustomArgs {
+public class Arguments {
 
   private static final Collection<String> TAGS =
       Lists.newArrayList("<rainbow>", "<gradient>", "<click>", "<hover>",
@@ -378,7 +378,7 @@ public class CustomArgs {
                 // Create context for request
                 BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
                 // Find a node that matches all required filters
-                return AbstractNavigationHandler.getInstance().getNavigationFilter().stream().allMatch(predicate -> predicate.test(c));
+                return AbstractNavigationHandler.getInstance().canFind(c);
               }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
               try {

@@ -16,7 +16,7 @@ public class FindLocationCommand extends CommandTree {
     withAliases("gpslocation", "navigatelocation");
     withPermission(PathPerms.PERM_CMD_FIND_LOCATION);
 
-    then(CustomArgs.location("location")
+    then(Arguments.location("location")
         .executesPlayer((player, args) -> {
           Location target = args.getUnchecked(0);
 

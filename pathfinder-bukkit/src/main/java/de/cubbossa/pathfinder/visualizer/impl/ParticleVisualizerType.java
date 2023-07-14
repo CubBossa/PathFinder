@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -37,6 +37,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
     return Messages.CMD_VIS_INFO_PARTICLES.formatted(
         Messages.formatter().particle("particle", element.getParticle(), element.getParticleData()),
         Messages.formatter().number("particle-steps", element.getSchedulerSteps()),
+        Messages.formatter().number("sampling-rate", element.getBezierSamplingRate()),
         Messages.formatter().number("interval", element.getInterval()),
         Messages.formatter().number("amount", element.getAmount()),
         Messages.formatter().number("speed", element.getSpeed()),
@@ -48,14 +49,14 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   @Override
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
     return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
-        .then(CustomArgs.literal("particle")
+        .then(Arguments.literal("particle")
             .then(new ParticleArgument("particle")
                 .executes((commandSender, args) -> {
                   ParticleVisualizer visualizer = args.getUnchecked(visualizerIndex);
                   onSetParticle(commandSender, visualizer, args.getUnchecked(argumentOffset),
                       null, null, null);
                 })
-                .then(CustomArgs.integer("amount", 1)
+                .then(Arguments.integer("amount", 1)
                     .executes((commandSender, args) -> {
                       ParticleVisualizer visualizer = args.getUnchecked(visualizerIndex);
                       onSetParticle(commandSender, visualizer,
@@ -71,7 +72,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                               args.getUnchecked(argumentOffset + 1),
                               args.getUnchecked(argumentOffset + 2), null);
                         })
-                        .then(CustomArgs.location("offset")
+                        .then(Arguments.location("offset")
                             .executes((commandSender, args) -> {
                               ParticleVisualizer visualizer =
                                   args.getUnchecked(visualizerIndex);
@@ -85,7 +86,7 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                     )
                 )
             ))
-        .then(subCommand("particle-steps", CustomArgs.integer("amount", 1),
+        .then(subCommand("particle-steps", Arguments.integer("amount", 1),
             ParticleVisualizer.PROP_SCHEDULER_STEPS));
   }
 

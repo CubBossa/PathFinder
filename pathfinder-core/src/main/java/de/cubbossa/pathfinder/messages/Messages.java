@@ -498,7 +498,7 @@ public class Messages {
                     
           <t>» <c-accent>right-click air:</c-accent> Open GUI</t>
           <t>» <c-accent>right-click node:</c-accent> Add groups</t>
-          <t>» <c-accent>right-click node:</c-accent> Remove groups</t>""")
+          <t>» <c-accent>left-click node:</c-accent> Remove groups</t>""")
       .build();
   public static final Message E_TP_TOOL_N = new MessageBuilder("editor.toolbar.teleport_tool.name")
       .withDefault("<t-light><u>Teleport Tool</u></t-light>")

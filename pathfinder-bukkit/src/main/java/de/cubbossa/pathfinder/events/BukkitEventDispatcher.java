@@ -84,7 +84,6 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   private CompletableFuture<Boolean> dispatchEventWithFuture(Event event) {
-    log("Dispatching Event '" + event.getClass().getSimpleName() + "'.");
     if (Bukkit.isPrimaryThread()) {
       return CompletableFuture.completedFuture(dispatchEventInMainThread(event));
     }

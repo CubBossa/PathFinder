@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -44,23 +44,23 @@ public class CompassVisualizerType extends IntervalVisualizerType<CompassVisuali
   @Override
   public Argument<?> appendEditCommand(Argument<?> tree, int visualizerIndex, int argumentOffset) {
     return super.appendEditCommand(tree, visualizerIndex, argumentOffset)
-        .then(subCommand("color", CustomArgs.enumArgument("value", BossBar.Color.class),
+        .then(subCommand("color", Arguments.enumArgument("value", BossBar.Color.class),
             BossBarVisualizer.PROP_COLOR))
-        .then(subCommand("overlay", CustomArgs.enumArgument("value", BossBar.Overlay.class),
+        .then(subCommand("overlay", Arguments.enumArgument("value", BossBar.Overlay.class),
             BossBarVisualizer.PROP_OVERLAY))
-        .then(subCommand("background", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("background", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_BACKGROUND))
-        .then(subCommand("north", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("north", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_NORTH))
-        .then(subCommand("east", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("east", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_EAST))
-        .then(subCommand("south", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("south", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_SOUTH))
-        .then(subCommand("west", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("west", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_WEST))
-        .then(subCommand("target", CustomArgs.miniMessageArgument("value"),
+        .then(subCommand("target", Arguments.miniMessageArgument("value"),
             CompassVisualizer.PROP_TARGET))
-        .then(subCommand("radius", CustomArgs.integer("value", 1), CompassVisualizer.PROP_RADIUS));
+        .then(subCommand("radius", Arguments.integer("value", 1), CompassVisualizer.PROP_RADIUS));
   }
 
   @Override

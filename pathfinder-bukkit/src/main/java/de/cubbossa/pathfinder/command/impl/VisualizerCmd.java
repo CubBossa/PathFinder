@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
@@ -35,7 +35,7 @@ public class VisualizerCmd extends PathFinderSubCommand {
       LiteralArgument set = (LiteralArgument) new LiteralArgument("set")
           .withPermission(PathPerms.PERM_CMD_PV_MODIFY);
 
-      set.then(CustomArgs.literal("permission")
+      set.then(Arguments.literal("permission")
           .then(new GreedyStringArgument("permission")
               .executes((commandSender, args) -> {
                 if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
@@ -61,9 +61,9 @@ public class VisualizerCmd extends PathFinderSubCommand {
 
       cmdExt.appendEditCommand(set, 0, 1);
       then(new LiteralArgument(type.getCommandName())
-          .then(CustomArgs.pathVisualizerArgument("visualizer", type)
+          .then(Arguments.pathVisualizerArgument("visualizer", type)
               .then(set)
-              .then(CustomArgs.literal("info")
+              .then(Arguments.literal("info")
                   .withPermission(PathPerms.PERM_CMD_PV_INFO)
                   .executes((commandSender, objects) -> {
                     onInfo(commandSender, (PathVisualizer<?, ?>) objects.getUnchecked(0));

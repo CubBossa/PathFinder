@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command.impl;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -17,7 +17,7 @@ public class DeleteVisualizerCmd extends PathFinderSubCommand {
 
     withGeneratedHelp();
     withPermission(PathPerms.PERM_CMD_PV_DELETE);
-    then(CustomArgs.pathVisualizerArgument("visualizer")
+    then(Arguments.pathVisualizerArgument("visualizer")
         .executes((commandSender, objects) -> {
           onDelete(commandSender, objects.getUnchecked(0));
         })

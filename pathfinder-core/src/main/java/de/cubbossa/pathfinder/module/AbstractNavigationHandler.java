@@ -5,7 +5,6 @@ import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
-import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.Location;
@@ -78,6 +77,10 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
     navigationFilter.add(filter);
+  }
+
+  public boolean canFind(NavigationRequestContext ctx) {
+    return navigationFilter.stream().allMatch(p -> p.test(ctx));
   }
 
   public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
@@ -221,13 +224,15 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       PathPlayer<?> player = CommonPathFinder.getInstance().wrap(c.playerId);
       Collection<NodeGroup> groups = StorageUtil.getGroups(c.node());
 
+      if (player.unwrap() == null) {
+        return false;
+      }
+
       return groups.stream()
           .allMatch(g -> {
-            Optional<PermissionModifier> mod = g.<PermissionModifier>getModifier(PermissionModifier.KEY);
-            return player.unwrap() == null || mod.isEmpty() || player.hasPermission(mod.get().permission());
-          })
-          && groups.stream()
-          .anyMatch(g -> g.hasModifier(NavigableModifier.KEY));
+            Optional<PermissionModifier> mod = g.getModifier(PermissionModifier.KEY);
+            return mod.isEmpty() || player.hasPermission(mod.get().permission());
+          });
     });
   }
 }

@@ -16,7 +16,7 @@ public class FindCommand extends CommandTree {
     withAliases("gps", "navigate");
     withPermission(PathPerms.PERM_CMD_FIND);
 
-    then(CustomArgs.navigateSelectionArgument("selection")
+    then(Arguments.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
           NodeSelection targets = args.getUnchecked(0);
           if (targets == null) {

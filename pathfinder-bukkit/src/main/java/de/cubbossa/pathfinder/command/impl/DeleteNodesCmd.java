@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -15,7 +15,7 @@ public class DeleteNodesCmd extends PathFinderSubCommand {
     super(pathFinder, "deletenodes");
 
     withPermission(PathPerms.PERM_CMD_WP_DELETE);
-    then(CustomArgs.nodeSelectionArgument("nodes")
+    then(Arguments.nodeSelectionArgument("nodes")
         .executesPlayer((player, args) -> {
           deleteNode(player, args.getUnchecked(0));
         })

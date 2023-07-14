@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.command.CustomArgs;
+import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
@@ -37,7 +37,7 @@ public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
 
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<VisualizerModifier, CommandExecutor> consumer) {
-    return tree.then(CustomArgs.pathVisualizerArgument("visualizer").executes((commandSender, objects) -> {
+    return tree.then(Arguments.pathVisualizerArgument("visualizer").executes((commandSender, objects) -> {
       consumer.apply(new CommonVisualizerModifier(objects.<PathVisualizer<?, ?>>getUnchecked(1).getKey())).run(commandSender, objects);
     }));
   }

@@ -49,6 +49,7 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
 
   public abstract ViewT createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player);
 
+  @Getter
   public abstract class EdgeBasedView extends IntervalVisualizer<ViewT>.IntervalView {
 
     private final List<Node> nodes;
