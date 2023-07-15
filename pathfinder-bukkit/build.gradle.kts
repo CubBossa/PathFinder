@@ -44,7 +44,7 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Commands
-    api("dev.jorel:commandapi-bukkit-shade:9.0.0")
+    api("dev.jorel:commandapi-bukkit-shade:9.0.3")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")
