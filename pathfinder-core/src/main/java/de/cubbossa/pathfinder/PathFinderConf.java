@@ -8,6 +8,7 @@ import de.cubbossa.pathapi.storage.DatabaseType;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import lombok.Getter;
+import lombok.ToString;
 import org.jooq.SQLDialect;
 
 import java.awt.*;
@@ -17,6 +18,7 @@ import java.util.Locale;
 
 @Getter
 @Configuration
+@ToString
 public class PathFinderConf implements PathFinderConfig {
 
   private final PathFinder pathFinder;
@@ -42,6 +44,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class LanguageConf implements LanguageConfig {
     @Comment("""
         If client language is set to true plugin messages will appear in the according client
@@ -64,6 +67,7 @@ public class PathFinderConf implements PathFinderConfig {
   }
 
   @Configuration
+  @ToString
   @Getter
   public static class DatabaseConf implements DatabaseConfig {
     @Comment("""
@@ -81,6 +85,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class NavigationConf implements NavigationConfig {
     @Comment("""
         Set this to true, if players have to discover nodegroups first to use the /find location
@@ -111,6 +116,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class ModuleConf implements ModuleConfig {
     public boolean discoveryModule = true;
     public boolean navigationModule = true;
@@ -118,12 +124,14 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class EmbeddedSqlStorageConf implements EmbeddedSqlStorageConfig {
     public File file = new File(PathFinderProvider.get().getDataFolder(), "data/database.db");
   }
 
   @Configuration
   @Getter
+  @ToString
   public static class SqlStorageConf implements SqlStorageConfig {
     public String dialect = SQLDialect.MYSQL.getName();
     public String jdbcUrl = "jdbc:mysql://localhost/";
@@ -133,6 +141,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class FindLocationCommandConf implements FindLocationCommandConfig {
     @Comment("""
         The command /findlocation <location> creates a virtual waypoint at the given location
@@ -144,6 +153,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class SimpleLocationWeightSolverConf implements SimpleLocationWeightSolverConfig {
     @Comment("""
         Finds the closest n amount of nodes and connects them to a virtual node at the players position.
@@ -154,6 +164,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class RaycastLocationWeightSolverConf implements RaycastLocationWeightSolverConfig {
     @Comment("""
         The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
@@ -177,6 +188,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   // <player> <player-loc> <player-loc-x>
   @Configuration
+  @ToString
   public static class EffectsConf {
     public ArrayList<String> onPathStart;
     public ArrayList<String> onPathTargetReach;
@@ -192,6 +204,7 @@ public class PathFinderConf implements PathFinderConfig {
 
   @Configuration
   @Getter
+  @ToString
   public static class EditModeConf implements EditModeConfig {
     @Comment("""
         If the edit mode should start with the edges tool set to directed edges or undirected edges.
