@@ -97,8 +97,11 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
 
     // all edges from rendered nodes to adjacent nodes
     Collection<Edge> toRender = nodes.stream()
-        .map(Node::getEdges).flatMap(Collection::stream)
-        .collect(Collectors.toSet());
+            .map(Node::getEdges).flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+
+    Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
+    hideElements(getNodeEntityMap().keySet().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
 
     showElements(toRender, player.unwrap());
     players.add(player);

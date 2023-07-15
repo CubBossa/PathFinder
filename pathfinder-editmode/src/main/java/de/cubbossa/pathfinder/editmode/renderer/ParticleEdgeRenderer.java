@@ -62,13 +62,16 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
 
+    for (Node node : nodes) {
+      edges.remove(node.getNodeId());
+    }
     rendered.addAll(nodes.stream().map(Node::getNodeId).toList());
     Collection<CompletableFuture<Void>> futures = new HashSet<>();
 
     // all edges from rendered nodes to adjacent nodes
     Collection<Edge> toRender = nodes.stream()
-        .map(Node::getEdges).flatMap(Collection::stream)
-        .collect(Collectors.toSet());
+            .map(Node::getEdges).flatMap(Collection::stream)
+            .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
     Storage storage = PathFinderProvider.get().getStorage();
     toRender.addAll(storage.loadEdgesTo(nodes).join().stream()
