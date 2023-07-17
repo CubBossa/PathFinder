@@ -199,7 +199,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   }
 
   public void cancelPath(SearchInfo<PlayerT> info) {
-    if (!eventDispatcher.dispatchPathCancel(info.player, info.path, info.target, info.distance)) {
+    if (!eventDispatcher.dispatchPathCancel(info.player, info.path)) {
       return;
     }
     unsetPath(info);

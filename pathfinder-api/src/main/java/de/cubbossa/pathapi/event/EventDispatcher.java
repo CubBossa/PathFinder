@@ -45,7 +45,7 @@ public interface EventDispatcher<PlayerT> {
 
   void dispatchPathStopped(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target, float distance);
 
-  boolean dispatchPathCancel(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target, float distance);
+  boolean dispatchPathCancel(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 
   <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType, Consumer<? super E> event);
 

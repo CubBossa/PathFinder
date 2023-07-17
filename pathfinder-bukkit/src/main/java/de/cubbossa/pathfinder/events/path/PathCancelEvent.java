@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder.events.path;
 
 import de.cubbossa.pathapi.event.PathCancelledEvent;
-import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
@@ -9,20 +10,18 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.UUID;
-
 @Getter
 @Setter
 public class PathCancelEvent extends Event implements Cancellable, PathCancelledEvent<Player> {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final UUID playerId;
-  private final CommonVisualizerPath<Player> path;
+  private final PathPlayer<Player> player;
+  private final VisualizerPath<Player> path;
   private boolean cancelled = false;
 
-  public PathCancelEvent(UUID playerId, CommonVisualizerPath<Player> path) {
-    this.playerId = playerId;
+  public PathCancelEvent(PathPlayer<Player> player, VisualizerPath<Player> path) {
+    this.player = player;
     this.path = path;
   }
 

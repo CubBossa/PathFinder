@@ -175,8 +175,8 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
-  public boolean dispatchPathCancel(PathPlayer<Player> player, VisualizerPath<Player> path, Location target, float distance) {
-    return true;
+  public boolean dispatchPathCancel(PathPlayer<Player> player, VisualizerPath<Player> path) {
+    return dispatchEvent(new PathCancelEvent(player, path));
   }
 
   @SneakyThrows

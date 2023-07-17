@@ -39,6 +39,12 @@ public class BukkitEffects {
     miniMessage = MiniMessage.miniMessage();
     gsonComponentSerializer = GsonComponentSerializer.gson();
 
+    dispatcher.listen(PathStartEvent.class, e -> {
+      runCommands(e.getPath().getTargetViewer(), config.onPathStart,
+          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+      );
+    });
+
     dispatcher.listen(PathTargetReachedEvent.class, e -> {
       runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach,
           Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
@@ -46,7 +52,6 @@ public class BukkitEffects {
     });
 
     dispatcher.listen(PathCancelledEvent.class, e -> {
-      e.getPath().getTargetViewer().sendMessage(Messages.CMD_CANCEL);
       runCommands(e.getPath().getTargetViewer(), config.onPathCancel,
           Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
       );
