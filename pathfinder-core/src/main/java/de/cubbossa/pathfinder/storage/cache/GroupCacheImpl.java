@@ -91,7 +91,6 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   public void write(NodeGroup group) {
     cache.put(group.getKey(), group);
     for (UUID uuid : group) {
-      //TODO also remove?
       nodeGroupCache.asMap().computeIfAbsent(uuid, uuid1 -> new HashSet<>()).add(group);
     }
   }
@@ -114,6 +113,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   @Override
   public void invalidate(UUID node) {
+    cache.asMap().values().forEach(group -> group.remove(node));
     nodeGroupCache.invalidate(node);
   }
 
@@ -132,5 +132,6 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
     cache.invalidateAll();
     cachedAll = false;
     nodeGroupCache.invalidateAll();
+    modifierGroupCache.invalidateAll();
   }
 }

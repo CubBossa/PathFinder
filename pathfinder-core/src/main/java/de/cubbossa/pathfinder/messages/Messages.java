@@ -568,7 +568,7 @@ public class Messages {
   }
 
   public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
-    return formatGroupInHover(sender, GEN_NODE_SEL, nodes, node -> formatNode(sender, node));
+    return formatGroupInHover(sender, GEN_NODE_SEL, nodes.stream().filter(node -> node != null).toList(), node -> formatNode(sender, node));
   }
 
   public static Component formatNode(CommandSender sender, Node node) {
