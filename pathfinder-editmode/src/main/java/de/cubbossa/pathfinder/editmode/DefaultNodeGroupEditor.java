@@ -30,7 +30,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 @Getter
 @Setter
@@ -59,26 +58,12 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     EventDispatcher<?> eventDispatcher = PathFinderProvider.get().getEventDispatcher();
     listeners = new HashSet<>();
 
-    Consumer<Node> erase = node -> {
-      for (PathPlayer<Player> player : editingPlayers.keySet()) {
-        eraseNodes(player, List.of(node));
-      }
-    };
-    Consumer<NodeEvent> render = event -> {
-      if (!renders(event.getNode())) {
-        erase.accept(event.getNode());
-        return;
-      }
-      for (PathPlayer<Player> player : editingPlayers.keySet()) {
-        renderNodes(player, List.of(event.getNode()));
-      }
-    };
-    listeners.add(eventDispatcher.listen(NodeCreateEvent.class, render));
-    listeners.add(eventDispatcher.listen(NodeSaveEvent.class, render));
-    listeners.add(eventDispatcher.listen(NodeDeleteEvent.class, e -> erase.accept(e.getNode())));
+    listeners.add(eventDispatcher.listen(NodeCreateEvent.class, e -> renderAll(e.getNode())));
+    listeners.add(eventDispatcher.listen(NodeSaveEvent.class, e -> renderAll(e.getNode())));
+    listeners.add(eventDispatcher.listen(NodeDeleteEvent.class, e -> eraseAll(e.getNode())));
 
-    eventDispatcher.listen(NodeGroupDeleteEvent.class, nodeGroupDeleteEvent -> {
-      if (!nodeGroupDeleteEvent.getGroup().getKey().equals(groupKey)) {
+    eventDispatcher.listen(NodeGroupDeleteEvent.class, event -> {
+      if (!event.getGroup().getKey().equals(groupKey)) {
         return;
       }
       for (PathPlayer<Player> player : editingPlayers.keySet()) {
@@ -89,6 +74,26 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     });
 
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+  }
+
+  private void renderAll(Node node) {
+    renderAll(Collections.singleton(node));
+  }
+
+  private void renderAll(Collection<Node> nodes) {
+    for (PathPlayer<Player> player : editingPlayers.keySet()) {
+      renderNodes(player, nodes);
+    }
+  }
+
+  private void eraseAll(Node node) {
+    eraseAll(Collections.singleton(node));
+  }
+
+  private void eraseAll(Collection<Node> nodes) {
+    for (PathPlayer<Player> player : editingPlayers.keySet()) {
+      eraseNodes(player, nodes);
+    }
   }
 
   @EventHandler

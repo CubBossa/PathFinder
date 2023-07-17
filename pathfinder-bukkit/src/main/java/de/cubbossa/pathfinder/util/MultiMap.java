@@ -4,9 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class MultiMap<K1, K2, V> implements Map<K1, Map<K2, V>> {
@@ -16,7 +16,7 @@ public class MultiMap<K1, K2, V> implements Map<K1, Map<K2, V>> {
   private final Map<K1, Map<K2, V>> map;
 
   public MultiMap() {
-    this(HashMap::new, HashMap::new);
+    this(ConcurrentHashMap::new, ConcurrentHashMap::new);
   }
 
   public MultiMap(Supplier<Map<K1, Map<K2, V>>> mapFactory, Supplier<Map<K2, V>> innerFactory) {
