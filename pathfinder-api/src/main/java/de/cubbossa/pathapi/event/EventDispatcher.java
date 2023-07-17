@@ -35,7 +35,7 @@ public interface EventDispatcher<PlayerT> {
 
   boolean dispatchPlayerFindEvent(PathPlayer<PlayerT> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate);
 
-  boolean dispatchPlayerForgetEvent(PathPlayer<PlayerT> player, NamespacedKey group, LocalDateTime foundDate);
+  boolean dispatchPlayerForgetEvent(PathPlayer<PlayerT> player, NamespacedKey group);
 
   boolean dispatchVisualizerChangeEvent(PathVisualizer<?, ?> visualizer);
 

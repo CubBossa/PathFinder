@@ -10,7 +10,12 @@ import de.cubbossa.pathfinder.command.CommonCmdPlaceholderProcessor;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.Translator;
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -21,38 +26,56 @@ import java.util.List;
 public class BukkitEffects {
 
   private final CommandPlaceholderProcessor processor;
+
+  @Setter
+  @Getter
+  private MiniMessage miniMessage;
   private final GsonComponentSerializer gsonComponentSerializer;
 
   public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConf.EffectsConf config) {
 
     processor = new CommonCmdPlaceholderProcessor();
+
+    miniMessage = MiniMessage.miniMessage();
     gsonComponentSerializer = GsonComponentSerializer.gson();
 
     dispatcher.listen(PathTargetReachedEvent.class, e -> {
-      e.getPath().getTargetViewer().sendMessage(Messages.TARGET_FOUND);
-      runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach);
+      runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach,
+          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+      );
     });
 
     dispatcher.listen(PathCancelledEvent.class, e -> {
       e.getPath().getTargetViewer().sendMessage(Messages.CMD_CANCEL);
-      runCommands(e.getPath().getTargetViewer(), config.onPathCancel);
+      runCommands(e.getPath().getTargetViewer(), config.onPathCancel,
+          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+      );
     });
 
     dispatcher.listen(PathStoppedEvent.class, e -> {
-      runCommands(e.getPath().getTargetViewer(), config.onPathStop);
+      runCommands(e.getPath().getTargetViewer(), config.onPathStop,
+          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+      );
     });
 
     dispatcher.listen(PlayerDiscoverLocationEvent.class, e -> {
-      e.getPlayer().sendMessage(e.getModifier().getDisplayName());
-      runCommands(e.getPlayer(), config.onDiscover);
+      runCommands(e.getPlayer(), config.onDiscover,
+          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("discoverable", e.getModifier().getDisplayName()),
+          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+      );
     });
 
     dispatcher.listen(PlayerForgetLocationEvent.class, e -> {
-      e.getPlayer().sendMessage(Component.text("Forget: ").append(e.getModifier().getDisplayName()));
+      runCommands(e.getPlayer(), config.onForget,
+          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("discoverable", e.getModifier().getDisplayName()),
+          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+      );
     });
   }
 
-  private String prepareCmd(String cmd, PathPlayer<Player> player) {
+  private String prepareCmd(String cmd, PathPlayer<Player> player, TagResolver... msgResolvers) {
     // TODO check if placeholderapi installed and if use placeholderapi placeholders
     return processor.process(cmd,
         CmdTagResolver.tag("player", strings -> {
@@ -69,7 +92,7 @@ public class BukkitEffects {
               }
               yield player.unwrap().getWorld().getName();
             }
-            case "loc" -> {
+            case "location" -> {
               String arg2 = strings.poll();
               Location loc = player.unwrap().getLocation();
               if (arg2 == null) {
@@ -88,27 +111,35 @@ public class BukkitEffects {
             default -> player.getName();
           };
         }),
-        CmdTagResolver.tag("msg", strings -> {
-          if (strings.size() == 0) {
+        CmdTagResolver.tag("translation", strings -> {
+          if (strings.size() < 1) {
             throw new IllegalStateException("Cannot parse message without message key.");
           }
+          String messageKey = "";
+          while (strings.size() > 1) messageKey += "." + strings.poll();
+          messageKey = messageKey.substring(1);
+          String serializer = strings.poll();
+
           Translator translator = CommonPathFinder.getInstance().getTranslations();
-          Component cmp = translator.translate(new Message(strings.poll(), translator).formatted(
-              // TODO resolve player, discoverable, group, ...
+
+          Component cmp = translator.translate(new Message(messageKey, translator).formatted(
+              msgResolvers
           ), CommonPathFinder.getInstance().getAudiences().player(player.getUniqueId()));
 
-          return gsonComponentSerializer.serialize(cmp);
+          return (switch (serializer) {
+            case "miniMessage", "mini" -> miniMessage;
+            default -> gsonComponentSerializer;
+          }).serialize(cmp);
         })
     );
   }
 
-  private void runCommands(PathPlayer<Player> player, List<String> commands) {
+  private void runCommands(PathPlayer<Player> player, List<String> commands, TagResolver... msgResolvers) {
     if (commands == null) {
       return;
     }
     commands.stream()
-        .map(s -> this.prepareCmd(s, player))
+        .map(s -> this.prepareCmd(s, player, msgResolvers))
         .forEach(r -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), r));
   }
-
 }

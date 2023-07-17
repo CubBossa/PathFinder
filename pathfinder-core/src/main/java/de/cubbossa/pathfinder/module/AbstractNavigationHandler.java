@@ -66,13 +66,16 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   }
 
   public static <PlayerT> void printResult(NavigateResult result, PathPlayer<PlayerT> player) {
+    // success played from effects.
     Message message = switch (result) {
-      case SUCCESS -> Messages.CMD_FIND;
       case FAIL_BLOCKED, FAIL_EVENT_CANCELLED -> Messages.CMD_FIND_BLOCKED;
       case FAIL_EMPTY -> Messages.CMD_FIND_EMPTY;
       case FAIL_TOO_FAR_AWAY -> Messages.CMD_FIND_TOO_FAR;
+      default -> null;
     };
-    player.sendMessage(message);
+    if (message != null) {
+      player.sendMessage(message);
+    }
   }
 
   public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {

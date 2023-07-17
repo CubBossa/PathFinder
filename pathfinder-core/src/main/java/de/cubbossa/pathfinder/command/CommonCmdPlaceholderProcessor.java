@@ -1,10 +1,13 @@
 package de.cubbossa.pathfinder.command;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommonCmdPlaceholderProcessor implements CommandPlaceholderProcessor {
 
   private final List<CmdTagResolver> resolvers = new ArrayList<>();
+  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([a-zA-Z0-9._\s-]+?)}");
 
   @Override
   public void addResolver(CmdTagResolver resolver) {
@@ -14,56 +17,36 @@ public class CommonCmdPlaceholderProcessor implements CommandPlaceholderProcesso
   @Override
   public String process(String command, CmdTagResolver... resolvers) {
 
-    List<CmdTagResolver> resolverMap = new ArrayList<>();
-    resolverMap.addAll(this.resolvers);
-    resolverMap.addAll(Arrays.stream(resolvers).toList());
+    List<CmdTagResolver> resolverCollection = new ArrayList<>();
+    resolverCollection.addAll(this.resolvers);
+    resolverCollection.addAll(Arrays.stream(resolvers).toList());
 
-    Collections.reverse(resolverMap);
-    return recursiveProcess(command, resolverMap)
-        .replaceAll("\\\\>", ">")
-        .replaceAll("\\\\<", "<");
+    Collections.reverse(resolverCollection);
+
+    String c = command;
+
+    Matcher matcher = PLACEHOLDER_PATTERN.matcher(c);
+    while (matcher.find()) {
+      int begin = matcher.start();
+      int end = matcher.end();
+
+      c = c.substring(0, begin) + parsePlaceholder(matcher.group(1), resolverCollection) + c.substring(end);
+      matcher = PLACEHOLDER_PATTERN.matcher(c);
+    }
+    return c;
   }
 
-  private String recursiveProcess(String command, Collection<CmdTagResolver> resolvers) {
-    for (int i = command.length() - 1; i >= 0; i--) {
-      if (command.charAt(i) != '<') {
-        continue;
-      }
-      if (command.charAt(i - 1) == '\\') {
-        continue;
-      }
-      command = processWithStartIndex(command, resolvers, i);
-      i = command.length() - 1;
+  private String parsePlaceholder(String arg, Collection<CmdTagResolver> resolvers) {
+    Queue<String> queue = toQueue(arg);
+    String key = queue.poll().trim();
+    Optional<CmdTagResolver> resolver = resolvers.stream().filter(r -> r.getKey().equalsIgnoreCase(key)).findFirst();
+    if (resolver.isEmpty()) {
+      return "";
     }
-    return command;
-  }
-
-  private String processWithStartIndex(String command, Collection<CmdTagResolver> resolvers, int openIndex) {
-    for (int i = openIndex; i < command.length(); i++) {
-      if (command.charAt(i) == '\\') {
-        i++;
-        continue;
-      }
-      if (command.charAt(i) != '>') {
-        continue;
-      }
-      Queue<String> queue = toQueue(command.substring(openIndex + 1, i));
-      String key = queue.poll();
-      Optional<CmdTagResolver> resolver = resolvers.stream().filter(r -> r.getKey().equalsIgnoreCase(key)).findFirst();
-      if (resolver.isEmpty()) {
-        return replaceChar(command, "\\>", i);
-      }
-      String parsedPlaceholder = resolver.get().resolve(queue);
-      return command.substring(0, openIndex) + parsedPlaceholder + command.substring(i + 1);
-    }
-    return command;
+    return resolver.get().resolve(queue);
   }
 
   private Queue<String> toQueue(String arg) {
-    return new LinkedList<>(Arrays.stream(arg.split(":")).toList());
-  }
-
-  private String replaceChar(String str, String insert, int index) {
-    return str.substring(0, index) + insert + str.substring(index + 1);
+    return new LinkedList<>(Arrays.stream(arg.split("\\.")).toList());
   }
 }

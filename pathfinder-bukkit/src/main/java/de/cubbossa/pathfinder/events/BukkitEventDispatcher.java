@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.events;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.Listener;
 import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
@@ -147,8 +148,10 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
-  public boolean dispatchPlayerForgetEvent(PathPlayer<Player> player, NamespacedKey group, LocalDateTime foundDate) {
-    return true;
+  public boolean dispatchPlayerForgetEvent(PathPlayer<Player> player, NamespacedKey group) {
+    NodeGroup g = PathFinderProvider.get().getStorage().loadGroup(group).join().orElseThrow();
+    DiscoverableModifier modifier = g.<DiscoverableModifier>getModifier(DiscoverableModifier.KEY).orElseThrow();
+    return dispatchEvent(new PlayerForgetEvent(player, g, modifier));
   }
 
   @Override

@@ -56,42 +56,43 @@ public class AbstractDiscoverHandler<PlayerT> {
     }
   }
 
-  public boolean fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
+  public CompletableFuture<Boolean> fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
     if (!group.hasModifier(DiscoverableModifier.class)) {
-      return false;
+      return CompletableFuture.completedFuture(false);
     }
     Optional<PermissionModifier> perm = group.getModifier(PermissionModifier.KEY);
     if (perm.isPresent() && !player.hasPermission(perm.get().permission())) {
+      return CompletableFuture.completedFuture(false);
+    }
+    return group.resolve().thenApply(nodes -> {
+      for (Node node : nodes) {
+        if (node == null) {
+          plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO
+          continue;
+        }
+        if (!Objects.equals(node.getLocation().getWorld(), player.getLocation().getWorld())) {
+          continue;
+        }
+        float dist = getDiscoveryDistance(player.getUniqueId(), node);
+        if (node.getLocation().getX() - player.getLocation().getX() > dist
+            || node.getLocation().getY() - player.getLocation().getY() > dist) {
+          continue;
+        }
+        if (node.getLocation().distanceSquared(player.getLocation()) > Math.pow(dist, 2)) {
+          continue;
+        }
+        return true;
+      }
       return false;
-    }
-    // TODO join performance issues
-    for (Node node : group.resolve().join()) {
-      if (node == null) {
-        plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO
-        continue;
-      }
-      if (!Objects.equals(node.getLocation().getWorld(), player.getLocation().getWorld())) {
-        continue;
-      }
-      float dist = getDiscoveryDistance(player.getUniqueId(), node);
-      if (node.getLocation().getX() - player.getLocation().getX() > dist
-          || node.getLocation().getY() - player.getLocation().getY() > dist) {
-        continue;
-      }
-      if (node.getLocation().distanceSquared(player.getLocation()) > Math.pow(dist, 2)) {
-        continue;
-      }
-      return true;
-    }
-    return false;
+    });
   }
 
-  public void discover(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime date) {
+  public CompletableFuture<Void> discover(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime date) {
     if (!group.hasModifier(DiscoverableModifier.KEY)) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
     UUID playerId = player.getUniqueId();
-    plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
+    return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
       if (discoverInfo.isPresent()) {
         return;
       }
@@ -105,17 +106,17 @@ public class AbstractDiscoverHandler<PlayerT> {
     });
   }
 
-  public void forget(PathPlayer<PlayerT> player, NodeGroup group) {
+  public CompletableFuture<Void> forget(PathPlayer<PlayerT> player, NodeGroup group) {
     if (!group.hasModifier(CommonDiscoverableModifier.class)) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
 
-    plugin.getStorage().loadDiscoverInfo(player.getUniqueId(), group.getKey()).thenAccept(discoverInfo -> {
+    return plugin.getStorage().loadDiscoverInfo(player.getUniqueId(), group.getKey()).thenAccept(discoverInfo -> {
       if (discoverInfo.isEmpty()) {
         return;
       }
       DiscoverInfo info = discoverInfo.get();
-      if (!eventDispatcher.dispatchPlayerForgetEvent(player, info.discoverable(), info.foundDate())) {
+      if (!eventDispatcher.dispatchPlayerForgetEvent(player, info.discoverable())) {
         return;
       }
       plugin.getStorage().deleteDiscoverInfo(discoverInfo.get());

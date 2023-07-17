@@ -190,16 +190,24 @@ public class PathFinderConf implements PathFinderConfig {
   @Configuration
   @ToString
   public static class EffectsConf {
-    public ArrayList<String> onPathStart;
-    public ArrayList<String> onPathTargetReach;
-    public ArrayList<String> onPathStop;
-    public ArrayList<String> onPathCancel;
-    public ArrayList<String> onDiscover = Lists.newArrayList(
-        "title <player> subtitle <msg:discovery.discover:json>",
-        "title <player> title {\"text\":\"\"}",
-        "playsound minecraft:entity.villager.work_cartographer neutral <player:name> <player:loc> 1 1"
+    public ArrayList<String> onPathStart = Lists.newArrayList(
+        "tellraw ${player} ${translation.commands.find.success.gson}"
     );
-    public ArrayList<String> onForget;
+    public ArrayList<String> onPathTargetReach = Lists.newArrayList(
+        "tellraw ${player} ${translation.general.target_reached.gson}"
+    );
+    public ArrayList<String> onPathStop;
+    public ArrayList<String> onPathCancel = Lists.newArrayList(
+        "tellraw ${player} ${translation.commands.cancel_path.gson}"
+    );
+    public ArrayList<String> onDiscover = Lists.newArrayList(
+        "title ${player} subtitle ${translation.discovery.discover.json}",
+        "title ${player} title {\"text\":\"\"}",
+        "playsound minecraft:entity.villager.work_cartographer neutral ${player} ${player.location} 1 1"
+    );
+    public ArrayList<String> onForget = Lists.newArrayList(
+        "tellraw ${player} ${translation.discovery.forget.gson}"
+    );
   }
 
   @Configuration

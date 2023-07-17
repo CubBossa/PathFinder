@@ -117,11 +117,11 @@ public class Messages {
           <t>Require help? Checkout the <t-warm><u><click:open_url:"https://docs.leonardbausenwein.de/getting_started/introduction.html">WIKI</click></u></t-warm>.
                     
           <white>Commands:</white>
-          <bg>» </bg><t><t-warm>/roadmap</t-warm> - Group waypoints in roadmaps
-          <bg>» </bg><t><t-warm>/nodegroup</t-warm> - Add behaviour to multiple waypoints
-          <bg>» </bg><t><t-warm>/waypoint</t-warm> - Create, edit and delete waypoints
-          <bg>» </bg><t><t-warm>/pathvisualizer</t-warm> - Compass, particles, placeholders and more
-          <bg>» </bg><t><t-warm>/gps</t-warm> - Find the shortest way to a nodegroup
+          <bg>» </bg><t><t-warm>/pf editmode</t-warm> - Create, edit and delete waypoints via GUI
+          <bg>» </bg><t><t-warm>/pf node</t-warm> - Create, edit and delete waypoints via Commands
+          <bg>» </bg><t><t-warm>/pf group</t-warm> - Add behaviour to multiple waypoints
+          <bg>» </bg><t><t-warm>/pf visualizer</t-warm> - Compass, particles, placeholders and more
+          <bg>» </bg><t><t-warm>/find</t-warm> - Find the shortest way to a nodegroup
           """)
       .build();
 
@@ -311,6 +311,11 @@ public class Messages {
       .withTranslation(Locale.GERMAN, "Entdeckt: <discoverable>")
       .withPlaceholders("player", "discoverable", "group")
       .build();
+  public static final Message DISCOVERY_FORGET = new MessageBuilder("discovery.forget")
+      .withDefault("<msg:prefix>You forgot all about <discoverable>")
+      .withTranslation(Locale.GERMAN, "Du vergisst alles über <discoverable>")
+      .withPlaceholders("player", "discoverable", "group")
+      .build();
 
 
   public static final Message CMD_VIS_LIST_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
@@ -472,6 +477,17 @@ public class Messages {
           <t>» <c-accent>left-click:</c-accent> Delete clicked node</t>
           <t>» <c-accent>left-click air:</c-accent> Activate chain mode</t>""")
       .build();
+  public static final Message E_EDGEDIR_TOOL_N = new MessageBuilder("editor.toolbar.edge_directed_toggle.name")
+      .withDefault("<t-light><u>Edges Directed: <t-hl><value:true:false></t-hl></u></t-light>")
+      .withPlaceholder("value", "Choice Placeholder, usage: <value:show-this-if-true:show-this-if-false>")
+      .build();
+  public static final Message E_EDGEDIR_TOOL_L = new MessageBuilder("editor.toolbar.edge_directed_toggle.lore")
+      .withDefault("""
+          <gray>An edge is directed if its
+          color goes from red to blue.
+          Players can cross this section only
+          in that direction, like a one way road.""")
+      .build();
   public static final Message E_NODE_CHAIN_NEW = new MessageBuilder("editor.node_tool.chain.new")
       .withDefault("<msg:prefix>Node chain completed.")
       .build();
@@ -513,7 +529,7 @@ public class Messages {
       .withDefault("<c-accent>Info</c-accent>")
       .build();
   public static final Message E_SUB_GROUP_INFO_L = new MessageBuilder("editor.groups.info.lore")
-      .withDefault("<t>Create a new nodegroup with\n<t>» <c-accent>/nodegroup create <key>")
+      .withDefault("<t>Click to toggle groups on or off.</t>\n<t>Create a new nodegroup with\n<t>» <c-accent>/pf creategroup <key>")
       .build();
   public static final Message E_SUB_GROUP_RESET_N = new MessageBuilder("editor.groups.reset.name")
       .withDefault("<c-negative>Reset Groups</c-negative>")

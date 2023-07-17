@@ -159,7 +159,12 @@ public class Arguments {
       String nodeName,
       Function<SuggestionInfo, Collection<String>> supplier
   ) {
-    return CommandArgument.arg(new GreedyStringArgument(nodeName)).replaceSuggestions((info, builder) -> {
+    return CommandArgument.arg(new GreedyStringArgument(nodeName)).includeSuggestions((info, builder) -> {
+
+      if (info.currentArg().length() == 0) {
+        TAGS.forEach(builder::suggest);
+        return builder.buildFuture();
+      }
 
       int offset = builder.getInput().length();
       String[] splits = info.currentInput().split(" ", -1);
@@ -371,7 +376,7 @@ public class Arguments {
               if (!(context.sender() instanceof Player player)) {
                 throw CustomArgument.CustomArgumentException.fromString("Only for players");
               }
-              String search = context.currentInput();
+              String search = context.currentInput().replace(" ", "");
               Storage storage = PathFinderProvider.get().getStorage();
               Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join().entrySet().stream().filter(entry -> {
                 Node node = entry.getKey();

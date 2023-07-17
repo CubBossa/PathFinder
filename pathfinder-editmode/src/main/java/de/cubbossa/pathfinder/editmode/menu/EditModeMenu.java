@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.editmode.menu;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
+import de.cubbossa.menuframework.inventory.context.ClickContext;
+import de.cubbossa.menuframework.inventory.context.ContextConsumer;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinderConfig;
@@ -62,12 +64,27 @@ public class EditModeMenu {
   }
 
   public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
-    BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3);
+    BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
       Bukkit.getScheduler().runTaskLater(PathFinderPlugin.getInstance(),
           () -> editor.setEditMode(BukkitUtils.wrap(c.getPlayer()), false), 1L);
     });
+
+    menu.setButton(4, Button.builder()
+        .withItemStack(() -> new LocalizedItem.Builder(new ItemStack(undirectedEdgesMode ? Material.RED_DYE : Material.LIGHT_BLUE_DYE))
+            .withName(Messages.E_EDGEDIR_TOOL_N.formatted(Messages.formatter().choice("value", !undirectedEdgesMode)))
+            .withLore(Messages.E_EDGEDIR_TOOL_L)
+            .createItem(editingPlayer))
+        .withClickHandler(c -> {
+          undirectedEdgesMode = !undirectedEdgesMode;
+          Player player = c.getPlayer();
+
+          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.formatted(
+              Messages.formatter().choice("value", !undirectedEdgesMode)
+          ));
+          c.getMenu().refresh(c.getSlot());
+        }, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK));
 
     menu.setButton(0, Button.builder()
         .withItemStack(() -> {
@@ -92,19 +109,11 @@ public class EditModeMenu {
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
           PathPlayer<Player> p = CommonPathFinder.getInstance().wrap(context.getPlayer());
           // cancel chain
-          if (chainEdgeStart != null) {
-            p.sendMessage(Messages.E_NODE_CHAIN_NEW);
-            chainEdgeStart = null;
-            context.getMenu().refresh(context.getSlot());
+          if (chainEdgeStart == null) {
             return;
           }
-
-          Player player = context.getPlayer();
-
-          undirectedEdgesMode = !undirectedEdgesMode;
-          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.formatted(
-              Messages.formatter().choice("value", !undirectedEdgesMode)
-          ));
+          p.sendMessage(Messages.E_NODE_CHAIN_NEW);
+          chainEdgeStart = null;
           context.getMenu().refresh(context.getSlot());
         })
 
@@ -145,6 +154,10 @@ public class EditModeMenu {
           Location view = context.getPlayer().getEyeLocation();
           Location block = context.getTarget().getLocation();
           BukkitVectorUtils.Orientation orientation = BukkitVectorUtils.getIntersection(view.toVector(), view.getDirection(), block.toVector());
+          if (orientation == null) {
+            return;
+          }
+
           Location pos = BukkitVectorUtils.toBukkit(VectorUtils.snap(BukkitVectorUtils.toInternal(orientation.location()), 2))
               .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
           if (types.size() > 1) {
@@ -259,8 +272,9 @@ public class EditModeMenu {
                 Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
           });
         })
-        .withClickHandler(Action.RIGHT_CLICK_AIR,
-            context -> openMultiToolMenu(context.getPlayer())));
+        .withClickHandler(Action.RIGHT_CLICK_AIR, context -> openMultiToolMenu(context.getPlayer()))
+        .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> openMultiToolMenu(context.getPlayer()))
+    );
     return menu;
   }
 
@@ -269,8 +283,7 @@ public class EditModeMenu {
     storage.loadAllGroups().thenAccept(nodeGroups -> {
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
-      menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
-          3)); //TODO extract icon
+      menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
       for (NodeGroup group : nodeGroups) {
 
         TagResolver resolver = TagResolver.builder()
@@ -292,24 +305,9 @@ public class EditModeMenu {
               }
               return stack;
             })
-            .withClickHandler(Action.LEFT, c -> {
-              if (!group.contains(node.getNodeId())) {
-                StorageUtil.addGroups(group, node.getNodeId());
-                storage.saveNode(node).thenRun(() -> {
-                  c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
-              }
-            })
-            .withClickHandler(Action.RIGHT, c -> {
-              if (group.contains(node.getNodeId())) {
-                StorageUtil.removeGroups(group, node.getNodeId());
-                storage.saveNode(node).thenRun(() -> {
-                  c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
-              }
-            }));
+            .withClickHandler(Action.LEFT, groupEntryClickHandler(menu, group, node))
+            .withClickHandler(Action.RIGHT, groupEntryClickHandler(menu, group, node))
+        );
       }
       menu.addPreset(presetApplier -> {
         presetApplier.addItemOnTop(3 * 9 + 8,
@@ -329,6 +327,24 @@ public class EditModeMenu {
       });
       menu.open(player);
     });
+  }
+
+  private ContextConsumer<ClickContext> groupEntryClickHandler(ListMenu menu, NodeGroup group, Node node) {
+    return c -> {
+      if (group.contains(node.getNodeId())) {
+        StorageUtil.removeGroups(group, node.getNodeId());
+        storage.saveNode(node).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        });
+      } else {
+        StorageUtil.addGroups(group, node.getNodeId());
+        storage.saveNode(node).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        });
+      }
+    };
   }
 
   private void openMultiToolMenu(Player player) {
@@ -358,28 +374,9 @@ public class EditModeMenu {
               }
               return stack;
             })
-            .withClickHandler(Action.LEFT, c -> {
-              if (!multiTool.contains(group.getKey())) {
-
-                Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
-                  multiTool.add(group.getKey());
-                  c.getPlayer()
-                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
-              }
-            })
-            .withClickHandler(Action.RIGHT, c -> {
-              if (multiTool.contains(group.getKey())) {
-
-                Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
-                  multiTool.remove(group.getKey());
-                  c.getPlayer()
-                      .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                  menu.refresh(menu.getListSlots());
-                });
-              }
-            }));
+            .withClickHandler(Action.LEFT, multiToolEntryClickHandler(menu, group))
+            .withClickHandler(Action.RIGHT, multiToolEntryClickHandler(menu, group))
+        );
       }
       menu.addPreset(presetApplier -> {
         presetApplier.addItemOnTop(3 * 9 + 8,
@@ -399,6 +396,20 @@ public class EditModeMenu {
       });
       menu.open(player);
     });
+  }
+
+  private ContextConsumer<ClickContext> multiToolEntryClickHandler(ListMenu menu, NodeGroup group) {
+    return c -> {
+      if (multiTool.contains(group.getKey())) {
+        multiTool.remove(group.getKey());
+        c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+        menu.refresh(menu.getListSlots());
+      } else {
+        multiTool.add(group.getKey());
+        c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+        menu.refresh(menu.getListSlots());
+      }
+    };
   }
 
   private void openNodeTypeMenu(Player player, Location location) {

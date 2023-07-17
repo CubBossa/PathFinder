@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -17,11 +18,13 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
 
   private final PathFinder pathFinder;
-  private final Collection<UUID> playerLock = new HashSet<>();
+  private final Collection<UUID> playerLock = ConcurrentHashMap.newKeySet();
 
   public BukkitDiscoverHandler(CommonPathFinder plugin) {
     super(plugin);
@@ -36,15 +39,17 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
       return;
     }
     playerLock.add(uuid);
-    pathFinder.getStorage().loadAllGroups().thenAccept(nodeGroups -> {
+    pathFinder.getStorage().loadGroups(DiscoverableModifier.KEY).thenAccept(nodeGroups -> {
       PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
+      Collection<CompletableFuture<?>> futures = new HashSet<>();
       for (NodeGroup group : nodeGroups) {
-        if (!super.fulfillsDiscoveringRequirements(group, player)) {
-          continue;
-        }
-        super.discover(player, group, LocalDateTime.now());
-        playerLock.remove(uuid);
+        futures.add(super.fulfillsDiscoveringRequirements(group, player).thenAccept(b -> {
+          if (b) {
+            super.discover(player, group, LocalDateTime.now());
+          }
+        }));
       }
+      CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> playerLock.remove(uuid));
     });
   }
 }
