@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -50,8 +51,14 @@ public class ParticleVisualizer extends BezierPathVisualizer {
             Player bukkitPlayer = player.unwrap();
             Location point = points.get(i);
             var data = particleData;
-            if (!particleData.getClass().equals(particle.getDataType())) {
+            if (particle.getDataType().equals(void.class) && data != null) {
               data = null;
+            } else if (particleData != null && !Objects.equals(particleData.getClass(), particle.getDataType())) {
+              try {
+                data = particle.getDataType().newInstance();
+              } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+              }
             }
             bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, data);
           }
