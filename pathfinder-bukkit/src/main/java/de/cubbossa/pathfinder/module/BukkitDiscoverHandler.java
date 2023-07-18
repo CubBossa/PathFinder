@@ -43,10 +43,11 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
       PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
       Collection<CompletableFuture<?>> futures = new HashSet<>();
       for (NodeGroup group : nodeGroups) {
-        futures.add(super.fulfillsDiscoveringRequirements(group, player).thenAccept(b -> {
+        futures.add(super.fulfillsDiscoveringRequirements(group, player).thenCompose(b -> {
           if (b) {
-            super.discover(player, group, LocalDateTime.now());
+            return super.discover(player, group, LocalDateTime.now());
           }
+          return CompletableFuture.completedFuture(null);
         }));
       }
       CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> playerLock.remove(uuid));
