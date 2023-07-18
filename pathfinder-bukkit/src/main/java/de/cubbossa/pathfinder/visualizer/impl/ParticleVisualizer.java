@@ -45,6 +45,9 @@ public class ParticleVisualizer extends BezierPathVisualizer {
 
       @Override
       void play(int interval) {
+        if (points == null) {
+          return;
+        }
         for (int i = interval % getSchedulerSteps(); i < points.size();
              i += getSchedulerSteps()) {
           for (PathPlayer<Player> player : getViewers()) {
