@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Range;
@@ -103,6 +104,11 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   @Override
   public void write(UUID node, Collection<NodeGroup> groups) {
     nodeGroupCache.put(node, groups);
+    for (NodeGroup group : groups) {
+      for (Modifier modifier : group.getModifiers()) {
+        modifierGroupCache.asMap().computeIfAbsent(modifier.getKey(), g -> new HashSet<>()).add(group);
+      }
+    }
   }
 
   @Override
