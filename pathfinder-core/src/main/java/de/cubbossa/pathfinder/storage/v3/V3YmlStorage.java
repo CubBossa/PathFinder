@@ -92,9 +92,9 @@ public class V3YmlStorage implements V3Storage {
 
         String visKeyString = cfg.getString("path-visualizer");
         registry.add(new V3RoadMap(key,
-            cfg.getString("name-format"),
-            NamespacedKey.fromString(visKeyString),
-            cfg.getDouble("curve-length"))
+                cfg.getString("name-format"),
+                visKeyString == null ? null : NamespacedKey.fromString(visKeyString),
+                cfg.getDouble("curve-length"))
         );
       } catch (Exception e) {
         throw new DataStorageException("Could not load roadmap: " + file.getName(), e);
@@ -234,8 +234,10 @@ public class V3YmlStorage implements V3Storage {
         NamespacedKey key = fromFileName(file.getName());
         YamlConfiguration cfg = nodeGroupHandles.computeIfAbsent(key, k -> YamlConfiguration.loadConfiguration(file));
 
-        V3SearchTerm term = new V3SearchTerm(key, cfg.getString("search-terms"));
-        registry.add(term);
+        for (String termString : cfg.getStringList("search-terms")) {
+          V3SearchTerm term = new V3SearchTerm(key, termString);
+          registry.add(term);
+        }
       } catch (Exception e) {
         throw new DataStorageException("Could not load nodegroup: " + file.getName(), e);
       }
@@ -245,33 +247,40 @@ public class V3YmlStorage implements V3Storage {
 
   @Override
   public Collection<V3Discovering> loadDiscoverings() {
-    File file;
-    Map<String, ConfigurationSection> cfgs = new HashMap<>();
-    if (meta.oneFileForAllUsers()) {
-      file = new File(userDir, "user_data.yml");
-      ConfigurationSection cfg = YamlConfiguration.loadConfiguration(file);
-      cfg.getKeys(false).forEach(s -> {
-        cfgs.put(s, cfg.getConfigurationSection(s));
-      });
-    } else {
-      Arrays.stream(Objects.requireNonNull(userDir.listFiles()))
-          .forEach(f -> {
-            cfgs.put(f.getName().replace(".yml", ""), YamlConfiguration.loadConfiguration(f));
-          });
-    }
-    Collection<V3Discovering> discoverings = new HashSet<>();
-    for (var e : cfgs.entrySet()) {
-      ConfigurationSection cfg = e.getValue();
-      ConfigurationSection discoveries = cfg.getConfigurationSection("discoveries");
-      if (discoveries == null) {
-        discoveries = cfg.createSection("discoveries");
+    try {
+      File file;
+      Map<String, ConfigurationSection> cfgs = new HashMap<>();
+      if (meta.oneFileForAllUsers()) {
+        file = new File(userDir, "user_data.yml");
+        ConfigurationSection cfg = YamlConfiguration.loadConfiguration(file);
+        cfg.getKeys(false).forEach(s -> {
+          cfgs.put(s, cfg.getConfigurationSection(s));
+        });
+      } else {
+        Arrays.stream(Objects.requireNonNull(userDir.listFiles()))
+                .forEach(f -> {
+                  cfgs.put(f.getName().replace(".yml", ""), YamlConfiguration.loadConfiguration(f));
+                });
       }
-      for (String key : discoveries.getKeys(false)) {
-        NamespacedKey nkey = NamespacedKey.fromString(key);
-        discoverings.add(new V3Discovering(UUID.fromString(e.getKey()), nkey, (LocalDateTime) discoveries.get(key + ".date")));
+      Collection<V3Discovering> discoverings = new HashSet<>();
+      for (var e : cfgs.entrySet()) {
+        try {
+          ConfigurationSection cfg = e.getValue();
+          ConfigurationSection discoveries = cfg.getConfigurationSection("discoveries");
+          if (discoveries == null) {
+            discoveries = cfg.createSection("discoveries");
+          }
+          for (String key : discoveries.getKeys(false)) {
+            NamespacedKey nkey = NamespacedKey.fromString(key);
+            discoverings.add(new V3Discovering(UUID.fromString(e.getKey()), nkey, (LocalDateTime) discoveries.get(key + ".date")));
+          }
+        } catch (Throwable t) {
+        }
       }
+      return discoverings;
+    } catch (Throwable t) {
     }
-    return discoverings;
+    return new HashSet<>();
   }
 
   @Override

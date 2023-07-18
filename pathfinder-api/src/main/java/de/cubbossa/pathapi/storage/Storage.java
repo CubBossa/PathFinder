@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.storage;
 
+import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.event.NodeDeleteEvent;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -35,6 +36,10 @@ public interface Storage {
    * Shuts down the storage by shutting down the underlying implementation and invalidating all caches.
    */
   void shutdown();
+
+  EventDispatcher<?> getEventDispatcher();
+
+  void setEventDispatcher(EventDispatcher<?> eventDispatcher);
 
   /**
    * @return The implementation instance.

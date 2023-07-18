@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.storage.DatabaseType;
 import de.cubbossa.pathfinder.util.Version;
 import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.Serializer;
@@ -18,22 +19,24 @@ import java.util.function.BiConsumer;
 @RequiredArgsConstructor
 public class ConfigFileLoader {
 
-  private final File dataFolder;
-  private final BiConsumer<String, Boolean> saveResource;
-  private Version configRegenerationVersion = new Version("4.0.0");
+    private final File dataFolder;
+    private final BiConsumer<String, Boolean> saveResource;
+    private Version configRegenerationVersion = new Version("4.0.0");
 
-  @Getter
-  private boolean versionChange;
+    @Getter
+    private boolean versionChange;
+    @Getter
+    private DatabaseType oldDatabaseType;
 
-  public PathFinderConf loadConfig() {
-    PathFinderConf configuration;
+    public PathFinderConf loadConfig() {
+        PathFinderConf configuration;
 
-    File configFile = new File(dataFolder, "config.yml");
-    YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-            .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
-            .addSerializer(Locale.class, new Serializer<Locale, String>() {
-              @Override
-              public String serialize(Locale element) {
+        File configFile = new File(dataFolder, "config.yml");
+        YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
+                .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+                .addSerializer(Locale.class, new Serializer<Locale, String>() {
+                    @Override
+                    public String serialize(Locale element) {
                 return element.toLanguageTag();
               }
 
@@ -78,11 +81,14 @@ public class ConfigFileLoader {
     configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
-      this.versionChange = true;
+        this.versionChange = true;
 
-      saveFileAsOld(configFile, "config", ".yml");
-      saveFileAsOld(new File(dataFolder, "effects.nbo"), "effects", ".nbo");
-      loadConfig();
+
+        saveFileAsOld(configFile, "config", ".yml");
+        saveFileAsOld(new File(dataFolder, "effects.nbo"), "effects", ".nbo");
+        oldDatabaseType = configuration.database.type;
+
+        configuration = loadConfig();
     }
     return configuration;
   }

@@ -7,6 +7,7 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -17,6 +18,9 @@ public class VisualizerTypeRegistryImpl implements VisualizerTypeRegistry {
   @Getter
   private static VisualizerTypeRegistryImpl instance;
 
+  @Getter
+  @Setter
+  private VisualizerType<?> defaultVisualizerType;
   private final HashedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> visualizerTypes;
 
   public VisualizerTypeRegistryImpl() {
@@ -26,8 +30,18 @@ public class VisualizerTypeRegistryImpl implements VisualizerTypeRegistry {
   }
 
   @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getDefaultType() {
+    return (VisualizerType<VisualizerT>) defaultVisualizerType;
+  }
+
+  @Override
+  public <VisualizerT extends PathVisualizer<?, ?>> void setDefaultType(VisualizerType<VisualizerT> type) {
+    defaultVisualizerType = type;
+  }
+
+  @Override
   public @Nullable <T extends PathVisualizer<?, ?>> Optional<VisualizerType<T>> getType(
-      NamespacedKey typeKey) {
+          NamespacedKey typeKey) {
     return Optional.ofNullable((VisualizerType<T>) visualizerTypes.get(typeKey));
   }
 

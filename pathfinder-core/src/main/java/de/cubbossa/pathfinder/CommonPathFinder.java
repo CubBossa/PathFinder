@@ -24,6 +24,7 @@ import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import de.cubbossa.pathfinder.storage.v3.V3Converter;
 import de.cubbossa.pathfinder.storage.v3.V3SqliteStorage;
+import de.cubbossa.pathfinder.storage.v3.V3YmlStorage;
 import de.cubbossa.pathfinder.util.FileUtils;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
@@ -173,7 +174,7 @@ public abstract class CommonPathFinder implements PathFinder {
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
           modifierRegistry, visualizerTypeRegistry);
       default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
-          visualizerTypeRegistry, modifierRegistry);
+              visualizerTypeRegistry, modifierRegistry);
     };
     impl.setWorldLoader(this::getWorld);
     impl.setLogger(getLogger());
@@ -182,6 +183,8 @@ public abstract class CommonPathFinder implements PathFinder {
     storage.setEventDispatcher(eventDispatcher);
     storage.setLogger(getLogger());
     storage.init();
+    setupVisualizerTypes();
+    getStorage().createGlobalNodeGroup(visualizerTypeRegistry.getDefaultType()).join();
 
     nodeTypeRegistry.register(new WaypointType(
             new WaypointStorage(storage),
@@ -196,12 +199,15 @@ public abstract class CommonPathFinder implements PathFinder {
     } else {
 
       var conv = new V3Converter(
-          getLogger(),
-          new V3SqliteStorage(new File(getDataFolder(), "old_data/database.db")),
-          storage,
-          nodeTypeRegistry,
-          visualizerTypeRegistry,
-          this::getWorld
+              getLogger(),
+              switch (configFileLoader.getOldDatabaseType()) {
+                case YML -> new V3YmlStorage(new File(getDataFolder(), "old_data/"));
+                default -> new V3SqliteStorage(new File(getDataFolder(), "old_data/database.db"));
+              },
+              storage,
+              nodeTypeRegistry,
+              visualizerTypeRegistry,
+              this::getWorld
       );
       Thread t = new Thread(conv);
       t.start();
@@ -227,6 +233,8 @@ public abstract class CommonPathFinder implements PathFinder {
       }).start();
     }
   }
+
+  abstract void setupVisualizerTypes();
 
   @Override
   public void shutdown() {

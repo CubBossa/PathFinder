@@ -103,6 +103,24 @@ public class BukkitPathFinder extends CommonPathFinder {
     modifierRegistry.registerModifierType(new FindDistanceModifierType());
     modifierRegistry.registerModifierType(new CurveLengthModifierType());
     modifierRegistry.registerModifierType(new VisualizerModifierType());
+
+
+  }
+
+  @Override
+  void setupVisualizerTypes() {
+    ParticleVisualizerType particleVisualizerType = new ParticleVisualizerType(pathfinder("particle"));
+    Set.<AbstractVisualizerType<?>>of(
+            particleVisualizerType,
+            new CompassVisualizerType(pathfinder("compass")),
+            new CombinedVisualizerType(pathfinder("combined"))
+    ).forEach(vt -> {
+      getVisualizerTypeRegistry().registerVisualizerType(vt);
+      if (getStorage().getImplementation() instanceof InternalVisualizerDataStorage visStorage) {
+        vt.setStorage(new InternalVisualizerStorage(vt, visStorage));
+      }
+    });
+    getVisualizerTypeRegistry().setDefaultType(particleVisualizerType);
   }
 
   @Override
@@ -112,21 +130,7 @@ public class BukkitPathFinder extends CommonPathFinder {
 
     new BukkitDiscoverHandler(this);
 
-    ParticleVisualizerType particleVisualizerType = new ParticleVisualizerType(pathfinder("particle"));
-
-    Set.<AbstractVisualizerType<?>>of(
-        particleVisualizerType,
-        new CompassVisualizerType(pathfinder("compass")),
-        new CombinedVisualizerType(pathfinder("combined"))
-    ).forEach(vt -> {
-      getVisualizerTypeRegistry().registerVisualizerType(vt);
-      if (getStorage().getImplementation() instanceof InternalVisualizerDataStorage visStorage) {
-        vt.setStorage(new InternalVisualizerStorage(vt, visStorage));
-      }
-    });
-
     commandRegistry.enableCommands(this);
-    getStorage().createGlobalNodeGroup(particleVisualizerType);
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
 

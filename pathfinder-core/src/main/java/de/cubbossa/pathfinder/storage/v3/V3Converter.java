@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage.v3;
 
+import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -46,8 +47,12 @@ public class V3Converter implements Runnable {
 
   @Override
   public void run() {
+    EventDispatcher<?> dispatcher = storage.getEventDispatcher();
+    storage.setEventDispatcher(null);
     try {
       oldStorage.connect();
+
+      storage.createGlobalNodeGroup(visualizerTypes.getDefaultType());
 
       Collection<V3Storage.V3RoadMap> v3RoadMaps = oldStorage.loadRoadmaps();
       Collection<V3Storage.V3Node> v3Nodes = oldStorage.loadNodes();
@@ -214,6 +219,8 @@ public class V3Converter implements Runnable {
       progress += 10;
     } catch (Throwable t) {
       this.exception = t;
+    } finally {
+      storage.setEventDispatcher(dispatcher);
     }
   }
 }
