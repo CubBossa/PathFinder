@@ -61,6 +61,7 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
   public Argument<?> registerAddCommand(Argument<?> tree, Function<NavigableModifier, CommandExecutor> consumer) {
     return tree.then(new GreedyStringArgument("search-terms").executes((commandSender, args) -> {
       consumer.apply(new CommonNavigableModifier(Arrays.stream(args.<String>getUnchecked(1).split(","))
+              .map(String::trim)
               .map(s -> s.replace(' ', '_'))
               .toArray(String[]::new)))
           .run(commandSender, args);
