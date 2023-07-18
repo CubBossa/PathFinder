@@ -25,6 +25,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -211,20 +212,24 @@ public class PathFinderCommand extends CommandTree {
     then(Arguments.literal("forcefind")
         .withGeneratedHelp()
         .withPermission(PathPerms.PERM_CMD_PF_FORCEFIND)
-        .then(Arguments.pathPlayer("player")
+        .then(Arguments.pathPlayers("player")
             .withGeneratedHelp()
             .then(Arguments.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
-                  onForceFind(commandSender, args.getUnchecked(0), args.getUnchecked(1));
+                  for (PathPlayer<Player> player : args.<Collection<PathPlayer<Player>>>getUnchecked(0)) {
+                    onForceFind(commandSender, player, args.getUnchecked(1));
+                  }
                 }))));
     then(Arguments.literal("forceforget")
         .withGeneratedHelp()
         .withPermission(PathPerms.PERM_CMD_PF_FORCEFORGET)
-        .then(Arguments.pathPlayer("player")
+        .then(Arguments.pathPlayers("player")
             .withGeneratedHelp()
             .then(Arguments.discoverableArgument("discovering")
                 .executes((commandSender, args) -> {
-                  onForceForget(BukkitUtils.wrap(commandSender), args.getUnchecked(0), args.getUnchecked(1));
+                  for (PathPlayer<Player> player : args.<Collection<PathPlayer<Player>>>getUnchecked(0)) {
+                    onForceForget(BukkitUtils.wrap(commandSender), player, args.getUnchecked(1));
+                  }
                 }))));
   }
 

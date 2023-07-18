@@ -77,6 +77,16 @@ public class Arguments {
     }));
   }
 
+  public CommandArgument<Collection<PathPlayer<Player>>, CustomArgument<Collection<PathPlayer<Player>>, Collection>> pathPlayers(String node) {
+    return new CommandArgument<>(new CustomArgument<>(new EntitySelectorArgument.ManyPlayers(node), info -> {
+      return ((Collection<Object>) info.currentInput()).stream()
+          .filter(e -> e instanceof Player)
+          .map(e -> (Player) e)
+          .map(BukkitUtils::<Player>wrap)
+          .collect(Collectors.toList());
+    }));
+  }
+
   public CommandArgument<de.cubbossa.pathapi.misc.Location, CustomArgument<de.cubbossa.pathapi.misc.Location, Location>> location(
       String node, LocationType type) {
     return CommandArgument.arg(new CustomArgument<>(new LocationArgument(node, type), customArgumentInfo -> {
