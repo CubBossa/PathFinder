@@ -29,7 +29,7 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
 
   @Override
   public String getSubCommandLiteral() {
-    return "searchable";
+    return "searchterms";
   }
 
   @Override
@@ -60,7 +60,9 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<NavigableModifier, CommandExecutor> consumer) {
     return tree.then(new GreedyStringArgument("search-terms").executes((commandSender, args) -> {
-      consumer.apply(new CommonNavigableModifier(args.<String>getUnchecked(1).split(",")))
+      consumer.apply(new CommonNavigableModifier(Arrays.stream(args.<String>getUnchecked(1).split(","))
+              .map(s -> s.replace(' ', '_'))
+              .toArray(String[]::new)))
           .run(commandSender, args);
     }));
   }

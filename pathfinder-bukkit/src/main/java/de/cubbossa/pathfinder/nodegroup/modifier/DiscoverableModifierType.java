@@ -25,7 +25,7 @@ public class DiscoverableModifierType implements ModifierType<DiscoverableModifi
 
   @Override
   public String getSubCommandLiteral() {
-    return "discoverable";
+    return "discover-as";
   }
 
   @Override
