@@ -292,7 +292,7 @@ public class Messages {
       .build();
 
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
-      .withDefault("<msg:prefix>Navigation started.  [ <t-hl><click:run_command:/cancelpath>Cancel</click></t-hl> ]")
+      .withDefault("<msg:prefix>Navigation started.  [ <c-accent><click:run_command:/cancelpath>/cancelpath</click></c-accent> ]")
       .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
       .withDefault("<msg:prefix>No matching waypoints could be found.")
