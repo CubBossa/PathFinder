@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.graph;
 
-import java.util.Collection;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.jetbrains.annotations.NotNull;
+import java.util.function.Supplier;
 
 public class Graph<N> implements Iterable<N> {
 
@@ -16,6 +17,15 @@ public class Graph<N> implements Iterable<N> {
 
   public Graph(int capacity) {
     nodes = new HashMap<>(capacity);
+  }
+
+  public int size() {
+    return nodes.size();
+  }
+
+  public boolean hasConnection(N start, N end) {
+    Map<N, Double> inner = nodes.get(start);
+    return inner != null && inner.containsKey(end);
   }
 
   public void merge(Graph<N> other) {
@@ -53,6 +63,15 @@ public class Graph<N> implements Iterable<N> {
       throw new IllegalArgumentException("Node must be in graph.");
     }
     return new HashMap<>(nodes.get(node));
+  }
+
+  public void subdivide(N start, N end, Supplier<N> factory) {
+    N center = factory.get();
+    addNode(center);
+    double weight = getEdgeWeight(start, end);
+    disconnect(start, end);
+    connect(start, center, weight);
+    connect(center, end, weight);
   }
 
   public void connect(N start, N end) {

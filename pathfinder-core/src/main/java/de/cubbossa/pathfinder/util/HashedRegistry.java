@@ -1,24 +1,33 @@
 package de.cubbossa.pathfinder.util;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
+import de.cubbossa.pathapi.misc.Keyed;
+import de.cubbossa.pathapi.misc.KeyedRegistry;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K>
-    implements Registry<K> {
+    implements KeyedRegistry<K> {
+
+  public HashedRegistry() {
+    super();
+  }
+
+  public HashedRegistry(Map<? extends NamespacedKey, ? extends K> map) {
+    super();
+    this.putAll(map);
+  }
 
   @Nullable
-  @Override
   public K get(@NotNull NamespacedKey namespacedKey) {
     return super.get(namespacedKey);
   }
 
   @NotNull
-  @Override
   public Iterator<K> iterator() {
     return super.values().iterator();
   }

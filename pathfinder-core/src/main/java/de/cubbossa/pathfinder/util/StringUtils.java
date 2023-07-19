@@ -1,9 +1,22 @@
 package de.cubbossa.pathfinder.util;
 
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+
 import java.awt.*;
 import java.util.Random;
 
 public class StringUtils {
+
+  @Setter
+  private static MiniMessage miniMessage = MiniMessage.miniMessage();
+
+  public static String toDisplayNameFormat(NamespacedKey key) {
+    return insertInRandomHexString(capizalize(key.getKey().toLowerCase()));
+  }
 
   public static String insertInRandomHexString(String inner) {
     String hex = Integer.toHexString(
@@ -17,5 +30,13 @@ public class StringUtils {
       throw new IllegalArgumentException("String must not be empty");
     }
     return in.substring(0, 1).toUpperCase() + in.substring(1);
+  }
+
+  public static Component deserialize(String str) {
+    return miniMessage.deserialize(str);
+  }
+
+  public static Component deserialize(String str, TagResolver resolver) {
+    return miniMessage.deserialize(str, resolver);
   }
 }

@@ -1,380 +1,415 @@
 package de.cubbossa.pathfinder.editmode.menu;
 
-import com.google.common.collect.Lists;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
+import de.cubbossa.menuframework.inventory.context.ClickContext;
+import de.cubbossa.menuframework.inventory.context.ContextConsumer;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
-import de.cubbossa.pathfinder.Messages;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.core.node.Groupable;
-import de.cubbossa.pathfinder.core.node.Node;
-import de.cubbossa.pathfinder.core.node.NodeGroup;
-import de.cubbossa.pathfinder.core.node.NodeGroupHandler;
-import de.cubbossa.pathfinder.core.node.NodeType;
-import de.cubbossa.pathfinder.core.roadmap.RoadMap;
-import de.cubbossa.pathfinder.editmode.DefaultRoadMapEditor;
-import de.cubbossa.pathfinder.editmode.utils.ClientNodeHandler;
+import de.cubbossa.pathapi.PathFinderConfig;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.event.NodeDeleteEvent;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
+import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
+import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
+import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
+import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.storage.StorageUtil;
+import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
-import de.cubbossa.serializedeffects.EffectHandler;
-import de.cubbossa.translations.TranslationHandler;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.stream.Collectors;
+import de.cubbossa.pathfinder.util.VectorUtils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class EditModeMenu {
 
-  private final RoadMap roadMap;
-  private final Collection<NodeGroup> multiTool = new HashSet<>();
+  private final Storage storage;
+  private final NamespacedKey key;
+  private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
-  private Node<?> edgeStart = null;
-  private Boolean undirectedEdges = false;
+  private Boolean undirectedEdgesMode;
+  private UUID chainEdgeStart = null;
 
-  public EditModeMenu(RoadMap roadMap, Collection<NodeType<?>> types) {
-    this.roadMap = roadMap;
+  public EditModeMenu(Storage storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
+    this.storage = storage;
+    this.key = group;
     this.types = types;
+    this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
+
+    PathFinderProvider.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
+      if (Objects.equals(chainEdgeStart, e.getNode().getNodeId())) {
+        chainEdgeStart = null;
+      }
+    });
   }
 
-  public BottomInventoryMenu createHotbarMenu(DefaultRoadMapEditor editor, Player editingPlayer) {
-    BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4, 5);
+  public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
+    BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
-      Bukkit.getScheduler().runTaskLater(PathPlugin.getInstance(),
-          () -> editor.setEditMode(c.getPlayer().getUniqueId(), false), 1L);
+      Bukkit.getScheduler().runTaskLater(PathFinderPlugin.getInstance(),
+          () -> editor.setEditMode(BukkitUtils.wrap(c.getPlayer()), false), 1L);
     });
 
-    menu.setButton(0, Button.builder()
-        .withItemStack(new LocalizedItem(Material.NETHER_STAR, Messages.E_NODE_TOOL_N,
-            Messages.E_NODE_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          Player p = context.getPlayer();
-          roadMap.removeNodes(context.getTarget());
-          p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1);
-        })
-        .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
-          Location pos = context.getTarget().getLocation().clone().add(new Vector(0.5, 1.5, 0.5));
+    menu.setButton(4, Button.builder()
+        .withItemStack(() -> new LocalizedItem.Builder(new ItemStack(undirectedEdgesMode ? Material.RED_DYE : Material.LIGHT_BLUE_DYE))
+            .withName(Messages.E_EDGEDIR_TOOL_N.formatted(Messages.formatter().choice("value", !undirectedEdgesMode)))
+            .withLore(Messages.E_EDGEDIR_TOOL_L)
+            .createItem(editingPlayer))
+        .withClickHandler(c -> {
+          undirectedEdgesMode = !undirectedEdgesMode;
+          Player player = c.getPlayer();
 
-          if (types.size() <= 1) {
-            NodeType<?> type = types.stream().findAny().orElse(null);
-            if (type == null) {
-              throw new IllegalStateException("Could not find any node type to generate node.");
-            }
-            // roadmap.isPersistent() has same result, because in roadmap it now is 'true && this.isPersistent'
-            roadMap.createNode(type, pos, true);
-          } else {
-            openNodeTypeMenu(context.getPlayer(), pos);
-          }
-        }));
-
-
-    menu.setButton(1, Button.builder()
-        .withItemStack(() -> {
-          ItemStack stack = new LocalizedItem(Material.STICK, Messages.E_EDGE_TOOL_N,
-              Messages.E_EDGE_TOOL_L).createItem(editingPlayer);
-          if (edgeStart != null) {
-            ItemStackUtils.setGlow(stack);
-          }
-          return stack;
-        })
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, c -> {
-          Player p = c.getPlayer();
-
-          if (edgeStart == null) {
-            edgeStart = c.getTarget();
-          } else {
-            if (edgeStart.equals(c.getTarget())) {
-              p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-              return;
-            }
-            if (edgeStart.getEdges().stream().anyMatch(e -> e.getEnd().equals(c.getTarget()))) {
-              p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
-              return;
-            }
-            roadMap.connectNodes(edgeStart, c.getTarget(), !undirectedEdges, 1, 1);
-            edgeStart = null;
-          }
+          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.formatted(
+              Messages.formatter().choice("value", !undirectedEdgesMode)
+          ));
           c.getMenu().refresh(c.getSlot());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_connect", p, p.getLocation());
-        })
-        .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
-          Player player = context.getPlayer();
+        }, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK));
 
-          // switch mode
-          if (edgeStart == null) {
-            undirectedEdges = !undirectedEdges;
-            TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_DIR_TOGGLE
-                .format(TagResolver.resolver("value",
-                    Tag.inserting(Messages.formatBool(!undirectedEdges)))), player);
+    menu.setButton(0, Button.builder()
+        .withItemStack(() -> {
+          ItemStack stack = new ItemStack(Material.FIREWORK_STAR);
+          FireworkEffectMeta meta = (FireworkEffectMeta) stack.getItemMeta();
+          meta.addItemFlags(ItemFlag.values());
+          meta.setEffect(FireworkEffect.builder()
+              // green = no current chain, orange = chain started
+              .withColor(Color.fromRGB(chainEdgeStart == null ? 0x00ff00 : 0xfc8a00))
+              .build());
+          stack.setItemMeta(meta);
+
+          return new LocalizedItem(stack, Messages.E_NODE_TOOL_N, Messages.E_NODE_TOOL_L).createItem(editingPlayer);
+        })
+
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+          Player p = context.getPlayer();
+          storage.deleteNodes(List.of(context.getTarget().getNodeId()))
+              .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
+        })
+
+        .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
+          PathPlayer<Player> p = CommonPathFinder.getInstance().wrap(context.getPlayer());
+          // cancel chain
+          if (chainEdgeStart == null) {
             return;
           }
-          // cancel creation
-          edgeStart = null;
-          TranslationHandler.getInstance().sendMessage(Messages.E_EDGE_TOOL_CANCELLED, player);
+          p.sendMessage(Messages.E_NODE_CHAIN_NEW);
+          chainEdgeStart = null;
           context.getMenu().refresh(context.getSlot());
-
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_EDGE, context -> {
-          Player player = context.getPlayer();
-          roadMap.disconnectNodes(context.getTarget());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_disconnect", player, player.getLocation());
+
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          Player p = context.getPlayer();
+          PathPlayer<Player> pp = CommonPathFinder.getInstance().wrap(p);
+          if (chainEdgeStart == null) {
+            chainEdgeStart = context.getTarget().getNodeId();
+            context.getMenu().refresh(context.getSlot());
+            pp.sendMessage(Messages.E_NODE_CHAIN_START);
+            return;
+          }
+          if (chainEdgeStart.equals(context.getTarget().getNodeId())) {
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+            return;
+          }
+          Collection<CompletableFuture<?>> futures = new HashSet<>();
+          futures.add(storage.modifyNode(chainEdgeStart, node -> {
+            node.connect(context.getTarget().getNodeId());
+          }));
+          if (undirectedEdgesMode) {
+            futures.add(storage.modifyNode(context.getTarget().getNodeId(), node -> {
+              node.connect(chainEdgeStart);
+            }));
+          }
+          CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            chainEdgeStart = null;
+            context.getMenu().refresh(context.getSlot());
+            CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+          });
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          Player player = context.getPlayer();
-          roadMap.disconnectNode(context.getTarget());
-          EffectHandler.getInstance().playEffect(PathPlugin.getInstance().getEffectsFile(),
-              "editor_edge_disconnect", player, player.getLocation());
-        }));
 
+        .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
 
-    menu.setButton(5, Button.builder()
+          Location view = context.getPlayer().getEyeLocation();
+          Location block = context.getTarget().getLocation();
+          BukkitVectorUtils.Orientation orientation = BukkitVectorUtils.getIntersection(view.toVector(), view.getDirection(), block.toVector());
+          if (orientation == null) {
+            return;
+          }
+
+          Location pos = BukkitVectorUtils.toBukkit(VectorUtils.snap(BukkitVectorUtils.toInternal(orientation.location()), 2))
+              .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
+          if (types.size() > 1) {
+            openNodeTypeMenu(context.getPlayer(), pos);
+            return;
+          }
+
+          NodeType<?> type = types.stream().findAny().orElse(null);
+          if (type == null) {
+            throw new IllegalStateException("Could not find any node type to generate node.");
+          }
+
+          storage
+              .createAndLoadNode(type, BukkitVectorUtils.toInternal(pos))
+              .thenCompose(node -> storage.modifyNode(node.getNodeId(), n -> {
+                if (chainEdgeStart != null) {
+                  storage.modifyNode(chainEdgeStart, o -> {
+                    o.connect(node);
+                  });
+                  if (undirectedEdgesMode) {
+                    n.connect(chainEdgeStart);
+                  }
+                }
+                chainEdgeStart = n.getNodeId();
+                storage.modifyGroup(key, group -> group.add(node.getNodeId()));
+                storage.modifyGroup(CommonPathFinder.globalGroupKey(), group -> group.add(node.getNodeId()));
+              }))
+              .exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+              });
+        })
+
+        .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
+          storage.modifyNode(context.getTarget().getStart(), node -> {
+            node.disconnect(context.getTarget().getEnd());
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+          });
+        })
+    );
+
+    menu.setButton(3, Button.builder()
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-          double dist = -1;
-          Node<?> nearest = null;
-          Location pLoc = context.getPlayer().getLocation();
-          for (Node<?> node : roadMap.getNodes()) {
-            double d = node.getLocation().distance(pLoc);
-            if (dist == -1 || d < dist) {
-              nearest = node;
-              dist = d;
-            }
-          }
-          if (nearest == null) {
-            return;
-          }
-          Player p = context.getPlayer();
-          Location newLoc = nearest.getLocation().setDirection(p.getLocation().getDirection());
-          p.teleport(newLoc);
-          p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+          storage.loadGroup(key)
+              .thenCompose(group -> storage.loadNodes(group.map(g -> (Collection<UUID>) g).orElseGet(HashSet::new)))
+              .thenAccept(nodes -> {
+                Player p = context.getPlayer();
+                if (nodes.size() == 0) {
+                  // no nodes in the current editing
+                  p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                  return;
+                }
+
+                double dist = -1;
+                Node nearest = null;
+                Location pLoc = context.getPlayer().getLocation();
+                for (Node node : nodes) {
+                  double d = node.getLocation().distance(BukkitVectorUtils.toInternal(pLoc));
+                  if (dist == -1 || d < dist) {
+                    nearest = node;
+                    dist = d;
+                  }
+                }
+
+                Location newLoc = BukkitVectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
+                Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
+                  p.teleport(newLoc);
+                  p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
+                });
+              }).exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+              });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
-    menu.setButton(3, Button.builder()
+    menu.setButton(1, Button.builder()
         .withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N,
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable<?> groupable) {
-            openGroupMenu(context.getPlayer(), groupable);
-          }
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          storage.loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
+            node.ifPresent(value -> openGroupMenu(context.getPlayer(), value));
+          });
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable<?> groupable) {
-            if (groupable.getGroups().isEmpty()) {
-              return;
-            }
-
-            Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance()
-                  .removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
-              context.getPlayer().playSound(context.getPlayer().getLocation(),
-                  Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
-            });
-          }
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+          StorageUtil.clearGroups(context.getTarget());
+          context.getPlayer().playSound(context.getPlayer().getLocation(),
+              Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
         }));
 
-    menu.setButton(4, Button.builder()
+    menu.setButton(2, Button.builder()
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(ClientNodeHandler.RIGHT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable<?> groupable) {
-            Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance().addNodes(multiTool, Lists.newArrayList(groupable));
-              context.getPlayer()
-                  .playSound(context.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1, 1);
+        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          storage.modifyNode(context.getTarget().getNodeId(), node -> {
+            storage.loadGroups(multiTool).thenAccept(groups -> {
+              StorageUtil.addGroups(groups, node.getNodeId());
             });
-          }
+            context.getPlayer().playSound(context.getPlayer().getLocation(),
+                Sound.BLOCK_CHEST_CLOSE, 1, 1);
+          });
         })
-        .withClickHandler(ClientNodeHandler.LEFT_CLICK_NODE, context -> {
-          if (context.getTarget() instanceof Groupable<?> groupable) {
-            Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-              NodeGroupHandler.getInstance().removeNodes(multiTool, Lists.newArrayList(groupable));
-              context.getPlayer().playSound(context.getPlayer().getLocation(),
-                  Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+          storage.modifyNode(context.getTarget().getNodeId(), node -> {
+            storage.loadGroups(multiTool).thenAccept(groups -> {
+              StorageUtil.removeGroups(groups, node.getNodeId());
             });
-          }
+            context.getPlayer().playSound(context.getPlayer().getLocation(),
+                Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+          });
         })
-        .withClickHandler(Action.RIGHT_CLICK_AIR,
-            context -> openMutliToolMenu(context.getPlayer())));
-
+        .withClickHandler(Action.RIGHT_CLICK_AIR, context -> openMultiToolMenu(context.getPlayer()))
+        .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> openMultiToolMenu(context.getPlayer()))
+    );
     return menu;
   }
 
-  private void openGroupMenu(Player player, Groupable<?> groupable) {
+  private void openGroupMenu(Player player, Node node) {
 
-    ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
-    menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
-        3)); //TODO extract icon
-    for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
+    storage.loadAllGroups().thenAccept(nodeGroups -> {
 
-      TagResolver resolver = TagResolver.builder()
-          .resolver(Placeholder.component("name", group.getDisplayName()))
-          .tag("key", Messages.formatKey(group.getKey()))
-          .resolver(Placeholder.unparsed("name-format", group.getNameFormat()))
-          .resolver(
-              Placeholder.component("permission", Messages.formatPermission(group.getPermission())))
-          .resolver(
-              Placeholder.component("discoverable", Messages.formatBool(group.isDiscoverable())))
-          .resolver(Placeholder.component("navigable", Messages.formatBool(group.isNavigable())))
-          .resolver(Formatter.number("find-distance", group.getFindDistance()))
-          .resolver(Placeholder.component("search-terms", Component.join(
-              JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-              group.getSearchTermStrings().stream().map(Component::text)
-                  .collect(Collectors.toList())
-          )))
-          .build();
+      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
+      for (NodeGroup group : nodeGroups) {
 
-      menu.addListEntry(Button.builder()
-          .withItemStack(() -> {
-            ItemStack stack = new LocalizedItem.Builder(new ItemStack(
-                group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
-                .withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
-                .withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
-                .createItem(player);
-            if (group.contains(groupable)) {
-              stack = ItemStackUtils.setGlow(stack);
-            }
-            return stack;
-          })
-          .withClickHandler(Action.LEFT, c -> {
-            if (!group.contains(groupable)) {
+        TagResolver resolver = TagResolver.builder()
+            .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
+            .resolver(Messages.formatter().number("weight", group.getWeight()))
+            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
+            .build();
 
-              Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                NodeGroupHandler.getInstance().addNodes(group, Lists.newArrayList(groupable));
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                menu.refresh(menu.getListSlots());
-              });
-            }
-          })
-          .withClickHandler(Action.RIGHT, c -> {
-            if (group.contains(groupable)) {
+        menu.addListEntry(Button.builder()
+            .withItemStack(() -> {
+              ItemStack stack = new LocalizedItem.Builder(new ItemStack(
+                  group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
+                      : Material.FURNACE_MINECART))
+                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
+                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
+                  .createItem(player);
+              if (group.contains(node.getNodeId())) {
+                stack = ItemStackUtils.setGlow(stack);
+              }
+              return stack;
+            })
+            .withClickHandler(Action.LEFT, groupEntryClickHandler(menu, group, node))
+            .withClickHandler(Action.RIGHT, groupEntryClickHandler(menu, group, node))
+        );
+      }
+      menu.addPreset(presetApplier -> {
+        presetApplier.addItemOnTop(3 * 9 + 8,
+            new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
+                Messages.E_SUB_GROUP_RESET_L).createItem(player));
+        presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
+          StorageUtil.clearGroups(node);
+          storage.saveNode(node).thenRun(() -> {
+            menu.refresh(menu.getListSlots());
+            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+          });
+        });
 
-              Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                NodeGroupHandler.getInstance().removeNodes(group, Lists.newArrayList(groupable));
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                menu.refresh(menu.getListSlots());
-              });
-            }
-          }));
-    }
-    menu.addPreset(presetApplier -> {
-      presetApplier.addItemOnTop(3 * 9 + 8,
-          new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
-              Messages.E_SUB_GROUP_RESET_L).createItem(player));
-      presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
+        presetApplier.addItemOnTop(3 * 9 + 4,
+            new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N,
+                Messages.E_SUB_GROUP_INFO_L).createItem(player));
+      });
+      menu.open(player);
+    });
+  }
 
-        Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-          NodeGroupHandler.getInstance()
-              .removeNodes(groupable.getGroups(), Lists.newArrayList(groupable));
+  private ContextConsumer<ClickContext> groupEntryClickHandler(ListMenu menu, NodeGroup group, Node node) {
+    return c -> {
+      if (group.contains(node.getNodeId())) {
+        StorageUtil.removeGroups(group, node.getNodeId());
+        storage.saveNode(node).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        });
+      } else {
+        StorageUtil.addGroups(group, node.getNodeId());
+        storage.saveNode(node).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        });
+      }
+    };
+  }
+
+  private void openMultiToolMenu(Player player) {
+    storage.loadAllGroups().thenAccept(nodeGroups -> {
+
+      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
+          3)); //TODO extract icon
+      for (NodeGroup group : nodeGroups) {
+
+        TagResolver resolver = TagResolver.builder()
+            .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
+            .resolver(Messages.formatter().number("weight", group.getWeight()))
+            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
+            .build();
+
+        menu.addListEntry(Button.builder()
+            .withItemStack(() -> {
+              ItemStack stack = new LocalizedItem.Builder(new ItemStack(
+                  group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
+                      : Material.FURNACE_MINECART))
+                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
+                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
+                  .createItem(player);
+              if (multiTool.contains(group.getKey())) {
+                stack = ItemStackUtils.setGlow(stack);
+              }
+              return stack;
+            })
+            .withClickHandler(Action.LEFT, multiToolEntryClickHandler(menu, group))
+            .withClickHandler(Action.RIGHT, multiToolEntryClickHandler(menu, group))
+        );
+      }
+      menu.addPreset(presetApplier -> {
+        presetApplier.addItemOnTop(3 * 9 + 8,
+            new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
+                Messages.E_SUB_GROUP_RESET_L).createItem(player));
+        presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
+          multiTool.clear();
           menu.refresh(menu.getListSlots());
           c.getPlayer()
               .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f,
                   1f);
         });
-      });
 
-      presetApplier.addItemOnTop(3 * 9 + 4,
-          new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N,
-              Messages.E_SUB_GROUP_INFO_L).createItem(player));
+        presetApplier.addItemOnTop(3 * 9 + 4,
+            new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N,
+                Messages.E_SUB_GROUP_INFO_L).createItem(player));
+      });
+      menu.open(player);
     });
-    menu.open(player);
   }
 
-  private void openMutliToolMenu(Player player) {
-
-    ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(player), 4);
-    menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
-        3)); //TODO extract icon
-    for (NodeGroup group : NodeGroupHandler.getInstance().getNodeGroups()) {
-
-      TagResolver resolver = TagResolver.builder()
-          .resolver(Placeholder.component("name", group.getDisplayName()))
-          .tag("key", Messages.formatKey(group.getKey()))
-          .resolver(Placeholder.unparsed("name-format", group.getNameFormat()))
-          .resolver(
-              Placeholder.component("permission", Messages.formatPermission(group.getPermission())))
-          .resolver(
-              Placeholder.component("discoverable", Messages.formatBool(group.isDiscoverable())))
-          .resolver(Placeholder.component("navigable", Messages.formatBool(group.isNavigable())))
-          .resolver(Formatter.number("find-distance", group.getFindDistance()))
-          .resolver(Placeholder.component("search-terms", Component.join(
-              JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-              group.getSearchTermStrings().stream().map(Component::text)
-                  .collect(Collectors.toList())
-          )))
-          .build();
-
-      menu.addListEntry(Button.builder()
-          .withItemStack(() -> {
-            ItemStack stack = new LocalizedItem.Builder(new ItemStack(
-                group.isDiscoverable() ? Material.CHEST_MINECART : Material.FURNACE_MINECART))
-                .withName(Messages.E_SUB_GROUP_ENTRY_N).withNameResolver(resolver)
-                .withLore(Messages.E_SUB_GROUP_ENTRY_L).withLoreResolver(resolver)
-                .createItem(player);
-            if (multiTool.contains(group)) {
-              stack = ItemStackUtils.setGlow(stack);
-            }
-            return stack;
-          })
-          .withClickHandler(Action.LEFT, c -> {
-            if (!multiTool.contains(group)) {
-
-              Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                multiTool.add(group);
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-                menu.refresh(menu.getListSlots());
-              });
-            }
-          })
-          .withClickHandler(Action.RIGHT, c -> {
-            if (multiTool.contains(group)) {
-
-              Bukkit.getScheduler().runTask(PathPlugin.getInstance(), () -> {
-                multiTool.remove(group);
-                c.getPlayer()
-                    .playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-                menu.refresh(menu.getListSlots());
-              });
-            }
-          }));
-    }
-    menu.addPreset(presetApplier -> {
-      presetApplier.addItemOnTop(3 * 9 + 8,
-          new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
-              Messages.E_SUB_GROUP_RESET_L).createItem(player));
-      presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
-        multiTool.clear();
+  private ContextConsumer<ClickContext> multiToolEntryClickHandler(ListMenu menu, NodeGroup group) {
+    return c -> {
+      if (multiTool.contains(group.getKey())) {
+        multiTool.remove(group.getKey());
+        c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
         menu.refresh(menu.getListSlots());
-        c.getPlayer()
-            .playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f,
-                1f);
-      });
-
-      presetApplier.addItemOnTop(3 * 9 + 4,
-          new LocalizedItem(Material.PAPER, Messages.E_SUB_GROUP_INFO_N,
-              Messages.E_SUB_GROUP_INFO_L).createItem(player));
-    });
-    menu.open(player);
+      } else {
+        multiTool.add(group.getKey());
+        c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+        menu.refresh(menu.getListSlots());
+      }
+    };
   }
 
   private void openNodeTypeMenu(Player player, Location location) {
@@ -383,9 +418,9 @@ public class EditModeMenu {
     for (NodeType<?> type : types) {
 
       menu.addListEntry(Button.builder()
-          .withItemStack(type::getDisplayItem)
+          .withItemStack(() -> new ItemStack(Material.CYAN_CONCRETE_POWDER))
           .withClickHandler(Action.RIGHT, c -> {
-            roadMap.createNode(type, location, true);
+            storage.createAndLoadNode(type, BukkitVectorUtils.toInternal(location));
             menu.close(player);
           }));
     }

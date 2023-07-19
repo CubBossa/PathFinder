@@ -5,12 +5,17 @@ plugins {
 rootProject.name = "pathfinder"
 
 sequenceOf(
-    "core",
-    "graph",
-    "editmode",
-    "scripted-visualizer"
+        "api",
+        "core",
+        "bukkit",
+        "graph",
+        "editmode",
+        "papi",
+        "scripted-visualizer",
+        "legacy-data"
 ).forEach {
     val name = "${rootProject.name}-$it"
     include(name)
     project(":$name").projectDir = file(name)
 }
+include("pathfinder-test-utils")

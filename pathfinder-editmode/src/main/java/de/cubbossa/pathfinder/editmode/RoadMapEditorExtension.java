@@ -2,11 +2,14 @@ package de.cubbossa.pathfinder.editmode;
 
 import com.google.auto.service.AutoService;
 import de.cubbossa.menuframework.GUIHandler;
-import de.cubbossa.pathfinder.PathPlugin;
-import de.cubbossa.pathfinder.PathPluginExtension;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.util.Version;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.UnknownDependencyException;
 import org.jetbrains.annotations.NotNull;
@@ -14,20 +17,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@AutoService(PathPluginExtension.class)
-public class RoadMapEditorExtension implements PathPluginExtension {
-
-  @NotNull
-  @Override
-  public NamespacedKey getKey() {
-    return new NamespacedKey(PathPlugin.getInstance(), "rmeditors");
-  }
+@AutoService(PathFinderExtension.class)
+public class RoadMapEditorExtension implements PathFinderExtension {
 
   private static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)+");
   private static final Pattern BUILD_PATTERN = Pattern.compile("b([0-9]+)");
 
+  @NotNull
   @Override
-  public void onEnable() {
+  public NamespacedKey getKey() {
+    return CommonPathFinder.pathfinder("group-editor");
+  }
+
+  @Override
+  public void onEnable(PathFinder plugin) {
 
     Plugin protocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib");
     if (protocolLib == null) {
@@ -40,17 +43,17 @@ public class RoadMapEditorExtension implements PathPluginExtension {
 
     checkVersion(spigotVersionExtracted, protocolLib.getDescription().getVersion());
 
-    PathPlugin.getInstance().getLogger().info("Enabling default roadmap editors.");
+    PathFinderProvider.get().getLogger().info("Enabling default roadmap editors.");
 
-    new GUIHandler(PathPlugin.getInstance());
+    new GUIHandler(PathFinderPlugin.getInstance());
     GUIHandler.getInstance().enable();
 
-    PathPlugin.getInstance().getLogger().info("Successfully enabled default roadmap editors.");
+    PathFinderProvider.get().getLogger().info("Successfully enabled default roadmap editors.");
   }
 
   @Override
-  public void onDisable() {
-    PathPlugin.getInstance().getLogger().info("Disabling default roadmap editors.");
+  public void onDisable(PathFinder plugin) {
+    PathFinderProvider.get().getLogger().info("Disabling default roadmap editors.");
     GUIHandler.getInstance().disable();
   }
 
@@ -66,19 +69,22 @@ public class RoadMapEditorExtension implements PathPluginExtension {
 
       // require 5.0.0 up to build 606
       if (protocolLib.compareTo(new Version("5")) < 0) {
-        throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
-            + " Current ProtocolLib: " + new Version(protocolLibVersion));
+        throw new UnknownDependencyException(
+            "Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0 for Minecraft 1.19"
+                + " Current ProtocolLib: " + new Version(protocolLibVersion));
       }
       if (spigot.compareTo(new Version("1.19.3")) >= 0) {
         // search for build 607+
         if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b607")) < 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3."
-          + " Current ProtocolLib: " + new Version(protocolLibVersion));
+          throw new UnknownDependencyException(
+              "Invalid ProtocolLib version. Use at least ProtocolLib v5.0.0-SNAPSHOT-b607 for Minecraft 1.19.3."
+                  + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       } else {
         if (protocolLib.compareTo(new Version("v5.0.0-SNAPSHOT-b606")) > 0) {
-          throw new UnknownDependencyException("Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2."
-              + " Current ProtocolLib: " + new Version(protocolLibVersion));
+          throw new UnknownDependencyException(
+              "Invalid ProtocolLib version. Use at latest ProtocolLib v5.0.0-SNAPSHOT-b606 for Minecraft 1.19.2."
+                  + " Current ProtocolLib: " + new Version(protocolLibVersion));
         }
       }
     }

@@ -7,7 +7,9 @@ package de.cubbossa.pathfinder.jooq.tables;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
+import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.jooq.Field;
@@ -52,17 +54,17 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     /**
      * The column <code>pathfinder_edges.start_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, Integer> START_ID = createField(DSL.name("start_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<PathfinderEdgesRecord, UUID> START_ID = createField(DSL.name("start_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
      * The column <code>pathfinder_edges.end_id</code>.
      */
-    public final TableField<PathfinderEdgesRecord, Integer> END_ID = createField(DSL.name("end_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<PathfinderEdgesRecord, UUID> END_ID = createField(DSL.name("end_id"), SQLDataType.VARCHAR(36).nullable(false), this, "", new UUIDConverter());
 
     /**
-     * The column <code>pathfinder_edges.weight_modifier</code>.
+     * The column <code>pathfinder_edges.weight</code>.
      */
-    public final TableField<PathfinderEdgesRecord, Double> WEIGHT_MODIFIER = createField(DSL.name("weight_modifier"), SQLDataType.DOUBLE.nullable(false).defaultValue(DSL.field("1E0", SQLDataType.DOUBLE)), this, "");
+    public final TableField<PathfinderEdgesRecord, Double> WEIGHT = createField(DSL.name("weight"), SQLDataType.DOUBLE.defaultValue(DSL.field("1", SQLDataType.DOUBLE)), this, "");
 
     private PathfinderEdges(Name alias, Table<PathfinderEdgesRecord> aliased) {
         this(alias, aliased, null);
@@ -104,7 +106,7 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
 
     @Override
     public UniqueKey<PathfinderEdgesRecord> getPrimaryKey() {
-        return Keys.PATHFINDER_EDGES__PK_PATHFINDER_EDGES;
+        return Keys.PATHFINDER_EDGES__PATHFINDER_EDGES_PK;
     }
 
     @Override
@@ -151,14 +153,14 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row3<Integer, Integer, Double> fieldsRow() {
+    public Row3<UUID, UUID, Double> fieldsRow() {
         return (Row3) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function3<? super Integer, ? super Integer, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -166,7 +168,7 @@ public class PathfinderEdges extends TableImpl<PathfinderEdgesRecord> {
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super Integer, ? super Integer, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function3<? super UUID, ? super UUID, ? super Double, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

@@ -4,21 +4,21 @@
 package de.cubbossa.pathfinder.jooq.tables;
 
 
-import de.cubbossa.pathfinder.data.NamespacedKeyConverter;
+import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
+import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
 
 import java.util.function.Function;
 
-import org.bukkit.NamespacedKey;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.Function6;
+import org.jooq.Function2;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Records;
-import org.jooq.Row6;
+import org.jooq.Row2;
 import org.jooq.Schema;
 import org.jooq.SelectField;
 import org.jooq.Table;
@@ -54,32 +54,12 @@ public class PathfinderNodegroups extends TableImpl<PathfinderNodegroupsRecord> 
     /**
      * The column <code>pathfinder_nodegroups.key</code>.
      */
-    public final TableField<PathfinderNodegroupsRecord, NamespacedKey> KEY = createField(DSL.name("key"), SQLDataType.VARCHAR.nullable(false), this, "", new NamespacedKeyConverter());
+    public final TableField<PathfinderNodegroupsRecord, NamespacedKey> KEY = createField(DSL.name("key"), SQLDataType.VARCHAR(64).nullable(false), this, "", new NamespacedKeyConverter());
 
     /**
-     * The column <code>pathfinder_nodegroups.name_format</code>.
+     * The column <code>pathfinder_nodegroups.weight</code>.
      */
-    public final TableField<PathfinderNodegroupsRecord, String> NAME_FORMAT = createField(DSL.name("name_format"), SQLDataType.VARCHAR.nullable(false), this, "");
-
-    /**
-     * The column <code>pathfinder_nodegroups.permission</code>.
-     */
-    public final TableField<PathfinderNodegroupsRecord, String> PERMISSION = createField(DSL.name("permission"), SQLDataType.VARCHAR, this, "");
-
-    /**
-     * The column <code>pathfinder_nodegroups.navigable</code>.
-     */
-    public final TableField<PathfinderNodegroupsRecord, Boolean> NAVIGABLE = createField(DSL.name("navigable"), SQLDataType.BOOLEAN.nullable(false), this, "");
-
-    /**
-     * The column <code>pathfinder_nodegroups.discoverable</code>.
-     */
-    public final TableField<PathfinderNodegroupsRecord, Boolean> DISCOVERABLE = createField(DSL.name("discoverable"), SQLDataType.BOOLEAN.nullable(false), this, "");
-
-    /**
-     * The column <code>pathfinder_nodegroups.find_distance</code>.
-     */
-    public final TableField<PathfinderNodegroupsRecord, Double> FIND_DISTANCE = createField(DSL.name("find_distance"), SQLDataType.DOUBLE.nullable(false), this, "");
+    public final TableField<PathfinderNodegroupsRecord, Double> WEIGHT = createField(DSL.name("weight"), SQLDataType.DOUBLE.nullable(false).defaultValue(DSL.field("1", SQLDataType.DOUBLE)), this, "");
 
     private PathfinderNodegroups(Name alias, Table<PathfinderNodegroupsRecord> aliased) {
         this(alias, aliased, null);
@@ -121,7 +101,7 @@ public class PathfinderNodegroups extends TableImpl<PathfinderNodegroupsRecord> 
 
     @Override
     public UniqueKey<PathfinderNodegroupsRecord> getPrimaryKey() {
-        return Keys.PATHFINDER_NODEGROUPS__PK_PATHFINDER_NODEGROUPS;
+        return Keys.PATHFINDER_NODEGROUPS__PATHFINDER_NODEGROUPS__PK;
     }
 
     @Override
@@ -164,18 +144,18 @@ public class PathfinderNodegroups extends TableImpl<PathfinderNodegroupsRecord> 
     }
 
     // -------------------------------------------------------------------------
-    // Row6 type methods
+    // Row2 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<NamespacedKey, String, String, Boolean, Boolean, Double> fieldsRow() {
-        return (Row6) super.fieldsRow();
+    public Row2<NamespacedKey, Double> fieldsRow() {
+        return (Row2) super.fieldsRow();
     }
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    public <U> SelectField<U> mapping(Function6<? super NamespacedKey, ? super String, ? super String, ? super Boolean, ? super Boolean, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Function2<? super NamespacedKey, ? super Double, ? extends U> from) {
         return convertFrom(Records.mapping(from));
     }
 
@@ -183,7 +163,7 @@ public class PathfinderNodegroups extends TableImpl<PathfinderNodegroupsRecord> 
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    public <U> SelectField<U> mapping(Class<U> toType, Function6<? super NamespacedKey, ? super String, ? super String, ? super Boolean, ? super Boolean, ? super Double, ? extends U> from) {
+    public <U> SelectField<U> mapping(Class<U> toType, Function2<? super NamespacedKey, ? super Double, ? extends U> from) {
         return convertFrom(toType, Records.mapping(from));
     }
 }

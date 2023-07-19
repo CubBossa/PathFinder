@@ -11,8 +11,15 @@ class SimpleAStarTest {
 
   // Test Graph: https://i.stack.imgur.com/VW9yr.png
 
-  private record Node(String name, double x, double y) {
-  }
+  Node a = n("a", 0, 3.0);
+  Node b = n("b", 2, 3.0);
+  Node c = n("c", 4, 3.5);
+  Node d = n("d", 3, 0.5);
+  Node e = n("e", 6, 2.5);
+  Node f = n("f", 5, 0.0);
+  Node g = n("g", 1, 0.0);
+  private Graph<Node> graph;
+  private SimpleAStar<Node> dijkstra;
 
   private static double distSquared(Node a, Node b) {
     return Math.pow(b.x() - a.x(), 2) + Math.pow(b.y() - a.y(), 2);
@@ -21,17 +28,6 @@ class SimpleAStarTest {
   private static Node n(String name, double x, double y) {
     return new Node(name, x, y);
   }
-
-  Node a = n("a", 0, 3.0);
-  Node b = n("b", 2, 3.0);
-  Node c = n("c", 4, 3.5);
-  Node d = n("d", 3, 0.5);
-  Node e = n("e", 6, 2.5);
-  Node f = n("f", 5, 0.0);
-  Node g = n("g", 1, 0.0);
-
-  private Graph<Node> graph;
-  private SimpleAStar<Node> dijkstra;
 
   @BeforeAll
   void setup() {
@@ -76,5 +72,8 @@ class SimpleAStarTest {
   @Test
   void shortestPathAny() throws NoPathFoundException {
     Assertions.assertEquals(List.of(a, b, c), dijkstra.solvePath(graph, a, List.of(c, f)));
+  }
+
+  private record Node(String name, double x, double y) {
   }
 }

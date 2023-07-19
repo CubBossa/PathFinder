@@ -78,7 +78,7 @@ command:
     <gray>MISSING
 
     <white>Commands:</white>
-    <dark_gray>» </dark_gray><gray><#d3c4f5>/roadmap</#d3c4f5> - Bearbeite Roadmaps, die Wegpunkte bündeln
+    <dark_gray>» </dark_gray><gray><#d3c4f5>/proadmap</#d3c4f5> - Bearbeite Roadmaps, die Wegpunkte bündeln
     <dark_gray>» </dark_gray><gray><#d3c4f5>/nodegroup</#d3c4f5> - Bearbeite Nodegruppen, um Wegpunkten Eigenschaften zu verleihen
     <dark_gray>» </dark_gray><gray><#d3c4f5>/node</#d3c4f5> - Erstelle, bearbeite und lösche Wegpunkte
     <dark_gray>» </dark_gray><gray><#d3c4f5>/pathvisualizer</#d3c4f5> - Bearbeite Pathvisualizer
