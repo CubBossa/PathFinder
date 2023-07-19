@@ -43,6 +43,8 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
     return new BezierView(player, nodes.toArray(Node[]::new)) {
 
+      private long lastException = 0;
+
       @Override
       void play(int interval) {
         if (points == null) {
@@ -54,14 +56,15 @@ public class ParticleVisualizer extends BezierPathVisualizer {
             Player bukkitPlayer = player.unwrap();
             Location point = points.get(i);
             var data = particleData;
-            if (particle.getDataType().equals(void.class) && data != null) {
+            if (particle.getDataType().equals(Void.class)) {
               data = null;
-            } else if (particleData != null && !Objects.equals(particleData.getClass(), particle.getDataType())) {
-              try {
-                data = particle.getDataType().newInstance();
-              } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
+            } else if (!Objects.equals(particleData.getClass(), particle.getDataType())) {
+              if (System.currentTimeMillis() - lastException < 3000) {
+                return;
               }
+              lastException = System.currentTimeMillis();
+              throw new IllegalStateException("Particle data is of wrong type - given: "
+                  + particleData.getClass().getName() + ", required: " + particle.getDataType().getName());
             }
             bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, data);
           }
