@@ -36,9 +36,9 @@ public class StorageUtil {
 
   public static CompletableFuture<Void> addGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
     return CompletableFuture.allOf(groups.stream().parallel()
-        .peek(group -> group.addAll(nodes))
-        .map(storage::saveGroup)
-        .toArray(CompletableFuture[]::new)
+            .peek(group -> group.addAll(nodes))
+            .map(storage::saveGroup)
+            .toArray(CompletableFuture[]::new)
     );
   }
 

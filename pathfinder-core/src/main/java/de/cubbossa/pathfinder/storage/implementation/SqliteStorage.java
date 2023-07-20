@@ -3,23 +3,18 @@ package de.cubbossa.pathfinder.storage.implementation;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.storage.DataStorageException;
-import lombok.SneakyThrows;
-import org.jetbrains.annotations.Nullable;
-import org.jooq.ConnectionProvider;
+import lombok.Getter;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteDataSource;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class SqliteStorage extends SqlStorage {
 
   private final File file;
-  private Connection connection;
+  @Getter
+  private SQLiteDataSource dataSource;
 
   public SqliteStorage(File file, NodeTypeRegistry nodeTypeRegistry,
                        ModifierRegistry modifierRegistry,
@@ -33,59 +28,21 @@ public class SqliteStorage extends SqlStorage {
       file.getParentFile().mkdirs();
       file.createNewFile();
     }
-    try {
-      ConnectionProvider fac = getConnectionProvider();
-      Connection con = fac.acquire();
-      con.prepareStatement("PRAGMA ignore_check_constraints = true;").execute();
-      fac.release(con);
+    SQLiteConfig config = new SQLiteConfig();
+    config.setJournalMode(SQLiteConfig.JournalMode.OFF);
+    config.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
 
-      super.init();
-
-    } catch (SQLException e) {
-      throw new DataStorageException("Could not connect to Sqlite database.", e);
-    }
+    dataSource = new SQLiteDataSource(config);
+    dataSource.setUrl("jdbc:sqlite:" + file.getAbsolutePath());
+//    try (Connection con = dataSource.getConnection()) {
+//      con.prepareStatement("PRAGMA ignore_check_constraints = true;").execute();
+//    } catch (SQLException e) {
+//      throw new DataStorageException("Could not connect to Sqlite database.", e);
+//    }
+    super.init();
   }
 
   public void shutdown() {
-    try {
-      if (connection != null && !connection.isClosed()) {
-        connection.close();
-        connection = null;
-      }
-    } catch (SQLException e) {
-      throw new DataStorageException("Could not disconnect Sqlite database", e);
-    }
-  }
 
-  ConnectionProvider connectionProvider = new ConnectionProvider() {
-    @Override
-    public synchronized @Nullable Connection acquire() throws DataAccessException {
-      if (connection != null) {
-        return connection;
-      }
-      try {
-        SQLiteConfig config = new SQLiteConfig();
-        config.setJournalMode(SQLiteConfig.JournalMode.WAL);
-        config.setSynchronous(SQLiteConfig.SynchronousMode.NORMAL);
-
-        Class.forName("org.sqlite.JDBC");
-        connection = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath(), config.toProperties());
-        connection.setAutoCommit(false);
-
-        return connection;
-      } catch (ClassNotFoundException | SQLException e) {
-        throw new DataStorageException("Could not connect to Sqlite database.", e);
-      }
-    }
-
-    @SneakyThrows
-    @Override
-    public void release(Connection con) throws DataAccessException {
-      con.commit();
-    }
-  };
-
-  public ConnectionProvider getConnectionProvider() {
-    return connectionProvider;
   }
 }

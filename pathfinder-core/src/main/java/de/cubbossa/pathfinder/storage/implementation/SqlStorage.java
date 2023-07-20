@@ -24,11 +24,15 @@ import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.Record1;
+import org.jooq.RecordMapper;
+import org.jooq.SQLDialect;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
+import javax.sql.DataSource;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -94,7 +98,7 @@ public abstract class SqlStorage extends CommonStorage {
     };
   }
 
-  public abstract ConnectionProvider getConnectionProvider();
+  public abstract DataSource getDataSource();
 
   private <T extends PathVisualizer<?, ?>> RecordMapper<PathfinderVisualizerRecord, T> visualizerMapper(
       VisualizerType<T> type) {
@@ -123,9 +127,9 @@ public abstract class SqlStorage extends CommonStorage {
     System.setProperty("org.jooq.no-tips", "true");
 
     create = DSL
-        .using(getConnectionProvider(), dialect, new Settings()
-            .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
-            .withRenderSchema(dialect != SQLDialect.SQLITE));
+            .using(getDataSource(), dialect, new Settings()
+                    .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
+                    .withRenderSchema(dialect != SQLDialect.SQLITE));
 
     createPathVisualizerTable();
     createPathVisualizerTypeTable();
@@ -332,22 +336,20 @@ public abstract class SqlStorage extends CommonStorage {
     create.transaction(configuration -> {
       var ctx = configuration.dsl();
       ctx.update(PATHFINDER_WAYPOINTS)
-          .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
-          .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
-          .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
-          .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
-          .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
-          .execute();
-      ctx.batched(conf -> {
-        var dsl = conf.dsl();
-        for (Edge e : waypoint.getEdgeChanges().getAddList()) {
-          saveEdge(dsl, e);
-        }
-        for (Edge e : waypoint.getEdgeChanges().getRemoveList()) {
-          deleteEdge(dsl, e);
-        }
-        waypoint.getEdgeChanges().flush();
-      });
+              .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
+              .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
+              .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
+              .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
+              .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
+              .execute();
+
+      for (Edge e : waypoint.getEdgeChanges().getAddList()) {
+        saveEdge(ctx, e);
+      }
+      for (Edge e : waypoint.getEdgeChanges().getRemoveList()) {
+        deleteEdge(ctx, e);
+      }
+      waypoint.getEdgeChanges().flush();
     });
   }
 

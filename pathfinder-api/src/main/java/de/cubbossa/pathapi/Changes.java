@@ -2,20 +2,21 @@ package de.cubbossa.pathapi;
 
 import lombok.Getter;
 
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public final class Changes<E> {
-  private final LinkedList<E> addList;
-  private final LinkedList<E> removeList;
+    private final Collection<E> addList;
+    private final Collection<E> removeList;
 
-  public Changes() {
-    addList = new LinkedList<>();
-    removeList = new LinkedList<>();
-  }
+    public Changes() {
+        addList = ConcurrentHashMap.newKeySet(16);
+        removeList = ConcurrentHashMap.newKeySet(16);
+    }
 
-  public void flush() {
-    addList.clear();
-    removeList.clear();
-  }
+    public void flush() {
+        addList.clear();
+        removeList.clear();
+    }
 }

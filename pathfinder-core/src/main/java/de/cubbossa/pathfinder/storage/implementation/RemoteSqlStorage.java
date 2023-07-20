@@ -6,9 +6,9 @@ import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import org.jooq.ConnectionProvider;
 import org.jooq.SQLDialect;
-import org.jooq.impl.DataSourceConnectionProvider;
+
+import javax.sql.DataSource;
 
 public class RemoteSqlStorage extends SqlStorage {
 
@@ -36,7 +36,7 @@ public class RemoteSqlStorage extends SqlStorage {
   }
 
   @Override
-  public ConnectionProvider getConnectionProvider() {
-    return new DataSourceConnectionProvider(dataSource);
+  public DataSource getDataSource() {
+    return dataSource;
   }
 }

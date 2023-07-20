@@ -27,15 +27,11 @@ import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.jetbrains.annotations.Nullable;
-import org.jooq.ConnectionProvider;
+import org.h2.jdbcx.JdbcDataSource;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.Assertions;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -114,34 +110,14 @@ public abstract class PathFinderTest {
   public StorageImplementation inMemoryStorage() {
     SqlStorage implementation = new SqlStorage(SQLDialect.H2, nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry) {
       @Override
-      public ConnectionProvider getConnectionProvider() {
-        final Connection connection;
-        try {
-          Class.forName("org.h2.jdbcx.JdbcDataSource");
-          connection = DriverManager.getConnection("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
-        } catch (SQLException | ClassNotFoundException e) {
-          throw new RuntimeException(e);
-        }
-        return new ConnectionProvider() {
-          @Override
-          public @Nullable Connection acquire() throws DataAccessException {
-            return connection;
-          }
-
-          @Override
-          public void release(Connection connection) throws DataAccessException {
-          }
-        };
+      public DataSource getDataSource() {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
+        return dataSource;
       }
 
       @Override
       public void shutdown() {
-        try {
-          getConnectionProvider().acquire().prepareStatement("DROP ALL OBJECTS").execute();
-          getConnectionProvider().acquire().close();
-        } catch (SQLException e) {
-          throw new RuntimeException(e);
-        }
       }
     };
     implementation.setLogger(Logger.getLogger("TESTS"));

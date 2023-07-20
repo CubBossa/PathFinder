@@ -218,7 +218,16 @@ public class YmlStorage extends CommonStorage {
 
   @Override
   public Collection<Edge> loadEdgesTo(UUID end) {
-    return null;
+    return workOnFile(fileEdges(), cfg -> {
+      Collection<Edge> edges = new HashSet<>();
+      for (String startKey : cfg.getKeys(false)) {
+        ConfigurationSection section = cfg.getConfigurationSection(startKey);
+        if (section != null && section.contains(end.toString())) {
+          readEdge(UUID.fromString(startKey), end, section).ifPresent(edges::add);
+        }
+      }
+      return edges;
+    });
   }
 
   public Optional<Edge> loadEdge(UUID start, UUID end) {
@@ -253,11 +262,14 @@ public class YmlStorage extends CommonStorage {
 
   private Optional<NodeGroup> loadGroup(YamlConfiguration cfg) {
     try {
+      if (!cfg.contains("key")) {
+        return Optional.empty();
+      }
       NamespacedKey k = NamespacedKey.fromString(cfg.getString("key"));
       SimpleNodeGroup group = new SimpleNodeGroup(k);
       group.setWeight((float) cfg.getDouble("weight"));
       group.addAll(cfg.getStringList("nodes").stream()
-          .map(UUID::fromString).toList());
+              .map(UUID::fromString).toList());
 
       ConfigurationSection modifiers = cfg.getConfigurationSection("modifier");
       if (modifiers != null) {
@@ -289,7 +301,6 @@ public class YmlStorage extends CommonStorage {
     workOnFile(fileGroup(group.getKey()), cfg -> {
       cfg.set("key", group.getKey().toString());
       cfg.set("weight", group.getWeight());
-      writeGroupNodes(cfg, group);
       cfg.set("modifier", null);
       group.getModifiers().forEach(modifier -> {
         Optional<ModifierType<Modifier>> type = modifierRegistry.getType(modifier.getKey());
@@ -299,11 +310,10 @@ public class YmlStorage extends CommonStorage {
         }
         cfg.set("modifier." + modifier.getKey(), type.get().serialize(modifier));
       });
+      cfg.set("nodes", group.stream().map(UUID::toString).toList());
+      group.getModifierChanges().flush();
+      group.getContentChanges().flush();
     });
-  }
-
-  private void writeGroupNodes(ConfigurationSection cfg, NodeGroup group) {
-    cfg.set("nodes", group.stream().map(UUID::toString).toList());
   }
 
   @Override
@@ -378,24 +388,6 @@ public class YmlStorage extends CommonStorage {
   @Override
   public void deleteGroup(NodeGroup group) {
     fileGroup(group.getKey()).delete();
-  }
-
-  public void assignToGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    groups.forEach(uuids -> {
-      workOnFile(fileGroup(uuids.getKey()), cfg -> {
-        uuids.addAll(nodes);
-        writeGroupNodes(cfg, uuids);
-      });
-    });
-  }
-
-  public void unassignFromGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    groups.forEach(uuids -> {
-      workOnFile(fileGroup(uuids.getKey()), cfg -> {
-        uuids.removeAll(nodes);
-        writeGroupNodes(cfg, uuids);
-      });
-    });
   }
 
   @Override
@@ -598,6 +590,13 @@ public class YmlStorage extends CommonStorage {
     workOnFile(fileWaypoints(), cfg -> {
       writeWaypoint(node, cfg.createSection(node.getNodeId().toString()));
     });
+    for (Edge e : node.getEdgeChanges().getAddList()) {
+      saveEdge(e);
+    }
+    for (Edge e : node.getEdgeChanges().getRemoveList()) {
+      deleteEdge(e);
+    }
+    node.getEdgeChanges().flush();
   }
 
   @Override
