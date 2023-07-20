@@ -29,4 +29,6 @@ public interface GroupCache extends StorageCache<NodeGroup> {
   void writeAll(Collection<NodeGroup> groups);
 
   void invalidate(UUID node);
+
+  void invalidate(NamespacedKey modifier);
 }

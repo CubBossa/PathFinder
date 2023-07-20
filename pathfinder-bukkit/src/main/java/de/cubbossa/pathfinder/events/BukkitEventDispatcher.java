@@ -20,6 +20,7 @@ import de.cubbossa.pathfinder.events.node.NodeDeletedEvent;
 import de.cubbossa.pathfinder.events.node.NodeSavedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupCreatedEvent;
 import de.cubbossa.pathfinder.events.nodegroup.GroupDeleteEvent;
+import de.cubbossa.pathfinder.events.nodegroup.GroupSaveEvent;
 import de.cubbossa.pathfinder.events.path.PathCancelEvent;
 import de.cubbossa.pathfinder.events.path.PathStartEvent;
 import de.cubbossa.pathfinder.events.path.PathStopEvent;
@@ -61,6 +62,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
     classMapping.put(NodeGroupCreateEvent.class, GroupCreatedEvent.class);
     classMapping.put(NodeGroupDeleteEvent.class, GroupDeleteEvent.class);
+    classMapping.put(NodeGroupSaveEvent.class, GroupSaveEvent.class);
 
     classMapping.put(de.cubbossa.pathapi.event.PathStartEvent.class, PathStartEvent.class);
     classMapping.put(PathCancelledEvent.class, PathCancelEvent.class);
@@ -140,6 +142,11 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   @Override
   public void dispatchGroupDelete(NodeGroup group) {
     dispatchEvent(new GroupDeleteEvent(group));
+  }
+
+  @Override
+  public void dispatchGroupSave(NodeGroup group) {
+    dispatchEvent(new GroupSaveEvent(group));
   }
 
   @Override

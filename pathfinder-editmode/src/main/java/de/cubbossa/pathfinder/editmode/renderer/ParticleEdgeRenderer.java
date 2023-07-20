@@ -23,6 +23,7 @@ import xyz.xenondevs.particle.utils.ReflectionUtils;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -110,38 +111,12 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   private void updateRenderer(PathPlayer<Player> player) {
     CompletableFuture.runAsync(() -> {
 
-      Map<UUID, Collection<UUID>> included = new HashMap<>();
-
       var sched = Bukkit.getScheduler();
       new HashSet<>(editModeTasks).forEach(sched::cancelTask);
 
-      Set<ParticleInfo> packets = new HashSet<>();
+      Set<ParticleInfo> packets = ConcurrentHashMap.newKeySet();
+      packets.addAll(generateLocations(player));
 
-      for (var edge : edges.flatValues()) {
-        if (!Objects.equals(edge.getStart().getWorld(), edge.getEnd().getWorld())) {
-          return;
-        }
-        boolean directed = edge.isDirected();
-        if (!directed && included.computeIfAbsent(edge.endId, x -> new HashSet<>()).contains(edge.startId)) {
-          continue;
-        }
-        included.computeIfAbsent(edge.startId, x -> new HashSet<>()).add(edge.endId);
-
-        Vector a = BukkitVectorUtils.toBukkit(edge.getStart().asVector());
-        Vector b = BukkitVectorUtils.toBukkit(edge.getEnd().asVector());
-        double dist = a.distance(b);
-
-        for (float i = 0; i < dist; i += config.getEdgeParticleSpacing()) {
-          java.awt.Color c = directed
-              ? LerpUtils.lerp(config.getEdgeParticleColorFrom(), config.getEdgeParticleColorTo(), i / dist)
-              : config.getEdgeParticleColorFrom();
-
-          org.bukkit.Location loc = BukkitUtils.lerp(a, b, i / dist)
-              .toLocation(Bukkit.getWorld(edge.getStart().getWorld().getUniqueId()));
-          // TODO conversion can be optimized
-          packets.add(new ParticleInfo(loc, Color.fromRGB(c.getRGB() & 0xffffff)));
-        }
-      }
       Function<Integer, Supplier<Collection<ParticleInfo>>> packetSupplier = i -> () -> {
         Player p = player.unwrap();
         if (p == null || !p.isOnline()) {
@@ -160,19 +135,59 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         });
         return CollectionUtils.everyNth(packet, 2, i);
       };
+      editModeTasks.add(Bukkit.getScheduler().runTaskTimerAsynchronously(ReflectionUtils.getPlugin(), () -> {
+        packets.clear();
+        packets.addAll(generateLocations(player));
+      }, config.getEdgeParticleTickDelay() * 5L, config.getEdgeParticleTickDelay() * 5L).getTaskId());
 
-      editModeTasks.add(startTask(packetSupplier.apply(0), player.unwrap(), 0));
-      editModeTasks.add(startTask(packetSupplier.apply(1), player.unwrap(), config.getEdgeParticleTickDelay() / 2));
+      editModeTasks.add(startTask(packetSupplier.apply(0), player, 0));
+      editModeTasks.add(startTask(packetSupplier.apply(1), player, config.getEdgeParticleTickDelay() / 2));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
   }
 
-  private int startTask(Supplier<Collection<ParticleInfo>> packets, Player player, int delay) {
+  private Collection<ParticleInfo> generateLocations(PathPlayer<Player> player) {
+    Map<UUID, Collection<UUID>> included = new HashMap<>();
+    Set<ParticleInfo> packets = new HashSet<>();
+    for (var edge : edges.flatValues()) {
+      if (!Objects.equals(edge.getStart().getWorld(), edge.getEnd().getWorld())) {
+        continue;
+      }
+      boolean directed = edge.isDirected();
+      if (!directed && included.computeIfAbsent(edge.endId, x -> new HashSet<>()).contains(edge.startId)) {
+        continue;
+      }
+      included.computeIfAbsent(edge.startId, x -> new HashSet<>()).add(edge.endId);
+
+      Vector a = BukkitVectorUtils.toBukkit(edge.getStart().asVector());
+      Vector b = BukkitVectorUtils.toBukkit(edge.getEnd().asVector());
+      double dist = a.distance(b);
+
+
+      Vector lastLoc = a;
+
+      for (float i = 0; i < dist; i += config.getEdgeParticleSpacing() + config.getEdgeParticleSpacing() * 10 * lastLoc.distance(player.unwrap().getLocation().toVector()) / config.getEdgeParticleRenderDistance()) {
+        java.awt.Color c = directed
+            ? LerpUtils.lerp(config.getEdgeParticleColorFrom(), config.getEdgeParticleColorTo(), i / dist)
+            : config.getEdgeParticleColorFrom();
+
+        org.bukkit.Location loc = BukkitUtils.lerp(a, b, i / dist)
+            .toLocation(Bukkit.getWorld(edge.getStart().getWorld().getUniqueId()));
+        lastLoc = loc.toVector();
+        // TODO conversion can be optimized
+        packets.add(new ParticleInfo(loc, Color.fromRGB(c.getRGB() & 0xffffff)));
+      }
+    }
+    return packets;
+  }
+
+  private int startTask(Supplier<Collection<ParticleInfo>> packets, PathPlayer<Player> player, int delay) {
     return Bukkit.getScheduler().runTaskTimerAsynchronously(ReflectionUtils.getPlugin(), () -> {
+      Player p = player.unwrap();
       for (ParticleInfo c : packets.get()) {
-        player.spawnParticle(Particle.REDSTONE, c.location(), 1, new Particle.DustOptions(c.color(), 1));
+        p.spawnParticle(Particle.REDSTONE, c.location(), 1, new Particle.DustOptions(c.color(), 1));
       }
     }, delay, config.getEdgeParticleTickDelay()).getTaskId();
   }

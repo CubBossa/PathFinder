@@ -9,6 +9,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
+import de.cubbossa.pathfinder.editmode.renderer.NodeGroupListRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.ParticleEdgeRenderer;
 import org.bukkit.entity.Player;
 
@@ -20,6 +21,7 @@ public class DefaultNodeGroupEditorFactory implements NodeGroupEditorFactory {
     DefaultNodeGroupEditor editor = new DefaultNodeGroupEditor(group);
     editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));
     editor.getRenderers().add(new NodeArmorStandRenderer(PathFinderPlugin.getInstance()));
+    editor.getRenderers().add(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));
     // editor.getRenderers().add(new NodeDisplayRenderer());
     editor.getRenderers().add(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
     return editor;

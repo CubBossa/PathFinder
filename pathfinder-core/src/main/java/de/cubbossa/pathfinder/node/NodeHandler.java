@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class NodeHandler {
+public class NodeHandler implements AutoCloseable {
 
   @Getter
   private static NodeHandler instance;
@@ -103,5 +103,10 @@ public class NodeHandler {
 
   public void cancelAllEditModes() {
     editors.values().forEach(NodeGroupEditor::cancelEditModes);
+  }
+
+  @Override
+  public void close() throws Exception {
+    editors.forEach((key, nodeGroupEditor) -> nodeGroupEditor.cancelEditModes());
   }
 }

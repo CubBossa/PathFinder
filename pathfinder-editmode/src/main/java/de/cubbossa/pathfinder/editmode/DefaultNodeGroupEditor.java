@@ -21,6 +21,7 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -115,9 +116,14 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
         .anyMatch(groupKey::equals);
   }
 
+  @SneakyThrows
   public void dispose() {
     PlayerInteractEvent.getHandlerList().unregister(this);
     listeners.forEach(pathFinder.getEventDispatcher()::drop);
+
+    for (GraphRenderer<Player> renderer : renderers) {
+      renderer.close();
+    }
   }
 
   public boolean isEdited() {

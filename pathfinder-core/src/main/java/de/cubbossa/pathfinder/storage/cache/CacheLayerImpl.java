@@ -176,6 +176,11 @@ public class CacheLayerImpl implements CacheLayer {
           }
 
           @Override
+          public void invalidate(NamespacedKey modifier) {
+
+          }
+
+          @Override
           public void write(NodeGroup group) {
 
           }

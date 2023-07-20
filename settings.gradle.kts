@@ -12,7 +12,6 @@ sequenceOf(
         "editmode",
         "papi",
         "scripted-visualizer",
-        "legacy-data"
 ).forEach {
     val name = "${rootProject.name}-$it"
     include(name)

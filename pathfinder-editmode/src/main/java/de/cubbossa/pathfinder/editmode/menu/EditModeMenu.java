@@ -255,21 +255,25 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
-          storage.modifyNode(context.getTarget().getNodeId(), node -> {
-            storage.loadGroups(multiTool).thenAccept(groups -> {
-              StorageUtil.addGroups(groups, node.getNodeId());
-            });
+          storage.loadGroups(multiTool).thenCompose(groups -> {
+            return StorageUtil.addGroups(groups, context.getTarget().getNodeId());
+          }).thenRun(() -> {
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.BLOCK_CHEST_CLOSE, 1, 1);
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          storage.modifyNode(context.getTarget().getNodeId(), node -> {
-            storage.loadGroups(multiTool).thenAccept(groups -> {
-              StorageUtil.removeGroups(groups, node.getNodeId());
-            });
+          storage.loadGroups(multiTool).thenCompose(groups -> {
+            return StorageUtil.removeGroups(groups, context.getTarget().getNodeId());
+          }).thenRun(() -> {
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
         .withClickHandler(Action.RIGHT_CLICK_AIR, context -> openMultiToolMenu(context.getPlayer()))
@@ -285,6 +289,9 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
       for (NodeGroup group : nodeGroups) {
+        if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+          continue;
+        }
 
         TagResolver resolver = TagResolver.builder()
             .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
@@ -332,16 +339,18 @@ public class EditModeMenu {
   private ContextConsumer<ClickContext> groupEntryClickHandler(ListMenu menu, NodeGroup group, Node node) {
     return c -> {
       if (group.contains(node.getNodeId())) {
-        StorageUtil.removeGroups(group, node.getNodeId());
-        storage.saveNode(node).thenRun(() -> {
-          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-          menu.refresh(menu.getListSlots());
+        StorageUtil.removeGroups(group, node.getNodeId()).thenCompose(unused -> {
+          return storage.saveNode(node).thenRun(() -> {
+            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+            menu.refresh(menu.getListSlots());
+          });
         });
       } else {
-        StorageUtil.addGroups(group, node.getNodeId());
-        storage.saveNode(node).thenRun(() -> {
-          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-          menu.refresh(menu.getListSlots());
+        StorageUtil.addGroups(group, node.getNodeId()).thenCompose(unused -> {
+          return storage.saveNode(node).thenRun(() -> {
+            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+            menu.refresh(menu.getListSlots());
+          });
         });
       }
     };
@@ -354,6 +363,9 @@ public class EditModeMenu {
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
           3)); //TODO extract icon
       for (NodeGroup group : nodeGroups) {
+        if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+          continue;
+        }
 
         TagResolver resolver = TagResolver.builder()
             .resolver(Messages.formatter().namespacedKey("key", group.getKey()))

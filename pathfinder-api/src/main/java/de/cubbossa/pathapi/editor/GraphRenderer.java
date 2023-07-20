@@ -2,6 +2,8 @@ package de.cubbossa.pathapi.editor;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
@@ -10,7 +12,12 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <Player> Defines the type of class that is wrapped within the {@link PathPlayer} object.
  */
-public interface GraphRenderer<Player> {
+public interface GraphRenderer<Player> extends AutoCloseable {
+
+  @Override
+  default void close() throws IOException {
+
+  }
 
   /**
    * Clear all existing node renderings.

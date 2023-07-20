@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   private final Cache<NamespacedKey, NodeGroup> cache;
-  private final Cache<UUID, Collection<NodeGroup>> nodeGroupCache;
-  private final Cache<NamespacedKey, Collection<NodeGroup>> modifierGroupCache;
+  private final Cache<UUID, Collection<NamespacedKey>> nodeGroupCache;
+  private final Cache<NamespacedKey, Collection<NamespacedKey>> modifierGroupCache;
   private boolean cachedAll = false;
 
   public GroupCacheImpl() {
@@ -41,7 +41,7 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
   @Override
   public Optional<Collection<NodeGroup>> getGroups(NamespacedKey modifier) {
     if (modifierGroupCache.asMap().containsKey(modifier)) {
-      return Optional.of(modifierGroupCache.asMap().get(modifier)).map(HashSet::new);
+      return Optional.of(modifierGroupCache.asMap().get(modifier)).map(HashSet::new).map(this::collect);
     }
     if (cachedAll) {
       Collection<NodeGroup> newCache = cache.asMap().values().stream()
@@ -86,50 +86,55 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   @Override
   public Optional<Collection<NodeGroup>> getGroups(UUID node) {
-    return Optional.ofNullable(nodeGroupCache.asMap().get(node)).map(HashSet::new);
+    return Optional.ofNullable(nodeGroupCache.asMap().get(node)).map(HashSet::new).map(this::collect);
+  }
+
+  private Collection<NodeGroup> collect(Collection<NamespacedKey> keys) {
+    return keys.stream()
+        .filter(nk -> cache.asMap().containsKey(nk))
+        .map(nk -> cache.asMap().get(nk))
+        .collect(Collectors.toList());
   }
 
   public void write(NodeGroup group) {
     cache.put(group.getKey(), group);
-    for (UUID uuid : group) {
-      nodeGroupCache.asMap().computeIfAbsent(uuid, uuid1 -> new HashSet<>()).add(group);
-    }
   }
 
   @Override
   public void write(NamespacedKey modifier, Collection<NodeGroup> groups) {
-    modifierGroupCache.put(modifier, groups);
+    groups.forEach(this::write);
+    modifierGroupCache.put(modifier, groups.stream().map(NodeGroup::getKey).collect(Collectors.toList()));
   }
 
   @Override
   public void write(UUID node, Collection<NodeGroup> groups) {
-    nodeGroupCache.put(node, groups);
-    for (NodeGroup group : groups) {
-      for (Modifier modifier : group.getModifiers()) {
-        modifierGroupCache.asMap().computeIfAbsent(modifier.getKey(), g -> new HashSet<>()).add(group);
-      }
-    }
+    groups.forEach(this::write);
+    nodeGroupCache.put(node, groups.stream().map(NodeGroup::getKey).collect(Collectors.toList()));
   }
 
   @Override
   public void writeAll(Collection<NodeGroup> groups) {
-    groups.forEach(group -> cache.put(group.getKey(), group));
+    groups.forEach(this::write);
     cachedAll = true;
   }
 
   @Override
   public void invalidate(UUID node) {
-    cache.asMap().values().forEach(group -> group.remove(node));
     nodeGroupCache.invalidate(node);
+  }
+
+  @Override
+  public void invalidate(NamespacedKey modifier) {
+    modifierGroupCache.invalidate(modifier);
   }
 
   public void invalidate(NodeGroup group) {
     cache.invalidate(group.getKey());
     for (UUID nodeId : group) {
-      Collection<NodeGroup> groups = nodeGroupCache.getIfPresent(nodeId);
-      if (groups != null) {
-        groups.remove(group);
-      }
+      nodeGroupCache.asMap().computeIfAbsent(nodeId, uuid -> new HashSet<>()).remove(group.getKey());
+    }
+    for (Modifier modifier : group.getModifiers()) {
+      modifierGroupCache.asMap().computeIfAbsent(modifier.getKey(), uuid -> new HashSet<>()).remove(group.getKey());
     }
   }
 

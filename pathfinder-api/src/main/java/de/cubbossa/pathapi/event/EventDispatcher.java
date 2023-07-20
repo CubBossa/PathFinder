@@ -33,6 +33,8 @@ public interface EventDispatcher<PlayerT> {
 
   void dispatchGroupDelete(NodeGroup group);
 
+  void dispatchGroupSave(NodeGroup group);
+
   boolean dispatchPlayerFindEvent(PathPlayer<PlayerT> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate);
 
   boolean dispatchPlayerForgetEvent(PathPlayer<PlayerT> player, NamespacedKey group);

@@ -35,7 +35,7 @@ public class StorageUtil {
   }
 
   public static CompletableFuture<Void> addGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    return CompletableFuture.allOf(groups.stream()
+    return CompletableFuture.allOf(groups.stream().parallel()
         .peek(group -> group.addAll(nodes))
         .map(storage::saveGroup)
         .toArray(CompletableFuture[]::new)
@@ -55,7 +55,7 @@ public class StorageUtil {
   }
 
   public static CompletableFuture<Void> removeGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    return CompletableFuture.allOf(groups.stream()
+    return CompletableFuture.allOf(groups.stream().parallel()
         .peek(group -> group.removeAll(nodes))
         .map(storage::saveGroup)
         .toArray(CompletableFuture[]::new)
