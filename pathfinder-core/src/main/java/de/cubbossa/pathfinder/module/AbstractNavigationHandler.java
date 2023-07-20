@@ -10,6 +10,7 @@ import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.CommonPathFinder;
@@ -18,6 +19,7 @@ import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.NodeHandler;
+import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.StorageUtil;
@@ -139,31 +141,42 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
         PathSolver<Node> pathSolver = new SimpleDijkstra<>();
-        List<Node> path;
+        List<GroupedNode> path;
         try {
           path = pathSolver.solvePath(graph, playerNode, targets.stream()
-              .filter(nodes::contains)
-              .collect(Collectors.toList()));
+                  .filter(nodes::contains)
+                  .collect(Collectors.toList())).stream().parallel()
+              .map(node -> new SimpleGroupedNode(node, StorageUtil.getGroups(node)))
+              .collect(Collectors.toList());
+
         } catch (NoPathFoundException e) {
           return NavigateResult.FAIL_BLOCKED;
         }
+        GroupedNode playerGroupNode = path.get(0);
+        // first is virtual -> node on the edge closest to player
+        GroupedNode first = path.get(1);
+        // the first true node with groups
+        GroupedNode second = path.get(2);
 
-        Node first = path.get(1);
-        // TODO first.getGroups().forEach(playerNode::addGroup);
+        second.groups().forEach(g -> {
+          playerGroupNode.groups().add(g);
+          first.groups().add(g);
+        });
 
-        Node last = path.get(path.size() - 1);
-        NodeGroup highest = StorageUtil.getGroups(last).stream()
+        NodeGroup highest = path.stream()
+            .map(GroupedNode::groups)
+            .flatMap(Collection::stream)
             .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
             .max(NodeGroup::compareTo).orElse(null);
 
         double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
             .map(FindDistanceModifier::distance).orElse(1.5);
-        return setPath(player, path, path.get(path.size() - 1).getLocation(), (float) findDist);
+        return setPath(player, path, path.get(path.size() - 1).node().getLocation(), (float) findDist);
       });
     });
   }
 
-  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<Node> pathNodes, Location target, float distance) {
+  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target, float distance) {
     VisualizerPath<PlayerT> visualizerPath = new CommonVisualizerPath<>(pathNodes, player);
 
     boolean success = eventDispatcher.dispatchPathStart(player, visualizerPath, target, distance);

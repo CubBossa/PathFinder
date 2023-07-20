@@ -3,10 +3,12 @@ package de.cubbossa.pathfinder.visualizer;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
+import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import lombok.experimental.Accessors;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Common implementation of the {@link VisualizerPath} interface.
@@ -29,7 +32,13 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
   protected final HashSet<PathPlayer<PlayerT>> viewers;
   protected final Collection<SubPath<?>> paths;
 
-  public CommonVisualizerPath(List<Node> path, PathPlayer<PlayerT> player) {
+  public static <PlayerT> CommonVisualizerPath<PlayerT> fromNodes(List<Node> path, PathPlayer<PlayerT> player) {
+    return new CommonVisualizerPath<>(path.stream().parallel()
+        .map(node -> new SimpleGroupedNode(node, StorageUtil.getGroups(node)))
+        .collect(Collectors.toList()), player);
+  }
+
+  public CommonVisualizerPath(List<GroupedNode> path, PathPlayer<PlayerT> player) {
     this.viewers = new HashSet<>();
     this.paths = new HashSet<>();
     targetViewer = player;
@@ -37,8 +46,8 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
-    for (Node node : path) {
-      StorageUtil.getGroups(node).stream()
+    for (GroupedNode node : path) {
+      node.groups().stream()
           .filter(g -> g.hasModifier(VisualizerModifier.KEY))
           .sorted()
           .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
@@ -47,7 +56,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
           .map(VisualizerModifier::getVisualizer)
           .map(CompletableFuture::join)
           .forEach(vis -> {
-            nodeVisualizerMap.computeIfAbsent(node, n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
+            nodeVisualizerMap.computeIfAbsent(node.node(), n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
           });
     }
 
