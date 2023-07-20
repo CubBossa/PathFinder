@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.storage.DataStorageException;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Deprecated(forRemoval = true)
+@ApiStatus.ScheduledForRemoval(inVersion = "v5")
 public class V3YmlStorage implements V3Storage {
 
   private static final String DIR_RM = "roadmaps";
@@ -92,9 +95,9 @@ public class V3YmlStorage implements V3Storage {
 
         String visKeyString = cfg.getString("path-visualizer");
         registry.add(new V3RoadMap(key,
-                cfg.getString("name-format"),
-                visKeyString == null ? null : NamespacedKey.fromString(visKeyString),
-                cfg.getDouble("curve-length"))
+            cfg.getString("name-format"),
+            visKeyString == null ? null : NamespacedKey.fromString(visKeyString),
+            cfg.getDouble("curve-length"))
         );
       } catch (Exception e) {
         throw new DataStorageException("Could not load roadmap: " + file.getName(), e);
@@ -258,9 +261,9 @@ public class V3YmlStorage implements V3Storage {
         });
       } else {
         Arrays.stream(Objects.requireNonNull(userDir.listFiles()))
-                .forEach(f -> {
-                  cfgs.put(f.getName().replace(".yml", ""), YamlConfiguration.loadConfiguration(f));
-                });
+            .forEach(f -> {
+              cfgs.put(f.getName().replace(".yml", ""), YamlConfiguration.loadConfiguration(f));
+            });
       }
       Collection<V3Discovering> discoverings = new HashSet<>();
       for (var e : cfgs.entrySet()) {

@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@ApiStatus.Experimental
+@Deprecated(forRemoval = true)
 public class YmlStorage extends CommonStorage {
 
   private static final String FILE_NODE_TYPES = "node_types.yml";
@@ -269,7 +272,7 @@ public class YmlStorage extends CommonStorage {
       SimpleNodeGroup group = new SimpleNodeGroup(k);
       group.setWeight((float) cfg.getDouble("weight"));
       group.addAll(cfg.getStringList("nodes").stream()
-              .map(UUID::fromString).toList());
+          .map(UUID::fromString).toList());
 
       ConfigurationSection modifiers = cfg.getConfigurationSection("modifier");
       if (modifiers != null) {

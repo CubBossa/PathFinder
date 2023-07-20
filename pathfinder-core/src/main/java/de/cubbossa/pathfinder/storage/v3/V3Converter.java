@@ -14,6 +14,7 @@ import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.*;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.StringReader;
 import java.util.Collection;
@@ -23,6 +24,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Deprecated(forRemoval = true)
+@ApiStatus.ScheduledForRemoval(inVersion = "v5")
 public class V3Converter implements Runnable {
 
   private final Logger logger;
@@ -64,13 +67,13 @@ public class V3Converter implements Runnable {
       Collection<V3Storage.V3GroupNode> v3GroupNodes = oldStorage.loadGroupNodes();
 
       estimate = v3RoadMaps.size()
-              + v3Nodes.size()
-              + v3NodeGroups.size()
-              + v3Discoverings.size()
-              + v3SearchTerms.size()
-              + v3Edges.size()
-              + v3Visualizers.size()
-              + v3GroupNodes.size() + 20;
+          + v3Nodes.size()
+          + v3NodeGroups.size()
+          + v3Discoverings.size()
+          + v3SearchTerms.size()
+          + v3Edges.size()
+          + v3Visualizers.size()
+          + v3GroupNodes.size() + 20;
       progress = 10;
 
       Map<NamespacedKey, NodeGroup> roadMapReplacements = new HashMap<>();
@@ -100,8 +103,8 @@ public class V3Converter implements Runnable {
       Collection<NodeGroup> roadMapsToSave = new HashSet<>();
       for (V3Storage.V3Node node : v3Nodes) {
         Node waypoint = storage.createAndLoadNode(
-                nodeTypes.getType(node.type()),
-                new Location(node.x(), node.y(), node.z(), worldLoader.loadWorld(node.world()))
+            nodeTypes.getType(node.type()),
+            new Location(node.x(), node.y(), node.z(), worldLoader.loadWorld(node.world()))
         ).join();
         nodesByOldId.put(node.id(), waypoint);
 
@@ -114,7 +117,7 @@ public class V3Converter implements Runnable {
         if (curveLength != null) {
           NodeGroup curveLenGroup = curveLengthGroups.computeIfAbsent(curveLength, len -> {
             NodeGroup g = storage.createAndLoadGroup(CommonPathFinder.pathfinder("curve_len_" + len.toString()
-                    .replace(",", "_").replace(".", "_"))).join();
+                .replace(",", "_").replace(".", "_"))).join();
 
             g.addModifier(new CommonCurveLengthModifier(len));
             return g;
@@ -199,7 +202,7 @@ public class V3Converter implements Runnable {
 
       for (V3Storage.V3Discovering discovering : v3Discoverings) {
         storage.createAndLoadDiscoverinfo(
-                discovering.player(), discovering.group(), discovering.time()
+            discovering.player(), discovering.group(), discovering.time()
         ).join();
         progress++;
       }

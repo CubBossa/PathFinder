@@ -34,11 +34,6 @@ public class SqliteStorage extends SqlStorage {
 
     dataSource = new SQLiteDataSource(config);
     dataSource.setUrl("jdbc:sqlite:" + file.getAbsolutePath());
-//    try (Connection con = dataSource.getConnection()) {
-//      con.prepareStatement("PRAGMA ignore_check_constraints = true;").execute();
-//    } catch (SQLException e) {
-//      throw new DataStorageException("Could not connect to Sqlite database.", e);
-//    }
     super.init();
   }
 

@@ -4,6 +4,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.v3.tables.*;
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
@@ -24,6 +25,8 @@ import java.util.UUID;
 import static de.cubbossa.pathfinder.storage.v3.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
 import static de.cubbossa.pathfinder.storage.v3.tables.PathfinderEdges.PATHFINDER_EDGES;
 
+@Deprecated(forRemoval = true)
+@ApiStatus.ScheduledForRemoval(inVersion = "v5")
 public class V3SqliteStorage implements V3Storage {
 
   private DSLContext context;
@@ -90,8 +93,8 @@ public class V3SqliteStorage implements V3Storage {
     System.setProperty("org.jooq.no-tips", "true");
 
     context = DSL.using(getConnectionProvider(), dialect, new Settings()
-            .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
-            .withRenderSchema(dialect != SQLDialect.SQLITE));
+        .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
+        .withRenderSchema(dialect != SQLDialect.SQLITE));
   }
 
   @Override
@@ -109,13 +112,13 @@ public class V3SqliteStorage implements V3Storage {
   @Override
   public Collection<V3RoadMap> loadRoadmaps() {
     return context
-            .selectFrom(PathfinderRoadmaps.PATHFINDER_ROADMAPS)
-            .fetch(record -> new V3RoadMap(
-                    record.getKey(),
-                    record.getNameFormat(),
-                    record.getPathVisualizer() == null ? null : NamespacedKey.fromString(record.getPathVisualizer()),
-                    record.getPathCurveLength()
-            ));
+        .selectFrom(PathfinderRoadmaps.PATHFINDER_ROADMAPS)
+        .fetch(record -> new V3RoadMap(
+            record.getKey(),
+            record.getNameFormat(),
+            record.getPathVisualizer() == null ? null : NamespacedKey.fromString(record.getPathVisualizer()),
+            record.getPathCurveLength()
+        ));
   }
 
   @Override
