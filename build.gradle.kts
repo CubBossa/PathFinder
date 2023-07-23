@@ -12,7 +12,7 @@ java {
 }
 
 group = "de.cubbossa"
-version = "4.0.0"
+version = "4.0.1"
 
 checkstyle {
     toolVersion = "10.7.0"
