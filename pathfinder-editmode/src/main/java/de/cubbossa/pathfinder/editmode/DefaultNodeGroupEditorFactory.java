@@ -24,9 +24,13 @@ public class DefaultNodeGroupEditorFactory implements NodeGroupEditorFactory {
     editor.getRenderers().add(new NodeArmorStandRenderer(PathFinderPlugin.getInstance()));
     editor.getRenderers().add(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
 
-    if (new Version(PathFinderPlugin.getInstance().getServer().getVersion()).compareTo(new Version("1.19.4")) >= 0) {
-      editor.getRenderers().add(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));
-      // editor.getRenderers().add(new NodeDisplayRenderer());
+    try {
+      if (new Version(PathFinderPlugin.getInstance().getServer().getBukkitVersion().split("-")[0]).compareTo(new Version("1.19.4")) >= 0) {
+        editor.getRenderers().add(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));
+        // editor.getRenderers().add(new NodeDisplayRenderer());
+      }
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
 
     return editor;
