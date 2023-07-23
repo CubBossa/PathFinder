@@ -22,7 +22,6 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
-import de.cubbossa.pathfinder.storage.implementation.YmlStorage;
 import de.cubbossa.pathfinder.storage.v3.V3Converter;
 import de.cubbossa.pathfinder.storage.v3.V3SqliteStorage;
 import de.cubbossa.pathfinder.storage.v3.V3YmlStorage;
@@ -170,12 +169,12 @@ public abstract class CommonPathFinder implements PathFinder {
 
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
-      case SQLITE -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry,
-              modifierRegistry, visualizerTypeRegistry);
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
-          modifierRegistry, visualizerTypeRegistry);
-      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
-              visualizerTypeRegistry, modifierRegistry);
+              modifierRegistry, visualizerTypeRegistry);
+      default -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry,
+              modifierRegistry, visualizerTypeRegistry);
+//      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
+//              visualizerTypeRegistry, modifierRegistry);
     };
     impl.setWorldLoader(this::getWorld);
     impl.setLogger(getLogger());
