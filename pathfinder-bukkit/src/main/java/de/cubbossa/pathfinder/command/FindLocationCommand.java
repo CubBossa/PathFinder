@@ -23,6 +23,9 @@ public class FindLocationCommand extends CommandTree {
           PathPlayer<Player> p = BukkitUtils.wrap(player);
           BukkitNavigationHandler.getInstance().findPath(p, target).thenAccept(result -> {
             AbstractNavigationHandler.printResult(result, p);
+          }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
           });
         })
     );

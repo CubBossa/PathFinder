@@ -79,8 +79,11 @@ public class Graph<N> implements Iterable<N> {
   }
 
   public void connect(N start, N end, double weight) throws IllegalArgumentException {
-    if (!nodes.containsKey(start) || !nodes.containsKey(end)) {
-      throw new IllegalArgumentException("Node must be in graph.");
+    if (!nodes.containsKey(start)) {
+      throw new IllegalArgumentException("Start node must be in graph.");
+    }
+    if (!nodes.containsKey(end)) {
+      throw new IllegalArgumentException("End node must be in graph.");
     }
     nodes.get(start).put(end, weight);
   }

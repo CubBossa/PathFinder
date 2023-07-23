@@ -9,4 +9,6 @@ public interface GroupedNode {
   Node node();
 
   Collection<NodeGroup> groups();
+
+  GroupedNode merge(GroupedNode other);
 }

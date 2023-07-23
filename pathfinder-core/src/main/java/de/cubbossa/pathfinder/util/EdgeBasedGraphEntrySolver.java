@@ -2,32 +2,25 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Vector;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathfinder.graph.Graph;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
-public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
+public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> {
 
-  public Graph<Node> solve(Node start, Graph<Node> scope) {
+  public Graph<GroupedNode> solve(GroupedNode start, Graph<GroupedNode> scope) {
 
     Set<WeightedEdge> sortedEdges = new TreeSet<>(Comparator.comparingDouble(WeightedEdge::weight));
-    Collection<CompletableFuture<Void>> futures = new HashSet<>();
-    for (Node node : scope) {
-      for (Edge edge : node.getEdges()) {
-        futures.add(edge.resolveEnd().thenAccept(end -> {
-          double d = VectorUtils.distancePointToSegment(start.getLocation().asVector(), node.getLocation().asVector(), end.getLocation().asVector());
-          sortedEdges.add(new WeightedEdge(edge, node, end, d));
-        }));
-      }
+    for (GroupedNode node : scope) {
+      scope.getEdges(node).forEach((end, weight) -> {
+        double d = VectorUtils.distancePointToSegment(start.node().getLocation().asVector(), node.node().getLocation().asVector(), end.node().getLocation().asVector());
+        sortedEdges.add(new WeightedEdge(node, end, d * weight));
+      });
     }
     if (sortedEdges.size() == 0) {
       return scope;
     }
-    futures.stream().parallel().forEach(CompletableFuture::join);
     WeightedEdge first = null;
     Collection<WeightedEdge> result = new HashSet<>();
     for (WeightedEdge edge : sortedEdges) {
@@ -42,9 +35,9 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       result.add(edge);
     }
     result.forEach(edge -> {
-      Waypoint w = (Waypoint) edge.start.clone(UUID.randomUUID());
-      Vector closest = VectorUtils.closestPointOnSegment(start.getLocation(), edge.start.getLocation(), edge.end.getLocation());
-      w.setLocation(closest.toLocation(edge.start.getLocation().getWorld()));
+      GroupedNode w = edge.start.merge(edge.end);
+      Vector closest = VectorUtils.closestPointOnSegment(start.node().getLocation(), edge.start.node().getLocation(), edge.end.node().getLocation());
+      w.node().setLocation(closest.toLocation(edge.start.node().getLocation().getWorld()));
 
       scope.subdivide(edge.start, edge.end, () -> w);
       scope.connect(start, w);
@@ -52,6 +45,6 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
     return scope;
   }
 
-  private record WeightedEdge(Edge edge, Node start, Node end, double weight) {
+  private record WeightedEdge(GroupedNode start, GroupedNode end, double weight) {
   }
 }

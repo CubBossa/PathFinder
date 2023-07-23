@@ -10,19 +10,21 @@ import de.cubbossa.pathapi.group.PermissionModifier;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.StorageUtil;
+import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
@@ -34,7 +36,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderExtension {
 
@@ -96,21 +100,57 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     return activePaths.get(player);
   }
 
+  private CompletableFuture<Graph<GroupedNode>> createGraph() {
+    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+      Map<UUID, GroupedNode> map = new HashMap<>();
+      nodes.forEach(node -> map.put(node.getNodeId(), new SimpleGroupedNode(node, StorageUtil.getGroups(node))));
+
+      Graph<GroupedNode> graph = new Graph<>();
+      map.values().forEach(graph::addNode);
+      for (Node node : nodes) {
+        for (Edge e : node.getEdges()) {
+          Node end = map.get(e.getEnd()).node();
+          if (end == null) {
+            pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e);
+            continue;
+          }
+          graph.connect(map.get(node.getNodeId()), map.get(end.getNodeId()), node.getLocation().distance(end.getLocation()) * e.getWeight());
+        }
+      }
+      return graph;
+    });
+  }
+
+  private Graph<GroupedNode> insertPlayer(Graph<GroupedNode> graph, PlayerNode player) {
+    GroupedNode playerNode = new SimpleGroupedNode(player, new HashSet<>());
+    graph.addNode(playerNode);
+    graph = new EdgeBasedGraphEntrySolver().solve(playerNode, graph);
+    graph.getEdges(playerNode).forEach((groupedNode, weight) -> {
+      playerNode.groups().addAll(groupedNode.groups());
+    });
+    return graph;
+  }
+
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Location location) {
     return findPath(player, location, pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance());
   }
 
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Location location, double maxDist) {
-    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+
+
+    PlayerNode playerNode = new PlayerNode(player);
+    return graph(playerNode).thenApply(graph -> {
+
+      Location l = location.clone();
       double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
       // check if x y and z are equals. Cannot cast raycast to self, therefore if statement required
-      Location _location = location.equals(player.getLocation())
-          ? location.add(0, 0.01, 0) : location;
+      Location _location = l.equals(player.getLocation())
+          ? l.add(0, 0.01, 0) : l;
 
-      Node closest = null;
+      GroupedNode closest = null;
       double dist = Double.MAX_VALUE;
-      for (Node node : nodes) {
-        double curDist = node.getLocation().distance(_location);
+      for (GroupedNode node : graph) {
+        double curDist = node.node().getLocation().distance(_location);
         if (curDist < dist && curDist < _maxDist) {
           closest = node;
           dist = curDist;
@@ -119,60 +159,59 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       if (closest == null) {
         return NavigateResult.FAIL_TOO_FAR_AWAY;
       }
-      final Node fClosest = closest;
       Waypoint waypoint = new Waypoint(UUID.randomUUID());
+      GroupedNode wpGrouped = new SimpleGroupedNode(waypoint, new HashSet<>());
       waypoint.setLocation(_location);
-      // we can savely add edges because the fClosest object is only a representation of the stored node.
-      fClosest.connect(waypoint);
+      wpGrouped.groups().addAll(closest.groups());
 
-      return findPath(player, new NodeSelection(waypoint)).join();
+      graph.addNode(wpGrouped);
+      graph.connect(closest, wpGrouped);
+      return findPath(player, graph, playerNode, new NodeSelection(waypoint)).join();
     });
   }
 
+  private CompletableFuture<Graph<GroupedNode>> graph(PlayerNode playerNode) {
+    return createGraph().thenApply(graph -> insertPlayer(graph, playerNode));
+  }
+
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, NodeSelection targets) {
+    PlayerNode playerNode = new PlayerNode(player);
+    return graph(playerNode).thenCompose(graph -> findPath(player, graph, playerNode, targets));
+  }
+
+  private GroupedNode fromGraph(Graph<GroupedNode> graph, Node node) {
+    return StreamSupport.stream(graph.spliterator(), false)
+        .filter(groupedNode -> groupedNode.node().getNodeId().equals(node.getNodeId()))
+        .findAny().orElseThrow();
+  }
+
+  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Graph<GroupedNode> graph, Node start, NodeSelection targets) {
 
     if (targets.size() == 0) {
       return CompletableFuture.completedFuture(NavigateResult.FAIL_EMPTY);
     }
+    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
-    PlayerNode playerNode = new PlayerNode(player);
+      PathSolver<GroupedNode> pathSolver = new SimpleDijkstra<>();
+      List<GroupedNode> path;
+      try {
+        path = pathSolver.solvePath(graph, fromGraph(graph, start), targets.stream()
+            .map(node -> fromGraph(graph, node))
+            .collect(Collectors.toList()));
 
-    return NodeHandler.getInstance().createGraph(playerNode).thenCompose(graph -> {
-      return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+      } catch (NoPathFoundException e) {
+        return NavigateResult.FAIL_BLOCKED;
+      }
 
-        PathSolver<Node> pathSolver = new SimpleDijkstra<>();
-        List<GroupedNode> path;
-        try {
-          path = pathSolver.solvePath(graph, playerNode, targets.stream()
-                  .filter(nodes::contains)
-                  .collect(Collectors.toList())).stream().parallel()
-              .map(node -> new SimpleGroupedNode(node, StorageUtil.getGroups(node)))
-              .collect(Collectors.toList());
+      NodeGroup highest = path.stream()
+          .map(GroupedNode::groups)
+          .flatMap(Collection::stream)
+          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+          .max(NodeGroup::compareTo).orElse(null);
 
-        } catch (NoPathFoundException e) {
-          return NavigateResult.FAIL_BLOCKED;
-        }
-        GroupedNode playerGroupNode = path.get(0);
-        // first is virtual -> node on the edge closest to player
-        GroupedNode first = path.get(1);
-        // the first true node with groups
-        GroupedNode second = path.get(2);
-
-        second.groups().forEach(g -> {
-          playerGroupNode.groups().add(g);
-          first.groups().add(g);
-        });
-
-        NodeGroup highest = path.stream()
-            .map(GroupedNode::groups)
-            .flatMap(Collection::stream)
-            .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-            .max(NodeGroup::compareTo).orElse(null);
-
-        double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-            .map(FindDistanceModifier::distance).orElse(1.5);
-        return setPath(player, path, path.get(path.size() - 1).node().getLocation(), (float) findDist);
-      });
+      double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
+          .map(FindDistanceModifier::distance).orElse(1.5);
+      return setPath(player, path, path.get(path.size() - 1).node().getLocation(), (float) findDist);
     });
   }
 
