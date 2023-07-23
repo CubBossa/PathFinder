@@ -115,7 +115,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     if (!holdsGroupTools(player)) {
       // Hide all currently visible texts.
       if (hasHeldGroupToolsBefore) {
-        context(player).displayed.forEach((k, v) -> hideText(v.node(), player));
+        new HashMap<>(context(player).displayed).forEach((k, v) -> hideText(v.node(), player));
       }
       return;
     }
@@ -216,7 +216,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   }
 
   private boolean holdsGroupTools(Player player) {
-    return true;
+    int slot = player.getInventory().getHeldItemSlot();
+    return slot == 1 || slot == 2;
   }
 
   @Override
