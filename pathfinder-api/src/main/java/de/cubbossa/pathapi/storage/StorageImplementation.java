@@ -49,9 +49,9 @@ public interface StorageImplementation {
   // #   Edges
   // ################################
 
-  Collection<Edge> loadEdgesFrom(UUID start);
+  Map<UUID, Collection<Edge>> loadEdgesFrom(Collection<UUID> start);
 
-  Collection<Edge> loadEdgesTo(UUID end);
+  Map<UUID, Collection<Edge>> loadEdgesTo(Collection<UUID> end);
 
   void deleteEdgesTo(Collection<UUID> end);
 
@@ -61,11 +61,13 @@ public interface StorageImplementation {
 
   NodeGroup createAndLoadGroup(NamespacedKey key);
 
+  Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key);
+
   default Optional<NodeGroup> loadGroup(NamespacedKey key) {
-    return loadGroups(Set.of(key)).stream().findAny();
+    return loadGroupsByMod(Set.of(key)).stream().findAny();
   }
 
-  Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key);
+  Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids);
 
   List<NodeGroup> loadGroups(Range range);
 

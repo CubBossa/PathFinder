@@ -37,6 +37,7 @@ import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
 import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER_TYPE_RELATION;
@@ -127,9 +128,9 @@ public abstract class SqlStorage extends CommonStorage {
     System.setProperty("org.jooq.no-tips", "true");
 
     create = DSL
-            .using(getDataSource(), dialect, new Settings()
-                    .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
-                    .withRenderSchema(dialect != SQLDialect.SQLITE));
+        .using(getDataSource(), dialect, new Settings()
+            .withRenderQuotedNames(RenderQuotedNames.ALWAYS)
+            .withRenderSchema(dialect != SQLDialect.SQLITE));
 
     createPathVisualizerTable();
     createPathVisualizerTypeTable();
@@ -251,17 +252,21 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public Collection<Edge> loadEdgesFrom(UUID start) {
-    return create.selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.START_ID.eq(start))
-        .fetch(edgeMapper);
+  public Map<UUID, Collection<Edge>> loadEdgesFrom(Collection<UUID> start) {
+    Map<UUID, Collection<Edge>> result = new HashMap<>();
+    create.selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.in(start))
+        .fetch(edgeMapper).forEach(edge -> result.computeIfAbsent(edge.getStart(), u -> new HashSet<>()).add(edge));
+    return result;
   }
 
   @Override
-  public Collection<Edge> loadEdgesTo(UUID end) {
-    return create.selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.END_ID.eq(end))
-        .fetch(edgeMapper);
+  public Map<UUID, Collection<Edge>> loadEdgesTo(Collection<UUID> end) {
+    Map<UUID, Collection<Edge>> result = new HashMap<>();
+    create.selectFrom(PATHFINDER_EDGES)
+        .where(PATHFINDER_EDGES.START_ID.in(end))
+        .fetch(edgeMapper).forEach(edge -> result.computeIfAbsent(edge.getEnd(), u -> new HashSet<>()).add(edge));
+    return result;
   }
 
   public Optional<Edge> loadEdge(UUID start, UUID end) {
@@ -336,12 +341,12 @@ public abstract class SqlStorage extends CommonStorage {
     create.transaction(configuration -> {
       var ctx = configuration.dsl();
       ctx.update(PATHFINDER_WAYPOINTS)
-              .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
-              .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
-              .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
-              .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
-              .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
-              .execute();
+          .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
+          .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
+          .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
+          .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
+          .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
+          .execute();
 
       for (Edge e : waypoint.getEdgeChanges().getAddList()) {
         saveEdge(ctx, e);
@@ -396,7 +401,29 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
+  public Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids) {
+    Map<UUID, Collection<NodeGroup>> result = new HashMap<>();
+    create.transaction(cfg -> {
+      Map<UUID, Collection<NamespacedKey>> mapping = new HashMap<>();
+      cfg.dsl().selectFrom(PATHFINDER_NODEGROUP_NODES)
+          .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(ids))
+          .forEach(record -> mapping.computeIfAbsent(record.getNodeId(), uuid -> new HashSet<>()).add(record.getGroupKey()));
+
+      Map<NamespacedKey, NodeGroup> groups = new HashMap<>();
+      cfg.dsl().selectFrom(PATHFINDER_NODEGROUPS)
+          .where(PATHFINDER_NODEGROUPS.KEY.in(mapping.values().stream()
+              .flatMap(Collection::stream).collect(Collectors.toList())))
+          .fetch(groupMapper)
+          .forEach(group -> groups.put(group.getKey(), group));
+
+      mapping.forEach((uuid, keys) -> result.put(uuid, keys.stream()
+          .map(groups::get).collect(Collectors.toSet())));
+    });
+    return result;
+  }
+
+  @Override
+  public Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
         .where(PATHFINDER_NODEGROUPS.KEY.in(key))
         .fetch(groupMapper);

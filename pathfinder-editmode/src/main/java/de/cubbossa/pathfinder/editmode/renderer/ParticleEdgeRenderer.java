@@ -71,11 +71,12 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
 
     // all edges from rendered nodes to adjacent nodes
     Collection<Edge> toRender = nodes.stream()
-            .map(Node::getEdges).flatMap(Collection::stream)
-            .collect(Collectors.toSet());
+        .map(Node::getEdges).flatMap(Collection::stream)
+        .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
     Storage storage = PathFinderProvider.get().getStorage();
-    toRender.addAll(storage.loadEdgesTo(nodes).join().stream()
+    toRender.addAll(storage.loadEdgesTo(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).join().values().stream()
+        .flatMap(Collection::stream)
         .filter(edge -> rendered.contains(edge.getStart()))
         .toList());
 

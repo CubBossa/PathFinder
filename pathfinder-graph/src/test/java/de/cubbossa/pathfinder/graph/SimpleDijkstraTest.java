@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.graph;
 
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.UUID;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleDijkstraTest {
@@ -69,5 +71,34 @@ class SimpleDijkstraTest {
   void shortestPathAnySeparated() throws NoPathFoundException {
     Assertions.assertEquals(List.of("a", "b", "c"),
         dijkstra.solvePath(graph, "a", List.of("c", "i")));
+  }
+
+  @Test
+  void performanceTest() throws NoPathFoundException {
+    int nodes = 10_000;
+    int edges = 30_000;
+
+    Graph<UUID> g = new Graph<>();
+    UUID[] ids = new UUID[nodes];
+    UUID start = UUID.randomUUID();
+    UUID end = UUID.randomUUID();
+    g.addNode(start);
+    g.addNode(end);
+    ids[0] = start;
+    ids[1] = end;
+    for (int i = 2; i < nodes; i++) {
+      UUID u = UUID.randomUUID();
+      ids[i] = u;
+      g.addNode(u);
+    }
+    for (int i = 0; i < edges; i++) {
+      UUID a = ids[(int) (Math.random() * nodes)];
+      UUID b = ids[(int) (Math.random() * nodes)];
+      if (a.equals(b)) continue;
+      g.connect(a, b);
+    }
+
+    PathSolver<UUID> d = new SimpleDijkstra<>();
+    d.solvePath(g, start, end);
   }
 }

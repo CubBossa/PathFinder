@@ -38,7 +38,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderExtension {
 
@@ -102,8 +101,15 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   private CompletableFuture<Graph<GroupedNode>> createGraph() {
     return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+      Map<UUID, Node> nodeMap = new HashMap<>();
+      nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
       Map<UUID, GroupedNode> map = new HashMap<>();
-      nodes.forEach(node -> map.put(node.getNodeId(), new SimpleGroupedNode(node, StorageUtil.getGroups(node))));
+
+      pathFinder.getStorage().loadGroups(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenAccept(groups -> {
+        groups.forEach((uuid, gs) -> {
+          map.put(uuid, new SimpleGroupedNode(nodeMap.get(uuid), gs));
+        });
+      }).join();
 
       Graph<GroupedNode> graph = new Graph<>();
       map.values().forEach(graph::addNode);
@@ -159,6 +165,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       if (closest == null) {
         return NavigateResult.FAIL_TOO_FAR_AWAY;
       }
+
       Waypoint waypoint = new Waypoint(UUID.randomUUID());
       GroupedNode wpGrouped = new SimpleGroupedNode(waypoint, new HashSet<>());
       waypoint.setLocation(_location);
@@ -179,12 +186,6 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     return graph(playerNode).thenCompose(graph -> findPath(player, graph, playerNode, targets));
   }
 
-  private GroupedNode fromGraph(Graph<GroupedNode> graph, Node node) {
-    return StreamSupport.stream(graph.spliterator(), false)
-        .filter(groupedNode -> groupedNode.node().getNodeId().equals(node.getNodeId()))
-        .findAny().orElseThrow();
-  }
-
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Graph<GroupedNode> graph, Node start, NodeSelection targets) {
 
     if (targets.size() == 0) {
@@ -193,10 +194,12 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
       PathSolver<GroupedNode> pathSolver = new SimpleDijkstra<>();
+      Map<UUID, GroupedNode> graphMapping = new HashMap<>();
+      graph.forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
       List<GroupedNode> path;
       try {
-        path = pathSolver.solvePath(graph, fromGraph(graph, start), targets.stream()
-            .map(node -> fromGraph(graph, node))
+        path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), targets.stream()
+            .map(node -> graphMapping.get(node.getNodeId()))
             .collect(Collectors.toList()));
 
       } catch (NoPathFoundException e) {

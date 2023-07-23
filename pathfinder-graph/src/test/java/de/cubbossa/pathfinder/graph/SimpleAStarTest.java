@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.graph;
 
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.UUID;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleAStarTest {
@@ -72,6 +74,39 @@ class SimpleAStarTest {
   @Test
   void shortestPathAny() throws NoPathFoundException {
     Assertions.assertEquals(List.of(a, b, c), dijkstra.solvePath(graph, a, List.of(c, f)));
+  }
+
+  @Test
+  void performanceTest() throws NoPathFoundException {
+    int nodes = 10_000;
+    int edges = 20_000;
+
+    Graph<Node> g = new Graph<>();
+    Node[] ids = new Node[nodes];
+    Node start = new Node(UUID.randomUUID().toString(), 0, 0);
+    Node end = new Node(UUID.randomUUID().toString(), 1000, 1000);
+    g.addNode(start);
+    g.addNode(end);
+    ids[0] = start;
+    ids[1] = end;
+    for (int i = 2; i < nodes; i++) {
+      UUID u = UUID.randomUUID();
+      Node node = new Node(u.toString(), Math.random() * 10_000, Math.random() * 10_000);
+      ids[i] = node;
+      g.addNode(node);
+    }
+    for (int i = 0; i < edges; i++) {
+      Node a = ids[(int) (Math.random() * nodes)];
+      Node b = ids[(int) (Math.random() * nodes)];
+      if (a.equals(b)) continue;
+      g.connect(a, b);
+    }
+
+    PathSolver<Node> d = new SimpleDijkstra<>();
+    System.out.println(System.currentTimeMillis());
+    List<Node> path = d.solvePath(g, start, end);
+    System.out.println(System.currentTimeMillis());
+    System.out.println(path.size());
   }
 
   private record Node(String name, double x, double y) {

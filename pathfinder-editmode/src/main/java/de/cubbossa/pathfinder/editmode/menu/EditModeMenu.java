@@ -255,7 +255,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
-          storage.loadGroups(multiTool).thenCompose(groups -> {
+          storage.loadGroupsByMod(multiTool).thenCompose(groups -> {
             return StorageUtil.addGroups(groups, context.getTarget().getNodeId());
           }).thenRun(() -> {
             context.getPlayer().playSound(context.getPlayer().getLocation(),
@@ -266,7 +266,7 @@ public class EditModeMenu {
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          storage.loadGroups(multiTool).thenCompose(groups -> {
+          storage.loadGroupsByMod(multiTool).thenCompose(groups -> {
             return StorageUtil.removeGroups(groups, context.getTarget().getNodeId());
           }).thenRun(() -> {
             context.getPlayer().playSound(context.getPlayer().getLocation(),

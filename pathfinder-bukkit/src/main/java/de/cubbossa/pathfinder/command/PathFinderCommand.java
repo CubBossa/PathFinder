@@ -19,6 +19,7 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.translations.MessageBundle;
 import dev.jorel.commandapi.CommandTree;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -231,6 +232,11 @@ public class PathFinderCommand extends CommandTree {
                     onForceForget(BukkitUtils.wrap(commandSender), player, args.getUnchecked(1));
                   }
                 }))));
+    then(Arguments.literal("worldid")
+        .executesPlayer((sender, args) -> {
+          BukkitUtils.wrap(sender).sendMessage(Component.text(sender.getWorld().getUID().toString())
+              .clickEvent(ClickEvent.copyToClipboard(sender.getWorld().getUID().toString())));
+        }));
   }
 
   private void onForceFind(CommandSender sender, PathPlayer<Player> target, NamespacedKey discoverable) {

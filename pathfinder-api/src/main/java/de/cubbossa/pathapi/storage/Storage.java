@@ -121,18 +121,20 @@ public interface Storage {
    */
   CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
 
-  CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes);
+  CompletableFuture<Map<UUID, Collection<Edge>>> loadEdgesTo(Collection<UUID> nodes);
 
   // Groups
   CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
 
   CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key);
 
+  CompletableFuture<Map<UUID, Collection<NodeGroup>>> loadGroups(Collection<UUID> ids);
+
   CompletableFuture<Collection<NodeGroup>> loadGroups(Range range);
 
-  CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys);
-
   CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);
+
+  CompletableFuture<Collection<NodeGroup>> loadGroupsByMod(Collection<NamespacedKey> keys);
 
   <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(NamespacedKey modifier);
 

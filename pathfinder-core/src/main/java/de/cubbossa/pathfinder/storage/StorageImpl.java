@@ -155,14 +155,8 @@ public class StorageImpl implements Storage {
 
   @Override
   public <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id) {
-    Optional<N> opt = cache.getNodeCache().getNode(id);
-    if (opt.isPresent()) {
-      return CompletableFuture.completedFuture(opt);
-    }
-    return this.<N>loadNodeType(id).thenApply(Optional::orElseThrow).thenApplyAsync(type -> {
-      Optional<N> node = type.loadNode(id).map(this::prepareLoadedNode).map(CompletableFuture::join);
-      node.ifPresent(cache.getNodeCache()::write);
-      return node;
+    return loadNodes(Collections.singletonList(id)).thenApply(nodes -> {
+      return nodes.stream().findAny().map(node -> (N) node);
     });
   }
 
@@ -173,17 +167,22 @@ public class StorageImpl implements Storage {
     }).thenApply(unused -> node);
   }
 
-  private <N extends Node> CompletableFuture<N> insertEdges(N node) {
+  private CompletableFuture<Collection<Node>> insertEdges(Collection<Node> nodes) {
     return CompletableFuture.supplyAsync(() -> {
-      return implementation.loadEdgesFrom(node.getNodeId());
+      return implementation.loadEdgesFrom(nodes.stream().map(Node::getNodeId).toList());
     }, ioExecutor).thenApply(edges -> {
-      node.getEdges().addAll(edges);
-      node.getEdgeChanges().flush();
-      return node;
+      for (Node node : nodes) {
+        if (!edges.containsKey(node.getNodeId())) {
+          continue;
+        }
+        node.getEdges().addAll(edges.get(node.getNodeId()));
+        node.getEdgeChanges().flush();
+      }
+      return nodes;
     });
   }
 
-  private <N extends Node> CompletableFuture<N> prepareLoadedNode(N node) {
+  private CompletableFuture<Collection<Node>> prepareLoadedNode(Collection<Node> node) {
     return insertEdges(node);
   }
 
@@ -193,7 +192,8 @@ public class StorageImpl implements Storage {
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
     }
-    return asyncFuture(() -> type.loadNode(id).map(this::prepareLoadedNode).map(CompletableFuture::join));
+    return asyncFuture(() -> type.loadNode(id).map(Collections::singleton)
+        .map(ns -> (N) this.prepareLoadedNode((Collection<Node>) ns).join().stream().findAny().get()));
   }
 
   @Override
@@ -203,12 +203,10 @@ public class StorageImpl implements Storage {
         .orElseGet(() -> asyncFuture(() -> {
           Collection<Node> all = nodeTypeRegistry.getTypes().stream()
               .flatMap(nodeType -> nodeType.loadAllNodes().stream())
-              .map(this::prepareLoadedNode)
-              .map(CompletableFuture::join)
               .collect(Collectors.toSet());
           cache.getNodeCache().writeAll(all);
           return all;
-        }));
+        })).thenCompose(this::prepareLoadedNode);
   }
 
   @Override
@@ -224,15 +222,12 @@ public class StorageImpl implements Storage {
         revert.computeIfAbsent(nodeType, id -> new HashSet<>()).add(uuid);
       });
       revert.forEach((nodeType, uuids) -> {
-        Collection<Node> nodes = nodeType.loadNodes(uuids).stream()
-            .map(this::prepareLoadedNode)
-            .map(CompletableFuture::join)
-            .collect(Collectors.toSet());
+        Collection<Node> nodes = new HashSet<>(nodeType.loadNodes(uuids));
         nodes.forEach(cache.getNodeCache()::write);
         result.addAll(nodes);
       });
       return result;
-    });
+    }).thenCompose(this::prepareLoadedNode);
   }
 
   @Override
@@ -298,12 +293,8 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<Edge>> loadEdgesTo(Collection<Node> nodes) {
-    return asyncFuture(() -> nodes.stream().parallel()
-        .map(Node::getNodeId)
-        .map(node -> implementation.loadEdgesTo(node))
-        .flatMap(Collection::stream)
-        .collect(Collectors.toSet()));
+  public CompletableFuture<Map<UUID, Collection<Edge>>> loadEdgesTo(Collection<UUID> nodes) {
+    return asyncFuture(() -> implementation.loadEdgesTo(nodes));
   }
 
   // Groups
@@ -330,6 +321,21 @@ public class StorageImpl implements Storage {
   }
 
   @Override
+  public CompletableFuture<Map<UUID, Collection<NodeGroup>>> loadGroups(Collection<UUID> ids) {
+    return asyncFuture(() -> {
+      Map<UUID, Collection<NodeGroup>> result = new HashMap<>();
+      Collection<UUID> toLoad = new HashSet<>();
+      for (UUID uuid : ids) {
+        cache.getGroupCache().getGroups(uuid).ifPresentOrElse(groups -> {
+          result.put(uuid, groups);
+        }, () -> toLoad.add(uuid));
+      }
+      result.putAll(implementation.loadGroups(toLoad));
+      return result;
+    });
+  }
+
+  @Override
   public CompletableFuture<Collection<NodeGroup>> loadGroups(Range range) {
     return cache.getGroupCache().getGroups(range)
         .map(CompletableFuture::completedFuture)
@@ -337,14 +343,14 @@ public class StorageImpl implements Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<NodeGroup>> loadGroups(Collection<NamespacedKey> keys) {
+  public CompletableFuture<Collection<NodeGroup>> loadGroupsByMod(Collection<NamespacedKey> keys) {
     StorageCache.CacheCollection<NamespacedKey, NodeGroup> cached = cache.getGroupCache().getGroups(keys);
     Collection<NodeGroup> result = new HashSet<>(cached.present());
     if (cached.absent().isEmpty()) {
       return CompletableFuture.completedFuture(result);
     }
     return asyncFuture(() -> {
-      Collection<NodeGroup> loaded = implementation.loadGroups(cached.absent());
+      Collection<NodeGroup> loaded = implementation.loadGroupsByMod(cached.absent());
       loaded.forEach(cache.getGroupCache()::write);
       result.addAll(loaded);
       return result;

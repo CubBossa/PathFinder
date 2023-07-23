@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 @ApiStatus.Experimental
 @Deprecated(forRemoval = true)
-public class YmlStorage extends CommonStorage {
+public abstract class YmlStorage extends CommonStorage {
 
   private static final String FILE_NODE_TYPES = "node_types.yml";
   private static final String FILE_VIS_TYPES = "visualizer_types.yml";
@@ -204,7 +204,6 @@ public class YmlStorage extends CommonStorage {
     });
   }
 
-  @Override
   public Collection<Edge> loadEdgesFrom(UUID start) {
     return workOnFile(fileEdges(), cfg -> {
       ConfigurationSection section = cfg.getConfigurationSection(start.toString());
@@ -219,7 +218,6 @@ public class YmlStorage extends CommonStorage {
     });
   }
 
-  @Override
   public Collection<Edge> loadEdgesTo(UUID end) {
     return workOnFile(fileEdges(), cfg -> {
       Collection<Edge> edges = new HashSet<>();
@@ -332,7 +330,7 @@ public class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> key) {
+  public Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key) {
     return key.stream()
         .map(this::loadGroup)
         .filter(Optional::isPresent)

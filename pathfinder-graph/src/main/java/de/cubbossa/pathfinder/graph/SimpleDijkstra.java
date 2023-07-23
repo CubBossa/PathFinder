@@ -1,18 +1,11 @@
 package de.cubbossa.pathfinder.graph;
 
 import com.google.common.base.Preconditions;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SimpleDijkstra<N> implements PathSolver<N> {
 
@@ -42,45 +35,31 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
 
   private Map<N, Node> setStartNode(Graph<N> graph, N source) {
     Map<N, Node> computedGraph = new HashMap<>();
-    Set<Node> unsettled = new HashSet<>();
+    TreeSet<Node> unsettled = new TreeSet<>();
     unsettled.add(buildGraph(graph, source));
 
-    while (unsettled.size() > 0) {
-      Node current = getNearest(unsettled);
-      unsettled.remove(current);
+    while (!unsettled.isEmpty()) {
+      Node current = unsettled.pollFirst();
 
-      for (Map.Entry<Node, Double> entry : current.adjacent.entrySet()) {
-        Node node = entry.getKey();
+      current.adjacent.forEach((node, value) -> {
         if (!node.settled) {
-          setMinDist(current, node, entry.getValue());
+          setMinDist(current, node, value);
           unsettled.add(node);
         }
-      }
+      });
       current.settled = true;
       computedGraph.put(current.node, current);
     }
     return computedGraph;
   }
 
-  private Node getNearest(Set<Node> unsettled) {
-    Node nearest = null;
-    double dist = Integer.MAX_VALUE;
-    for (Node node : unsettled) {
-      if (node.distance < dist) {
-        nearest = node;
-        dist = node.distance;
-      }
-    }
-    return nearest;
-  }
-
   private void setMinDist(Node node, Node neighbour, double edgeWeigh) {
-    double sourceDistance = node.distance;
-    if (sourceDistance + edgeWeigh < neighbour.distance) {
-      neighbour.distance = sourceDistance + edgeWeigh;
-      LinkedList<Node> shortestPath = new LinkedList<>(node.path);
-      shortestPath.add(node);
-      neighbour.path = shortestPath;
+    double d = node.distance * edgeWeigh;
+    if (d < neighbour.distance) {
+      neighbour.distance = d;
+      neighbour.path.clear();
+      neighbour.path.addAll(node.path);
+      neighbour.path.add(node);
     }
   }
 
@@ -126,13 +105,16 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
   }
 
   @Getter
-  @RequiredArgsConstructor
-  private class Node {
+  private class Node implements Comparable<Node> {
     private final N node;
     private final Map<Node, Double> adjacent = new HashMap<>();
     private boolean settled = false;
     private List<Node> path = new LinkedList<>();
     private double distance = Integer.MAX_VALUE;
+
+    public Node(N node) {
+      this.node = node;
+    }
 
     public Node(N node, double distance) {
       this.node = node;
@@ -142,6 +124,11 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
     @Override
     public int hashCode() {
       return node.hashCode();
+    }
+
+    @Override
+    public int compareTo(@NotNull SimpleDijkstra<N>.Node o) {
+      return Double.compare(this.distance, o.distance);
     }
   }
 }
