@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.module;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
@@ -13,12 +14,10 @@ import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class AbstractDiscoverHandler<PlayerT> {
 
@@ -41,17 +40,15 @@ public class AbstractDiscoverHandler<PlayerT> {
 
     if (plugin.getConfiguration().navigation.requireDiscovery) {
       AbstractNavigationHandler.getInstance().registerFindPredicate(context -> {
-        Collection<NodeGroup> groups = StorageUtil.getGroups(context.node());
+        Map<Node, Collection<NodeGroup>> map = PathFinderProvider.get().getStorage().loadGroupsOfNodes(context.nodes()).join();
 
-        for (NodeGroup group : groups) {
-          if (!group.hasModifier(CommonDiscoverableModifier.class)) {
-            continue;
-          }
-          if (!hasDiscovered(context.playerId(), group).join()) {
-            return false;
-          }
-        }
-        return true;
+        return map.entrySet().stream()
+            .filter(e -> e.getValue().stream().allMatch(group -> {
+              return !group.hasModifier(CommonDiscoverableModifier.class)
+                  || !this.hasDiscovered(context.playerId(), group).join();
+            }))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
       });
     }
   }

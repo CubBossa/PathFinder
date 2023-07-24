@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -76,7 +77,7 @@ class SimpleDijkstraTest {
   @Test
   void performanceTest() throws NoPathFoundException {
     int nodes = 10_000;
-    int edges = 30_000;
+    int edges = 100_000;
 
     Graph<UUID> g = new Graph<>();
     UUID[] ids = new UUID[nodes];
@@ -91,9 +92,10 @@ class SimpleDijkstraTest {
       ids[i] = u;
       g.addNode(u);
     }
+    Random random = new Random(1920648153);
     for (int i = 0; i < edges; i++) {
-      UUID a = ids[(int) (Math.random() * nodes)];
-      UUID b = ids[(int) (Math.random() * nodes)];
+      UUID a = ids[random.nextInt(nodes)];
+      UUID b = ids[random.nextInt(nodes)];
       if (a.equals(b)) continue;
       g.connect(a, b);
     }

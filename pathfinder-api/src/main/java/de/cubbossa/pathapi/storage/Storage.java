@@ -130,6 +130,8 @@ public interface Storage {
 
   CompletableFuture<Map<UUID, Collection<NodeGroup>>> loadGroups(Collection<UUID> ids);
 
+  CompletableFuture<Map<Node, Collection<NodeGroup>>> loadGroupsOfNodes(Collection<Node> ids);
+
   CompletableFuture<Collection<NodeGroup>> loadGroups(Range range);
 
   CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -31,6 +32,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -331,6 +333,20 @@ public class StorageImpl implements Storage {
         }, () -> toLoad.add(uuid));
       }
       result.putAll(implementation.loadGroups(toLoad));
+      toLoad.forEach(uuid -> result.computeIfAbsent(uuid, u -> new HashSet<>()));
+      return result;
+    });
+  }
+
+  @Override
+  public CompletableFuture<Map<Node, Collection<NodeGroup>>> loadGroupsOfNodes(Collection<Node> ids) {
+    Map<UUID, Node> nodes = new HashMap<>();
+    ids.forEach(node -> nodes.put(node.getNodeId(), node));
+    return loadGroups(nodes.keySet()).thenApply(col -> {
+      Map<Node, Collection<NodeGroup>> result = new HashMap<>();
+      col.forEach((uuid, groups) -> {
+        result.put(nodes.get(uuid), groups);
+      });
       return result;
     });
   }
@@ -585,14 +601,19 @@ public class StorageImpl implements Storage {
   public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier) {
     return loadGroups(modifier).thenCompose(groups -> {
       return loadNodes(groups.stream().flatMap(Collection::stream).toList()).thenApply(nodes -> {
-        Map<Node, Collection<M>> results = new HashMap<>();
         Map<UUID, Node> nodeMap = new HashMap<>();
         nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
 
+        Map<Node, Collection<M>> results = new HashMap<>();
         for (NodeGroup group : groups) {
-          for (UUID node : group) {
+          for (UUID id : group) {
+            Node node = nodeMap.get(id);
+            if (node == null) {
+              PathFinderProvider.get().getLogger().log(Level.WARNING, "Node unexpectedly null for id " + id + ".");
+              continue;
+            }
             group.<M>getModifier(modifier).ifPresent(m -> {
-              results.computeIfAbsent(nodeMap.get(node), n -> new HashSet<>()).add(m);
+              results.computeIfAbsent(node, n -> new HashSet<>()).add(m);
             });
           }
         }

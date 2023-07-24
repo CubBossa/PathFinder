@@ -23,7 +23,6 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
@@ -35,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -49,7 +48,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     FAIL_TOO_FAR_AWAY;
   }
 
-  public record NavigationRequestContext(UUID playerId, Node node) {
+  public record NavigationRequestContext(UUID playerId, Collection<Node> nodes) {
   }
 
   public record SearchInfo<PlayerT>(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target,
@@ -58,7 +57,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   protected final Map<PathPlayer<PlayerT>, SearchInfo<PlayerT>> activePaths;
   protected final PathFinder pathFinder;
-  protected final List<Predicate<NavigationRequestContext>> navigationFilter;
+  protected final List<Function<NavigationRequestContext, Collection<Node>>> navigationFilter;
   @Getter
   private final NamespacedKey key = CommonPathFinder.pathfinder("navigation");
   protected EventDispatcher<PlayerT> eventDispatcher;
@@ -83,16 +82,20 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     }
   }
 
-  public void registerFindPredicate(Predicate<NavigationRequestContext> filter) {
+  public void registerFindPredicate(Function<NavigationRequestContext, Collection<Node>> filter) {
     navigationFilter.add(filter);
   }
 
-  public boolean canFind(NavigationRequestContext ctx) {
-    return navigationFilter.stream().allMatch(p -> p.test(ctx));
+  public boolean canFind(UUID uuid, Node node, Collection<Node> scope) {
+    return filterFindables(uuid, scope).contains(node);
   }
 
-  public List<Predicate<NavigationRequestContext>> getNavigationFilter() {
-    return new ArrayList<>(navigationFilter);
+  public Collection<Node> filterFindables(UUID player, Collection<Node> nodes) {
+    Collection<Node> nodeSet = new HashSet<>(nodes);
+    for (Function<NavigationRequestContext, Collection<Node>> f : navigationFilter) {
+      nodeSet = f.apply(new NavigationRequestContext(player, nodeSet));
+    }
+    return nodeSet;
   }
 
   public @Nullable SearchInfo<PlayerT> getActivePath(PathPlayer<PlayerT> player) {
@@ -115,12 +118,15 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       map.values().forEach(graph::addNode);
       for (Node node : nodes) {
         for (Edge e : node.getEdges()) {
-          Node end = map.get(e.getEnd()).node();
-          if (end == null) {
-            pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e);
+          GroupedNode endGrouped = map.get(e.getEnd());
+          Node end = endGrouped == null ? null : endGrouped.node();
+          GroupedNode startGrouped = map.get(e.getStart());
+          Node start = startGrouped == null ? null : startGrouped.node();
+          if (end == null || start == null) {
+            pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e + ". Apparently, not all nodes are part of the global group.");
             continue;
           }
-          graph.connect(map.get(node.getNodeId()), map.get(end.getNodeId()), node.getLocation().distance(end.getLocation()) * e.getWeight());
+          graph.connect(startGrouped, endGrouped, node.getLocation().distance(end.getLocation()) * e.getWeight());
         }
       }
       return graph;
@@ -197,18 +203,17 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       Map<UUID, GroupedNode> graphMapping = new HashMap<>();
       graph.forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
       List<GroupedNode> path;
+      Collection<GroupedNode> convertedTargets = targets.stream()
+          .map(node -> graphMapping.get(node.getNodeId()))
+          .toList();
       try {
-        path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), targets.stream()
-            .map(node -> graphMapping.get(node.getNodeId()))
-            .collect(Collectors.toList()));
+        path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), convertedTargets);
 
       } catch (NoPathFoundException e) {
         return NavigateResult.FAIL_BLOCKED;
       }
 
-      NodeGroup highest = path.stream()
-          .map(GroupedNode::groups)
-          .flatMap(Collection::stream)
+      NodeGroup highest = path.get(path.size() - 1).groups().stream()
           .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
           .max(NodeGroup::compareTo).orElse(null);
 
@@ -280,17 +285,21 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
     registerFindPredicate(c -> {
       PathPlayer<?> player = CommonPathFinder.getInstance().wrap(c.playerId);
-      Collection<NodeGroup> groups = StorageUtil.getGroups(c.node());
+      Map<Node, Collection<NodeGroup>> groups = PathFinderProvider.get().getStorage().loadGroupsOfNodes(c.nodes()).join();
 
       if (player.unwrap() == null) {
-        return false;
+        return new HashSet<>();
       }
 
-      return groups.stream()
-          .allMatch(g -> {
-            Optional<PermissionModifier> mod = g.getModifier(PermissionModifier.KEY);
-            return mod.isEmpty() || player.hasPermission(mod.get().permission());
-          });
+      return groups.entrySet().stream()
+          .filter(e -> {
+            return e.getValue().stream().allMatch(group -> {
+              Optional<PermissionModifier> mod = group.getModifier(PermissionModifier.KEY);
+              return mod.isEmpty() || player.hasPermission(mod.get().permission());
+            });
+          })
+          .map(Map.Entry::getKey)
+          .collect(Collectors.toList());
     });
   }
 }

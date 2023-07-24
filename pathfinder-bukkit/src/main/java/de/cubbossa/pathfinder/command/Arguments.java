@@ -20,7 +20,6 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
-import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -388,21 +387,19 @@ public class Arguments {
               }
               String search = context.currentInput().replace(" ", "");
               Storage storage = PathFinderProvider.get().getStorage();
-              Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join().entrySet().stream().filter(entry -> {
-                Node node = entry.getKey();
-                // Create context for request
-                BukkitNavigationHandler.NavigationRequestContext c = new BukkitNavigationHandler.NavigationRequestContext(player.getUniqueId(), node);
-                // Find a node that matches all required filters
-                return AbstractNavigationHandler.getInstance().canFind(c);
-              }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+              Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
+              Collection<Node> valids = AbstractNavigationHandler.getInstance().filterFindables(player.getUniqueId(), scope.keySet());
+
+              Map<Node, Collection<NavigableModifier>> result = new HashMap<>();
+              valids.forEach(node -> result.put(node, scope.get(node)));
 
               try {
-                Function<Node, Collection<SearchTerm>> searchTermFunction = n -> scope.get(n).stream()
+                Function<Node, Collection<SearchTerm>> searchTermFunction = n -> result.get(n).stream()
                     .map(NavigableModifier::getSearchTerms)
                     .flatMap(Collection::stream)
                     .collect(Collectors.toList());
 
-                Collection<Node> target = new FindQueryParser().parse(search, new ArrayList<>(scope.keySet()), searchTermFunction);
+                Collection<Node> target = new FindQueryParser().parse(search, new ArrayList<>(valids), searchTermFunction);
                 return new NodeSelection(target);
               } catch (Throwable t) {
                 t.printStackTrace();

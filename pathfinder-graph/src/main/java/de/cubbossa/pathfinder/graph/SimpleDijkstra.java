@@ -16,6 +16,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
     Node root = new Node(source, 0);
     queue.add(root);
 
+    System.out.println(System.currentTimeMillis() + " start build");
     while (!queue.isEmpty()) {
       Node current = queue.poll();
       computed.put(current.node, current);
@@ -28,6 +29,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
       }
       current.settled = true;
     }
+    System.out.println(System.currentTimeMillis() + " end build");
 
     computed.values().forEach(node -> node.settled = false);
     return root;
@@ -38,6 +40,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
     TreeSet<Node> unsettled = new TreeSet<>();
     unsettled.add(buildGraph(graph, source));
 
+    System.out.println(System.currentTimeMillis() + " start dijkstra");
     while (!unsettled.isEmpty()) {
       Node current = unsettled.pollFirst();
 
@@ -50,6 +53,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
       current.settled = true;
       computedGraph.put(current.node, current);
     }
+    System.out.println(System.currentTimeMillis() + " end dijkstra");
     return computedGraph;
   }
 
