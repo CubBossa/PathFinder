@@ -204,21 +204,28 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       graph.forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
       List<GroupedNode> path;
       Collection<GroupedNode> convertedTargets = targets.stream()
-          .map(node -> graphMapping.get(node.getNodeId()))
-          .toList();
+              .map(node -> graphMapping.get(node.getNodeId()))
+              .toList();
       try {
         path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), convertedTargets);
 
       } catch (NoPathFoundException e) {
         return NavigateResult.FAIL_BLOCKED;
       }
+      Location last = null;
+      for (GroupedNode groupedNode : new LinkedList<>(path)) {
+        if (Objects.equals(last, groupedNode.node().getLocation())) {
+          path.remove(groupedNode);
+        }
+        last = groupedNode.node().getLocation();
+      }
 
       NodeGroup highest = path.get(path.size() - 1).groups().stream()
-          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-          .max(NodeGroup::compareTo).orElse(null);
+              .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+              .max(NodeGroup::compareTo).orElse(null);
 
       double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-          .map(FindDistanceModifier::distance).orElse(1.5);
+              .map(FindDistanceModifier::distance).orElse(1.5);
       return setPath(player, path, path.get(path.size() - 1).node().getLocation(), (float) findDist);
     });
   }
