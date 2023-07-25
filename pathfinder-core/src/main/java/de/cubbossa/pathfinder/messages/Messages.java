@@ -725,6 +725,7 @@ public class Messages {
     @Override
     public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
       return TagResolver.resolver(key, (queue, context) -> {
+        Collection<C> e = new ArrayList<>(entries).subList(0, 100);
         ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
         ComponentLike prefix = null;
         ComponentLike suffix = null;
@@ -741,7 +742,7 @@ public class Messages {
         ComponentLike finalPrefix = prefix;
         ComponentLike finalSuffix = suffix;
         return Tag.selfClosingInserting(Component.join(JoinConfiguration.builder().separator(separator).build(),
-            entries.stream().map(c -> {
+            e.stream().map(c -> {
               if (finalPrefix == null) {
                 return c;
               }

@@ -492,6 +492,7 @@ public abstract class SqlStorage extends CommonStorage {
             .onDuplicateKeyIgnore()
             .execute();
       }
+      group.getContentChanges().getRemoveList().forEach(uuid -> System.out.println(" Removed " + uuid + " from group " + group.getKey()));
       ctx
           .deleteFrom(PATHFINDER_NODEGROUP_NODES)
           .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))

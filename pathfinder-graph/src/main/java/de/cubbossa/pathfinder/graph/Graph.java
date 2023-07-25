@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.graph;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -122,5 +123,13 @@ public class Graph<N> implements Iterable<N> {
   @Override
   public Iterator<N> iterator() {
     return nodes.keySet().iterator();
+  }
+
+  public Collection<N> getNodes() {
+    return nodes.keySet();
+  }
+
+  public Map<N, Map<N, Double>> getEdgeMap() {
+    return nodes;
   }
 }

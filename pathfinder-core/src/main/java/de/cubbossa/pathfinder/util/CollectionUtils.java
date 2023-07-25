@@ -3,8 +3,7 @@ package de.cubbossa.pathfinder.util;
 import de.cubbossa.pathapi.misc.Range;
 import lombok.experimental.UtilityClass;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @UtilityClass
 public class CollectionUtils {
@@ -45,5 +44,13 @@ public class CollectionUtils {
       result.add(in.get(i));
     }
     return result;
+  }
+
+  public static <K, V> Map<K, V> sort(Map<K, V> unsorted, Collection<K> sorting) {
+    Map<K, V> sorted = new LinkedHashMap<>();
+    for (K k : sorting) {
+      sorted.put(k, unsorted.get(k));
+    }
+    return sorted;
   }
 }

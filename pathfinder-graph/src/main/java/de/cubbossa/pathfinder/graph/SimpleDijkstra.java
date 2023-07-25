@@ -9,40 +9,31 @@ import java.util.stream.Collectors;
 
 public class SimpleDijkstra<N> implements PathSolver<N> {
 
-  public Node buildGraph(Graph<N> graph, N source) {
-    Map<N, Node> computed = new HashMap<>();
-    Queue<Node> queue = new LinkedList<>();
+  public Map<N, Node> buildGraph(Graph<N> graph) {
+    Map<N, Node> nodes = new HashMap<>();
 
-    Node root = new Node(source, 0);
-    queue.add(root);
-
-    System.out.println(System.currentTimeMillis() + " start build");
-    while (!queue.isEmpty()) {
-      Node current = queue.poll();
-      computed.put(current.node, current);
-      for (var entry : graph.getEdges(current.node).entrySet()) {
-        Node adjacent = computed.computeIfAbsent(entry.getKey(), Node::new);
-        if (!adjacent.settled) {
-          queue.add(adjacent);
-        }
-        current.adjacent.put(adjacent, entry.getValue());
-      }
-      current.settled = true;
+    for (N n : graph) {
+      nodes.put(n, new Node(n));
     }
-    System.out.println(System.currentTimeMillis() + " end build");
-
-    computed.values().forEach(node -> node.settled = false);
-    return root;
+    graph.getEdgeMap().forEach((node, edgeMap) -> {
+      edgeMap.forEach((n, d) -> {
+        nodes.get(node).adjacent.put(nodes.get(n), d);
+      });
+    });
+    return nodes;
   }
 
   private Map<N, Node> setStartNode(Graph<N> graph, N source) {
-    Map<N, Node> computedGraph = new HashMap<>();
-    TreeSet<Node> unsettled = new TreeSet<>();
-    unsettled.add(buildGraph(graph, source));
+    Map<N, Node> scope = buildGraph(graph);
+    Map<N, Node> computed = new HashMap<>();
+    Queue<Node> unsettled = new LinkedList<>();
+    Node startNode = scope.get(source);
+    startNode.distance = 0;
+    unsettled.add(startNode);
 
     System.out.println(System.currentTimeMillis() + " start dijkstra");
     while (!unsettled.isEmpty()) {
-      Node current = unsettled.pollFirst();
+      Node current = unsettled.poll();
 
       current.adjacent.forEach((node, value) -> {
         if (!node.settled) {
@@ -51,14 +42,14 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
         }
       });
       current.settled = true;
-      computedGraph.put(current.node, current);
+      computed.put(current.node, current);
     }
     System.out.println(System.currentTimeMillis() + " end dijkstra");
-    return computedGraph;
+    return computed;
   }
 
-  private void setMinDist(Node node, Node neighbour, double edgeWeigh) {
-    double d = node.distance * edgeWeigh;
+  private void setMinDist(Node node, Node neighbour, double edgeWeight) {
+    double d = node.distance + edgeWeight;
     if (d < neighbour.distance) {
       neighbour.distance = d;
       neighbour.path.clear();
@@ -71,6 +62,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
     Preconditions.checkNotNull(target);
+    Preconditions.checkState(graph.hasNode(start));
 
     Map<N, Node> computedGraph = setStartNode(graph, start);
 
@@ -87,6 +79,7 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
       throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
+    Preconditions.checkState(graph.hasNode(start));
     Preconditions.checkState(targets.size() > 0);
 
     Map<N, Node> computedGraph = setStartNode(graph, start);

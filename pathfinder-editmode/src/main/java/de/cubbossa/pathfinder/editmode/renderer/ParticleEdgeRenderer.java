@@ -47,7 +47,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     pathFinder = PathFinderProvider.get();
     rendered = new HashSet<>();
     edges = new MultiMap<>();
-    editModeTasks = new HashSet<>();
+    editModeTasks = ConcurrentHashMap.newKeySet();
     config = editModeConfig;
   }
 

@@ -20,6 +20,7 @@ import de.cubbossa.pathfinder.nodegroup.modifier.CommonCurveLengthModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonFindDistanceModifier;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonVisualizerModifier;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
+import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import lombok.Getter;
 import lombok.Setter;
@@ -290,6 +291,7 @@ public class StorageImpl implements Storage {
     });
   }
 
+  // TODO mutliple nodes at once for performance
   private void deleteNode(Node node, NodeType type) {
     type.deleteNode(node);
   }
@@ -334,16 +336,19 @@ public class StorageImpl implements Storage {
       }
       result.putAll(implementation.loadGroups(toLoad));
       toLoad.forEach(uuid -> result.computeIfAbsent(uuid, u -> new HashSet<>()));
-      return result;
+      result.forEach((uuid, groups) -> {
+        cache.getGroupCache().write(uuid, groups);
+      });
+      return CollectionUtils.sort(result, ids);
     });
   }
 
   @Override
   public CompletableFuture<Map<Node, Collection<NodeGroup>>> loadGroupsOfNodes(Collection<Node> ids) {
-    Map<UUID, Node> nodes = new HashMap<>();
+    Map<UUID, Node> nodes = new LinkedHashMap<>();
     ids.forEach(node -> nodes.put(node.getNodeId(), node));
     return loadGroups(nodes.keySet()).thenApply(col -> {
-      Map<Node, Collection<NodeGroup>> result = new HashMap<>();
+      Map<Node, Collection<NodeGroup>> result = new LinkedHashMap<>();
       col.forEach((uuid, groups) -> {
         result.put(nodes.get(uuid), groups);
       });
