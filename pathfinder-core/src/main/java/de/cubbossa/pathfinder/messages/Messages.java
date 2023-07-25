@@ -596,7 +596,9 @@ public class Messages {
   public static <T> Component formatGroupInHover(CommandSender sender, Message placeHolder,
                                                  Collection<T> collection,
                                                  Function<T, ComponentLike> converter) {
-    return placeHolder.formatted(Placeholder.unparsed("amount", collection.size() + ""))
+    int size = collection.size();
+    collection = new ArrayList<>(collection).subList(0, 30);
+    return placeHolder.formatted(Placeholder.unparsed("amount", size + ""))
         .asComponent(audienceSender(sender))
         .hoverEvent(HoverEvent.showText(
             Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
@@ -725,7 +727,7 @@ public class Messages {
     @Override
     public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
       return TagResolver.resolver(key, (queue, context) -> {
-        Collection<C> e = new ArrayList<>(entries).subList(0, 100);
+        Collection<C> e = new ArrayList<>(entries).subList(0, 30);
         ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
         ComponentLike prefix = null;
         ComponentLike suffix = null;

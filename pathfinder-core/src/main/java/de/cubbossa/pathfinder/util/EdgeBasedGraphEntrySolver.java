@@ -14,7 +14,6 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
 
   public Graph<GroupedNode> solve(GroupedNode start, Graph<GroupedNode> scope) {
 
-    System.out.println(System.currentTimeMillis() + " start edge entry solving");
     TreeSet<WeightedEdge> sortedEdges = new TreeSet<>(Comparator.comparingDouble(WeightedEdge::weight));
     scope.getEdgeMap().forEach((node, edgeMap) -> {
       edgeMap.forEach((end, weight) -> {
@@ -47,7 +46,6 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
       scope.subdivide(edge.start, edge.end, () -> w);
       scope.connect(start, w);
     });
-    System.out.println(System.currentTimeMillis() + " end edge entry solving");
     return scope;
   }
 

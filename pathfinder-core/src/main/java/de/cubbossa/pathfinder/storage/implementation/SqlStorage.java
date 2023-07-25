@@ -448,6 +448,7 @@ public abstract class SqlStorage extends CommonStorage {
           group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT).floatValue());
           loadModifiers(group.getKey()).forEach(group::addModifier);
           group.addAll(loadGroupNodes(group));
+          group.getContentChanges().flush();
           return group;
         });
   }
@@ -465,7 +466,9 @@ public abstract class SqlStorage extends CommonStorage {
               r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
           );
           group.addAll(loadGroupNodes(group));
+          group.getContentChanges().flush();
           loadModifiers(group.getKey()).forEach(group::addModifier);
+          group.getModifierChanges().flush();
           return group;
         });
   }
@@ -492,7 +495,6 @@ public abstract class SqlStorage extends CommonStorage {
             .onDuplicateKeyIgnore()
             .execute();
       }
-      group.getContentChanges().getRemoveList().forEach(uuid -> System.out.println(" Removed " + uuid + " from group " + group.getKey()));
       ctx
           .deleteFrom(PATHFINDER_NODEGROUP_NODES)
           .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))

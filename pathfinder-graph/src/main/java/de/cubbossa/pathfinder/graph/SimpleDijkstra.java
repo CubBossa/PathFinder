@@ -31,7 +31,6 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
     startNode.distance = 0;
     unsettled.add(startNode);
 
-    System.out.println(System.currentTimeMillis() + " start dijkstra");
     while (!unsettled.isEmpty()) {
       Node current = unsettled.poll();
 
@@ -44,7 +43,6 @@ public class SimpleDijkstra<N> implements PathSolver<N> {
       current.settled = true;
       computed.put(current.node, current);
     }
-    System.out.println(System.currentTimeMillis() + " end dijkstra");
     return computed;
   }
 
