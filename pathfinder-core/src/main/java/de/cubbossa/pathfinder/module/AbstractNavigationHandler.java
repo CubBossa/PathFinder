@@ -212,12 +212,13 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       } catch (NoPathFoundException e) {
         return NavigateResult.FAIL_BLOCKED;
       }
-      Location last = null;
+      GroupedNode last = null;
       for (GroupedNode groupedNode : new LinkedList<>(path)) {
-        if (Objects.equals(last, groupedNode.node().getLocation())) {
+        if (Objects.equals(last == null ? null : last.node().getLocation(), groupedNode.node().getLocation())) {
+          last.groups().addAll(groupedNode.groups());
           path.remove(groupedNode);
         }
-        last = groupedNode.node().getLocation();
+        last = groupedNode;
       }
 
       NodeGroup highest = path.get(path.size() - 1).groups().stream()
