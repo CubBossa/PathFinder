@@ -49,7 +49,7 @@ public class WaypointStorage implements NodeDataStorage<Waypoint> {
   }
 
   @Override
-  public void deleteNode(Waypoint node) {
-    implementation.deleteWaypoints(List.of(node));
+  public void deleteNodes(Collection<Waypoint> nodes) {
+    implementation.deleteWaypoints(nodes);
   }
 }

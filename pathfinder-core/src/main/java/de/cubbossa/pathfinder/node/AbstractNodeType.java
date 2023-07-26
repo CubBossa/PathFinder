@@ -67,9 +67,9 @@ public abstract class AbstractNodeType<N extends Node> implements
   }
 
   @Override
-  public void deleteNode(N node) {
+  public void deleteNodes(Collection<N> node) {
     if (storage != null) {
-      storage.deleteNode(node);
+      storage.deleteNodes(node);
     }
   }
 }

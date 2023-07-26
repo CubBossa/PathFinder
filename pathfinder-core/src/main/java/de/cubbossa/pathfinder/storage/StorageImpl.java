@@ -276,9 +276,7 @@ public class StorageImpl implements Storage {
     return loadNodes(uuids).thenCompose(nodes -> {
       return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenApplyAsync(types -> {
         implementation.deleteNodeTypeMapping(uuids);
-        for (Node node : nodes) {
-          deleteNode(node, types.get(node.getNodeId()));
-        }
+        deleteNode(nodes, types.get(nodes.stream().findAny().get().getNodeId()));
         implementation.deleteEdgesTo(uuids);
 
         uuids.forEach(cache.getNodeCache()::invalidate);
@@ -291,9 +289,8 @@ public class StorageImpl implements Storage {
     });
   }
 
-  // TODO mutliple nodes at once for performance
-  private void deleteNode(Node node, NodeType type) {
-    type.deleteNode(node);
+  private void deleteNode(Collection<Node> nodes, NodeType type) {
+    type.deleteNodes(nodes);
   }
 
   @Override

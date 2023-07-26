@@ -2,6 +2,7 @@ package de.cubbossa.pathapi.storage;
 
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Node;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +19,7 @@ public interface NodeDataStorage<N extends Node> {
 
   void saveNode(N node);
 
-  void deleteNode(N node);
+  void deleteNodes(Collection<N> node);
 
   record Context(Location location) {
   }
