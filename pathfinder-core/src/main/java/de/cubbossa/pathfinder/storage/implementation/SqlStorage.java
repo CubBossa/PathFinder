@@ -141,6 +141,26 @@ public abstract class SqlStorage extends CommonStorage {
     createDiscoverInfoTable();
     createNodeTypeRelation();
     createModifierGroupRelation();
+
+    // some cleanup tasks that should not be necessary if everything were bugfree x)
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(
+            create.selectZero().eq(create.selectCount().from(PATHFINDER_WAYPOINTS)
+                .where(PATHFINDER_EDGES.START_ID.eq(PATHFINDER_WAYPOINTS.ID)))
+        )
+        .execute();
+    create.deleteFrom(PATHFINDER_EDGES)
+        .where(
+            create.selectZero().eq(create.selectCount().from(PATHFINDER_WAYPOINTS)
+                .where(PATHFINDER_EDGES.END_ID.eq(PATHFINDER_WAYPOINTS.ID)))
+        )
+        .execute();
+    create.deleteFrom(PATHFINDER_NODEGROUP_NODES)
+        .where(
+            create.selectZero().eq(create.selectCount().from(PATHFINDER_WAYPOINTS)
+                .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.eq(PATHFINDER_WAYPOINTS.ID)))
+        )
+        .execute();
   }
 
   private void createNodeTable() {
