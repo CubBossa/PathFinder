@@ -198,21 +198,33 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   @Override
   public CompletableFuture<Void> clear(PathPlayer<Player> player) {
     return CompletableFuture.allOf(renderers.stream()
-        .map(r -> r.clear(player))
-        .toArray(CompletableFuture[]::new));
+            .map(r -> r.clear(player))
+            .toArray(CompletableFuture[]::new))
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        });
   }
 
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.allOf(renderers.stream()
-        .map(r -> r.renderNodes(player, nodes))
-        .toArray(CompletableFuture[]::new));
+            .map(r -> r.renderNodes(player, nodes))
+            .toArray(CompletableFuture[]::new))
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        });
   }
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.allOf(renderers.stream()
-        .map(r -> r.eraseNodes(player, nodes))
-        .toArray(CompletableFuture[]::new));
+            .map(r -> r.eraseNodes(player, nodes))
+            .toArray(CompletableFuture[]::new))
+        .exceptionally(throwable -> {
+          throwable.printStackTrace();
+          return null;
+        });
   }
 }
