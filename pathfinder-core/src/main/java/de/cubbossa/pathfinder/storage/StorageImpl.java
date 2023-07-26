@@ -274,6 +274,9 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> deleteNodes(Collection<UUID> uuids) {
     return loadNodes(uuids).thenCompose(nodes -> {
+      if (nodes == null || nodes.isEmpty()) {
+        return CompletableFuture.completedFuture(null);
+      }
       return loadNodeTypes(nodes.stream().map(Node::getNodeId).toList()).thenApplyAsync(types -> {
         implementation.deleteNodeTypeMapping(uuids);
         deleteNode(nodes, types.get(nodes.stream().findAny().get().getNodeId()));

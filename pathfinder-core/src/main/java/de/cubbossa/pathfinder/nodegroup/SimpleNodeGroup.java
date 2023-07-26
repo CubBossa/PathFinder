@@ -13,10 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class SimpleNodeGroup extends ModifiedHashSet<UUID> implements NodeGroup {
@@ -103,7 +100,11 @@ public class SimpleNodeGroup extends ModifiedHashSet<UUID> implements NodeGroup 
 
   @Override
   public <C extends Modifier> void removeModifier(Class<C> modifierClass) {
-    modifiers.values().removeIf(modifierClass::isInstance);
+    new HashMap<>(modifiers).forEach((k, modifier) -> {
+      if (modifier.getClass().equals(modifierClass) || modifier.getClass().isInstance(modifierClass.getName())) {
+        modifiers.remove(k);
+      }
+    });
   }
 
   @Override

@@ -30,7 +30,10 @@ public class NodeCacheImpl implements NodeCache {
   @Override
   public CacheCollection<UUID, Node> getNodes(Collection<UUID> ids) {
     if (allCached) {
-      return new CacheCollection<>(new HashSet<>(ids.stream().map(nodeCache::get).collect(Collectors.toSet())), new HashSet<>());
+      return new CacheCollection<>(new HashSet<>(ids.stream()
+          .map(nodeCache::get)
+          .filter(Objects::nonNull)
+          .collect(Collectors.toSet())), new HashSet<>());
     }
     Collection<Node> result = new HashSet<>();
     Collection<UUID> absent = new HashSet<>();

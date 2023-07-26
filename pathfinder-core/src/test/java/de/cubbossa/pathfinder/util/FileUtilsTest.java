@@ -8,7 +8,7 @@ import java.io.File;
 
 class FileUtilsTest {
 
-    private File resources = new File("src/test/java/resources");
+    private File resources = new File("src/test/resources");
 
     @SneakyThrows
     @Test
@@ -24,6 +24,9 @@ class FileUtilsTest {
         Assertions.assertTrue(target.exists());
         Assertions.assertTrue(target.isDirectory());
         Assertions.assertTrue(target.listFiles().length > 0);
+
+        new File(target, "b.txt").delete();
+        target.delete();
     }
 
     @Test

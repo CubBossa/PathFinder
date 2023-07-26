@@ -1,13 +1,21 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.pathapi.ExtensionsRegistry;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderConfig;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.WorldLoader;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
@@ -26,12 +34,14 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
 import lombok.SneakyThrows;
+import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.h2.jdbcx.JdbcDataSource;
 import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Assertions;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,12 +70,124 @@ public abstract class PathFinderTest {
   protected static World world;
   protected static Logger logger = Logger.getLogger("TESTS");
   protected static MiniMessage miniMessage;
+
+  protected PathFinder pathFinder = new PathFinder() {
+    @Override
+    public Logger getLogger() {
+      return logger;
+    }
+
+    @Override
+    public ApplicationState getState() {
+      return ApplicationState.RUNNING;
+    }
+
+    @Override
+    public void load() {
+
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public void shutdownExceptionally(Throwable t) {
+
+    }
+
+    @Override
+    public Storage getStorage() {
+      return storage;
+    }
+
+    @Override
+    public ExtensionsRegistry getExtensionRegistry() {
+      return null;
+    }
+
+    @Override
+    public EventDispatcher<?> getEventDispatcher() {
+      return null;
+    }
+
+    @Override
+    public ModifierRegistry getModifierRegistry() {
+      return modifierRegistry;
+    }
+
+    @Override
+    public NodeTypeRegistry getNodeTypeRegistry() {
+      return null;
+    }
+
+    @Override
+    public VisualizerTypeRegistry getVisualizerTypeRegistry() {
+      return visualizerTypeRegistry;
+    }
+
+    @Override
+    public PathFinderConfig getConfiguration() {
+      return new PathFinderConf();
+    }
+
+    @Override
+    public String getVersion() {
+      return "1.0.0";
+    }
+
+    @Override
+    public File getDataFolder() {
+      return new File("src/test/resources/");
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+      return this.getClassLoader();
+    }
+
+    @Override
+    public MiniMessage getMiniMessage() {
+      return miniMessage;
+    }
+
+    @Override
+    public AudienceProvider getAudiences() {
+      return null;
+    }
+
+    @Override
+    public Task repeatingTask(Runnable runnable, long delay, long interval) {
+      return null;
+    }
+
+    @Override
+    public void cancelTask(Task task) {
+
+    }
+  };
+
   protected StorageImpl storage;
   protected NodeTypeRegistryImpl nodeTypeRegistry;
   protected VisualizerTypeRegistry visualizerTypeRegistry;
   protected ModifierRegistry modifierRegistry;
   protected NodeType<Waypoint> waypointNodeType;
   protected TestVisualizerType visualizerType;
+  protected NodeGroup globalGroup;
+
+  public void setupPathFinder() {
+    setupInMemoryStorage();
+    setupMiniMessage();
+    PathFinderProvider.setPathFinder(pathFinder);
+  }
+
+  public void shutdownPathFinder() {
+    shutdownStorage();
+    miniMessage = null;
+    modifierRegistry = null;
+    PathFinderProvider.setPathFinder(null);
+  }
 
   public void setupWorldMock() {
     UUID uuid = UUID.randomUUID();
@@ -79,7 +201,7 @@ public abstract class PathFinderTest {
   @SneakyThrows
   public void setupStorage(boolean cached, Supplier<StorageImplementation> factory) {
     nodeTypeRegistry = new NodeTypeRegistryImpl();
-    modifierRegistry = new ModifierRegistryImpl();
+    modifierRegistry = modifierRegistry == null ? new ModifierRegistryImpl() : modifierRegistry;
     modifierRegistry.registerModifierType(new TestModifierType());
     visualizerTypeRegistry = new VisualizerTypeRegistryImpl();
 
@@ -102,7 +224,7 @@ public abstract class PathFinderTest {
     visualizerTypeRegistry.registerVisualizerType(visualizerType);
 
     storage.init();
-    storage.createGlobalNodeGroup(visualizerType).join();
+    globalGroup = storage.createGlobalNodeGroup(visualizerType).join();
 
     StorageUtil.storage = storage;
   }
@@ -117,7 +239,9 @@ public abstract class PathFinderTest {
       }
 
       @Override
+      @SneakyThrows
       public void shutdown() {
+        getDataSource().getConnection().prepareStatement("DROP ALL OBJECTS").execute();
       }
     };
     implementation.setLogger(Logger.getLogger("TESTS"));
@@ -130,6 +254,7 @@ public abstract class PathFinderTest {
 
   public void shutdownStorage() {
     storage.shutdown();
+    storage = null;
   }
 
   protected <T> T assertResult(Supplier<CompletableFuture<T>> supplier) {

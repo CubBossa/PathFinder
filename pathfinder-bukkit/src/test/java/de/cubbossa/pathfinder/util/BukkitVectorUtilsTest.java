@@ -42,7 +42,7 @@ class BukkitVectorUtilsTest {
         BukkitVectorUtils.getIntersection(new Vector(0, .5, 0), new Vector(-1, 1, 0), new Vector(-3, 3, 0))
     );
     Assertions.assertEquals(
-        new BukkitVectorUtils.Orientation(new Vector(-2.5, -2.5, -2), new Vector(0, 1, 0)),
+        new BukkitVectorUtils.Orientation(new Vector(-2.5, -2.5, -2), new Vector(0, 0, 1)),
         BukkitVectorUtils.getIntersection(new Vector(0, 0, 0.5), new Vector(-1, -1, -1), new Vector(-3, -3, -3))
     );
   }
