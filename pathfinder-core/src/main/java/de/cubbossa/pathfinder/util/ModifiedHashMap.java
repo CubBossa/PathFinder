@@ -31,16 +31,14 @@ public class ModifiedHashMap<K, V> extends HashMap<K, V> {
   @Override
   public V remove(Object key) {
     V val = super.remove(key);
-    if (val != null) {
-      changes.getRemoveList().remove(val);
-    }
+    changes.getRemoveList().add(val);
     return val;
   }
 
   @Override
   public boolean remove(Object key, Object value) {
     if (super.remove(key, value)) {
-      changes.getRemoveList().remove(value);
+      changes.getRemoveList().add((V) value);
       return true;
     }
     return false;
