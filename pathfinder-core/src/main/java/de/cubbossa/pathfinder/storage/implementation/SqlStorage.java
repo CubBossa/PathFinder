@@ -289,13 +289,6 @@ public abstract class SqlStorage extends CommonStorage {
     return result;
   }
 
-  public Optional<Edge> loadEdge(UUID start, UUID end) {
-    return create.selectFrom(PATHFINDER_EDGES)
-        .where(PATHFINDER_EDGES.END_ID.eq(end))
-        .and(PATHFINDER_EDGES.START_ID.eq(start))
-        .fetch(edgeMapper).stream().findAny();
-  }
-
   private void saveEdge(DSLContext ctx, Edge edge) {
     ctx.insertInto(PATHFINDER_EDGES)
         .values(edge.getStart(), edge.getEnd(), edge.getWeight())
