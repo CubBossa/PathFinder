@@ -39,6 +39,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -245,6 +246,16 @@ public abstract class CommonPathFinder implements PathFinder {
         state = ApplicationState.RUNNING;
       }).start();
     }
+
+    dumpWriter.addProperty("node-types", () -> nodeTypeRegistry.getTypes().stream()
+            .map(Keyed::getKey).map(Objects::toString).toList());
+    dumpWriter.addProperty("modifier-types", () -> modifierRegistry.getTypes().stream()
+            .map(Keyed::getKey).map(Objects::toString).toList());
+    dumpWriter.addProperty("visualizer-types", () -> visualizerTypeRegistry.getTypes().keySet().stream()
+            .map(Objects::toString).toList());
+    dumpWriter.addProperty("node-count", () -> storage.loadNodes().join().size());
+    dumpWriter.addProperty("group-count", () -> storage.loadAllGroups().join().size());
+    dumpWriter.addProperty("visualizer-count", () -> storage.loadVisualizers().join().size());
   }
 
   abstract void setupVisualizerTypes();
