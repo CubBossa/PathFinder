@@ -74,7 +74,7 @@ dependencies {
     testImplementation(project(":pathfinder-test-utils"))
 
     // UI
-    api("de.cubbossa:Translations:2.2")
+    api("de.cubbossa:Translations:2.3")
 
     // Utility
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
