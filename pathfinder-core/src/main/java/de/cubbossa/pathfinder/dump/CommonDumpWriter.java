@@ -22,34 +22,40 @@ public class CommonDumpWriter implements DumpWriter {
   private final Gson gson;
 
   public CommonDumpWriter() {
+    this(true);
+  }
+
+  public CommonDumpWriter(boolean prettyPrinting) {
     dumpMap = new LinkedHashMap<>();
     DumpWriterProvider.set(this);
 
-    gson = new GsonBuilder()
-        .registerTypeAdapter(File.class, new TypeAdapter<File>() {
-          @Override
-          public void write(JsonWriter out, File value) throws IOException {
-            out.value(value.getAbsolutePath());
-          }
+    GsonBuilder builder = new GsonBuilder()
+            .registerTypeAdapter(File.class, new TypeAdapter<File>() {
+              @Override
+              public void write(JsonWriter out, File value) throws IOException {
+                out.value(value.getAbsolutePath());
+              }
 
-          @Override
-          public File read(JsonReader in) throws IOException {
-            return new File(in.nextString());
-          }
-        })
-        .registerTypeAdapter(Color.class, new TypeAdapter<Color>() {
-          @Override
-          public void write(JsonWriter out, Color value) throws IOException {
-            out.value(Integer.toHexString(value.getRGB()));
-          }
+              @Override
+              public File read(JsonReader in) throws IOException {
+                return new File(in.nextString());
+              }
+            })
+            .registerTypeAdapter(Color.class, new TypeAdapter<Color>() {
+              @Override
+              public void write(JsonWriter out, Color value) throws IOException {
+                out.value(Integer.toHexString(value.getRGB()));
+              }
 
-          @Override
-          public Color read(JsonReader in) throws IOException {
-            return null;
-          }
-        })
-        .setPrettyPrinting()
-        .create();
+              @Override
+              public Color read(JsonReader in) throws IOException {
+                return null;
+              }
+            });
+    if (prettyPrinting) {
+      builder.setPrettyPrinting();
+    }
+    gson = builder.create();
   }
 
   @Override

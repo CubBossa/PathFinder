@@ -13,7 +13,7 @@ class CommonDumpWriterTest {
 
   @BeforeEach
   void beforeEach() {
-    new CommonDumpWriter();
+    new CommonDumpWriter(false);
   }
 
   @Test
