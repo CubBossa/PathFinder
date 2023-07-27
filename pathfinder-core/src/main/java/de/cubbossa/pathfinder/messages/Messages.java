@@ -4,10 +4,12 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageBuilder;
 import lombok.Setter;
@@ -597,7 +599,7 @@ public class Messages {
                                                  Collection<T> collection,
                                                  Function<T, ComponentLike> converter) {
     int size = collection.size();
-    collection = new ArrayList<>(collection).subList(0, 30);
+    collection = CollectionUtils.subList(new ArrayList<>(collection), Range.range(0, 30));
     return placeHolder.formatted(Placeholder.unparsed("amount", size + ""))
         .asComponent(audienceSender(sender))
         .hoverEvent(HoverEvent.showText(
@@ -727,7 +729,7 @@ public class Messages {
     @Override
     public <C extends ComponentLike> TagResolver list(String key, Collection<C> entries) {
       return TagResolver.resolver(key, (queue, context) -> {
-        Collection<C> e = new ArrayList<>(entries).subList(0, 30);
+        Collection<C> e = CollectionUtils.subList(new ArrayList<>(entries), Range.range(0, 30));
         ComponentLike separator = Component.text(", ", NamedTextColor.GRAY);
         ComponentLike prefix = null;
         ComponentLike suffix = null;
