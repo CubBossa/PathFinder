@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder;
 public class PathPerms {
 
   public static final String PERM_CMD_PF_INFO = "pathfinder.command.pathfinder.info";
+  public static final String PERM_CMD_PF_DUMP = "pathfinder.command.pathfinder.createdump";
   public static final String PERM_CMD_PF_HELP = "pathfinder.command.pathfinder.help";
   public static final String PERM_CMD_PF_RELOAD = "pathfinder.command.pathfinder.reload";
   public static final String PERM_CMD_PF_EXPORT = "pathfinder.command.pathfinder.export";

@@ -3,12 +3,14 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.dump.DumpWriterProvider;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.impl.*;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -25,11 +27,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
@@ -80,6 +82,25 @@ public class PathFinderCommand extends CommandTree {
           Placeholder.parsed("version", PathFinderProvider.get().getVersion())
       ));
     });
+
+    then(Arguments.literal("createdump")
+        .withPermission(PathPerms.PERM_CMD_PF_DUMP)
+        .executes((sender, args) -> {
+          try {
+            File dir = PathFinderPlugin.getInstance().getDataFolder();
+            String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            File dump = new File(dir, "dump_" + date + ".json");
+            dir.mkdirs();
+            dump.createNewFile();
+            DumpWriterProvider.get().save(dump);
+
+            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_DUMP_SUCCESS);
+          } catch (IOException t) {
+            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_DUMP_FAIL);
+            pathFinder.getLogger().log(Level.SEVERE, "Could not create dump file.", t);
+          }
+        })
+    );
 
     then(Arguments.literal("info")
         .withPermission(PathPerms.PERM_CMD_PF_INFO)

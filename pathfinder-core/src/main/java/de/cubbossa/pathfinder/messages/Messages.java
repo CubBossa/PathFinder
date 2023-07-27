@@ -113,6 +113,12 @@ public class Messages {
           """)
       .withPlaceholder("version")
       .build();
+  public static final Message CMD_DUMP_SUCCESS = new MessageBuilder("command.createdump.success")
+      .withDefault("<msg:prefix>Dump file successfully created in plugin directory.")
+      .build();
+  public static final Message CMD_DUMP_FAIL = new MessageBuilder("command.createdump.failure")
+      .withDefault("<negative>Dump file could not be created. Check console for details.</negative>")
+      .build();
   public static final Message CMD_HELP = new MessageBuilder("command.help")
       .withDefault("""
           <gradient:black:dark_gray:black>------------ <c-brand>Pathfinder</c-brand> ------------</gradient>
