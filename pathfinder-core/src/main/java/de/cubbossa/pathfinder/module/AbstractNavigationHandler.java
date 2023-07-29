@@ -45,7 +45,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
   public enum NavigateResult {
     SUCCESS, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
-    FAIL_TOO_FAR_AWAY;
+    FAIL_TOO_FAR_AWAY, FAIL_UNKNOWN;
   }
 
   public record NavigationRequestContext(UUID playerId, Collection<Node> nodes) {
@@ -204,8 +204,8 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       graph.forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
       List<GroupedNode> path;
       Collection<GroupedNode> convertedTargets = targets.stream()
-              .map(node -> graphMapping.get(node.getNodeId()))
-              .toList();
+          .map(node -> graphMapping.get(node.getNodeId()))
+          .toList();
       try {
         path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), convertedTargets);
 
@@ -222,12 +222,15 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       }
 
       NodeGroup highest = path.get(path.size() - 1).groups().stream()
-              .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-              .max(NodeGroup::compareTo).orElse(null);
+          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+          .max(NodeGroup::compareTo).orElse(null);
 
       double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-              .map(FindDistanceModifier::distance).orElse(1.5);
+          .map(FindDistanceModifier::distance).orElse(1.5);
       return setPath(player, path, path.get(path.size() - 1).node().getLocation(), (float) findDist);
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return NavigateResult.FAIL_UNKNOWN;
     });
   }
 

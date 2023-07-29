@@ -1,8 +1,9 @@
 package de.cubbossa.pathapi.misc;
 
-import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -17,6 +18,10 @@ public final class Location extends Vector {
 
   public Vector asVector() {
     return this;
+  }
+
+  public Location toBlockCoordinates() {
+    return new Location((int) x, (int) y, (int) z, world);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
+import com.google.common.base.Preconditions;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.Vector;
@@ -52,86 +53,81 @@ public class NodeUtils {
         Messages.CMD_N_LIST_FOOTER.formatted(resolver));
   }
 
-  public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path, boolean shortenIfOverlapping) {
+  public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path, boolean preventLoopsFromHighWeights) {
+    Preconditions.checkState(path.size() > 0);
 
-    if (path.size() < 1) {
-      throw new IllegalArgumentException("Path to modify must have at least one point.");
+    if (path.size() < 2) {
+      return List.of(new BezierVector(CommonPathFinder.SPLINES.convertToVector(path.keySet().iterator().next().getLocation()), null, null));
     }
-    List<BezierVector> vectors = new ArrayList<>();
 
-    Node first = path.keySet().iterator().next();
-    vectors.add(new BezierVector(
-        CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-        CommonPathFinder.SPLINES.convertToVector(first.getLocation()),
-        CommonPathFinder.SPLINES.convertToVector(first.getLocation())
-    ));
+    BezierVector[] vectors = new BezierVector[path.size()];
+    de.cubbossa.splinelib.util.Vector[] dirs = new de.cubbossa.splinelib.util.Vector[path.size()];
+    double[] leftWeights = new double[path.size()];
+    double[] rightWeights = new double[path.size()];
 
-    Node prev = null;
-    double sPrev = 1;
-    Node curr = null;
-    double sCurr = 1;
-    Vector vNext = null;
-
-
+    int index = 0;
     for (Map.Entry<Node, Double> entry : path.entrySet()) {
-      Node next = entry.getKey();
-      Double sNext = entry.getValue();
-      if (prev != null) {
-        vectors.add(toBezierVector(prev, curr, next, sPrev, sCurr, sNext, shortenIfOverlapping ?
-            new TangentModifier(1, 0) : null));
-      }
-      prev = curr;
-      sPrev = sCurr;
-      curr = next;
-      sCurr = sNext;
-      vNext = next.getLocation();
-    }
-    vectors.add(new BezierVector(
-        CommonPathFinder.SPLINES.convertToVector(vNext),
-        CommonPathFinder.SPLINES.convertToVector(vNext),
-        CommonPathFinder.SPLINES.convertToVector(vNext)));
-    return vectors;
-  }
-
-  public static BezierVector toBezierVector(
-      Node previous, Node current, Node next,
-      double strengthPrevious, double strengthCurrent, double strengthNext,
-      @Nullable TangentModifier tangentModifier) {
-    Vector vPrevious = previous.getLocation();
-    Vector vCurrent = current.getLocation();
-    Vector vNext = next.getLocation();
-
-    // make both same distance to vCurrent
-    vPrevious = vCurrent.clone().add(vPrevious.clone().subtract(vCurrent).normalize());
-    vNext = vCurrent.clone().add(vNext.clone().subtract(vCurrent).normalize());
-
-    // dir is now independent of the distance to neighbouring points
-    Vector dir = vNext.clone().subtract(vPrevious).normalize();
-    double sCurrentPrev = strengthCurrent;
-    double sCurrentNext = strengthCurrent;
-
-    if (tangentModifier != null) {
-      double distPrevious = vCurrent.distance(previous.getLocation());
-      if (sCurrentPrev + strengthPrevious > distPrevious) {
-        sCurrentPrev = distPrevious * sCurrentPrev / (strengthPrevious + sCurrentPrev
-            + tangentModifier.staticOffset()) * tangentModifier.relativeOffset();
-      }
-      double distNext = vCurrent.distance(next.getLocation());
-      if (sCurrentNext + strengthNext > distNext) {
-        sCurrentNext =
-            distNext * sCurrentNext / (strengthNext + sCurrentNext + tangentModifier.staticOffset())
-                * tangentModifier.relativeOffset();
-      }
+      vectors[index] = new BezierVector(CommonPathFinder.SPLINES.convertToVector(entry.getKey().getLocation()), null, null);
+      dirs[index] = null;
+      leftWeights[index] = entry.getValue();
+      rightWeights[index++] = entry.getValue();
     }
 
-    return new BezierVector(
-        CommonPathFinder.SPLINES.convertToVector(vCurrent),
-        CommonPathFinder.SPLINES.convertToVector(
-            vCurrent.clone().add(dir.clone().multiply(-1 * sCurrentPrev))),
-        CommonPathFinder.SPLINES.convertToVector(vCurrent.clone().add(dir.multiply(sCurrentNext)))
-    );
-  }
+    @Nullable BezierVector previous;
+    BezierVector current;
+    @Nullable BezierVector next;
 
-  public record TangentModifier(double relativeOffset, double staticOffset) {
+    for (int i = 0; i < path.size(); i++) {
+      current = vectors[i];
+      next = i == path.size() - 1 ? (BezierVector) current.clone() : vectors[i + 1];
+
+      if (i == 0) {
+        dirs[i] = next.toVector().subtract(current).normalize();
+        continue;
+      }
+      previous = i < path.size() - 1
+          ? vectors[i - 1]
+          : (BezierVector) current.clone();
+
+      de.cubbossa.splinelib.util.Vector a = next.toVector().subtract(current);
+      de.cubbossa.splinelib.util.Vector b = current.toVector().subtract(previous);
+      boolean anull = a.lengthSquared() == 0;
+      boolean bnull = b.lengthSquared() == 0;
+      if (!anull) a = a.normalize();
+      if (!bnull) b = b.normalize();
+      de.cubbossa.splinelib.util.Vector dir = null;
+      if (!anull || !bnull) {
+        de.cubbossa.splinelib.util.Vector sum = a.add(b);
+        dir = sum.lengthSquared() == 0 ? null : sum.normalize();
+      }
+      dirs[i] = dir;
+
+      if (i == path.size() - 1) {
+        continue;
+      }
+
+      // Set weights for previous and current -> if they have more than dist weight we need to proportionally share.
+      double rightWeight = rightWeights[i - 1], leftWeight = leftWeights[i];
+
+      if (preventLoopsFromHighWeights) {
+        // distance times 0.8 so the neighbouring controllers don't touch each other
+        double dist = previous.distance(current) * .8;
+        // They would touch each other -> shorten them
+        if (rightWeight + leftWeight > dist) {
+          double r = rightWeight / (rightWeight + leftWeight);
+          rightWeight = r * dist;
+          leftWeight = (1 - r) * dist;
+          rightWeights[i - 1] = rightWeight;
+          leftWeights[i] = leftWeight;
+        }
+      }
+      if (dirs[i - 1] != null) {
+        previous.setRightControlPoint(previous.toVector().add(dirs[i - 1].clone().multiply(rightWeight)));
+      }
+      if (dir != null) {
+        current.setLeftControlPoint(current.toVector().add(dir.clone().multiply(-1).multiply(leftWeight)));
+      }
+    }
+    return List.of(vectors);
   }
 }

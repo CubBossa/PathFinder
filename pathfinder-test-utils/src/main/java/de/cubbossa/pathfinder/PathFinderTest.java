@@ -11,19 +11,19 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathapi.node.*;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.WorldLoader;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.WaypointType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
+import de.cubbossa.pathfinder.nodegroup.modifier.CommonVisualizerModifier;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
@@ -42,9 +42,7 @@ import org.junit.jupiter.api.Assertions;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -176,9 +174,16 @@ public abstract class PathFinderTest {
   protected TestVisualizerType visualizerType;
   protected NodeGroup globalGroup;
 
+  private final Map<PathVisualizer<?, ?>, NodeGroup> groupMap;
+
+  public PathFinderTest() {
+    groupMap = new HashMap<>();
+  }
+
   public void setupPathFinder() {
-    setupInMemoryStorage();
+    setupWorldMock();
     setupMiniMessage();
+    setupInMemoryStorage();
     PathFinderProvider.setPathFinder(pathFinder);
   }
 
@@ -273,9 +278,30 @@ public abstract class PathFinderTest {
   }
 
   protected Waypoint makeWaypoint() {
+    return makeWaypoint(new Location(1, 2, 3, world));
+  }
+
+  protected Waypoint makeWaypoint(Location location) {
     return assertResult(() -> storage
-        .createAndLoadNode(waypointNodeType, new Location(1, 2, 3, world))
+        .createAndLoadNode(waypointNodeType, location)
         .thenCompose(storage::insertGlobalGroupAndSave));
+  }
+
+  protected GroupedNode makeGroupedWaypoint(Location location, PathVisualizer<?, ?>... visualizers) {
+    Waypoint waypoint = makeWaypoint(location);
+    Collection<NodeGroup> groups = new HashSet<>();
+    for (PathVisualizer<?, ?> vis : visualizers) {
+      NodeGroup group = groupMap.computeIfAbsent(vis, v -> {
+        NodeGroup g = makeGroup(v.getKey());
+        g.addModifier(new CommonVisualizerModifier(v.getKey()));
+        g.add(waypoint.getNodeId());
+        storage.saveGroup(g).join();
+        return g;
+      });
+      groups.add(group);
+    }
+    groups.add(globalGroup);
+    return new SimpleGroupedNode(waypoint, groups);
   }
 
   protected Collection<NodeGroup> getGroups(Node node) {
