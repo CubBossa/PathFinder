@@ -31,4 +31,79 @@ class VectorUtilsTest {
         VectorUtils.snap(new Vector(0.26, 0, 0), 3)
     );
   }
+
+  @Test
+  void distancePointToSegment() {
+    Assertions.assertEquals(VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0),
+            new Vector(0, 2, 0)
+        ), Math.sqrt(2)
+    );
+    Assertions.assertEquals(VectorUtils.distancePointToSegment(
+            new Vector(1, 0, 0),
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0)
+        ), 0
+    );
+    Assertions.assertEquals(VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(1, 1, 0),
+            new Vector(2, 1, 0)
+        ), Math.sqrt(2)
+    );
+    Assertions.assertEquals(
+        VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0),
+            new Vector(0, 2, 0)
+        ), VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(0, 2, 0),
+            new Vector(2, 0, 0)
+        )
+    );
+    Assertions.assertEquals(VectorUtils.distancePointToSegment(
+            new Vector(1, 0, 0),
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0)
+        ), VectorUtils.distancePointToSegment(
+            new Vector(1, 0, 0),
+            new Vector(2, 0, 0),
+            new Vector(0, 0, 0)
+        )
+    );
+    Assertions.assertEquals(VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(1, 1, 0),
+            new Vector(2, 1, 0)
+        ), VectorUtils.distancePointToSegment(
+            new Vector(0, 0, 0),
+            new Vector(2, 1, 0),
+            new Vector(1, 1, 0)
+        )
+    );
+  }
+
+  @Test
+  void closestPointOnSegment() {
+    Assertions.assertEquals(VectorUtils.closestPointOnSegment(
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0),
+            new Vector(0, 2, 0)
+        ), new Vector(1, 1, 0)
+    );
+    Assertions.assertEquals(VectorUtils.closestPointOnSegment(
+            new Vector(1, 0, 0),
+            new Vector(0, 0, 0),
+            new Vector(2, 0, 0)
+        ), new Vector(1, 0, 0)
+    );
+    Assertions.assertEquals(VectorUtils.closestPointOnSegment(
+            new Vector(0, 0, 0),
+            new Vector(1, 1, 0),
+            new Vector(2, 1, 0)
+        ), new Vector(1, 1, 0)
+    );
+  }
 }

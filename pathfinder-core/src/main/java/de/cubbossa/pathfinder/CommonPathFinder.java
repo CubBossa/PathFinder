@@ -2,15 +2,14 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.dump.DumpWriter;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.misc.Vector;
-import de.cubbossa.pathapi.misc.World;
+import de.cubbossa.pathapi.misc.*;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.dump.CommonDumpWriter;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
@@ -38,7 +37,9 @@ import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -69,6 +70,7 @@ public abstract class CommonPathFinder implements PathFinder {
   protected PathFinderConf configuration;
   protected EventDispatcher<?> eventDispatcher;
   protected MessageBundle translations;
+  protected DumpWriter dumpWriter;
 
 
   public static NamespacedKey globalGroupKey() {
@@ -103,6 +105,8 @@ public abstract class CommonPathFinder implements PathFinder {
     instance = this;
     state = ApplicationState.LOADING;
     PathFinderProvider.setPathFinder(this);
+    dumpWriter = new CommonDumpWriter();
+    dumpWriter.addProperty("pathfinder-version", this::getVersion);
 
     nodeTypeRegistry = new NodeTypeRegistryImpl();
     visualizerTypeRegistry = new VisualizerTypeRegistryImpl();
@@ -110,6 +114,13 @@ public abstract class CommonPathFinder implements PathFinder {
 
     configFileLoader = new ConfigFileLoader(getDataFolder(), this::saveResource);
     loadConfig();
+    dumpWriter.addProperty("config", () -> {
+      try {
+        return Files.readString(new File(getDataFolder(), "config.yml").toPath());
+      } catch (Throwable t) {
+        return t.toString();
+      }
+    });
 
     storage = new StorageImpl(nodeTypeRegistry);
     if (!configuration.getDatabase().isCaching()) {
@@ -120,6 +131,8 @@ public abstract class CommonPathFinder implements PathFinder {
     extensionRegistry = new ExtensionsRegistry();
     extensionRegistry.findServiceExtensions(this.getClassLoader());
     eventDispatcher = provideEventDispatcher();
+    dumpWriter.addProperty("extensions", () -> extensionRegistry.getExtensions().stream()
+        .map(Keyed::getKey).map(NamespacedKey::toString).toList());
 
     extensionRegistry.loadExtensions(this);
   }
@@ -233,6 +246,16 @@ public abstract class CommonPathFinder implements PathFinder {
         state = ApplicationState.RUNNING;
       }).start();
     }
+
+    dumpWriter.addProperty("node-types", () -> nodeTypeRegistry.getTypes().stream()
+            .map(Keyed::getKey).map(Objects::toString).toList());
+    dumpWriter.addProperty("modifier-types", () -> modifierRegistry.getTypes().stream()
+            .map(Keyed::getKey).map(Objects::toString).toList());
+    dumpWriter.addProperty("visualizer-types", () -> visualizerTypeRegistry.getTypes().keySet().stream()
+            .map(Objects::toString).toList());
+    dumpWriter.addProperty("node-count", () -> storage.loadNodes().join().size());
+    dumpWriter.addProperty("group-count", () -> storage.loadAllGroups().join().size());
+    dumpWriter.addProperty("visualizer-count", () -> storage.loadVisualizers().join().size());
   }
 
   abstract void setupVisualizerTypes();

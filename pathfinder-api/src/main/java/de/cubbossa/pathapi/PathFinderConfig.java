@@ -31,7 +31,7 @@ public interface PathFinderConfig {
      * <p>
      * See also: https://docs.leonardbausenwein.de/configuration/config.html#client-language
      */
-    public boolean isClientLanguage();
+    boolean isClientLanguage();
 
     /**
      * The fallback language serves as default language for all users. If the client language

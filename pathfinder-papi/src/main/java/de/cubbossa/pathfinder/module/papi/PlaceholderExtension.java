@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.module.papi;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import org.bukkit.Bukkit;

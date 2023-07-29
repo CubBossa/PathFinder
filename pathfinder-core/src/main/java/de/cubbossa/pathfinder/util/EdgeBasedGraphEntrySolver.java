@@ -4,23 +4,22 @@ import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathfinder.graph.Graph;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> {
 
   public Graph<GroupedNode> solve(GroupedNode start, Graph<GroupedNode> scope) {
 
-    TreeSet<WeightedEdge> sortedEdges = new TreeSet<>(Comparator.comparingDouble(WeightedEdge::weight));
+    List<WeightedEdge> sortedEdges = new LinkedList<>();
     scope.getEdgeMap().forEach((node, edgeMap) -> {
-      edgeMap.forEach((end, weight) -> {
+      edgeMap.forEach((end, unused) -> {
         double d = VectorUtils.distancePointToSegment(start.node().getLocation().asVector(), node.node().getLocation().asVector(), end.node().getLocation().asVector());
         sortedEdges.add(new WeightedEdge(node, end, d));
       });
     });
+    Collections.sort(sortedEdges);
     if (sortedEdges.size() == 0) {
       return scope;
     }
@@ -33,7 +32,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
         result.add(first);
         continue;
       }
-      if (Math.abs(edge.weight - first.weight) > .0001) {
+      if (Math.abs(edge.weight - first.weight) > .01) {
         break;
       }
       result.add(edge);
@@ -49,6 +48,16 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
     return scope;
   }
 
-  private record WeightedEdge(GroupedNode start, GroupedNode end, double weight) {
+  private record WeightedEdge(GroupedNode start, GroupedNode end, double weight) implements Comparable<WeightedEdge> {
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof WeightedEdge w && compareTo(w) == 0;
+    }
+
+    @Override
+    public int compareTo(@NotNull EdgeBasedGraphEntrySolver.WeightedEdge o) {
+      return Double.compare(this.weight, o.weight);
+    }
   }
 }
