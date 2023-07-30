@@ -31,7 +31,9 @@ public class ModifiedHashMap<K, V> extends HashMap<K, V> {
   @Override
   public V remove(Object key) {
     V val = super.remove(key);
-    changes.getRemoveList().add(val);
+    if (val != null) {
+      changes.getRemoveList().add(val);
+    }
     return val;
   }
 
