@@ -1,7 +1,9 @@
 package de.cubbossa.pathfinder.util;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +23,18 @@ class ModifiedHashSetTest {
 
     assertEquals(0, set.getChanges().getAddList().size());
     assertEquals(0, set.getChanges().getRemoveList().size());
+  }
+
+  @Test
+  void addCopy() {
+    ModifiedHashSet<String> set = new ModifiedHashSet<>();
+    set.add("a");
+    set.getChanges().flush();
+    set.add("b");
+    Set<String> other = new HashSet<>(set);
+    other.addAll(set.getChanges().getRemoveList());
+
+    assertEquals(1, set.getChanges().getAddList().size());
   }
 
   @Test

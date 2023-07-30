@@ -460,6 +460,7 @@ public abstract class SqlStorage extends CommonStorage {
           SimpleNodeGroup group = new SimpleNodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
           group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT).floatValue());
           loadModifiers(group.getKey()).forEach(group::addModifier);
+          group.getModifierChanges().flush();
           group.addAll(loadGroupNodes(group));
           group.getContentChanges().flush();
           return group;

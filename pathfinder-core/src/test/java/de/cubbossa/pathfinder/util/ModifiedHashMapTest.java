@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,6 +22,23 @@ class ModifiedHashMapTest {
 
     assertEquals(0, map.getChanges().getAddList().size());
     assertEquals(0, map.getChanges().getRemoveList().size());
+  }
+
+  @Test
+  void addCopy() {
+    Object a = new Object();
+    Object b = new Object();
+
+    ModifiedHashMap<Integer, Object> map = new ModifiedHashMap<>();
+    map.put(1, a);
+    map.getChanges().flush();
+    map.put(2, b);
+    Set<Object> other = new HashSet<>();
+    other.addAll(new HashSet<>(map.values()));
+    other.addAll(map.getChanges().getAddList());
+    other.add("x");
+
+    assertEquals(1, map.getChanges().getAddList().size());
   }
 
   @Test

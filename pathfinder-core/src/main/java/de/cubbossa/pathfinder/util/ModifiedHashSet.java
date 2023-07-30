@@ -22,7 +22,10 @@ public class ModifiedHashSet<E> extends HashSet<E> {
 
   public ModifiedHashSet(Changes<E> changes, Collection<E> iterable) {
     this(changes);
+    Collection<E> temp = new HashSet<>(changes.getAddList());
     addAll(iterable);
+    changes.getAddList().clear();
+    changes.getAddList().addAll(temp);
   }
 
   public ModifiedHashSet(Collection<E> iterable) {

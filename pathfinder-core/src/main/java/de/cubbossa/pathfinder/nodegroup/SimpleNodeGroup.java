@@ -75,7 +75,7 @@ public class SimpleNodeGroup extends ModifiedHashSet<UUID> implements NodeGroup 
   }
 
   public Collection<Modifier> getModifiers() {
-    return new HashSet<>(modifiers.values());
+    return modifiers.values();
   }
 
   @Override
