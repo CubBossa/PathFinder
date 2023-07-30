@@ -6,17 +6,17 @@ import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.group.PermissionModifier;
+import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
-import de.cubbossa.pathfinder.storage.StorageUtil;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class AbstractDiscoverHandler<PlayerT> {
@@ -53,34 +53,40 @@ public class AbstractDiscoverHandler<PlayerT> {
     }
   }
 
-  public CompletableFuture<Boolean> fulfillsDiscoveringRequirements(NodeGroup group, PathPlayer<?> player) {
-    if (!group.hasModifier(DiscoverableModifier.class)) {
-      return CompletableFuture.completedFuture(false);
-    }
-    Optional<PermissionModifier> perm = group.getModifier(PermissionModifier.KEY);
-    if (perm.isPresent() && !player.hasPermission(perm.get().permission())) {
-      return CompletableFuture.completedFuture(false);
-    }
-    return group.resolve().thenApply(nodes -> {
-      for (Node node : nodes) {
-        if (node == null) {
-          plugin.getLogger().log(Level.SEVERE, "Node is null"); // TODO
-          continue;
-        }
-        if (!Objects.equals(node.getLocation().getWorld(), player.getLocation().getWorld())) {
-          continue;
-        }
-        float dist = getDiscoveryDistance(player.getUniqueId(), node);
-        if (node.getLocation().getX() - player.getLocation().getX() > dist
-            || node.getLocation().getY() - player.getLocation().getY() > dist) {
-          continue;
-        }
-        if (node.getLocation().distanceSquared(player.getLocation()) > Math.pow(dist, 2)) {
-          continue;
-        }
-        return true;
+  public CompletableFuture<Collection<NodeGroup>> getFulfillingGroups(PathPlayer<?> player) {
+    Storage storage = PathFinderProvider.get().getStorage();
+    return storage.loadGroups(DiscoverableModifier.KEY).thenCompose(groups -> {
+      Collection<UUID> allNodes = groups.stream().flatMap(Collection::stream).toList();
+      if (allNodes.isEmpty()) {
+        return CompletableFuture.completedFuture(new HashSet<>());
       }
-      return false;
+      return storage.loadNodes(allNodes).thenCompose(nodes -> {
+        return storage.loadGroups(allNodes).thenApply(nodeGroupMap -> {
+          Map<UUID, Node> nodeMap = new HashMap<>();
+          nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
+
+          return groups.stream()
+              .filter(group -> {
+                Optional<PermissionModifier> perm = group.getModifier(PermissionModifier.KEY);
+                return perm.isEmpty() || player.hasPermission(perm.get().permission());
+              })
+              .filter(group -> {
+                return group.stream().anyMatch(uuid -> {
+                  Location location = nodeMap.get(uuid).getLocation();
+                  if (!Objects.equals(player.getLocation().getWorld(), location.getWorld())) {
+                    return false;
+                  }
+                  float dist = getDiscoveryDistance(nodeGroupMap.get(uuid));
+                  if (location.getX() - player.getLocation().getX() > dist
+                      || location.getY() - player.getLocation().getY() > dist) {
+                    return false;
+                  }
+                  return !(location.distanceSquared(player.getLocation()) > Math.pow(dist, 2));
+                });
+              })
+              .collect(Collectors.toSet());
+        });
+      });
     });
   }
 
@@ -125,8 +131,8 @@ public class AbstractDiscoverHandler<PlayerT> {
         .thenApply(Optional::isPresent);
   }
 
-  public float getDiscoveryDistance(UUID playerId, Node node) {
-    FindDistanceModifier mod = StorageUtil.getGroups(node).stream()
+  public float getDiscoveryDistance(Collection<NodeGroup> groups) {
+    FindDistanceModifier mod = groups.stream()
         .filter(group -> group.hasModifier(FindDistanceModifier.KEY))
         .sorted()
         .findFirst()

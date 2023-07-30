@@ -298,7 +298,12 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Map<UUID, Collection<Edge>>> loadEdgesTo(Collection<UUID> nodes) {
-    return asyncFuture(() -> implementation.loadEdgesTo(nodes));
+    return asyncFuture(() -> {
+      if (nodes.isEmpty()) {
+        return new HashMap<>();
+      }
+      return implementation.loadEdgesTo(nodes);
+    });
   }
 
   // Groups
@@ -334,8 +339,10 @@ public class StorageImpl implements Storage {
           result.put(uuid, groups);
         }, () -> toLoad.add(uuid));
       }
-      result.putAll(implementation.loadGroups(toLoad));
-      toLoad.forEach(uuid -> result.computeIfAbsent(uuid, u -> new HashSet<>()));
+      if (toLoad.size() > 0) {
+        result.putAll(implementation.loadGroups(toLoad));
+        toLoad.forEach(uuid -> result.computeIfAbsent(uuid, u -> new HashSet<>()));
+      }
       result.forEach((uuid, groups) -> {
         cache.getGroupCache().write(uuid, groups);
       });

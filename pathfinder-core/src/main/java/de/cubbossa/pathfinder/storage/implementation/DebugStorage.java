@@ -123,7 +123,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
 
   @Override
   public Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids) {
-    logger.log(Level.INFO, "> loadGroups(Collection<UUID> ids)");
+    logger.log(Level.INFO, "> loadGroups(Collection<UUID> ids " + ids.size() + ")");
     var x = implementation.loadGroups(ids);
     logger.log(Level.INFO, "< loadGroups(Collection<UUID> ids)");
     return x;
