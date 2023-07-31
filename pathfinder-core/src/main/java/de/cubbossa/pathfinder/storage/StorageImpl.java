@@ -625,7 +625,7 @@ public class StorageImpl implements Storage {
               continue;
             }
             group.<M>getModifier(modifier).ifPresent(m -> {
-              results.computeIfAbsent(node, n -> new HashSet<>()).add(m);
+              results.computeIfAbsent(node, n -> new ArrayList<>()).add(m);
             });
           }
         }

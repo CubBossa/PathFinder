@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import com.google.common.collect.Maps;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -14,10 +15,7 @@ import de.cubbossa.pathfinder.*;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -116,7 +114,7 @@ public abstract class StorageTest extends PathFinderTest {
     assertTrue(nodes.containsKey(a));
     assertFalse(nodes.containsKey(b));
     assertNotNull(nodes.get(a));
-    assertEquals(Set.of(m), nodes.get(a));
+    assertEquals(List.of(m), nodes.get(a));
   }
 
   @Test
@@ -164,6 +162,35 @@ public abstract class StorageTest extends PathFinderTest {
     assertGroupExists(key);
     deleteGroup(key);
     assertGroupNotExists(key);
+  }
+
+  @Test
+  void loadGroupsByMod() {
+    NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
+    NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");
+    Waypoint waypoint = makeWaypoint();
+
+    NodeGroup x = makeGroup(xKey);
+    NodeGroup y = makeGroup(yKey);
+    Collection<NodeGroup> groups = Set.of(x, y);
+
+    int i = 0;
+    for (NodeGroup g : groups) {
+      g.addModifier(new TestModifier(i++ + ""));
+      g.add(waypoint.getNodeId());
+      storage.saveGroup(g).join();
+    }
+
+    Map<Node, Collection<String>> expected = Map.of(waypoint, groups.stream()
+        .map(group -> group.<TestModifier>getModifier(TestModifierType.KEY))
+        .filter(Optional::isPresent).map(Optional::get)
+        .map(TestModifier::data)
+        .collect(Collectors.toList()));
+    Map<Node, Collection<String>> result = storage.<TestModifier>loadNodes(TestModifierType.KEY).join().entrySet().stream()
+        .map(e -> Map.entry(e.getKey(), e.getValue().stream().map(TestModifier::data).collect(Collectors.toList())))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    Assertions.assertTrue(Maps.difference(expected, result).areEqual());
   }
 
   @Test
