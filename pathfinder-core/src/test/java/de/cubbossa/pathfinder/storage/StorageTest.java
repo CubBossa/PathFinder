@@ -18,6 +18,7 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,17 +38,19 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @BeforeEach
+  @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void beforeEach() {
     setupStorage(useCaches, () -> storage(nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry));
   }
 
   @AfterEach
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void afterEach() {
     shutdownStorage();
   }
 
   @Test
-  @Order(1)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void createNode() {
     assertNodeCount(0);
     Waypoint waypoint = makeWaypoint();
@@ -56,7 +59,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(2)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void createNodeWithDefaultGroup() {
     Waypoint waypoint = makeWaypoint();
     assertEquals(1, getGroups(waypoint).size());
@@ -66,7 +69,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(2)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void getNodes() {
     assertNodeCount(0);
     makeWaypoint();
@@ -74,7 +77,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(3)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   <N extends Node> void getNodeType() {
     Waypoint waypoint = makeWaypoint();
     Optional<NodeType<N>> type = assertResult(() -> storage.loadNodeType(waypoint.getNodeId()));
@@ -83,7 +86,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(4)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void updateNode() {
     Waypoint waypoint = makeWaypoint();
     assertFuture(() -> storage.modifyNode(waypoint.getNodeId(), node -> {
@@ -94,7 +97,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(6)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void testLoadNodesByModifier() {
     NamespacedKey gk = CommonPathFinder.pathfinder("testxy");
     Waypoint a = makeWaypoint();
@@ -118,7 +121,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(6)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void testConnectNodes() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
@@ -129,7 +132,7 @@ public abstract class StorageTest extends PathFinderTest {
 
   @SneakyThrows
   @Test
-  @Order(7)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void disconnectNodes() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
@@ -145,7 +148,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(11)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void createGroup() {
     NamespacedKey key = NamespacedKey.fromString("pathfinder:abc");
     assertGroupNotExists(key);
@@ -154,17 +157,20 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(12)
+  @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void deleteGroup() {
     NamespacedKey key = NamespacedKey.fromString("pathfinder:abc");
     assertGroupNotExists(key);
     makeGroup(key);
     assertGroupExists(key);
+    System.out.println("yep");
     deleteGroup(key);
+    System.out.println("yep");
     assertGroupNotExists(key);
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void loadGroupsByMod() {
     NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
     NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");
@@ -194,7 +200,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(13)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void getNodeGroupKeySet() {
     NamespacedKey a = NamespacedKey.fromString("pathfinder:a");
     NamespacedKey b = NamespacedKey.fromString("pathfinder:b");
@@ -210,7 +216,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(14)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void deleteNodes() {
     assertNodeCount(0);
     Waypoint a = makeWaypoint();
@@ -223,7 +229,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(15)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void assignNodesToGroup() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
@@ -240,7 +246,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(16)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void unassignNodesFromGroup() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
@@ -264,7 +270,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Order(16)
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void deleteNodesWithGroups() {
     NamespacedKey gk = NamespacedKey.fromString("pathfinder:g");
     Waypoint a = makeWaypoint();
@@ -280,6 +286,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void deleteNodeWithEdges() {
     Waypoint a = makeWaypoint();
     Waypoint b = makeWaypoint();
@@ -296,6 +303,7 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void setModifier() {
     NamespacedKey gk = NamespacedKey.fromString("test:abc");
     NodeGroup g = makeGroup(gk);
@@ -316,17 +324,20 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void createVisualizer() {
     NamespacedKey key = CommonPathFinder.pathfinder("abc");
     TestVisualizer visualizer = makeVisualizer(key);
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void deleteVisualizer() {
 
   }
 
   @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void loadVisualizer() {
 
   }

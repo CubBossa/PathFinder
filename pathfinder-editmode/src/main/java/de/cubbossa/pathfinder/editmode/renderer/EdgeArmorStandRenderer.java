@@ -66,9 +66,10 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   @Override
   public void showElement(Edge element, Player player) {
     super.showElement(element, player);
-    element.resolveStart().thenApply(start -> {
-      Node end = element.resolveEnd().join();
-      return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
+    element.resolveStart().thenCompose(start -> {
+      return element.resolveEnd().thenApply(end -> {
+        return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
+      });
     }).thenAccept(vector -> {
       setHeadRotation(player, nodeEntityMap.get(element), vector);
     });

@@ -13,7 +13,6 @@ import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
@@ -31,8 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
-
-  private static final GsonComponentSerializer serializer = GsonComponentSerializer.gson();
 
   @Getter
   @Setter

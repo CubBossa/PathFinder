@@ -16,7 +16,6 @@ import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +30,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Getter
 @Setter
@@ -48,6 +49,8 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   private final Collection<GraphRenderer<Player>> renderers;
   private final Collection<de.cubbossa.pathapi.event.Listener<?>> listeners;
 
+  private final ExecutorService renderExecutor;
+
   public DefaultNodeGroupEditor(NodeGroup group) {
     this.pathFinder = PathFinderProvider.get();
     this.groupKey = group.getKey();
@@ -55,6 +58,8 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     this.renderers = new ArrayList<>();
     this.editingPlayers = new HashMap<>();
     this.preservedGameModes = new HashMap<>();
+
+    this.renderExecutor = Executors.newSingleThreadExecutor();
 
     EventDispatcher<?> eventDispatcher = PathFinderProvider.get().getEventDispatcher();
     listeners = new HashSet<>();
@@ -110,12 +115,6 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     )));
   }
 
-  private boolean renders(Node node) {
-    return StorageUtil.getGroups(node).stream()
-        .map(NodeGroup::getKey)
-        .anyMatch(groupKey::equals);
-  }
-
   @SneakyThrows
   public void dispose() {
     PlayerInteractEvent.getHandlerList().unregister(this);
@@ -124,6 +123,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     for (GraphRenderer<Player> renderer : renderers) {
       renderer.close();
     }
+    renderExecutor.shutdown();
   }
 
   public boolean isEdited() {
