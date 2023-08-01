@@ -315,13 +315,16 @@ public class Messages {
       .withDefault("<msg:prefix>Navigation cancelled.")
       .build();
   public static final Message CMD_FINDP_OFFLINE = new MessageBuilder("commands.find_player.target_offline")
-      .withDefault("<negative>Player not found.</negative>")
+      .withDefault("<c-negative>Player not found.</c-negative>")
+      .build();
+  public static final Message CMD_FINDP_NO_SELF = new MessageBuilder("commands.find_player.no_requests_to_self")
+      .withDefault("<c-negative>You cannot make requests to yourself.</c-negative>")
       .build();
   public static final Message CMD_FINDP_NO_REQ = new MessageBuilder("commands.find_player.no_requests")
-      .withDefault("<negative>No requests found.</negative>")
+      .withDefault("<c-negative>No requests found.</c-negative>")
       .build();
   public static final Message CMD_FINDP_ALREADY_REQ = new MessageBuilder("commands.find_player.already_requested")
-      .withDefault("<negative>Navigation already requested.</negative>")
+      .withDefault("<c-negative>Navigation already requested.</c-negative>")
       .build();
   public static final Message CMD_FINDP_REQUEST = new MessageBuilder("commands.find_player.request")
       .withDefault("<msg:prefix>Made a request to navigate to <t-hl><target></t-hl>.")

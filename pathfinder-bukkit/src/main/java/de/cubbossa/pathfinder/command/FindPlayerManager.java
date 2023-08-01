@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FindPlayerManager {
 
@@ -86,6 +87,10 @@ public class FindPlayerManager {
   }
 
   private void makeRequest(Player requester, UUID target) {
+    if (requester.getUniqueId().equals(target)) {
+      BukkitUtils.wrap(requester).sendMessage(Messages.CMD_FINDP_NO_SELF);
+      return;
+    }
     Player targetPlayer = Bukkit.getPlayer(target);
     if (targetPlayer == null || !targetPlayer.isOnline()) {
       BukkitUtils.wrap(requester).sendMessage(Messages.CMD_FINDP_OFFLINE);
@@ -96,10 +101,10 @@ public class FindPlayerManager {
       return;
     }
 
-    requests.computeIfAbsent(requester.getUniqueId(), uuid -> new HashMap<>()).put(target,
+    requests.computeIfAbsent(target, uuid -> new HashMap<>()).put(requester.getUniqueId(),
         Bukkit.getScheduler().runTaskLater(PathFinderPlugin.getInstance(), () -> {
           requests.computeIfPresent(requester.getUniqueId(), (uuid, uuidBukkitTaskMap) -> {
-            uuidBukkitTaskMap.remove(target);
+            uuidBukkitTaskMap.remove(requester.getUniqueId());
             BukkitUtils.wrap(requester).sendMessage(Messages.CMD_FINDP_EXPIRED);
             return uuidBukkitTaskMap;
           });
@@ -149,14 +154,22 @@ public class FindPlayerManager {
 
   private void declineRequest(Player target, UUID requester) {
     Player requesterPlayer = Bukkit.getPlayer(requester);
+    AtomicBoolean wasRemoved = new AtomicBoolean(false);
     requests.computeIfPresent(target.getUniqueId(), (uuid, uuids) -> {
-      uuids.remove(requester).cancel();
+      BukkitTask t = uuids.remove(requester);
+      if (t != null) {
+        t.cancel();
+        wasRemoved.set(true);
+      }
       return uuids;
     });
     BukkitUtils.wrap(target).sendMessage(Messages.CMD_FINDP_DECLINE.formatted(
         Placeholder.parsed("target", target.getName()),
         Placeholder.parsed("requester", requesterPlayer.getName())
     ));
+    if (!wasRemoved.get()) {
+      return;
+    }
     BukkitUtils.wrap(requesterPlayer).sendMessage(Messages.CMD_FINDP_DECLINED.formatted(
         Placeholder.parsed("target", target.getName()),
         Placeholder.parsed("requester", requesterPlayer.getName())
