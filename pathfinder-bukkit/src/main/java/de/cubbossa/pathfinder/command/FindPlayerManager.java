@@ -163,13 +163,14 @@ public class FindPlayerManager {
       }
       return uuids;
     });
+    if (!wasRemoved.get()) {
+      BukkitUtils.wrap(target).sendMessage(Messages.CMD_FINDP_NO_REQ);
+      return;
+    }
     BukkitUtils.wrap(target).sendMessage(Messages.CMD_FINDP_DECLINE.formatted(
         Placeholder.parsed("target", target.getName()),
         Placeholder.parsed("requester", requesterPlayer.getName())
     ));
-    if (!wasRemoved.get()) {
-      return;
-    }
     BukkitUtils.wrap(requesterPlayer).sendMessage(Messages.CMD_FINDP_DECLINED.formatted(
         Placeholder.parsed("target", target.getName()),
         Placeholder.parsed("requester", requesterPlayer.getName())
