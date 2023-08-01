@@ -314,6 +314,42 @@ public class Messages {
   public static final Message CMD_CANCEL = new MessageBuilder("commands.cancel_path")
       .withDefault("<msg:prefix>Navigation cancelled.")
       .build();
+  public static final Message CMD_FINDP_OFFLINE = new MessageBuilder("commands.find_player.target_offline")
+      .withDefault("<negative>Player not found.</negative>")
+      .build();
+  public static final Message CMD_FINDP_NO_REQ = new MessageBuilder("commands.find_player.no_requests")
+      .withDefault("<negative>No requests found.</negative>")
+      .build();
+  public static final Message CMD_FINDP_ALREADY_REQ = new MessageBuilder("commands.find_player.already_requested")
+      .withDefault("<negative>Navigation already requested.</negative>")
+      .build();
+  public static final Message CMD_FINDP_REQUEST = new MessageBuilder("commands.find_player.request")
+      .withDefault("<msg:prefix>Made a request to navigate to <t-hl><target></t-hl>.")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_REQUESTED = new MessageBuilder("commands.find_player.requested")
+      .withDefault("<msg:prefix><t-hl><requester></t-hl> asked to navigate to you. [ <green><click:run_command:/fpaccept <requester>>accept</click></green> ]  [ <red><click:run_command:/fpdecline <requester>>decline</click></red> ]")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_ACCEPT = new MessageBuilder("commands.find_player.accept")
+      .withDefault("<msg:prefix>Request accepted.")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_ACCEPTED = new MessageBuilder("commands.find_player.accepted")
+      .withDefault("<msg:prefix><t-hl><target></t-hl> accepted your navigate request.")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_DECLINE = new MessageBuilder("commands.find_player.decline")
+      .withDefault("<msg:prefix>Request declined.")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_DECLINED = new MessageBuilder("commands.find_player.declined")
+      .withDefault("<msg:prefix><t-hl><target></t-hl> declined your navigate request.")
+      .withPlaceholders("requester", "target")
+      .build();
+  public static final Message CMD_FINDP_EXPIRED = new MessageBuilder("commands.find_player.request_expired")
+      .withDefault("<msg:prefix>Your request expired.")
+      .build();
   public static final Message DISCOVERY_DISCOVER = new MessageBuilder("discovery.discover")
       .withDefault("You discovered: <discoverable>")
       .withTranslation(Locale.GERMAN, "Entdeckt: <discoverable>")
