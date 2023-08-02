@@ -437,10 +437,14 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> saveGroup(NodeGroup group) {
     return asyncFuture(() -> {
-      HashSet<UUID> before = new HashSet<>(group);
-      before.addAll(group.getContentChanges().getRemoveList());
-      HashSet<Modifier> mods = new HashSet<>(group.getModifiers());
-      mods.addAll(group.getModifierChanges().getRemoveList());
+      HashSet<UUID> before = new HashSet<>();
+      HashSet<Modifier> mods = new HashSet<>();
+      synchronized (group) {
+        before.addAll(group);
+        before.addAll(group.getContentChanges().getRemoveList());
+        mods.addAll(group.getModifiers());
+        mods.addAll(group.getModifierChanges().getRemoveList());
+      }
 
       implementation.saveGroup(group);
       cache.getNodeCache().write(group);

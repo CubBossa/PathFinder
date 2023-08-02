@@ -66,21 +66,22 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
 
   @Override
   public CompletableFuture<Void> clear(PathPlayer<Player> player) {
-    hideElements(entityNodeMap.values(), player.unwrap());
-    players.remove(player);
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.runAsync(() -> {
+      hideElements(entityNodeMap.values(), player.unwrap());
+      players.remove(player);
+    });
   }
 
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
-    showElements(nodes, player.unwrap());
-    players.add(player);
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.runAsync(() -> {
+      showElements(nodes, player.unwrap());
+      players.add(player);
+    });
   }
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
-    hideElements(nodes, player.unwrap());
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.runAsync(() -> hideElements(nodes, player.unwrap()));
   }
 }

@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.editmode.menu;
 
-import com.google.common.util.concurrent.Monitor;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
@@ -41,6 +40,7 @@ import org.bukkit.inventory.meta.FireworkEffectMeta;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EditModeMenu {
 
@@ -51,9 +51,7 @@ public class EditModeMenu {
   private Boolean undirectedEdgesMode;
   private UUID chainEdgeStart = null;
 
-  private final Monitor nodeToolLock = new Monitor();
-  private final Monitor groupToolLock = new Monitor();
-  private final Monitor teleportToolLock = new Monitor();
+  private final AtomicBoolean lock = new AtomicBoolean();
 
   public EditModeMenu(Storage storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
     this.storage = storage;
@@ -107,13 +105,13 @@ public class EditModeMenu {
 
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          if (!nodeToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
           storage.deleteNodes(Collections.singleton(context.getTarget().getNodeId()))
               .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1))
-              .whenComplete((unused, throwable) -> nodeToolLock.leave());
+              .whenComplete((unused, throwable) -> lock.set(false));
         })
 
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
@@ -140,7 +138,7 @@ public class EditModeMenu {
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
           }
-          if (!nodeToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
@@ -161,16 +159,22 @@ public class EditModeMenu {
             if (throwable != null) {
               throwable.printStackTrace();
             }
-            nodeToolLock.leave();
+            lock.set(false);
           });
         })
 
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
 
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
+
           Location view = context.getPlayer().getEyeLocation();
           Location block = context.getTarget().getLocation();
           BukkitVectorUtils.Orientation orientation = BukkitVectorUtils.getIntersection(view.toVector(), view.getDirection(), block.toVector());
           if (orientation == null) {
+            lock.set(false);
             return;
           }
 
@@ -178,11 +182,13 @@ public class EditModeMenu {
               .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
           if (types.size() > 1) {
             openNodeTypeMenu(context.getPlayer(), pos);
+            lock.set(false);
             return;
           }
 
           NodeType<?> type = types.stream().findAny().orElse(null);
           if (type == null) {
+            lock.set(false);
             throw new IllegalStateException("Could not find any node type to generate node.");
           }
           storage
@@ -204,7 +210,7 @@ public class EditModeMenu {
                 if (throwable != null) {
                   throwable.printStackTrace();
                 }
-                nodeToolLock.leave();
+                lock.set(false);
               });
         })
 
@@ -222,7 +228,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
-          if (!teleportToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
@@ -256,7 +262,7 @@ public class EditModeMenu {
                 if (throwable != null) {
                   throwable.printStackTrace();
                 }
-                teleportToolLock.leave();
+                lock.set(false);
               });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
@@ -269,7 +275,7 @@ public class EditModeMenu {
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          if (!groupToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
@@ -278,7 +284,7 @@ public class EditModeMenu {
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
           } finally {
-            groupToolLock.leave();
+            lock.set(false);
           }
         }));
 
@@ -286,7 +292,7 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
-          if (!groupToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
@@ -299,7 +305,7 @@ public class EditModeMenu {
             if (throwable != null) {
               throwable.printStackTrace();
             }
-            groupToolLock.leave();
+            lock.set(false);
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
@@ -358,7 +364,7 @@ public class EditModeMenu {
             new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
                 Messages.E_SUB_GROUP_RESET_L).createItem(player));
         presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
-          if (!groupToolLock.tryEnter()) {
+          if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(c.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
           }
@@ -369,7 +375,7 @@ public class EditModeMenu {
             if (throwable != null) {
               throwable.printStackTrace();
             }
-            groupToolLock.leave();
+            lock.set(false);
           });
         });
 
@@ -383,7 +389,7 @@ public class EditModeMenu {
 
   private ContextConsumer<ClickContext> groupEntryClickHandler(ListMenu menu, NodeGroup group, Node node) {
     return c -> {
-      if (!groupToolLock.tryEnter()) {
+      if (!lock.compareAndSet(false, true)) {
         BukkitUtils.wrap(c.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
         return;
       }
@@ -395,7 +401,7 @@ public class EditModeMenu {
           if (throwable != null) {
             throwable.printStackTrace();
           }
-          groupToolLock.leave();
+          lock.set(false);
         });
       } else {
         StorageUtil.addGroups(group, node.getNodeId()).thenRun(() -> {
@@ -405,7 +411,7 @@ public class EditModeMenu {
           if (throwable != null) {
             throwable.printStackTrace();
           }
-          groupToolLock.leave();
+          lock.set(false);
         });
       }
     };
