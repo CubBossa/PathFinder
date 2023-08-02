@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathfinder.command.FindPlayerManager;
 import de.cubbossa.pathfinder.command.PathFinderCommand;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
@@ -38,6 +39,7 @@ public class CommandRegistry {
     CommandAPI.onEnable();
     pathFinderCommand = new PathFinderCommand(pathFinder);
     pathFinderCommand.register();
+    new FindPlayerManager(this);
     externalCommands.forEach(CommandTree::register);
   }
 
