@@ -27,6 +27,7 @@ import org.bukkit.util.Vector;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
@@ -39,7 +40,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 
     public Context() {
       rendered = new HashSet<>();
-      displayed = new HashMap<>();
+      displayed = new ConcurrentHashMap<>();
     }
 
     private record NodeContext(Node node, TextDisplay display) {
@@ -118,11 +119,11 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     }
     hasHeldGroupToolsBefore = true;
     for (Node node : context(player).rendered) {
-      evaulate(node, player);
+      evaluate(node, player);
     }
   }
 
-  private void evaulate(Node node, Player player) {
+  private void evaluate(Node node, Player player) {
     Location nodeLoc = BukkitVectorUtils.toBukkit(node.getLocation());
     if (!Objects.equals(nodeLoc.getWorld(), player.getLocation().getWorld())) {
       hideText(node, player);
@@ -176,16 +177,19 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
       return;
     }
     Location location = BukkitVectorUtils.toBukkit(node.getLocation()).add(0, 0.3, 0);
-    TextDisplay display = entityPool.get(location);
-    display.setVisibleByDefault(false);
-    player.showEntity(plugin, display);
+    CompletableFuture.runAsync(() -> {
+      TextDisplay display = entityPool.get(location);
+      display.setVisibleByDefault(false);
+      player.showEntity(plugin, display);
 
-    Context.NodeContext nCtx = new Context.NodeContext(node, display);
-    ctx.displayed.put(node.getNodeId(), nCtx);
+      Context.NodeContext nCtx = new Context.NodeContext(node, display);
+      ctx.displayed.put(node.getNodeId(), nCtx);
 
-    setText(nCtx);
+      setText(nCtx);
 
-    display.setBillboard(Display.Billboard.CENTER);
+      display.setBillboard(Display.Billboard.CENTER);
+    }, BukkitPathFinder.mainThreadExecutor());
+
 //    display.setInterpolationDuration(animationTickDuration);
 //    display.setInterpolationDelay(-1);
 //    display.setTransformation(new Transformation(
@@ -208,8 +212,10 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 //      }
 //    }, animationTickDuration);
 
-    player.hideEntity(plugin, nCtx.display());
-    entityPool.destroy(nCtx.display());
+    CompletableFuture.runAsync(() -> {
+      player.hideEntity(plugin, nCtx.display());
+      entityPool.destroy(nCtx.display());
+    }, BukkitPathFinder.mainThreadExecutor());
   }
 
   private boolean holdsGroupTools(Player player) {
@@ -226,7 +232,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
         hideText(c.node(), player.unwrap());
       }
       ctx.displayed.clear();
-    }, BukkitPathFinder.mainThreadExecutor());
+    });
   }
 
   @Override
@@ -236,9 +242,9 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
       ctx.rendered.addAll(nodes);
       Player p = player.unwrap();
       for (Node node : nodes) {
-        evaulate(node, p);
+        evaluate(node, p);
       }
-    }, BukkitPathFinder.mainThreadExecutor());
+    });
   }
 
   @Override
@@ -250,6 +256,6 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
       for (Node node : nodes) {
         hideText(node, player.unwrap());
       }
-    }, BukkitPathFinder.mainThreadExecutor());
+    });
   }
 }
