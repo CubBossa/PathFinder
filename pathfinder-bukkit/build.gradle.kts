@@ -107,8 +107,8 @@ bukkit {
         register("pathfinder.command.find") { default = BukkitPluginDescription.Permission.Default.NOT_OP }
         register("pathfinder.command.findlocation")
         register("pathfinder.command.findplayer.request")
-        register("pathfinder.command.findplayer.accept") { default = BukkitPluginDescription.Permission.Default.NOT_OP }
-        register("pathfinder.command.findplayer.decline") { default = BukkitPluginDescription.Permission.Default.NOT_OP }
+        register("pathfinder.command.findplayer.accept")
+        register("pathfinder.command.findplayer.decline")
         register("pathfinder.command.cancel_path") { default = BukkitPluginDescription.Permission.Default.NOT_OP }
         register("pathfinder.command.roadmap.info")
         register("pathfinder.command.roadmap.create")
