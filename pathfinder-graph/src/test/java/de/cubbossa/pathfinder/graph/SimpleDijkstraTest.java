@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.graph;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.Random;
@@ -74,33 +73,77 @@ class SimpleDijkstraTest {
         dijkstra.solvePath(graph, "a", List.of("c", "i")));
   }
 
-  @Test
+  @RequiredArgsConstructor
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  static class Heavy {
+    @EqualsAndHashCode.Include
+    public final UUID id;
+    public final String load;
+  }
+
+  @RepeatedTest(10)
   void performanceTest() throws NoPathFoundException {
     int nodes = 10_000;
     int edges = 100_000;
+    int heavySize = 0x1000;
 
-    Graph<UUID> g = new Graph<>();
-    UUID[] ids = new UUID[nodes];
-    UUID start = UUID.randomUUID();
-    UUID end = UUID.randomUUID();
+    Graph<Heavy> g = new Graph<>();
+    Heavy[] ids = new Heavy[nodes];
+    Heavy start = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
+    Heavy end = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
     g.addNode(start);
     g.addNode(end);
     ids[0] = start;
     ids[1] = end;
     for (int i = 2; i < nodes; i++) {
-      UUID u = UUID.randomUUID();
+      Heavy u = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
       ids[i] = u;
       g.addNode(u);
     }
     Random random = new Random(1920648153);
     for (int i = 0; i < edges; i++) {
-      UUID a = ids[random.nextInt(nodes)];
-      UUID b = ids[random.nextInt(nodes)];
+      Heavy a = ids[random.nextInt(nodes)];
+      Heavy b = ids[random.nextInt(nodes)];
       if (a.equals(b)) continue;
       g.connect(a, b);
     }
 
-    PathSolver<UUID> d = new SimpleDijkstra<>();
+    long startTime = System.currentTimeMillis();
+    PathSolver<Heavy> d = new SimpleDijkstra<>();
+    var x = d.solvePath(g, start, end);
+    System.out.println(System.currentTimeMillis() - startTime);
+  }
+
+  @RepeatedTest(10)
+  void performanceTestOpt() throws NoPathFoundException {
+    int nodes = 10_000;
+    int edges = 100_000;
+    int heavySize = 0x1000;
+
+    Graph<Heavy> g = new Graph<>();
+    Heavy[] ids = new Heavy[nodes];
+    Heavy start = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
+    Heavy end = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
+    g.addNode(start);
+    g.addNode(end);
+    ids[0] = start;
+    ids[1] = end;
+    for (int i = 2; i < nodes; i++) {
+      Heavy u = new Heavy(UUID.randomUUID(), "a".repeat(heavySize));
+      ids[i] = u;
+      g.addNode(u);
+    }
+    Random random = new Random(1920648153);
+    for (int i = 0; i < edges; i++) {
+      Heavy a = ids[random.nextInt(nodes)];
+      Heavy b = ids[random.nextInt(nodes)];
+      if (a.equals(b)) continue;
+      g.connect(a, b);
+    }
+
+    long startTime = System.currentTimeMillis();
+    PathSolver<Heavy> d = new OptimizedDijkstra<>();
     d.solvePath(g, start, end);
+    System.out.println(System.currentTimeMillis() - startTime);
   }
 }

@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.module;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.group.PermissionModifier;
@@ -17,8 +17,8 @@ import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.graph.Graph;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.graph.OptimizedDijkstra;
 import de.cubbossa.pathfinder.graph.PathSolver;
-import de.cubbossa.pathfinder.graph.SimpleDijkstra;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
@@ -62,6 +62,9 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   private final NamespacedKey key = CommonPathFinder.pathfinder("navigation");
   protected EventDispatcher<PlayerT> eventDispatcher;
 
+  private CompletableFuture<Graph<GroupedNode>> generatingFuture = null;
+  private Graph<GroupedNode> cachedGraph = null;
+
   public AbstractNavigationHandler() {
     this.activePaths = new HashMap<>();
     this.pathFinder = PathFinderProvider.get();
@@ -102,37 +105,6 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     return activePaths.get(player);
   }
 
-  private CompletableFuture<Graph<GroupedNode>> createGraph() {
-    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
-      Map<UUID, Node> nodeMap = new HashMap<>();
-      nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
-      Map<UUID, GroupedNode> map = new HashMap<>();
-
-      pathFinder.getStorage().loadGroups(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenAccept(groups -> {
-        groups.forEach((uuid, gs) -> {
-          map.put(uuid, new SimpleGroupedNode(nodeMap.get(uuid), gs));
-        });
-      }).join();
-
-      Graph<GroupedNode> graph = new Graph<>();
-      map.values().forEach(graph::addNode);
-      for (Node node : nodes) {
-        for (Edge e : node.getEdges()) {
-          GroupedNode endGrouped = map.get(e.getEnd());
-          Node end = endGrouped == null ? null : endGrouped.node();
-          GroupedNode startGrouped = map.get(e.getStart());
-          Node start = startGrouped == null ? null : startGrouped.node();
-          if (end == null || start == null) {
-            pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e + ". Apparently, not all nodes are part of the global group.");
-            continue;
-          }
-          graph.connect(startGrouped, endGrouped, node.getLocation().distance(end.getLocation()) * e.getWeight());
-        }
-      }
-      return graph;
-    });
-  }
-
   private Graph<GroupedNode> insertPlayer(Graph<GroupedNode> graph, PlayerNode player) {
     GroupedNode playerNode = new SimpleGroupedNode(player, new HashSet<>());
     graph.addNode(playerNode);
@@ -151,7 +123,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
 
     PlayerNode playerNode = new PlayerNode(player);
-    return graph(playerNode).thenApply(graph -> {
+    return getGraph(playerNode).thenApply(graph -> {
 
       Location l = location.clone();
       double _maxDist = maxDist < 0 ? Double.MAX_VALUE : maxDist;
@@ -183,13 +155,58 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     });
   }
 
-  private CompletableFuture<Graph<GroupedNode>> graph(PlayerNode playerNode) {
-    return createGraph().thenApply(graph -> insertPlayer(graph, playerNode));
+  private CompletableFuture<Graph<GroupedNode>> getGraph(PlayerNode playerNode) {
+    return fetchGraph().thenApply(graph -> insertPlayer(graph, playerNode));
+  }
+
+  private CompletableFuture<Graph<GroupedNode>> fetchGraph() {
+    if (cachedGraph != null) {
+      return CompletableFuture.completedFuture(cachedGraph);
+    }
+    if (generatingFuture == null) {
+      generatingFuture = createGraph().thenApply(graph -> {
+        cachedGraph = graph;
+        generatingFuture = null;
+        return graph;
+      });
+    }
+    return generatingFuture;
+  }
+
+  private CompletableFuture<Graph<GroupedNode>> createGraph() {
+    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+      Map<UUID, Node> nodeMap = new HashMap<>();
+      nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
+      Map<UUID, GroupedNode> map = new HashMap<>();
+
+      pathFinder.getStorage().loadGroups(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenAccept(groups -> {
+        groups.forEach((uuid, gs) -> {
+          map.put(uuid, new SimpleGroupedNode(nodeMap.get(uuid), gs));
+        });
+      }).join();
+
+      Graph<GroupedNode> graph = new Graph<>();
+      map.values().forEach(graph::addNode);
+      for (Node node : nodes) {
+        for (Edge e : node.getEdges()) {
+          GroupedNode endGrouped = map.get(e.getEnd());
+          Node end = endGrouped == null ? null : endGrouped.node();
+          GroupedNode startGrouped = map.get(e.getStart());
+          Node start = startGrouped == null ? null : startGrouped.node();
+          if (end == null || start == null) {
+            pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e + ". Apparently, not all nodes are part of the global group.");
+            continue;
+          }
+          graph.connect(startGrouped, endGrouped, node.getLocation().distance(end.getLocation()) * e.getWeight());
+        }
+      }
+      return graph;
+    });
   }
 
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, NodeSelection targets) {
     PlayerNode playerNode = new PlayerNode(player);
-    return graph(playerNode).thenCompose(graph -> findPath(player, graph, playerNode, targets));
+    return getGraph(playerNode).thenCompose(graph -> findPath(player, graph, playerNode, targets));
   }
 
   public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> player, Graph<GroupedNode> graph, Node start, NodeSelection targets) {
@@ -199,7 +216,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     }
     return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
 
-      PathSolver<GroupedNode> pathSolver = new SimpleDijkstra<>();
+      PathSolver<GroupedNode> pathSolver = new OptimizedDijkstra<>();
       Map<UUID, GroupedNode> graphMapping = new HashMap<>();
       graph.forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
       List<GroupedNode> path;
@@ -208,7 +225,6 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
           .toList();
       try {
         path = pathSolver.solvePath(graph, graphMapping.get(start.getNodeId()), convertedTargets);
-
       } catch (NoPathFoundException e) {
         return NavigateResult.FAIL_BLOCKED;
       }
@@ -312,5 +328,14 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
           .map(Map.Entry::getKey)
           .collect(Collectors.toList());
     });
+
+    eventDispatcher.listen(NodeCreateEvent.class, e -> cachedGraph = null);
+    eventDispatcher.listen(NodeGroupDeleteEvent.class, e -> cachedGraph = null);
+    eventDispatcher.listen(NodeSaveEvent.class, e -> cachedGraph = null);
+    eventDispatcher.listen(NodeGroupSaveEvent.class, e -> cachedGraph = null);
+    eventDispatcher.listen(NodeDeleteEvent.class, e -> cachedGraph = null);
+    eventDispatcher.listen(NodeGroupDeleteEvent.class, e -> cachedGraph = null);
+
+    fetchGraph();
   }
 }
