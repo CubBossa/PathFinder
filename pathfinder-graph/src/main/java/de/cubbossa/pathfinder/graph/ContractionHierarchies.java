@@ -222,8 +222,6 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
     Collection<Node> upwardsGraph = new HashSet<>();
     Map<Node, Node> seam = new HashMap<>();
 
-    optimized.nodes().forEach(node -> System.out.println(node + " -> " + node.priority + " . " + node.edgeDiff));
-
     // upwards graph dijkstra
     queue.enqueue(mapping.get(start), 0);
     queue.min().getValue().distance = 0;
@@ -272,7 +270,6 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
       }
       current.settled = true;
     }
-    System.out.println();
     visited.forEach(node -> {
       node.settled = false;
       node.distance = Float.MAX_VALUE;

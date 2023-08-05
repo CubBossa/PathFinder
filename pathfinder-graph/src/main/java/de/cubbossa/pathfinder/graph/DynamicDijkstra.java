@@ -52,7 +52,6 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
     startNode.distance = 0;
     unsettled.enqueue(startNode, 0);
 
-    System.out.println(System.currentTimeMillis() + " Dijkstra start");
     while (!unsettled.isEmpty()) {
       Node current = unsettled.dequeueMin().getValue();
       // actually, no settled node can end up in the queue but for some reason it happens anyways
@@ -76,7 +75,6 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
         break;
       }
     }
-    System.out.println(System.currentTimeMillis() + " Dijkstra end");
 
     Node nearest = targetNodes.stream()
         .min(Comparator.comparingDouble(Node::getDistance))
