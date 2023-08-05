@@ -9,6 +9,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class PathFinderPlugin extends JavaPlugin {
@@ -31,9 +33,9 @@ public class PathFinderPlugin extends JavaPlugin {
     dumpWriter.addProperty("mc-version", () -> getServer().getVersion());
     dumpWriter.addProperty("bukkit-version", () -> getServer().getBukkitVersion());
     dumpWriter.addProperty("active-plugins", () -> Arrays.stream(getServer().getPluginManager().getPlugins())
-        .map(Plugin::getName).toList());
+        .map(Plugin::getName).collect(Collectors.toCollection(TreeSet::new)));
     dumpWriter.addProperty("worlds", () -> Bukkit.getWorlds().stream()
-        .collect(Collectors.toMap(World::getUID, World::getName)));
+        .collect(Collectors.toMap(World::getUID, World::getName, (s, s2) -> s, TreeMap::new)));
   }
 
   @Override
