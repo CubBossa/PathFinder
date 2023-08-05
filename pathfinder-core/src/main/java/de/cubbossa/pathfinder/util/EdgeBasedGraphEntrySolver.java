@@ -1,23 +1,23 @@
 package de.cubbossa.pathfinder.util;
 
+import com.google.common.graph.MutableValueGraph;
+import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.GroupedNode;
-import de.cubbossa.pathfinder.graph.Graph;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> {
 
-  public Graph<GroupedNode> solve(GroupedNode start, Graph<GroupedNode> scope) {
+  @Override
+  public MutableValueGraph<GroupedNode, Double> solve(GroupedNode start, MutableValueGraph<GroupedNode, Double> scope) {
 
     List<WeightedEdge> sortedEdges = new LinkedList<>();
-    scope.getEdgeMap().forEach((node, edgeMap) -> {
-      edgeMap.forEach((end, unused) -> {
-        double d = VectorUtils.distancePointToSegment(start.node().getLocation().asVector(), node.node().getLocation().asVector(), end.node().getLocation().asVector());
-        sortedEdges.add(new WeightedEdge(node, end, d));
-      });
+    scope.edges().forEach((e) -> {
+      double d = VectorUtils.distancePointToSegment(start.node().getLocation().asVector(), e.nodeU().node().getLocation().asVector(), e.nodeV().node().getLocation().asVector());
+      sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), d));
     });
     Collections.sort(sortedEdges);
     if (sortedEdges.size() == 0) {
@@ -37,15 +37,23 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
       }
       result.add(edge);
     }
+    MutableValueGraph<GroupedNode, Double> graph = ValueGraphBuilder.directed()
+        .build();
+    scope.nodes().forEach(graph::addNode);
+    scope.edges().forEach(e -> graph.putEdgeValue(e, scope.edgeValue(e).orElseThrow()));
+
     result.forEach(edge -> {
       GroupedNode w = edge.start.merge(edge.end);
       Vector closest = VectorUtils.closestPointOnSegment(start.node().getLocation(), edge.start.node().getLocation(), edge.end.node().getLocation());
       w.node().setLocation(closest.toLocation(edge.start.node().getLocation().getWorld()));
 
-      scope.subdivide(edge.start, edge.end, () -> w);
-      scope.connect(start, w);
+      graph.removeEdge(edge.start, edge.end);
+      graph.addNode(w);
+      graph.putEdgeValue(edge.start, w, edge.start.node().getLocation().distance(w.node().getLocation()));
+      graph.putEdgeValue(w, edge.end, edge.end.node().getLocation().distance(w.node().getLocation()));
+      graph.putEdgeValue(start, w, 0.);
     });
-    return scope;
+    return graph;
   }
 
   private record WeightedEdge(GroupedNode start, GroupedNode end, double weight) implements Comparable<WeightedEdge> {

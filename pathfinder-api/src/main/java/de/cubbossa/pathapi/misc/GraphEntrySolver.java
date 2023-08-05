@@ -1,8 +1,9 @@
 package de.cubbossa.pathapi.misc;
 
-import de.cubbossa.pathfinder.graph.Graph;
+import com.google.common.graph.MutableValueGraph;
+import de.cubbossa.pathapi.node.GroupedNode;
 
 public interface GraphEntrySolver<T> {
 
-  Graph<T> solve(T start, Graph<T> scope);
+  MutableValueGraph<GroupedNode, Double> solve(T start, MutableValueGraph<GroupedNode, Double> scope);
 }

@@ -44,6 +44,9 @@ public class ListGroupsCmd extends PathFinderSubCommand {
           Messages.CMD_NG_LIST_HEADER,
           Messages.CMD_NG_LIST_FOOTER
       );
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
     });
   }
 }

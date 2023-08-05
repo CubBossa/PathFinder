@@ -1,34 +1,30 @@
 package de.cubbossa.pathfinder.graph;
 
 import com.google.common.base.Preconditions;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.TreeSet;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+import com.google.common.graph.ValueGraph;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-public class SimpleAStar<N> implements PathSolver<N> {
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
+public class AStarImpl<N> implements PathSolver<N> {
 
   private final BiFunction<N, N, Double> distanceFunction;
+  private ValueGraph<N, Double> graph;
 
-  public SimpleAStar(BiFunction<N, N, Double> distanceFunction) {
+  public AStarImpl(BiFunction<N, N, Double> distanceFunction) {
     this.distanceFunction = distanceFunction;
   }
 
-  public List<N> solvePath(Graph<N> graph, N startNode, N targetNode) throws NoPathFoundException {
-    return solvePath(graph, startNode, List.of(targetNode));
+  @Override
+  public void setGraph(ValueGraph<N, Double> graph) {
+    this.graph = graph;
   }
 
   @Override
-  public List<N> solvePath(Graph<N> graph, N startNode, Collection<N> targets)
+  public List<N> solvePath(N startNode, Collection<N> targets)
       throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(startNode);
@@ -109,7 +105,7 @@ public class SimpleAStar<N> implements PathSolver<N> {
     return path;
   }
 
-  private Map<N, Node> buildGraph(Graph<N> graph, N start, Collection<N> targets) {
+  private Map<N, Node> buildGraph(ValueGraph<N, Double> graph, N start, Collection<N> targets) {
     Map<N, Node> computed = new HashMap<>();
     Queue<Node> queue = new LinkedList<>();
 
@@ -123,12 +119,12 @@ public class SimpleAStar<N> implements PathSolver<N> {
           .min().orElse(Double.MAX_VALUE);
       computed.put(current.node, current);
 
-      for (var entry : graph.getEdges(current.node).entrySet()) {
-        Node adjacent = computed.computeIfAbsent(entry.getKey(), Node::new);
+      for (var entry : graph.successors(current.node)) {
+        Node adjacent = computed.computeIfAbsent(entry, Node::new);
         if (!adjacent.settled) {
           queue.add(adjacent);
         }
-        current.adjacent.put(adjacent, entry.getValue());
+        current.adjacent.put(adjacent, graph.edgeValue(current.node, entry).orElseThrow());
       }
       current.settled = true;
     }
@@ -161,7 +157,7 @@ public class SimpleAStar<N> implements PathSolver<N> {
     }
 
     @Override
-    public int compareTo(@NotNull SimpleAStar<N>.Node o) {
+    public int compareTo(@NotNull AStarImpl<N>.Node o) {
       return Double.compare(this.f, o.f);
     }
   }

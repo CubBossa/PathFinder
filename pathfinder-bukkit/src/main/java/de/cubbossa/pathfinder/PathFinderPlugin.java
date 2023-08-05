@@ -3,10 +3,13 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.dump.DumpWriter;
 import de.cubbossa.pathapi.dump.DumpWriterProvider;
 import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class PathFinderPlugin extends JavaPlugin {
 
@@ -29,6 +32,8 @@ public class PathFinderPlugin extends JavaPlugin {
     dumpWriter.addProperty("bukkit-version", () -> getServer().getBukkitVersion());
     dumpWriter.addProperty("active-plugins", () -> Arrays.stream(getServer().getPluginManager().getPlugins())
         .map(Plugin::getName).toList());
+    dumpWriter.addProperty("worlds", () -> Bukkit.getWorlds().stream()
+        .collect(Collectors.toMap(World::getUID, World::getName)));
   }
 
   @Override
