@@ -40,6 +40,7 @@ import org.bukkit.inventory.meta.FireworkEffectMeta;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EditModeMenu {
 
@@ -49,6 +50,8 @@ public class EditModeMenu {
   private final Collection<NodeType<?>> types;
   private Boolean undirectedEdgesMode;
   private UUID chainEdgeStart = null;
+
+  private final AtomicBoolean lock = new AtomicBoolean();
 
   public EditModeMenu(Storage storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
     this.storage = storage;
@@ -102,8 +105,13 @@ public class EditModeMenu {
 
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          storage.deleteNodes(List.of(context.getTarget().getNodeId()))
-              .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1));
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
+          storage.deleteNodes(Collections.singleton(context.getTarget().getNodeId()))
+              .thenRun(() -> p.playSound(p.getLocation(), Sound.ENTITY_ARMOR_STAND_BREAK, 1, 1))
+              .whenComplete((unused, throwable) -> lock.set(false));
         })
 
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
@@ -130,6 +138,10 @@ public class EditModeMenu {
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
           }
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
           Collection<CompletableFuture<?>> futures = new HashSet<>();
           futures.add(storage.modifyNode(chainEdgeStart, node -> {
             node.connect(context.getTarget().getNodeId());
@@ -143,18 +155,26 @@ public class EditModeMenu {
             chainEdgeStart = null;
             context.getMenu().refresh(context.getSlot());
             CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
-          }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+          }).whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+              throwable.printStackTrace();
+            }
+            lock.set(false);
           });
         })
 
         .withClickHandler(Action.RIGHT_CLICK_BLOCK, context -> {
 
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
+
           Location view = context.getPlayer().getEyeLocation();
           Location block = context.getTarget().getLocation();
           BukkitVectorUtils.Orientation orientation = BukkitVectorUtils.getIntersection(view.toVector(), view.getDirection(), block.toVector());
           if (orientation == null) {
+            lock.set(false);
             return;
           }
 
@@ -162,14 +182,15 @@ public class EditModeMenu {
               .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
           if (types.size() > 1) {
             openNodeTypeMenu(context.getPlayer(), pos);
+            lock.set(false);
             return;
           }
 
           NodeType<?> type = types.stream().findAny().orElse(null);
           if (type == null) {
+            lock.set(false);
             throw new IllegalStateException("Could not find any node type to generate node.");
           }
-
           storage
               .createAndLoadNode(type, BukkitVectorUtils.toInternal(pos))
               .thenCompose(node -> storage.modifyNode(node.getNodeId(), n -> {
@@ -185,9 +206,11 @@ public class EditModeMenu {
                 storage.modifyGroup(key, group -> group.add(node.getNodeId()));
                 storage.modifyGroup(CommonPathFinder.globalGroupKey(), group -> group.add(node.getNodeId()));
               }))
-              .exceptionally(throwable -> {
-                throwable.printStackTrace();
-                return null;
+              .whenComplete((ex, throwable) -> {
+                if (throwable != null) {
+                  throwable.printStackTrace();
+                }
+                lock.set(false);
               });
         })
 
@@ -205,6 +228,10 @@ public class EditModeMenu {
         .withItemStack(new LocalizedItem(Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
             Messages.E_TP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(context -> {
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
           storage.loadGroup(key)
               .thenCompose(group -> storage.loadNodes(group.map(g -> (Collection<UUID>) g).orElseGet(HashSet::new)))
               .thenAccept(nodes -> {
@@ -231,9 +258,11 @@ public class EditModeMenu {
                   p.teleport(newLoc);
                   p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1, 1);
                 });
-              }).exceptionally(throwable -> {
-                throwable.printStackTrace();
-                return null;
+              }).whenComplete((ex, throwable) -> {
+                if (throwable != null) {
+                  throwable.printStackTrace();
+                }
+                lock.set(false);
               });
         }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR));
 
@@ -246,23 +275,37 @@ public class EditModeMenu {
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
-          StorageUtil.clearGroups(context.getTarget());
-          context.getPlayer().playSound(context.getPlayer().getLocation(),
-              Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
+          try {
+            StorageUtil.clearGroups(context.getTarget());
+            context.getPlayer().playSound(context.getPlayer().getLocation(),
+                Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1, 1);
+          } finally {
+            lock.set(false);
+          }
         }));
 
     menu.setButton(2, Button.builder()
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
         .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
           storage.loadGroupsByMod(multiTool).thenCompose(groups -> {
             return StorageUtil.addGroups(groups, context.getTarget().getNodeId());
           }).thenRun(() -> {
             context.getPlayer().playSound(context.getPlayer().getLocation(),
                 Sound.BLOCK_CHEST_CLOSE, 1, 1);
-          }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+          }).whenComplete((ex, throwable) -> {
+            if (throwable != null) {
+              throwable.printStackTrace();
+            }
+            lock.set(false);
           });
         })
         .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
@@ -321,10 +364,18 @@ public class EditModeMenu {
             new LocalizedItem(Material.BARRIER, Messages.E_SUB_GROUP_RESET_N,
                 Messages.E_SUB_GROUP_RESET_L).createItem(player));
         presetApplier.addClickHandlerOnTop(3 * 9 + 8, Action.LEFT, c -> {
-          StorageUtil.clearGroups(node);
-          storage.saveNode(node).thenRun(() -> {
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(c.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
+          StorageUtil.clearGroups(node).thenRun(() -> {
             menu.refresh(menu.getListSlots());
             c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f);
+          }).whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+              throwable.printStackTrace();
+            }
+            lock.set(false);
           });
         });
 
@@ -338,19 +389,29 @@ public class EditModeMenu {
 
   private ContextConsumer<ClickContext> groupEntryClickHandler(ListMenu menu, NodeGroup group, Node node) {
     return c -> {
+      if (!lock.compareAndSet(false, true)) {
+        BukkitUtils.wrap(c.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+        return;
+      }
       if (group.contains(node.getNodeId())) {
-        StorageUtil.removeGroups(group, node.getNodeId()).thenCompose(unused -> {
-          return storage.saveNode(node).thenRun(() -> {
-            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
-            menu.refresh(menu.getListSlots());
-          });
+        StorageUtil.removeGroups(group, node.getNodeId()).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_CLOSE, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        }).whenComplete((unused, throwable) -> {
+          if (throwable != null) {
+            throwable.printStackTrace();
+          }
+          lock.set(false);
         });
       } else {
-        StorageUtil.addGroups(group, node.getNodeId()).thenCompose(unused -> {
-          return storage.saveNode(node).thenRun(() -> {
-            c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
-            menu.refresh(menu.getListSlots());
-          });
+        StorageUtil.addGroups(group, node.getNodeId()).thenRun(() -> {
+          c.getPlayer().playSound(c.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 1f);
+          menu.refresh(menu.getListSlots());
+        }).whenComplete((unused, throwable) -> {
+          if (throwable != null) {
+            throwable.printStackTrace();
+          }
+          lock.set(false);
         });
       }
     };

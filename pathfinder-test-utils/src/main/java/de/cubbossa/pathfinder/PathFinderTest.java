@@ -28,6 +28,7 @@ import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
+import de.cubbossa.pathfinder.storage.implementation.DebugStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
@@ -212,6 +213,7 @@ public abstract class PathFinderTest {
 
     storage = new StorageImpl(nodeTypeRegistry);
     StorageImplementation implementation = factory.get();
+    implementation = new DebugStorage(implementation, logger);
     implementation.setLogger(logger);
     implementation.setWorldLoader(WORLD_LOADER);
 
@@ -358,7 +360,7 @@ public abstract class PathFinderTest {
 
   protected void deleteGroup(NamespacedKey key) {
     assertFuture(() -> storage.loadGroup(key)
-        .thenAccept(group -> storage.deleteGroup(group.orElseThrow()).join()));
+        .thenCompose(group -> storage.deleteGroup(group.orElseThrow())));
   }
 
   protected NodeGroup assertGroupExists(NamespacedKey key) {

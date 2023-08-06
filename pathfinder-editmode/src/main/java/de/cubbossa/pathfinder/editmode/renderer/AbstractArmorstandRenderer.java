@@ -33,6 +33,7 @@ import org.bukkit.util.Vector;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Setter
@@ -62,12 +63,12 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     entityId = 0xffffabcd;
     protocolManager = ProtocolLibrary.getProtocolManager();
 
-    nodeEntityMap = new HashMap<>();
-    entityNodeMap = new HashMap<>();
+    nodeEntityMap = new ConcurrentHashMap<>();
+    entityNodeMap = new ConcurrentHashMap<>();
     players = new HashSet<>();
-    hiddenNodes = new HashMap<>();
+    hiddenNodes = new ConcurrentHashMap<>();
 
-    Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+    Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
       for (PathPlayer<Player> player : players) {
         Collection<CompletableFuture<?>> futures = new HashSet<>();
         HashSet<T> show = new HashSet<>();

@@ -66,9 +66,10 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   @Override
   public void showElement(Edge element, Player player) {
     super.showElement(element, player);
-    element.resolveStart().thenApply(start -> {
-      Node end = element.resolveEnd().join();
-      return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
+    element.resolveStart().thenCompose(start -> {
+      return element.resolveEnd().thenApply(end -> {
+        return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
+      });
     }).thenAccept(vector -> {
       setHeadRotation(player, nodeEntityMap.get(element), vector);
     });
@@ -87,29 +88,31 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
 
   @Override
   public CompletableFuture<Void> clear(PathPlayer<Player> player) {
-    hideElements(entityNodeMap.values(), player.unwrap());
-    players.remove(player);
-    return CompletableFuture.completedFuture(null);
+    return CompletableFuture.runAsync(() -> {
+      hideElements(entityNodeMap.values(), player.unwrap());
+      players.remove(player);
+    });
   }
 
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
+    return CompletableFuture.runAsync(() -> {
+      // all edges from rendered nodes to adjacent nodes
+      Collection<Edge> toRender = nodes.stream()
+          .map(Node::getEdges).flatMap(Collection::stream)
+          .collect(Collectors.toSet());
 
-    // all edges from rendered nodes to adjacent nodes
-    Collection<Edge> toRender = nodes.stream()
-            .map(Node::getEdges).flatMap(Collection::stream)
-            .collect(Collectors.toSet());
+      Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
+      hideElements(getNodeEntityMap().keySet().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
 
-    Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-    hideElements(getNodeEntityMap().keySet().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
-
-    showElements(toRender, player.unwrap());
-    players.add(player);
-    return CompletableFuture.completedFuture(null);
+      showElements(toRender, player.unwrap());
+      players.add(player);
+    });
   }
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
+
     Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).collect(Collectors.toSet());
     Collection<Edge> toErase = nodeEntityMap.keySet().stream()
         .filter(edge -> nodeIds.contains(edge.getStart()) || nodeIds.contains(edge.getEnd()))

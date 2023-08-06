@@ -29,8 +29,9 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 @Setter
 public class StorageImpl implements Storage {
 
-  private final Executor ioExecutor;
+  private ExecutorService ioExecutor;
   private CacheLayer cache;
   private @Nullable EventDispatcher<?> eventDispatcher;
   private @Nullable Logger logger;
@@ -51,7 +52,6 @@ public class StorageImpl implements Storage {
 
   public StorageImpl(NodeTypeRegistry nodeTypeRegistry) {
     cache = new CacheLayerImpl();
-    ioExecutor = Executors.newFixedThreadPool(8);
     this.nodeTypeRegistry = nodeTypeRegistry;
   }
 
@@ -61,6 +61,7 @@ public class StorageImpl implements Storage {
 
   @Override
   public void init() throws Exception {
+    ioExecutor = Executors.newCachedThreadPool();
     implementation.init();
   }
 
@@ -70,28 +71,40 @@ public class StorageImpl implements Storage {
       cache.invalidateAll();
     }
     implementation.shutdown();
+    ioExecutor.shutdown();
+    try {
+      if (!ioExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+        ioExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      ioExecutor.shutdownNow();
+    }
   }
 
   @Override
   public CompletableFuture<NodeGroup> createGlobalNodeGroup(VisualizerType<?> defaultVisualizerType) {
     return loadGroup(CommonPathFinder.globalGroupKey()).thenCompose(group -> {
-      if (group.isPresent()) {
-        return CompletableFuture.completedFuture(group.get());
-      }
-      return loadVisualizer(CommonPathFinder.defaultVisualizerKey()).thenApply(pathVisualizer -> {
-        return pathVisualizer.orElseGet(() -> {
-          return createAndLoadVisualizer(defaultVisualizerType, CommonPathFinder.defaultVisualizerKey()).join();
-        });
-      }).thenApply(vis -> {
-        NodeGroup globalGroup = createAndLoadGroup(CommonPathFinder.globalGroupKey()).join();
-        globalGroup.setWeight(0);
-        globalGroup.addModifier(new CommonCurveLengthModifier(3));
-        globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
-        globalGroup.addModifier(new CommonVisualizerModifier(vis.getKey()));
-        return globalGroup;
-      }).thenCompose(g -> {
-        return saveGroup(g).thenApply(unused -> g);
-      });
+      return group
+          .<java.util.concurrent.CompletionStage<NodeGroup>>map(CompletableFuture::completedFuture)
+          .orElseGet(() -> loadVisualizer(CommonPathFinder.defaultVisualizerKey())
+              .thenCompose(pathVisualizer -> {
+                return pathVisualizer
+                    .<CompletableFuture<PathVisualizer<?, ?>>>map(CompletableFuture::completedFuture)
+                    .orElseGet(() -> (CompletableFuture<PathVisualizer<?, ?>>) createAndLoadVisualizer(defaultVisualizerType, CommonPathFinder.defaultVisualizerKey()));
+              }).thenCompose(vis -> {
+                return createAndLoadGroup(CommonPathFinder.globalGroupKey()).thenApply(globalGroup -> {
+                  globalGroup.setWeight(0);
+                  globalGroup.addModifier(new CommonCurveLengthModifier(3));
+                  globalGroup.addModifier(new CommonFindDistanceModifier(1.5));
+                  globalGroup.addModifier(new CommonVisualizerModifier(vis.getKey()));
+                  return globalGroup;
+                });
+              }).thenCompose(g -> {
+                return saveGroup(g).thenApply(unused -> g);
+              }));
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
     });
   }
 
@@ -195,8 +208,10 @@ public class StorageImpl implements Storage {
     if (opt.isPresent()) {
       return CompletableFuture.completedFuture(opt);
     }
-    return asyncFuture(() -> type.loadNode(id).map(Collections::singleton)
-        .map(ns -> (N) this.prepareLoadedNode((Collection<Node>) ns).join().stream().findAny().get()));
+    return type.loadNode(id).map(Collections::singleton)
+        .map(ns -> this.prepareLoadedNode((Collection<Node>) ns)
+            .thenApply(nodes -> (Optional<N>) nodes.stream().findAny()))
+        .orElse(CompletableFuture.completedFuture(Optional.empty()));
   }
 
   @Override
@@ -422,10 +437,14 @@ public class StorageImpl implements Storage {
   @Override
   public CompletableFuture<Void> saveGroup(NodeGroup group) {
     return asyncFuture(() -> {
-      HashSet<UUID> before = new HashSet<>(group);
-      before.addAll(group.getContentChanges().getRemoveList());
-      HashSet<Modifier> mods = new HashSet<>(group.getModifiers());
-      mods.addAll(group.getModifierChanges().getRemoveList());
+      HashSet<UUID> before = new HashSet<>();
+      HashSet<Modifier> mods = new HashSet<>();
+      synchronized (group) {
+        before.addAll(group);
+        before.addAll(group.getContentChanges().getRemoveList());
+        mods.addAll(group.getModifiers());
+        mods.addAll(group.getModifierChanges().getRemoveList());
+      }
 
       implementation.saveGroup(group);
       cache.getNodeCache().write(group);
@@ -571,8 +590,7 @@ public class StorageImpl implements Storage {
     if (cached.isPresent()) {
       return CompletableFuture.completedFuture(cached);
     }
-    return asyncFuture(() -> {
-      Optional<VisualizerType<VisualizerT>> type = this.resolveOptVisualizerType(key);
+    return this.<VisualizerT>loadVisualizerType(key).thenApply(type -> {
       if (type.isEmpty()) {
         return Optional.empty();
       }
@@ -584,12 +602,10 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
-    return asyncFuture(() -> {
-
-      VisualizerType<?> type = resolveVisualizerType(visualizer.getKey());
-      saveVisualizerUnsafe(type, visualizer);
+    return loadVisualizerType(visualizer.getKey()).thenAccept(opt -> opt.ifPresent(t -> {
+      saveVisualizerUnsafe(t, visualizer);
       cache.getVisualizerCache().write(visualizer);
-    });
+    }));
   }
 
   private void saveVisualizerUnsafe(VisualizerType type, PathVisualizer visualizer) {
@@ -598,12 +614,11 @@ public class StorageImpl implements Storage {
 
   @Override
   public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
-    return asyncFuture(() -> {
-      VisualizerType<?> type = resolveVisualizerType(visualizer.getKey());
+    return loadVisualizerType(visualizer.getKey()).thenAccept(opt -> opt.ifPresent(type -> {
       deleteVisualizerUnsafe(type, visualizer);
       cache.getVisualizerCache().invalidate(visualizer);
       implementation.deleteVisualizerTypeMapping(Set.of(visualizer.getKey()));
-    });
+    }));
   }
 
   private void deleteVisualizerUnsafe(VisualizerType type, PathVisualizer vis) {
@@ -631,26 +646,6 @@ public class StorageImpl implements Storage {
         }
         return results;
       });
-    });
-  }
-
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(
-      VisualizerT visualizer) {
-    return resolveOptVisualizerType(visualizer.getKey());
-  }
-
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> resolveOptVisualizerType(NamespacedKey key) {
-    return this.<VisualizerT>loadVisualizerType(key).join();
-  }
-
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(VisualizerT visualizer) {
-    return resolveVisualizerType(visualizer.getKey());
-  }
-
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> resolveVisualizerType(NamespacedKey key) {
-    return this.<VisualizerT>resolveOptVisualizerType(key).orElseThrow(() -> {
-      return new IllegalStateException(
-          "Tried to create visualizer of type '" + key + "' but could not find registered type with this key.");
     });
   }
 }

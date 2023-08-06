@@ -75,30 +75,32 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
     Storage storage = PathFinderProvider.get().getStorage();
-    toRender.addAll(storage.loadEdgesTo(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).join().values().stream()
-        .flatMap(Collection::stream)
-        .filter(edge -> rendered.contains(edge.getStart()))
-        .toList());
+    return storage.loadEdgesTo(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenCompose(uuidCollectionMap -> {
+      toRender.addAll(uuidCollectionMap.values().stream()
+          .flatMap(Collection::stream)
+          .filter(edge -> rendered.contains(edge.getStart()))
+          .toList());
 
-    for (Edge edge : toRender) {
-      var future = FutureUtils.both(edge.resolveStart(), edge.resolveEnd()).thenAccept(entry -> {
-        Node startNode = entry.getKey();
-        Node endNode = entry.getValue();
+      for (Edge edge : toRender) {
+        var future = FutureUtils.both(edge.resolveStart(), edge.resolveEnd()).thenAccept(entry -> {
+          Node startNode = entry.getKey();
+          Node endNode = entry.getValue();
 
-        ParticleEdge particleEdge = new ParticleEdge(startNode.getNodeId(), endNode.getNodeId(), startNode.getLocation(), endNode.getLocation(), true);
-        ParticleEdge present = edges.get(edge.getEnd(), edge.getStart());
-        if (present != null) {
-          present.start = endNode.getLocation();
-          present.end = startNode.getLocation();
-          particleEdge.setDirected(false);
-          present.setDirected(false);
-        }
-        edges.put(edge.getStart(), edge.getEnd(), particleEdge);
-      });
-      futures.add(future);
-    }
-    return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
-        .thenRun(() -> updateRenderer(player));
+          ParticleEdge particleEdge = new ParticleEdge(startNode.getNodeId(), endNode.getNodeId(), startNode.getLocation(), endNode.getLocation(), true);
+          ParticleEdge present = edges.get(edge.getEnd(), edge.getStart());
+          if (present != null) {
+            present.start = endNode.getLocation();
+            present.end = startNode.getLocation();
+            particleEdge.setDirected(false);
+            present.setDirected(false);
+          }
+          edges.put(edge.getStart(), edge.getEnd(), particleEdge);
+        });
+        futures.add(future);
+      }
+      return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+          .thenRun(() -> updateRenderer(player));
+    });
   }
 
   @Override

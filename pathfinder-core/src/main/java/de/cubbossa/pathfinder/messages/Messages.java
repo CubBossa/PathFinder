@@ -49,6 +49,9 @@ public class Messages {
   public static final Message PREFIX = new MessageBuilder("prefix")
       .withDefault("<c-brand>PathFinder</c-brand><bg> › </bg><t>")
       .build();
+  public static final Message GEN_TOO_FAST = new MessageBuilder("general.response_pending")
+      .withDefault("<msg:prefix>Better slow down, your database is out of breath.")
+      .build();
   public static final Message GEN_ERROR = new MessageBuilder("general.error")
       .withDefault("<c-negative><cause></c-negative>")
       .withPlaceholders("cause")
