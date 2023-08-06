@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathapi.misc.World;
-import java.util.Objects;
-import java.util.UUID;
 import org.bukkit.Bukkit;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 public class WorldImpl implements World {
 
@@ -21,14 +23,14 @@ public class WorldImpl implements World {
 
   @Override
   public String getName() {
-    return resolve().getName();
+    return resolve().map(org.bukkit.World::getName).orElse("-Unknown World-");
   }
 
-  private org.bukkit.World resolve() {
+  private Optional<org.bukkit.World> resolve() {
     if (world == null) {
       world = Bukkit.getWorld(uuid);
     }
-    return world;
+    return Optional.ofNullable(world);
   }
 
   @Override
