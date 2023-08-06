@@ -215,11 +215,17 @@ public class EditModeMenu {
         })
 
         .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
+          if (!lock.compareAndSet(false, true)) {
+            BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+            return;
+          }
           storage.modifyNode(context.getTarget().getStart(), node -> {
             node.disconnect(context.getTarget().getEnd());
-          }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+          }).whenComplete((x, throwable) -> {
+            if (throwable != null) {
+              throwable.printStackTrace();
+            }
+            lock.set(false);
           });
         })
     );
