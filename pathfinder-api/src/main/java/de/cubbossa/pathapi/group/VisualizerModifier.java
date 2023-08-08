@@ -3,6 +3,7 @@ package de.cubbossa.pathapi.group;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface VisualizerModifier extends Modifier {
@@ -16,5 +17,5 @@ public interface VisualizerModifier extends Modifier {
 
   NamespacedKey getVisualizerKey();
 
-  CompletableFuture<PathVisualizer<?, ?>> getVisualizer();
+  CompletableFuture<Optional<PathVisualizer<?, ?>>> getVisualizer();
 }

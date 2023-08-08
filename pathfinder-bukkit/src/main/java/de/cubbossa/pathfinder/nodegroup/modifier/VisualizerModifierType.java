@@ -30,9 +30,9 @@ public class VisualizerModifierType implements ModifierType<VisualizerModifier>,
 
   @Override
   public ComponentLike toComponents(VisualizerModifier modifier) {
-    return Messages.CMD_NG_MOD_VIS.formatted(
-        Messages.formatter().namespacedKey("visualizer", modifier.getVisualizer().join().getKey())
-    );
+    return modifier.getVisualizer().join().map(visualizer -> Messages.CMD_NG_MOD_VIS.formatted(
+        Messages.formatter().namespacedKey("visualizer", visualizer.getKey())
+    )).orElse(Messages.CMD_NG_MOD_VIS);
   }
 
   @Override

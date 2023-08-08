@@ -55,6 +55,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
           .map(Optional::get)
           .map(VisualizerModifier::getVisualizer)
           .map(CompletableFuture::join)
+          .filter(Optional::isPresent).map(Optional::get)
           .forEach(vis -> {
             nodeVisualizerMap.computeIfAbsent(node.node(), n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
           });

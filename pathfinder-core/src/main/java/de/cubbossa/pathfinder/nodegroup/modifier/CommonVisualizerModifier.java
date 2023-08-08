@@ -32,7 +32,7 @@ public class CommonVisualizerModifier implements Modifier, VisualizerModifier {
   }
 
   @Override
-  public CompletableFuture<PathVisualizer<?, ?>> getVisualizer() {
-    return PathFinderProvider.get().getStorage().loadVisualizer(visualizerKey).thenApply(Optional::orElseThrow);
+  public CompletableFuture<Optional<PathVisualizer<?, ?>>> getVisualizer() {
+    return PathFinderProvider.get().getStorage().loadVisualizer(visualizerKey);
   }
 }
