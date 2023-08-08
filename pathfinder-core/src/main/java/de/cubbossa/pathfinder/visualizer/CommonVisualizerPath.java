@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.pathapi.group.VisualizerModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.Task;
@@ -47,8 +48,16 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
     for (GroupedNode node : path) {
+      AtomicDouble highest = new AtomicDouble();
       node.groups().stream()
           .filter(g -> g.hasModifier(VisualizerModifier.KEY))
+          .map(group -> {
+            if (highest.get() < group.getWeight()) {
+              highest.set(group.getWeight());
+            }
+            return group;
+          })
+          .filter(g -> g.getWeight() == highest.get())
           .sorted()
           .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
           .filter(Optional::isPresent)

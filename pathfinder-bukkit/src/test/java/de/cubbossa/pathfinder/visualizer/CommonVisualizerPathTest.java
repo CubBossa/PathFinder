@@ -5,7 +5,6 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestPlayer;
 import de.cubbossa.pathfinder.TestVisualizer;
@@ -82,9 +81,8 @@ class CommonVisualizerPathTest extends PathFinderTest {
     PathPlayer<Object> p = new TestPlayer();
     CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>(path, p);
     assertTrue(visPath.isActive());
-    // one more because of global group
-    assertEquals(2, visPath.paths.size());
-    assertEquals(Set.of(CommonPathFinder.defaultVisualizerKey(), vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
+    assertEquals(1, visPath.paths.size());
+    assertEquals(Set.of(vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
 
     storage.deleteVisualizer(vis).join();
@@ -103,8 +101,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     PathPlayer<Object> p = new TestPlayer();
     CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>(path, p);
     assertTrue(visPath.isActive());
-    // one more because of global group
-    assertEquals(3, visPath.paths.size());
+    assertEquals(2, visPath.paths.size());
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(a)));
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(b)));
 
@@ -125,8 +122,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     PathPlayer<Object> p = new TestPlayer();
     CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>(path, p);
     assertTrue(visPath.isActive());
-    // one more because of global group
-    assertEquals(4, visPath.paths.size());
+    assertEquals(3, visPath.paths.size());
     assertEquals(2, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(a)).count());
     assertEquals(1, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(b)).count());
     assertTrue(visPath.paths.stream()
@@ -148,8 +144,7 @@ class CommonVisualizerPathTest extends PathFinderTest {
     PathPlayer<Object> p = new TestPlayer();
     CommonVisualizerPath<Object> visPath = new CommonVisualizerPath<>(path, p);
     assertTrue(visPath.isActive());
-    // one more because of global group
-    assertEquals(2, visPath.paths.size());
+    assertEquals(1, visPath.paths.size());
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
 
     storage.deleteVisualizer(vis).join();
