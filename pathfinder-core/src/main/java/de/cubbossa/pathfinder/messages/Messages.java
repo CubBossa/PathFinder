@@ -8,13 +8,10 @@ import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageBuilder;
 import lombok.Setter;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -29,12 +26,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Particle;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("checkstyle:LineLength")
@@ -604,55 +600,15 @@ public class Messages {
       .withDefault("<c-negative>Your currently edited group was deleted by another user.")
       .build();
 
-  @Setter
-  private static AudienceProvider audiences;
-
-  private static Audience audienceSender(CommandSender sender) {
-    return sender instanceof Player player
-        ? audiences.player(player.getUniqueId())
-        : audiences.console();
-  }
-
   public static Message throwable(Throwable throwable) {
     return GEN_ERROR.formatted(formatter().throwable(throwable));
   }
 
-  public static Component formatNodeSelection(CommandSender sender, Collection<Node> nodes) {
-    return formatGroupInHover(sender, GEN_NODE_SEL, nodes.stream().filter(node -> node != null).toList(), node -> formatNode(sender, node));
-  }
-
-  public static Component formatNode(CommandSender sender, Node node) {
+  public static Message formatNode(Node node) {
     return GEN_NODE.formatted(
         Placeholder.parsed("world", node.getLocation().getWorld().getName()),
         Messages.formatter().vector("location", node.getLocation())
-    ).asComponent(audienceSender(sender));
-  }
-
-  public static Component formatNodeGroups(CommandSender sender, Collection<SimpleNodeGroup> groups) {
-    return formatGroupInHover(sender, GEN_GROUP_SEL, groups, g -> Component.text(g.getKey().toString()));
-  }
-
-  public static <T> Component formatGroupConcat(CommandSender sender, Message placeHolder,
-                                                Collection<T> collection,
-                                                Function<T, ComponentLike> converter) {
-    return placeHolder.formatted(TagResolver.resolver(
-        Placeholder.unparsed("amount", collection.size() + ""),
-        Placeholder.component("list",
-            Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-                collection.stream().map(converter).collect(Collectors.toList())))
-    )).asComponent(audienceSender(sender));
-  }
-
-  public static <T> Component formatGroupInHover(CommandSender sender, Message placeHolder,
-                                                 Collection<T> collection,
-                                                 Function<T, ComponentLike> converter) {
-    int size = collection.size();
-    collection = CollectionUtils.subList(new ArrayList<>(collection), Range.range(0, 30));
-    return placeHolder.formatted(Placeholder.unparsed("amount", size + ""))
-        .asComponent(audienceSender(sender))
-        .hoverEvent(HoverEvent.showText(
-            Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-                collection.stream().map(converter).collect(Collectors.toList()))));
+    );
   }
 
   @Setter
@@ -734,6 +690,21 @@ public class Messages {
             .append(namespaceString)
             .append(Component.text(":"))
             .append(keyString));
+      });
+    }
+
+    @Override
+    public TagResolver nodeSelection(String key, Supplier<Collection<Node>> nodesSupplier) {
+      return TagResolver.resolver(key, (argumentQueue, context) -> {
+        Collection<Node> nodes = nodesSupplier.get();
+        int size = nodes.size();
+        nodes = CollectionUtils.subList(new ArrayList<>(nodes), Range.range(0, 30));
+        return Tag.selfClosingInserting(GEN_NODE_SEL.formatted(
+            Placeholder.unparsed("amount", size + "")
+        ).asComponent().hoverEvent(HoverEvent.showText(Component.join(
+            JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
+            nodes.stream().map(Messages::formatNode).collect(Collectors.toList()))
+        )));
       });
     }
 

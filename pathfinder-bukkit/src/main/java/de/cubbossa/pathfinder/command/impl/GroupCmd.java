@@ -13,7 +13,6 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -71,7 +70,7 @@ public class GroupCmd extends PathFinderSubCommand {
   private void showGroup(CommandSender sender, SimpleNodeGroup group) {
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(
         Messages.formatter().namespacedKey("key", group.getKey()),
-        Placeholder.component("nodes", Messages.formatNodeSelection(sender, group.resolve().join())),
+        Messages.formatter().nodeSelection("nodes", () -> group.resolve().join()),
         Messages.formatter().number("weight", group.getWeight()),
         Messages.formatter().modifiers("modifiers", group.getModifiers())
     ));

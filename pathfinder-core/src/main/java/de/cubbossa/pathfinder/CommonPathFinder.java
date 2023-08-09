@@ -142,7 +142,6 @@ public abstract class CommonPathFinder implements PathFinder {
     miniMessage = MiniMessage.miniMessage();
 
     audiences = provideAudiences();
-    Messages.setAudiences(audiences);
 
     saveResource("lang/styles.properties", false);
 

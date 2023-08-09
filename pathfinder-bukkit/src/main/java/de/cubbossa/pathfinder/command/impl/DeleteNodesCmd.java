@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 public class DeleteNodesCmd extends PathFinderSubCommand {
@@ -25,7 +24,7 @@ public class DeleteNodesCmd extends PathFinderSubCommand {
   private void deleteNode(CommandSender sender, NodeSelection nodes) {
     getPathfinder().getStorage().deleteNodes(nodes.ids()).thenRun(() -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.formatted(
-          Placeholder.component("selection", Messages.formatNodeSelection(sender, nodes))
+          Messages.formatter().nodeSelection("selection", () -> nodes)
       ));
     });
   }

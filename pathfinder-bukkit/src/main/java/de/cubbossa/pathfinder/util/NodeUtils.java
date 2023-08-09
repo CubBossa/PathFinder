@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.util;
 import com.google.common.base.Preconditions;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.CommonPathFinder;
@@ -45,7 +44,7 @@ public class NodeUtils {
               .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
               .resolvers(Messages.formatter().vector("position", n.getLocation()))
               .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-              .resolver(Placeholder.component("edges", Messages.formatNodeSelection(player, resolvedNeighbours)))
+              .resolvers(Messages.formatter().nodeSelection("edges", () -> resolvedNeighbours))
               .build();
           BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_LIST_ELEMENT.formatted(r));
         },

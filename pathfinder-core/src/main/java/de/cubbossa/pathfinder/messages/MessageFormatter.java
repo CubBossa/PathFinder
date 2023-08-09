@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.messages;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathapi.node.Node;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -13,6 +14,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface MessageFormatter {
 
@@ -33,6 +35,8 @@ public interface MessageFormatter {
   TagResolver uuid(String key, UUID value);
 
   TagResolver namespacedKey(String key, NamespacedKey namespacedKey);
+
+  TagResolver nodeSelection(String key, Supplier<Collection<Node>> nodesSupplier);
 
   TagResolver permission(String key, @Nullable String permission);
 
