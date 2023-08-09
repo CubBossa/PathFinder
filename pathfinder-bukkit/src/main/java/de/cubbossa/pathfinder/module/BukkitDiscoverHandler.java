@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.command.DiscoveriesCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,6 +27,8 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
     super(plugin);
     pathFinder = PathFinderProvider.get();
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+
+    BukkitPathFinder.getInstance().getCommandRegistry().registerCommand(new DiscoveriesCommand());
   }
 
   @EventHandler

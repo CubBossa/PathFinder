@@ -301,6 +301,18 @@ public class Messages {
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
       .withDefault("<msg:prefix>Navigation started.  [ <c-accent><click:run_command:/cancelpath>/cancelpath</click></c-accent> ]")
       .build();
+  public static final Message CMD_DISCOVERIES_ENTRY = new MessageBuilder("commands.discoveries.list.entry")
+      .withDefault("<display-name>: <percentage>")
+      .withPlaceholders("display-name", "command-tag", "percentage")
+      .build();
+  public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
+      .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Discoveries</c-brand-light> ------------</gradient>")
+      .withPlaceholders("page", "next-page", "prev-page", "pages")
+      .build();
+  public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.path_visualizer.list.footer")
+      .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/discoveries <prev-page>>←</click> <page>/<pages> <click:run_command:/discoveries <next-page>>→</click> </t>-------------</gradient>")
+      .withPlaceholders("page", "next-page", "prev-page", "pages")
+      .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
       .withDefault("<msg:prefix>No matching waypoints could be found.")
       .build();
