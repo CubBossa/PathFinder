@@ -95,17 +95,18 @@ public class AbstractDiscoverHandler<PlayerT> {
       return CompletableFuture.completedFuture(null);
     }
     UUID playerId = player.getUniqueId();
-    return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenAccept(discoverInfo -> {
+    return plugin.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenCompose(discoverInfo -> {
       if (discoverInfo.isPresent()) {
-        return;
+        return CompletableFuture.completedFuture(null);
       }
 
       Optional<DiscoverableModifier> discoverable = group.getModifier(DiscoverableModifier.KEY);
       if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable.get(), date)) {
-        return;
+        return CompletableFuture.completedFuture(null);
       }
 
-      plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date);
+      return plugin.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date);
+    }).thenRun(() -> {
     });
   }
 

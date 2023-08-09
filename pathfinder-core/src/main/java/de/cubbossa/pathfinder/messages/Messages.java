@@ -12,6 +12,8 @@ import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageBuilder;
 import lombok.Setter;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -26,6 +28,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Particle;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -306,8 +310,8 @@ public class Messages {
       .withDefault("<msg:prefix>Navigation started.  [ <c-accent><click:run_command:/cancelpath>/cancelpath</click></c-accent> ]")
       .build();
   public static final Message CMD_DISCOVERIES_ENTRY = new MessageBuilder("commands.discoveries.list.entry")
-      .withDefault("<display-name>: <percentage>")
-      .withPlaceholders("display-name", "command-tag", "percentage")
+      .withDefault("<bg>» </bg><name>: <percentage:#.##>%")
+      .withPlaceholders("name", "percentage", "ratio")
       .build();
   public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.discoveries.list.header")
       .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Discoveries</c-brand-light> ------------</gradient>")
@@ -372,6 +376,10 @@ public class Messages {
       .withDefault("You discovered: <discoverable>")
       .withTranslation(Locale.GERMAN, "Entdeckt: <discoverable>")
       .withPlaceholders("player", "discoverable", "group")
+      .build();
+  public static final Message DISCOVERY_PROG = new MessageBuilder("discovery.progress")
+      .withDefault("<percentage>% of <name>")
+      .withPlaceholders("player", "discoverable", "group", "name", "percentage", "ratio", "count-found", "count-all")
       .build();
   public static final Message DISCOVERY_FORGET = new MessageBuilder("discovery.forget")
       .withDefault("<msg:prefix>You forgot all about <discoverable>")
@@ -615,6 +623,15 @@ public class Messages {
   public static final Message EDITM_NG_DELETED = new MessageBuilder("editmode.group_deleted")
       .withDefault("<c-negative>Your currently edited group was deleted by another user.")
       .build();
+
+  @Setter
+  private static AudienceProvider audiences;
+
+  private static Audience audienceSender(CommandSender sender) {
+    return sender instanceof Player player
+        ? audiences.player(player.getUniqueId())
+        : audiences.console();
+  }
 
   public static Message throwable(Throwable throwable) {
     return GEN_ERROR.formatted(formatter().throwable(throwable));

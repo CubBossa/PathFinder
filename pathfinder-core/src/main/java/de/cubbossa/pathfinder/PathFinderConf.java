@@ -205,6 +205,9 @@ public class PathFinderConf implements PathFinderConfig {
         "title ${player} title {\"text\":\"\"}",
         "playsound minecraft:entity.villager.work_cartographer neutral ${player} ${player.location} 1 1"
     );
+    public ArrayList<String> onDiscoverProgress = Lists.newArrayList(
+        "title ${player} actionbar ${translation.discovery.progress.json}"
+    );
     public ArrayList<String> onForget = Lists.newArrayList(
         "tellraw ${player} ${translation.discovery.forget.gson}"
     );

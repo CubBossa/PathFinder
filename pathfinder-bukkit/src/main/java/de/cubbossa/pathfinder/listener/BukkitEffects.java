@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.listener;
 
 import de.cubbossa.pathapi.event.*;
+import de.cubbossa.pathapi.group.DiscoverProgressModifier;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderConf;
@@ -14,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -67,7 +70,34 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onDiscover,
           Placeholder.component("player", e.getPlayer().getDisplayName()),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+          Messages.formatter().namespacedKey("group", e.getGroup().getKey()),
+          TagResolver.resolver("percentage", (argumentQueue, context) -> {
+            if (e.getGroup().hasModifier(DiscoverProgressModifier.KEY)) {
+              return Tag.inserting(Component.text(e.getGroup().<DiscoverProgressModifier>getModifier(DiscoverProgressModifier.KEY)
+                  .orElseThrow().calculateProgress(e.getPlayer().getUniqueId())
+                  .join()));
+            }
+            return Tag.inserting(Component.text(100));
+          })
+      );
+    });
+
+    dispatcher.listen(PlayerDiscoverProgressEvent.class, e -> {
+
+      DiscoverableModifier discoverableModifier = e.getFoundGroup().<DiscoverableModifier>getModifier(DiscoverableModifier.KEY)
+          .orElseThrow();
+      DiscoverProgressModifier discoverProgressModifier = e.getProgressObserverGroup().<DiscoverProgressModifier>getModifier(DiscoverProgressModifier.KEY)
+          .orElseThrow();
+
+      runCommands(e.getPlayer(), config.onDiscoverProgress, //"player", "discoverable", "group", "name", "percent", "ratio", "count-found", "count-all"
+          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("discoverable", discoverableModifier.getDisplayName()),
+          Messages.formatter().namespacedKey("group", e.getProgressObserverGroup().getKey()),
+          Placeholder.component("name", discoverProgressModifier.getDisplayName()),
+          TagResolver.resolver("percentage", (argumentQueue, context) -> {
+            return Tag.inserting(Component.text(discoverProgressModifier.calculateProgress(e.getPlayer().getUniqueId())
+                .join() * 100));
+          })
       );
     });
 

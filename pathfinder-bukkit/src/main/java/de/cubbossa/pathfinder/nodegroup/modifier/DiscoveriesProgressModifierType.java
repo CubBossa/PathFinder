@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -32,9 +31,9 @@ public class DiscoveriesProgressModifierType implements ModifierType<DiscoverPro
 
   @Override
   public ComponentLike toComponents(DiscoverProgressModifier modifier) {
-    return Messages.CMD_NG_MOD_DISCOVERIES.formatted(Placeholder.component("name",
-        PathFinderProvider.get().getMiniMessage().deserialize(modifier.getNameFormat())
-    ));
+    return Messages.CMD_NG_MOD_DISCOVERIES.formatted(
+        Placeholder.component("name", modifier.getDisplayName())
+    );
   }
 
   @Override

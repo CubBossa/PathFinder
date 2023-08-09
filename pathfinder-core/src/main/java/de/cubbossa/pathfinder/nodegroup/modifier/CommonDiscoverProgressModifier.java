@@ -47,14 +47,17 @@ public class CommonDiscoverProgressModifier implements DiscoverProgressModifier 
     return storage.loadGroup(owningGroup).thenCompose(group -> {
       return storage.loadGroups(group.orElseThrow()).thenApply(m -> {
         Collection<NodeGroup> discoverableGroupsWithin = m.values().stream()
-            .flatMap(Collection::stream)
-            .distinct()
-            .filter(g -> g.hasModifier(DiscoverableModifier.KEY))
-            .toList();
+                .flatMap(Collection::stream)
+                .distinct()
+                .filter(g -> g.hasModifier(DiscoverableModifier.KEY))
+                .toList();
         int all = discoverableGroupsWithin.size();
+        if (all == 0) {
+          return 0.;
+        }
         int discovered = (int) discoverableGroupsWithin.stream()
-            .filter(g -> dh.hasDiscovered(playerId, g).join())
-            .count();
+                .filter(g -> dh.hasDiscovered(playerId, g).join())
+                .count();
         return discovered / (double) all;
       });
     });

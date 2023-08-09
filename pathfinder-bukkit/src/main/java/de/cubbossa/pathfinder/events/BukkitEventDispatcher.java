@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.events;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.Listener;
 import de.cubbossa.pathapi.event.*;
+import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
@@ -70,6 +71,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
     classMapping.put(PathTargetReachedEvent.class, PathTargetFoundEvent.class);
 
     classMapping.put(PlayerDiscoverLocationEvent.class, PlayerDiscoverEvent.class);
+    classMapping.put(PlayerDiscoverProgressEvent.class, de.cubbossa.pathfinder.events.discovering.PlayerDiscoverProgressEvent.class);
     classMapping.put(PlayerForgetLocationEvent.class, PlayerForgetEvent.class);
   }
 
@@ -150,8 +152,24 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
+  public boolean dispatchPlayerFindProgressEvent(PathPlayer<Player> player, NodeGroup found, NodeGroup observer) {
+    dispatchEvent(new de.cubbossa.pathfinder.events.discovering.PlayerDiscoverProgressEvent(player, found, observer));
+    return true;
+  }
+
+  @Override
   public boolean dispatchPlayerFindEvent(PathPlayer<Player> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate) {
-    return dispatchEvent(new PlayerDiscoverEvent(player, group, modifier, findDate));
+    if (dispatchEvent(new PlayerDiscoverEvent(player, group, modifier, findDate))) {
+      PathFinderProvider.get().getStorage().loadGroups(group).thenAccept(uuidCollectionMap -> {
+        uuidCollectionMap.values()
+            .stream().flatMap(Collection::stream)
+            .distinct()
+            .filter(g -> g.hasModifier(DiscoverProgressModifier.KEY))
+            .forEach(g -> dispatchPlayerFindProgressEvent(player, group, g));
+      });
+      return true;
+    }
+    return false;
   }
 
   @Override

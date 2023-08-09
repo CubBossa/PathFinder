@@ -29,7 +29,7 @@ public class DiscoveriesCommand extends CommandTree {
     pathFinder = PathFinderProvider.get();
 
     executesPlayer((sender, args) -> {
-      printList(sender, Pagination.page(1, 10));
+      printList(sender, Pagination.page(0, 10));
     });
     then(Arguments.pagination(10).executesPlayer((sender, args) -> {
       printList(sender, args.getUnchecked(0));
@@ -52,7 +52,9 @@ public class DiscoveriesCommand extends CommandTree {
           CollectionUtils.subList(l, pagination),
           e -> {
             p.sendMessage(Messages.CMD_DISCOVERIES_ENTRY.formatted(
-                Placeholder.component("name", pathFinder.getMiniMessage().deserialize(e.getKey().getNameFormat()))
+                    Placeholder.component("name", e.getKey().getDisplayName()),
+                    Messages.formatter().number("percentage", e.getValue() * 100),
+                    Messages.formatter().number("ratio", e.getValue())
             ));
           },
           Messages.CMD_DISCOVERIES_HEADER,
