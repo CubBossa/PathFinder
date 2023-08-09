@@ -378,7 +378,7 @@ public class Messages {
       .withPlaceholders("player", "discoverable", "group")
       .build();
   public static final Message DISCOVERY_PROG = new MessageBuilder("discovery.progress")
-      .withDefault("<percentage>% of <name>")
+      .withDefault("<percentage:#.##>% of <name>")
       .withPlaceholders("player", "discoverable", "group", "name", "percentage", "ratio", "count-found", "count-all")
       .build();
   public static final Message DISCOVERY_FORGET = new MessageBuilder("discovery.forget")

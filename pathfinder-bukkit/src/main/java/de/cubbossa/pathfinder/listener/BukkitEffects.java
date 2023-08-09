@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -70,15 +70,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onDiscover,
           Placeholder.component("player", e.getPlayer().getDisplayName()),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey()),
-          TagResolver.resolver("percentage", (argumentQueue, context) -> {
-            if (e.getGroup().hasModifier(DiscoverProgressModifier.KEY)) {
-              return Tag.inserting(Component.text(e.getGroup().<DiscoverProgressModifier>getModifier(DiscoverProgressModifier.KEY)
-                  .orElseThrow().calculateProgress(e.getPlayer().getUniqueId())
-                  .join()));
-            }
-            return Tag.inserting(Component.text(100));
-          })
+          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
       );
     });
 
@@ -94,10 +86,7 @@ public class BukkitEffects {
           Placeholder.component("discoverable", discoverableModifier.getDisplayName()),
           Messages.formatter().namespacedKey("group", e.getProgressObserverGroup().getKey()),
           Placeholder.component("name", discoverProgressModifier.getDisplayName()),
-          TagResolver.resolver("percentage", (argumentQueue, context) -> {
-            return Tag.inserting(Component.text(discoverProgressModifier.calculateProgress(e.getPlayer().getUniqueId())
-                .join() * 100));
-          })
+          Formatter.number("percentage", discoverProgressModifier.calculateProgress(e.getPlayer().getUniqueId()).join() * 100)
       );
     });
 
