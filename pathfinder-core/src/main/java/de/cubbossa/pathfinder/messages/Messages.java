@@ -281,6 +281,10 @@ public class Messages {
       .withDefault("Discover as: <name>")
       .withPlaceholder("name", "The name that is being shown when discovering this group.")
       .build();
+  public static final Message CMD_NG_MOD_DISCOVERIES = new MessageBuilder("commands.node_group.modifier.discover-progress")
+      .withDefault("Discover progress as: <name>")
+      .withPlaceholder("name", "The name that is being shown when running /discoveries.")
+      .build();
   public static final Message CMD_NG_MOD_FINDDIST = new MessageBuilder("commands.node_group.modifier.finddistance")
       .withDefault("Find distance: <distance:#.##>")
       .withPlaceholder("distance", "Use java number formatting to provide custom formatting.")
@@ -305,11 +309,11 @@ public class Messages {
       .withDefault("<display-name>: <percentage>")
       .withPlaceholders("display-name", "command-tag", "percentage")
       .build();
-  public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
+  public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.discoveries.list.header")
       .withDefault("<gradient:black:dark_gray:black>------------ <c-brand-light>Discoveries</c-brand-light> ------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
-  public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.path_visualizer.list.footer")
+  public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.discoveries.list.footer")
       .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/discoveries <prev-page>>←</click> <page>/<pages> <click:run_command:/discoveries <next-page>>→</click> </t>-------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();

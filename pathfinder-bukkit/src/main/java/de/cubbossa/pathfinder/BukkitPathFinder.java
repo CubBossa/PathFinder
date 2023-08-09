@@ -100,6 +100,7 @@ public class BukkitPathFinder extends CommonPathFinder {
     modifierRegistry.registerModifierType(new PermissionModifierType());
     modifierRegistry.registerModifierType(new NavigableModifierType());
     modifierRegistry.registerModifierType(new DiscoverableModifierType());
+    modifierRegistry.registerModifierType(new DiscoveriesProgressModifierType());
     modifierRegistry.registerModifierType(new FindDistanceModifierType());
     modifierRegistry.registerModifierType(new CurveLengthModifierType());
     modifierRegistry.registerModifierType(new VisualizerModifierType());

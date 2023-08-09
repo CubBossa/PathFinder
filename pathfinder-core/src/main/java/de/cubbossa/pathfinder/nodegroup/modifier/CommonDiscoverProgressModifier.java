@@ -9,7 +9,7 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -17,12 +17,17 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
-@RequiredArgsConstructor
 public class CommonDiscoverProgressModifier implements DiscoverProgressModifier {
 
-  private final NamespacedKey ownerGroup;
+  private final NamespacedKey owningGroup;
   private final String nameFormat;
-  private final String commandKey;
+  private final Component displayName;
+
+  public CommonDiscoverProgressModifier(NamespacedKey ownerGroup, String nameFormat) {
+    this.owningGroup = ownerGroup;
+    this.nameFormat = nameFormat;
+    this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -39,7 +44,7 @@ public class CommonDiscoverProgressModifier implements DiscoverProgressModifier 
     Storage storage = PathFinderProvider.get().getStorage();
     AbstractDiscoverHandler<Player> dh = AbstractDiscoverHandler.getInstance();
 
-    return storage.loadGroup(ownerGroup).thenCompose(group -> {
+    return storage.loadGroup(owningGroup).thenCompose(group -> {
       return storage.loadGroups(group.orElseThrow()).thenApply(m -> {
         Collection<NodeGroup> discoverableGroupsWithin = m.values().stream()
             .flatMap(Collection::stream)

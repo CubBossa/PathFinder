@@ -1,7 +1,7 @@
 package de.cubbossa.pathapi.group;
 
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import net.kyori.adventure.text.Component;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +15,9 @@ public interface DiscoverProgressModifier extends Modifier {
     return KEY;
   }
 
-  String getCommandKey();
+  NamespacedKey getOwningGroup();
+
+  Component getDisplayName();
 
   String getNameFormat();
 

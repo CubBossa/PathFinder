@@ -52,8 +52,7 @@ public class DiscoveriesCommand extends CommandTree {
           CollectionUtils.subList(l, pagination),
           e -> {
             p.sendMessage(Messages.CMD_DISCOVERIES_ENTRY.formatted(
-                Placeholder.unparsed("command-tag", e.getKey().getCommandKey()),
-                Placeholder.component("display-name", pathFinder.getMiniMessage().deserialize(e.getKey().getNameFormat()))
+                Placeholder.component("name", pathFinder.getMiniMessage().deserialize(e.getKey().getNameFormat()))
             ));
           },
           Messages.CMD_DISCOVERIES_HEADER,

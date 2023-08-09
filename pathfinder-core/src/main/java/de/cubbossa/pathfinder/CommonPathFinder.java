@@ -147,7 +147,7 @@ public abstract class CommonPathFinder implements PathFinder {
 
     // Data
     translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
-            .withDefaultLocale(configuration.language.fallbackLanguage)
+        .withDefaultLocale(configuration.language.fallbackLanguage)
         .withEnabledLocales(Locale.getAvailableLocales())
         .withPreferClientLanguage(configuration.language.clientLanguage)
         .withLogger(getLogger())
