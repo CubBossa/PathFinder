@@ -334,19 +334,21 @@ public class EditModeMenu {
   private void openGroupMenu(Player player, Node node) {
 
     storage.loadAllGroups().thenAccept(nodeGroups -> {
+      ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
+      nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
 
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
-      for (NodeGroup group : nodeGroups) {
+      for (NodeGroup group : nodeGroupList) {
         if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
           continue;
         }
 
         TagResolver resolver = TagResolver.builder()
-            .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-            .resolver(Messages.formatter().number("weight", group.getWeight()))
-            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-            .build();
+                .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
+                .resolver(Messages.formatter().number("weight", group.getWeight()))
+                .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
+                .build();
 
         menu.addListEntry(Button.builder()
             .withItemStack(() -> {
@@ -426,19 +428,22 @@ public class EditModeMenu {
   private void openMultiToolMenu(Player player) {
     storage.loadAllGroups().thenAccept(nodeGroups -> {
 
+      ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
+      nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
+
       ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
-          3)); //TODO extract icon
-      for (NodeGroup group : nodeGroups) {
+              3)); //TODO extract icon
+      for (NodeGroup group : nodeGroupList) {
         if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
           continue;
         }
 
         TagResolver resolver = TagResolver.builder()
-            .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-            .resolver(Messages.formatter().number("weight", group.getWeight()))
-            .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-            .build();
+                .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
+                .resolver(Messages.formatter().number("weight", group.getWeight()))
+                .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
+                .build();
 
         menu.addListEntry(Button.builder()
             .withItemStack(() -> {
