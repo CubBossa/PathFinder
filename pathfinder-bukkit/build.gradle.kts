@@ -104,6 +104,7 @@ bukkit {
         register("pathfinder.command.pathfinder.reload")
         register("pathfinder.command.pathfinder.import")
         register("pathfinder.command.pathfinder.export")
+        register("pathfinder.command.discoveries") { default = BukkitPluginDescription.Permission.Default.TRUE }
         register("pathfinder.command.find") { default = BukkitPluginDescription.Permission.Default.TRUE }
         register("pathfinder.command.findlocation")
         register("pathfinder.command.findplayer.request")

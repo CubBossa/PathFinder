@@ -11,6 +11,7 @@ public class PathPerms {
   public static final String PERM_CMD_PF_MODULES = "pathfinder.command.pathfinder.modules";
   public static final String PERM_CMD_PF_FORCEFIND = "pathfinder.command.pathfinder.forcefind";
   public static final String PERM_CMD_PF_FORCEFORGET = "pathfinder.command.pathfinder.forceforget";
+  public static final String PERM_CMD_DISCOVERIES = "pathfinder.command.discoveries";
   public static final String PERM_CMD_FIND = "pathfinder.command.find";
   public static final String PERM_CMD_FIND_LOCATION = "pathfinder.command.findlocation";
   public static final String PERM_CMD_FIND_PLAYER_REQUEST = "pathfinder.command.findplayer.request";

@@ -5,6 +5,7 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -25,6 +26,8 @@ public class DiscoveriesCommand extends CommandTree {
 
   public DiscoveriesCommand() {
     super("discoveries");
+
+    withPermission(PathPerms.PERM_CMD_DISCOVERIES);
 
     pathFinder = PathFinderProvider.get();
 
