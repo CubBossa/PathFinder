@@ -24,7 +24,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,7 +79,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() throws Exception {
     GraphRenderer.super.close();
     PathFinderProvider.get().getEventDispatcher().drop(groupChangeListener);
     PlayerMoveEvent.getHandlerList().unregister(this);

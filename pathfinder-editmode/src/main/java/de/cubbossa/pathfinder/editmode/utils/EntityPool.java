@@ -37,6 +37,10 @@ public class EntityPool<EntityT extends Entity> implements AutoCloseable {
     }
 
     Optional<EntityT> any = free.stream().findAny();
+    if (any.isPresent() && any.get().isDead()) {
+      free.remove(any.get());
+      any = Optional.empty();
+    }
     if (any.isEmpty()) {
       EntityT e = aquire(location);
       claimed.add(e);
