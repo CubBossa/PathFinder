@@ -10,7 +10,6 @@ import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.NodeDeleteEvent;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -43,6 +42,26 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EditModeMenu {
+
+
+  private static Material[] GROUP_ITEM_LIST = new Material[]{
+      Material.WHITE_CONCRETE,
+      Material.ORANGE_CONCRETE,
+      Material.MAGENTA_CONCRETE,
+      Material.LIGHT_BLUE_CONCRETE,
+      Material.YELLOW_CONCRETE,
+      Material.LIME_CONCRETE,
+      Material.PINK_CONCRETE,
+      Material.GRAY_CONCRETE,
+      Material.LIGHT_GRAY_CONCRETE,
+      Material.CYAN_CONCRETE,
+      Material.PURPLE_CONCRETE,
+      Material.BLUE_CONCRETE,
+      Material.BROWN_CONCRETE,
+      Material.GREEN_CONCRETE,
+      Material.RED_CONCRETE,
+      Material.BLACK_CONCRETE
+  };
 
   private final Storage storage;
   private final NamespacedKey key;
@@ -331,6 +350,20 @@ public class EditModeMenu {
     return menu;
   }
 
+  private LocalizedItem.Builder groupItem(NodeGroup group) {
+    int mod = group.getKey().hashCode();
+
+    TagResolver resolver = TagResolver.builder()
+        .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
+        .resolver(Messages.formatter().number("weight", group.getWeight()))
+        .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
+        .build();
+
+    return new LocalizedItem.Builder(new ItemStack(GROUP_ITEM_LIST[Math.floorMod(mod, 16)]))
+        .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
+        .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver));
+  }
+
   private void openGroupMenu(Player player, Node node) {
 
     storage.loadAllGroups().thenAccept(nodeGroups -> {
@@ -344,20 +377,9 @@ public class EditModeMenu {
           continue;
         }
 
-        TagResolver resolver = TagResolver.builder()
-                .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-                .resolver(Messages.formatter().number("weight", group.getWeight()))
-                .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-                .build();
-
         menu.addListEntry(Button.builder()
             .withItemStack(() -> {
-              ItemStack stack = new LocalizedItem.Builder(new ItemStack(
-                  group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
-                      : Material.FURNACE_MINECART))
-                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
-                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
-                  .createItem(player);
+              ItemStack stack = groupItem(group).createItem(player);
               if (group.contains(node.getNodeId())) {
                 stack = ItemStackUtils.setGlow(stack);
               }
@@ -439,20 +461,9 @@ public class EditModeMenu {
           continue;
         }
 
-        TagResolver resolver = TagResolver.builder()
-                .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-                .resolver(Messages.formatter().number("weight", group.getWeight()))
-                .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-                .build();
-
         menu.addListEntry(Button.builder()
             .withItemStack(() -> {
-              ItemStack stack = new LocalizedItem.Builder(new ItemStack(
-                  group.hasModifier(DiscoverableModifier.class) ? Material.CHEST_MINECART
-                      : Material.FURNACE_MINECART))
-                  .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
-                  .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver))
-                  .createItem(player);
+              ItemStack stack = groupItem(group).createItem(player);
               if (multiTool.contains(group.getKey())) {
                 stack = ItemStackUtils.setGlow(stack);
               }
