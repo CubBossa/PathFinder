@@ -268,11 +268,10 @@ public abstract class CommonPathFinder implements PathFinder {
     }
     state = ApplicationState.DISABLED;
 
-    NodeHandler.getInstance().cancelAllEditModes();
+    NodeHandler.getInstance().close();
     extensionRegistry.disableExtensions(this);
     storage.shutdown();
 
-    NodeHandler.getInstance().close();
   }
 
   @Override

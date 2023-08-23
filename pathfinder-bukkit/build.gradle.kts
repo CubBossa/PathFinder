@@ -26,7 +26,7 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://libraries.minecraft.net/")
-    maven("https://repo.codemc.org/repository/maven-public/")
+    maven("https://repo.codemc.org/repository/maven-snapshots/")
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
@@ -87,7 +87,15 @@ bukkit {
 
     apiVersion = "1.18"
 
-    softDepend = listOf("PlaceholderAPI")
+    softDepend = listOf(
+            "PlaceholderAPI",
+            "ProtocolLib",
+            "ProtocolSupport",
+            "ViaVersion",
+            "ViaBackwards",
+            "ViaRewind",
+            "Geyser-Spigot"
+    )
     libraries = listOf(
             "org.openjdk.nashorn:nashorn-core:15.4",
             "org.snakeyaml:snakeyaml-engine:2.0",

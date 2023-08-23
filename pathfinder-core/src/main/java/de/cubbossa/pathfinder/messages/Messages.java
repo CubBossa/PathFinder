@@ -318,7 +318,7 @@ public class Messages {
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.discoveries.list.footer")
-      .withDefault("<gradient:black:dark_gray:black>------------<t> <click:run_command:/discoveries <prev-page>>←</click> <page>/<pages> <click:run_command:/discoveries <next-page>>→</click> </t>-------------</gradient>")
+      .withDefault("<gradient:black:dark_gray:black>-------------<t> <click:run_command:/discoveries <prev-page>>←</click> <page>/<pages> <click:run_command:/discoveries <next-page>>→</click> </t>--------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")

@@ -7,13 +7,13 @@ import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
@@ -25,13 +25,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
+
 public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDisplay>
     implements GraphRenderer<Player> {
 
   private static final Vector3f NODE_SCALE = new Vector3f(1f, 1f, 1.618f).mul(0.25f);
-
-  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
   public EdgeEntityRenderer(JavaPlugin plugin) {
     super(plugin, BlockDisplay.class);
@@ -48,6 +48,7 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
         .thenApply(e -> BukkitUtils.lerp(e.getKey(), e.getValue(), .3d));
   }
 
+  @Override
   Action<TargetContext<Edge>> handleInteract(Player player, int slot, boolean left) {
     return left ? LEFT_CLICK_EDGE : RIGHT_CLICK_EDGE;
   }
@@ -74,9 +75,14 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
   }
 
   @Override
+  void hitbox(Edge element, Interaction entity) {
+    entity.setInteractionWidth(Float.max(NODE_SCALE.x, NODE_SCALE.z));
+    entity.setInteractionHeight(NODE_SCALE.y);
+  }
+
+  @Override
   public void showElement(Edge element, Player player) {
     super.showElement(element, player);
-
   }
 
   @Override
@@ -84,7 +90,10 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
     return CompletableFuture.runAsync(() -> {
       hideElements(entityNodeMap.values(), player.unwrap());
       players.remove(player);
-    }, BukkitPathFinder.mainThreadExecutor());
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   @Override
@@ -96,21 +105,27 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
           .collect(Collectors.toSet());
 
       Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-      hideElements(getNodeEntityMap().keySet().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
+      hideElements(getEntityNodeMap().values().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
 
       showElements(toRender, player.unwrap());
       players.add(player);
-    }, BukkitPathFinder.mainThreadExecutor());
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 
   @Override
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.runAsync(() -> {
       Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).collect(Collectors.toSet());
-      Collection<Edge> toErase = nodeEntityMap.keySet().stream()
+      Collection<Edge> toErase = entityNodeMap.values().stream()
           .filter(edge -> nodeIds.contains(edge.getStart()) || nodeIds.contains(edge.getEnd()))
           .collect(Collectors.toSet());
       hideElements(toErase, player.unwrap());
-    }, BukkitPathFinder.mainThreadExecutor());
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
+    });
   }
 }

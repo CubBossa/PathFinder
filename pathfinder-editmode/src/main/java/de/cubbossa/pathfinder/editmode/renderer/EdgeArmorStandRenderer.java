@@ -16,6 +16,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,11 +25,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
+
 public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     implements GraphRenderer<Player> {
 
-  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
-  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
   private static final Vector ARMORSTAND_CHILD_OFFSET = new Vector(0, -.9, 0);
 
   private final ItemStack nodeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_ORANGE);
@@ -71,7 +73,11 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
         return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
       });
     }).thenAccept(vector -> {
-      setHeadRotation(player, nodeEntityMap.get(element), vector);
+      Location location = new Location(null, 0, 0, 0);
+      location.setDirection(vector);
+      entityNodeMap.inverse().get(element).setHeadPose(
+          new EulerAngle(location.getYaw(), location.getPitch(), 0)
+      );
     });
   }
 
@@ -103,7 +109,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
           .collect(Collectors.toSet());
 
       Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-      hideElements(getNodeEntityMap().keySet().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
+      hideElements(entityNodeMap.values().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
 
       showElements(toRender, player.unwrap());
       players.add(player);
@@ -114,7 +120,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
   public CompletableFuture<Void> eraseNodes(PathPlayer<Player> player, Collection<Node> nodes) {
 
     Collection<UUID> nodeIds = nodes.stream().map(Node::getNodeId).collect(Collectors.toSet());
-    Collection<Edge> toErase = nodeEntityMap.keySet().stream()
+    Collection<Edge> toErase = entityNodeMap.values().stream()
         .filter(edge -> nodeIds.contains(edge.getStart()) || nodeIds.contains(edge.getEnd()))
         .collect(Collectors.toSet());
     hideElements(toErase, player.unwrap());

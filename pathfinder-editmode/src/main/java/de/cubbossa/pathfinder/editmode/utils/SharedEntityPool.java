@@ -41,10 +41,10 @@ public class SharedEntityPool<KeyT, EntityT extends Entity> implements AutoClose
     if (e == null) {
       throw new IllegalStateException("Cannot destroy entity that is not rendered.");
     }
+    player.hideEntity(plugin, e);
     AtomicInteger renderCount = viewers.get(key);
     if (renderCount.get() > 1) {
       renderCount.decrementAndGet();
-      player.hideEntity(plugin, e);
       return;
     }
     mapping.remove(key);
