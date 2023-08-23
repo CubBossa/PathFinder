@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 public class ClientBlockDisplay extends ClientDisplay implements BlockDisplay {
 
-  BlockData block = Material.AIR.createBlockData();
+  BlockData block = Material.LIME_CONCRETE.createBlockData();
 
   public ClientBlockDisplay(PlayerSpace playerSpace, int entityId) {
     super(playerSpace, entityId, EntityType.BLOCK_DISPLAY);

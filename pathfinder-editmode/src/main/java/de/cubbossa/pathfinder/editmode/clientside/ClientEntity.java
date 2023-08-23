@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
-import com.github.retrooper.packetevents.protocol.entity.pose.EntityPose;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
@@ -39,7 +38,7 @@ import java.util.*;
 
 public class ClientEntity implements Entity, UntickedEntity {
 
-  private static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
+  static final GsonComponentSerializer GSON = GsonComponentSerializer.gson();
 
   final int entityId;
   final UUID uniqueId;
@@ -576,6 +575,7 @@ public class ClientEntity implements Entity, UntickedEntity {
           );
         }
         aliveChanged = false;
+        locationChanged = false;
       }
       if (locationChanged) {
         api.getPlayerManager().sendPacket(player,
@@ -584,7 +584,12 @@ public class ClientEntity implements Entity, UntickedEntity {
         locationChanged = false;
       }
       if (metaChanged) {
-        api.getPlayerManager().sendPacket(player, new WrapperPlayServerEntityMetadata(entityId, metaData()));
+        try {
+          List<EntityData> data = metaData();
+          api.getPlayerManager().sendPacket(player, new WrapperPlayServerEntityMetadata(entityId, data));
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
         metaChanged = false;
       }
     }
@@ -593,17 +598,20 @@ public class ClientEntity implements Entity, UntickedEntity {
   List<EntityData> metaData() {
     List<EntityData> data = new ArrayList<>();
     // flags
-    data.add(new EntityData(0, EntityDataTypes.BYTE, (byte)
-        ((!visible ? 0x20 : 0)
-            | (isGlowing() ? 0x40 : 0))
-    ));
-    data.add(new EntityData(1, EntityDataTypes.INT, 300));
+    byte mask = (byte) ((!visible ? 0x20 : 0) | (isGlowing() ? 0x40 : 0));
+    if (mask != 0) {
+      data.add(new EntityData(0, EntityDataTypes.BYTE, mask));
+    }
     // data.add(new EntityData(2, EntityDataTypes.OPTIONAL_COMPONENT, Optional.ofNullable(getCustomName())));
-    data.add(new EntityData(3, EntityDataTypes.BOOLEAN, customNameVisible));
-    data.add(new EntityData(4, EntityDataTypes.BOOLEAN, silent));
-    data.add(new EntityData(5, EntityDataTypes.BOOLEAN, !gravity));
-    data.add(new EntityData(6, EntityDataTypes.ENTITY_POSE, EntityPose.STANDING));
-    data.add(new EntityData(7, EntityDataTypes.INT, 0));
+    if (customNameVisible) {
+      data.add(new EntityData(3, EntityDataTypes.BOOLEAN, true));
+    }
+    if (silent) {
+      data.add(new EntityData(4, EntityDataTypes.BOOLEAN, true));
+    }
+    if (!gravity) {
+      data.add(new EntityData(5, EntityDataTypes.BOOLEAN, false));
+    }
     return data;
   }
 

@@ -189,24 +189,38 @@ public class ClientArmorStand extends ClientLivingEntity implements ArmorStand {
   @Override
   List<EntityData> metaData() {
     List<EntityData> data = super.metaData();
-    data.add(new EntityData(15, EntityDataTypes.BYTE, (byte)
+    byte mask = (byte)
         ((isSmall() ? 0x01 : 0)
             | (hasArms() ? 0x02 : 0)
             | (!hasBasePlate() ? 0x04 : 0)
-            | (isMarker() ? 0x08 : 0))
-    ));
-    data.add(new EntityData(16, EntityDataTypes.ROTATION,
-        new Vector3f((float) headPose.getX(), (float) headPose.getY(), (float) headPose.getZ())));
-    data.add(new EntityData(17, EntityDataTypes.ROTATION,
-        new Vector3f((float) bodyPose.getX(), (float) bodyPose.getY(), (float) bodyPose.getZ())));
-    data.add(new EntityData(18, EntityDataTypes.ROTATION,
-        new Vector3f((float) leftArmPose.getX(), (float) leftArmPose.getY(), (float) leftArmPose.getZ())));
-    data.add(new EntityData(19, EntityDataTypes.ROTATION,
-        new Vector3f((float) rightArmPose.getX(), (float) rightArmPose.getY(), (float) rightArmPose.getZ())));
-    data.add(new EntityData(20, EntityDataTypes.ROTATION,
-        new Vector3f((float) leftLegPose.getX(), (float) leftLegPose.getY(), (float) leftLegPose.getZ())));
-    data.add(new EntityData(21, EntityDataTypes.ROTATION,
-        new Vector3f((float) rightLegPose.getX(), (float) rightLegPose.getY(), (float) rightLegPose.getZ())));
+            | (isMarker() ? 0x08 : 0));
+    if (mask != 0) {
+      data.add(new EntityData(15, EntityDataTypes.BYTE, mask));
+    }
+    if (!headPose.equals(new EulerAngle(0, 0, 0))) {
+      data.add(new EntityData(16, EntityDataTypes.ROTATION,
+          new Vector3f((float) headPose.getX(), (float) headPose.getY(), (float) headPose.getZ())));
+    }
+    if (!bodyPose.equals(new EulerAngle(0, 0, 0))) {
+      data.add(new EntityData(17, EntityDataTypes.ROTATION,
+          new Vector3f((float) bodyPose.getX(), (float) bodyPose.getY(), (float) bodyPose.getZ())));
+    }
+    if (!leftArmPose.equals(new EulerAngle(-10, 0, 10))) {
+      data.add(new EntityData(18, EntityDataTypes.ROTATION,
+          new Vector3f((float) leftArmPose.getX(), (float) leftArmPose.getY(), (float) leftArmPose.getZ())));
+    }
+    if (!rightArmPose.equals(new EulerAngle(-15, 0, 10))) {
+      data.add(new EntityData(19, EntityDataTypes.ROTATION,
+          new Vector3f((float) rightArmPose.getX(), (float) rightArmPose.getY(), (float) rightArmPose.getZ())));
+    }
+    if (!leftLegPose.equals(new EulerAngle(-1, 0, -1))) {
+      data.add(new EntityData(20, EntityDataTypes.ROTATION,
+          new Vector3f((float) leftLegPose.getX(), (float) leftLegPose.getY(), (float) leftLegPose.getZ())));
+    }
+    if (!rightLegPose.equals(new EulerAngle(1, 0, 1))) {
+      data.add(new EntityData(21, EntityDataTypes.ROTATION,
+          new Vector3f((float) rightLegPose.getX(), (float) rightLegPose.getY(), (float) rightLegPose.getZ())));
+    }
     return data;
   }
 }

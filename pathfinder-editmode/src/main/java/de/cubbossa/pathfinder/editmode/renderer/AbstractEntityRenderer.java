@@ -9,17 +9,14 @@ import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
+import de.cubbossa.pathfinder.editmode.clientside.PlayerSpace;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,9 +29,9 @@ import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
-public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display> implements GraphRenderer<Player>, Listener {
+public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display> implements GraphRenderer<Player> {
 
-  private final BukkitMainThreadExecutor executor;
+  final PlayerSpace playerSpace;
   protected final Collection<PathPlayer<Player>> players;
   final Class<DisplayT> entityClass;
   final BiMap<DisplayT, ElementT> entityNodeMap;
@@ -42,15 +39,24 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
   double renderDistance;
   double renderDistanceSquared;
 
+  private Collection<PlayerSpace.ListenerHandle> listeners = new HashSet<>();
+
   public AbstractEntityRenderer(JavaPlugin plugin, Class<DisplayT> displayClass) {
     this.entityClass = displayClass;
-    this.executor = new BukkitMainThreadExecutor(plugin, 15);
+    this.playerSpace = PlayerSpace.create();
 
     entityNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     interactionNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     players = new HashSet<>();
 
-    Bukkit.getPluginManager().registerEvents(this, plugin);
+    listeners.add(playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick));
+    listeners.add(playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit));
+  }
+
+  @Override
+  public void close() throws Exception {
+    listeners.forEach(playerSpace::unregisterListener);
+    playerSpace.close();
   }
 
   public void setRenderDistance(double renderDistance) {
@@ -75,14 +81,15 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
   }
 
   public void showElement(ElementT element, Player player) {
+    playerSpace.addPlayerIfAbsent(player);
     if (entityNodeMap.inverse().containsKey(element)) {
       updateElement(element, player);
       return;
     }
 
-    location(element).thenAcceptAsync(location -> {
+    location(element).thenAccept(location -> {
 
-      DisplayT entity = player.getWorld().spawn(location, entityClass);
+      DisplayT entity = playerSpace.spawn(location, entityClass);
 
       entity.setViewRange((float) (renderDistance / 64.));
 
@@ -91,12 +98,15 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
       render(element, entity);
 
-      Interaction interaction = player.getWorld().spawn(location, Interaction.class);
+      Interaction interaction = playerSpace.spawn(location, Interaction.class);
       interactionNodeMap.put(interaction, element);
 
       hitbox(element, interaction);
 
-    }, executor).exceptionally(throwable -> {
+      playerSpace.announce(entity);
+      playerSpace.announce(interaction);
+
+    }).exceptionally(throwable -> {
       throwable.printStackTrace();
       hideElements(Collections.singleton(element), player);
       return null;
@@ -111,15 +121,19 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
       return;
     }
     Location prev = display.getLocation();
-    location(element).thenAcceptAsync(loc -> {
+    location(element).thenAccept(loc -> {
       // update position if position changed
       if (!prev.equals(loc)) {
         display.teleport(loc);
+
         Interaction interaction = interactionNodeMap.inverse().get(element);
         interaction.teleport(loc);
         hitbox(element, interaction);
+
+        playerSpace.announce(display);
+        playerSpace.announce(interaction);
       }
-    }, executor).exceptionally(throwable -> {
+    }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
@@ -136,31 +150,22 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
       if (e1 == null && e2 == null) {
         continue;
       }
-      CompletableFuture.runAsync(() -> {
-        if (e1 != null) {
-          e1.remove();
-        }
-        if (e2 != null) {
-          e2.remove();
-        }
-      }, executor);
+      if (e1 != null) {
+        e1.remove();
+      }
+      if (e2 != null) {
+        e2.remove();
+      }
     }
+    playerSpace.announceEntityRemovals();
   }
 
-  @Override
-  public void close() throws Exception {
-    PlayerInteractEntityEvent.getHandlerList().unregister(this);
-    EntityDamageByEntityEvent.getHandlerList().unregister(this);
-  }
-
-  @EventHandler
   public void onClick(PlayerInteractEntityEvent e) {
     if (e.getRightClicked() instanceof Interaction interaction) {
       handleInteract(interaction, e.getPlayer(), false);
     }
   }
 
-  @EventHandler
   public void onHit(EntityDamageByEntityEvent e) {
     if (e.getEntity() instanceof Interaction interaction && e.getDamager() instanceof Player player) {
       handleInteract(interaction, player, true);

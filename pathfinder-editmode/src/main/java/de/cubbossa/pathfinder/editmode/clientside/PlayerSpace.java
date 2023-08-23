@@ -7,21 +7,31 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 
 import javax.annotation.Nullable;
+import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class PlayerSpace {
+public class PlayerSpace implements Closeable {
 
   public static BiMap<Class<? extends Entity>, Class<? extends ClientEntity>> classConversion = HashBiMap.create();
 
   static {
     classConversion.put(ArmorStand.class, ClientArmorStand.class);
+    classConversion.put(BlockDisplay.class, ClientBlockDisplay.class);
+    classConversion.put(TextDisplay.class, ClientTextDisplay.class);
+    classConversion.put(Interaction.class, ClientInteraction.class);
+  }
+
+  public static PlayerSpace create() {
+    return new PlayerSpace(Collections.emptyList());
   }
 
   public static PlayerSpace create(Player... players) {
@@ -35,13 +45,24 @@ public class PlayerSpace {
   private static int entityIdCounter = (int) 1e5;
   private static final TreeSet<Integer> freeEntityIds = new TreeSet<>();
 
+  ClientEntityListener clientEntityListener;
+
   Collection<UUID> players;
   Map<Integer, Entity> entities;
-
+  Map<Class<? extends Event>, Map<UUID, Consumer<Event>>> listeners;
 
   private PlayerSpace(Collection<UUID> players) {
     this.players = new HashSet<>(players);
     this.entities = new HashMap<>();
+    listeners = new HashMap<>();
+
+    clientEntityListener = new ClientEntityListener(Executors.newSingleThreadExecutor(), this);
+    PacketEvents.getAPI().getEventManager().registerListener(clientEntityListener);
+  }
+
+  @Override
+  public void close() throws IOException {
+    PacketEvents.getAPI().getEventManager().unregisterListener(clientEntityListener);
   }
 
   /**
@@ -58,6 +79,12 @@ public class PlayerSpace {
       id = entityIdCounter--;
     }
     return id;
+  }
+
+  public void addPlayerIfAbsent(Player player) {
+    if (!players.contains(player.getUniqueId())) {
+      addPlayer(player);
+    }
   }
 
   public void addPlayer(Player player) {
@@ -105,7 +132,7 @@ public class PlayerSpace {
     }
   }
 
-  public <E extends Entity> E spawnEntity(Class<E> type, Location location) {
+  public <E extends Entity> E spawn(Location location, Class<E> type) {
     try {
       Constructor<?> constructor = classConversion.get(type).getConstructor(PlayerSpace.class, int.class);
       E entity = (E) constructor.newInstance(this, claimId());
@@ -115,6 +142,24 @@ public class PlayerSpace {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public <EventT extends Event> ListenerHandle registerListener(Class<EventT> event, Consumer<EventT> handler) {
+    ListenerHandle handle = new ListenerHandle(event, UUID.randomUUID());
+    listeners.computeIfAbsent(event, c -> new HashMap<>()).put(handle.id(), (Consumer<Event>) handler);
+    return handle;
+  }
+
+  public void unregisterListener(ListenerHandle handle) {
+    listeners.computeIfAbsent(handle.type(), c -> new HashMap<>()).remove(handle.id());
+  }
+
+  public <EventT extends Event> void callEvent(EventT event) {
+    listeners.forEach((key, value) -> {
+      if (key.isInstance(event)) {
+        value.values().forEach(eventConsumer -> eventConsumer.accept(event));
+      }
+    });
   }
 
   public void announceEntityRemovals() {
@@ -157,5 +202,9 @@ public class PlayerSpace {
     return players.stream()
         .map(Bukkit::getPlayer)
         .collect(Collectors.toList());
+  }
+
+  public record ListenerHandle(Class<? extends Event> type, UUID id) {
+
   }
 }

@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.editmode.renderer;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import de.cubbossa.menuframework.inventory.Action;
+import de.cubbossa.menuframework.inventory.InvMenuHandler;
+import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -18,6 +20,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -111,7 +115,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         hiddenNodes.computeIfAbsent(player, player1 -> new HashSet<>()).add(element);
         return;
       }
-      ArmorStand armorStand = ps(player).spawnEntity(ArmorStand.class, location);
+      ArmorStand armorStand = ps(player).spawn(location, ArmorStand.class);
       armorStand.setSmall(isSmall(element));
       ((ClientEntity) armorStand).setCustomName(getName(element));
       armorStand.setBasePlate(false);
@@ -126,8 +130,13 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     });
   }
 
-  private PlayerSpace ps(Player player) {
-    return playerSpaces.computeIfAbsent(player.getUniqueId(), PlayerSpace::create);
+  protected PlayerSpace ps(Player player) {
+    return playerSpaces.computeIfAbsent(player.getUniqueId(), uuid -> {
+      PlayerSpace playerSpace = PlayerSpace.create(uuid);
+      playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick);
+      playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit);
+      return playerSpace;
+    });
   }
 
   public void updateElement(T element, Player player) {
@@ -153,5 +162,32 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
       }
     });
     ps(player).announceEntityRemovals();
+  }
+
+  public void onClick(PlayerInteractEntityEvent e) {
+    handleInteract(e.getRightClicked(), e.getPlayer(), false);
+  }
+
+  public void onHit(EntityDamageByEntityEvent e) {
+    if (e.getDamager() instanceof Player player) {
+      handleInteract(e.getEntity(), player, true);
+    }
+  }
+
+  private void handleInteract(Entity e, Player player, boolean left) {
+    if (!(e instanceof ClientArmorStand as)) {
+      return;
+    }
+    T element = entityNodeMap.get(as);
+    if (element == null) {
+      return;
+    }
+    int slot = player.getInventory().getHeldItemSlot();
+    Menu menu = InvMenuHandler.getInstance().getMenuAtSlot(player, slot);
+    if (menu == null) {
+      return;
+    }
+    Action<TargetContext<T>> action = handleInteract(player, slot, left);
+    menu.handleInteract(action, new TargetContext<>(player, menu, slot, action, true, element));
   }
 }

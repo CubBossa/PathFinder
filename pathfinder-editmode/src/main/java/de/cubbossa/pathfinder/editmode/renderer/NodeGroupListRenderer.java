@@ -7,8 +7,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.editmode.utils.EntityPool;
+import de.cubbossa.pathfinder.editmode.clientside.PlayerSpace;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
@@ -24,6 +23,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +34,12 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   @Getter
   @Setter
   private static final class Context {
+    private final PlayerSpace playerSpace;
     private final Collection<Node> rendered;
     private final Map<UUID, NodeContext> displayed;
 
-    public Context() {
+    public Context(UUID player) {
+      playerSpace = PlayerSpace.create(player);
       rendered = new HashSet<>();
       displayed = new ConcurrentHashMap<>();
     }
@@ -49,7 +51,6 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   private final Plugin plugin;
 
   private final Map<UUID, Context> contextMap;
-  private final EntityPool<TextDisplay> entityPool;
 
   private boolean hasHeldGroupToolsBefore = false;
   private final long cooldown = 100;
@@ -64,7 +65,6 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   public NodeGroupListRenderer(Plugin plugin, double angle, double distance) {
     this.plugin = plugin;
     contextMap = new HashMap<>();
-    entityPool = new EntityPool<>(0, TextDisplay.class);
 
     angleDot = Math.cos(angle * Math.PI / 180);
     distanceSquared = Math.pow(distance, 2);
@@ -81,13 +81,19 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   @Override
   public void close() throws Exception {
     GraphRenderer.super.close();
+    contextMap.values().forEach(context -> {
+      try {
+        context.playerSpace.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
     PathFinderProvider.get().getEventDispatcher().drop(groupChangeListener);
     PlayerMoveEvent.getHandlerList().unregister(this);
-    entityPool.close();
   }
 
   private Context context(Player player) {
-    return contextMap.computeIfAbsent(player.getUniqueId(), u -> new Context());
+    return contextMap.computeIfAbsent(player.getUniqueId(), Context::new);
   }
 
   /**
@@ -176,18 +182,14 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
       return;
     }
     Location location = BukkitVectorUtils.toBukkit(node.getLocation()).add(0, 0.3, 0);
-    CompletableFuture.runAsync(() -> {
-      TextDisplay display = entityPool.get(location);
-      display.setVisibleByDefault(false);
-      player.showEntity(plugin, display);
+    TextDisplay display = ctx.playerSpace.spawn(location, TextDisplay.class);
 
-      Context.NodeContext nCtx = new Context.NodeContext(node, display);
-      ctx.displayed.put(node.getNodeId(), nCtx);
+    Context.NodeContext nodeCtx = new Context.NodeContext(node, display);
+    ctx.displayed.put(node.getNodeId(), nodeCtx);
 
-      setText(nCtx);
-
-      display.setBillboard(Display.Billboard.CENTER);
-    }, BukkitPathFinder.mainThreadExecutor());
+    setText(nodeCtx);
+    display.setBillboard(Display.Billboard.CENTER);
+    ctx.playerSpace.announce(display);
 
 //    display.setInterpolationDuration(animationTickDuration);
 //    display.setInterpolationDelay(-1);
@@ -198,8 +200,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 
   private void hideText(Node node, Player player) {
     Context ctx = context(player);
-    Context.NodeContext nCtx = ctx.displayed.remove(node.getNodeId());
-    if (nCtx == null) {
+    Context.NodeContext nodeCtx = ctx.displayed.remove(node.getNodeId());
+    if (nodeCtx == null) {
       return;
     }
 //    display.setInterpolationDelay(-1);
@@ -211,10 +213,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 //      }
 //    }, animationTickDuration);
 
-    CompletableFuture.runAsync(() -> {
-      player.hideEntity(plugin, nCtx.display());
-      entityPool.destroy(nCtx.display());
-    }, BukkitPathFinder.mainThreadExecutor());
+    nodeCtx.display.remove();
+    ctx.playerSpace.announce(nodeCtx.display);
   }
 
   private boolean holdsGroupTools(Player player) {

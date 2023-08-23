@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -75,9 +76,9 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     }).thenAccept(vector -> {
       Location location = new Location(null, 0, 0, 0);
       location.setDirection(vector);
-      entityNodeMap.inverse().get(element).setHeadPose(
-          new EulerAngle(location.getYaw(), location.getPitch(), 0)
-      );
+      ArmorStand e = entityNodeMap.inverse().get(element);
+      e.setHeadPose(new EulerAngle(location.getPitch(), location.getYaw(), 0));
+      ps(player).announce(e);
     });
   }
 
