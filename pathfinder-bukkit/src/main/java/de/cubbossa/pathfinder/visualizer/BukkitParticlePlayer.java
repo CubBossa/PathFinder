@@ -30,4 +30,9 @@ public class BukkitParticlePlayer extends AbstractParticlePlayer<org.bukkit.Loca
   org.bukkit.Location convert(Location location) {
     return BukkitVectorUtils.toBukkit(location);
   }
+
+  @Override
+  Location convert(org.bukkit.Location location) {
+    return BukkitVectorUtils.toInternal(location);
+  }
 }
