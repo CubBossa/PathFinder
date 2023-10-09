@@ -1,6 +1,9 @@
 package de.cubbossa.pathapi.visualizer;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.GroupedNode;
+
+import java.util.List;
 
 /**
  * A VisualizerPath resembles one visualization across a path of nodes.
@@ -34,4 +37,11 @@ public interface VisualizerPath<PlayerT> extends PathView<PlayerT> {
    * @return True, if the path is currently being rendered for the given player.
    */
   boolean isActive(PathPlayer<PlayerT> player);
+
+  /**
+   * Refreshes the path of this visualizer path.
+   *
+   * @param path A list of grouped nodes that represent a path.
+   */
+  void update(List<GroupedNode> path);
 }

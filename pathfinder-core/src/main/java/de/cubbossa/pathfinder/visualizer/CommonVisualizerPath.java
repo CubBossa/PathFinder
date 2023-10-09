@@ -45,6 +45,10 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
     targetViewer = player;
     this.viewers.add(targetViewer);
 
+    update(path);
+  }
+
+  public void update(List<GroupedNode> path) {
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
     for (GroupedNode node : path) {
@@ -113,7 +117,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
       }
     }
     for (SubPath<?> subPath : paths) {
-      injectSubPathView(subPath, player);
+      injectSubPathView(subPath, targetViewer);
     }
   }
 
