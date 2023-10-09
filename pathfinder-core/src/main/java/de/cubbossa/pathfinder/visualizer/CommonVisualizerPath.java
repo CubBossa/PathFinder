@@ -11,6 +11,7 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.storage.StorageUtil;
+import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -32,6 +33,8 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
   protected PathPlayer<PlayerT> targetViewer;
   protected final HashSet<PathPlayer<PlayerT>> viewers;
   protected final Collection<SubPath<?>> paths;
+
+  private final Timer updateTimer = new Timer();
 
   public static <PlayerT> CommonVisualizerPath<PlayerT> fromNodes(List<Node> path, PathPlayer<PlayerT> player) {
     return new CommonVisualizerPath<>(path.stream().parallel()
@@ -119,6 +122,21 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
     for (SubPath<?> subPath : paths) {
       injectSubPathView(subPath, targetViewer);
     }
+  }
+
+  @Override
+  public void startUpdater(Supplier<List<GroupedNode>> path, int ms) {
+    updateTimer.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        update(path.get());
+      }
+    }, ms, ms);
+  }
+
+  @Override
+  public void stopUpdater() {
+    updateTimer.cancel();
   }
 
   private <ViewT extends PathView<PlayerT>> void injectSubPathView(SubPath<ViewT> subPath, PathPlayer<PlayerT> player) {
