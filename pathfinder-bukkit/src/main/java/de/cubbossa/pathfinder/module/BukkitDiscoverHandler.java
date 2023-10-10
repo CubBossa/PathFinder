@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.module;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;

@@ -34,6 +34,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
   protected final HashSet<PathPlayer<PlayerT>> viewers;
   protected final Collection<SubPath<?>> paths;
 
+  private Supplier<List<GroupedNode>> updaterPathSupplier;
   private final Timer updateTimer = new Timer();
 
   public static <PlayerT> CommonVisualizerPath<PlayerT> fromNodes(List<Node> path, PathPlayer<PlayerT> player) {
@@ -126,12 +127,17 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
 
   @Override
   public void startUpdater(Supplier<List<GroupedNode>> path, int ms) {
+    updaterPathSupplier = path;
     updateTimer.schedule(new TimerTask() {
       @Override
       public void run() {
-        update(path.get());
+        update(updaterPathSupplier.get());
       }
     }, ms, ms);
+  }
+
+  public void forceExecuteUpdater() {
+    update(updaterPathSupplier.get());
   }
 
   @Override

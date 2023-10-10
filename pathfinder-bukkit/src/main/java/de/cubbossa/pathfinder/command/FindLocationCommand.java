@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.CommandTree;
@@ -21,7 +21,7 @@ public class FindLocationCommand extends CommandTree {
           Location target = args.getUnchecked(0);
 
           PathPlayer<Player> p = BukkitUtils.wrap(player);
-          BukkitNavigationHandler.getInstance().findPath(p, target).thenAccept(result -> {
+          BukkitNavigationHandler.getInstance().findPathToLocation(p, target).thenAccept(result -> {
             AbstractNavigationHandler.printResult(result, p);
           }).exceptionally(throwable -> {
             throwable.printStackTrace();

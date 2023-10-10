@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.event.PathStartEvent;
 import de.cubbossa.pathapi.event.PathStoppedEvent;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;

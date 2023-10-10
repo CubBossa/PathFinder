@@ -7,7 +7,7 @@ import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
+import de.cubbossa.pathfinder.AbstractDiscoverHandler;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;

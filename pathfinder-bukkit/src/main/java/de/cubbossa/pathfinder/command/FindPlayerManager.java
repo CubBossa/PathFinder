@@ -5,7 +5,7 @@ import de.cubbossa.pathfinder.CommandRegistry;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -144,7 +144,7 @@ public class FindPlayerManager {
     ));
 
     PathPlayer<Player> requesterPathPlayer = BukkitUtils.wrap(requesterPlayer);
-    BukkitNavigationHandler.getInstance().findPath(requesterPathPlayer, BukkitVectorUtils.toInternal(target.getLocation().add(0, 1, 0))).thenAccept(result -> {
+    BukkitNavigationHandler.getInstance().findPathToLocation(requesterPathPlayer, BukkitVectorUtils.toInternal(target.getLocation().add(0, 1, 0))).thenAccept(result -> {
       AbstractNavigationHandler.printResult(result, requesterPathPlayer);
     }).exceptionally(throwable -> {
       throwable.printStackTrace();

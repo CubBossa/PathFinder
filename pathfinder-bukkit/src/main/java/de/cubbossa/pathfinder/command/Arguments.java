@@ -19,7 +19,7 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;

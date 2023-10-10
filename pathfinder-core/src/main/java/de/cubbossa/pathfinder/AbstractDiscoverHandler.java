@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module;
+package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
@@ -11,7 +11,6 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.CommonDiscoverableModifier;
 
 import java.time.LocalDateTime;

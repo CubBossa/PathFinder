@@ -14,7 +14,7 @@ import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.impl.*;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
+import de.cubbossa.pathfinder.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.NodeHandler;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.BukkitUtils;
