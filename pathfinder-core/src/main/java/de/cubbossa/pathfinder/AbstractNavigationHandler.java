@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder;
 import com.google.common.base.Preconditions;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
-import de.cubbossa.pathapi.navigation.NavigationHandler;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
@@ -20,9 +19,11 @@ import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.navigation.NavigationHandler;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
@@ -31,6 +32,7 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
@@ -50,9 +52,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.Listener;
@@ -222,11 +222,13 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     });
   }
 
-  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target, float distance) {
+  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
+                                float distance) {
     return setPath(player, pathNodes, target, distance, null);
   }
 
-  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull Supplier<List<GroupedNode>> pathNodeSupplier, Location target, float distance) {
+  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull Supplier<List<GroupedNode>> pathNodeSupplier,
+                                Location target, float distance) {
 
     List<GroupedNode> pathNodes = pathNodeSupplier.get();
     VisualizerPath<PlayerT> visualizerPath = new CommonVisualizerPath<>(pathNodes, player);
@@ -350,7 +352,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigateLocation> locations) {
 
     // check if any agile location has changed. If not, just return the last graph.
-    if (locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
+    if (cachedGraphWithTargets != null && locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
         .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
       return CompletableFuture.completedFuture(cachedGraphWithTargets);
     }
@@ -369,7 +371,8 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       // cache results
       cachedGraphWithTargets = graph;
       cachedAgileLocations.clear();
-      cachedAgileLocations.addAll(locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode).map(Node::getLocation).toList());
+      cachedAgileLocations.addAll(
+          locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode).map(Node::getLocation).toList());
       return graph;
     });
   }
@@ -395,23 +398,32 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
    * Generates the current world into one graph representation
    */
   private CompletableFuture<MutableValueGraph<GroupedNode, Double>> createGraph() {
-    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+    System.out.println("Create graph " + ((StorageImpl) pathFinder.getStorage()).getIoExecutor().isShutdown());
+    return pathFinder.getStorage().loadNodes().thenCompose(nodes -> {
+      System.out.println("one " + ((StorageImpl) pathFinder.getStorage()).getIoExecutor().isShutdown());
       Map<UUID, Node> nodeMap = new HashMap<>();
       nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
-      Map<UUID, GroupedNode> map = new HashMap<>();
+      Map<Node, GroupedNode> map = new HashMap<>();
 
-      pathFinder.getStorage().loadGroups(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenAccept(groups -> {
-        groups.forEach((uuid, gs) -> {
-          map.put(uuid, new SimpleGroupedNode(nodeMap.get(uuid), gs));
+      return pathFinder.getStorage().loadGroupsOfNodes(nodeMap.values()).thenApply(groups -> {
+        System.out.println("two");
+        groups.forEach((node, gs) -> {
+          map.put(node, new SimpleGroupedNode(node, gs));
         });
-      }).join();
+        return map;
+      });
+    }).exceptionally(throwable -> {
+      System.out.println("three");
+      throwable.printStackTrace();
+      return new HashMap<>();
+    }).thenApply(map -> {
 
       MutableValueGraph<GroupedNode, Double> graph = ValueGraphBuilder
           .directed().allowsSelfLoops(false)
           .build();
 
       map.values().forEach(graph::addNode);
-      for (Node node : nodes) {
+      for (Node node : map.keySet()) {
         for (Edge e : node.getEdges()) {
           GroupedNode endGrouped = map.get(e.getEnd());
           Node end = endGrouped == null ? null : endGrouped.node();
@@ -426,6 +438,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
         }
       }
       pathSolver.setGraph(graph);
+      System.out.println("asd");
       return graph;
     });
   }
@@ -437,6 +450,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
 
     private final Node node;
     private boolean agile;
+
     public static NavigateLocation agileNode(Node node) {
       NavigateLocation loc = new CommonNavigateLocation(node);
       loc.setAgile(true);
@@ -459,15 +473,5 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       n.setLocation(location);
       return new CommonNavigateLocation(n);
     }
-  }
-
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Getter
-  @Setter
-  public static class NavigationConfig {
-    private PathSolver<Node> pathSolver;
-    private GraphEntrySolver<Node> insertionSolver;
-    private double maxInsertionDistance;
   }
 }

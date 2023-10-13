@@ -117,7 +117,7 @@ public class StorageImpl implements Storage {
 
   private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
 
-    return CompletableFuture.supplyAsync(supplier, ioExecutor).exceptionally(throwable -> {
+    return CompletableFuture.supplyAsync(supplier).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
     });
@@ -184,9 +184,9 @@ public class StorageImpl implements Storage {
   }
 
   private CompletableFuture<Collection<Node>> insertEdges(Collection<Node> nodes) {
-    return CompletableFuture.supplyAsync(() -> {
+    return asyncFuture(() -> {
       return implementation.loadEdgesFrom(nodes.stream().map(Node::getNodeId).toList());
-    }, ioExecutor).thenApply(edges -> {
+    }).thenApply(edges -> {
       for (Node node : nodes) {
         if (!edges.containsKey(node.getNodeId())) {
           continue;

@@ -171,6 +171,26 @@ public abstract class StorageTest extends PathFinderTest {
 
   @Test
   @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void loadGroupsOfNodes() {
+    NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
+    NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");
+    Waypoint waypoint = makeWaypoint();
+
+    NodeGroup x = makeGroup(xKey);
+    NodeGroup y = makeGroup(yKey);
+    Collection<NodeGroup> groups = Set.of(globalGroup, x, y);
+
+    groups.forEach(nodeGroup -> {
+      nodeGroup.add(waypoint.getNodeId());
+      storage.saveGroup(nodeGroup);
+    });
+
+    var result = storage.loadGroupsOfNodes(Collections.singletonList(waypoint)).join();
+    Assertions.assertEquals(Map.of(waypoint, groups), result);
+  }
+
+  @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void loadGroupsByMod() {
     NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
     NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");

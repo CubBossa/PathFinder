@@ -1,13 +1,19 @@
 package de.cubbossa.pathapi.navigation;
 
+import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.graph.PathSolver;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -103,5 +109,15 @@ public interface NavigationHandler<PlayerT> {
     Node getNode();
     boolean isAgile();
     void setAgile(boolean agile);
+  }
+
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Getter
+  @Setter
+  class NavigationConfig {
+    private PathSolver<Node> pathSolver;
+    private GraphEntrySolver<Node> insertionSolver;
+    private double maxInsertionDistance;
   }
 }
