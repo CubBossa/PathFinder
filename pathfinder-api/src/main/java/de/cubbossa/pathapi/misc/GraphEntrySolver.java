@@ -5,5 +5,7 @@ import de.cubbossa.pathapi.node.GroupedNode;
 
 public interface GraphEntrySolver<T> {
 
-  MutableValueGraph<GroupedNode, Double> solve(T start, MutableValueGraph<GroupedNode, Double> scope);
+    MutableValueGraph<GroupedNode, Double> solveEntry(T in, MutableValueGraph<GroupedNode, Double> scope);
+
+    MutableValueGraph<GroupedNode, Double> solveExit(T out, MutableValueGraph<GroupedNode, Double> scope);
 }

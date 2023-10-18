@@ -12,7 +12,16 @@ import java.util.*;
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> {
 
   @Override
-  public MutableValueGraph<GroupedNode, Double> solve(GroupedNode start, MutableValueGraph<GroupedNode, Double> scope) {
+  public MutableValueGraph<GroupedNode, Double> solveEntry(GroupedNode in, MutableValueGraph<GroupedNode, Double> scope) {
+    return solve(in, true, scope);
+  }
+
+  @Override
+  public MutableValueGraph<GroupedNode, Double> solveExit(GroupedNode out, MutableValueGraph<GroupedNode, Double> scope) {
+    return solve(out, false, scope);
+  }
+
+  private MutableValueGraph<GroupedNode, Double> solve(GroupedNode start, boolean entry, MutableValueGraph<GroupedNode, Double> scope) {
 
     List<WeightedEdge> sortedEdges = new LinkedList<>();
     scope.edges().forEach((e) -> {
@@ -51,7 +60,11 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
       graph.addNode(w);
       graph.putEdgeValue(edge.start, w, edge.start.node().getLocation().distance(w.node().getLocation()));
       graph.putEdgeValue(w, edge.end, edge.end.node().getLocation().distance(w.node().getLocation()));
-      graph.putEdgeValue(start, w, 0.);
+      if (entry) {
+        graph.putEdgeValue(start, w, 0.);
+      } else {
+        graph.putEdgeValue(w, start, 0.);
+      }
     });
     return graph;
   }

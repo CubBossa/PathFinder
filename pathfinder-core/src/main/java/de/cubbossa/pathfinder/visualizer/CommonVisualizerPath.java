@@ -11,7 +11,6 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.storage.StorageUtil;
-import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -19,6 +18,7 @@ import lombok.experimental.Accessors;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**

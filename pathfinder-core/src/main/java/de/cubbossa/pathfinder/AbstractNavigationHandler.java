@@ -6,12 +6,7 @@ import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.event.EventDispatcher;
-import de.cubbossa.pathapi.event.NodeCreateEvent;
-import de.cubbossa.pathapi.event.NodeDeleteEvent;
-import de.cubbossa.pathapi.event.NodeGroupDeleteEvent;
-import de.cubbossa.pathapi.event.NodeGroupSaveEvent;
-import de.cubbossa.pathapi.event.NodeSaveEvent;
+import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.group.PermissionModifier;
@@ -23,7 +18,6 @@ import de.cubbossa.pathapi.navigation.NavigationHandler;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.GroupedNode;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
@@ -36,28 +30,19 @@ import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderExtension, NavigationHandler<PlayerT> {
 
@@ -170,19 +155,22 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     navigateLocations.addAll(target);
 
     // graph becomes static, so this step and all following must be repeated for each path update.
-    return getGraph(navigateLocations).thenCompose(graph -> findPath(graph, start, target)).thenApply(path -> {
+    return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).thenApply(path -> {
 
       NodeGroup highest = path.get(path.size() - 1).groups().stream()
-          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-          .max(NodeGroup::compareTo).orElse(null);
+              .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+              .max(NodeGroup::compareTo).orElse(null);
 
       double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-          .map(FindDistanceModifier::distance).orElse(1.5);
+              .map(FindDistanceModifier::distance).orElse(1.5);
 
-      boolean updating = navigateLocations.stream().noneMatch(NavigateLocation::isAgile);
+      boolean updating = navigateLocations.stream().anyMatch(NavigateLocation::isAgile);
 
-      return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating
-          ? null : () -> getGraph(navigateLocations).thenCompose(graph -> findPath(graph, start, target)).join());
+      return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
+        //TODO
+        System.out.println("Update");
+        return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
+      });
 
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
@@ -203,6 +191,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       List<GroupedNode> path;
 
       try {
+        pathSolver.setGraph(graph); // TODO fix for performance improvement
         path = pathSolver.solvePath(graphMapping.get(start.getNode().getNodeId()), convertedTargets);
       } catch (NoPathFoundException e) {
         throw new RuntimeException(e);
@@ -256,7 +245,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     visualizerPath.addViewer(player);
 
     if (pathNodeSupplier != null) {
-      visualizerPath.startUpdater(pathNodeSupplier, 100);
+      visualizerPath.startUpdater(pathNodeSupplier, 1000);
     }
 
     return NavigateResult.SUCCESS;
@@ -349,11 +338,14 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
    * @param locations A collection of NavigateLocation instances. The first one might represent the start point. All points
    *                  will be inserted by finding their closest edge and creating two edges from the point to both edge ends.
    */
-  private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigateLocation> locations) {
+  private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigateLocation> entries, Collection<NavigateLocation> exits) {
+
+    Collection<NavigateLocation> locations = new HashSet<>(entries);
+    locations.addAll(exits);
 
     // check if any agile location has changed. If not, just return the last graph.
-    if (cachedGraphWithTargets != null && locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
-        .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
+    if (false && cachedGraphWithTargets != null && locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
+            .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
       return CompletableFuture.completedFuture(cachedGraphWithTargets);
     }
 
@@ -361,10 +353,16 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     return fetchGraph().thenApply(graph -> {
       GraphEntrySolver<GroupedNode> solver = new EdgeBasedGraphEntrySolver();
 
-      for (NavigateLocation location : locations) {
+      for (NavigateLocation location : entries) {
         GroupedNode g = new SimpleGroupedNode(location.getNode(), new HashSet<>());
         graph.addNode(g);
-        graph = solver.solve(g, graph);
+        graph = solver.solveEntry(g, graph);
+        graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
+      }
+      for (NavigateLocation location : exits) {
+        GroupedNode g = new SimpleGroupedNode(location.getNode(), new HashSet<>());
+        graph.addNode(g);
+        graph = solver.solveExit(g, graph);
         graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
       }
 
@@ -372,7 +370,8 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       cachedGraphWithTargets = graph;
       cachedAgileLocations.clear();
       cachedAgileLocations.addAll(
-          locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode).map(Node::getLocation).toList());
+              locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode).map(Node::getLocation).toList());
+      cachedGraph = graph;
       return graph;
     });
   }
@@ -403,27 +402,24 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       System.out.println("one " + ((StorageImpl) pathFinder.getStorage()).getIoExecutor().isShutdown());
       Map<UUID, Node> nodeMap = new HashMap<>();
       nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
-      Map<Node, GroupedNode> map = new HashMap<>();
+      Map<UUID, GroupedNode> map = new HashMap<>();
 
       return pathFinder.getStorage().loadGroupsOfNodes(nodeMap.values()).thenApply(groups -> {
         System.out.println("two");
         groups.forEach((node, gs) -> {
-          map.put(node, new SimpleGroupedNode(node, gs));
+          map.put(node.getNodeId(), new SimpleGroupedNode(node, gs));
         });
         return map;
       });
-    }).exceptionally(throwable -> {
-      System.out.println("three");
-      throwable.printStackTrace();
-      return new HashMap<>();
     }).thenApply(map -> {
 
       MutableValueGraph<GroupedNode, Double> graph = ValueGraphBuilder
-          .directed().allowsSelfLoops(false)
-          .build();
+              .directed().allowsSelfLoops(false)
+              .build();
 
       map.values().forEach(graph::addNode);
-      for (Node node : map.keySet()) {
+      for (var entry : map.entrySet()) {
+        Node node = entry.getValue().node();
         for (Edge e : node.getEdges()) {
           GroupedNode endGrouped = map.get(e.getEnd());
           Node end = endGrouped == null ? null : endGrouped.node();
@@ -431,14 +427,13 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
           Node start = startGrouped == null ? null : startGrouped.node();
           if (end == null || start == null) {
             pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e
-                + ". Apparently, not all nodes are part of the global group.");
+                    + ". Apparently, not all nodes are part of the global group.");
             continue;
           }
           graph.putEdgeValue(startGrouped, endGrouped, node.getLocation().distance(end.getLocation()) * e.getWeight());
         }
       }
       pathSolver.setGraph(graph);
-      System.out.println("asd");
       return graph;
     });
   }
