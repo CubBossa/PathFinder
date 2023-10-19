@@ -53,6 +53,7 @@ public class CommonVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
   }
 
   public void update(List<GroupedNode> path) {
+
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
     for (GroupedNode node : path) {

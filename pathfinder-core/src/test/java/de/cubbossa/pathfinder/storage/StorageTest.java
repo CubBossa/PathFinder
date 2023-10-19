@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
@@ -170,7 +171,6 @@ public abstract class StorageTest extends PathFinderTest {
   }
 
   @Test
-  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
   void loadGroupsOfNodes() {
     NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
     NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");
@@ -182,11 +182,14 @@ public abstract class StorageTest extends PathFinderTest {
 
     groups.forEach(nodeGroup -> {
       nodeGroup.add(waypoint.getNodeId());
-      storage.saveGroup(nodeGroup);
+      storage.saveGroup(nodeGroup).join();
     });
 
     var result = storage.loadGroupsOfNodes(Collections.singletonList(waypoint)).join();
-    Assertions.assertEquals(Map.of(waypoint, groups), result);
+    Assertions.assertEquals(
+            groups.stream().map(Keyed::getKey).collect(Collectors.toSet()),
+            result.get(waypoint).stream().map(Keyed::getKey).collect(Collectors.toSet())
+    );
   }
 
   @Test

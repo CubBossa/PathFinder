@@ -30,7 +30,6 @@ import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.DebugStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
-import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
@@ -242,7 +241,7 @@ public abstract class PathFinderTest {
       @Override
       public DataSource getDataSource() {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setURL("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
         return dataSource;
       }
 

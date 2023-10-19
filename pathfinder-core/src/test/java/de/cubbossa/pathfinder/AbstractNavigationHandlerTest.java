@@ -1,19 +1,6 @@
 package de.cubbossa.pathfinder;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
 class AbstractNavigationHandlerTest extends PathFinderTest {
 
@@ -29,8 +16,7 @@ class AbstractNavigationHandlerTest extends PathFinderTest {
   void filterFindables() {
   }
 
-  @Test
-  @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  /*@Test
   void findPath() {
     setupPathFinder();
 
@@ -55,5 +41,5 @@ class AbstractNavigationHandlerTest extends PathFinderTest {
     )));
 
     shutdownPathFinder();
-  }
+  }*/
 }

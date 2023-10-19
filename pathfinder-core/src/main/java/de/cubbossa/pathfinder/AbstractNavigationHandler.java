@@ -167,8 +167,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       boolean updating = navigateLocations.stream().anyMatch(NavigateLocation::isAgile);
 
       return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
-        //TODO
-        System.out.println("Update");
+        System.out.println("Update " + start.getNode().getLocation());
         return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
       });
 
@@ -369,9 +368,8 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       // cache results
       cachedGraphWithTargets = graph;
       cachedAgileLocations.clear();
-      cachedAgileLocations.addAll(
-              locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode).map(Node::getLocation).toList());
-      cachedGraph = graph;
+      cachedAgileLocations.addAll(locations.stream().filter(NavigateLocation::isAgile)
+              .map(NavigateLocation::getNode).map(Node::getLocation).toList());
       return graph;
     });
   }
