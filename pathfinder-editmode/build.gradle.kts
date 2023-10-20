@@ -50,8 +50,8 @@ dependencies {
     implementation("xyz.xenondevs:particle:1.8.4")
 
     // Client ArmorStands
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.0.0-SNAPSHOT")
-    implementation("com.github.retrooper.packetevents:spigot:2.0.0-SNAPSHOT")
+    implementation("de.cubbossa:ClientEntities:1.0.1")
+    implementation("com.github.retrooper.packetevents:spigot:2.0.2")
 }
 
 tasks {
@@ -72,8 +72,10 @@ tasks {
 
         dependencies {
             include(dependency("de.cubbossa:MenuFramework:.*"))
+            include(dependency("de.cubbossa:ClientEntities:.*"))
             include(dependency("xyz.xenondevs:particle:.*"))
             include(dependency("de.tr7zw:item-nbt-api:.*"))
+            include(dependency("de.item-nbt-api:.*"))
             include(dependency("com.github.retrooper.packetevents:spigot:.*"))
             include(dependency("com.github.retrooper.packetevents:api:.*"))
         }
@@ -83,6 +85,7 @@ tasks {
         }
 
         relocate("de.cubbossa.menuframework", "gui")
+        relocate("de.cubbossa.cliententities", "cliententities")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
         relocate("com.github.retrooper.packetevents", "packetevents.api")

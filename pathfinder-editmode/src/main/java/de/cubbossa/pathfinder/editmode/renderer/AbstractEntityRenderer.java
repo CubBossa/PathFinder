@@ -3,13 +3,13 @@ package de.cubbossa.pathfinder.editmode.renderer;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
+import de.cubbossa.cliententities.PlayerSpace;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.editmode.clientside.PlayerSpace;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -43,7 +43,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
   public AbstractEntityRenderer(JavaPlugin plugin, Class<DisplayT> displayClass) {
     this.entityClass = displayClass;
-    this.playerSpace = PlayerSpace.create();
+    this.playerSpace = PlayerSpace.builder().withEventSupport().build();
 
     entityNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     interactionNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
@@ -89,7 +89,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
     location(element).thenAccept(location -> {
 
-      DisplayT entity = playerSpace.spawn(location, entityClass);
+      DisplayT entity = (DisplayT) playerSpace.spawn(location, entityClass);
 
       entity.setViewRange((float) (renderDistance / 64.));
 
@@ -103,8 +103,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
       hitbox(element, interaction);
 
-      playerSpace.announce(entity);
-      playerSpace.announce(interaction);
+      playerSpace.announce();
 
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
@@ -130,8 +129,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
         interaction.teleport(loc);
         hitbox(element, interaction);
 
-        playerSpace.announce(display);
-        playerSpace.announce(interaction);
+        playerSpace.announce();
       }
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
@@ -157,7 +155,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
         e2.remove();
       }
     }
-    playerSpace.announceEntityRemovals();
+    playerSpace.announce();
   }
 
   public void onClick(PlayerInteractEntityEvent e) {

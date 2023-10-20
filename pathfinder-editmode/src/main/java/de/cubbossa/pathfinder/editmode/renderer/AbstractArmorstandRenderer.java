@@ -2,15 +2,15 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import de.cubbossa.cliententities.PlayerSpace;
+import de.cubbossa.cliententities.entity.ClientArmorStand;
+import de.cubbossa.cliententities.entity.ClientEntity;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.InvMenuHandler;
 import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.editmode.clientside.ClientArmorStand;
-import de.cubbossa.pathfinder.editmode.clientside.ClientEntity;
-import de.cubbossa.pathfinder.editmode.clientside.PlayerSpace;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -121,7 +121,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
       armorStand.setBasePlate(false);
       armorStand.setVisible(false);
       armorStand.getEquipment().setHelmet(head(element));
-      ps(player).announce(armorStand);
+      ps(player).announce();
 
       entityNodeMap.put((ClientArmorStand) armorStand, element);
     }).exceptionally(throwable -> {
@@ -132,7 +132,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
 
   protected PlayerSpace ps(Player player) {
     return playerSpaces.computeIfAbsent(player.getUniqueId(), uuid -> {
-      PlayerSpace playerSpace = PlayerSpace.create(uuid);
+      PlayerSpace playerSpace = PlayerSpace.builder().withPlayer(uuid).build();
       playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick);
       playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit);
       return playerSpace;
@@ -147,7 +147,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         if (!prevLoc.equals(loc)) {
           Entity entity = entityNodeMap.inverse().get(element);
           entity.teleport(loc);
-          ps(player).announce(entity);
+          ps(player).announce();
         }
       });
     });
@@ -161,7 +161,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         present.remove();
       }
     });
-    ps(player).announceEntityRemovals();
+    ps(player).announce();
   }
 
   public void onClick(PlayerInteractEntityEvent e) {

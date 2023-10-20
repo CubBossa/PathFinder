@@ -78,7 +78,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
       location.setDirection(vector);
       ArmorStand e = entityNodeMap.inverse().get(element);
       e.setHeadPose(new EulerAngle(location.getPitch(), location.getYaw(), 0));
-      ps(player).announce(e);
+        ps(player).announce();
     });
   }
 

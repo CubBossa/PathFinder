@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import de.cubbossa.cliententities.PlayerSpace;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.event.NodeGroupSaveEvent;
@@ -7,7 +8,6 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.editmode.clientside.PlayerSpace;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
@@ -39,8 +39,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     private final Map<UUID, NodeContext> displayed;
 
     public Context(UUID player) {
-      playerSpace = PlayerSpace.create(player);
-      rendered = new HashSet<>();
+        playerSpace = PlayerSpace.builder().withPlayer(player).build();
+        rendered = new HashSet<>();
       displayed = new ConcurrentHashMap<>();
     }
 
@@ -188,8 +188,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     ctx.displayed.put(node.getNodeId(), nodeCtx);
 
     setText(nodeCtx);
-    display.setBillboard(Display.Billboard.CENTER);
-    ctx.playerSpace.announce(display);
+      display.setBillboard(Display.Billboard.CENTER);
+      ctx.playerSpace.announce();
 
 //    display.setInterpolationDuration(animationTickDuration);
 //    display.setInterpolationDelay(-1);
@@ -213,8 +213,8 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 //      }
 //    }, animationTickDuration);
 
-    nodeCtx.display.remove();
-    ctx.playerSpace.announce(nodeCtx.display);
+      nodeCtx.display.remove();
+      ctx.playerSpace.announce();
   }
 
   private boolean holdsGroupTools(Player player) {

@@ -13,6 +13,7 @@ import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.util.Collection;
@@ -83,6 +84,7 @@ public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDispla
     entity.setBlock(Material.LIME_CONCRETE.createBlockData());
     Transformation t = entity.getTransformation();
     t.getTranslation().sub(new Vector3f(NODE_SCALE, NODE_SCALE, NODE_SCALE).mul(0.5f));
+    t.getLeftRotation().set(new AxisAngle4f(45, 1, 0, 0));
     t.getScale().set(NODE_SCALE);
     entity.setTransformation(t);
   }
