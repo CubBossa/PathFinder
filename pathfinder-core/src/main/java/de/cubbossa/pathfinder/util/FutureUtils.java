@@ -13,7 +13,7 @@ public class FutureUtils {
     AtomicReference<A> aRef = new AtomicReference<>();
     AtomicReference<B> bRef = new AtomicReference<>();
 
-    a.thenAccept(a1 -> {
+    a.thenAcceptAsync(a1 -> {
       if (bRef.get() != null) {
         result.complete(new AbstractMap.SimpleEntry<>(a1, bRef.get()));
         return;
@@ -21,7 +21,7 @@ public class FutureUtils {
       aRef.set(a1);
     });
 
-    b.thenAccept(b1 -> {
+    b.thenAcceptAsync(b1 -> {
       if (aRef.get() != null) {
         result.complete(new AbstractMap.SimpleEntry<>(aRef.get(), b1));
         return;

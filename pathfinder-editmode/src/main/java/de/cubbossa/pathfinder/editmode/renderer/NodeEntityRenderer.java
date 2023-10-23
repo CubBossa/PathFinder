@@ -13,7 +13,6 @@ import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.util.Collection;
@@ -46,7 +45,7 @@ public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDispla
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
     return CompletableFuture.runAsync(() -> {
-      showElements(nodes, player.unwrap());
+      showElements(nodes, player.unwrap()).join();
       players.add(player);
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
@@ -84,7 +83,6 @@ public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDispla
     entity.setBlock(Material.LIME_CONCRETE.createBlockData());
     Transformation t = entity.getTransformation();
     t.getTranslation().sub(new Vector3f(NODE_SCALE, NODE_SCALE, NODE_SCALE).mul(0.5f));
-    t.getLeftRotation().set(new AxisAngle4f(45, 1, 0, 0));
     t.getScale().set(NODE_SCALE);
     entity.setTransformation(t);
   }
@@ -93,5 +91,6 @@ public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDispla
   void hitbox(Node element, Interaction entity) {
     entity.setInteractionWidth(NODE_SCALE);
     entity.setInteractionHeight(NODE_SCALE);
+    entity.teleport(entity.getLocation().subtract(0, NODE_SCALE / 2., 0));
   }
 }

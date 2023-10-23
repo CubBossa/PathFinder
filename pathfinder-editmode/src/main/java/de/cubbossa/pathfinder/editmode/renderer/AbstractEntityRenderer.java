@@ -74,20 +74,19 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
   abstract Action<TargetContext<ElementT>> handleInteract(Player player, int slot, boolean left);
 
-  public void showElements(Collection<ElementT> elements, Player player) {
-    for (ElementT element : elements) {
-      showElement(element, player);
-    }
+  public CompletableFuture<Void> showElements(Collection<ElementT> elements, Player player) {
+    return CompletableFuture.allOf(elements.stream()
+        .map(e -> showElement(e, player))
+        .toArray(CompletableFuture[]::new));
   }
 
-  public void showElement(ElementT element, Player player) {
+  public CompletableFuture<Void> showElement(ElementT element, Player player) {
     playerSpace.addPlayerIfAbsent(player);
     if (entityNodeMap.inverse().containsKey(element)) {
-      updateElement(element, player);
-      return;
+      return updateElement(element, player);
     }
 
-    location(element).thenAccept(location -> {
+    return location(element).thenAccept(location -> {
 
       DisplayT entity = (DisplayT) playerSpace.spawn(location, entityClass);
 
@@ -112,15 +111,14 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
     });
   }
 
-  public void updateElement(ElementT element, Player player) {
+  public CompletableFuture<Void> updateElement(ElementT element, Player player) {
     DisplayT display = entityNodeMap.inverse().get(element);
     if (display.isDead()) {
       entityNodeMap.remove(display);
-      showElement(element, player);
-      return;
+      return showElement(element, player);
     }
     Location prev = display.getLocation();
-    location(element).thenAccept(loc -> {
+    return location(element).thenAccept(loc -> {
       // update position if position changed
       if (!prev.equals(loc)) {
         display.teleport(loc);

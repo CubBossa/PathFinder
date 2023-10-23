@@ -20,6 +20,7 @@ import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -60,11 +61,10 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
 
   @Override
   void render(Edge element, BlockDisplay entity) {
-    Vector dir = element.resolveStart().thenCompose(start -> {
-      return element.resolveEnd().thenApply(end -> {
-        return BukkitVectorUtils.toBukkit(end.getLocation().clone().subtract(start.getLocation()).asVector());
-      });
-    }).join();
+
+    Vector dir = FutureUtils.both(element.resolveStart(), element.resolveEnd())
+        .thenApply((entry) -> BukkitVectorUtils.toBukkit(entry.getKey().getLocation().clone().subtract(entry.getValue().getLocation()).asVector()))
+        .join();
     entity.setBlock(Material.ORANGE_CONCRETE.createBlockData());
 
     entity.setTransformationMatrix(new Matrix4f()
@@ -78,11 +78,7 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
   void hitbox(Edge element, Interaction entity) {
     entity.setInteractionWidth(Float.max(NODE_SCALE.x, NODE_SCALE.z));
     entity.setInteractionHeight(NODE_SCALE.y);
-  }
-
-  @Override
-  public void showElement(Edge element, Player player) {
-    super.showElement(element, player);
+    entity.teleport(entity.getLocation().subtract(0, NODE_SCALE.y / 2., 0));
   }
 
   @Override
@@ -98,21 +94,17 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
 
   @Override
   public CompletableFuture<Void> renderNodes(PathPlayer<Player> player, Collection<Node> nodes) {
-    return CompletableFuture.runAsync(() -> {
-      // all edges from rendered nodes to adjacent nodes
-      Collection<Edge> toRender = nodes.stream()
-          .map(Node::getEdges).flatMap(Collection::stream)
-          .collect(Collectors.toSet());
+    // all edges from rendered nodes to adjacent nodes
+    Collection<Edge> toRender = nodes.stream()
+        .map(Node::getEdges).flatMap(Collection::stream)
+        .collect(Collectors.toSet());
 
-      Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
-      hideElements(getEntityNodeMap().values().stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
+    Collection<UUID> ids = nodes.stream().map(Node::getNodeId).toList();
 
-      showElements(toRender, player.unwrap());
-      players.add(player);
-    }).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
-    });
+    hideElements(new ArrayList<>(getEntityNodeMap().values()).stream().filter(edge -> ids.contains(edge.getStart())).toList(), player.unwrap());
+
+    players.add(player);
+    return showElements(toRender, player.unwrap());
   }
 
   @Override

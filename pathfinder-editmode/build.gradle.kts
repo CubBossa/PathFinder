@@ -18,6 +18,7 @@ val minecraftVersion = project.property("minecraft_version") as String
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://libraries.minecraft.net/")
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
@@ -50,7 +51,7 @@ dependencies {
     implementation("xyz.xenondevs:particle:1.8.4")
 
     // Client ArmorStands
-    implementation("de.cubbossa:ClientEntities:1.0.1")
+    implementation("de.cubbossa:ClientEntities:1.2.1")
     implementation("com.github.retrooper.packetevents:spigot:2.0.2")
 }
 
