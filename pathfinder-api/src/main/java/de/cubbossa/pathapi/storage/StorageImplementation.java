@@ -7,9 +7,12 @@ import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
 /**
@@ -18,6 +21,10 @@ import java.util.logging.Logger;
  * combines different loading methods (e.g. loading a node, its edges and its groups) into one.
  */
 public interface StorageImplementation {
+
+  default @Nullable ExecutorService service(ThreadFactory factory) {
+    return null;
+  }
 
   /**
    * Initializes this storage implementation. Will be called by {@link Storage#init()} and will create

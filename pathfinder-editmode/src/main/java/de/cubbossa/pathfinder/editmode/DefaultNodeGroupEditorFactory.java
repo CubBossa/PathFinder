@@ -21,7 +21,7 @@ public class DefaultNodeGroupEditorFactory implements NodeGroupEditorFactory {
     editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));
     try {
       if (new Version(PathFinderPlugin.getInstance().getServer().getBukkitVersion().split("-")[0]).compareTo(new Version("1.19.4")) >= 0) {
-        // editor.getRenderers().add(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));
+        editor.getRenderers().add(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));
         editor.getRenderers().add(new NodeEntityRenderer(PathFinderPlugin.getInstance()));
         editor.getRenderers().add(new EdgeEntityRenderer(PathFinderPlugin.getInstance()));
       } else {
