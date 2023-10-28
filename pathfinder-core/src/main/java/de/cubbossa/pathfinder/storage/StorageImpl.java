@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.Modifier;
@@ -28,10 +29,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -61,7 +59,11 @@ public class StorageImpl implements Storage {
 
   @Override
   public void init() throws Exception {
-    ioExecutor = Executors.newCachedThreadPool();
+    ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("pathfinder-io-%d").build();
+    ioExecutor = implementation.service(factory);
+    if (ioExecutor == null) {
+      ioExecutor = Executors.newCachedThreadPool(factory);
+    }
     implementation.init();
   }
 
@@ -117,9 +119,11 @@ public class StorageImpl implements Storage {
 
   private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
 
-    return CompletableFuture.supplyAsync(supplier, ioExecutor).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
+    return CompletableFuture.supplyAsync(() -> {
+      return CompletableFuture.supplyAsync(supplier, ioExecutor).exceptionally(throwable -> {
+        throwable.printStackTrace();
+        return null;
+      }).join();
     });
   }
 
@@ -184,9 +188,9 @@ public class StorageImpl implements Storage {
   }
 
   private CompletableFuture<Collection<Node>> insertEdges(Collection<Node> nodes) {
-    return CompletableFuture.supplyAsync(() -> {
+    return asyncFuture(() -> {
       return implementation.loadEdgesFrom(nodes.stream().map(Node::getNodeId).toList());
-    }, ioExecutor).thenApply(edges -> {
+    }).thenApply(edges -> {
       for (Node node : nodes) {
         if (!edges.containsKey(node.getNodeId())) {
           continue;

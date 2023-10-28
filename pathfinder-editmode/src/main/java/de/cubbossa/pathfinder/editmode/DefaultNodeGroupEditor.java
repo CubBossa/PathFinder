@@ -88,7 +88,10 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
 
   private void renderAll(Collection<Node> nodes) {
     for (PathPlayer<Player> player : editingPlayers.keySet()) {
-      renderNodes(player, nodes);
+      List<Node> sortedNodes = new ArrayList<>(nodes);
+      sortedNodes.sort(Comparator.comparing(node -> node.getLocation().distanceSquared(player.getLocation())));
+
+      renderNodes(player, sortedNodes);
     }
   }
 

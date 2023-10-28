@@ -4,11 +4,15 @@ import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.SQLDialect;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class SqliteStorage extends SqlStorage {
 
@@ -21,6 +25,11 @@ public class SqliteStorage extends SqlStorage {
                        VisualizerTypeRegistry visualizerTypeRegistry) {
     super(SQLDialect.SQLITE, nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
     this.file = file;
+  }
+
+  @Override
+  public @Nullable ExecutorService service(ThreadFactory factory) {
+    return Executors.newSingleThreadExecutor(factory);
   }
 
   public void init() throws Exception {

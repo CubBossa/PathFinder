@@ -5,6 +5,7 @@ import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.menuframework.inventory.context.ClickContext;
 import de.cubbossa.menuframework.inventory.context.ContextConsumer;
+import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathapi.PathFinderConfig;
@@ -13,6 +14,7 @@ import de.cubbossa.pathapi.event.NodeDeleteEvent;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.Storage;
@@ -20,8 +22,6 @@ import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
-import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
-import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.StorageUtil;
@@ -62,6 +62,12 @@ public class EditModeMenu {
       Material.RED_CONCRETE,
       Material.BLACK_CONCRETE
   };
+
+
+  public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
+  public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
+  public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
   private final Storage storage;
   private final NamespacedKey key;
@@ -122,7 +128,7 @@ public class EditModeMenu {
           return new LocalizedItem(stack, Messages.E_NODE_TOOL_N, Messages.E_NODE_TOOL_L).createItem(editingPlayer);
         })
 
-        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+        .withClickHandler(LEFT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
           if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST);
@@ -144,7 +150,7 @@ public class EditModeMenu {
           context.getMenu().refresh(context.getSlot());
         })
 
-        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+        .withClickHandler(RIGHT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
           PathPlayer<Player> pp = CommonPathFinder.getInstance().wrap(p);
           if (chainEdgeStart == null) {
@@ -233,7 +239,7 @@ public class EditModeMenu {
               });
         })
 
-        .withClickHandler(EdgeArmorStandRenderer.LEFT_CLICK_EDGE, context -> {
+        .withClickHandler(LEFT_CLICK_EDGE, context -> {
           if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
@@ -294,12 +300,12 @@ public class EditModeMenu {
     menu.setButton(1, Button.builder()
         .withItemStack(new LocalizedItem(Material.CHEST, Messages.E_GROUP_TOOL_N,
             Messages.E_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+        .withClickHandler(RIGHT_CLICK_NODE, context -> {
           storage.loadNode(context.getTarget().getNodeId()).thenAccept(node -> {
             node.ifPresent(value -> openGroupMenu(context.getPlayer(), value));
           });
         })
-        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+        .withClickHandler(LEFT_CLICK_NODE, context -> {
           if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
@@ -316,7 +322,7 @@ public class EditModeMenu {
     menu.setButton(2, Button.builder()
         .withItemStack(new LocalizedItem(Material.ENDER_CHEST, Messages.E_MULTI_GROUP_TOOL_N,
             Messages.E_MULTI_GROUP_TOOL_L).createItem(editingPlayer))
-        .withClickHandler(NodeArmorStandRenderer.RIGHT_CLICK_NODE, context -> {
+        .withClickHandler(RIGHT_CLICK_NODE, context -> {
           if (!lock.compareAndSet(false, true)) {
             BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
             return;
@@ -333,7 +339,7 @@ public class EditModeMenu {
             lock.set(false);
           });
         })
-        .withClickHandler(NodeArmorStandRenderer.LEFT_CLICK_NODE, context -> {
+        .withClickHandler(LEFT_CLICK_NODE, context -> {
           storage.loadGroupsByMod(multiTool).thenCompose(groups -> {
             return StorageUtil.removeGroups(groups, context.getTarget().getNodeId());
           }).thenRun(() -> {

@@ -82,6 +82,9 @@ public class NodeHandler implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    editors.forEach((key, nodeGroupEditor) -> nodeGroupEditor.cancelEditModes());
+    editors.forEach((key, nodeGroupEditor) -> {
+      nodeGroupEditor.cancelEditModes();
+      nodeGroupEditor.dispose();
+    });
   }
 }
