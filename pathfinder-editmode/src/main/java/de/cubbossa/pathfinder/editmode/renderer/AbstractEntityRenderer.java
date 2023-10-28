@@ -18,6 +18,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -49,7 +50,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
     interactionNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     players = new HashSet<>();
 
-    listeners.add(playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick));
+    listeners.add(playerSpace.registerListener(PlayerInteractAtEntityEvent.class, this::onClick));
     listeners.add(playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit));
   }
 

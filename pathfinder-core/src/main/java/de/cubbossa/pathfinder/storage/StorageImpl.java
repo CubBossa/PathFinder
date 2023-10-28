@@ -272,7 +272,7 @@ public class StorageImpl implements Storage {
       // actually hard load and not cached to make sure that nodes are comparable
       type.saveNode(node);
       return node;
-    });
+    }, ioExecutor); // TODO temporary solution, actually each node storage should manage its own logic
   }
 
   @Override

@@ -18,7 +18,6 @@ import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
-import de.cubbossa.pathfinder.storage.implementation.DebugStorage;
 import de.cubbossa.pathfinder.storage.implementation.RemoteSqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
@@ -194,7 +193,7 @@ public abstract class CommonPathFinder implements PathFinder {
     impl.setWorldLoader(this::getWorld);
     impl.setLogger(getLogger());
 
-    storage.setImplementation(new DebugStorage(impl, getLogger()));
+    storage.setImplementation(impl);
     storage.setEventDispatcher(eventDispatcher);
     storage.setLogger(getLogger());
     storage.init();

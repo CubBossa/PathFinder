@@ -15,9 +15,12 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.storage.WaypointDataStorage;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +32,11 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   public DebugStorage(StorageImplementation implementation, Logger logger) {
     this.implementation = implementation;
     this.logger = logger;
+  }
+
+  @Override
+  public @Nullable ExecutorService service(ThreadFactory factory) {
+    return implementation.service(factory);
   }
 
   @Override
