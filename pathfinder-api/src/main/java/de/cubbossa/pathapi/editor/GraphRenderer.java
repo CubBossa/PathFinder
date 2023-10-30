@@ -3,7 +3,6 @@ package de.cubbossa.pathapi.editor;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
@@ -15,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 public interface GraphRenderer<Player> extends AutoCloseable {
 
   @Override
-  default void close() throws IOException {
+  default void close() throws Exception {
 
   }
 

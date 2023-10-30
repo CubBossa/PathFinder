@@ -98,8 +98,10 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         });
         futures.add(future);
       }
-      return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
-          .thenRun(() -> updateRenderer(player));
+      return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> updateRenderer(player));
+    }).exceptionally(throwable -> {
+      throwable.printStackTrace();
+      return null;
     });
   }
 
@@ -206,6 +208,6 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     private final UUID endId;
     private Location start;
     private Location end;
-    private boolean directed = true;
+    private boolean directed;
   }
 }

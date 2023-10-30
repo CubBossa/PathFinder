@@ -235,7 +235,7 @@ public class PathFinderConf implements PathFinderConfig {
         1s = 20t""")
     public int edgeParticleTickDelay = 6;
     @Comment("The edge color that indicates an outgoing or undirected edge.")
-    public Color edgeParticleColorFrom = new Color(0xff0000);
+    public Color edgeParticleColorFrom = new Color(0xff5500);
     @Comment("The edge color that indicates an incoming edge.")
     public Color edgeParticleColorTo = new Color(0x0088ff);
     @Comment("""

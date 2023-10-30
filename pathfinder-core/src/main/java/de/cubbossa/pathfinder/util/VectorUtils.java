@@ -9,6 +9,10 @@ public class VectorUtils {
   public static final Vector SOUTH = new Vector(0, 0, 1);
   public static final Vector WEST = new Vector(-1, 0, 0);
 
+  public static float angle(Vector a, Vector b) {
+    return (float) Math.acos(a.dot(b));
+  }
+
   public static Vector snap(Vector point, int segmentsPerUnit) {
 
     return snap(point, segmentsPerUnit, new Vector(0, 0, 0));

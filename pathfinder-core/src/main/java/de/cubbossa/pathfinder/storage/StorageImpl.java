@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.Modifier;
@@ -28,10 +29,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -61,7 +59,11 @@ public class StorageImpl implements Storage {
 
   @Override
   public void init() throws Exception {
-    ioExecutor = Executors.newCachedThreadPool();
+    ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("pathfinder-io-%d").build();
+    ioExecutor = implementation.service(factory);
+    if (ioExecutor == null) {
+      ioExecutor = Executors.newCachedThreadPool(factory);
+    }
     implementation.init();
   }
 
@@ -117,9 +119,13 @@ public class StorageImpl implements Storage {
 
   private <T> CompletableFuture<T> asyncFuture(Supplier<T> supplier) {
 
-    return CompletableFuture.supplyAsync(supplier).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
+    // Prevent the chained CompletableFutures from running on ioExecutor
+    return CompletableFuture.supplyAsync(() -> {
+      // The database action runs with the appropriate executor
+      return CompletableFuture.supplyAsync(supplier, ioExecutor).exceptionally(throwable -> {
+        throwable.printStackTrace();
+        return null;
+      }).join();
     });
   }
 
@@ -268,7 +274,7 @@ public class StorageImpl implements Storage {
       // actually hard load and not cached to make sure that nodes are comparable
       type.saveNode(node);
       return node;
-    });
+    }, ioExecutor); // TODO temporary solution, actually each node storage should manage its own logic
   }
 
   @Override

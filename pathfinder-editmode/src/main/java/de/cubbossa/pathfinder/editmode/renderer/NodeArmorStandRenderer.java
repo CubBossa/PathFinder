@@ -19,11 +19,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_NODE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_NODE;
+
 public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
     implements GraphRenderer<Player> {
 
-  public static final Action<TargetContext<Node>> RIGHT_CLICK_NODE = new Action<>();
-  public static final Action<TargetContext<Node>> LEFT_CLICK_NODE = new Action<>();
   private static final Vector NODE_OFFSET = new Vector(0, -1.75, 0);
 
   private final ItemStack nodeHead = ItemStackUtils.createCustomHead(ItemStackUtils.HEAD_URL_GREEN);

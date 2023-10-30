@@ -9,9 +9,18 @@ import java.util.concurrent.Executor;
 
 public class BukkitMainThreadExecutor implements Executor {
 
-  private Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+  private final double MAX_MILLIS_PER_TICK;
+  private final int MAX_NANOS_PER_TICK;
+
+  private final Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
 
   public BukkitMainThreadExecutor(JavaPlugin plugin) {
+    this(plugin, 50);
+  }
+
+  public BukkitMainThreadExecutor(JavaPlugin plugin, double maxMillis) {
+    this.MAX_MILLIS_PER_TICK = maxMillis;
+    this.MAX_NANOS_PER_TICK = (int) (MAX_MILLIS_PER_TICK * 1E6);
     plugin.getServer().getScheduler().runTaskTimer(plugin, this::runTasks, 1, 1);
   }
 
@@ -21,8 +30,9 @@ public class BukkitMainThreadExecutor implements Executor {
   }
 
   public void runTasks() {
+    long stopTime = System.nanoTime() + MAX_NANOS_PER_TICK;
     Runnable task;
-    while ((task = tasks.poll()) != null) {
+    while (System.nanoTime() < stopTime && (task = tasks.poll()) != null) {
       task.run();
     }
   }

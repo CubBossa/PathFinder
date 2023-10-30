@@ -235,8 +235,20 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   @SneakyThrows
   @Override
   public void drop(Listener<?> listener) {
-    HandlerList handlerList = (HandlerList) listener.eventType().getMethod("getHandlerList")
-        .invoke(classMapping.get(listener.eventType()));
-    handlerList.unregister(listenerMap.remove(listener));
+    // Remove listener if exists.
+    org.bukkit.event.Listener bukkitListener = listenerMap.remove(listener);
+    if (bukkitListener == null) {
+      return;
+    }
+
+    Class<? extends Event> bukkitEventClass = classMapping.get(listener.eventType());
+    Method handlerListMethod;
+    try {
+      handlerListMethod = bukkitEventClass.getMethod("getHandlerList");
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException("Bukkit Event class '" + bukkitEventClass.getName() + "' does not implement mandatory method getHandlerList.");
+    }
+    HandlerList handlerList = (HandlerList) handlerListMethod.invoke(bukkitEventClass);
+    handlerList.unregister(bukkitListener);
   }
 }
