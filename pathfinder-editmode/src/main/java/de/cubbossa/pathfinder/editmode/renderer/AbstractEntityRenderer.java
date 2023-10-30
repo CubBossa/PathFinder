@@ -77,8 +77,9 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
   public CompletableFuture<Void> showElements(Collection<ElementT> elements, Player player) {
     return CompletableFuture.allOf(elements.stream()
-        .map(e -> showElement(e, player))
-        .toArray(CompletableFuture[]::new));
+            .map(e -> showElement(e, player))
+            .toArray(CompletableFuture[]::new))
+        .thenRun(playerSpace::announce);
   }
 
   public CompletableFuture<Void> showElement(ElementT element, Player player) {
@@ -103,8 +104,6 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
       hitbox(element, interaction);
 
-      playerSpace.announce();
-
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       hideElements(Collections.singleton(element), player);
@@ -127,8 +126,6 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
         Interaction interaction = interactionNodeMap.inverse().get(element);
         interaction.teleport(loc);
         hitbox(element, interaction);
-
-        playerSpace.announce();
       }
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
