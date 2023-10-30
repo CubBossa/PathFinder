@@ -26,7 +26,6 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.SimpleGroupedNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.storage.StorageImpl;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
 import de.cubbossa.translations.Message;
@@ -243,7 +242,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     }
     visualizerPath.addViewer(player);
 
-    if (pathNodeSupplier != null) {
+    if (false && pathNodeSupplier != null) {
       visualizerPath.startUpdater(pathNodeSupplier, 1000);
     }
 
@@ -362,7 +361,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
         GroupedNode g = new SimpleGroupedNode(location.getNode(), new HashSet<>());
         graph.addNode(g);
         graph = solver.solveExit(g, graph);
-        graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
+        graph.predecessors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
       }
 
       // cache results
@@ -395,15 +394,12 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
    * Generates the current world into one graph representation
    */
   private CompletableFuture<MutableValueGraph<GroupedNode, Double>> createGraph() {
-    System.out.println("Create graph " + ((StorageImpl) pathFinder.getStorage()).getIoExecutor().isShutdown());
     return pathFinder.getStorage().loadNodes().thenCompose(nodes -> {
-      System.out.println("one " + ((StorageImpl) pathFinder.getStorage()).getIoExecutor().isShutdown());
       Map<UUID, Node> nodeMap = new HashMap<>();
       nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
       Map<UUID, GroupedNode> map = new HashMap<>();
 
       return pathFinder.getStorage().loadGroupsOfNodes(nodeMap.values()).thenApply(groups -> {
-        System.out.println("two");
         groups.forEach((node, gs) -> {
           map.put(node.getNodeId(), new SimpleGroupedNode(node, gs));
         });
