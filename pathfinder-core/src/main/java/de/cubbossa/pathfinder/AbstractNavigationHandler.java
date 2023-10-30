@@ -166,7 +166,6 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       boolean updating = navigateLocations.stream().anyMatch(NavigateLocation::isAgile);
 
       return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
-        System.out.println("Update " + start.getNode().getLocation());
         return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
       });
 
