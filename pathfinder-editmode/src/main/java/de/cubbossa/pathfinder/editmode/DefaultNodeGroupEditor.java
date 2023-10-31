@@ -26,6 +26,7 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.*;
@@ -48,6 +49,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
 
   private final Collection<GraphRenderer<Player>> renderers;
   private final Collection<de.cubbossa.pathapi.event.Listener<?>> listeners;
+  private final EntityInteractListener entityInteractListener = new EntityInteractListener();
 
   private final ExecutorService renderExecutor;
 
@@ -67,6 +69,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
     listeners.add(eventDispatcher.listen(NodeCreateEvent.class, e -> renderAll(e.getNode())));
     listeners.add(eventDispatcher.listen(NodeSaveEvent.class, e -> renderAll(e.getNode())));
     listeners.add(eventDispatcher.listen(NodeDeleteEvent.class, e -> eraseAll(e.getNode())));
+    Bukkit.getPluginManager().registerEvents(entityInteractListener, PathFinderPlugin.getInstance());
 
     eventDispatcher.listen(NodeGroupDeleteEvent.class, event -> {
       if (!event.getGroup().getKey().equals(groupKey)) {
@@ -122,6 +125,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
   public void dispose() {
     PlayerInteractEvent.getHandlerList().unregister(this);
     listeners.forEach(pathFinder.getEventDispatcher()::drop);
+    entityInteractListener.close();
 
     for (GraphRenderer<Player> renderer : renderers) {
       renderer.close();
@@ -229,5 +233,27 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
           throwable.printStackTrace();
           return null;
         });
+  }
+
+  private class EntityInteractListener implements Listener, AutoCloseable {
+    @EventHandler
+    public void onInteract(PlayerInteractAtEntityEvent e) {
+      PathPlayer<Player> player = BukkitUtils.wrap(e.getPlayer());
+      if (!editingPlayers.containsKey(player)) {
+        return;
+      }
+      int slot = e.getPlayer().getInventory().getHeldItemSlot();
+      // slots 0-5 are part of the editmode -> cancel interaction
+      // it does not affect interacting with nodes or edges, those are handled beforehand
+      // and are no valid entities, hence they don't trigger actual Events
+      if (slot < 5) {
+        e.setCancelled(true);
+      }
+    }
+
+    @Override
+    public void close() throws Exception {
+      PlayerInteractAtEntityEvent.getHandlerList().unregister(this);
+    }
   }
 }
