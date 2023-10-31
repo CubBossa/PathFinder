@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.*;
@@ -237,7 +238,7 @@ public class DefaultNodeGroupEditor implements NodeGroupEditor<Player>, GraphRen
 
   private class EntityInteractListener implements Listener, AutoCloseable {
     @EventHandler
-    public void onInteract(PlayerInteractAtEntityEvent e) {
+    public void onInteract(PlayerInteractEntityEvent e) {
       PathPlayer<Player> player = BukkitUtils.wrap(e.getPlayer());
       if (!editingPlayers.containsKey(player)) {
         return;
