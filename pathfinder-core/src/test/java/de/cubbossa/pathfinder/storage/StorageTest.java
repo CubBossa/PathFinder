@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.storage;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -220,6 +221,26 @@ public abstract class StorageTest extends PathFinderTest {
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     Assertions.assertTrue(Maps.difference(expected, result).areEqual());
+  }
+
+  @Test
+  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void loadGroupsByMod2() {
+    NamespacedKey xKey = NamespacedKey.fromString("pathfinder:x");
+    NamespacedKey yKey = NamespacedKey.fromString("pathfinder:y");
+
+    NodeGroup x = makeGroup(xKey);
+    NodeGroup y = makeGroup(yKey);
+    Set<NodeGroup> groups = Set.of(x, y);
+
+    int i = 0;
+    for (NodeGroup g : groups) {
+      g.addModifier(new TestModifier(i++ + ""));
+      storage.saveGroup(g).join();
+    }
+
+    Set<NodeGroup> result = new HashSet<>(storage.loadGroupsByMod(Collections.singletonList(TestModifierType.KEY)).join());
+    assertTrue(Sets.difference(groups, result).isEmpty());
   }
 
   @Test

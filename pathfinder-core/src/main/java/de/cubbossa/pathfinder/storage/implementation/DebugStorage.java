@@ -54,8 +54,17 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
     return logger;
   }
 
+  private Map<Long, Long> threadStartMap = new HashMap<>();
+
   private void debug(String msg) {
-    logger.log(Level.INFO, msg + "\u001B[90m" + "(" + Thread.currentThread().getName() + ")" + "\u001B[0m");
+    long id = Thread.currentThread().getId();
+    Long dur = null;
+    if (!threadStartMap.containsKey(id)) {
+      threadStartMap.put(id, System.nanoTime());
+    } else {
+      dur = System.nanoTime() - threadStartMap.remove(id);
+    }
+    logger.log(Level.INFO, msg + "\u001B[90m" + "(" + Thread.currentThread().getName() + (dur == null ? "" : ", " + (dur / 1_000_000.) + "ms") + ")" + "\u001B[0m");
   }
 
   @Override
@@ -134,9 +143,17 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   }
 
   @Override
-  public Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids) {
+  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> keys) {
+    debug("> loadGroups(Collection<NamespacedKey> keys)");
+    var x = implementation.loadGroups(keys);
+    debug("< loadGroups(Collection<NamespacedKey> keys)");
+    return x;
+  }
+
+  @Override
+  public Map<UUID, Collection<NodeGroup>> loadGroupsByNodes(Collection<UUID> ids) {
     debug("> loadGroups(Collection<UUID> ids " + ids.size() + ")");
-    var x = implementation.loadGroups(ids);
+    var x = implementation.loadGroupsByNodes(ids);
     debug("< loadGroups(Collection<UUID> ids)");
     return x;
   }
@@ -150,9 +167,9 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(UUID node) {
+  public Collection<NodeGroup> loadGroupsByNode(UUID node) {
     debug("> loadGroups(UUID nodes)");
-    var x = implementation.loadGroups(node);
+    var x = implementation.loadGroupsByNode(node);
     debug("< loadGroups(UUID nodes)");
     return x;
   }

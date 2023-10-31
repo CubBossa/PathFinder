@@ -351,7 +351,7 @@ public abstract class YmlStorage extends CommonStorage {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(UUID node) {
+  public Collection<NodeGroup> loadGroupsByNode(UUID node) {
     return loadAllGroups().stream()
         .filter(g -> g.contains(node))
         .collect(Collectors.toSet());

@@ -71,14 +71,16 @@ public interface StorageImplementation {
   Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key);
 
   default Optional<NodeGroup> loadGroup(NamespacedKey key) {
-    return loadGroupsByMod(Set.of(key)).stream().findAny();
+    return loadGroups(Set.of(key)).stream().findAny();
   }
 
-  Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids);
+  Collection<NodeGroup> loadGroups(Collection<NamespacedKey> keys);
+
+  Map<UUID, Collection<NodeGroup>> loadGroupsByNodes(Collection<UUID> ids);
+
+  Collection<NodeGroup> loadGroupsByNode(UUID node);
 
   List<NodeGroup> loadGroups(Range range);
-
-  Collection<NodeGroup> loadGroups(UUID node);
 
   <M extends Modifier> Collection<NodeGroup> loadGroups(NamespacedKey modifier);
 

@@ -1,5 +1,15 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
+import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER_TYPE_RELATION;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
+import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
+
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
@@ -15,6 +25,7 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
+import de.cubbossa.pathfinder.jooq.tables.records.PathfinderGroupModifierRelationRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
@@ -22,6 +33,19 @@ import de.cubbossa.pathfinder.node.SimpleEdge;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
 import de.cubbossa.pathfinder.util.HashedRegistry;
+import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jooq.DSLContext;
@@ -31,23 +55,6 @@ import org.jooq.SQLDialect;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-
-import javax.sql.DataSource;
-import java.io.StringReader;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-
-import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER;
-import static de.cubbossa.pathfinder.jooq.Tables.PATHFINDER_VISUALIZER_TYPE_RELATION;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings.PATHFINDER_DISCOVERINGS;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderEdges.PATHFINDER_EDGES;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderGroupModifierRelation.PATHFINDER_GROUP_MODIFIER_RELATION;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation.PATHFINDER_NODE_TYPE_RELATION;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
-import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
 
 public abstract class SqlStorage extends CommonStorage {
 
@@ -172,27 +179,46 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   private void createEdgeTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_EDGES)
-        .columns(PATHFINDER_EDGES.fields())
-        .primaryKey(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID)
-        .execute();
+    create.transaction(c -> {
+      var ctx = DSL.using(c);
+      ctx.createTableIfNotExists(PATHFINDER_EDGES)
+          .columns(PATHFINDER_EDGES.fields())
+          .primaryKey(PATHFINDER_EDGES.START_ID, PATHFINDER_EDGES.END_ID)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_EDGES)
+          .include(PATHFINDER_EDGES.START_ID)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_EDGES)
+          .include(PATHFINDER_EDGES.END_ID)
+          .execute();
+    });
   }
 
   private void createNodeGroupTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_NODEGROUPS)
+    create.createTableIfNotExists(PATHFINDER_NODEGROUPS)
         .columns(PATHFINDER_NODEGROUPS.fields())
         .primaryKey(PATHFINDER_NODEGROUPS.KEY)
         .execute();
   }
 
   private void createNodeGroupNodesTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
-        .columns(PATHFINDER_NODEGROUP_NODES.fields())
-        .primaryKey(PATHFINDER_NODEGROUP_NODES.fields())
-        .execute();
+    create.transaction(cfg -> {
+      var ctx = DSL.using(cfg);
+      ctx.createTableIfNotExists(PATHFINDER_NODEGROUP_NODES)
+          .columns(PATHFINDER_NODEGROUP_NODES.fields())
+          .primaryKey(PATHFINDER_NODEGROUP_NODES.fields())
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_NODEGROUP_NODES)
+          .include(PATHFINDER_NODEGROUP_NODES.NODE_ID)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_NODEGROUP_NODES)
+          .include(PATHFINDER_NODEGROUP_NODES.GROUP_KEY)
+          .execute();
+    });
   }
 
   private void createPathVisualizerTable() {
@@ -204,36 +230,74 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   private void createPathVisualizerTypeTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_VISUALIZER_TYPE_RELATION)
-        .columns(PATHFINDER_VISUALIZER_TYPE_RELATION.fields())
-        .primaryKey(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY, PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
-        .execute();
+    create.transaction(cfg -> {
+      var ctx = DSL.using(cfg);
+      ctx.createTableIfNotExists(PATHFINDER_VISUALIZER_TYPE_RELATION)
+          .columns(PATHFINDER_VISUALIZER_TYPE_RELATION.fields())
+          .primaryKey(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY, PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_VISUALIZER_TYPE_RELATION)
+          .include(PATHFINDER_VISUALIZER_TYPE_RELATION.TYPE_KEY)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_VISUALIZER_TYPE_RELATION)
+          .include(PATHFINDER_VISUALIZER_TYPE_RELATION.VISUALIZER_KEY)
+          .execute();
+    });
   }
 
   private void createDiscoverInfoTable() {
-    create
-        .createTableIfNotExists(PATHFINDER_DISCOVERINGS)
-        .columns(PATHFINDER_DISCOVERINGS.fields())
-        .primaryKey(PATHFINDER_DISCOVERINGS.PLAYER_ID, PATHFINDER_DISCOVERINGS.DISCOVER_KEY)
-        .execute();
+    create.transaction(cfg -> {
+      var ctx = DSL.using(cfg);
+      ctx.createTableIfNotExists(PATHFINDER_DISCOVERINGS)
+          .columns(PATHFINDER_DISCOVERINGS.fields())
+          .primaryKey(PATHFINDER_DISCOVERINGS.PLAYER_ID, PATHFINDER_DISCOVERINGS.DISCOVER_KEY)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_DISCOVERINGS)
+          .include(PATHFINDER_DISCOVERINGS.PLAYER_ID)
+          .execute();
+    });
   }
 
 
   private void createNodeTypeRelation() {
-    create
-        .createTableIfNotExists(PATHFINDER_NODE_TYPE_RELATION)
-        .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
-        .primaryKey(PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
-        .execute();
+
+    create.transaction(cfg -> {
+      var ctx = DSL.using(cfg);
+      ctx.createTableIfNotExists(PATHFINDER_NODE_TYPE_RELATION)
+          .columns(PATHFINDER_NODE_TYPE_RELATION.fields())
+          .primaryKey(PATHFINDER_NODE_TYPE_RELATION.NODE_ID, PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_NODE_TYPE_RELATION)
+          .include(PATHFINDER_NODE_TYPE_RELATION.NODE_ID)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_NODE_TYPE_RELATION)
+          .include(PATHFINDER_NODE_TYPE_RELATION.NODE_TYPE)
+          .execute();
+    });
+
   }
 
   private void createModifierGroupRelation() {
-    create
-        .createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
-        .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
-        .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY)
-        .execute();
+    create.transaction(cfg -> {
+      var ctx = DSL.using(cfg);
+      ctx.createTableIfNotExists(PATHFINDER_GROUP_MODIFIER_RELATION)
+          .columns(PATHFINDER_GROUP_MODIFIER_RELATION.fields())
+          .primaryKey(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY, PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_GROUP_MODIFIER_RELATION)
+          .include(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
+          .execute();
+      ctx.createIndexIfNotExists()
+          .on(PATHFINDER_GROUP_MODIFIER_RELATION)
+          .include(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY)
+          .execute();
+    });
   }
 
   @Override
@@ -413,8 +477,7 @@ public abstract class SqlStorage extends CommonStorage {
         .fetch(Record1::value1);
   }
 
-  @Override
-  public Map<UUID, Collection<NodeGroup>> loadGroups(Collection<UUID> ids) {
+  public Map<UUID, Collection<NodeGroup>> loadGroupsByNodes(Collection<UUID> ids) {
     Map<UUID, Collection<NodeGroup>> result = new HashMap<>();
     create.transaction(cfg -> {
       Map<UUID, Collection<NamespacedKey>> mapping = new HashMap<>();
@@ -437,8 +500,21 @@ public abstract class SqlStorage extends CommonStorage {
 
   @Override
   public Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key) {
+    return create.transactionResult(cfg -> {
+      var ctx = DSL.using(cfg);
+      Collection<NamespacedKey> groups = ctx.selectFrom(PATHFINDER_GROUP_MODIFIER_RELATION)
+          .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY.in(key))
+          .fetch(PathfinderGroupModifierRelationRecord::getGroupKey);
+      return ctx.selectFrom(PATHFINDER_NODEGROUPS)
+          .where(PATHFINDER_NODEGROUPS.KEY.in(groups))
+          .fetch(groupMapper);
+    });
+  }
+
+  @Override
+  public Collection<NodeGroup> loadGroups(Collection<NamespacedKey> keys) {
     return create.selectFrom(PATHFINDER_NODEGROUPS)
-        .where(PATHFINDER_NODEGROUPS.KEY.in(key))
+        .where(PATHFINDER_NODEGROUPS.KEY.in(keys))
         .fetch(groupMapper);
   }
 
@@ -451,7 +527,7 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public Collection<NodeGroup> loadGroups(UUID node) {
+  public Collection<NodeGroup> loadGroupsByNode(UUID node) {
     return create.select().from(PATHFINDER_NODEGROUPS)
         .join(PATHFINDER_NODEGROUP_NODES)
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))

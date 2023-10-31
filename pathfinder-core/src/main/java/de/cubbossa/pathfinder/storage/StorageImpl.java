@@ -361,7 +361,7 @@ public class StorageImpl implements Storage {
         }, () -> toLoad.add(uuid));
       }
       if (toLoad.size() > 0) {
-        result.putAll(implementation.loadGroups(toLoad));
+        result.putAll(implementation.loadGroupsByNodes(toLoad));
         toLoad.forEach(uuid -> result.computeIfAbsent(uuid, u -> new HashSet<>()));
       }
       result.forEach((uuid, groups) -> {
@@ -412,7 +412,7 @@ public class StorageImpl implements Storage {
     return cached
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> {
-          Collection<NodeGroup> loaded = implementation.loadGroups(node);
+          Collection<NodeGroup> loaded = implementation.loadGroupsByNode(node);
           cache.getGroupCache().write(node, loaded);
           return loaded;
         }));
