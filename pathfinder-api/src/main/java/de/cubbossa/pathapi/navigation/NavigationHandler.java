@@ -6,15 +6,16 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.graph.PathSolver;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * The core element to manage path visualizations on an existing graph.
@@ -107,7 +108,13 @@ public interface NavigationHandler<PlayerT> {
    */
   interface NavigateLocation {
     Node getNode();
+
+    boolean isExternal();
+
+    void setExternal(boolean external);
+
     boolean isAgile();
+
     void setAgile(boolean agile);
   }
 

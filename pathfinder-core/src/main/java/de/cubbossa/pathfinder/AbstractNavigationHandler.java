@@ -78,6 +78,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       case FAIL_BLOCKED, FAIL_EVENT_CANCELLED -> Messages.CMD_FIND_BLOCKED;
       case FAIL_EMPTY -> Messages.CMD_FIND_EMPTY;
       case FAIL_TOO_FAR_AWAY -> Messages.CMD_FIND_TOO_FAR;
+      case FAIL_UNKNOWN -> Messages.CMD_FIND_UNKNOWN;
       default -> null;
     };
     if (message != null) {
@@ -119,8 +120,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     NavigateLocation location = new CommonNavigateLocation(new PlayerNode(player));
     location.setAgile(true);
     return findPath(player, location, targets.stream()
-        .map(Node::getLocation)
-        .map(CommonNavigateLocation::staticLocation)
+            .map(CommonNavigateLocation::staticNode)
         .collect(Collectors.toList()));
   }
 
@@ -154,7 +154,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     navigateLocations.addAll(target);
 
     // graph becomes static, so this step and all following must be repeated for each path update.
-    return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).thenApply(path -> {
+    return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).thenApply((path) -> {
 
       NodeGroup highest = path.get(path.size() - 1).groups().stream()
               .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
@@ -168,9 +168,11 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
         return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
       });
-
-    }).exceptionally(throwable -> {
-      throwable.printStackTrace();
+    }).exceptionally(t -> {
+      if (t.getCause().getCause() instanceof NoPathFoundException) {
+        return NavigateResult.FAIL_BLOCKED;
+      }
+      t.printStackTrace();
       return NavigateResult.FAIL_UNKNOWN;
     });
   }
@@ -340,6 +342,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
     Collection<NavigateLocation> locations = new HashSet<>(entries);
     locations.addAll(exits);
 
+    // TODO
     // check if any agile location has changed. If not, just return the last graph.
     if (false && cachedGraphWithTargets != null && locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
             .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
@@ -351,12 +354,16 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       GraphEntrySolver<GroupedNode> solver = new EdgeBasedGraphEntrySolver();
 
       for (NavigateLocation location : entries) {
+        if (!location.isExternal()) continue;
+
         GroupedNode g = new SimpleGroupedNode(location.getNode(), new HashSet<>());
         graph.addNode(g);
         graph = solver.solveEntry(g, graph);
         graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
       }
       for (NavigateLocation location : exits) {
+        if (!location.isExternal()) continue;
+
         GroupedNode g = new SimpleGroupedNode(location.getNode(), new HashSet<>());
         graph.addNode(g);
         graph = solver.solveExit(g, graph);
@@ -437,6 +444,7 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
   static class CommonNavigateLocation implements NavigateLocation {
 
     private final Node node;
+    private boolean external = true;
     private boolean agile;
 
     public static NavigateLocation agileNode(Node node) {
@@ -454,6 +462,12 @@ public class AbstractNavigationHandler<PlayerT> implements Listener, PathFinderE
       });
       navloc.setAgile(true);
       return navloc;
+    }
+
+    public static NavigateLocation staticNode(Node node) {
+      var n = new CommonNavigateLocation(node);
+      n.setExternal(false);
+      return n;
     }
 
     public static NavigateLocation staticLocation(Location location) {

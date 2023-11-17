@@ -320,25 +320,28 @@ public class Messages {
   public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.discoveries.list.footer")
       .withDefault("<gradient:black:dark_gray:black>-------------<t> <click:run_command:/discoveries <prev-page>>←</click> <page>/<pages> <click:run_command:/discoveries <next-page>>→</click> </t>--------------</gradient>")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
-      .build();
+          .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
-      .withDefault("<msg:prefix>No matching waypoints could be found.")
-      .build();
+          .withDefault("<msg:prefix>No matching waypoints could be found.")
+          .build();
   public static final Message CMD_FIND_TOO_FAR = new MessageBuilder("commands.find.too_far_away")
-      .withDefault("<msg:prefix>The given location is too far away from any waypoint.")
-      .build();
+          .withDefault("<msg:prefix>The given location is too far away from any waypoint.")
+          .build();
   public static final Message CMD_FIND_BLOCKED = new MessageBuilder("commands.find.no_path_found")
-      .withDefault("<msg:prefix>No possible way could be found to reach that target.")
-      .build();
+          .withDefault("<msg:prefix>No possible way could be found to reach that target.")
+          .build();
+  public static final Message CMD_FIND_UNKNOWN = new MessageBuilder("commands.find.unknown_error")
+          .withDefault("<c-negative>An unknown error occurred.</c-negative>")
+          .build();
   public static final Message CMD_CANCEL = new MessageBuilder("commands.cancel_path")
-      .withDefault("<msg:prefix>Navigation cancelled.")
-      .build();
+          .withDefault("<msg:prefix>Navigation cancelled.")
+          .build();
   public static final Message CMD_FINDP_OFFLINE = new MessageBuilder("commands.find_player.target_offline")
-      .withDefault("<c-negative>Player not found.</c-negative>")
-      .build();
+          .withDefault("<c-negative>Player not found.</c-negative>")
+          .build();
   public static final Message CMD_FINDP_NO_SELF = new MessageBuilder("commands.find_player.no_requests_to_self")
-      .withDefault("<c-negative>You cannot make requests to yourself.</c-negative>")
-      .build();
+          .withDefault("<c-negative>You cannot make requests to yourself.</c-negative>")
+          .build();
   public static final Message CMD_FINDP_NO_REQ = new MessageBuilder("commands.find_player.no_requests")
       .withDefault("<c-negative>No requests found.</c-negative>")
       .build();
