@@ -7,6 +7,7 @@ group = "de.cubbossa"
 
 repositories {
     mavenCentral()
+  maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
 }
 
 dependencies {

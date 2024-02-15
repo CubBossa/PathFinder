@@ -44,7 +44,7 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Commands
-    api("dev.jorel:commandapi-bukkit-shade:9.2.0")
+  api("dev.jorel:commandapi-bukkit-shade:9.3.0")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")
@@ -171,7 +171,6 @@ bukkit {
 
 tasks {
     build {
-        dependsOn(checkstyleMain)
         dependsOn(shadowJar)
     }
     processResources {

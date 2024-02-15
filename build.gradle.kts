@@ -2,7 +2,6 @@ plugins {
     idea
     java
     eclipse
-    checkstyle
 }
 
 java {
@@ -14,22 +13,10 @@ java {
 group = "de.cubbossa"
 version = "4.5.0"
 
-checkstyle {
-    toolVersion = "10.7.0"
-    configFile = file("${project.rootDir}/google_checks.xml")
-    isShowViolations = true
-}
-
 subprojects {
 
     apply {
         plugin("java")
-        plugin("checkstyle")
-    }
-    checkstyle {
-        toolVersion = "10.7.0"
-        config =  rootProject.resources.text.fromFile("google_checks.xml")
-        isShowViolations = true
     }
 
     repositories {

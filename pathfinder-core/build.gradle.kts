@@ -82,9 +82,6 @@ dependencies {
 }
 
 tasks {
-    build {
-        dependsOn(checkstyleMain)
-    }
     generateGrammarSource {
         // Tell ANTLR to generate visitor classes
         arguments.plusAssign("-visitor")
