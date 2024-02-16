@@ -11,13 +11,12 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -39,17 +38,16 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
 
   @Override
   public Message getInfoMessage(PlaceholderVisualizer element) {
-    return Messages.CMD_VIS_PAPI_INFO.formatted(
-        Placeholder.parsed("format-north", element.getNorth()),
-        Placeholder.parsed("format-northeast", element.getNorthEast()),
-        Placeholder.parsed("format-east", element.getEast()),
-        Placeholder.parsed("format-southeast", element.getSouthEast()),
-        Placeholder.parsed("format-south", element.getSouth()),
-        Placeholder.parsed("format-southwest", element.getSouthWest()),
-        Placeholder.parsed("format-west", element.getWest()),
-        Placeholder.parsed("format-northwest", element.getNorthWest()),
-        Placeholder.parsed("format-distance", element.getDistanceFormat())
-    );
+    return Messages.CMD_VIS_PAPI_INFO
+        .insertParsed("format-north", element.getNorth())
+        .insertParsed("format-northeast", element.getNorthEast())
+        .insertParsed("format-east", element.getEast())
+        .insertParsed("format-southeast", element.getSouthEast())
+        .insertParsed("format-south", element.getSouth())
+        .insertParsed("format-southwest", element.getSouthWest())
+        .insertParsed("format-west", element.getWest())
+        .insertParsed("format-northwest", element.getNorthWest())
+        .insertParsed("format-distance", element.getDistanceFormat());
   }
 
   @Override

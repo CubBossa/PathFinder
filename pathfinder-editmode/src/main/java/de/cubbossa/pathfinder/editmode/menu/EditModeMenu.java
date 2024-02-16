@@ -18,7 +18,6 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
@@ -29,8 +28,11 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import de.cubbossa.tinytranslations.util.FormattableBuilder;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -101,16 +103,14 @@ public class EditModeMenu {
 
     menu.setButton(4, Button.builder()
         .withItemStack(() -> new LocalizedItem.Builder(new ItemStack(undirectedEdgesMode ? Material.RED_DYE : Material.LIGHT_BLUE_DYE))
-            .withName(Messages.E_EDGEDIR_TOOL_N.formatted(Messages.formatter().choice("value", !undirectedEdgesMode)))
+            .withName(Messages.E_EDGEDIR_TOOL_N.insertBool("value", !undirectedEdgesMode))
             .withLore(Messages.E_EDGEDIR_TOOL_L)
             .createItem(editingPlayer))
         .withClickHandler(c -> {
           undirectedEdgesMode = !undirectedEdgesMode;
           Player player = c.getPlayer();
 
-          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.formatted(
-              Messages.formatter().choice("value", !undirectedEdgesMode)
-          ));
+          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.insertBool("value", !undirectedEdgesMode));
           c.getMenu().refresh(c.getSlot());
         }, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK));
 
@@ -356,14 +356,18 @@ public class EditModeMenu {
     return menu;
   }
 
+  private static Component render(ComponentLike component, Player player) {
+    return GlobalTranslator.render(component.asComponent(), Locale.forLanguageTag(player.getLocale()));
+  }
+
   private LocalizedItem.Builder groupItem(NodeGroup group) {
     int mod = group.getKey().hashCode();
 
-    TagResolver resolver = TagResolver.builder()
-        .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-        .resolver(Messages.formatter().number("weight", group.getWeight()))
-        .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-        .build();
+    TagResolver resolver = FormattableBuilder.builder()
+        .insertObject("key", group.getKey())
+        .insertNumber("weight", group.getWeight())
+        .insertList("modifiers", group.getModifiers())
+        .toResolver();
 
     return new LocalizedItem.Builder(new ItemStack(GROUP_ITEM_LIST[Math.floorMod(mod, 16)]))
         .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
@@ -376,7 +380,7 @@ public class EditModeMenu {
       ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
       nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      ListMenu menu = new ListMenu(render(Messages.E_SUB_GROUP_TITLE, player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
       for (NodeGroup group : nodeGroupList) {
         if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
@@ -459,7 +463,7 @@ public class EditModeMenu {
       ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
       nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      ListMenu menu = new ListMenu(render(Messages.E_SUB_GROUP_TITLE, player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
               3)); //TODO extract icon
       for (NodeGroup group : nodeGroupList) {

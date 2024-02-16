@@ -11,8 +11,6 @@ import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.StringArgument;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 import java.util.Optional;
@@ -43,10 +41,7 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
       return;
     }
     getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey()),
-          Placeholder.component("type", Component.text(type.getCommandName()))
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.insertObject("visualizer", visualizer));
     }).exceptionally(throwable -> {
       getPathfinder().getLogger().log(Level.SEVERE, "Error while creating new visualizer", throwable);
       return null;

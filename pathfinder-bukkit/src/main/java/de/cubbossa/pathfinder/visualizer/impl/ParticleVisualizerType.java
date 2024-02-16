@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
@@ -34,16 +34,16 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
 
   @Override
   public Message getInfoMessage(ParticleVisualizer element) {
-    return Messages.CMD_VIS_INFO_PARTICLES.formatted(
-        Messages.formatter().particle("particle", element.getParticle(), element.getParticleData()),
-        Messages.formatter().number("particle-steps", element.getSchedulerSteps()),
-        Messages.formatter().number("sampling-rate", element.getBezierSamplingRate()),
-        Messages.formatter().number("interval", element.getInterval()),
-        Messages.formatter().number("amount", element.getAmount()),
-        Messages.formatter().number("speed", element.getSpeed()),
-        Messages.formatter().vector("offset", BukkitVectorUtils.toInternal(element.getOffset())),
-        Messages.formatter().number("point-distance", element.getPointDistance())
-    );
+    return Messages.CMD_VIS_INFO_PARTICLES
+        .insertObject("particle", element.getParticle())
+        .insertObject("data", element.getParticleData())
+        .insertNumber("particle-steps", element.getSchedulerSteps())
+        .insertNumber("sampling-rate", element.getBezierSamplingRate())
+        .insertNumber("interval", element.getInterval())
+        .insertNumber("amount", element.getAmount())
+        .insertNumber("speed", element.getSpeed())
+        .insertObject("offset", element.getOffset())
+        .insertNumber("point-distance", element.getPointDistance());
   }
 
   @Override

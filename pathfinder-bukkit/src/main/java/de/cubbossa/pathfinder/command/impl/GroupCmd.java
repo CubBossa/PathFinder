@@ -68,21 +68,15 @@ public class GroupCmd extends PathFinderSubCommand {
   }
 
   private void showGroup(CommandSender sender, SimpleNodeGroup group) {
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(
-        Messages.formatter().namespacedKey("key", group.getKey()),
-        Messages.formatter().nodeSelection("nodes", () -> group.resolve().join()),
-        Messages.formatter().number("weight", group.getWeight()),
-        Messages.formatter().modifiers("modifiers", group.getModifiers())
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.insertObject("group", group));
   }
 
   private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
-          Messages.formatter().namespacedKey("group", group.getKey()),
-          Messages.formatter().namespacedKey("type", modifier.getKey())
-      ));
+      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET
+          .insertObject("group", group)
+          .insertObject("mod", modifier));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
@@ -92,10 +86,9 @@ public class GroupCmd extends PathFinderSubCommand {
   private void removeModifier(CommandSender sender, SimpleNodeGroup group, NamespacedKey mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
-          Messages.formatter().namespacedKey("group", group.getKey()),
-          Messages.formatter().namespacedKey("type", mod)
-      ));
+      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE
+          .insertObject("group", group)
+          .insertObject("key", mod));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;

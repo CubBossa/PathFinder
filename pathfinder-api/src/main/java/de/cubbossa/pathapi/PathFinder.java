@@ -6,8 +6,8 @@ import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.tinytranslations.MessageTranslator;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
 import java.util.logging.Logger;
@@ -119,11 +119,13 @@ public interface PathFinder {
 
   ClassLoader getClassLoader();
 
-  MiniMessage getMiniMessage();
+  MessageTranslator getTranslations();
 
   AudienceProvider getAudiences();
 
   Task repeatingTask(Runnable runnable, long delay, long interval);
 
   void cancelTask(Task task);
+
+  void reloadLocales(PathFinderConfig configuration);
 }

@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.node.implementation;
 
 import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
@@ -19,8 +18,7 @@ public class PlayerNode implements Node {
 
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
       CommonPathFinder.pathfinder("player"),
-      "empty",
-      PathFinderProvider.get().getMiniMessage()
+      "empty"
   ) {
     @Override
     public PlayerNode createAndLoadNode(Context context) {

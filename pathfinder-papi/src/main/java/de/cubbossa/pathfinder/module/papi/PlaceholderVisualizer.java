@@ -3,9 +3,9 @@ package de.cubbossa.pathfinder.module.papi;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
+import de.cubbossa.tinytranslations.util.FormattableBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -52,7 +52,7 @@ public class PlaceholderVisualizer
       new SimpleProperty<>("format-distance",
           String.class, PlaceholderVisualizer::getDistanceFormat,
           PlaceholderVisualizer::setDistanceFormat);
-  public static final Property<PlaceholderVisualizer, String>[] PROPS = new Property[] {
+  public static final Property<PlaceholderVisualizer, String>[] PROPS = new Property[]{
       PROP_NORTH, PROP_NORTH_EAST, PROP_EAST, PROP_SOUTH_EAST, PROP_SOUTH, PROP_SOUTH_WEST,
       PROP_WEST, PROP_NORTH_WEST, PROP_DISTANCE
   };
@@ -91,8 +91,8 @@ public class PlaceholderVisualizer
 
   public String resolveDistance(double distance) {
     return resolver.serialize(
-            resolver.deserialize(distanceFormat, Messages.formatter().number("distance", distance)))
-        .replace("\\<", "<");
+        resolver.deserialize(distanceFormat, FormattableBuilder.builder().insertNumber("distance", distance).toResolver())
+    ).replace("\\<", "<");
   }
 
   @Getter

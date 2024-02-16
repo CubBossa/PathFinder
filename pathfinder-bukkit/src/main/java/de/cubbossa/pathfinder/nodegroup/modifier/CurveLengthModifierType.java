@@ -30,9 +30,7 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
 
   @Override
   public ComponentLike toComponents(CurveLengthModifier modifier) {
-    return Messages.CMD_NG_MOD_CURVELEN.formatted(
-        Messages.formatter().number("length", modifier.curveLength())
-    );
+    return Messages.CMD_NG_MOD_CURVELEN.insertNumber("length", modifier.curveLength());
   }
 
   @Override

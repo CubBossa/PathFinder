@@ -31,7 +31,6 @@ class CommonVisualizerPathTest extends PathFinderTest {
 
   public CommonVisualizerPathTest() {
     groupMap = new HashMap<>();
-    setupMiniMessage();
     setupWorldMock();
   }
 

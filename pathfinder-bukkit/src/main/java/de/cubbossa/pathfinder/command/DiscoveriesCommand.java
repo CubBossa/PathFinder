@@ -6,12 +6,9 @@ import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.CollectionUtils;
 import dev.jorel.commandapi.CommandTree;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -51,17 +48,14 @@ public class DiscoveriesCommand extends CommandTree {
           .toList();
 
       PathPlayer<CommandSender> p = BukkitUtils.wrap(sender);
-      CommandUtils.printList(sender, pagination,
-          CollectionUtils.subList(l, pagination),
-          e -> {
-            p.sendMessage(Messages.CMD_DISCOVERIES_ENTRY.formatted(
-                    Placeholder.component("name", e.getKey().getDisplayName()),
-                    Messages.formatter().number("percentage", e.getValue() * 100),
-                    Messages.formatter().number("ratio", e.getValue())
-            ));
-          },
-          Messages.CMD_DISCOVERIES_HEADER,
-          Messages.CMD_DISCOVERIES_FOOTER);
+
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_DISCOVERIES_ENTRY.insertList(
+          "discoveries", l, b -> {
+            b.with("name", e -> e.getKey().getDisplayName())
+                .with("percentage", e -> e.getValue() * 100)
+                .with("ratio", Map.Entry::getValue);
+          }
+      ));
     });
   }
 }

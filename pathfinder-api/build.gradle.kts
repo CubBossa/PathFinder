@@ -6,6 +6,7 @@ plugins {
 group = "de.cubbossa"
 
 repositories {
+  mavenLocal()
     mavenCentral()
   maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
 }
@@ -21,6 +22,9 @@ dependencies {
     api("net.kyori:adventure-platform-bukkit:4.3.0")
     api("net.kyori:adventure-text-minimessage:4.13.0")
     api("net.kyori:adventure-text-serializer-plain:4.13.0")
+
+  // UI
+  api("de.cubbossa:TinyTranslations-common:4.4.2")
 }
 
 tasks.getByName<Test>("test") {

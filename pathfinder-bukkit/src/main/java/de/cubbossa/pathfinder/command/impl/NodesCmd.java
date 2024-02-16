@@ -4,7 +4,6 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.storage.Storage;
 import de.cubbossa.pathfinder.PathPerms;
@@ -17,15 +16,13 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.NodeUtils;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.LocationType;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class NodesCmd extends PathFinderSubCommand {
@@ -117,19 +114,16 @@ public class NodesCmd extends PathFinderSubCommand {
     group.addAll(nodes.ids());
     getPathfinder().getStorage().saveGroup(group);
 
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes),
-        Messages.formatter().namespacedKey("group", group.getKey())
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP
+        .insertObject("nodes", nodes)
+        .insertObject("group", group));
   }
 
   private void removeGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
     group.removeAll(nodes.ids());
     getPathfinder().getStorage().saveGroup(group);
 
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes)
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.insertObject("nodes", nodes));
   }
 
   private void clearGroups(CommandSender sender, NodeSelection nodes) {
@@ -140,9 +134,7 @@ public class NodesCmd extends PathFinderSubCommand {
       storage.saveGroup(group);
     });
 
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CLEAR_GROUPS.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes)
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CLEAR_GROUPS.insertObject("nodes", nodes));
   }
 
   private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
@@ -152,10 +144,9 @@ public class NodesCmd extends PathFinderSubCommand {
         getPathfinder().getStorage().saveNode(s);
       }
     }
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DISCONNECT.formatted(
-        Messages.formatter().nodeSelection("start", () -> start),
-        Messages.formatter().nodeSelection("end", () -> end)
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DISCONNECT
+        .insertObject("start", start)
+        .insertObject("end", end));
   }
 
   private void connectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
@@ -171,10 +162,9 @@ public class NodesCmd extends PathFinderSubCommand {
         getPathfinder().getStorage().saveNode(s);
       }
     }
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CONNECT.formatted(
-        Messages.formatter().nodeSelection("start", () -> start),
-        Messages.formatter().nodeSelection("end", () -> end)
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CONNECT
+        .insertObject("start", start)
+        .insertObject("end", end));
   }
 
   private void teleportNodes(CommandSender sender, NodeSelection nodes, Location location) {
@@ -184,9 +174,7 @@ public class NodesCmd extends PathFinderSubCommand {
       futures.add(getPathfinder().getStorage().saveNode(node));
     }
     CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_UPDATED.formatted(
-          Messages.formatter().nodeSelection("selection", () -> nodes)
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_UPDATED.insertObject("nodes", nodes));
     });
   }
 
@@ -202,16 +190,7 @@ public class NodesCmd extends PathFinderSubCommand {
     }
     Node node = selection.get(0);
 
-    Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
-    Collection<Node> resolvedNeighbours =
-        getPathfinder().getStorage().loadNodes(neighbours).join();
-
-    Message message = Messages.CMD_N_INFO.formatted(
-        Messages.formatter().uuid("id", node.getNodeId()),
-        Messages.formatter().vector("position", node.getLocation()),
-        Placeholder.unparsed("world", node.getLocation().getWorld().getName()),
-        Messages.formatter().nodeSelection("edges", () -> resolvedNeighbours)
-    );
+    Message message = Messages.CMD_N_INFO.insertObject("node", node);
     BukkitUtils.wrap(player).sendMessage(message);
   }
 }

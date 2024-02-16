@@ -6,7 +6,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.CollectionUtils;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;

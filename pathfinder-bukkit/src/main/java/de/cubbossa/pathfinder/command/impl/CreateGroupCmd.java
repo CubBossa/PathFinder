@@ -8,7 +8,6 @@ import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.StringArgument;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 import java.util.logging.Level;
@@ -31,17 +30,13 @@ public class CreateGroupCmd extends PathFinderSubCommand {
     NamespacedKey key = CommonPathFinder.pathfinder(name);
     getPathfinder().getStorage().loadGroup(key).thenAccept(optGroup -> {
       if (optGroup.isPresent()) {
-        BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.formatted(
-            Placeholder.parsed("key", name)
-        ));
+        BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.insertObject("key", optGroup.get().getKey()));
         return;
       }
       getPathfinder().getStorage()
           .createAndLoadGroup(CommonPathFinder.pathfinder(name))
           .thenAccept(group -> {
-            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE.formatted(
-                Messages.formatter().namespacedKey("key", group.getKey())
-            ));
+            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE.insertObject("group", group));
           })
           .exceptionally(throwable -> {
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE_FAIL);

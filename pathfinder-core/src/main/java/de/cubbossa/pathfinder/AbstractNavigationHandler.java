@@ -28,7 +28,7 @@ import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

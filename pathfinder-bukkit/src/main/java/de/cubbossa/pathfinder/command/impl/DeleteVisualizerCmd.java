@@ -26,9 +26,8 @@ public class DeleteVisualizerCmd extends PathFinderSubCommand {
 
   public void onDelete(CommandSender sender, PathVisualizer<?, ?> visualizer) {
     getPathfinder().getStorage().deleteVisualizer(visualizer).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_DELETE_SUCCESS.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey())
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_DELETE_SUCCESS
+          .insertObject("visualizer", visualizer));
     }).exceptionally(throwable -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_DELETE_ERROR);
       getPathfinder().getLogger().log(Level.WARNING, "Could not delete visualizer", throwable);

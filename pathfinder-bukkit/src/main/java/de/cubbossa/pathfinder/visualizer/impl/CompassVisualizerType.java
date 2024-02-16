@@ -5,10 +5,9 @@ import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.Map;
 
@@ -28,17 +27,16 @@ public class CompassVisualizerType extends IntervalVisualizerType<CompassVisuali
 
   @Override
   public Message getInfoMessage(CompassVisualizer element) {
-    return Messages.CMD_VIS_COMPASS_INFO.formatted(
-        Placeholder.unparsed("color", element.getColor().toString().toLowerCase()),
-        Placeholder.unparsed("overlay", element.getOverlay().toString().toLowerCase()),
-        Placeholder.parsed("background", element.getBackgroundFormat()),
-        Placeholder.parsed("marker-north", element.getNorth()),
-        Placeholder.parsed("marker-east", element.getEast()),
-        Placeholder.parsed("marker-south", element.getSouth()),
-        Placeholder.parsed("marker-west", element.getWest()),
-        Placeholder.parsed("marker-target", element.getTarget()),
-        Placeholder.unparsed(CompassVisualizer.PROP_RADIUS.getKey(), String.valueOf(element.getRadius()))
-    );
+    return Messages.CMD_VIS_COMPASS_INFO
+        .insertString("color", element.getColor().toString().toLowerCase())
+        .insertString("overlay", element.getOverlay().toString().toLowerCase())
+        .insertParsed("background", element.getBackgroundFormat())
+        .insertParsed("marker-north", element.getNorth())
+        .insertParsed("marker-east", element.getEast())
+        .insertParsed("marker-south", element.getSouth())
+        .insertParsed("marker-west", element.getWest())
+        .insertParsed("marker-target", element.getTarget())
+        .insertNumber(CompassVisualizer.PROP_RADIUS.getKey(), element.getRadius());
   }
 
   @Override

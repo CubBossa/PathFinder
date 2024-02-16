@@ -34,9 +34,9 @@ import de.cubbossa.pathfinder.storage.implementation.WaypointStorage;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
+import de.cubbossa.tinytranslations.MessageTranslator;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.h2.jdbcx.JdbcDataSource;
 import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Assertions;
@@ -67,8 +67,8 @@ public abstract class PathFinderTest {
     }
   };
   protected static World world;
+  protected static MessageTranslator translations;
   protected static Logger logger = Logger.getLogger("TESTS");
-  protected static MiniMessage miniMessage;
 
   protected PathFinder pathFinder = new PathFinder() {
     @Override
@@ -147,8 +147,8 @@ public abstract class PathFinderTest {
     }
 
     @Override
-    public MiniMessage getMiniMessage() {
-      return miniMessage;
+    public MessageTranslator getTranslations() {
+      return translations;
     }
 
     @Override
@@ -163,6 +163,11 @@ public abstract class PathFinderTest {
 
     @Override
     public void cancelTask(Task task) {
+
+    }
+
+    @Override
+    public void reloadLocales(PathFinderConfig configuration) {
 
     }
   };
@@ -183,14 +188,12 @@ public abstract class PathFinderTest {
 
   public void setupPathFinder() {
     setupWorldMock();
-    setupMiniMessage();
     setupInMemoryStorage();
     PathFinderProvider.setPathFinder(pathFinder);
   }
 
   public void shutdownPathFinder() {
     shutdownStorage();
-    miniMessage = null;
     modifierRegistry = null;
     PathFinderProvider.setPathFinder(null);
   }
@@ -198,10 +201,6 @@ public abstract class PathFinderTest {
   public void setupWorldMock() {
     UUID uuid = UUID.randomUUID();
     world = WORLD_LOADER.loadWorld(uuid);
-  }
-
-  public void setupMiniMessage() {
-    miniMessage = MiniMessage.miniMessage();
   }
 
   @SneakyThrows
@@ -221,7 +220,7 @@ public abstract class PathFinderTest {
     storage.setLogger(logger);
     storage.setCache(cached ? new CacheLayerImpl() : CacheLayerImpl.empty());
 
-    waypointNodeType = new WaypointType(new WaypointStorage(storage), miniMessage);
+    waypointNodeType = new WaypointType(new WaypointStorage(storage));
     nodeTypeRegistry.register(waypointNodeType);
 
     visualizerType = new TestVisualizerType(CommonPathFinder.pathfinder("particle"));

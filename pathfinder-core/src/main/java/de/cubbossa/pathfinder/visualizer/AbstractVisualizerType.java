@@ -17,12 +17,9 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -79,39 +76,29 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
   public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
                                String property, Supplier<T2> getter,
                                Consumer<T2> setter, Function<T2, ComponentLike> formatter) {
-    setProperty(sender, visualizer, value, property, getter, setter,
-        (s, t) -> Placeholder.component(s, formatter.apply(t)));
-  }
-
-  public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
-                               String property, Supplier<T2> getter,
-                               Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
     T2 old = getter.get();
     if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
-      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey()),
-          Placeholder.parsed("property", property)
-      ));
+      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+          .insertObject("visualizer", visualizer)
+          .insertString("property", property));
       return;
     }
     setter.accept(value);
     PathFinderProvider.get().getStorage()
         .saveVisualizer(visualizer)
         .thenCompose(unused -> PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.component("type", Component.text(
-                  optType.map(VisualizerType::getCommandName).orElse("unknown"))),
-              Placeholder.parsed("property", property),
-              formatter.apply("old-value", old),
-              formatter.apply("value", value)
-          ));
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP
+              .insertObject("visualizer", visualizer)
+              .insertComponent("type", Component.text(optType.map(VisualizerType::getCommandName).orElse("unknown")))
+              .insertString("property", property)
+              .insertComponent("old-value", formatter.apply(old))
+              .insertComponent("value", formatter.apply(value))
+          );
         }))
         .exceptionally(throwable -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.parsed("property", property)
-          ));
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+              .insertObject("visualizer", visualizer)
+              .insertString("property", property));
           throwable.printStackTrace();
           return null;
         });

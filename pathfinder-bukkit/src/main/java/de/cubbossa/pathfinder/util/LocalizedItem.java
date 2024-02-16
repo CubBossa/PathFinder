@@ -2,10 +2,15 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.translations.ComponentSplit;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
+import de.cubbossa.tinytranslations.TinyTranslations;
+import de.cubbossa.tinytranslations.util.ComponentSplit;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -36,12 +41,19 @@ public class LocalizedItem {
     CommonPathFinder pf = BukkitPathFinder.getInstance();
 
     ItemMeta meta = stack.getItemMeta();
+
     Audience audience = pf.getAudiences().player(player.getUniqueId());
-    meta.setDisplayName(serializer.serialize(name.getTranslator().translate(name, audience)));
-    meta.setLore(ComponentSplit.split(pf.getTranslations().translate(lore, audience), "\n").stream()
+
+
+    meta.setDisplayName(serializer.serialize(render(name, audience)));
+    meta.setLore(ComponentSplit.split(render(lore, audience), "\n").stream()
         .map(serializer::serialize).toList());
     stack.setItemMeta(meta);
     return stack;
+  }
+
+  private static Component render(ComponentLike component, Audience audience) {
+    return GlobalTranslator.renderer().render(component.asComponent(), audience.getOrDefault(Identity.LOCALE, TinyTranslations.DEFAULT_LOCALE));
   }
 
   public static class Builder {

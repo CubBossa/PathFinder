@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -70,10 +69,9 @@ public class BukkitPathSender implements PathPlayer<ConsoleCommandSender> {
   @Override
   public void sendMessage(ComponentLike message) {
     Audience audience = PathFinderProvider.get().getAudiences().console();
-    ComponentLike resolved = message;
-    if (message instanceof Message msg) {
-      resolved = msg.asComponent(audience);
+    if (message.asComponent().compact().equals(Component.empty())) {
+      return;
     }
-    audience.sendMessage(resolved);
+    audience.sendMessage(message);
   }
 }

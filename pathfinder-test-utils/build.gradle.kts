@@ -8,6 +8,7 @@ version = "4.5.0"
 
 repositories {
     mavenCentral()
+  mavenLocal()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://libraries.minecraft.net/")

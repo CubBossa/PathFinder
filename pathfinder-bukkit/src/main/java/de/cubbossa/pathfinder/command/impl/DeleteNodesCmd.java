@@ -16,16 +16,14 @@ public class DeleteNodesCmd extends PathFinderSubCommand {
     withPermission(PathPerms.PERM_CMD_WP_DELETE);
     then(Arguments.nodeSelectionArgument("nodes")
         .executesPlayer((player, args) -> {
-          deleteNode(player, args.getUnchecked(0));
+          deleteNodes(player, args.getUnchecked(0));
         })
     );
   }
 
-  private void deleteNode(CommandSender sender, NodeSelection nodes) {
+  private void deleteNodes(CommandSender sender, NodeSelection nodes) {
     getPathfinder().getStorage().deleteNodes(nodes.ids()).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.formatted(
-          Messages.formatter().nodeSelection("selection", () -> nodes)
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.insertObject("nodes", nodes));
     });
   }
 }

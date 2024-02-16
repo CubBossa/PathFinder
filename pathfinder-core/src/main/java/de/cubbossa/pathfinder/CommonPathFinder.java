@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.dump.DumpWriter;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
+import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.misc.*;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
@@ -28,19 +30,18 @@ import de.cubbossa.pathfinder.util.FileUtils;
 import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.translations.GlobalMessageBundle;
-import de.cubbossa.translations.MessageBundle;
+import de.cubbossa.tinytranslations.MessageTranslator;
+import de.cubbossa.tinytranslations.TinyTranslations;
+import de.cubbossa.tinytranslations.storage.properties.PropertiesMessageStorage;
+import de.cubbossa.tinytranslations.storage.properties.PropertiesStyleStorage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 
 @Getter
@@ -64,12 +65,11 @@ public abstract class CommonPathFinder implements PathFinder {
   protected ExtensionsRegistry extensionRegistry;
   protected ConfigFileLoader configFileLoader;
   protected AudienceProvider audiences;
-  protected MiniMessage miniMessage;
   protected StorageImpl storage;
   @Setter
   protected PathFinderConf configuration;
   protected EventDispatcher<?> eventDispatcher;
-  protected MessageBundle translations;
+  protected MessageTranslator translations;
   protected DumpWriter dumpWriter;
 
 
@@ -139,32 +139,17 @@ public abstract class CommonPathFinder implements PathFinder {
 
   @SneakyThrows
   public void onEnable() {
-    miniMessage = MiniMessage.miniMessage();
 
     audiences = provideAudiences();
-    Messages.setAudiences(audiences);
 
     saveResource("lang/styles.properties", false);
 
     // Data
-    translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
-        .withDefaultLocale(configuration.language.fallbackLanguage)
-        .withEnabledLocales(Locale.getAvailableLocales())
-        .withPreferClientLanguage(configuration.language.clientLanguage)
-        .withLogger(getLogger())
-        .withPropertiesStorage(new File(getDataFolder(), "lang"))
-        .withPropertiesStyles(new File(getDataFolder(), "lang/styles.properties"))
-        .build();
-
-    miniMessage = MiniMessage.builder()
-            .editTags(builder -> builder
-                    .resolvers(translations.getBundleResolvers())
-                    .resolvers(translations.getStylesResolver())
-            )
-            .build();
-
-    translations.addMessagesClass(Messages.class);
-    translations.writeLocale(Locale.ENGLISH);
+    Messages.applyObjectResolvers(TinyTranslations.NM.getObjectTypeResolverMap());
+    translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "/lang/")));
+    translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "/lang/styles.properties")));
+    translations.addMessages(TinyTranslations.messageFieldsFromClass(Messages.class));
+    reloadLocales(configuration);
 
     if (configFileLoader.isVersionChange()) {
       File data = new File(getDataFolder(), "data/");
@@ -175,19 +160,12 @@ public abstract class CommonPathFinder implements PathFinder {
       }
     }
 
-    Messages.formatter().setMiniMessage(miniMessage);
-    Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));
-    Messages.formatter().setTextStyle(translations.getStyles().get("c-offset"));
-    Messages.formatter().setNumberStyle(translations.getStyles().get("c-offset-light"));
-
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = switch (configuration.database.type) {
       case REMOTE_SQL -> new RemoteSqlStorage(configuration.database.remoteSql, nodeTypeRegistry,
               modifierRegistry, visualizerTypeRegistry);
       default -> new SqliteStorage(configuration.database.embeddedSql.file, nodeTypeRegistry,
               modifierRegistry, visualizerTypeRegistry);
-//      default -> new YmlStorage(new File(getDataFolder(), "data/"), nodeTypeRegistry,
-//              visualizerTypeRegistry, modifierRegistry);
     };
     // impl = new DebugStorage(impl, getLogger());
     impl.setWorldLoader(this::getWorld);
@@ -200,10 +178,7 @@ public abstract class CommonPathFinder implements PathFinder {
     setupVisualizerTypes();
     getStorage().createGlobalNodeGroup(visualizerTypeRegistry.getDefaultType()).join();
 
-    nodeTypeRegistry.register(new WaypointType(
-            new WaypointStorage(storage),
-            miniMessage
-    ));
+    nodeTypeRegistry.register(new WaypointType(new WaypointStorage(storage)));
 
     new NodeHandler(this);
     extensionRegistry.enableExtensions(this);
@@ -287,6 +262,15 @@ public abstract class CommonPathFinder implements PathFinder {
   @Override
   public VisualizerTypeRegistry getVisualizerTypeRegistry() {
     return VisualizerTypeRegistryImpl.getInstance();
+  }
+
+  @Override
+  public void reloadLocales(PathFinderConfig configuration) {
+    translations.saveLocale(Locale.ENGLISH);
+    translations.loadLocales();
+    translations.loadStyles();
+    translations.setUseClientLocale(configuration.getLanguage().isClientLanguage());
+    translations.setDefaultLocale(configuration.getLanguage().getFallbackLanguage());
   }
 
   abstract AudienceProvider provideAudiences();
