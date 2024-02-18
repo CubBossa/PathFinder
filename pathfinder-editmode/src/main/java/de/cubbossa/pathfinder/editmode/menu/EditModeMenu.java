@@ -382,6 +382,7 @@ public class EditModeMenu {
 
       ListMenu menu = new ListMenu(render(Messages.E_SUB_GROUP_TITLE, player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
+      menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));
       for (NodeGroup group : nodeGroupList) {
         if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
           continue;
@@ -466,6 +467,7 @@ public class EditModeMenu {
       ListMenu menu = new ListMenu(render(Messages.E_SUB_GROUP_TITLE, player), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
               3)); //TODO extract icon
+      menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));
       for (NodeGroup group : nodeGroupList) {
         if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
           continue;
