@@ -144,7 +144,9 @@ public abstract class CommonPathFinder implements PathFinder {
     audiences = provideAudiences();
     Messages.setAudiences(audiences);
 
-    saveResource("lang/styles.properties", false);
+    if (!new File(getDataFolder(), "lang/styles.properties").exists()) {
+      saveResource("lang/styles.properties", false);
+    }
 
     // Data
     translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
