@@ -186,7 +186,6 @@ public class Messages {
       .withDefault("""
           <c-offset>Node #<id></c-offset>
           <bg>» </bg><t>Position: <t-hl><position></t-hl> (<world>)
-          <bg>» </bg><t>Curve-Length: <t-hl><curve-length></t-hl>
           <bg>» </bg><t>Edges: <edges>
           <bg>» </bg><t>Groups: <groups>
           """)
