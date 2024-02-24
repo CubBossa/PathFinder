@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import dev.jorel.commandapi.CommandTree;
@@ -23,6 +23,7 @@ public class FindCommand extends CommandTree {
             return;
           }
 
+          PathPlayer<Player> p = BukkitPathFinder.wrap(player);
           BukkitNavigationHandler.getInstance().findPathToNodes(p, targets).thenAccept(result -> {
             AbstractNavigationHandler.printResult(result, p);
           }).exceptionally(throwable -> {

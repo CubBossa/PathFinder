@@ -1,9 +1,7 @@
 package de.cubbossa.pathfinder.messages;
 
 import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.World;
+import de.cubbossa.pathapi.misc.*;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
@@ -11,18 +9,21 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.tinytranslations.Formattable;
 import de.cubbossa.tinytranslations.Message;
 import de.cubbossa.tinytranslations.MessageBuilder;
-import de.cubbossa.tinytranslations.nanomessage.ObjectTagResolverMap;
+import de.cubbossa.tinytranslations.tinyobject.TinyObjectMapping;
+import de.cubbossa.tinytranslations.tinyobject.TinyObjectResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Particle;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class Messages {
 
   public static final Message PREFIX = new MessageBuilder("prefix")
-      .withDefault("<prefix>PathFinder</prefix>")
+      .withDefault("PathFinder")
       .build();
   public static final Message GEN_TOO_FAST = new MessageBuilder("general.response_pending")
       .withDefault("<prefix>Better slow down, your database is out of breath.")
@@ -30,6 +31,10 @@ public class Messages {
   public static final Message GEN_ERROR = new MessageBuilder("general.error")
       .withDefault("<prefix_negative>{error:cause}</prefix_negative>")
       .withPlaceholders("error")
+      .build();
+  public static final Message GEN_LOCATION = new MessageBuilder("general.location")
+      .withDefault("\\<{loc:x};{loc:y};{loc:z}>")
+      .withPlaceholders("loc")
       .build();
   public static final Message GEN_PARTICLE = new MessageBuilder("general.particle")
       .withDefault("<text_hl>{particle}</text_hl>")
@@ -45,7 +50,7 @@ public class Messages {
       .withPlaceholders("node")
       .build();
   public static final Message GEN_NODE_SEL = new MessageBuilder("general.selection.nodes")
-      .withDefault("<hover:show_text:'<sel:content:', '>{el}</sel>'><white><u>{sel:size} Nodes</u></white></hover>")
+      .withDefault("<hover:show_text:\"<sel:content:', '>{el}</sel>\"><white><u>{sel:size} Node{sel:size ? '' : 's'}</u></white></hover>")
       .withPlaceholders("sel")
       .build();
   public static final Message RELOAD_ERROR = new MessageBuilder("command.reload.error")
@@ -182,9 +187,9 @@ public class Messages {
   public static final Message CMD_N_LIST = new MessageBuilder("commands.node.list")
       .withDefault("""
           <header>Waypoints</header>
-          <nodes:'<newline>'><bg>» </bg><hover:show_text:'<text>Groups: {el:groups}<newline><text>Edges to: {el:edges}<newline><text>Click for more information'><click:run_command:'/pf nodes \"@n[id={el:id}]\" info'><text>at {el:loc} ({el:loc:world})</nodes>
+          <nodes:'<newline>'><bg>» </bg><hover:show_text:'<text>Groups: {el:groups}<newline><text>Edges to: {el:edges}<newline><text>Click for more information'><click:run_command:'/pf nodes \"@n[id={el:id}]\" info'><text>at {el:loc}({el:loc:world})</nodes>
           {list_static_footer:'/pf listnodes "{selector}" {prev-page}':'/pf listnodes "{selector}" {next-page}'}
-          <gradient:black:dark_gray:black>------------<text> <click:run_command:>←</click> {page}/{pages} <click:run_command:/pf listnodes \"{selector}\" {next-page}>→</click> </text>-------------</gradient>""")
+          <gradient:black:dark_gray:black>------------<text> <click:run_command:>←</click> {page}/{pages} <click:run_command:'/pf listnodes \"{selector}\" {next-page}'>→</click> </text>-------------</gradient>""")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
@@ -228,7 +233,7 @@ public class Messages {
   public static final Message CMD_NG_LIST = new MessageBuilder("commands.node_group.list.line")
       .withDefault("""
           <header>Node-Groups</header>
-          <groups:"\n"><dark_gray> » </dark_gray>{el:key} <text>(Weight: {el:weight})</text></groups>
+          <groups:"\n"><bg> » </bg><text_l>{el:key} </text_l><text>(Weight: {el:weight})</text></groups>
           <gradient:black:dark_gray:black>------------<text> <click:run_command:"/pf listgroups {prev-page}">←</click> {page}/{pages} <click:run_command:"/pf listgroups {next-page}">→</click></text> -------------</gradient>""")
       .withPlaceholders("page", "key", "weight", "modifiers")
       .build();
@@ -273,7 +278,7 @@ public class Messages {
       .withDefault("<prefix>Navigation started. <button><click:run_command:/cancelpath>/cancelpath</click></button>")
       .build();
   public static final Message CMD_DISCOVERIES_ENTRY = new MessageBuilder("commands.discoveries.list.entry")
-      .withDefault("<bg>» </bg>{name}: {percentage:#.##}%")
+      .withDefault("<discoveries><bg>» </bg>{name}: {percentage:#.##}%</discoveries>")
       .withPlaceholders("name", "percentage", "ratio")
       .build();
   public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.discoveries.list.header")
@@ -586,45 +591,55 @@ public class Messages {
       .withDefault("<prefix_negative>Your currently edited group was deleted by another user.")
       .build();
 
-  public static void applyObjectResolvers(ObjectTagResolverMap resolverMap) {
+  public static void applyObjectResolvers(TinyObjectResolver resolver) {
 
-    resolverMap.put(Keyed.class, Map.of(
-        "key", Keyed::getKey
-    ), Keyed::getKey);
-    resolverMap.put(Location.class, Map.of(
-        "x", Location::getX,
-        "y", Location::getY,
-        "z", Location::getZ,
-        "world", Location::getWorld
-    ), l -> Component.text(l.toString())); //TODO
-    resolverMap.put(World.class, Map.of(
-        "name", World::getName,
-        "uuid", World::getUniqueId
-    ), w -> Component.text(w.getName()));
-    resolverMap.put(Node.class, Map.of(
-        "id", Node::getNodeId,
-        "loc", Node::getLocation,
-        "edges", Node::getEdges
-    ), node -> GEN_NODE.insertObject("node", node));
-    resolverMap.put(Edge.class, Map.of(
-        "start", Edge::getStart,
-        "end", Edge::getEnd,
-        "weight", Edge::getWeight
-    ));
-    resolverMap.put(NodeGroup.class, Map.of(
-        "key", NodeGroup::getKey,
-        "weight", NodeGroup::getWeight,
-        "modifiers", NodeGroup::getModifiers,
-        "content", List::of
-    ), Keyed::getKey);
-    resolverMap.put(PathVisualizer.class, Map.of(
-        "key", PathVisualizer::getKey,
-        "perm", PathVisualizer::getPermission
-    ));
-    resolverMap.put(NodeSelection.class, Map.of(
-        "content", ArrayList::new,
-        "size", Collection::size
-    ), n -> GEN_NODE_SEL.insertObject("sel", n));
+    resolver.add(TinyObjectMapping.builder(PathPlayer.class)
+        .with("uuid", PathPlayer::getUniqueId)
+        .with("name", PathPlayer::getName)
+        .with("loc", PathPlayer::getLocation)
+        .build());
+    resolver.add(TinyObjectMapping.builder(Keyed.class)
+        .with("key", Keyed::getKey)
+        .withFallback(Keyed::getKey)
+        .build());
+    resolver.add(TinyObjectMapping.builder(Location.class)
+        .with("world", Location::getWorld)
+        .withFallback(l -> GEN_LOCATION.insertObject("loc", l))
+        .build());
+    resolver.add(TinyObjectMapping.builder(Vector.class)
+        .with("x", Vector::getX)
+        .with("y", Vector::getY)
+        .with("z", Vector::getZ)
+        .withFallback(l -> GEN_LOCATION.insertObject("loc", l))
+        .build());
+    resolver.add(TinyObjectMapping.builder(World.class)
+        .with("name", World::getName)
+        .with("uuid", World::getUniqueId)
+        .withFallback(w -> Component.text(w.getName()))
+        .build());
+    resolver.add(TinyObjectMapping.builder(Node.class)
+        .with("id", Node::getNodeId)
+        .with("loc", Node::getLocation)
+        .with("edges", Node::getEdges)
+        .withFallback(node -> GEN_NODE.insertObject("node", node))
+        .build());
+    resolver.add(TinyObjectMapping.builder(Edge.class)
+        .with("start", Edge::getStart)
+        .with("end", Edge::getEnd)
+        .with("weight", Edge::getWeight)
+        .build());
+    resolver.add(TinyObjectMapping.builder(NodeGroup.class)
+        .with("weight", NodeGroup::getWeight)
+        .with("modifiers", NodeGroup::getModifiers)
+        .with("content", List::of)
+        .build());
+    resolver.add(TinyObjectMapping.builder(PathVisualizer.class)
+        .with("perm", PathVisualizer::getPermission)
+        .build());
+    resolver.add(TinyObjectMapping.builder(NodeSelection.class)
+        .with("content", ArrayList::new)
+        .withFallback(n -> GEN_NODE_SEL.insertObject("sel", n))
+        .build());
   }
 
   public TagResolver particle(String key, Particle particle, Object data) {

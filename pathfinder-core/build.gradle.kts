@@ -74,7 +74,7 @@ dependencies {
     testImplementation(project(":pathfinder-test-utils"))
 
     // UI
-  api("de.cubbossa:TinyTranslations-bukkit-common:4.4.2")
+  api("de.cubbossa:TinyTranslations-bukkit-common:4.4.3")
 
     // Utility
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")

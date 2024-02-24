@@ -6,7 +6,6 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.dump.DumpWriter;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.misc.Vector;
 import de.cubbossa.pathapi.misc.*;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
@@ -41,7 +40,9 @@ import net.kyori.adventure.platform.AudienceProvider;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Level;
 
 @Getter
@@ -145,7 +146,7 @@ public abstract class CommonPathFinder implements PathFinder {
     saveResource("lang/styles.properties", false);
 
     // Data
-    Messages.applyObjectResolvers(TinyTranslations.NM.getObjectTypeResolverMap());
+    Messages.applyObjectResolvers(TinyTranslations.NM.getObjectResolver());
     translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "/lang/")));
     translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "/lang/styles.properties")));
     translations.addMessages(TinyTranslations.messageFieldsFromClass(Messages.class));

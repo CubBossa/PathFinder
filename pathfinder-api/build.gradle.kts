@@ -24,7 +24,7 @@ dependencies {
     api("net.kyori:adventure-text-serializer-plain:4.13.0")
 
   // UI
-  api("de.cubbossa:TinyTranslations-common:4.4.2")
+  api("de.cubbossa:TinyTranslations-common:4.4.3")
 }
 
 tasks.getByName<Test>("test") {
