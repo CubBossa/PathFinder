@@ -34,6 +34,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
   @Override
   public Message getInfoMessage(CombinedVisualizer element) {
     return Messages.CMD_VIS_COMBINED_INFO
+        .insertObject("visualizer", element)
         .insertList("entries", element.getVisualizers().stream().map(Keyed::getKey).map(Objects::toString).toList());
   }
 

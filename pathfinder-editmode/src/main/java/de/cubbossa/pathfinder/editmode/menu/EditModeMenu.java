@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EditModeMenu {
 
 
-  private static Material[] GROUP_ITEM_LIST = new Material[]{
+  private static final Material[] GROUP_ITEM_LIST = new Material[]{
       Material.WHITE_CONCRETE,
       Material.ORANGE_CONCRETE,
       Material.MAGENTA_CONCRETE,
@@ -364,8 +364,7 @@ public class EditModeMenu {
     int mod = group.getKey().hashCode();
 
     TagResolver resolver = FormattableBuilder.builder()
-        .insertObject("key", group.getKey())
-        .insertNumber("weight", group.getWeight())
+        .insertObject("group", group)
         .insertList("modifiers", group.getModifiers())
         .toResolver();
 

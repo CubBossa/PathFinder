@@ -88,7 +88,7 @@ public class GroupCmd extends PathFinderSubCommand {
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE
           .insertObject("group", group)
-          .insertObject("key", mod));
+          .insertObject("mod", mod));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;

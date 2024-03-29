@@ -28,7 +28,7 @@ public class CompassVisualizerType extends IntervalVisualizerType<CompassVisuali
   @Override
   public Message getInfoMessage(CompassVisualizer element) {
     return Messages.CMD_VIS_COMPASS_INFO
-        .insertString("color", element.getColor().toString().toLowerCase())
+        .insertString("bb_color", element.getColor().toString().toLowerCase())
         .insertString("overlay", element.getOverlay().toString().toLowerCase())
         .insertParsed("background", element.getBackgroundFormat())
         .insertParsed("marker-north", element.getNorth())

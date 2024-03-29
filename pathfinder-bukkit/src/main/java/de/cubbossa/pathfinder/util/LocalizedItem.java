@@ -53,7 +53,7 @@ public class LocalizedItem {
   }
 
   private static Component render(ComponentLike component, Audience audience) {
-    return GlobalTranslator.renderer().render(component.asComponent(), audience.getOrDefault(Identity.LOCALE, TinyTranslations.DEFAULT_LOCALE));
+    return GlobalTranslator.renderer().render(component.asComponent(), audience.getOrDefault(Identity.LOCALE, TinyTranslations.FALLBACK_DEFAULT_LOCALE));
   }
 
   public static class Builder {

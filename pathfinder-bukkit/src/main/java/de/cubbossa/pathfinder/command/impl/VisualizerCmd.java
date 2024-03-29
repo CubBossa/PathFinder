@@ -47,7 +47,7 @@ public class VisualizerCmd extends PathFinderSubCommand {
 
                   pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
                     BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP
-                        .insertObject("key", visualizer.getKey())
+                        .insertObject("visualizer", visualizer)
                         .insertObject("type", type.getKey())
                         .insertString("property", "permission")
                         .insertString("old-value", old)
@@ -84,7 +84,7 @@ public class VisualizerCmd extends PathFinderSubCommand {
       }
 
       Message message = ext.getInfoMessage(visualizer)
-          .insertObject("key", visualizer.getKey())
+          .insertObject("visualizer", visualizer)
           .insertObject("type", type.get().getKey())
           .insertString("permission", visualizer.getPermission());
       p.sendMessage(message);

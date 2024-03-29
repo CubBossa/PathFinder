@@ -146,7 +146,7 @@ public abstract class CommonPathFinder implements PathFinder {
     saveResource("lang/styles.properties", false);
 
     // Data
-    Messages.applyObjectResolvers(TinyTranslations.NM.getObjectResolver());
+    Messages.applyObjectResolvers(translations);
     translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "/lang/")));
     translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "/lang/styles.properties")));
     translations.addMessages(TinyTranslations.messageFieldsFromClass(Messages.class));
@@ -271,7 +271,7 @@ public abstract class CommonPathFinder implements PathFinder {
     translations.loadLocales();
     translations.loadStyles();
     translations.setUseClientLocale(configuration.getLanguage().isClientLanguage());
-    translations.setDefaultLocale(configuration.getLanguage().getFallbackLanguage());
+    translations.defaultLocale(configuration.getLanguage().getFallbackLanguage());
   }
 
   abstract AudienceProvider provideAudiences();

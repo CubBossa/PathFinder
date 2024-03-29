@@ -19,12 +19,12 @@ dependencies {
 
     // Adventure
     api("net.kyori:adventure-api:4.13.0")
-    api("net.kyori:adventure-platform-bukkit:4.3.0")
+  api("net.kyori:adventure-platform-bukkit:4.3.3-SNAPSHOT")
     api("net.kyori:adventure-text-minimessage:4.13.0")
     api("net.kyori:adventure-text-serializer-plain:4.13.0")
 
   // UI
-  api("de.cubbossa:TinyTranslations-common:4.4.3")
+  api("de.cubbossa:TinyTranslations-common:4.5.1")
 }
 
 tasks.getByName<Test>("test") {
