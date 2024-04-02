@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.util.ModifiedHashSet;
 import lombok.Getter;
 import lombok.Setter;
@@ -70,7 +70,7 @@ public class Waypoint implements Node {
     if (getConnection(other).isPresent()) {
       return Optional.empty();
     }
-    Edge e = new SimpleEdge(nodeId, other, (float) weight);
+    Edge e = new EdgeImpl(nodeId, other, (float) weight);
     edges.add(e);
     return Optional.of(e);
   }

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
@@ -28,7 +28,7 @@ public class CreateGroupCmd extends PathFinderSubCommand {
   }
 
   private void createGroup(CommandSender sender, String name) {
-    NamespacedKey key = CommonPathFinder.pathfinder(name);
+    NamespacedKey key = AbstractPathFinder.pathfinder(name);
     getPathfinder().getStorage().loadGroup(key).thenAccept(optGroup -> {
       if (optGroup.isPresent()) {
         BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_ALREADY_EXISTS.formatted(
@@ -37,7 +37,7 @@ public class CreateGroupCmd extends PathFinderSubCommand {
         return;
       }
       getPathfinder().getStorage()
-          .createAndLoadGroup(CommonPathFinder.pathfinder(name))
+          .createAndLoadGroup(AbstractPathFinder.pathfinder(name))
           .thenAccept(group -> {
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE.formatted(
                 Messages.formatter().namespacedKey("key", group.getKey())

@@ -5,14 +5,18 @@ import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathapi.visualizer.query.SearchTermHolder;
 import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class FindQueryParser {
 
@@ -94,7 +98,7 @@ public class FindQueryParser {
     @Override
     public boolean matches(String term, Collection<SearchQueryAttribute> attributes) {
       return getSearchTerms().stream()
-          .filter(searchTerm -> searchTerm instanceof SimpleSearchTerm s && s.getIdentifier().equalsIgnoreCase(term))
+          .filter(searchTerm -> searchTerm instanceof SearchTermImpl s && s.getIdentifier().equalsIgnoreCase(term))
           .anyMatch(searchTerm -> searchTerm.matches(attributes));
     }
   }

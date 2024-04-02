@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.event;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public interface EventDispatcher<PlayerT> {
+public interface EventDispatcher<PlayerT> extends Disposable {
 
   <N extends Node> void dispatchNodeCreate(N node);
 

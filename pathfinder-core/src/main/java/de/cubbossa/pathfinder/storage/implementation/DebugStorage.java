@@ -13,18 +13,23 @@ import de.cubbossa.pathapi.storage.WorldLoader;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
-import de.cubbossa.pathfinder.storage.WaypointDataStorage;
-import org.jetbrains.annotations.Nullable;
-
+import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
+import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jetbrains.annotations.Nullable;
 
-public class DebugStorage implements StorageImplementation, WaypointDataStorage, InternalVisualizerDataStorage {
+public class DebugStorage implements StorageImplementation, WaypointStorageImplementation, InternalVisualizerStorageImplementation {
 
   private final StorageImplementation implementation;
   private final Logger logger;
@@ -260,7 +265,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
     debug("> createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
-    var x = implementation instanceof InternalVisualizerDataStorage vs ?
+    var x = implementation instanceof InternalVisualizerStorageImplementation vs ?
         vs.createAndLoadInternalVisualizer(type, key) : null;
     debug("< createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
     return x;
@@ -269,7 +274,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
     debug("> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
-    Optional<VisualizerT> x = implementation instanceof InternalVisualizerDataStorage vs ?
+    Optional<VisualizerT> x = implementation instanceof InternalVisualizerStorageImplementation vs ?
         vs.loadInternalVisualizer(type, key) : Optional.empty();
     debug("< loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
     return x;
@@ -278,7 +283,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(VisualizerType<VisualizerT> type) {
     debug("> loadInternalVisualizers(VisualizerType<VisualizerT> type)");
-    Map<NamespacedKey, VisualizerT> x = implementation instanceof InternalVisualizerDataStorage vs ?
+    Map<NamespacedKey, VisualizerT> x = implementation instanceof InternalVisualizerStorageImplementation vs ?
         vs.loadInternalVisualizers(type) : new HashMap<>();
     debug("< loadInternalVisualizers(VisualizerType<VisualizerT> type)");
     return x;
@@ -287,7 +292,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer) {
     debug("> saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer)");
-    if (implementation instanceof InternalVisualizerDataStorage vs) {
+    if (implementation instanceof InternalVisualizerStorageImplementation vs) {
       debug("< saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer)");
       vs.saveInternalVisualizer(type, visualizer);
     }
@@ -296,7 +301,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
     debug("> deleteInternalVisualizer(VisualizerT visualizer)");
-    if (implementation instanceof InternalVisualizerDataStorage vs) {
+    if (implementation instanceof InternalVisualizerStorageImplementation vs) {
       debug("< deleteInternalVisualizer(VisualizerT visualizer)");
       vs.deleteInternalVisualizer(visualizer);
     }
@@ -305,7 +310,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public Waypoint createAndLoadWaypoint(Location location) {
     debug("> createAndLoadWaypoint(Location location)");
-    var x = implementation instanceof WaypointDataStorage ws ? ws.createAndLoadWaypoint(location) : null;
+    var x = implementation instanceof WaypointStorageImplementation ws ? ws.createAndLoadWaypoint(location) : null;
     debug("< createAndLoadWaypoint(Location location)");
     return x;
   }
@@ -313,7 +318,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public Optional<Waypoint> loadWaypoint(UUID uuid) {
     debug("> loadWaypoint(UUID uuid)");
-    Optional<Waypoint> x = implementation instanceof WaypointDataStorage ws ? ws.loadWaypoint(uuid) : Optional.empty();
+    Optional<Waypoint> x = implementation instanceof WaypointStorageImplementation ws ? ws.loadWaypoint(uuid) : Optional.empty();
     debug("< loadWaypoint(UUID uuid)");
     return x;
   }
@@ -321,7 +326,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public Collection<Waypoint> loadWaypoints(Collection<UUID> ids) {
     debug("> loadWaypoints(Collection<UUID> ids " + ids.size() + ")");
-    Collection<Waypoint> x = implementation instanceof WaypointDataStorage ws ? ws.loadWaypoints(ids) : new HashSet<>();
+    Collection<Waypoint> x = implementation instanceof WaypointStorageImplementation ws ? ws.loadWaypoints(ids) : new HashSet<>();
     debug("< loadWaypoints(Collection<UUID> ids " + ids.size() + ")");
     return x;
   }
@@ -329,14 +334,14 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public Collection<Waypoint> loadAllWaypoints() {
     debug("> loadAllWaypoints()");
-    Collection<Waypoint> x = implementation instanceof WaypointDataStorage ws ? ws.loadAllWaypoints() : new HashSet<>();
+    Collection<Waypoint> x = implementation instanceof WaypointStorageImplementation ws ? ws.loadAllWaypoints() : new HashSet<>();
     debug("< loadAllWaypoints()");
     return x;
   }
 
   @Override
   public void saveWaypoint(Waypoint node) {
-    if (implementation instanceof WaypointDataStorage ws) {
+    if (implementation instanceof WaypointStorageImplementation ws) {
       debug("> saveWaypoint(Waypoint nodes)");
       ws.saveWaypoint(node);
       debug("< saveWaypoint(Waypoint nodes)");
@@ -346,7 +351,7 @@ public class DebugStorage implements StorageImplementation, WaypointDataStorage,
   @Override
   public void deleteWaypoints(Collection<Waypoint> waypoints) {
     debug("> deleteWaypoints(Collection<Waypoint> waypoints)");
-    if (implementation instanceof WaypointDataStorage ws) {
+    if (implementation instanceof WaypointStorageImplementation ws) {
       debug("< deleteWaypoints(Collection<Waypoint> waypoints)");
       ws.deleteWaypoints(waypoints);
     }

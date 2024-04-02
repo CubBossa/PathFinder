@@ -4,17 +4,17 @@ import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
-import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
+import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
+import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
 import org.jetbrains.annotations.NotNull;
 
 @AutoService(PathFinderExtension.class)
-public class ScriptedVisualizerPathfinderExtension implements PathFinderExtension {
+public class ScriptedVisualizerPathfinderExtension extends PathFinderExtensionBase implements PathFinderExtension {
 
-    public static final NamespacedKey KEY = CommonPathFinder.pathfinder("scriptline-visualizers");
+  public static final NamespacedKey KEY = AbstractPathFinder.pathfinder("scriptline-visualizers");
     public static AbstractVisualizerType<ScriptLineParticleVisualizer> ADV_PARTICLE_VISUALIZER_TYPE =
-            new ScriptLineParticleVisualizerType(CommonPathFinder.pathfinder("scriptline"));
+        new ScriptLineParticleVisualizerType();
 
   @NotNull
   @Override
@@ -24,9 +24,8 @@ public class ScriptedVisualizerPathfinderExtension implements PathFinderExtensio
 
   @Override
   public void onEnable(PathFinder pathPlugin) {
-    if (pathPlugin.getStorage().getImplementation() instanceof InternalVisualizerDataStorage storage) {
-      ADV_PARTICLE_VISUALIZER_TYPE.setStorage(new InternalVisualizerStorage<>(ADV_PARTICLE_VISUALIZER_TYPE, storage));
+    if (pathPlugin.getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation storage) {
+      ADV_PARTICLE_VISUALIZER_TYPE.setStorage(new InternalVisualizerStorageImplementationImpl<>(storage));
     }
-    pathPlugin.getVisualizerTypeRegistry().registerVisualizerType(ADV_PARTICLE_VISUALIZER_TYPE);
   }
 }

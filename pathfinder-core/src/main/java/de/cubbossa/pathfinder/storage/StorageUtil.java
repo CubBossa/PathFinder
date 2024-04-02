@@ -2,8 +2,7 @@ package de.cubbossa.pathfinder.storage;
 
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.Storage;
-
+import de.cubbossa.pathapi.storage.StorageAdapter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -12,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class StorageUtil {
 
-  public static Storage storage;
+  public static StorageAdapter storage;
 
   public static Collection<NodeGroup> getGroups(Node node) {
     return getGroups(node.getNodeId());

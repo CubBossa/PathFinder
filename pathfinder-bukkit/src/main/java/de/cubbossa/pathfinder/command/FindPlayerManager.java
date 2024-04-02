@@ -1,32 +1,34 @@
 package de.cubbossa.pathfinder.command;
 
+import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommandRegistry;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import dev.jorel.commandapi.CommandTree;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
-public class FindPlayerManager {
+public class FindPlayerManager implements Disposable {
 
   private final Map<UUID, Map<UUID, BukkitTask>> requests;
 
-  public FindPlayerManager(CommandRegistry commandRegistry) {
+  public FindPlayerManager(PathFinder pathFinder, CommandRegistry commandRegistry) {
 
+    pathFinder.getDisposer().register(commandRegistry, this);
     requests = new HashMap<>();
 
     commandRegistry.registerCommand(new CommandTree("findplayer")

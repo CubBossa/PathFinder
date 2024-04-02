@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.navigation;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -22,7 +23,7 @@ import java.util.function.Function;
  *
  * @param <PlayerT> The environment implementation that is wrapped by the {@link PathPlayer} class.
  */
-public interface NavigationHandler<PlayerT> {
+public interface NavigationHandler<PlayerT> extends Disposable {
 
   /**
    * Adds a filter that maps the graph nodes on new nodes. Only nodes that are contained in the node collection

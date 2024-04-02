@@ -4,16 +4,15 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.visualizer.PathView;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import javax.annotation.Nullable;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -84,7 +83,7 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
 
   @Getter
   @RequiredArgsConstructor
-  public static class SimpleProperty<Value extends PathVisualizer<?, ?>, Type>
+  public static class PropertyImpl<Value extends PathVisualizer<?, ?>, Type>
       implements Property<Value, Type> {
     private final String key;
     private final Class<Type> type;

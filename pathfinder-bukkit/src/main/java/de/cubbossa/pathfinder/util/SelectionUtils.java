@@ -13,23 +13,32 @@ import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
-import de.cubbossa.pathfinder.nodeselection.NodeSelectionParser;
-import de.cubbossa.pathfinder.nodeselection.NumberRange;
+import de.cubbossa.pathfinder.node.selection.BukkitSelectionParser;
+import de.cubbossa.pathfinder.node.selection.NumberRange;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import dev.jorel.commandapi.SuggestionInfo;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
 public class SelectionUtils {
 
-  public static final NodeSelectionParser.Argument<UUID> ID =
-      new NodeSelectionParser.Argument<>(r -> UUID.fromString(r.getRemaining()))
+  public static final BukkitSelectionParser.Argument<UUID> ID =
+      new BukkitSelectionParser.Argument<>(r -> UUID.fromString(r.getRemaining()))
           .execute(c -> c.getScope().stream()
               .filter(n -> c.getValue().equals(n.getNodeId()))
               .collect(Collectors.toList()))
@@ -38,8 +47,8 @@ public class SelectionUtils {
               .map(integer -> integer + "")
               .collect(Collectors.toList()));
 
-  public static final NodeSelectionParser.Argument<NumberRange> DISTANCE =
-      new NodeSelectionParser.Argument<>(r -> NumberRange.fromString(r.getRemaining()))
+  public static final BukkitSelectionParser.Argument<NumberRange> DISTANCE =
+      new BukkitSelectionParser.Argument<>(r -> NumberRange.fromString(r.getRemaining()))
           .execute(c -> {
             if (c.getSender() instanceof Player player) {
               PathPlayer<Player> p = BukkitPathFinder.wrap(player);
@@ -51,8 +60,8 @@ public class SelectionUtils {
             return Lists.newArrayList();
           });
 
-  public static final NodeSelectionParser.Argument<World> WORLD =
-      new NodeSelectionParser.Argument<>(r -> {
+  public static final BukkitSelectionParser.Argument<World> WORLD =
+      new BukkitSelectionParser.Argument<>(r -> {
         World world = Bukkit.getWorld(r.getRemaining());
         if (world == null) {
           throw new RuntimeException("'" + r.getRemaining() + "' is not a valid world.");
@@ -65,15 +74,15 @@ public class SelectionUtils {
               .map(World::getName)
               .collect(Collectors.toList()));
 
-  public static final NodeSelectionParser.Argument<Integer> LIMIT =
-      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
+  public static final BukkitSelectionParser.Argument<Integer> LIMIT =
+      new BukkitSelectionParser.Argument<>(IntegerArgumentType.integer())
           .execute(c -> CollectionUtils.subList(c.getScope(), Range.range(0, c.getValue())));
 
-  public static final NodeSelectionParser.Argument<Integer> OFFSET =
-      new NodeSelectionParser.Argument<>(IntegerArgumentType.integer())
+  public static final BukkitSelectionParser.Argument<Integer> OFFSET =
+      new BukkitSelectionParser.Argument<>(IntegerArgumentType.integer())
           .execute(c -> CollectionUtils.subList(c.getScope(), c.getValue()));
-  public static final NodeSelectionParser.Argument<SortMethod> SORT =
-      new NodeSelectionParser.Argument<SortMethod>(
+  public static final BukkitSelectionParser.Argument<SortMethod> SORT =
+      new BukkitSelectionParser.Argument<>(
           r -> SortMethod.valueOf(r.getRemaining().toUpperCase()))
           .execute(c -> {
             Location playerLocation = c.getSender() instanceof Player player
@@ -98,8 +107,8 @@ public class SelectionUtils {
             };
           })
           .suggestStrings(Lists.newArrayList("nearest", "furthest", "random", "arbitrary"));
-  public static final NodeSelectionParser.Argument<Collection<NodeGroup>> GROUP =
-      new NodeSelectionParser.Argument<>(r -> {
+  public static final BukkitSelectionParser.Argument<Collection<NodeGroup>> GROUP =
+      new BukkitSelectionParser.Argument<>(r -> {
         String in = r.getRemaining();
         Collection<NodeGroup> groups = new HashSet<>();
         NamespacedKey key = NamespacedKey.fromString(in);
@@ -118,7 +127,7 @@ public class SelectionUtils {
               .map(NodeGroup::getKey)
               .map(NamespacedKey::toString)
               .collect(Collectors.toList()));
-  public static final Map<String, NodeSelectionParser.Argument<?>> SELECTORS = Map.of(
+  public static final Map<String, BukkitSelectionParser.Argument<?>> SELECTORS = Map.of(
       "id", ID,
       "offset", OFFSET,
       "limit", LIMIT,
@@ -127,7 +136,7 @@ public class SelectionUtils {
       "world", WORLD,
       "group", GROUP
   );
-  private static final NodeSelectionParser parser = new NodeSelectionParser("node", "n", "nodes");
+  private static final BukkitSelectionParser parser = new BukkitSelectionParser("node", "n", "nodes");
 
   static {
     SELECTORS.forEach(parser::addResolver);

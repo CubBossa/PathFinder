@@ -1,31 +1,33 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.storage.VisualizerDataStorage;
+import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
+import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
+import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
-import lombok.Getter;
-import lombok.Setter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import lombok.Getter;
+import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -42,10 +44,23 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
    */
   private final NamespacedKey key;
-  private VisualizerDataStorage<T> storage = null;
+  private VisualizerStorageImplementation<T> storage = null;
 
   public AbstractVisualizerType(NamespacedKey key) {
     this.key = key;
+  }
+
+  @Override
+  public VisualizerStorageImplementation<T> getStorage() {
+    // TODO cache pls
+    PathFinder pathFinder = PathFinderProvider.get();
+    if (pathFinder == null || pathFinder.getStorage() == null) {
+      return null;
+    }
+    if (PathFinderProvider.get().getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation visStorage) {
+      setStorage(new InternalVisualizerStorageImplementationImpl<>(visStorage));
+    }
+    return storage;
   }
 
   @Override
@@ -122,7 +137,7 @@ public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
       if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-        setProperty(CommonPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+        setProperty(AbstractPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),

@@ -8,32 +8,47 @@ import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.impl.*;
+import de.cubbossa.pathfinder.command.impl.CreateGroupCmd;
+import de.cubbossa.pathfinder.command.impl.CreateNodeCmd;
+import de.cubbossa.pathfinder.command.impl.CreateVisualizerCmd;
+import de.cubbossa.pathfinder.command.impl.DeleteGroupCmd;
+import de.cubbossa.pathfinder.command.impl.DeleteNodesCmd;
+import de.cubbossa.pathfinder.command.impl.DeleteVisualizerCmd;
+import de.cubbossa.pathfinder.command.impl.GroupCmd;
+import de.cubbossa.pathfinder.command.impl.ImportVisualizerCmd;
+import de.cubbossa.pathfinder.command.impl.ListGroupsCmd;
+import de.cubbossa.pathfinder.command.impl.ListNodesCmd;
+import de.cubbossa.pathfinder.command.impl.ListVisualizersCmd;
+import de.cubbossa.pathfinder.command.impl.NodesCmd;
+import de.cubbossa.pathfinder.command.impl.VisualizerCmd;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.AbstractDiscoverHandler;
-import de.cubbossa.pathfinder.node.NodeHandler;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
+import de.cubbossa.pathfinder.node.GraphEditorRegistry;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.translations.MessageBundle;
 import dev.jorel.commandapi.CommandTree;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 /**
  * The basic command of this plugin, which handles things like reload, export, import, etc.
@@ -52,7 +67,7 @@ public class PathFinderCommand extends CommandTree {
     withAliases("pf");
 
     then(new NodesCmd(pathFinder));
-    NodeType<?> type = pathFinder.getNodeTypeRegistry().getType(CommonPathFinder.pathfinder("waypoint"));
+    NodeType<?> type = pathFinder.getNodeTypeRegistry().getType(AbstractPathFinder.pathfinder("waypoint"));
     then(new CreateNodeCmd(pathFinder, () -> type));
     then(new DeleteNodesCmd(pathFinder));
     then(new ListNodesCmd(pathFinder));
@@ -125,13 +140,13 @@ public class PathFinderCommand extends CommandTree {
 
     then(Arguments.literal("editmode")
         .executesPlayer((player, args) -> {
-          NodeHandler.getInstance()
-              .toggleNodeGroupEditor(BukkitUtils.wrap(player), CommonPathFinder.globalGroupKey());
+          GraphEditorRegistry.getInstance()
+              .toggleNodeGroupEditor(BukkitUtils.wrap(player), AbstractPathFinder.globalGroupKey());
         })
         .then(Arguments.nodeGroupArgument("group")
             .executesPlayer((player, args) -> {
-              NodeHandler.getInstance().toggleNodeGroupEditor(BukkitUtils.wrap(player),
-                  ((SimpleNodeGroup) args.getUnchecked(0)).getKey());
+              GraphEditorRegistry.getInstance().toggleNodeGroupEditor(BukkitUtils.wrap(player),
+                  ((NodeGroupImpl) args.getUnchecked(0)).getKey());
             })));
 
     then(Arguments.literal("help")
@@ -147,8 +162,8 @@ public class PathFinderCommand extends CommandTree {
           long now = System.currentTimeMillis();
 
           CompletableFuture.runAsync(() -> {
-            CommonPathFinder pf = BukkitPathFinder.getInstance();
-            pf.loadConfig();
+            AbstractPathFinder pf = BukkitPathFinder.getInstance();
+            pf.getConfigFileLoader().loadConfig();
 
             MessageBundle translations = pf.getTranslations();
 
@@ -176,7 +191,7 @@ public class PathFinderCommand extends CommandTree {
               long now = System.currentTimeMillis();
 
               CompletableFuture.runAsync(() -> {
-                CommonPathFinder pf = BukkitPathFinder.getInstance();
+                AbstractPathFinder pf = BukkitPathFinder.getInstance();
                 MessageBundle translations = pf.getTranslations();
 
                 Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
@@ -207,7 +222,7 @@ public class PathFinderCommand extends CommandTree {
               CompletableFuture.runAsync(() -> {
                 try {
                   // TODO bah
-                  ((CommonPathFinder) PathFinderProvider.get()).loadConfig();
+                  ((AbstractPathFinder) PathFinderProvider.get()).getConfigFileLoader().loadConfig();
                 } catch (Throwable t) {
                   throw new RuntimeException(t);
                 }

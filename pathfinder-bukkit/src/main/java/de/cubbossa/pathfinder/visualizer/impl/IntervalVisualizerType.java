@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import dev.jorel.commandapi.arguments.Argument;
-
 import java.util.Map;
 
 public abstract class IntervalVisualizerType<T extends IntervalVisualizer<?>>

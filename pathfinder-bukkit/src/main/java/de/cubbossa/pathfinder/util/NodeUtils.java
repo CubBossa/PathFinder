@@ -5,7 +5,7 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.splinelib.util.BezierVector;
@@ -56,7 +56,7 @@ public class NodeUtils {
     Preconditions.checkState(path.size() > 0);
 
     if (path.size() < 2) {
-      return List.of(new BezierVector(CommonPathFinder.SPLINES.convertToVector(path.keySet().iterator().next().getLocation()), null, null));
+      return List.of(new BezierVector(AbstractPathFinder.SPLINES.convertToVector(path.keySet().iterator().next().getLocation()), null, null));
     }
 
     BezierVector[] vectors = new BezierVector[path.size()];
@@ -66,7 +66,7 @@ public class NodeUtils {
 
     int index = 0;
     for (Map.Entry<Node, Double> entry : path.entrySet()) {
-      vectors[index] = new BezierVector(CommonPathFinder.SPLINES.convertToVector(entry.getKey().getLocation()), null, null);
+      vectors[index] = new BezierVector(AbstractPathFinder.SPLINES.convertToVector(entry.getKey().getLocation()), null, null);
       dirs[index] = null;
       leftWeights[index] = entry.getValue();
       rightWeights[index++] = entry.getValue();

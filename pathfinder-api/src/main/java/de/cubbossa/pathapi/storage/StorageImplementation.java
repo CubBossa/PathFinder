@@ -7,17 +7,21 @@ import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import org.jetbrains.annotations.Nullable;
-
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A {@link StorageImplementation} handles the actual serializing and deserializing of the given objects.
- * To access pathfinder data, use an instance of {@link Storage} instead, which also handles caching and
+ * To access pathfinder data, use an instance of {@link StorageAdapter} instead, which also handles caching and
  * combines different loading methods (e.g. loading a node, its edges and its groups) into one.
  */
 public interface StorageImplementation {
@@ -27,7 +31,7 @@ public interface StorageImplementation {
   }
 
   /**
-   * Initializes this storage implementation. Will be called by {@link Storage#init()} and will create
+   * Initializes this storage implementation. Will be called by {@link StorageAdapter#init()} and will create
    * necessary files or objects. It assures that the instance can be used without issues afterward.
    *
    * @throws Exception Might call an exception. Not specified due to different implementations.

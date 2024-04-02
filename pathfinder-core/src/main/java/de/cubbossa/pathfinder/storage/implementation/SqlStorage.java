@@ -9,7 +9,6 @@ import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodeTypeRelation.PATH
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroupNodes.PATHFINDER_NODEGROUP_NODES;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups.PATHFINDER_NODEGROUPS;
 import static de.cubbossa.pathfinder.jooq.tables.PathfinderWaypoints.PATHFINDER_WAYPOINTS;
-
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
@@ -29,9 +28,9 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderGroupModifierRelatio
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
-import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.io.StringReader;
 import java.time.LocalDateTime;
@@ -56,7 +55,7 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public abstract class SqlStorage extends CommonStorage {
+public abstract class SqlStorage extends AbstractStorage {
 
   private final RecordMapper<? super PathfinderWaypointsRecord, Waypoint> nodeMapper;
   private final RecordMapper<? super PathfinderEdgesRecord, Edge> edgeMapper =
@@ -65,7 +64,7 @@ public abstract class SqlStorage extends CommonStorage {
         UUID endId = record.getEndId();
         double weight = record.getWeight();
 
-        return new SimpleEdge(startId, endId, (float) weight);
+        return new EdgeImpl(startId, endId, (float) weight);
       };
 
   private final SQLDialect dialect;
@@ -75,7 +74,7 @@ public abstract class SqlStorage extends CommonStorage {
   private final RecordMapper<? super PathfinderNodegroupsRecord, NodeGroup> groupMapper =
       record -> {
         NamespacedKey key = record.getKey();
-        SimpleNodeGroup group = new SimpleNodeGroup(key);
+        NodeGroupImpl group = new NodeGroupImpl(key);
 
         group.addAll(loadGroupNodes(group));
         loadModifiers(group.getKey()).forEach(group::addModifier);
@@ -332,7 +331,7 @@ public abstract class SqlStorage extends CommonStorage {
         .values(start, end, weight)
         .onDuplicateKeyIgnore()
         .execute();
-    return new SimpleEdge(start, end, (float) weight);
+    return new EdgeImpl(start, end, (float) weight);
   }
 
   @Override
@@ -454,12 +453,12 @@ public abstract class SqlStorage extends CommonStorage {
   }
 
   @Override
-  public SimpleNodeGroup createAndLoadGroup(NamespacedKey key) {
+  public NodeGroupImpl createAndLoadGroup(NamespacedKey key) {
     create
         .insertInto(PATHFINDER_NODEGROUPS)
         .values(key, 1)
         .execute();
-    return new SimpleNodeGroup(key);
+    return new NodeGroupImpl(key);
   }
 
   @Override
@@ -533,7 +532,7 @@ public abstract class SqlStorage extends CommonStorage {
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_NODEGROUP_NODES.GROUP_KEY))
         .where(PATHFINDER_NODEGROUP_NODES.NODE_ID.eq(node))
         .fetch(record -> {
-          SimpleNodeGroup group = new SimpleNodeGroup(record.get(PATHFINDER_NODEGROUPS.KEY));
+          NodeGroupImpl group = new NodeGroupImpl(record.get(PATHFINDER_NODEGROUPS.KEY));
           group.setWeight(record.get(PATHFINDER_NODEGROUPS.WEIGHT).floatValue());
           loadModifiers(group.getKey()).forEach(group::addModifier);
           group.getModifierChanges().flush();
@@ -552,7 +551,7 @@ public abstract class SqlStorage extends CommonStorage {
         .on(PATHFINDER_NODEGROUPS.KEY.eq(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY))
         .where(PATHFINDER_GROUP_MODIFIER_RELATION.MODIFIER_KEY.eq(modifier))
         .fetch(r -> {
-          SimpleNodeGroup group = new SimpleNodeGroup(
+          NodeGroupImpl group = new NodeGroupImpl(
               r.getValue(PATHFINDER_GROUP_MODIFIER_RELATION.GROUP_KEY)
           );
           group.addAll(loadGroupNodes(group));

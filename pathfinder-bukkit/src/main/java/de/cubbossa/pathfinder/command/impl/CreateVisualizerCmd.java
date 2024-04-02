@@ -4,7 +4,7 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
@@ -29,7 +29,7 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
             .executes((commandSender, objects) -> {
               onCreate(commandSender,
                   objects.getUnchecked(0),
-                  CommonPathFinder.pathfinder(objects.getUnchecked(1)));
+                  AbstractPathFinder.pathfinder(objects.getUnchecked(1)));
             })
         )
     );

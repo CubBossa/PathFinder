@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.translations.ComponentSplit;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
@@ -33,7 +33,7 @@ public class LocalizedItem {
     if (stack.getType() == Material.AIR) {
       return stack.clone();
     }
-    CommonPathFinder pf = BukkitPathFinder.getInstance();
+    AbstractPathFinder pf = BukkitPathFinder.getInstance();
 
     ItemMeta meta = stack.getItemMeta();
     Audience audience = pf.getAudiences().player(player.getUniqueId());

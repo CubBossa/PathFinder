@@ -4,11 +4,11 @@ import de.cubbossa.pathapi.event.*;
 import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.CommonPathFinder;
-import de.cubbossa.pathfinder.PathFinderConf;
+import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.command.CmdTagResolver;
 import de.cubbossa.pathfinder.command.CommandPlaceholderProcessor;
-import de.cubbossa.pathfinder.command.CommonCmdPlaceholderProcessor;
+import de.cubbossa.pathfinder.command.CommandPlaceholderProcessorImpl;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.Translator;
@@ -35,9 +35,9 @@ public class BukkitEffects {
   private MiniMessage miniMessage;
   private final GsonComponentSerializer gsonComponentSerializer;
 
-  public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConf.EffectsConf config) {
+  public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConfigImpl.EffectsConfigImpl config) {
 
-    processor = new CommonCmdPlaceholderProcessor();
+    processor = new CommandPlaceholderProcessorImpl();
 
     miniMessage = MiniMessage.miniMessage();
     gsonComponentSerializer = GsonComponentSerializer.gson();
@@ -144,11 +144,11 @@ public class BukkitEffects {
           messageKey = messageKey.substring(1);
           String serializer = strings.poll();
 
-          Translator translator = CommonPathFinder.getInstance().getTranslations();
+          Translator translator = AbstractPathFinder.getInstance().getTranslations();
 
           Component cmp = translator.translate(new Message(messageKey, translator).formatted(
               msgResolvers
-          ), CommonPathFinder.getInstance().getAudiences().player(player.getUniqueId()));
+          ), AbstractPathFinder.getInstance().getAudiences().player(player.getUniqueId()));
 
           return (switch (serializer) {
             case "miniMessage", "mini" -> miniMessage;

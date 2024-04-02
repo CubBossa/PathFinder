@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.util.NodeSelection;
 import dev.jorel.commandapi.CommandTree;

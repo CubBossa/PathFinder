@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -13,43 +14,41 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-
 @Getter
 @Setter
 public class PlaceholderVisualizer
     extends EdgeBasedVisualizer<PlaceholderVisualizer.PlaceholderView> {
 
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH =
-      new SimpleProperty<>("format-north",
+      new PropertyImpl<>("format-north",
           String.class, PlaceholderVisualizer::getNorth, PlaceholderVisualizer::setNorth);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_EAST =
-      new SimpleProperty<>("format-north-east",
+      new PropertyImpl<>("format-north-east",
           String.class, PlaceholderVisualizer::getNorthEast,
           PlaceholderVisualizer::setNorthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_EAST =
-      new SimpleProperty<>("format-east",
+      new PropertyImpl<>("format-east",
           String.class, PlaceholderVisualizer::getEast, PlaceholderVisualizer::setEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_EAST =
-      new SimpleProperty<>("format-south-east",
+      new PropertyImpl<>("format-south-east",
           String.class, PlaceholderVisualizer::getSouthEast,
           PlaceholderVisualizer::setSouthEast);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH =
-      new SimpleProperty<>("format-south",
+      new PropertyImpl<>("format-south",
           String.class, PlaceholderVisualizer::getSouth, PlaceholderVisualizer::setSouth);
   public static final Property<PlaceholderVisualizer, String> PROP_SOUTH_WEST =
-      new SimpleProperty<>("format-south-west",
+      new PropertyImpl<>("format-south-west",
           String.class, PlaceholderVisualizer::getSouthWest,
           PlaceholderVisualizer::setSouthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_WEST =
-      new SimpleProperty<>("format-west",
+      new PropertyImpl<>("format-west",
           String.class, PlaceholderVisualizer::getWest, PlaceholderVisualizer::setWest);
   public static final Property<PlaceholderVisualizer, String> PROP_NORTH_WEST =
-      new SimpleProperty<>("format-north-west",
+      new PropertyImpl<>("format-north-west",
           String.class, PlaceholderVisualizer::getNorthWest,
           PlaceholderVisualizer::setNorthWest);
   public static final Property<PlaceholderVisualizer, String> PROP_DISTANCE =
-      new SimpleProperty<>("format-distance",
+      new PropertyImpl<>("format-distance",
           String.class, PlaceholderVisualizer::getDistanceFormat,
           PlaceholderVisualizer::setDistanceFormat);
   public static final Property<PlaceholderVisualizer, String>[] PROPS = new Property[] {

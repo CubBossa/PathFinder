@@ -1,22 +1,23 @@
 package de.cubbossa.pathapi;
 
+import de.cubbossa.disposables.Disposable;
+import de.cubbossa.disposables.Disposer;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.misc.Task;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-
 import java.io.File;
 import java.util.logging.Logger;
+import net.kyori.adventure.platform.AudienceProvider;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * The main handler of the PathFinder application.
  * Use a service provider or {@link PathFinderProvider} to get an instance.
  */
-public interface PathFinder {
+public interface PathFinder extends Disposable {
 
     enum ApplicationState {
         /**
@@ -62,12 +63,14 @@ public interface PathFinder {
 
     void shutdownExceptionally(Throwable t);
 
+  Disposer getDisposer();
+
     /**
      * The storage is the main class to handle read and write. Use it to load, modify and save PathFinder data.
      *
      * @return a storage instance.
      */
-    Storage getStorage();
+    StorageAdapter getStorage();
 
     /**
      * The extension registry handles all plugins to the PathFinder Application. There must be only one

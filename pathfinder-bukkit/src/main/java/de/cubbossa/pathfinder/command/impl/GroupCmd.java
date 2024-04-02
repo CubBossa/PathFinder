@@ -4,13 +4,13 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
 import org.bukkit.command.CommandSender;
@@ -67,7 +67,7 @@ public class GroupCmd extends PathFinderSubCommand {
     );
   }
 
-  private void showGroup(CommandSender sender, SimpleNodeGroup group) {
+  private void showGroup(CommandSender sender, NodeGroupImpl group) {
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(
         Messages.formatter().namespacedKey("key", group.getKey()),
         Messages.formatter().nodeSelection("nodes", () -> group.resolve().join()),
@@ -76,10 +76,10 @@ public class GroupCmd extends PathFinderSubCommand {
     ));
   }
 
-  private void addModifier(CommandSender sender, SimpleNodeGroup group, Modifier modifier) {
+  private void addModifier(CommandSender sender, NodeGroupImpl group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
+      AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
           Messages.formatter().namespacedKey("group", group.getKey()),
           Messages.formatter().namespacedKey("type", modifier.getKey())
       ));
@@ -89,10 +89,10 @@ public class GroupCmd extends PathFinderSubCommand {
     });
   }
 
-  private void removeModifier(CommandSender sender, SimpleNodeGroup group, NamespacedKey mod) {
+  private void removeModifier(CommandSender sender, NodeGroupImpl group, NamespacedKey mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
+      AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
           Messages.formatter().namespacedKey("group", group.getKey()),
           Messages.formatter().namespacedKey("type", mod)
       ));

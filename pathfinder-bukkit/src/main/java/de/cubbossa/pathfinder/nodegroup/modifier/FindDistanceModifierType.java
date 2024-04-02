@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -8,14 +9,14 @@ import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
-import lombok.Getter;
-import net.kyori.adventure.text.ComponentLike;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
 
+@AutoService(ModifierType.class)
 public class FindDistanceModifierType implements ModifierType<FindDistanceModifier>,
     ModifierCommandExtension<FindDistanceModifier> {
 
@@ -35,7 +36,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
   @Override
   public Argument<?> registerAddCommand(Argument<?> tree, Function<FindDistanceModifier, CommandExecutor> consumer) {
     return tree.then(new FloatArgument("find-distance", .1f).executes((commandSender, objects) -> {
-      consumer.apply(new CommonFindDistanceModifier(objects.<Float>getUnchecked(1).doubleValue())).run(commandSender, objects);
+      consumer.apply(new FindDistanceModifierImpl(objects.<Float>getUnchecked(1).doubleValue())).run(commandSender, objects);
     }));
   }
 
@@ -49,7 +50,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
   @Override
   public FindDistanceModifier deserialize(Map<String, Object> values) throws IOException {
     if (values.containsKey("find-distance") && values.get("find-distance") instanceof Double f) {
-      return new CommonFindDistanceModifier(f);
+      return new FindDistanceModifierImpl(f);
     }
     throw new IOException("Could not deserialize FindDistanceModifier, missing 'find-distance' attribute.");
   }

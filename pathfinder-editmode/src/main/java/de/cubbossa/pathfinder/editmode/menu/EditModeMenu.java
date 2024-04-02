@@ -17,11 +17,11 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageAdapter;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
-import de.cubbossa.pathfinder.editmode.DefaultNodeGroupEditor;
+import de.cubbossa.pathfinder.editmode.DefaultGraphEditor;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.StorageUtil;
@@ -29,17 +29,27 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.LocalizedItem;
 import de.cubbossa.pathfinder.util.VectorUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EditModeMenu {
 
@@ -69,7 +79,7 @@ public class EditModeMenu {
   public static final Action<TargetContext<Edge>> RIGHT_CLICK_EDGE = new Action<>();
   public static final Action<TargetContext<Edge>> LEFT_CLICK_EDGE = new Action<>();
 
-  private final Storage storage;
+  private final StorageAdapter storage;
   private final NamespacedKey key;
   private final Collection<NamespacedKey> multiTool = new HashSet<>();
   private final Collection<NodeType<?>> types;
@@ -78,7 +88,7 @@ public class EditModeMenu {
 
   private final AtomicBoolean lock = new AtomicBoolean();
 
-  public EditModeMenu(Storage storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
+  public EditModeMenu(StorageAdapter storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
     this.storage = storage;
     this.key = group;
     this.types = types;
@@ -91,7 +101,7 @@ public class EditModeMenu {
     });
   }
 
-  public BottomInventoryMenu createHotbarMenu(DefaultNodeGroupEditor editor, Player editingPlayer) {
+  public BottomInventoryMenu createHotbarMenu(DefaultGraphEditor editor, Player editingPlayer) {
     BottomInventoryMenu menu = new BottomInventoryMenu(0, 1, 2, 3, 4);
 
     menu.setDefaultClickHandler(Action.HOTBAR_DROP, c -> {
@@ -140,7 +150,7 @@ public class EditModeMenu {
         })
 
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
-          PathPlayer<Player> p = CommonPathFinder.getInstance().wrap(context.getPlayer());
+          PathPlayer<Player> p = AbstractPathFinder.getInstance().wrap(context.getPlayer());
           // cancel chain
           if (chainEdgeStart == null) {
             return;
@@ -152,7 +162,7 @@ public class EditModeMenu {
 
         .withClickHandler(RIGHT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          PathPlayer<Player> pp = CommonPathFinder.getInstance().wrap(p);
+          PathPlayer<Player> pp = AbstractPathFinder.getInstance().wrap(p);
           if (chainEdgeStart == null) {
             chainEdgeStart = context.getTarget().getNodeId();
             context.getMenu().refresh(context.getSlot());
@@ -179,7 +189,7 @@ public class EditModeMenu {
           CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             chainEdgeStart = null;
             context.getMenu().refresh(context.getSlot());
-            CommonPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
+            AbstractPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
           }).whenComplete((unused, throwable) -> {
             if (throwable != null) {
               throwable.printStackTrace();
@@ -229,7 +239,7 @@ public class EditModeMenu {
                 }
                 chainEdgeStart = n.getNodeId();
                 storage.modifyGroup(key, group -> group.add(node.getNodeId()));
-                storage.modifyGroup(CommonPathFinder.globalGroupKey(), group -> group.add(node.getNodeId()));
+                storage.modifyGroup(AbstractPathFinder.globalGroupKey(), group -> group.add(node.getNodeId()));
               }))
               .whenComplete((ex, throwable) -> {
                 if (throwable != null) {
@@ -380,7 +390,7 @@ public class EditModeMenu {
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
       menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));
       for (NodeGroup group : nodeGroupList) {
-        if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+        if (group.getKey().equals(AbstractPathFinder.globalGroupKey())) {
           continue;
         }
 
@@ -465,7 +475,7 @@ public class EditModeMenu {
               3)); //TODO extract icon
       menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));
       for (NodeGroup group : nodeGroupList) {
-        if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+        if (group.getKey().equals(AbstractPathFinder.globalGroupKey())) {
           continue;
         }
 

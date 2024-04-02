@@ -1,9 +1,7 @@
 package de.cubbossa.pathapi;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import java.util.function.Consumer;
 
 /**
  * A PathFinderExtension is an interface that includes functions for different lifecycles of the
@@ -13,7 +11,11 @@ import java.util.function.Consumer;
  * To make this class recognizable to PathFinder, you must register it as Service in your manifest.
  * PathFinder will use the {@link java.util.ServiceLoader} class to retrieve all possible extensions.
  */
-public interface PathFinderExtension extends Keyed {
+public interface PathFinderExtension extends Keyed, Disposable {
+
+  void disable();
+
+  boolean isDisabled();
 
   /**
    * LifeCycle hook that is called in the loading stage of the environment. Mostly, this will be a Bukkit servers
