@@ -45,7 +45,7 @@ COND_DELIMIT: ',';
 COND_EQUALS: '=';
 
 QUOTE  : '"' ( ESC_SEQ | ~('\\'|'"') )* '"' ;
-IDENTIFIER: [a-zA-Z0-9_:]+;
+IDENTIFIER: [a-zA-Z][a-zA-Z0-9_:-]*;
 STRING: (~[,=])+?;
 
 fragment
