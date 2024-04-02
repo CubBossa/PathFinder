@@ -34,9 +34,9 @@ class AbstractNavigationHandlerTest extends PathFinderTest {
     AbstractNavigationHandler<Object> nav = new AbstractNavigationHandler<>();
     PathPlayer<Object> player = new TestPlayer();
 
-    nav.findPath(player, AbstractNavigationHandler.CommonNavigateLocation.staticLocation(
+    nav.findPath(player, AbstractNavigationHandler.NavigateLocationImpl.staticLocation(
         new Location(-10, 0, -10, world)
-    ), Set.of(AbstractNavigationHandler.CommonNavigateLocation.staticLocation(
+    ), Set.of(AbstractNavigationHandler.NavigateLocationImpl.staticLocation(
         new Location(10, 0, 10, world)
     )));
 

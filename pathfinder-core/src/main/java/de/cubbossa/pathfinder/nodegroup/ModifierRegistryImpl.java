@@ -1,21 +1,27 @@
 package de.cubbossa.pathfinder.nodegroup;
 
+import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.Modifier;
 import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.util.ExtensionPoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
-
 import java.util.Collection;
 import java.util.Optional;
 
 public class ModifierRegistryImpl implements ModifierRegistry {
 
+  public final ExtensionPoint<ModifierType> EXTENSION_POINT = new ExtensionPoint<>(ModifierType.class);
+
   private final KeyedRegistry<ModifierType<?>> modifiers;
 
-  public ModifierRegistryImpl() {
+  public ModifierRegistryImpl(PathFinder pathFinder) {
     modifiers = new HashedRegistry<>();
+    pathFinder.getDisposer().register(pathFinder, this);
+
+    EXTENSION_POINT.getExtensions().forEach(this::registerModifierType);
   }
 
   @Override

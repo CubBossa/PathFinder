@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.EdgeImpl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -40,7 +40,7 @@ public class EdgesDeleteEvent {
   public static class Post extends Event {
     private static final HandlerList handlers = new HandlerList();
 
-    private final Collection<SimpleEdge> edges;
+    private final Collection<EdgeImpl> edges;
 
     public static HandlerList getHandlerList() {
       return handlers;

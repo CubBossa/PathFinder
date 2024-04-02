@@ -1,9 +1,7 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import java.io.File;
 
 public class CacheLayerTest extends StorageTest {
 
@@ -12,8 +10,7 @@ public class CacheLayerTest extends StorageTest {
   }
 
   @Override
-  StorageImplementation storage(NodeTypeRegistry registry, ModifierRegistry modifierRegistry,
-                                VisualizerTypeRegistry visualizerTypeRegistry) {
+  StorageImplementation storage(File dir) {
     return inMemoryStorage();
   }
 }

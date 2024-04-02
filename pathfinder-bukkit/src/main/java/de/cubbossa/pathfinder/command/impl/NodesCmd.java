@@ -5,12 +5,12 @@ import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -24,6 +24,9 @@ import org.bukkit.entity.Player;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class NodesCmd extends PathFinderSubCommand {
 
@@ -110,7 +113,7 @@ public class NodesCmd extends PathFinderSubCommand {
     );
   }
 
-  private void addGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
+  private void addGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
     group.addAll(nodes.ids());
     getPathfinder().getStorage().saveGroup(group);
 
@@ -119,7 +122,7 @@ public class NodesCmd extends PathFinderSubCommand {
         .insertObject("group", group));
   }
 
-  private void removeGroup(CommandSender sender, NodeSelection nodes, SimpleNodeGroup group) {
+  private void removeGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
     group.removeAll(nodes.ids());
     getPathfinder().getStorage().saveGroup(group);
 
@@ -128,7 +131,7 @@ public class NodesCmd extends PathFinderSubCommand {
 
   private void clearGroups(CommandSender sender, NodeSelection nodes) {
     Collection<NodeGroup> groups = nodes.stream().map(StorageUtil::getGroups).flatMap(Collection::stream).toList();
-    Storage storage = getPathfinder().getStorage();
+    StorageAdapter storage = getPathfinder().getStorage();
     groups.forEach(group -> {
       nodes.ids().forEach(group::remove);
       storage.saveGroup(group);

@@ -14,12 +14,12 @@ import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.Storage;
+import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -27,7 +27,31 @@ import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.SelectionUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import dev.jorel.commandapi.SuggestionInfo;
-import dev.jorel.commandapi.arguments.*;
+import dev.jorel.commandapi.arguments.Argument;
+import dev.jorel.commandapi.arguments.ArgumentSuggestions;
+import dev.jorel.commandapi.arguments.CustomArgument;
+import dev.jorel.commandapi.arguments.EntitySelectorArgument;
+import dev.jorel.commandapi.arguments.GreedyStringArgument;
+import dev.jorel.commandapi.arguments.IntegerArgument;
+import dev.jorel.commandapi.arguments.LocationArgument;
+import dev.jorel.commandapi.arguments.LocationType;
+import dev.jorel.commandapi.arguments.NamespacedKeyArgument;
+import dev.jorel.commandapi.arguments.PlayerArgument;
+import dev.jorel.commandapi.arguments.StringArgument;
+import dev.jorel.commandapi.arguments.TextArgument;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -35,14 +59,6 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * A collection of custom command arguments for the CommandAPI.
@@ -386,7 +402,7 @@ public class Arguments {
                 throw CustomArgument.CustomArgumentException.fromString("Only for players");
               }
               String search = context.currentInput().replace(" ", "");
-              Storage storage = PathFinderProvider.get().getStorage();
+              StorageAdapter storage = PathFinderProvider.get().getStorage();
               Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
               Collection<Node> valids = AbstractNavigationHandler.getInstance().filterFindables(player.getUniqueId(), scope.keySet());
 

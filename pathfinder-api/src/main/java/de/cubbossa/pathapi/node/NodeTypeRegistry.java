@@ -1,10 +1,11 @@
 package de.cubbossa.pathapi.node;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 
 import java.util.Collection;
 
-public interface NodeTypeRegistry {
+public interface NodeTypeRegistry extends Disposable {
   <N extends Node> NodeType<N> getType(NamespacedKey key);
 
   Collection<NamespacedKey> getTypeKeys();

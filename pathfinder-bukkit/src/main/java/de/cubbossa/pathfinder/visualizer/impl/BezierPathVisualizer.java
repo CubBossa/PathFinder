@@ -6,10 +6,16 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -17,17 +23,14 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Getter
 @Setter
 public abstract class BezierPathVisualizer
     extends IntervalVisualizer<BezierPathVisualizer.BezierView> {
 
-  public static final Property<BezierPathVisualizer, Double> PROP_POINT_DIST = new SimpleProperty<>("particle-distance",
+  public static final Property<BezierPathVisualizer, Double> PROP_POINT_DIST = new PropertyImpl<>("particle-distance",
       Double.class, BezierPathVisualizer::getPointDistance, BezierPathVisualizer::setPointDistance);
-  public static final Property<BezierPathVisualizer, Integer> PROP_SAMPLE_RATE = new SimpleProperty<>("sample-rate",
+  public static final Property<BezierPathVisualizer, Integer> PROP_SAMPLE_RATE = new PropertyImpl<>("sample-rate",
       Integer.class, BezierPathVisualizer::getBezierSamplingRate, BezierPathVisualizer::setBezierSamplingRate);
 
   private double pointDistance = .2f;
@@ -48,7 +51,7 @@ public abstract class BezierPathVisualizer
   }
 
   private List<Vector> interpolate(Spline bezierVectors) {
-    return CommonPathFinder.SPLINES.newCurveBuilder(bezierVectors)
+    return AbstractPathFinder.SPLINES.newCurveBuilder(bezierVectors)
         .withClosedPath(false)
         .withRoundingInterpolation(Interpolation.bezierInterpolation(bezierSamplingRate))
         .withSpacingInterpolation(Interpolation.equidistantInterpolation(pointDistance))

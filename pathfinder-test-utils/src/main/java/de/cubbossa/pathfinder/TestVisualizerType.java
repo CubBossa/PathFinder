@@ -1,15 +1,17 @@
 package de.cubbossa.pathfinder;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-
+import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.HashMap;
 import java.util.Map;
 
+@AutoService(VisualizerType.class)
 public class TestVisualizerType extends AbstractVisualizerType<TestVisualizer> {
 
-  public TestVisualizerType(NamespacedKey key) {
-    super(key);
+  public TestVisualizerType() {
+    super(AbstractPathFinder.pathfinder("particle"));
   }
 
   @Override

@@ -3,16 +3,15 @@ package de.cubbossa.pathfinder.node;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.NodeDataStorage;
-import lombok.Getter;
-import lombok.Setter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-
+import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 @Getter
 @Setter
@@ -21,7 +20,7 @@ public abstract class AbstractNodeType<N extends Node> implements
 
   private final NamespacedKey key;
   private final MiniMessage miniMessage = MiniMessage.miniMessage();
-  private final NodeDataStorage<N> storage;
+  protected NodeStorageImplementation<N> storage;
   private String nameFormat;
   private Component displayName;
 
@@ -29,11 +28,12 @@ public abstract class AbstractNodeType<N extends Node> implements
     this(key, name, null);
   }
 
-  public AbstractNodeType(NamespacedKey key, String name, NodeDataStorage<N> storage) {
-    this.key = key;
-    this.setNameFormat(name);
-    this.storage = storage;
-  }
+  public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage, NodeStorageImplementation<N> storage) {
+        this.key = key;
+        this.miniMessage = miniMessage;
+        this.setNameFormat(name);
+        this.storage = storage;
+    }
 
   @Override
   public void setNameFormat(String name) {
@@ -45,29 +45,29 @@ public abstract class AbstractNodeType<N extends Node> implements
 
   @Override
   public Optional<N> loadNode(UUID uuid) {
-    return storage != null ? storage.loadNode(uuid) : Optional.empty();
+    return getStorage() != null ? storage.loadNode(uuid) : Optional.empty();
   }
 
   @Override
   public Collection<N> loadNodes(Collection<UUID> ids) {
-    return storage != null ? storage.loadNodes(ids) : new HashSet<>();
+    return getStorage() != null ? storage.loadNodes(ids) : new HashSet<>();
   }
 
   @Override
   public Collection<N> loadAllNodes() {
-    return storage != null ? storage.loadAllNodes() : new HashSet<>();
+    return getStorage() != null ? storage.loadAllNodes() : new HashSet<>();
   }
 
   @Override
   public void saveNode(N node) {
-    if (storage != null) {
+    if (getStorage() != null) {
       storage.saveNode(node);
     }
   }
 
   @Override
   public void deleteNodes(Collection<N> node) {
-    if (storage != null) {
+    if (getStorage() != null) {
       storage.deleteNodes(node);
     }
   }

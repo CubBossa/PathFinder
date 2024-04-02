@@ -1,23 +1,21 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 import lombok.Getter;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
-
-public class PlaceholderHook extends PlaceholderExpansion {
+public class PlaceholderHook extends PlaceholderExpansion implements Disposable {
 
   public static final AbstractVisualizerType<PlaceholderVisualizer> PLACEHOLDER_VISUALIZER_TYPE =
-      new PlaceholderVisualizerType(CommonPathFinder.pathfinder("placeholder"));
+      new PlaceholderVisualizerType();
 
   public static final String DIRECTION = "direction";
   public static final String DISTANCE = "distance";
@@ -33,7 +31,12 @@ public class PlaceholderHook extends PlaceholderExpansion {
     this.plugin = plugin;
 
     register();
-    VisualizerTypeRegistryImpl.getInstance().registerVisualizerType(PLACEHOLDER_VISUALIZER_TYPE);
+  }
+
+  @Override
+  public void dispose() {
+    unregister();
+    instance = null;
   }
 
   public void register(String key, OfflinePlayer player, Supplier<String> placeholder) {

@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
@@ -14,16 +16,21 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
+@AutoService(VisualizerType.class)
 public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CombinedVisualizer> {
 
-  public CombinedVisualizerType(NamespacedKey key) {
-    super(key);
+  public CombinedVisualizerType() {
+    super(AbstractPathFinder.pathfinder("combined"));
   }
 
   @Override
@@ -52,7 +59,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
-                  CommonPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD
+                  AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD
                       .insertObject("visualizer", vis)
                       .insertObject("child", target));
                 })))
@@ -66,7 +73,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                           CombinedVisualizerChangedEvent.Action.REMOVE,
                           Collections.singleton(target))));
-                  CommonPathFinder.getInstance().wrap(sender)
+                  AbstractPathFinder.getInstance().wrap(sender)
                       .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE
                           .insertObject("visualizer", vis)
                           .insertObject("child", target));

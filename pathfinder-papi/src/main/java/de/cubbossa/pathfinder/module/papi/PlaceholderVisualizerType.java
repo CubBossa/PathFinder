@@ -1,9 +1,11 @@
 package de.cubbossa.pathfinder.module.papi;
 
+import com.google.auto.service.AutoService;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
@@ -15,20 +17,25 @@ import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.*;
-import java.util.function.Consumer;
-
 @Getter
 @Setter
-public class PlaceholderVisualizerType extends AbstractVisualizerType<PlaceholderVisualizer>
-    implements VisualizerTypeCommandExtension,
-    VisualizerTypeMessageExtension<PlaceholderVisualizer> {
+@AutoService(VisualizerType.class)
+public class PlaceholderVisualizerType
+    extends AbstractVisualizerType<PlaceholderVisualizer>
+    implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<PlaceholderVisualizer> {
 
-  public PlaceholderVisualizerType(NamespacedKey key) {
-    super(key);
+  public PlaceholderVisualizerType() {
+    super(AbstractPathFinder.pathfinder("placeholder"));
   }
 
   @Override
@@ -79,7 +86,7 @@ public class PlaceholderVisualizerType extends AbstractVisualizerType<Placeholde
                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
       if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-        setProperty(CommonPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+        setProperty(AbstractPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),

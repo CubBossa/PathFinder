@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -9,15 +10,15 @@ import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
-import lombok.Getter;
-import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
+@AutoService(ModifierType.class)
 public class DiscoveriesProgressModifierType implements ModifierType<DiscoverProgressModifier>,
     ModifierCommandExtension<DiscoverProgressModifier> {
 
@@ -41,7 +42,7 @@ public class DiscoveriesProgressModifierType implements ModifierType<DiscoverPro
     return tree
         .then(Arguments.miniMessageArgument("name")
             .executes((commandSender, objects) -> {
-              consumer.apply(new CommonDiscoverProgressModifier(
+              consumer.apply(new DiscoverProgressModifierImpl(
                   objects.<NodeGroup>getUnchecked(0).getKey(),
                   objects.getUnchecked(1)
               )).run(commandSender, objects);
@@ -62,7 +63,7 @@ public class DiscoveriesProgressModifierType implements ModifierType<DiscoverPro
     try {
       String group = (String) values.get("group-key");
       String name = (String) values.get("name-format");
-      return new CommonDiscoverProgressModifier(NamespacedKey.fromString(group), name);
+      return new DiscoverProgressModifierImpl(NamespacedKey.fromString(group), name);
     } catch (Throwable t) {
       throw new IOException("Could not deserialize DiscoverProgressModifier.", t);
     }

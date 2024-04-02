@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -23,7 +23,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
   @Getter
   @Setter
   private @Nullable
-  SimpleNodeGroup group;
+  NodeGroupImpl group;
   @Getter
   @Setter
   private Date date;
@@ -31,7 +31,7 @@ public class NodeGroupFindEvent extends Event implements Cancellable {
   @Setter
   private boolean cancelled;
 
-  public NodeGroupFindEvent(UUID playerId, SimpleNodeGroup group, Waypoint triggeringFindable,
+  public NodeGroupFindEvent(UUID playerId, NodeGroupImpl group, Waypoint triggeringFindable,
                             Date date) {
     this.playerId = playerId;
     this.group = group;

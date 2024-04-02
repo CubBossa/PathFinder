@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
-      CommonPathFinder.pathfinder("empty"),
+      AbstractPathFinder.pathfinder("empty"),
       "empty"
   ) {
 

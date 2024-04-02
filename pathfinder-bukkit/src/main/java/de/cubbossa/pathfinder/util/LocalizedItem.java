@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.tinytranslations.Message;
 import de.cubbossa.tinytranslations.TinyTranslations;
 import de.cubbossa.tinytranslations.util.ComponentSplit;
@@ -38,7 +38,7 @@ public class LocalizedItem {
     if (stack.getType() == Material.AIR) {
       return stack.clone();
     }
-    CommonPathFinder pf = BukkitPathFinder.getInstance();
+    AbstractPathFinder pf = BukkitPathFinder.getInstance();
 
     ItemMeta meta = stack.getItemMeta();
 

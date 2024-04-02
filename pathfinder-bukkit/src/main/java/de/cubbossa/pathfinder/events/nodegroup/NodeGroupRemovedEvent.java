@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.events.nodegroup;
 
 import com.google.common.collect.Lists;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Event;
@@ -19,14 +19,14 @@ public class NodeGroupRemovedEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
 
   private final Collection<Node> groupables;
-  private final Collection<SimpleNodeGroup> groups;
+  private final Collection<NodeGroupImpl> groups;
 
-  public NodeGroupRemovedEvent(Node groupables, SimpleNodeGroup groups) {
+  public NodeGroupRemovedEvent(Node groupables, NodeGroupImpl groups) {
     this(Lists.newArrayList(groupables), List.of(groups));
   }
 
   public NodeGroupRemovedEvent(Collection<Node> groupables,
-                               Collection<SimpleNodeGroup> groups) {
+                               Collection<NodeGroupImpl> groups) {
     this.groupables = Collections.unmodifiableCollection(groupables);
     this.groups = Collections.unmodifiableCollection(groups);
   }

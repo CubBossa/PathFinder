@@ -3,19 +3,18 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathFinderPlugin;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 @Getter
 @Setter
 public abstract class IntervalVisualizer<ViewT extends IntervalVisualizer<ViewT>.IntervalView> extends BukkitVisualizer<ViewT> {
 
-  public static final Property<IntervalVisualizer<?>, Integer> PROP_INTERVAL = new SimpleProperty<>(
+  public static final Property<IntervalVisualizer<?>, Integer> PROP_INTERVAL = new PropertyImpl<>(
       "interval", Integer.class, IntervalVisualizer::getInterval, IntervalVisualizer::setInterval
   );
 

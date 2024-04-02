@@ -1,32 +1,45 @@
 package de.cubbossa.pathfinder.module;
 
+import com.google.auto.service.AutoService;
+import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.CommonPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.DiscoveriesCommand;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
+@AutoService(PathFinderExtension.class)
 public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
 
   private final Collection<UUID> playerLock = ConcurrentHashMap.newKeySet();
+  private final DiscoveriesCommand discoveriesCommand;
 
-  public BukkitDiscoverHandler(CommonPathFinder plugin) {
-    super(plugin);
+  public BukkitDiscoverHandler() {
+    discoveriesCommand = new DiscoveriesCommand();
+  }
+
+  @Override
+  public void onEnable(PathFinder pathPlugin) {
+    super.onEnable(pathPlugin);
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+    BukkitPathFinder.getInstance().getCommandRegistry().registerCommand(discoveriesCommand);
+  }
 
-    BukkitPathFinder.getInstance().getCommandRegistry().registerCommand(new DiscoveriesCommand());
+  @Override
+  public void dispose() {
+    BukkitPathFinder.getInstance().getCommandRegistry().unregisterCommand(discoveriesCommand);
+    PlayerMoveEvent.getHandlerList().unregister(this);
+    super.dispose();
   }
 
   @EventHandler

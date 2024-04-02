@@ -1,6 +1,9 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
@@ -13,18 +16,18 @@ import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;
 import dev.jorel.commandapi.wrappers.ParticleData;
+import java.util.Map;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-
+@AutoService(VisualizerType.class)
 public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<ParticleVisualizer> {
 
-  public ParticleVisualizerType(NamespacedKey key) {
-    super(key);
+  public ParticleVisualizerType() {
+    super(AbstractPathFinder.pathfinder("particle"));
   }
 
   @Override

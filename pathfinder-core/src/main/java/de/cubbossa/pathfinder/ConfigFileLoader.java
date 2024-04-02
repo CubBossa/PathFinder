@@ -1,26 +1,24 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.storage.DatabaseType;
 import de.cubbossa.pathfinder.util.Version;
 import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
+import java.awt.Color;
+import java.io.File;
+import java.util.Locale;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.awt.*;
-import java.io.File;
-import java.util.Locale;
-import java.util.function.BiConsumer;
-
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class ConfigFileLoader {
+public class ConfigFileLoader implements Disposable {
 
     private final File dataFolder;
-    private final BiConsumer<String, Boolean> saveResource;
     private Version configRegenerationVersion = new Version("4.0.0");
 
     @Getter
@@ -28,8 +26,8 @@ public class ConfigFileLoader {
     @Getter
     private DatabaseType oldDatabaseType;
 
-    public PathFinderConf loadConfig() {
-        PathFinderConf configuration;
+  public PathFinderConfigImpl loadConfig() {
+    PathFinderConfigImpl configuration;
 
         File configFile = new File(dataFolder, "config.yml");
         YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
@@ -74,11 +72,11 @@ public class ConfigFileLoader {
         .build();
 
     if (!configFile.exists()) {
-      configuration = new PathFinderConf();
-      YamlConfigurations.save(configFile.toPath(), PathFinderConf.class, configuration, properties);
+      configuration = new PathFinderConfigImpl();
+      YamlConfigurations.save(configFile.toPath(), PathFinderConfigImpl.class, configuration, properties);
       return configuration;
     }
-    configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConf.class, properties);
+    configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConfigImpl.class, properties);
 
     if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
         this.versionChange = true;

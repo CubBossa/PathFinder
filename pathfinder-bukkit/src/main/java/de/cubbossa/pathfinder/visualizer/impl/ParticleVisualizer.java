@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -10,21 +12,18 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.List;
-import java.util.Objects;
-
 @Getter
 @Setter
 public class ParticleVisualizer extends BezierPathVisualizer {
 
   public static final Property<ParticleVisualizer, Integer> PROP_SCHEDULER_STEPS =
-      new SimpleProperty<>("particle-steps", Integer.class,
+      new PropertyImpl<>("particle-steps", Integer.class,
           ParticleVisualizer::getSchedulerSteps, ParticleVisualizer::setSchedulerSteps);
   public static final Property<ParticleVisualizer, Integer> PROP_AMOUNT =
-      new SimpleProperty<>("amount", Integer.class,
+      new PropertyImpl<>("amount", Integer.class,
           ParticleVisualizer::getAmount, ParticleVisualizer::setAmount);
   public static final Property<ParticleVisualizer, Vector> PROP_OFFSET =
-      new SimpleProperty<>("offset", Vector.class,
+      new PropertyImpl<>("offset", Vector.class,
           ParticleVisualizer::getOffset, ParticleVisualizer::setOffset);
 
   private int schedulerSteps = 50;

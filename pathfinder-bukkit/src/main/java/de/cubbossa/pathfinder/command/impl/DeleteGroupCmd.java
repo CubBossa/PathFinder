@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command.impl;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
@@ -25,7 +25,7 @@ public class DeleteGroupCmd extends PathFinderSubCommand {
 
   private void deleteGroup(CommandSender sender, NodeGroup group) {
     PathPlayer<?> p = BukkitUtils.wrap(sender);
-    if (group.getKey().equals(CommonPathFinder.globalGroupKey())) {
+    if (group.getKey().equals(AbstractPathFinder.globalGroupKey())) {
       p.sendMessage(Messages.CMD_NG_DELETE_GLOBAL);
       return;
     }

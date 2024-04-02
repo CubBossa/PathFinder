@@ -1,21 +1,24 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
+import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 
-import java.util.Map;
-
+@AutoService(VisualizerType.class)
 public class CompassVisualizerType extends IntervalVisualizerType<CompassVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {
 
-  public CompassVisualizerType(NamespacedKey key) {
-    super(key);
+  public CompassVisualizerType() {
+    super(AbstractPathFinder.pathfinder("compass"));
   }
 
   @Override

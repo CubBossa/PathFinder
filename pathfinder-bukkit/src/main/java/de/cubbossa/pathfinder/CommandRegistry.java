@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathfinder.command.FindPlayerManager;
 import de.cubbossa.pathfinder.command.PathFinderCommand;
@@ -10,7 +11,7 @@ import dev.jorel.commandapi.CommandTree;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommandRegistry {
+public class CommandRegistry implements Disposable {
 
   private final PathFinder pathFinder;
   private final List<CommandTree> externalCommands;
@@ -18,7 +19,13 @@ public class CommandRegistry {
 
   public CommandRegistry(PathFinder pathFinder) {
     this.pathFinder = pathFinder;
+    this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.externalCommands = new ArrayList<>();
+  }
+
+  @Override
+  public void dispose() {
+    unregisterCommands();
   }
 
   public void registerCommand(CommandTree command) {
@@ -35,11 +42,11 @@ public class CommandRegistry {
         .missingExecutorImplementationMessage("Wrong command usage, use /help."));
   }
 
-  public void enableCommands(CommonPathFinder plugin) {
+  public void enableCommands(AbstractPathFinder plugin) {
     CommandAPI.onEnable();
     pathFinderCommand = new PathFinderCommand(pathFinder);
     pathFinderCommand.register();
-    new FindPlayerManager(this);
+    new FindPlayerManager(plugin, this);
     externalCommands.forEach(CommandTree::register);
   }
 

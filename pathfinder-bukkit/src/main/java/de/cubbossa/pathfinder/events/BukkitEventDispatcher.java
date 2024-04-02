@@ -206,9 +206,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   @SneakyThrows
   @Override
-  public <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType,
-                                                        Consumer<? super E> event) {
-    log("Registering Event Listener for '" + eventType.getSimpleName() + "'.");
+  public <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType, Consumer<? super E> event) {
     org.bukkit.event.Listener listener = new org.bukkit.event.Listener() {
       @EventHandler
       public void onEvent(Event e) {

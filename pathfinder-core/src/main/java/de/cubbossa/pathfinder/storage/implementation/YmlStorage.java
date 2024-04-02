@@ -15,31 +15,38 @@ import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.node.SimpleEdge;
+import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.util.CollectionUtils;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.ApiStatus;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Experimental
 @Deprecated(forRemoval = true)
-public abstract class YmlStorage extends CommonStorage {
+public abstract class YmlStorage extends AbstractStorage {
 
   private static final String FILE_NODE_TYPES = "node_types.yml";
   private static final String FILE_VIS_TYPES = "visualizer_types.yml";
@@ -189,7 +196,7 @@ public abstract class YmlStorage extends CommonStorage {
       return Optional.empty();
     }
     double weight = startSection.getDouble(end.toString());
-    return Optional.of(new SimpleEdge(start, end, (float) weight));
+    return Optional.of(new EdgeImpl(start, end, (float) weight));
   }
 
   void writeEdge(Edge edge, ConfigurationSection section) {
@@ -198,7 +205,7 @@ public abstract class YmlStorage extends CommonStorage {
 
   public Edge createAndLoadEdge(UUID start, UUID end, double weight) {
     return workOnFile(fileEdges(), cfg -> {
-      SimpleEdge edge = new SimpleEdge(start, end, (float) weight);
+      EdgeImpl edge = new EdgeImpl(start, end, (float) weight);
       writeEdge(edge, cfg.createSection(start.toString()));
       return edge;
     });
@@ -267,7 +274,7 @@ public abstract class YmlStorage extends CommonStorage {
         return Optional.empty();
       }
       NamespacedKey k = NamespacedKey.fromString(cfg.getString("key"));
-      SimpleNodeGroup group = new SimpleNodeGroup(k);
+      NodeGroupImpl group = new NodeGroupImpl(k);
       group.setWeight((float) cfg.getDouble("weight"));
       group.addAll(cfg.getStringList("nodes").stream()
           .map(UUID::fromString).toList());
@@ -319,7 +326,7 @@ public abstract class YmlStorage extends CommonStorage {
 
   @Override
   public NodeGroup createAndLoadGroup(NamespacedKey key) {
-    SimpleNodeGroup group = new SimpleNodeGroup(key);
+    NodeGroupImpl group = new NodeGroupImpl(key);
     writeGroup(group);
     return group;
   }

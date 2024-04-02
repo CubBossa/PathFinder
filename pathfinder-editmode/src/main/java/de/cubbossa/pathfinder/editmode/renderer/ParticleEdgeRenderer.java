@@ -8,9 +8,28 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.storage.Storage;
-import de.cubbossa.pathfinder.PathFinderConf;
-import de.cubbossa.pathfinder.util.*;
+import de.cubbossa.pathapi.storage.StorageAdapter;
+import de.cubbossa.pathfinder.PathFinderConfigImpl;
+import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import de.cubbossa.pathfinder.util.CollectionUtils;
+import de.cubbossa.pathfinder.util.FutureUtils;
+import de.cubbossa.pathfinder.util.LerpUtils;
+import de.cubbossa.pathfinder.util.MultiMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,13 +40,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import xyz.xenondevs.particle.utils.ReflectionUtils;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 @Getter
 @Setter
 public class ParticleEdgeRenderer implements GraphRenderer<Player> {
@@ -37,10 +49,10 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   private final Collection<UUID> rendered;
   private final MultiMap<UUID, UUID, ParticleEdge> edges;
   private final Collection<Integer> editModeTasks;
-  private final PathFinderConf.EditModeConfig config;
+  private final PathFinderConfigImpl.EditModeConfig config;
 
   public ParticleEdgeRenderer() {
-    this(new PathFinderConf.EditModeConf());
+    this(new PathFinderConfigImpl.EditModeConfigImpl());
   }
 
   public ParticleEdgeRenderer(PathFinderConfig.EditModeConfig editModeConfig) {
@@ -74,7 +86,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         .map(Node::getEdges).flatMap(Collection::stream)
         .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
-    Storage storage = PathFinderProvider.get().getStorage();
+    StorageAdapter storage = PathFinderProvider.get().getStorage();
     return storage.loadEdgesTo(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenCompose(uuidCollectionMap -> {
       toRender.addAll(uuidCollectionMap.values().stream()
           .flatMap(Collection::stream)

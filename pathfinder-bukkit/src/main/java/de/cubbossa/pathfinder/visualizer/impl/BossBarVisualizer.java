@@ -5,13 +5,12 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -19,11 +18,11 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
     extends EdgeBasedVisualizer<ViewT> {
 
   public static final AbstractVisualizer.Property<CompassVisualizer, BossBar.Color> PROP_COLOR =
-      new AbstractVisualizer.SimpleProperty<>("color", BossBar.Color.class,
+      new PropertyImpl<>("color", BossBar.Color.class,
           BossBarVisualizer::getColor, BossBarVisualizer::setColor);
 
   public static final AbstractVisualizer.Property<CompassVisualizer, BossBar.Overlay> PROP_OVERLAY =
-      new AbstractVisualizer.SimpleProperty<>("overlay", BossBar.Overlay.class,
+      new PropertyImpl<>("overlay", BossBar.Overlay.class,
           BossBarVisualizer::getOverlay, BossBarVisualizer::setOverlay);
 
   private BossBar.Color color = BossBar.Color.GREEN;

@@ -1,11 +1,13 @@
 package de.cubbossa.pathapi.misc;
 
+import de.cubbossa.disposables.Disposable;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 
 import java.util.UUID;
 
-public interface PathPlayer<P> {
+public interface PathPlayer<P> extends Disposable {
 
     UUID getUniqueId();
 

@@ -6,7 +6,7 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathfinder.CommonPathFinder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ import java.util.*;
 public class PlayerNode implements Node {
 
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
-      CommonPathFinder.pathfinder("player"),
+      AbstractPathFinder.pathfinder("player"),
       "empty"
   ) {
     @Override

@@ -199,8 +199,10 @@ tasks {
             include(project(":pathfinder-graph"))
             include(project(":pathfinder-editmode"))
             include(project(":pathfinder-scripted-visualizer"))
-          include(dependency("de.cubbossa:TinyTranslations-common:.*"))
-          include(dependency("de.cubbossa:TinyTranslations-bukkit-common:.*"))
+            include(dependency("de.cubbossa:disposables-api:.*"))
+            include(dependency("de.cubbossa:disposables-bukkit:.*"))
+            include(dependency("de.cubbossa:TinyTranslations-common:.*"))
+            include(dependency("de.cubbossa:TinyTranslations-bukkit-common:.*"))
             include(dependency("de.cubbossa:splinelib:.*"))
             include(dependency("net.kyori:.*"))
             include(dependency("net.kyori:.*"))
@@ -209,6 +211,7 @@ tasks {
             include(dependency("dev.jorel:commandapi-bukkit-shade:.*"))
             include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
             include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
+            include(dependency("org.flywaydb:flyway-core:.*"))
         }
 
         fun relocate(from: String, to: String) {
@@ -218,11 +221,13 @@ tasks {
         relocate("org.bstats", "bstats")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
-      relocate("de.cubbossa.tinytranslations", "tinytranslations")
+        relocate("de.cubbossa.tinytranslations", "tinytranslations")
         relocate("de.cubbossa.splinelib", "splinelib")
+        relocate("de.cubbossa.disposables", "disposables")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.exlll", "exlll")
+        relocate("org.flywaydb", "flywaydb")
     }
     test {
         useJUnitPlatform()

@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.events.path;
 import de.cubbossa.pathapi.event.PathStoppedEvent;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathPlayer;
-import de.cubbossa.pathfinder.visualizer.CommonVisualizerPath;
+import de.cubbossa.pathfinder.visualizer.VisualizerPathImpl;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
@@ -20,10 +20,10 @@ public class PathStopEvent extends Event implements Cancellable, PathStoppedEven
   private static final HandlerList handlers = new HandlerList();
 
   private final PathPlayer<Player> player;
-  private final CommonVisualizerPath<Player> path;
+  private final VisualizerPathImpl<Player> path;
   private boolean cancelled = false;
 
-  public PathStopEvent(UUID playerId, CommonVisualizerPath<Player> path) {
+  public PathStopEvent(UUID playerId, VisualizerPathImpl<Player> path) {
     this.player = new BukkitPathPlayer(playerId);
     this.path = path;
   }

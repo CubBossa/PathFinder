@@ -1,11 +1,11 @@
 package de.cubbossa.pathapi.visualizer;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
-
 import java.util.Optional;
 
-public interface VisualizerTypeRegistry {
+public interface VisualizerTypeRegistry extends Disposable {
 
   <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getDefaultType();
 

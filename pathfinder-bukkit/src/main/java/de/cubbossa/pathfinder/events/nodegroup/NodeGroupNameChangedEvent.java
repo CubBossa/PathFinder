@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
-import de.cubbossa.pathfinder.nodegroup.SimpleNodeGroup;
+import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.bukkit.event.Event;
@@ -12,7 +12,7 @@ public class NodeGroupNameChangedEvent extends Event {
 
   private static final HandlerList handlers = new HandlerList();
 
-  private final SimpleNodeGroup group;
+  private final NodeGroupImpl group;
   private final String nameFormat;
 
   public static HandlerList getHandlerList() {

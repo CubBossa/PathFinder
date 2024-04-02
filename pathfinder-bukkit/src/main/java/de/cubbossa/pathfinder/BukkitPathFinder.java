@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder;
 
+import de.cubbossa.disposables.Disposer;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -8,17 +9,13 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.BukkitEffects;
 import de.cubbossa.pathfinder.listener.PlayerListener;
-import de.cubbossa.pathfinder.module.BukkitDiscoverHandler;
-import de.cubbossa.pathfinder.nodegroup.modifier.*;
-import de.cubbossa.pathfinder.storage.InternalVisualizerDataStorage;
 import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.util.YamlUtils;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.CompassVisualizerType;
-import de.cubbossa.pathfinder.visualizer.impl.InternalVisualizerStorage;
-import de.cubbossa.pathfinder.visualizer.impl.ParticleVisualizerType;
+import java.io.File;
+import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.logging.Logger;
 import lombok.Getter;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -28,14 +25,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.logging.Logger;
-
 @Getter
-public class BukkitPathFinder extends CommonPathFinder {
+public class BukkitPathFinder extends AbstractPathFinder {
 
   @Getter
   private static BukkitPathFinder instance;
@@ -96,32 +87,6 @@ public class BukkitPathFinder extends CommonPathFinder {
     super.onLoad();
     bstatsLoader = new BStatsLoader(this);
     YamlUtils.registerClasses();
-
-    modifierRegistry.registerModifierType(new PermissionModifierType());
-    modifierRegistry.registerModifierType(new NavigableModifierType());
-    modifierRegistry.registerModifierType(new DiscoverableModifierType());
-    modifierRegistry.registerModifierType(new DiscoveriesProgressModifierType());
-    modifierRegistry.registerModifierType(new FindDistanceModifierType());
-    modifierRegistry.registerModifierType(new CurveLengthModifierType());
-    modifierRegistry.registerModifierType(new VisualizerModifierType());
-
-
-  }
-
-  @Override
-  void setupVisualizerTypes() {
-    ParticleVisualizerType particleVisualizerType = new ParticleVisualizerType(pathfinder("particle"));
-    Set.<AbstractVisualizerType<?>>of(
-            particleVisualizerType,
-            new CompassVisualizerType(pathfinder("compass")),
-            new CombinedVisualizerType(pathfinder("combined"))
-    ).forEach(vt -> {
-      getVisualizerTypeRegistry().registerVisualizerType(vt);
-      if (getStorage().getImplementation() instanceof InternalVisualizerDataStorage visStorage) {
-        vt.setStorage(new InternalVisualizerStorage(vt, visStorage));
-      }
-    });
-    getVisualizerTypeRegistry().setDefaultType(particleVisualizerType);
   }
 
   @Override
@@ -129,18 +94,21 @@ public class BukkitPathFinder extends CommonPathFinder {
     super.onEnable();
     bstatsLoader.registerStatistics(javaPlugin);
 
-    new BukkitDiscoverHandler(this);
-
     commandRegistry.enableCommands(this);
 
     Bukkit.getPluginManager().registerEvents(new PlayerListener(), javaPlugin);
 
-    new BukkitEffects((EventDispatcher<Player>) eventDispatcher, configuration.effects);
+    new BukkitEffects((EventDispatcher<Player>) eventDispatcher, ((PathFinderConfigImpl) configuration).effects);
+  }
+
+  @Override
+  public void dispose() {
+    instance = null;
+    super.dispose();
   }
 
   public void onDisable() {
     super.shutdown();
-      commandRegistry.unregisterCommands();
   }
 
   @Override
@@ -168,22 +136,29 @@ public class BukkitPathFinder extends CommonPathFinder {
       bukkitTaskWrapper.task().cancel();
       return;
     }
-    throw new IllegalStateException("One implementation of CommonPathFinder must only use one type of Task representation");
+    throw new IllegalStateException("One implementation of AbstractPathFinder must only use one type of Task representation");
   }
 
   @Override
-  AudienceProvider provideAudiences() {
+  Disposer createDisposer() {
+    return Disposer.disposer();
+  }
+
+  @Override
+  AudienceProvider createAudiences() {
     return BukkitAudiences.create(javaPlugin);
   }
 
   @Override
-  EventDispatcher provideEventDispatcher() {
+  EventDispatcher<?> createEventDispatcher() {
     return new BukkitEventDispatcher(getLogger());
   }
 
   @Override
   void saveResource(String name, boolean override) {
-    javaPlugin.saveResource(name, override);
+    if (override || !new File(getDataFolder(), name).exists()) {
+      javaPlugin.saveResource(name, override);
+    }
   }
 
   @Override
