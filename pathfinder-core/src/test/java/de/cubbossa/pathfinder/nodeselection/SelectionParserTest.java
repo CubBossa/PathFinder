@@ -3,9 +3,12 @@ package de.cubbossa.pathfinder.nodeselection;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import de.cubbossa.pathfinder.node.selection.NumberRange;
 import de.cubbossa.pathfinder.util.SelectionParser;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -158,6 +161,31 @@ public class SelectionParserTest {
   public void testParseSelection6b() {
 
     Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1-1f01-4c56-88bb-c2bec7105714]", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
+  @SneakyThrows
+  public void testParseSelection7() {
+    TestParser testParser = new TestParser("s");
+    testParser.addResolver(new TestParser.Argument<>("a", StringArgumentType.string()).execute(c -> {
+      c.getScope().add("A");
+      return c.getScope();
+    }));
+    testParser.addResolver(new TestParser.Argument<>("b", StringArgumentType.string()) {
+      @Override
+      public Collection<String> executeAfter() {
+        return List.of("a");
+      }
+    }.execute(c -> {
+      c.getScope().add("B");
+      return c.getScope();
+    }));
+
+    Assertions.assertEquals(
+        testParser.parse("@s[a=A,b=B]", new ArrayList<>(), SelectionParser.ArgumentContext::new),
+        testParser.parse("@s[b=B,a=A]", new ArrayList<>(), SelectionParser.ArgumentContext::new)
+    );
+
   }
 
   @Test

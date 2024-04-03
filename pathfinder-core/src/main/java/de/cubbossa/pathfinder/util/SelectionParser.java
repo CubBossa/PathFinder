@@ -16,9 +16,11 @@ import de.cubbossa.pathfinder.node.selection.SelectionVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -33,11 +35,12 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>> {
 
   private final Collection<String> identifiers = new ArrayList<>();
-  private final Map<String, Argument<?, TypeT, ContextT, ?>> argumentMap = new HashMap<>();
+  private final Collection<Argument<?, TypeT, ContextT, ?>> arguments = new TreeSet<>();
 
   public SelectionParser(String identifier, String... alias) {
     identifiers.add(identifier);
@@ -45,10 +48,10 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
   }
 
   public void addResolver(Argument<?, ? extends TypeT, ? extends ContextT, ?> argument) {
-    argumentMap.put(argument.getKey(), (Argument<?, TypeT, ContextT, ?>) argument);
+    arguments.add((Argument<?, TypeT, ContextT, ?>) argument);
   }
 
-  public <S> Collection<TypeT> parse(String input, List<TypeT> scope, BiFunction<S, List<TypeT>, ContextT> context)
+  public <ValueT> Collection<TypeT> parse(String input, List<TypeT> scope, BiFunction<ValueT, List<TypeT>, ContextT> context)
       throws ParseCancellationException {
 
     CharStream charStream = CharStreams.fromString(input);
@@ -70,21 +73,17 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
     }
 
     List<TypeT> scopeHolder = new ArrayList<>(scope);
-    // not the speediest but fine for me for now
-    for (SelectionModification modification : SelectionModification.values()) {
+    for (Argument<?, TypeT, ContextT, ?> argument : arguments) {
+      System.out.println(argument.getKey());
       for (SelectionAttribute a : attributes) {
-        if (argumentMap.containsKey(a.identifier())) {
-          Argument<S, TypeT, ContextT, ?> argument = (Argument<S, TypeT, ContextT, ?>) argumentMap.get(a.identifier());
-
-          if (argument.modificationType() != modification) {
-            continue;
-          }
-
-          S value = argument.getParse().apply(a.value());
-          scopeHolder = argument.getExecute().apply(
-              context.apply(value, scopeHolder)
-          );
+        System.out.println(a.identifier() + " <-> " + argument.getKey());
+        if (!a.identifier().equals(argument.getKey())) {
+          continue;
         }
+        ValueT value = (ValueT) argument.getParse().apply(a.value());
+        scopeHolder = argument.getExecute().apply(
+            context.apply(value, scopeHolder)
+        );
       }
     }
     return scopeHolder;
@@ -105,7 +104,7 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
 
     SelectionSuggestionLanguageParser.ProgramContext tree = parser.program();
     Map<String, Function<SuggestionContext, List<Suggestion>>> map = new HashMap<>();
-    argumentMap.forEach((s, tcArgument) -> map.put(s, tcArgument.suggest));
+    arguments.forEach((a) -> map.put(a.getKey(), a.suggest));
 
     List<Suggestion> suggestions =
         new SelectSuggestionVisitor(identifiers, map, input, null).visit(tree);
@@ -128,7 +127,8 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
   }
 
   @Getter
-  public static abstract class Argument<ValueT, TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>, ArgumentT extends Argument<ValueT, TypeT, ContextT, ArgumentT>> {
+  public static abstract class Argument<ValueT, TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>, ArgumentT extends Argument<ValueT, TypeT, ContextT, ArgumentT>>
+      implements Comparable<ArgumentT> {
 
     private final Function<String, ValueT> parse;
     private Function<ContextT, List<TypeT>> execute;
@@ -147,6 +147,25 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
     public abstract String getKey();
 
     public abstract SelectionModification modificationType();
+
+    public Collection<String> executeAfter() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public int compareTo(@NotNull ArgumentT o) {
+      int compare = Integer.compare(modificationType().ordinal(), o.modificationType().ordinal());
+      if (compare != 0) {
+        return compare;
+      }
+      if (o.executeAfter().contains(getKey())) {
+        return 1;
+      }
+      if (executeAfter().contains(o.getKey())) {
+        return -1;
+      }
+      return String.CASE_INSENSITIVE_ORDER.compare(getKey(), o.getKey());
+    }
 
     public ArgumentT execute(Function<ContextT, List<TypeT>> execute) {
       this.execute = execute;
