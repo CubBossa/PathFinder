@@ -4,13 +4,15 @@ import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.cubbossa.pathfinder.node.selection.NumberRange;
-import de.cubbossa.pathfinder.node.selection.SelectionParser;
+import de.cubbossa.pathfinder.util.SelectionParser;
 import java.text.ParseException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +20,13 @@ import org.junit.jupiter.api.Test;
 
 public class SelectionParserTest {
 
-  public static final TestParser.Argument<Integer> LETTER_COUNT = new TestParser.Argument<>(
+  public static final TestParser.Argument<UUID> UUID = new TestParser.Argument<>("uuid", r -> {
+    UUID uuid = java.util.UUID.fromString(r.getRemaining());
+    System.out.println(uuid);
+    return uuid;
+  })
+      .execute(SelectionParser.ArgumentContext::getScope);
+  public static final TestParser.Argument<Integer> LETTER_COUNT = new TestParser.Argument<>("lettercount",
       IntegerArgumentType.integer(1, 10)
   ).execute(c -> c.getScope().stream()
       .filter(s -> {
@@ -30,7 +38,7 @@ public class SelectionParserTest {
         return counter == c.getValue();
       })
       .collect(Collectors.toList()));
-  public static final TestParser.Argument<NumberRange> LENGTH = new TestParser.Argument<>(
+  public static final TestParser.Argument<NumberRange> LENGTH = new TestParser.Argument<>("length",
       reader -> {
         try {
           return NumberRange.parse(reader.getRemaining() == null
@@ -45,7 +53,7 @@ public class SelectionParserTest {
               && (s.length() <= context.getValue().getEnd().doubleValue()))
           .collect(Collectors.toList()));
   public static final TestParser.Argument<CharacterType> TYPE =
-      new TestParser.Argument<>(reader -> switch (reader.getRemaining()) {
+      new TestParser.Argument<>("type", reader -> switch (reader.getRemaining()) {
         case "letter" -> CharacterType.LETTER;
         case "number" -> CharacterType.NUMBER;
         default -> CharacterType.MISC;
@@ -72,9 +80,10 @@ public class SelectionParserTest {
   @BeforeAll
   static void setup() {
     parser = new TestParser("s");
-    parser.addResolver("length", LENGTH);
-    parser.addResolver("type", TYPE);
-    parser.addResolver("lettercount", LETTER_COUNT);
+    parser.addResolver(UUID);
+    parser.addResolver(LENGTH);
+    parser.addResolver(TYPE);
+    parser.addResolver(LETTER_COUNT);
   }
 
   @Test
@@ -133,6 +142,25 @@ public class SelectionParserTest {
   }
 
   @Test
+  @SneakyThrows
+  public void testParseSelection6a() {
+
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=abcdefg]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=0123456]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a-a]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a1]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=1a]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1]", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
+  @SneakyThrows
+  public void testParseSelection6b() {
+
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1-1f01-4c56-88bb-c2bec7105714]", SCOPE, SelectionParser.ArgumentContext::new));
+  }
+
+  @Test
   public void testInvalidClassifier() {
     Assertions.assertThrows(IllegalStateException.class,
         () -> parser.parse("@invalid", SCOPE, SelectionParser.ArgumentContext::new));
@@ -172,8 +200,17 @@ public class SelectionParserTest {
     public static class Argument<V>
         extends SelectionParser.Argument<V, String, ArgumentContext<V, String>, Argument<V>> {
 
-      public Argument(ArgumentType<V> type) {
+      @Getter
+      private final String key;
+
+      public Argument(String key, ArgumentType<V> type) {
         super(type);
+        this.key = key;
+      }
+
+      @Override
+      public SelectionModification modificationType() {
+        return SelectionModification.FILTER;
       }
     }
   }

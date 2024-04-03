@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.node.selection;
+package de.cubbossa.pathfinder.util;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -10,6 +10,9 @@ import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
+import de.cubbossa.pathfinder.node.selection.SelectSuggestionVisitor;
+import de.cubbossa.pathfinder.node.selection.SelectionAttribute;
+import de.cubbossa.pathfinder.node.selection.SelectionVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,24 +34,21 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.entity.Player;
 
-public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>> {
+public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>> {
 
   private final Collection<String> identifiers = new ArrayList<>();
-  private final Map<String, Argument<?, T, C, ?>> argumentMap = new HashMap<>();
+  private final Map<String, Argument<?, TypeT, ContextT, ?>> argumentMap = new HashMap<>();
 
   public SelectionParser(String identifier, String... alias) {
     identifiers.add(identifier);
     identifiers.addAll(Arrays.stream(alias).toList());
   }
 
-  public void addResolver(
-      String identifier,
-      Argument<?, ? extends T, ? extends C, ?> argument
-  ) {
-    argumentMap.put(identifier, (Argument<?, T, C, ?>) argument);
+  public void addResolver(Argument<?, ? extends TypeT, ? extends ContextT, ?> argument) {
+    argumentMap.put(argument.getKey(), (Argument<?, TypeT, ContextT, ?>) argument);
   }
 
-  public <S> Collection<T> parse(String input, List<T> scope, BiFunction<S, List<T>, C> context)
+  public <S> Collection<TypeT> parse(String input, List<TypeT> scope, BiFunction<S, List<TypeT>, ContextT> context)
       throws ParseCancellationException {
 
     CharStream charStream = CharStreams.fromString(input);
@@ -69,14 +69,22 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
       attributes = new ArrayList<>();
     }
 
-    List<T> scopeHolder = new ArrayList<>(scope);
-    for (SelectionAttribute a : attributes) {
-      if (argumentMap.containsKey(a.identifier())) {
-        Argument<S, T, C, ?> argument = (Argument<S, T, C, ?>) argumentMap.get(a.identifier());
-        S value = argument.getParse().apply(a.value());
-        scopeHolder = argument.getExecute().apply(
-            context.apply(value, scopeHolder)
-        );
+    List<TypeT> scopeHolder = new ArrayList<>(scope);
+    // not the speediest but fine for me for now
+    for (SelectionModification modification : SelectionModification.values()) {
+      for (SelectionAttribute a : attributes) {
+        if (argumentMap.containsKey(a.identifier())) {
+          Argument<S, TypeT, ContextT, ?> argument = (Argument<S, TypeT, ContextT, ?>) argumentMap.get(a.identifier());
+
+          if (argument.modificationType() != modification) {
+            continue;
+          }
+
+          S value = argument.getParse().apply(a.value());
+          scopeHolder = argument.getExecute().apply(
+              context.apply(value, scopeHolder)
+          );
+        }
       }
     }
     return scopeHolder;
@@ -107,9 +115,9 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
 
   @Getter
   @RequiredArgsConstructor
-  public static class ArgumentContext<S, T> {
-    private final S value;
-    private final List<T> scope;
+  public static class ArgumentContext<ValueT, TypeT> {
+    private final ValueT value;
+    private final List<TypeT> scope;
   }
 
   @Getter
@@ -120,13 +128,13 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
   }
 
   @Getter
-  public static class Argument<S, T, C extends SelectionParser.ArgumentContext<?, T>, A extends Argument<S, T, C, A>> {
+  public static abstract class Argument<ValueT, TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>, ArgumentT extends Argument<ValueT, TypeT, ContextT, ArgumentT>> {
 
-    private final Function<String, S> parse;
-    private Function<C, List<T>> execute;
+    private final Function<String, ValueT> parse;
+    private Function<ContextT, List<TypeT>> execute;
     private Function<SuggestionContext, List<Suggestion>> suggest;
 
-    public Argument(ArgumentType<S> type) {
+    public Argument(ArgumentType<ValueT> type) {
       this.parse = s -> {
         try {
           return type.parse(new StringReader(s));
@@ -136,34 +144,44 @@ public class SelectionParser<T, C extends SelectionParser.ArgumentContext<?, T>>
       };
     }
 
-    public A execute(Function<C, List<T>> execute) {
+    public abstract String getKey();
+
+    public abstract SelectionModification modificationType();
+
+    public ArgumentT execute(Function<ContextT, List<TypeT>> execute) {
       this.execute = execute;
-      return (A) this;
+      return (ArgumentT) this;
     }
 
-    public A suggest(List<Suggestion> suggest) {
+    public ArgumentT suggest(List<Suggestion> suggest) {
       this.suggest = context -> suggest;
-      return (A) this;
+      return (ArgumentT) this;
     }
 
-    public A suggestStrings(List<String> suggest) {
+    public ArgumentT suggestStrings(List<String> suggest) {
       this.suggest = context -> suggest.stream()
           .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
           .collect(Collectors.toList());
-      return (A) this;
+      return (ArgumentT) this;
     }
 
-    public A suggest(Function<SuggestionContext, List<Suggestion>> suggest) {
+    public ArgumentT suggest(Function<SuggestionContext, List<Suggestion>> suggest) {
       this.suggest = suggest;
-      return (A) this;
+      return (ArgumentT) this;
     }
 
-    public A suggestStrings(Function<SuggestionContext, List<String>> suggest) {
+    public ArgumentT suggestStrings(Function<SuggestionContext, List<String>> suggest) {
       this.suggest = context -> suggest.apply(context).stream()
           .map(s -> new Suggestion(StringRange.between(0, context.input.length()), s))
           .collect(Collectors.toList());
-      return (A) this;
+      return (ArgumentT) this;
     }
+  }
+
+  public enum SelectionModification {
+    SORT,
+    FILTER,
+    PEEK
   }
 
   public static class ErrorListener extends BaseErrorListener {

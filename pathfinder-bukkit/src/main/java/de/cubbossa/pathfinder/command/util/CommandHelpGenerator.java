@@ -4,7 +4,7 @@
 //import de.cubbossa.pathfinder.command.CommandArgument;
 //import de.cubbossa.pathfinder.command.CustomLiteralArgument;
 //import dev.jorel.commandapi.CommandTree;
-//import dev.jorel.commandapi.arguments.Argument;
+//import dev.jorel.commandapi.arguments.BukkitNodeSelectionArgument;
 //import dev.jorel.commandapi.arguments.LiteralArgument;
 //import dev.jorel.commandapi.arguments.MultiLiteralArgument;
 //
@@ -33,19 +33,19 @@
 //  private static PlainTextComponentSerializer TO_PLAIN = PlainTextComponentSerializer.builder()
 //      .build();
 //
-//  public List<ComponentLike> format(Argument<?> tree) {
+//  public List<ComponentLike> format(BukkitNodeSelectionArgument<?> tree) {
 //    return format(tree, -1);
 //  }
 //
-//  public List<ComponentLike> format(Argument<?> tree, int depth) {
+//  public List<ComponentLike> format(BukkitNodeSelectionArgument<?> tree, int depth) {
 //
 //    SortedMap<String, ComponentLike> components = new TreeMap<>();
-//    List<Argument<?>> leaves = findLeaves(tree);
+//    List<BukkitNodeSelectionArgument<?>> leaves = findLeaves(tree);
 //
-//    for (Argument<?> leaf : leaves) {
-//      Stack<Argument<?>> stack = new Stack<>();
+//    for (BukkitNodeSelectionArgument<?> leaf : leaves) {
+//      Stack<BukkitNodeSelectionArgument<?>> stack = new Stack<>();
 //      stack.push(leaf);
-//      Argument<?> el = leaf;
+//      BukkitNodeSelectionArgument<?> el = leaf;
 //      while (el.getParent() != null) {
 //        stack.push(el.getParent());
 //        el = el.getParent();
@@ -57,7 +57,7 @@
 //      int index = 0;
 //
 //      while (!stack.isEmpty()) {
-//        Argument<?> arg = stack.pop();
+//        BukkitNodeSelectionArgument<?> arg = stack.pop();
 //        cmd = cmd
 //            .append(Component.text(" "))
 //            .append(formatArgument(arg, index));
@@ -80,8 +80,8 @@
 //    return new ArrayList<>(components.values());
 //  }
 //
-//  private String getShortDesc(Argument<?> tree) {
-//    Argument<?> current = tree;
+//  private String getShortDesc(BukkitNodeSelectionArgument<?> tree) {
+//    BukkitNodeSelectionArgument<?> current = tree;
 //    while (current != null) {
 //      if (current instanceof CommandArgument<?, ?> arg && arg.getDescription() != null) {
 //        return arg.getDescription();
@@ -95,8 +95,8 @@
 //    return null;
 //  }
 //
-//  private String getWiki(Argument<?> tree) {
-//    Argument<?> current = tree;
+//  private String getWiki(BukkitNodeSelectionArgument<?> tree) {
+//    BukkitNodeSelectionArgument<?> current = tree;
 //    while (current != null) {
 //      if (current instanceof CommandArgument<?, ?> arg && arg.getWiki() != null) {
 //        return arg.getWiki();
@@ -108,8 +108,8 @@
 //    return null;
 //  }
 //
-//  private boolean executable(Argument<?> tree) {
-//    Argument<?> current = tree;
+//  private boolean executable(BukkitNodeSelectionArgument<?> tree) {
+//    BukkitNodeSelectionArgument<?> current = tree;
 //    while (current != null) {
 //      if (!(current instanceof LiteralArgument || current instanceof Command)) {
 //        return false;
@@ -119,11 +119,11 @@
 //    return true;
 //  }
 //
-//  private Component formatArgument(Argument<?> tree, int index) {
+//  private Component formatArgument(BukkitNodeSelectionArgument<?> tree, int index) {
 //    Component c = null;
 //
 //    if (tree instanceof ArgumentTree arg) {
-//      Argument<?> o = arg.getArgument();
+//      BukkitNodeSelectionArgument<?> o = arg.getArgument();
 //      String s = o.getNodeName();
 //      if (o instanceof LiteralArgument l) {
 //        c = Component.text(l.getLiteral());
@@ -156,17 +156,17 @@
 //    return c;
 //  }
 //
-//  private List<Argument<?>> findLeaves(Argument<?> tree) {
+//  private List<BukkitNodeSelectionArgument<?>> findLeaves(BukkitNodeSelectionArgument<?> tree) {
 //    if (tree.getArguments().size() == 0) {
 //      return List.of(tree);
 //    }
 //
-//    Queue<Argument<?>> toProcess = new LinkedList<>();
-//    List<Argument<?>> childless = new ArrayList<>();
+//    Queue<BukkitNodeSelectionArgument<?>> toProcess = new LinkedList<>();
+//    List<BukkitNodeSelectionArgument<?>> childless = new ArrayList<>();
 //    toProcess.add(tree);
 //
 //    while (!toProcess.isEmpty()) {
-//      Argument<?> first = toProcess.poll();
+//      BukkitNodeSelectionArgument<?> first = toProcess.poll();
 //      if (first.getArguments().size() == 0) {
 //        // no children
 //        childless.add(first);

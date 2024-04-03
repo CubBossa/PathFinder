@@ -4,6 +4,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageBaseVisitor;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
+import de.cubbossa.pathfinder.util.SelectionParser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

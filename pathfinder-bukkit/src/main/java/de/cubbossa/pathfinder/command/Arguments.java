@@ -162,7 +162,7 @@ public class Arguments {
   }
 
   /**
-   * Provides a MiniMessage Argument, which autocompletes xml tags and contains all default tags
+   * Provides a MiniMessage BukkitNodeSelectionArgument, which autocompletes xml tags and contains all default tags
    * that come along with MiniMessage.
    *
    * @param nodeName The name of the command argument in the command structure
@@ -173,7 +173,7 @@ public class Arguments {
   }
 
   /**
-   * Provides a MiniMessage Argument, which autocompletes xml tags and contains all default tags
+   * Provides a MiniMessage BukkitNodeSelectionArgument, which autocompletes xml tags and contains all default tags
    * that come along with MiniMessage.
    *
    * @param nodeName The name of the command argument in the command structure
