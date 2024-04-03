@@ -1,20 +1,21 @@
 package de.cubbossa.pathfinder.listener;
 
 import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.event.*;
+import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.event.PathCancelledEvent;
+import de.cubbossa.pathapi.event.PathStartEvent;
+import de.cubbossa.pathapi.event.PathStoppedEvent;
+import de.cubbossa.pathapi.event.PathTargetReachedEvent;
+import de.cubbossa.pathapi.event.PlayerDiscoverLocationEvent;
+import de.cubbossa.pathapi.event.PlayerDiscoverProgressEvent;
+import de.cubbossa.pathapi.event.PlayerForgetLocationEvent;
 import de.cubbossa.pathapi.group.DiscoverProgressModifier;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathfinder.PathFinderConf;
-import de.cubbossa.tinytranslations.util.FormattableBuilder;
-import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
-import de.cubbossa.pathfinder.command.CmdTagResolver;
-import de.cubbossa.pathfinder.command.CommandPlaceholderProcessor;
-import de.cubbossa.pathfinder.command.CommandPlaceholderProcessorImpl;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.translations.Message;
-import de.cubbossa.translations.Translator;
+import de.cubbossa.tinytranslations.util.FormattableBuilder;
+import java.util.List;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -25,9 +26,6 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.Locale;
-
 public class BukkitEffects {
 
   @Setter
@@ -36,8 +34,6 @@ public class BukkitEffects {
   private final PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
 
   public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConfigImpl.EffectsConfigImpl config) {
-
-    processor = new CommandPlaceholderProcessorImpl();
 
     miniMessage = MiniMessage.miniMessage();
 

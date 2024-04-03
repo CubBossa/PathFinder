@@ -28,9 +28,8 @@ public abstract class AbstractNodeType<N extends Node> implements
     this(key, name, null);
   }
 
-  public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage, NodeStorageImplementation<N> storage) {
+  public AbstractNodeType(NamespacedKey key, String name, NodeStorageImplementation<N> storage) {
         this.key = key;
-        this.miniMessage = miniMessage;
         this.setNameFormat(name);
         this.storage = storage;
     }

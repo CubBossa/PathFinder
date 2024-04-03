@@ -7,7 +7,6 @@ import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.implementation.WaypointStorageImplementationImpl;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 @AutoService(NodeType.class)
 public class WaypointType extends AbstractNodeType<Waypoint> {
@@ -16,7 +15,6 @@ public class WaypointType extends AbstractNodeType<Waypoint> {
     super(
         NamespacedKey.fromString("pathfinder:waypoint"),
         "<color:#ff0000>Waypoint</color>",
-        MiniMessage.miniMessage(), //TODO please remove
         null
     );
   }
