@@ -48,7 +48,7 @@ dependencies {
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("de.cubbossa:disposables-api:1.0-SNAPSHOT")
-    implementation("org.flywaydb:flyway-core:8.0.0")
+    api("org.flywaydb:flyway-core:8.0.0")
 
     // Particles
     api("de.cubbossa:splinelib:1.0")

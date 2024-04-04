@@ -339,28 +339,26 @@ public class Arguments {
   public CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>> nodeSelectionArgument(
       String nodeName) {
     return (CommandArgument<NodeSelection, CustomArgument<NodeSelection, String>>) CommandArgument.arg(
-        new CustomArgument<>(new TextArgument(nodeName), info -> {
-          if (info.sender() instanceof Player player) {
-            try {
-              return NodeSelection.ofSender(info.input().substring(1, info.input().length() - 1), player);
-            } catch (ParseCancellationException e) {
-              throw CustomArgument.CustomArgumentException.fromString(e.getMessage());
-            }
-          }
-          return new NodeSelectionImpl();
-        })).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
-      if (!(suggestionInfo.sender() instanceof Player player)) {
-        return suggestionsBuilder.buildFuture();
-      }
-      int offset = suggestionInfo.currentInput().length() - suggestionInfo.currentArg().length();
+            new CustomArgument<>(new TextArgument(nodeName), info -> {
+              if (info.sender() instanceof Player player) {
+                try {
+                  return NodeSelection.ofSender(info.input().substring(1, info.input().length() - 1), player);
+                } catch (ParseCancellationException e) {
+                  throw CustomArgument.CustomArgumentException.fromString(e.getMessage());
+                }
+              }
+              return new NodeSelectionImpl();
+            }))
+        .includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+          int offset = suggestionInfo.currentInput().length() - suggestionInfo.currentArg().length();
 
-      return NodeSelectionProviderImpl.getNodeSelectionSuggestions(suggestionInfo)
-          //  add quotations to suggestions
-          .thenApply(s -> CommandUtils.wrapWithQuotation(suggestionInfo.currentArg(), s,
-              suggestionInfo.currentArg(), offset))
-          // shift suggestions toward actual command argument offset
-          .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
-    });
+          return NodeSelectionProviderImpl.getNodeSelectionSuggestions(suggestionInfo)
+              //  add quotations to suggestions
+              .thenApply(s -> CommandUtils.wrapWithQuotation(suggestionInfo.currentArg(), s,
+                  suggestionInfo.currentArg(), offset))
+              // shift suggestions toward actual command argument offset
+              .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
+        });
   }
 
   /**

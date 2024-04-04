@@ -129,4 +129,8 @@ public interface PathFinder extends Disposable {
   Task repeatingTask(Runnable runnable, long delay, long interval);
 
   void cancelTask(Task task);
+
+  default Object[] getMigrations() {
+    return new Object[0];
+  }
 }

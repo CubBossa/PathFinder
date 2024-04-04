@@ -1,8 +1,6 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathapi.storage.DatabaseType;
-import de.cubbossa.pathfinder.util.Version;
 import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurationProperties;
@@ -11,94 +9,62 @@ import java.awt.Color;
 import java.io.File;
 import java.util.Locale;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class ConfigFileLoader implements Disposable {
 
-    private final File dataFolder;
-    private Version configRegenerationVersion = new Version("4.0.0");
+  private static final YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
+      .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+      .addSerializer(Locale.class, new Serializer<Locale, String>() {
+        @Override
+        public String serialize(Locale element) {
+          return element.toLanguageTag();
+        }
 
-    @Getter
-    private boolean versionChange;
-    @Getter
-    private DatabaseType oldDatabaseType;
+        @Override
+        public Locale deserialize(String element) {
+          return Locale.forLanguageTag(element.replace("_", "-"));
+        }
+      })
+      .addSerializer(Color.class, new Serializer<Color, String>() {
+        @Override
+        public String serialize(Color element) {
+          return Integer.toHexString(element.getRGB() & 0xffffff);
+        }
+
+        @Override
+        public Color deserialize(String element) {
+          return new Color(Integer.parseInt(element, 16));
+        }
+      })
+      .createParentDirectories(true)
+      .header("""
+          #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+          #                                                               #
+          #       _____      _   _     ______ _           _               #
+          #      |  __ \\    | | | |   |  ____(_)         | |              #
+          #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
+          #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
+          #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
+          #      |_|   \\__,_|\\__|_| |_|_|    |_|_| |_|\\__,_|\\___|_|       #
+          #                        Configuration                          #
+          #                                                               #
+          #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+                      
+          """)
+      .build();
+
+  private final File dataFolder;
 
   public PathFinderConfigImpl loadConfig() {
     PathFinderConfigImpl configuration;
 
-        File configFile = new File(dataFolder, "config.yml");
-        YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-                .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
-                .addSerializer(Locale.class, new Serializer<Locale, String>() {
-                    @Override
-                    public String serialize(Locale element) {
-                return element.toLanguageTag();
-              }
-
-              @Override
-              public Locale deserialize(String element) {
-                return Locale.forLanguageTag(element.replace("_", "-"));
-              }
-            })
-        .addSerializer(Color.class, new Serializer<Color, String>() {
-          @Override
-          public String serialize(Color element) {
-            return Integer.toHexString(element.getRGB() & 0xffffff);
-          }
-
-          @Override
-          public Color deserialize(String element) {
-            return new Color(Integer.parseInt(element, 16));
-          }
-        })
-        .createParentDirectories(true)
-        .header("""
-            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-            #                                                               #
-            #       _____      _   _     ______ _           _               #
-            #      |  __ \\    | | | |   |  ____(_)         | |              #
-            #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
-            #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
-            #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
-            #      |_|   \\__,_|\\__|_| |_|_|    |_|_| |_|\\__,_|\\___|_|       #
-            #                        Configuration                          #
-            #                                                               #
-            #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
-                        
-            """)
-        .build();
-
+    File configFile = new File(dataFolder, "config.yml");
     if (!configFile.exists()) {
       configuration = new PathFinderConfigImpl();
       YamlConfigurations.save(configFile.toPath(), PathFinderConfigImpl.class, configuration, properties);
       return configuration;
     }
-    configuration = YamlConfigurations.load(configFile.toPath(), PathFinderConfigImpl.class, properties);
-
-    if (new Version(configuration.version).compareTo(configRegenerationVersion) < 0) {
-        this.versionChange = true;
-
-
-        saveFileAsOld(configFile, "config", ".yml");
-        saveFileAsOld(new File(dataFolder, "effects.nbo"), "effects", ".nbo");
-        oldDatabaseType = configuration.database.type;
-
-        configuration = loadConfig();
-    }
-    return configuration;
-  }
-
-  private void saveFileAsOld(File file, String base, String suffix) {
-    int test = 1;
-    String b = base + "_old";
-    File f = new File(file.getParentFile(), b + suffix);
-    while (f.exists()) {
-      b = String.format("%s_old_%02d%s", base, test++, suffix);
-      f = new File(file.getParentFile(), b);
-    }
-    file.renameTo(f);
+    return YamlConfigurations.load(configFile.toPath(), PathFinderConfigImpl.class, properties);
   }
 }

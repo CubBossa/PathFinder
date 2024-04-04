@@ -7,8 +7,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.cubbossa.pathapi.dump.DumpWriter;
 import de.cubbossa.pathapi.dump.DumpWriterProvider;
-
-import java.awt.*;
+import de.cubbossa.pathfinder.util.ExtensionPoint;
+import java.awt.Color;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class DumpWriterImpl implements DumpWriter {
+
+  public static final ExtensionPoint<DumpWriterDataProvider> EXTENSION_POINT = new ExtensionPoint<>(DumpWriterDataProvider.class);
 
   private final LinkedHashMap<String, Supplier<Object>> dumpMap;
   private final Gson gson;
@@ -28,6 +30,8 @@ public class DumpWriterImpl implements DumpWriter {
   public DumpWriterImpl(boolean prettyPrinting) {
     dumpMap = new LinkedHashMap<>();
     DumpWriterProvider.set(this);
+
+    EXTENSION_POINT.getExtensions().forEach(e -> this.addProperty(e.getDumpKey(), e::getDumpData));
 
     GsonBuilder builder = new GsonBuilder()
             .registerTypeAdapter(File.class, new TypeAdapter<File>() {

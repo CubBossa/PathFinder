@@ -35,6 +35,7 @@ import de.cubbossa.translations.GlobalMessageBundle;
 import de.cubbossa.translations.MessageBundle;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -43,6 +44,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.flywaydb.core.api.migration.JavaMigration;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
@@ -166,7 +168,10 @@ public abstract class AbstractPathFinder implements PathFinder {
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = getStorageImplementation();
 
-    new Migrator(getDataFolder(), getLogger()).migrate();
+    new Migrator(getDataFolder(), Arrays.stream(getMigrations())
+        .filter(object -> object instanceof JavaMigration)
+        .map(object -> (JavaMigration) object)
+        .toArray(JavaMigration[]::new)).migrate();
 
     ((StorageAdapterImpl) storage).setImplementation(impl);
     storage.setEventDispatcher(eventDispatcher);

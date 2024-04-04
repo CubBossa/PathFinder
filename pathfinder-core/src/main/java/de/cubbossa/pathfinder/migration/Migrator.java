@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.util.logging.Logger;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.migration.JavaMigration;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
@@ -15,7 +15,7 @@ public class Migrator implements Disposable {
   private final File file;
   private final Flyway flyway;
 
-  public Migrator(File pluginDirectory, Logger logger) {
+  public Migrator(File pluginDirectory, JavaMigration... migrations) {
 
     this.file = new File(pluginDirectory, ".flyway.sqlite");
     if (!file.exists()) {
@@ -38,7 +38,9 @@ public class Migrator implements Disposable {
 
     flyway = Flyway.configure()
         .dataSource(dataSource)
-        //.callbacks((String[]) null /* Callbacks here ... */)
+        .baselineVersion("5.0.0")
+        .javaMigrations(migrations)
+        .locations("classpath:db/migration")
         .load();
   }
 
