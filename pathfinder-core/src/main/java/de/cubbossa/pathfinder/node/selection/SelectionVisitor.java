@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<SelectionAttribute>> {
+public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<ParsedSelectionAttribute>> {
 
   private final Collection<String> identifiers;
 
@@ -15,12 +15,12 @@ public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<Selectio
   }
 
   @Override
-  public List<SelectionAttribute> visitProgram(SelectionLanguageParser.ProgramContext ctx) {
+  public List<ParsedSelectionAttribute> visitProgram(SelectionLanguageParser.ProgramContext ctx) {
     return visitExpression(ctx.expression());
   }
 
   @Override
-  public List<SelectionAttribute> visitExpression(SelectionLanguageParser.ExpressionContext ctx) {
+  public List<ParsedSelectionAttribute> visitExpression(SelectionLanguageParser.ExpressionContext ctx) {
     if (!identifiers.contains(ctx.selector().IDENTIFIER().getSymbol().getText())) {
       throw new IllegalStateException(
           "Invalid identifier: " + ctx.selector().IDENTIFIER().getSymbol().getText());
@@ -29,15 +29,15 @@ public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<Selectio
   }
 
   @Override
-  public List<SelectionAttribute> visitConditions(SelectionLanguageParser.ConditionsContext ctx) {
+  public List<ParsedSelectionAttribute> visitConditions(SelectionLanguageParser.ConditionsContext ctx) {
     return ctx.attributelist() == null ? null : visitAttributelist(ctx.attributelist());
   }
 
   @Override
-  public List<SelectionAttribute> visitAttributelist(
+  public List<ParsedSelectionAttribute> visitAttributelist(
       SelectionLanguageParser.AttributelistContext ctx) {
 
-    List<SelectionAttribute> list = new ArrayList<>();
+    List<ParsedSelectionAttribute> list = new ArrayList<>();
     if (ctx.attributelist() != null) {
       list.addAll(visitAttributelist(ctx.attributelist()));
     }
@@ -46,9 +46,9 @@ public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<Selectio
   }
 
   @Override
-  public List<SelectionAttribute> visitAttribute(SelectionLanguageParser.AttributeContext ctx) {
+  public List<ParsedSelectionAttribute> visitAttribute(SelectionLanguageParser.AttributeContext ctx) {
 
     String identifier = ctx.IDENTIFIER().getText();
-    return List.of(new SelectionAttribute(identifier, ctx.value().getText()));
+    return List.of(new ParsedSelectionAttribute(identifier, ctx.value().getText()));
   }
 }

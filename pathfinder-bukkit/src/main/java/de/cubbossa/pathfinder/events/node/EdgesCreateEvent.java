@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.node;
 
 import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathapi.node.NodeSelection;
 import java.util.Collection;
 import java.util.HashSet;
 import lombok.Getter;

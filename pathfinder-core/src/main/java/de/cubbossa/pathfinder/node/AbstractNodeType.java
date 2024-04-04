@@ -17,24 +17,24 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 @Setter
 public abstract class AbstractNodeType<N extends Node> implements NodeType<N> {
 
-    private final NamespacedKey key;
-    private final MiniMessage miniMessage;
+  private final NamespacedKey key;
+  private final MiniMessage miniMessage;
   protected NodeStorageImplementation<N> storage;
-    private String nameFormat;
-    private Component displayName;
+  private String nameFormat;
+  private Component displayName;
 
-    public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage) {
-        this(key, name, miniMessage, null);
-    }
+  public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage) {
+    this(key, name, miniMessage, null);
+  }
 
   public AbstractNodeType(NamespacedKey key, String name, MiniMessage miniMessage, NodeStorageImplementation<N> storage) {
-        this.key = key;
-        this.miniMessage = miniMessage;
-        this.setNameFormat(name);
-        this.storage = storage;
-    }
+    this.key = key;
+    this.miniMessage = miniMessage;
+    this.setNameFormat(name);
+    this.storage = storage;
+  }
 
-    @Override
+  @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
     this.displayName = miniMessage.deserialize(name);

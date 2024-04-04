@@ -1,15 +1,14 @@
 package de.cubbossa.pathfinder.events.node;
 
+import de.cubbossa.pathapi.node.NodeSelection;
 import de.cubbossa.pathfinder.node.EdgeImpl;
+import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import de.cubbossa.pathfinder.util.NodeSelection;
-
-import java.util.Collection;
 
 public class EdgesDeleteEvent {
 

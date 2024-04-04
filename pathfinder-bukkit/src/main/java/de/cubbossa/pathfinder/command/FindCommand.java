@@ -5,7 +5,7 @@ import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
-import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
 
@@ -18,7 +18,7 @@ public class FindCommand extends CommandTree {
 
     then(Arguments.navigateSelectionArgument("selection")
         .executesPlayer((player, args) -> {
-          NodeSelection targets = args.getUnchecked(0);
+          NodeSelectionImpl targets = args.getUnchecked(0);
           if (targets == null) {
             return;
           }

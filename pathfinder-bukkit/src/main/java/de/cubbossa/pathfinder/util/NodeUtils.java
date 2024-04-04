@@ -5,17 +5,22 @@ import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeSelection;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.splinelib.util.BezierVector;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 public class NodeUtils {
 
@@ -25,8 +30,8 @@ public class NodeUtils {
   public static void onList(Player player, NodeSelection selection, Pagination pagination) {
 
     String selector;
-    if (selection.getMeta() != null) {
-      selector = selection.getMeta().selector();
+    if (selection.getSelectionString() != null) {
+      selector = selection.getSelectionString();
     } else {
       selector = "@n";
     }

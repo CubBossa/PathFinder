@@ -6,12 +6,13 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
+import de.cubbossa.pathfinder.node.selection.ParsedSelectionAttribute;
 import de.cubbossa.pathfinder.node.selection.SelectSuggestionVisitor;
-import de.cubbossa.pathfinder.node.selection.SelectionAttribute;
 import de.cubbossa.pathfinder.node.selection.SelectionVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -37,7 +37,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>> {
+public abstract class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>> {
 
   private final Collection<String> identifiers = new ArrayList<>();
   private final Collection<Argument<?, TypeT, ContextT, ?>> arguments = new TreeSet<>();
@@ -51,7 +51,13 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
     arguments.add((Argument<?, TypeT, ContextT, ?>) argument);
   }
 
-  public <ValueT> Collection<TypeT> parse(String input, List<TypeT> scope, BiFunction<ValueT, List<TypeT>, ContextT> context)
+  public abstract <ValueT> ContextT createContext(ValueT value, List<TypeT> scope, Object sender);
+
+  public List<TypeT> parse(String input, List<TypeT> scope) {
+    return this.parse(input, scope, null);
+  }
+
+  public <ValueT> List<TypeT> parse(String input, List<TypeT> scope, Object sender)
       throws ParseCancellationException {
 
     CharStream charStream = CharStreams.fromString(input);
@@ -67,22 +73,20 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
     parser.addErrorListener(listener);
 
     SelectionLanguageParser.ProgramContext tree = parser.program();
-    List<SelectionAttribute> attributes = new SelectionVisitor(identifiers).visit(tree);
+    List<ParsedSelectionAttribute> attributes = new SelectionVisitor(identifiers).visit(tree);
     if (attributes == null) {
       attributes = new ArrayList<>();
     }
 
     List<TypeT> scopeHolder = new ArrayList<>(scope);
     for (Argument<?, TypeT, ContextT, ?> argument : arguments) {
-      System.out.println(argument.getKey());
-      for (SelectionAttribute a : attributes) {
-        System.out.println(a.identifier() + " <-> " + argument.getKey());
+      for (ParsedSelectionAttribute a : attributes) {
         if (!a.identifier().equals(argument.getKey())) {
           continue;
         }
         ValueT value = (ValueT) argument.getParse().apply(a.value());
         scopeHolder = argument.getExecute().apply(
-            context.apply(value, scopeHolder)
+            createContext(value, scopeHolder, sender)
         );
       }
     }
@@ -90,7 +94,6 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
   }
 
   public CompletableFuture<Suggestions> applySuggestions(
-      Player player,
       String command,
       String input
   ) {
@@ -104,7 +107,7 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
 
     SelectionSuggestionLanguageParser.ProgramContext tree = parser.program();
     Map<String, Function<SuggestionContext, List<Suggestion>>> map = new HashMap<>();
-    arguments.forEach((a) -> map.put(a.getKey(), a.suggest));
+    arguments.forEach((a) -> map.put(a.getKey(), a.getSuggest()));
 
     List<Suggestion> suggestions =
         new SelectSuggestionVisitor(identifiers, map, input, null).visit(tree);
@@ -114,15 +117,19 @@ public class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentCon
 
   @Getter
   @RequiredArgsConstructor
-  public static class ArgumentContext<ValueT, TypeT> {
+  public static abstract class ArgumentContext<ValueT, TypeT> {
     private final ValueT value;
     private final List<TypeT> scope;
+
+    public abstract Object getSender();
+
+    public abstract Location getSenderLocation();
   }
 
   @Getter
   @RequiredArgsConstructor
   public static class SuggestionContext {
-    private final Player player;
+    private final Object sender;
     private final String input;
   }
 

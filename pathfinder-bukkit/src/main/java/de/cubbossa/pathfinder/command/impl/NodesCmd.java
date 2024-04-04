@@ -6,6 +6,7 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeSelection;
 import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
@@ -15,7 +16,6 @@ import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.LocationType;
@@ -113,7 +113,7 @@ public class NodesCmd extends PathFinderSubCommand {
   }
 
   private void addGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
-    group.addAll(nodes.ids());
+    group.addAll(nodes.getIds());
     getPathfinder().getStorage().saveGroup(group);
 
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP.formatted(
@@ -123,7 +123,7 @@ public class NodesCmd extends PathFinderSubCommand {
   }
 
   private void removeGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
-    group.removeAll(nodes.ids());
+    group.removeAll(nodes.getIds());
     getPathfinder().getStorage().saveGroup(group);
 
     BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.formatted(
@@ -135,7 +135,7 @@ public class NodesCmd extends PathFinderSubCommand {
     Collection<NodeGroup> groups = nodes.stream().map(StorageUtil::getGroups).flatMap(Collection::stream).toList();
     StorageAdapter storage = getPathfinder().getStorage();
     groups.forEach(group -> {
-      nodes.ids().forEach(group::remove);
+      nodes.getIds().forEach(group::remove);
       storage.saveGroup(group);
     });
 

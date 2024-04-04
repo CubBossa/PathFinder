@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathfinder.node.selection.NumberRange;
 import de.cubbossa.pathfinder.util.SelectionParser;
 import java.text.ParseException;
@@ -95,7 +96,7 @@ public class SelectionParserTest {
 
     Assertions.assertEquals(
         Lists.newArrayList("A", "B", "C", "D", "E", " ", ""),
-        parser.parse("@s[length=..1]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[length=..1]", SCOPE));
   }
 
   @Test
@@ -104,7 +105,7 @@ public class SelectionParserTest {
 
     Assertions.assertEquals(
         Lists.newArrayList("A", "B", "C", "D", "E", " "),
-        parser.parse("@s[length=1]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[length=1]", SCOPE));
   }
 
   @Test
@@ -114,7 +115,7 @@ public class SelectionParserTest {
     Assertions.assertEquals(
         Lists.newArrayList("OtherWord", "00000000", "            ", "More words than one",
             "Another sentence"),
-        parser.parse("@s[length=5..]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[length=5..]", SCOPE));
   }
 
   @Test
@@ -123,7 +124,7 @@ public class SelectionParserTest {
 
     Assertions.assertEquals(
         Lists.newArrayList("OtherWord"),
-        parser.parse("@s[length=5..,type=letter]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[length=5..,type=letter]", SCOPE));
   }
 
   @Test
@@ -132,7 +133,7 @@ public class SelectionParserTest {
 
     Assertions.assertEquals(
         Lists.newArrayList("123"),
-        parser.parse("@s[length=..5,type=number]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[length=..5,type=number]", SCOPE));
   }
 
   @Test
@@ -141,26 +142,26 @@ public class SelectionParserTest {
 
     Assertions.assertEquals(
         Lists.newArrayList("A", "B", "C", "D", "E"),
-        parser.parse("@s[lettercount=1]", SCOPE, SelectionParser.ArgumentContext::new));
+        parser.parse("@s[lettercount=1]", SCOPE));
   }
 
   @Test
   @SneakyThrows
   public void testParseSelection6a() {
 
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=abcdefg]", SCOPE, SelectionParser.ArgumentContext::new));
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=0123456]", SCOPE, SelectionParser.ArgumentContext::new));
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a-a]", SCOPE, SelectionParser.ArgumentContext::new));
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a1]", SCOPE, SelectionParser.ArgumentContext::new));
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=1a]", SCOPE, SelectionParser.ArgumentContext::new));
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=abcdefg]", SCOPE));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=0123456]", SCOPE));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a-a]", SCOPE));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=a1]", SCOPE));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=1a]", SCOPE));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1]", SCOPE));
   }
 
   @Test
   @SneakyThrows
   public void testParseSelection6b() {
 
-    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1-1f01-4c56-88bb-c2bec7105714]", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertDoesNotThrow(() -> parser.parse("@s[uui=68cf83b1-1f01-4c56-88bb-c2bec7105714]", SCOPE));
   }
 
   @Test
@@ -182,8 +183,8 @@ public class SelectionParserTest {
     }));
 
     Assertions.assertEquals(
-        testParser.parse("@s[a=A,b=B]", new ArrayList<>(), SelectionParser.ArgumentContext::new),
-        testParser.parse("@s[b=B,a=A]", new ArrayList<>(), SelectionParser.ArgumentContext::new)
+        testParser.parse("@s[a=A,b=B]", new ArrayList<>()),
+        testParser.parse("@s[b=B,a=A]", new ArrayList<>())
     );
 
   }
@@ -191,27 +192,27 @@ public class SelectionParserTest {
   @Test
   public void testInvalidClassifier() {
     Assertions.assertThrows(IllegalStateException.class,
-        () -> parser.parse("@invalid", SCOPE, SelectionParser.ArgumentContext::new));
+        () -> parser.parse("@invalid", SCOPE));
   }
 
   @Test
   @SneakyThrows
   public void testOnlyClassifier() {
-    Assertions.assertEquals(SCOPE, parser.parse("@s", SCOPE, SelectionParser.ArgumentContext::new));
+    Assertions.assertEquals(SCOPE, parser.parse("@s", SCOPE));
   }
 
   @Test
   void applySuggestions() throws ExecutionException, InterruptedException {
 
-    System.out.println(parser.applySuggestions(null, "123", "").get());
-    System.out.println(parser.applySuggestions(null, "", "@").get());
-    System.out.println(parser.applySuggestions(null, "", "@abc[").get());
-    System.out.println(parser.applySuggestions(null, "", "@n[le").get());
-    System.out.println(parser.applySuggestions(null, "", "@n[type=").get());
-    System.out.println(parser.applySuggestions(null, "", "@n[type=le").get());
-    System.out.println(parser.applySuggestions(null, "", "@n[type=le,").get());
-    System.out.println(parser.applySuggestions(null, "", "@s[]").get());
-    System.out.println(parser.applySuggestions(null, "", "@n").get());
+    System.out.println(parser.applySuggestions("123", "").get());
+    System.out.println(parser.applySuggestions("", "@").get());
+    System.out.println(parser.applySuggestions("", "@abc[").get());
+    System.out.println(parser.applySuggestions("", "@n[le").get());
+    System.out.println(parser.applySuggestions("", "@n[type=").get());
+    System.out.println(parser.applySuggestions("", "@n[type=le").get());
+    System.out.println(parser.applySuggestions("", "@n[type=le,").get());
+    System.out.println(parser.applySuggestions("", "@s[]").get());
+    System.out.println(parser.applySuggestions("", "@n").get());
   }
 
   private enum CharacterType {
@@ -223,6 +224,21 @@ public class SelectionParserTest {
 
     public TestParser(String identifier, String... alias) {
       super(identifier, alias);
+    }
+
+    @Override
+    public <ValueT> ArgumentContext<?, String> createContext(ValueT value, List<String> scope, Object sender) {
+      return new ArgumentContext<Object, String>(value, scope) {
+        @Override
+        public Object getSender() {
+          return sender;
+        }
+
+        @Override
+        public Location getSenderLocation() {
+          return null;
+        }
+      };
     }
 
     public static class Argument<V>

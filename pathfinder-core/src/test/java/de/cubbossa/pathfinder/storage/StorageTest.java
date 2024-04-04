@@ -19,8 +19,8 @@ import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestModifier;
 import de.cubbossa.pathfinder.TestModifierType;
 import de.cubbossa.pathfinder.TestVisualizer;
+import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -294,7 +294,7 @@ public abstract class StorageTest extends PathFinderTest {
     Waypoint a = makeWaypoint();
     makeWaypoint();
     assertNodeCount(2);
-    assertFuture(() -> storage.deleteNodes(new NodeSelection(a).ids()));
+    assertFuture(() -> storage.deleteNodes(new NodeSelectionImpl(a).getIds()));
     assertNodeCount(1);
     assertFuture(() -> storage.deleteNodes(List.of(UUID.randomUUID())));
     assertNodeCount(1);
@@ -351,7 +351,7 @@ public abstract class StorageTest extends PathFinderTest {
     assertFuture(() -> storage.modifyGroup(gk, group -> {
       group.remove(a.getNodeId());
     }));
-    assertFuture(() -> storage.deleteNodes(new NodeSelection(a).ids()));
+    assertFuture(() -> storage.deleteNodes(new NodeSelectionImpl(a).getIds()));
 
     NodeGroup g1 = assertGroupExists(gk);
     assertEquals(0, g1.size());

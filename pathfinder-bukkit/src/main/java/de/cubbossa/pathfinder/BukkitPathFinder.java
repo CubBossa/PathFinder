@@ -9,6 +9,8 @@ import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.BukkitEffects;
 import de.cubbossa.pathfinder.listener.PlayerListener;
+import de.cubbossa.pathfinder.node.NodeSelectionProviderImpl;
+import de.cubbossa.pathfinder.node.selection.BukkitNodeSelectionParser;
 import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.util.YamlUtils;
@@ -87,6 +89,8 @@ public class BukkitPathFinder extends AbstractPathFinder {
     super.onLoad();
     bstatsLoader = new BStatsLoader(this);
     YamlUtils.registerClasses();
+
+    new NodeSelectionProviderImpl<>(new BukkitNodeSelectionParser("n"));
   }
 
   @Override

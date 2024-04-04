@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathfinder.util.NodeSelection;
+import de.cubbossa.pathapi.node.NodeSelection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

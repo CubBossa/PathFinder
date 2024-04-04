@@ -13,18 +13,20 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Pagination;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathapi.node.NodeSelection;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
+import de.cubbossa.pathfinder.node.NodeSelectionImpl;
+import de.cubbossa.pathfinder.node.NodeSelectionProviderImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import de.cubbossa.pathfinder.util.NodeSelection;
-import de.cubbossa.pathfinder.util.SelectionUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import dev.jorel.commandapi.SuggestionInfo;
 import dev.jorel.commandapi.arguments.Argument;
@@ -330,7 +332,6 @@ public class Arguments {
    * There are a variety of filters to apply to the search, an example user input could be
    * "@n[distance=..10]", which returns all nodes within a range of 10 blocks.
    * This includes ALL nodes of all roadmaps.
-   * All filters can be seen in {@link SelectionUtils#SELECTORS}
    *
    * @param nodeName The name of the command argument in the command structure
    * @return a node selection argument instance
@@ -341,13 +342,25 @@ public class Arguments {
         new CustomArgument<>(new TextArgument(nodeName), info -> {
           if (info.sender() instanceof Player player) {
             try {
-              return SelectionUtils.getNodeSelection(player, info.input().substring(1, info.input().length() - 1));
+              return NodeSelection.ofSender(info.input().substring(1, info.input().length() - 1), player);
             } catch (ParseCancellationException e) {
               throw CustomArgument.CustomArgumentException.fromString(e.getMessage());
             }
           }
-          return new NodeSelection();
-        })).includeSuggestions(SelectionUtils::getNodeSelectionSuggestions);
+          return new NodeSelectionImpl();
+        })).includeSuggestions((suggestionInfo, suggestionsBuilder) -> {
+      if (!(suggestionInfo.sender() instanceof Player player)) {
+        return suggestionsBuilder.buildFuture();
+      }
+      int offset = suggestionInfo.currentInput().length() - suggestionInfo.currentArg().length();
+
+      return NodeSelectionProviderImpl.getNodeSelectionSuggestions(suggestionInfo)
+          //  add quotations to suggestions
+          .thenApply(s -> CommandUtils.wrapWithQuotation(suggestionInfo.currentArg(), s,
+              suggestionInfo.currentArg(), offset))
+          // shift suggestions toward actual command argument offset
+          .thenApply(s -> CommandUtils.offsetSuggestions(suggestionInfo.currentArg(), s, offset));
+    });
   }
 
   /**
@@ -395,7 +408,7 @@ public class Arguments {
    * @param nodeName The name of the command argument in the command structure
    * @return The CustomArgument instance
    */
-  public Argument<NodeSelection> navigateSelectionArgument(String nodeName) {
+  public Argument<NodeSelectionImpl> navigateSelectionArgument(String nodeName) {
     return CommandArgument.arg(new CustomArgument<>(new GreedyStringArgument(nodeName),
             context -> {
               if (!(context.sender() instanceof Player player)) {
@@ -416,7 +429,7 @@ public class Arguments {
                     .collect(Collectors.toList());
 
                 Collection<Node> target = new FindQueryParser().parse(search, new ArrayList<>(valids), searchTermFunction);
-                return new NodeSelection(target);
+                return new NodeSelectionImpl(target);
               } catch (Throwable t) {
                 t.printStackTrace();
                 throw new RuntimeException(t);

@@ -24,6 +24,7 @@ import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.GroupedNodeImpl;
+import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
@@ -34,7 +35,6 @@ import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
-import de.cubbossa.pathfinder.util.NodeSelection;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import java.io.File;
 import java.util.Collection;
@@ -335,7 +335,7 @@ public abstract class PathFinderTest {
   }
 
   protected void deleteWaypoint(Waypoint waypoint) {
-    assertFuture(() -> storage.deleteNodes(new NodeSelection(waypoint).ids()));
+    assertFuture(() -> storage.deleteNodes(new NodeSelectionImpl(waypoint).getIds()));
   }
 
   protected <N extends Node> N assertNodeExists(UUID node) {

@@ -5,10 +5,8 @@ import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.util.SelectionParser;
-import java.util.Collection;
 import java.util.List;
 import lombok.Getter;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bukkit.command.CommandSender;
 
 public class BukkitNodeSelectionParser extends AbstractNodeSelectionParser<CommandSender, BukkitNodeSelectionParser.BukkitNodeArgumentContext<?>> {
@@ -17,9 +15,12 @@ public class BukkitNodeSelectionParser extends AbstractNodeSelectionParser<Comma
     super(identifier, alias);
   }
 
-  public Collection<Node> parse(String input, List<Node> scope, CommandSender sender)
-      throws ParseCancellationException {
-    return super.parse(input, scope, (o, nodes) -> new BukkitNodeArgumentContext<>(o, nodes, sender));
+  @Override
+  public <ValueT> BukkitNodeArgumentContext<?> createContext(ValueT value, List<Node> scope, Object sender) {
+    if (!(sender instanceof CommandSender)) {
+      throw new IllegalArgumentException("Expecting sender to be instance of bukkit CommandSender.");
+    }
+    return new BukkitNodeArgumentContext<>(value, scope, (CommandSender) sender);
   }
 
   public static abstract class BukkitNodeSelectionArgument<T>
@@ -31,7 +32,7 @@ public class BukkitNodeSelectionParser extends AbstractNodeSelectionParser<Comma
   }
 
   @Getter
-  public static class BukkitNodeArgumentContext<ValueT> extends NodeArgumentContext<CommandSender, ValueT> {
+  public static class BukkitNodeArgumentContext<ValueT> extends NodeArgumentContext<ValueT> {
     private final CommandSender sender;
 
     public BukkitNodeArgumentContext(ValueT value, List<Node> scope, CommandSender sender) {
