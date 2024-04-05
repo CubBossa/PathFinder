@@ -13,12 +13,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 public class WaypointType extends AbstractNodeType<Waypoint> {
 
   public WaypointType() {
-    super(
-        NamespacedKey.fromString("pathfinder:waypoint"),
-        "<color:#ff0000>Waypoint</color>",
-        MiniMessage.miniMessage(), //TODO please remove
-        null
-    );
+    super(NamespacedKey.fromString("pathfinder:waypoint"), null);
   }
 
   @Override

@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.disposables.Disposer;
+import de.cubbossa.disposablesbukkit.BukkitDisposer;
 import de.cubbossa.pathapi.event.EventDispatcher;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -146,7 +147,7 @@ public class BukkitPathFinder extends AbstractPathFinder {
 
   @Override
   Disposer createDisposer() {
-    return Disposer.disposer();
+    return BukkitDisposer.disposer(javaPlugin);
   }
 
   @Override

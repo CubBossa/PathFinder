@@ -20,9 +20,7 @@ import java.util.UUID;
 public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
-      AbstractPathFinder.pathfinder("empty"),
-      "empty",
-      PathFinderProvider.get().getMiniMessage()
+      AbstractPathFinder.pathfinder("empty")
   ) {
 
     @Override

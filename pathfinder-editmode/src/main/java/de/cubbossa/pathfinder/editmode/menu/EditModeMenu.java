@@ -12,11 +12,13 @@ import de.cubbossa.pathapi.PathFinderConfig;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.event.NodeDeleteEvent;
 import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathapi.misc.Named;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -38,6 +40,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -215,13 +218,18 @@ public class EditModeMenu {
 
           Location pos = BukkitVectorUtils.toBukkit(VectorUtils.snap(BukkitVectorUtils.toInternal(orientation.location()), 2))
               .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
-          if (types.size() > 1) {
-            openNodeTypeMenu(context.getPlayer(), pos);
+
+          NodeStorageImplementation.Context c = new NodeStorageImplementation.Context(BukkitVectorUtils.toInternal(pos));
+          Collection<NodeType<?>> applicableTypes = types.stream()
+              .filter(nodeType -> nodeType.canBeCreated(c))
+              .toList();
+          if (applicableTypes.size() > 1) {
+            openNodeTypeMenu(applicableTypes, context.getPlayer(), pos);
             lock.set(false);
             return;
           }
 
-          NodeType<?> type = types.stream().findAny().orElse(null);
+          NodeType<?> type = applicableTypes.stream().findAny().orElse(null);
           if (type == null) {
             lock.set(false);
             throw new IllegalStateException("Could not find any node type to generate node.");
@@ -525,18 +533,31 @@ public class EditModeMenu {
     };
   }
 
-  private void openNodeTypeMenu(Player player, Location location) {
+  private void openNodeTypeMenu(Collection<NodeType<?>> types, Player player, Location location) {
 
-    ListMenu menu = new ListMenu(Component.text("Node-Gruppen verwalten:"), 2);
+    ListMenu menu = new ListMenu(Component.text("Choose a NodeType"), 2);
     for (NodeType<?> type : types) {
 
       menu.addListEntry(Button.builder()
-          .withItemStack(() -> new ItemStack(Material.CYAN_CONCRETE_POWDER))
+          .withItemStack(() -> nodeTypeItem(type))
           .withClickHandler(Action.RIGHT, c -> {
             storage.createAndLoadNode(type, BukkitVectorUtils.toInternal(location));
             menu.close(player);
           }));
     }
     menu.open(player);
+  }
+
+  private ItemStack nodeTypeItem(NodeType<?> type) {
+    Component name;
+    if (type instanceof Named named) {
+      name = named.getDisplayName();
+    } else {
+      name = Component.text(type.getKey().toString());
+    }
+    return ItemStackUtils.createItemStack(
+        GROUP_ITEM_LIST[Math.floorMod(type.getKey().hashCode(), 16)],
+        name
+    );
   }
 }

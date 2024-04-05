@@ -33,6 +33,7 @@ dependencies {
 
     api(project(":pathfinder-api"))
     api(project(":pathfinder-core"))
+    api("de.cubbossa:disposables-bukkit:1.0")
     runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
 
@@ -43,7 +44,7 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Commands
-  api("dev.jorel:commandapi-bukkit-shade:9.3.0")
+    api("dev.jorel:commandapi-bukkit-shade:9.3.0")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")

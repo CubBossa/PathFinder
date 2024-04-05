@@ -122,6 +122,20 @@ public class ItemStackUtils {
     return itemStack;
   }
 
+  public ItemStack createItemStack(Material material, ComponentLike name) {
+    ItemStack stack = new ItemStack(material);
+    ItemMeta meta = stack.getItemMeta();
+    if (meta == null) {
+      meta = Bukkit.getItemFactory().getItemMeta(material);
+    }
+    if (meta == null) {
+      throw new IllegalStateException("Could not create itemstack.");
+    }
+    meta.setDisplayName(SERIALIZER.serialize(name.asComponent()));
+    stack.setItemMeta(meta);
+    return stack;
+  }
+
   public ItemStack createItemStack(Material material, int customModelData) {
     return ItemStackUtils.setCustomModelData(new ItemStack(material), customModelData);
   }

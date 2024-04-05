@@ -5,10 +5,15 @@ import de.cubbossa.pathapi.node.Node;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import org.jetbrains.annotations.Nullable;
 
 public interface NodeStorageImplementation<N extends Node> {
 
-  N createAndLoadNode(Context context);
+  default boolean canBeCreated(Context context) {
+    return true;
+  }
+
+  @Nullable N createAndLoadNode(Context context);
 
   Optional<N> loadNode(UUID uuid);
 

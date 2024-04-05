@@ -35,7 +35,7 @@ dependencies {
     antlr("org.antlr:antlr4:4.12.0") { isTransitive = true }
 
     // Configuration
-    api("com.github.Exlll.ConfigLib:configlib-yaml:v4.2.0")
+    api("de.exlll:configlib-yaml:4.5.0")
 
     // Commands
     api("dev.jorel:commandapi-bukkit-shade:9.2.0")

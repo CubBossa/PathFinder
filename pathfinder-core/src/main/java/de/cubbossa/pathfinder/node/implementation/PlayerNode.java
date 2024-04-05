@@ -18,9 +18,7 @@ import java.util.*;
 public class PlayerNode implements Node {
 
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
-      AbstractPathFinder.pathfinder("player"),
-      "empty",
-      PathFinderProvider.get().getMiniMessage()
+      AbstractPathFinder.pathfinder("player")
   ) {
     @Override
     public PlayerNode createAndLoadNode(Context context) {
