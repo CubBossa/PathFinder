@@ -24,6 +24,11 @@ public class EmptyNode implements Node {
   ) {
 
     @Override
+    public boolean canBeCreated(Context context) {
+      return false;
+    }
+
+    @Override
     public EmptyNode createAndLoadNode(Context context) {
       throw new IllegalStateException("EmptyNode are only part of runtime navigation and "
           + "must be created from constructor.");

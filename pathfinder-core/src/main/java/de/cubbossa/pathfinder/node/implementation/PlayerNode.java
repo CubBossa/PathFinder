@@ -13,6 +13,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class PlayerNode implements Node {
@@ -20,8 +21,14 @@ public class PlayerNode implements Node {
   public static final NodeType<PlayerNode> TYPE = new AbstractNodeType<>(
       AbstractPathFinder.pathfinder("player")
   ) {
+
     @Override
-    public PlayerNode createAndLoadNode(Context context) {
+    public boolean canBeCreated(Context context) {
+      return false;
+    }
+
+    @Override
+    public @Nullable PlayerNode createAndLoadNode(Context context) {
       throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
           + "must be created from constructor.");
     }
