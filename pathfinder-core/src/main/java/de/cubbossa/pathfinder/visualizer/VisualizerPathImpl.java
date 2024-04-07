@@ -32,11 +32,12 @@ import lombok.experimental.Accessors;
  *
  * @param <PlayerT> The abstract path player type.
  */
-@Getter
-@Setter
 public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
 
+  @Getter
+  @Setter
   protected PathPlayer<PlayerT> targetViewer;
+  @Getter
   protected final HashSet<PathPlayer<PlayerT>> viewers;
   protected final Collection<SubPath<?>> paths;
 
@@ -66,11 +67,10 @@ public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
       AtomicDouble highest = new AtomicDouble();
       node.groups().stream()
           .filter(g -> g.hasModifier(VisualizerModifier.KEY))
-          .map(group -> {
+          .peek(group -> {
             if (highest.get() < group.getWeight()) {
               highest.set(group.getWeight());
             }
-            return group;
           })
           .filter(g -> g.getWeight() == highest.get())
           .sorted()
@@ -185,7 +185,7 @@ public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
 
   @RequiredArgsConstructor
   @Accessors(fluent = true)
-  class SubPath<ViewT extends PathView<PlayerT>> {
+  protected class SubPath<ViewT extends PathView<PlayerT>> {
     protected final List<Node> path;
     protected final PathVisualizer<ViewT, PlayerT> visualizer;
     protected ViewT data;

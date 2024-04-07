@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.node.implementation;
 
 import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.World;
 import de.cubbossa.pathapi.node.Edge;
@@ -9,19 +8,23 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 public class EmptyNode implements Node {
 
   public static final NodeType<EmptyNode> TYPE = new AbstractNodeType<>(
       AbstractPathFinder.pathfinder("empty")
   ) {
+
+    @Override
+    public EmptyNode createNodeInstance(Context context) {
+      return new EmptyNode(context.id(), context.location().getWorld());
+    }
 
     @Override
     public boolean canBeCreated(Context context) {

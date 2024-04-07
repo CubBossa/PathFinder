@@ -300,14 +300,6 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   }
 
   @Override
-  public Waypoint createAndLoadWaypoint(Location location) {
-    debug("> createAndLoadWaypoint(Location location)");
-    var x = implementation instanceof WaypointStorageImplementation ws ? ws.createAndLoadWaypoint(location) : null;
-    debug("< createAndLoadWaypoint(Location location)");
-    return x;
-  }
-
-  @Override
   public Optional<Waypoint> loadWaypoint(UUID uuid) {
     debug("> loadWaypoint(UUID uuid)");
     Optional<Waypoint> x = implementation instanceof WaypointStorageImplementation ws ? ws.loadWaypoint(uuid) : Optional.empty();

@@ -1,5 +1,6 @@
 package de.cubbossa.pathapi.visualizer;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
@@ -24,7 +25,7 @@ import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
  * @param <VisualizerT> The type of the visualizer that is being handled by this type.
  */
 public interface VisualizerType<VisualizerT extends PathVisualizer<?, ?>>
-    extends Keyed, VisualizerStorageImplementation<VisualizerT> {
+    extends Keyed, VisualizerStorageImplementation<VisualizerT>, Disposable {
 
   /**
    * Creates a new visualizer in storage.
@@ -32,7 +33,7 @@ public interface VisualizerType<VisualizerT extends PathVisualizer<?, ?>>
    * @param key The key to use for this visualizer. This key must be unique among all visualizers of all types.
    * @return The created visualizer instance.
    */
-  VisualizerT createAndLoadVisualizer(NamespacedKey key);
+  VisualizerT createAndSaveVisualizer(NamespacedKey key);
 
   /**
    * A string representation in the ingame visualizer command. Mostly, it might be the key of the NamespacedKey.

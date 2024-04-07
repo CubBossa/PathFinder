@@ -10,8 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Setter
@@ -27,6 +26,15 @@ public abstract class AbstractNodeType<N extends Node> implements NodeType<N> {
   public AbstractNodeType(NamespacedKey key, NodeStorageImplementation<N> storage) {
     this.key = key;
     this.storage = storage;
+  }
+
+  public abstract N createNodeInstance(Context context);
+
+  @Override
+  public @Nullable N createAndLoadNode(Context context) {
+    N node = createNodeInstance(context);
+    saveNode(node);
+    return node;
   }
 
   // pass to storage methods.

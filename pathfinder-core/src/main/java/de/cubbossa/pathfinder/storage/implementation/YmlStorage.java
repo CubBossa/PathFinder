@@ -5,7 +5,6 @@ import de.cubbossa.pathapi.group.ModifierRegistry;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NodeGroup;
 import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.Range;
 import de.cubbossa.pathapi.node.Edge;
@@ -477,7 +476,7 @@ public abstract class YmlStorage extends AbstractStorage {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
-    T vis = type.createAndLoadVisualizer(key);
+    T vis = type.createAndSaveVisualizer(key);
     Map<String, Object> values = (Map<String, Object>) cfg.get("props");
     type.deserialize(vis, values == null ? new HashMap<>() : values);
     return vis;
@@ -548,16 +547,6 @@ public abstract class YmlStorage extends AbstractStorage {
     cfg.set("y", waypoint.getLocation().getY());
     cfg.set("z", waypoint.getLocation().getZ());
     cfg.set("world", waypoint.getLocation().getWorld().getUniqueId().toString());
-  }
-
-  @Override
-  public Waypoint createAndLoadWaypoint(Location location) {
-    return workOnFile(fileWaypoints(), cfg -> {
-      Waypoint waypoint = new Waypoint(UUID.randomUUID());
-      waypoint.setLocation(location);
-      writeWaypoint(waypoint, cfg.createSection(waypoint.getNodeId().toString()));
-      return waypoint;
-    });
   }
 
   @Override

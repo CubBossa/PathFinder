@@ -8,22 +8,17 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public class WaypointStorageImplementationImpl implements NodeStorageImplementation<Waypoint> {
+public class NodeStorageImplementationWrapper implements NodeStorageImplementation<Waypoint> {
 
   private final WaypointStorageImplementation implementation;
 
-  public WaypointStorageImplementationImpl(StorageAdapter storage) {
+  public NodeStorageImplementationWrapper(StorageAdapter storage) {
     if (storage.getImplementation() instanceof WaypointStorageImplementation wp) {
       implementation = wp;
     } else {
       throw new IllegalArgumentException(
           "StorageAdapter implementation must also include waypoint methods.");
     }
-  }
-
-  @Override
-  public Waypoint createAndLoadNode(Context context) {
-    return implementation.createAndLoadWaypoint(context.location());
   }
 
   @Override

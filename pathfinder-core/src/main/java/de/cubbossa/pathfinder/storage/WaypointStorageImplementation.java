@@ -1,14 +1,11 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface WaypointStorageImplementation {
-
-  Waypoint createAndLoadWaypoint(Location location);
 
   Optional<Waypoint> loadWaypoint(UUID uuid);
 

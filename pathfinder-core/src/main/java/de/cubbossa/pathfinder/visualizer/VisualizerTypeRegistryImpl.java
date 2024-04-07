@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
@@ -66,10 +67,12 @@ public class VisualizerTypeRegistryImpl implements VisualizerTypeRegistry {
   @Override
   public <T extends PathVisualizer<?, ?>> void registerVisualizerType(VisualizerType<T> type) {
     visualizerTypes.put(type);
+    PathFinderProvider.get().getDisposer().register(this, type);
   }
 
   @Override
   public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type) {
+    PathFinderProvider.get().getDisposer().unregister(type);
     visualizerTypes.remove(type.getKey());
   }
 

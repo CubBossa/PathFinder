@@ -28,6 +28,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
@@ -70,7 +71,14 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
     return new LinkedHashMap<>();
   }
 
+  @ApiStatus.Internal
   public abstract VisualizerT createVisualizerInstance(NamespacedKey key);
+
+  public VisualizerT createVisualizer(NamespacedKey key) {
+    VisualizerT vis = createVisualizerInstance(key);
+    PathFinderProvider.get().getDisposer().register(this, vis);
+    return vis;
+  }
 
   @Override
   public void saveVisualizer(VisualizerT visualizer) {
@@ -78,8 +86,8 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
   }
 
   @Override
-  public VisualizerT createAndLoadVisualizer(NamespacedKey key) {
-    VisualizerT vis = createVisualizerInstance(key);
+  public VisualizerT createAndSaveVisualizer(NamespacedKey key) {
+    VisualizerT vis = createVisualizer(key);
     saveVisualizer(vis);
     return vis;
   }

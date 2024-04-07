@@ -1,10 +1,10 @@
 package de.cubbossa.pathapi.visualizer;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.PathPlayer;
-
 import java.util.Collection;
 
-public interface PathView<PlayerT> {
+public interface PathView<PlayerT> extends Disposable {
 
   PathPlayer<PlayerT> getTargetViewer();
 

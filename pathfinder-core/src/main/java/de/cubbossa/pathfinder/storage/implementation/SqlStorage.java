@@ -112,7 +112,7 @@ public abstract class SqlStorage extends AbstractStorage {
       AbstractVisualizerType<T> type) {
     return record -> {
       // create visualizer object
-      T visualizer = type.createVisualizerInstance(record.getKey());
+      T visualizer = type.createVisualizer(record.getKey());
       visualizer.setPermission(record.getPermission());
 
       // inject data from map
@@ -378,19 +378,6 @@ public abstract class SqlStorage extends AbstractStorage {
   }
 
   @Override
-  public Waypoint createAndLoadWaypoint(Location l) {
-    UUID uuid = UUID.randomUUID();
-    create
-        .insertInto(PATHFINDER_WAYPOINTS)
-        .values(uuid, l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
-            l.getZ())
-        .execute();
-    Waypoint waypoint = new Waypoint(uuid);
-    waypoint.setLocation(l);
-    return waypoint;
-  }
-
-  @Override
   public Optional<Waypoint> loadWaypoint(UUID uuid) {
     return create
         .selectFrom(PATHFINDER_WAYPOINTS)
@@ -417,12 +404,16 @@ public abstract class SqlStorage extends AbstractStorage {
   public void saveWaypoint(Waypoint waypoint) {
     create.transaction(configuration -> {
       var ctx = configuration.dsl();
-      ctx.update(PATHFINDER_WAYPOINTS)
-          .set(PATHFINDER_WAYPOINTS.X, waypoint.getLocation().getX())
-          .set(PATHFINDER_WAYPOINTS.Y, waypoint.getLocation().getY())
-          .set(PATHFINDER_WAYPOINTS.Z, waypoint.getLocation().getZ())
-          .set(PATHFINDER_WAYPOINTS.WORLD, waypoint.getLocation().getWorld().getUniqueId())
-          .where(PATHFINDER_WAYPOINTS.ID.eq(waypoint.getNodeId()))
+      Location l = waypoint.getLocation();
+      create
+          .insertInto(PATHFINDER_WAYPOINTS)
+          .values(waypoint.getNodeId(), l.getWorld() == null ? null : l.getWorld().getUniqueId(), l.getX(), l.getY(),
+              l.getZ())
+          .onDuplicateKeyUpdate()
+          .set(PATHFINDER_WAYPOINTS.X, l.getX())
+          .set(PATHFINDER_WAYPOINTS.Y, l.getY())
+          .set(PATHFINDER_WAYPOINTS.Z, l.getZ())
+          .set(PATHFINDER_WAYPOINTS.WORLD, l.getWorld().getUniqueId())
           .execute();
 
       for (Edge e : waypoint.getEdgeChanges().getAddList()) {

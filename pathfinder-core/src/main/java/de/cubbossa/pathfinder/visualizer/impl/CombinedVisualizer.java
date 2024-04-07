@@ -77,7 +77,6 @@ public class CombinedVisualizer extends
         .collect(Collectors.toMap(Keyed::getKey, v -> v.createView(nodes, (PathPlayer) player))));
   }
 
-
   @Getter
   public class CombinedView<T> extends AbstractVisualizer<CombinedView<T>, T>.AbstractView {
 

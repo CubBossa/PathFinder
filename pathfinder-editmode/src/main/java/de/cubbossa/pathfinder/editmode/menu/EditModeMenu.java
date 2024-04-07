@@ -18,7 +18,6 @@ import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -40,7 +39,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -219,7 +217,7 @@ public class EditModeMenu {
           Location pos = BukkitVectorUtils.toBukkit(VectorUtils.snap(BukkitVectorUtils.toInternal(orientation.location()), 2))
               .toLocation(block.getWorld()).add(orientation.direction().clone().multiply(.5f));
 
-          NodeStorageImplementation.Context c = new NodeStorageImplementation.Context(BukkitVectorUtils.toInternal(pos));
+          NodeType.Context c = new NodeType.Context(UUID.randomUUID(), BukkitVectorUtils.toInternal(pos));
           Collection<NodeType<?>> applicableTypes = types.stream()
               .filter(nodeType -> nodeType.canBeCreated(c))
               .toList();

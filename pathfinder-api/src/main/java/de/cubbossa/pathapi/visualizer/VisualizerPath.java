@@ -1,10 +1,9 @@
 package de.cubbossa.pathapi.visualizer;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.GroupedNode;
-
 import java.util.List;
-import java.util.TimerTask;
 import java.util.function.Supplier;
 
 /**

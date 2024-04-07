@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.node.implementation;
 
 import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathapi.node.Edge;
@@ -9,10 +8,13 @@ import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.node.AbstractNodeType;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
@@ -25,6 +27,12 @@ public class PlayerNode implements Node {
     @Override
     public boolean canBeCreated(Context context) {
       return false;
+    }
+
+    @Override
+    public PlayerNode createNodeInstance(Context context) {
+      throw new IllegalStateException("PlayerNodes are only part of runtime navigation and "
+          + "must be created from constructor.");
     }
 
     @Override

@@ -14,7 +14,6 @@ import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.CacheLayer;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import de.cubbossa.pathapi.storage.StorageAdapter;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.cache.StorageCache;
@@ -190,7 +189,7 @@ public class StorageAdapterImpl implements StorageAdapter {
   @Override
   public <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location) {
     return asyncFuture(() -> {
-      N node = type.createAndLoadNode(new NodeStorageImplementation.Context(location));
+      N node = type.createAndLoadNode(new NodeType.Context(UUID.randomUUID(), location));
       implementation.saveNodeTypeMapping(Map.of(node.getNodeId(), type));
       cache.getNodeTypeCache().write(node.getNodeId(), type);
 
@@ -585,7 +584,7 @@ public class StorageAdapterImpl implements StorageAdapter {
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     return saveVisualizerType(key, type).thenApplyAsync(u -> {
-      VisualizerT visualizer = type.createAndLoadVisualizer(key);
+      VisualizerT visualizer = type.createAndSaveVisualizer(key);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });

@@ -86,7 +86,7 @@ public class ExamplesLoader {
 
 
     if (type instanceof AbstractVisualizerType abstractType) {
-      VisualizerT visualizer = (VisualizerT) abstractType.createVisualizerInstance(name);
+      VisualizerT visualizer = (VisualizerT) abstractType.createVisualizer(name);
       abstractType.deserialize((AbstractVisualizer<?, ?>) visualizer, values);
       return visualizer;
     } else {
