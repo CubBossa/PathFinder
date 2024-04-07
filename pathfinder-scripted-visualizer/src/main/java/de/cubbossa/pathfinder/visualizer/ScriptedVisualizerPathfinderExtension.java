@@ -5,8 +5,9 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
-import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
+import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementationWrapper;
 import org.jetbrains.annotations.NotNull;
 
 @AutoService(PathFinderExtension.class)
@@ -25,7 +26,7 @@ public class ScriptedVisualizerPathfinderExtension extends PathFinderExtensionBa
   @Override
   public void onEnable(PathFinder pathPlugin) {
     if (pathPlugin.getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation storage) {
-      ADV_PARTICLE_VISUALIZER_TYPE.setStorage(new InternalVisualizerStorageImplementationImpl<>(storage));
+      ADV_PARTICLE_VISUALIZER_TYPE.setStorage(new VisualizerStorageImplementationWrapper<>(ADV_PARTICLE_VISUALIZER_TYPE, storage));
     }
   }
 }

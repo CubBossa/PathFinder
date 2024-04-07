@@ -15,7 +15,7 @@ public class TestVisualizerType extends AbstractVisualizerType<TestVisualizer> {
   }
 
   @Override
-  public TestVisualizer create(NamespacedKey key) {
+  public TestVisualizer createVisualizerInstance(NamespacedKey key) {
     return new TestVisualizer(key);
   }
 

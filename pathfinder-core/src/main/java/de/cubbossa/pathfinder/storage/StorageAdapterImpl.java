@@ -585,7 +585,7 @@ public class StorageAdapterImpl implements StorageAdapter {
   public <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
       VisualizerType<VisualizerT> type, NamespacedKey key) {
     return saveVisualizerType(key, type).thenApplyAsync(u -> {
-      VisualizerT visualizer = type.getStorage().createAndLoadVisualizer(type, key);
+      VisualizerT visualizer = type.createAndLoadVisualizer(key);
       cache.getVisualizerCache().write(visualizer);
       return visualizer;
     });
@@ -609,7 +609,7 @@ public class StorageAdapterImpl implements StorageAdapter {
     return cached
         .map(CompletableFuture::completedFuture)
         .orElseGet(() -> asyncFuture(() -> {
-          Collection<VisualizerT> visualizers = type.getStorage().loadVisualizers(type).values();
+          Collection<VisualizerT> visualizers = type.loadVisualizers().values();
           cache.getVisualizerCache().writeAll(type, visualizers);
           return visualizers;
         }));
@@ -625,7 +625,7 @@ public class StorageAdapterImpl implements StorageAdapter {
       if (type.isEmpty()) {
         return Optional.empty();
       }
-      Optional<VisualizerT> loaded = type.get().getStorage().loadVisualizer(type.get(), key);
+      Optional<VisualizerT> loaded = type.get().loadVisualizer(key);
       loaded.ifPresent(visualizer -> cache.getVisualizerCache().write(visualizer));
       return loaded;
     });
@@ -634,26 +634,18 @@ public class StorageAdapterImpl implements StorageAdapter {
   @Override
   public CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer) {
     return loadVisualizerType(visualizer.getKey()).thenAccept(opt -> opt.ifPresent(t -> {
-      saveVisualizerUnsafe(t, visualizer);
+      t.saveVisualizer(visualizer);
       cache.getVisualizerCache().write(visualizer);
     }));
-  }
-
-  private void saveVisualizerUnsafe(VisualizerType type, PathVisualizer visualizer) {
-    type.getStorage().saveVisualizer(type, visualizer);
   }
 
   @Override
   public CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer) {
     return loadVisualizerType(visualizer.getKey()).thenAccept(opt -> opt.ifPresent(type -> {
-      deleteVisualizerUnsafe(type, visualizer);
+      type.deleteVisualizer(visualizer);
       cache.getVisualizerCache().invalidate(visualizer);
       implementation.deleteVisualizerTypeMapping(Set.of(visualizer.getKey()));
     }));
-  }
-
-  private void deleteVisualizerUnsafe(VisualizerType type, PathVisualizer vis) {
-    type.getStorage().deleteVisualizer(type, vis);
   }
 
   public <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier) {

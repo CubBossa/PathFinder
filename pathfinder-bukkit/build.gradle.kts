@@ -208,8 +208,8 @@ tasks {
             include(dependency("org.bstats:.*"))
             include(dependency("xyz.xenondevs:particle:.*"))
             include(dependency("dev.jorel:commandapi-bukkit-shade:.*"))
-            include(dependency("com.github.Exlll.ConfigLib:configlib-yaml:.*"))
-            include(dependency("com.github.Exlll.ConfigLib:configlib-core:.*"))
+            include(dependency("de.exlll:configlib-yaml:.*"))
+            include(dependency("de.exlll:configlib-core:.*"))
             include(dependency("org.flywaydb:flyway-core:.*"))
         }
 

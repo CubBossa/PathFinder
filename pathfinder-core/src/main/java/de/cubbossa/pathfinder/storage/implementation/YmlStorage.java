@@ -12,7 +12,6 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.EdgeImpl;
@@ -20,6 +19,8 @@ import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.util.CollectionUtils;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -462,43 +463,35 @@ public abstract class YmlStorage extends AbstractStorage {
     });
   }
 
-  private <VisualizerT extends PathVisualizer<?, ?>> void writeInternalVisualizer(VisualizerType<VisualizerT> type,
-                                                                                  VisualizerT visualizer) {
+  private <VisualizerT extends AbstractVisualizer<?, ?>> void writeInternalVisualizer(AbstractVisualizerType<VisualizerT> type,
+                                                                                      VisualizerT visualizer) {
     workOnFile(fileVisualizer(visualizer.getKey()), cfg -> {
       cfg.set("type", type.getKey().toString());
       type.serialize(visualizer).forEach(cfg::set);
     });
   }
 
-  private <T extends PathVisualizer<?, ?>> T readInternalVisualizer(VisualizerType<T> type,
+  private <T extends AbstractVisualizer<?, ?>> T readInternalVisualizer(AbstractVisualizerType<T> type,
                                                                     NamespacedKey key,
                                                                     ConfigurationSection cfg) {
     if (type == null) {
       throw new IllegalStateException("Invalid visualizer type: " + cfg.getString("type"));
     }
-    T vis = type.create(key);
+    T vis = type.createAndLoadVisualizer(key);
     Map<String, Object> values = (Map<String, Object>) cfg.get("props");
     type.deserialize(vis, values == null ? new HashMap<>() : values);
     return vis;
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(
-      VisualizerType<VisualizerT> type, NamespacedKey key) {
-    VisualizerT visualizer = type.create(key);
-    writeInternalVisualizer(type, visualizer);
-    return visualizer;
-  }
-
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(
-      VisualizerType<VisualizerT> type, NamespacedKey key) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(
+      AbstractVisualizerType<VisualizerT> type, NamespacedKey key) {
     return workOnFileIfExists(fileVisualizer(key), cfg -> readInternalVisualizer(type, key, cfg));
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(
-      VisualizerType<VisualizerT> type) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(
+      AbstractVisualizerType<VisualizerT> type) {
     Collection<NamespacedKey> keys = new HashSet<>();
     workOnFile(fileVisualizerTypes(), cfg -> {
       String typeString = type.getKey().toString();
@@ -517,13 +510,13 @@ public abstract class YmlStorage extends AbstractStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type,
+  public <VisualizerT extends AbstractVisualizer<?, ?>> void saveInternalVisualizer(AbstractVisualizerType<VisualizerT> type,
                                                                                 VisualizerT visualizer) {
     writeInternalVisualizer(type, visualizer);
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> void deleteInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer) {
     File file = new File(pathVisualizerDir, toFileName(visualizer.getKey()));
     file.deleteOnExit();
   }

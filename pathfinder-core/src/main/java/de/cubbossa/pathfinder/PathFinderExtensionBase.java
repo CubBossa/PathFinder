@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.visualizer;
+package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathapi.PathFinderExtension;
 import lombok.Getter;

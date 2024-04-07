@@ -5,19 +5,19 @@ import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
-import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
+import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementationWrapper;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -33,48 +33,70 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
  * VisualizerTypes contain multiple methods to manage visualizers with common properties.
  * This includes the edit command, serialization and deserialization.
  *
- * @param <T> The class of the Visualizer. This can also be a common parent class or interface.
+ * @param <VisualizerT> The class of the Visualizer. This can also be a common parent class or interface.
  */
 @Getter
 @Setter
-public abstract class AbstractVisualizerType<T extends PathVisualizer<?, ?>>
-    implements VisualizerType<T> {
+public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisualizer<?, ?>>
+    implements VisualizerType<VisualizerT> {
 
   /**
    * The NamespacedKey of this visualizer that is used as type identifier when loading data.
    */
   private final NamespacedKey key;
-  private VisualizerStorageImplementation<T> storage = null;
+  private VisualizerStorageImplementationWrapper<VisualizerT> storage = null;
 
   public AbstractVisualizerType(NamespacedKey key) {
     this.key = key;
   }
 
-  @Override
-  public VisualizerStorageImplementation<T> getStorage() {
+  public VisualizerStorageImplementationWrapper<VisualizerT> getStorage() {
     // TODO cache pls
     PathFinder pathFinder = PathFinderProvider.get();
     if (pathFinder == null || pathFinder.getStorage() == null) {
       return null;
     }
     if (PathFinderProvider.get().getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation visStorage) {
-      setStorage(new InternalVisualizerStorageImplementationImpl<>(visStorage));
+      setStorage(new VisualizerStorageImplementationWrapper<>(this, visStorage));
     }
     return storage;
   }
 
-  @Override
-  public String getCommandName() {
-    return key.getKey();
+  public void deserialize(VisualizerT visualizer, Map<String, Object> values) {
+
   }
 
-  @Override
-  public void deserialize(final T visualizer, Map<String, Object> values) {
-  }
-
-  @Override
-  public Map<String, Object> serialize(T visualizer) {
+  public Map<String, Object> serialize(VisualizerT visualizer) {
     return new LinkedHashMap<>();
+  }
+
+  public abstract VisualizerT createVisualizerInstance(NamespacedKey key);
+
+  @Override
+  public void saveVisualizer(VisualizerT visualizer) {
+    getStorage().saveVisualizer(visualizer);
+  }
+
+  @Override
+  public VisualizerT createAndLoadVisualizer(NamespacedKey key) {
+    VisualizerT vis = createVisualizerInstance(key);
+    saveVisualizer(vis);
+    return vis;
+  }
+
+  @Override
+  public Map<NamespacedKey, VisualizerT> loadVisualizers() {
+    return getStorage().loadVisualizers();
+  }
+
+  @Override
+  public Optional<VisualizerT> loadVisualizer(NamespacedKey key) {
+    return getStorage().loadVisualizer(key);
+  }
+
+  @Override
+  public void deleteVisualizer(VisualizerT visualizer) {
+    getStorage().deleteVisualizer(visualizer);
   }
 
   public <V extends PathVisualizer<?, ?>, T2> void setProperty(PathPlayer<?> sender, V visualizer,

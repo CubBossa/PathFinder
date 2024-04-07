@@ -40,7 +40,7 @@ public class PlaceholderVisualizerType
   }
 
   @Override
-  public PlaceholderVisualizer create(NamespacedKey key) {
+  public PlaceholderVisualizer createVisualizerInstance(NamespacedKey key) {
     return new PlaceholderVisualizer(key);
   }
 

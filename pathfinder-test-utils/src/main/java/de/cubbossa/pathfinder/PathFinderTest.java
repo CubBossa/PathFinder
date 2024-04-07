@@ -33,8 +33,8 @@ import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.StorageAdapterImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
-import de.cubbossa.pathfinder.storage.implementation.InternalVisualizerStorageImplementationImpl;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
+import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementationWrapper;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import java.io.File;
 import java.util.Collection;
@@ -243,7 +243,7 @@ public abstract class PathFinderTest {
 
     visualizerType = new TestVisualizerType();
     InternalVisualizerStorageImplementation visualizerDataStorage = (InternalVisualizerStorageImplementation) implementation;
-    visualizerType.setStorage(new InternalVisualizerStorageImplementationImpl<>(visualizerDataStorage));
+    visualizerType.setStorage(new VisualizerStorageImplementationWrapper<>(visualizerType, visualizerDataStorage));
 
     storage.init();
     globalGroup = storage.createGlobalNodeGroup(visualizerType).join();

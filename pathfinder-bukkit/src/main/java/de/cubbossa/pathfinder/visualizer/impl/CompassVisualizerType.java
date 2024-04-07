@@ -23,7 +23,7 @@ public class CompassVisualizerType extends IntervalVisualizerType<CompassVisuali
   }
 
   @Override
-  public CompassVisualizer create(NamespacedKey key) {
+  public CompassVisualizer createVisualizerInstance(NamespacedKey key) {
     CompassVisualizer visualizer = new CompassVisualizer(key);
     visualizer.setInterval(1);
     return visualizer;

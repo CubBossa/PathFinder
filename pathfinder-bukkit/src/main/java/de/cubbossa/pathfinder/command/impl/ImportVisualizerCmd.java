@@ -7,7 +7,7 @@ import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.examples.ExamplesLoader;
-import de.cubbossa.pathfinder.examples.ExamplesReader;
+import de.cubbossa.pathfinder.examples.ExamplesFileReader;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
@@ -31,7 +31,7 @@ public class ImportVisualizerCmd extends PathFinderSubCommand {
         .replaceSuggestions((suggestionInfo, suggestionsBuilder) -> {
           return loader.getExampleFiles().thenApply(files -> {
             files.stream()
-                .map(ExamplesReader.ExampleFile::name)
+                .map(ExamplesFileReader.ExampleFile::name)
                 .forEach(suggestionsBuilder::suggest);
             suggestionsBuilder.suggest("*");
             return suggestionsBuilder.build();
@@ -54,7 +54,7 @@ public class ImportVisualizerCmd extends PathFinderSubCommand {
     );
   }
 
-  private CompletableFuture<Void> importVisualizer(CommandSender commandSender, ExamplesReader.ExampleFile exampleFile) {
+  private CompletableFuture<Void> importVisualizer(CommandSender commandSender, ExamplesFileReader.ExampleFile exampleFile) {
     if (exampleFile == null) {
       BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_NOT_EXISTS);
       return CompletableFuture.completedFuture(null);

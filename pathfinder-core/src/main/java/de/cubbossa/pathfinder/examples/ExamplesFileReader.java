@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
-public class ExamplesReader {
+public class ExamplesFileReader {
 
   public CompletableFuture<Collection<ExampleFile>> getExamples(String link) {
     return CompletableFuture.supplyAsync(() -> {

@@ -33,7 +33,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
   }
 
   @Override
-  public CombinedVisualizer create(NamespacedKey key) {
+  public CombinedVisualizer createVisualizerInstance(NamespacedKey key) {
     return new CombinedVisualizer(key);
   }
 

@@ -4,6 +4,8 @@ import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.io.StringReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -19,21 +21,29 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class ExamplesLoader {
 
-  private static final String LINK = "https://api.github.com/repos/CubBossa/PathFinder/contents/examples";
-  private final List<ExamplesReader.ExampleFile> files = new ArrayList<>();
-  private final ExamplesReader reader;
+  private static final String COMMON_REPO = "https://api.github.com/repos/CubBossa/PathFinder/contents/examples";
+
+  private final String url;
+  private final List<ExamplesFileReader.ExampleFile> files;
+  private final ExamplesFileReader reader;
   private final VisualizerTypeRegistry registry;
   @Getter
   private boolean cached = false;
 
-  public ExamplesLoader(VisualizerTypeRegistry registry) {
+  public ExamplesLoader(VisualizerTypeRegistry registry, String url) {
     this.registry = registry;
-    reader = new ExamplesReader();
+    this.reader = new ExamplesFileReader();
+    this.files = new ArrayList<>();
+    this.url = url;
   }
 
-  public CompletableFuture<Collection<ExamplesReader.ExampleFile>> getExampleFiles() {
+  public ExamplesLoader(VisualizerTypeRegistry registry) {
+    this(registry, COMMON_REPO);
+  }
+
+  public CompletableFuture<Collection<ExamplesFileReader.ExampleFile>> getExampleFiles() {
     if (!cached) {
-      return reader.getExamples(LINK).thenApply(exampleFiles -> {
+      return reader.getExamples(url).thenApply(exampleFiles -> {
         this.files.addAll(exampleFiles);
         cached = true;
         return new HashSet<>(this.files);
@@ -53,29 +63,34 @@ public class ExamplesLoader {
   }
 
   public <V extends PathVisualizer<?, ?>>
-  CompletableFuture<Map.Entry<V, VisualizerType<V>>> loadVisualizer(ExamplesReader.ExampleFile file) {
+  CompletableFuture<Map.Entry<V, VisualizerType<V>>> loadVisualizer(ExamplesFileReader.ExampleFile file) {
     return reader.read(file.fetchUrl()).thenApply(s -> {
       Map<String, Object> values = YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
       String typeString = (String) values.get("type");
       Optional<VisualizerType<V>> type = registry.<V>getType(NamespacedKey.fromString(typeString));
       if (type.isEmpty()) {
         throw new RuntimeException(
-            "Could not parse visualizer of type '" + typeString + "'. Are you missing some additional plugins?");
+            "Could not load visualizer of type '" + typeString + "'. Make sure that required PathFinder extensions are installed.");
       }
       return new AbstractMap.SimpleEntry<>(parse(file, type.get(), values), type.get());
     });
   }
 
   private <VisualizerT extends PathVisualizer<?, ?>> VisualizerT parse(
-      ExamplesReader.ExampleFile file, VisualizerType<VisualizerT> type,
+      ExamplesFileReader.ExampleFile file, VisualizerType<VisualizerT> type,
       Map<String, Object> values
   ) {
     NamespacedKey name = NamespacedKey.fromString(file.name()
         .replace(".yml", "")
         .replace("$", ":"));
 
-    VisualizerT visualizer = type.create(name);
-    type.deserialize(visualizer, values);
-    return visualizer;
+
+    if (type instanceof AbstractVisualizerType abstractType) {
+      VisualizerT visualizer = (VisualizerT) abstractType.createVisualizerInstance(name);
+      abstractType.deserialize((AbstractVisualizer<?, ?>) visualizer, values);
+      return visualizer;
+    } else {
+      throw new RuntimeException("Only visualizers of a type that extends 'AbstractVisualizerType' can be loaded from yml files.");
+    }
   }
 }

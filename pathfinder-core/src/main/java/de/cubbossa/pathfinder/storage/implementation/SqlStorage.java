@@ -20,7 +20,6 @@ import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.node.NodeTypeRegistry;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
@@ -32,6 +31,8 @@ import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.HashedRegistry;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -107,11 +108,11 @@ public abstract class SqlStorage extends AbstractStorage {
 
   public abstract DataSource getDataSource();
 
-  private <T extends PathVisualizer<?, ?>> RecordMapper<PathfinderVisualizerRecord, T> visualizerMapper(
-      VisualizerType<T> type) {
+  private <T extends AbstractVisualizer<?, ?>> RecordMapper<PathfinderVisualizerRecord, T> visualizerMapper(
+      AbstractVisualizerType<T> type) {
     return record -> {
       // create visualizer object
-      T visualizer = type.create(record.getKey());
+      T visualizer = type.createVisualizerInstance(record.getKey());
       visualizer.setPermission(record.getPermission());
 
       // inject data from map
@@ -704,33 +705,7 @@ public abstract class SqlStorage extends AbstractStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> T createAndLoadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
-    T visualizer = type.create(key);
-    Map<String, Object> data = type.serialize(visualizer);
-    if (data == null) {
-      throw new IllegalStateException("Could not serialize internal visualizer '" + key + "', data is null.");
-    }
-    YamlConfiguration cfg = new YamlConfiguration();
-    data.forEach(cfg::set);
-    String dataString = cfg.saveToString();
-
-    create
-        .insertInto(PATHFINDER_VISUALIZER)
-        .columns(
-            PATHFINDER_VISUALIZER.KEY,
-            PATHFINDER_VISUALIZER.TYPE,
-            PATHFINDER_VISUALIZER.PERMISSION,
-            PATHFINDER_VISUALIZER.DATA
-        )
-        .values(
-            visualizer.getKey(), type.getKey(), visualizer.getPermission(), dataString
-        )
-        .execute();
-    return visualizer;
-  }
-
-  @Override
-  public <T extends PathVisualizer<?, ?>> Optional<T> loadInternalVisualizer(VisualizerType<T> type, NamespacedKey key) {
+  public <T extends AbstractVisualizer<?, ?>> Optional<T> loadInternalVisualizer(AbstractVisualizerType<T> type, NamespacedKey key) {
     return create
         .selectFrom(PATHFINDER_VISUALIZER)
         .where(PATHFINDER_VISUALIZER.KEY.eq(key))
@@ -739,7 +714,7 @@ public abstract class SqlStorage extends AbstractStorage {
   }
 
   @Override
-  public <T extends PathVisualizer<?, ?>> Map<NamespacedKey, T> loadInternalVisualizers(VisualizerType<T> type) {
+  public <T extends AbstractVisualizer<?, ?>> Map<NamespacedKey, T> loadInternalVisualizers(AbstractVisualizerType<T> type) {
     HashedRegistry<T> registry = new HashedRegistry<>();
     create
         .selectFrom(PATHFINDER_VISUALIZER)
@@ -751,8 +726,8 @@ public abstract class SqlStorage extends AbstractStorage {
 
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>>
-  void saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>>
+  void saveInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer) {
     Map<String, Object> data = type.serialize(visualizer);
     if (data == null) {
       return;
@@ -774,7 +749,7 @@ public abstract class SqlStorage extends AbstractStorage {
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> void deleteInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer) {
     create
         .deleteFrom(PATHFINDER_VISUALIZER)
         .where(PATHFINDER_VISUALIZER.KEY.eq(visualizer.getKey()))

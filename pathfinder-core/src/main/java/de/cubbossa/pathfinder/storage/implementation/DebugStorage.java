@@ -10,11 +10,12 @@ import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.DiscoverInfo;
 import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathapi.storage.WorldLoader;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -263,16 +264,7 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerT createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
-    debug("> createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
-    var x = implementation instanceof InternalVisualizerStorageImplementation vs ?
-        vs.createAndLoadInternalVisualizer(type, key) : null;
-    debug("< createAndLoadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
-    return x;
-  }
-
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(AbstractVisualizerType<VisualizerT> type, NamespacedKey key) {
     debug("> loadInternalVisualizer(VisualizerType<VisualizerT> type, NamespacedKey key)");
     Optional<VisualizerT> x = implementation instanceof InternalVisualizerStorageImplementation vs ?
         vs.loadInternalVisualizer(type, key) : Optional.empty();
@@ -281,7 +273,7 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(VisualizerType<VisualizerT> type) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(AbstractVisualizerType<VisualizerT> type) {
     debug("> loadInternalVisualizers(VisualizerType<VisualizerT> type)");
     Map<NamespacedKey, VisualizerT> x = implementation instanceof InternalVisualizerStorageImplementation vs ?
         vs.loadInternalVisualizers(type) : new HashMap<>();
@@ -290,7 +282,7 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> void saveInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer) {
     debug("> saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer)");
     if (implementation instanceof InternalVisualizerStorageImplementation vs) {
       debug("< saveInternalVisualizer(VisualizerType<VisualizerT> type, VisualizerT visualizer)");
@@ -299,11 +291,11 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   }
 
   @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void deleteInternalVisualizer(VisualizerT visualizer) {
+  public <VisualizerT extends AbstractVisualizer<?, ?>> void deleteInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer) {
     debug("> deleteInternalVisualizer(VisualizerT visualizer)");
     if (implementation instanceof InternalVisualizerStorageImplementation vs) {
       debug("< deleteInternalVisualizer(VisualizerT visualizer)");
-      vs.deleteInternalVisualizer(visualizer);
+      vs.deleteInternalVisualizer(type, visualizer);
     }
   }
 
