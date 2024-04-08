@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.command.util;
 
-import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;

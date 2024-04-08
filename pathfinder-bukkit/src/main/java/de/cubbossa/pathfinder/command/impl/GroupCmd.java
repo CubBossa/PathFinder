@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.command.impl;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;

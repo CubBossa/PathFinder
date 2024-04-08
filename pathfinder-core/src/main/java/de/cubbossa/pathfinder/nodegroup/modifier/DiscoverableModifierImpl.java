@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.group.Modifier;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 

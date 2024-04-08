@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommandRegistry;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.HashMap;
 import java.util.Map;

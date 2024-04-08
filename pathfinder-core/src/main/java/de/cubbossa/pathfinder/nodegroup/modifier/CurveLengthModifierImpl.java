@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.CurveLengthModifier;
-import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathfinder.group.CurveLengthModifier;
+import de.cubbossa.pathfinder.group.Modifier;
 
 public record CurveLengthModifierImpl(double curveLength) implements CurveLengthModifier {
 

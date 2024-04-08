@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;

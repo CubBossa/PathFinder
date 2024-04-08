@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;

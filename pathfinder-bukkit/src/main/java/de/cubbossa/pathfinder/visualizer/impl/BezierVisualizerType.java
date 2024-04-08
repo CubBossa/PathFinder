@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.DoubleArgument;

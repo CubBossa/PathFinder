@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.CurveLengthModifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.CurveLengthModifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.World;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;

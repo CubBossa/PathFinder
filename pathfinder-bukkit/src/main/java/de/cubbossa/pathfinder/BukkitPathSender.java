@@ -1,8 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;

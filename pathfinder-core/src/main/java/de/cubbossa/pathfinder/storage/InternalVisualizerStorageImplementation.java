@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.Map;

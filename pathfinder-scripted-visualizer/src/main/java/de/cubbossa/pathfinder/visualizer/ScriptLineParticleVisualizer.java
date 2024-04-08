@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.AdvancedParticleVisualizer;
 import lombok.Getter;

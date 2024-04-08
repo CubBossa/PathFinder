@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.util;
 
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
-import de.cubbossa.pathapi.misc.GraphEntrySolver;
-import de.cubbossa.pathapi.misc.Vector;
-import de.cubbossa.pathapi.node.GroupedNode;
+import de.cubbossa.pathfinder.misc.GraphEntrySolver;
+import de.cubbossa.pathfinder.misc.Vector;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

@@ -1,8 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.ExtensionsRegistry;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
 import java.util.logging.Level;
 

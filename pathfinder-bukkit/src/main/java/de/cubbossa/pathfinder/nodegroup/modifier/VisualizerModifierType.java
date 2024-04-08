@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.group.VisualizerModifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.group.VisualizerModifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;

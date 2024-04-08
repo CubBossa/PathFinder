@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;

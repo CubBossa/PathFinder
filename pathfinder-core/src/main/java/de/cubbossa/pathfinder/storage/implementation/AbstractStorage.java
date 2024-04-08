@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathapi.storage.WorldLoader;
-import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.group.ModifierRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.storage.WorldLoader;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
 import java.util.logging.Logger;

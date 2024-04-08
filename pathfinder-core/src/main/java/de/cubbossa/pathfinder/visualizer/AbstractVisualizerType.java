@@ -1,12 +1,10 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;

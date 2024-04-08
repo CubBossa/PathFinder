@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.events.visualizer;
 
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.Event;

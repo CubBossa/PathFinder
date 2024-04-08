@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathfinder.PathFinder;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 
 public class PathFinderSubCommand extends LiteralArgument {

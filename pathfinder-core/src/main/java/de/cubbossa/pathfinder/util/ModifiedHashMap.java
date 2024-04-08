@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathapi.Changes;
+import de.cubbossa.pathfinder.Changes;
 import lombok.Getter;
 
 import java.util.Collection;

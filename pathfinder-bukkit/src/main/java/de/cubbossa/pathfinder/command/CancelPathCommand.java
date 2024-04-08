@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;

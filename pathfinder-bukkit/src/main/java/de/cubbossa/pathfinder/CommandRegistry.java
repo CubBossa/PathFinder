@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathfinder.command.FindPlayerManager;
 import de.cubbossa.pathfinder.command.PathFinderCommand;
 import dev.jorel.commandapi.CommandAPI;

@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderExtension;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderExtension;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;

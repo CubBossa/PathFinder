@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathapi.misc.Range;
+import de.cubbossa.pathfinder.misc.Range;
 import lombok.experimental.UtilityClass;
 
 import java.util.*;

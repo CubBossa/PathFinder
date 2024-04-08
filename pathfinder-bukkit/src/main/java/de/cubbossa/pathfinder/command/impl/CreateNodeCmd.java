@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.command.impl;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;

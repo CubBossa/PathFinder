@@ -1,18 +1,18 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.ModifierRegistry;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.Keyed;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Range;
+import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.NodeType;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
@@ -521,7 +521,7 @@ public abstract class YmlStorage extends AbstractStorage {
   }
 
   /**
-   * don't deal with edges and groups, are introduced by {@link de.cubbossa.pathapi.storage.Storage#loadNode(UUID)}
+   * don't deal with edges and groups, are introduced by {@link de.cubbossa.pathfinder.storage.Storage#loadNode(UUID)}
    */
   private Optional<Waypoint> readWaypoint(YamlConfiguration cfg, UUID id) {
 
@@ -533,8 +533,8 @@ public abstract class YmlStorage extends AbstractStorage {
     double y = sec.getDouble("y");
     double z = sec.getDouble("z");
     UUID world = UUID.fromString(sec.getString("world"));
-    de.cubbossa.pathapi.misc.Location location =
-        new de.cubbossa.pathapi.misc.Location(x, y, z, worldLoader.loadWorld(world));
+    de.cubbossa.pathfinder.misc.Location location =
+        new de.cubbossa.pathfinder.misc.Location(x, y, z, worldLoader.loadWorld(world));
 
     Waypoint waypoint = new Waypoint(id);
     waypoint.setLocation(location);

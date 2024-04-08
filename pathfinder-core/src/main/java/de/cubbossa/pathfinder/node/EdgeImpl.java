@@ -1,9 +1,7 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;

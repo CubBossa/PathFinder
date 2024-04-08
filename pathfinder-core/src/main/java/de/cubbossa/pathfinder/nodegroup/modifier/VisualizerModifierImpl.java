@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.VisualizerModifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.VisualizerModifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

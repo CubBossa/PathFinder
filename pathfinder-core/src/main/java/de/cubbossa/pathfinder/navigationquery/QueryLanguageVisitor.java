@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.navigationquery;
 
-import de.cubbossa.pathapi.visualizer.query.SearchQueryAttribute;
-import de.cubbossa.pathapi.visualizer.query.SearchTermHolder;
+import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
 import de.cubbossa.pathfinder.antlr.QueryLanguageBaseVisitor;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
 import java.util.ArrayList;

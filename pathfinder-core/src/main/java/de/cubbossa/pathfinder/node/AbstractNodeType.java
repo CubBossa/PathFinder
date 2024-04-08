@@ -1,9 +1,7 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.NodeStorageImplementation;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.storage.NodeStorageImplementation;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;

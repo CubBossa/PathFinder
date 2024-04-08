@@ -1,8 +1,6 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.node.GroupedNode;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.Collection;
 import java.util.HashSet;

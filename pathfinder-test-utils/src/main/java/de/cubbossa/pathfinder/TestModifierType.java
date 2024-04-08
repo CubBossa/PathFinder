@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import java.io.IOException;
 import java.util.Map;
 import org.pf4j.Extension;

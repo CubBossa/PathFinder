@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 
 public record TestModifier(String data) implements Modifier {
   @Override

@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.nodegroup;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.misc.KeyedRegistry;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.ModifierRegistry;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;

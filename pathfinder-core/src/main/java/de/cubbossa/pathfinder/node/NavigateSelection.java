@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.node.Node;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

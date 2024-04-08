@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import lombok.Getter;
 import lombok.Setter;

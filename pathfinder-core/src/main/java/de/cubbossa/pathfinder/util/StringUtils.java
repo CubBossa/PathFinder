@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.dump.DumpWriter;
-import de.cubbossa.pathapi.dump.DumpWriterProvider;
+import de.cubbossa.pathfinder.dump.DumpWriter;
+import de.cubbossa.pathfinder.dump.DumpWriterProvider;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;

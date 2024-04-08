@@ -5,8 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import de.cubbossa.pathapi.dump.DumpWriter;
-import de.cubbossa.pathapi.dump.DumpWriterProvider;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
 import java.awt.Color;
 import java.io.File;

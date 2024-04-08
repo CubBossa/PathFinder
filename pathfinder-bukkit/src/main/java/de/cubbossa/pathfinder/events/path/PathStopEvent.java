@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.path;
 
-import de.cubbossa.pathapi.event.PathStoppedEvent;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.event.PathStoppedEvent;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathPlayer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPathImpl;
 import lombok.Getter;

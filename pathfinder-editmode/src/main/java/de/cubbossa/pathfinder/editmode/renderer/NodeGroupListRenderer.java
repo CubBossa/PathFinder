@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.cliententities.PlayerSpace;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.editor.GraphRenderer;
-import de.cubbossa.pathapi.event.NodeGroupSaveEvent;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.editor.GraphRenderer;
+import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,7 +59,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   private final double angleDot;
   private final double distanceSquared;
 
-  private final de.cubbossa.pathapi.event.Listener<?> groupChangeListener;
+  private final de.cubbossa.pathfinder.event.Listener<?> groupChangeListener;
 
   public NodeGroupListRenderer(Plugin plugin, double angle, double distance) {
     this.plugin = plugin;

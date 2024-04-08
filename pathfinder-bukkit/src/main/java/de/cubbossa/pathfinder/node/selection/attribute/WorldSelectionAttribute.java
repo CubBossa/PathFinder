@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.node.selection.attribute;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser;
 import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute;
 import de.cubbossa.pathfinder.util.SelectionParser;

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.PermissionModifier;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.PermissionModifier;
 
 public record PermissionModifierImpl(String permission) implements PermissionModifier {
 

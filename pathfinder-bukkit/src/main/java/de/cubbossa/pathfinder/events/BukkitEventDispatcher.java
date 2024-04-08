@@ -1,17 +1,17 @@
 package de.cubbossa.pathfinder.events;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.event.Listener;
-import de.cubbossa.pathapi.event.*;
-import de.cubbossa.pathapi.group.DiscoverProgressModifier;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.event.Listener;
+import de.cubbossa.pathfinder.event.*;
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
@@ -65,7 +65,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
     classMapping.put(NodeGroupDeleteEvent.class, GroupDeleteEvent.class);
     classMapping.put(NodeGroupSaveEvent.class, GroupSaveEvent.class);
 
-    classMapping.put(de.cubbossa.pathapi.event.PathStartEvent.class, PathStartEvent.class);
+    classMapping.put(de.cubbossa.pathfinder.event.PathStartEvent.class, PathStartEvent.class);
     classMapping.put(PathCancelledEvent.class, PathCancelEvent.class);
     classMapping.put(PathStoppedEvent.class, PathStopEvent.class);
     classMapping.put(PathTargetReachedEvent.class, PathTargetFoundEvent.class);

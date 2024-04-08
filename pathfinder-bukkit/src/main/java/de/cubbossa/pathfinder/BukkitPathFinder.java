@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.disposables.Disposer;
 import de.cubbossa.disposablesbukkit.BukkitDisposer;
-import de.cubbossa.pathapi.event.EventDispatcher;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.misc.Task;
-import de.cubbossa.pathapi.misc.World;
+import de.cubbossa.pathfinder.event.EventDispatcher;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.Task;
+import de.cubbossa.pathfinder.misc.World;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.BukkitEffects;
 import de.cubbossa.pathfinder.listener.PlayerListener;

@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.editor.GraphEditor;
-import de.cubbossa.pathapi.editor.GraphEditorFactory;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.editor.GraphEditor;
+import de.cubbossa.pathfinder.editor.GraphEditorFactory;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.nodegroup.NoImplGraphEditor;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
 import java.util.HashMap;

@@ -1,16 +1,15 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.StorageImplementation;
-import de.cubbossa.pathapi.storage.WorldLoader;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Range;
+import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.NodeType;
+import de.cubbossa.pathfinder.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.storage.WorldLoader;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;

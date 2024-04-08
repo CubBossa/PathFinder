@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.dump;
 
 import com.google.gson.Gson;
-import de.cubbossa.pathapi.dump.DumpWriterProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

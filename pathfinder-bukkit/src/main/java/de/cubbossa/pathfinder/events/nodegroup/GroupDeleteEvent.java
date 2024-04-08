@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
-import de.cubbossa.pathapi.event.NodeGroupDeleteEvent;
-import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;

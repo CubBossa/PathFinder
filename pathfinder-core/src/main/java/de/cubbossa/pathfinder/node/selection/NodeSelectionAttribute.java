@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.node.selection;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.suggestion.Suggestion;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.SelectionParser;
 import java.util.Collection;
 import java.util.Collections;

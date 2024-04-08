@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.module;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderExtension;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderExtension;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.DiscoveriesCommand;

@@ -1,10 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderConfig;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.storage.DatabaseType;
+import de.cubbossa.pathfinder.storage.DatabaseType;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import lombok.Getter;

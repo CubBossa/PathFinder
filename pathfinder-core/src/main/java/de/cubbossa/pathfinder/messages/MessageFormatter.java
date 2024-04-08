@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.messages;
 
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Vector;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Vector;
+import de.cubbossa.pathfinder.node.Node;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.minimessage.MiniMessage;

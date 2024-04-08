@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.FindDistanceModifier;
-import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathfinder.group.FindDistanceModifier;
+import de.cubbossa.pathfinder.group.Modifier;
 
 public record FindDistanceModifierImpl(double distance) implements Modifier, FindDistanceModifier {
 

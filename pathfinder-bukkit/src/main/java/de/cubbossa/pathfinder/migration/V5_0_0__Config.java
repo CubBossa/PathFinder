@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.migration;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import java.io.File;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.flywaydb.core.api.migration.BaseJavaMigration;

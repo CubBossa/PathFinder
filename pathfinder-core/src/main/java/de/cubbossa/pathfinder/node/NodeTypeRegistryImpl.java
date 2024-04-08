@@ -1,12 +1,9 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.KeyedRegistry;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.misc.KeyedRegistry;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
 import de.cubbossa.pathfinder.util.HashedRegistry;
 import java.util.Collection;

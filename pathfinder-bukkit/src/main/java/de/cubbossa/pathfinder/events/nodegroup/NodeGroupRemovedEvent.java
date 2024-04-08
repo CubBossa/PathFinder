@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import lombok.Getter;
 import lombok.Setter;

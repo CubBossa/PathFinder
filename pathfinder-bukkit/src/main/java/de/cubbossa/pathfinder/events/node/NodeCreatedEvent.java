@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathapi.event.NodeCreateEvent;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.event.NodeCreateEvent;
+import de.cubbossa.pathfinder.node.Node;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Event;

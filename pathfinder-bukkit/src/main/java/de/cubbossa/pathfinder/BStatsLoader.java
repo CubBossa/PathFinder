@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.PathFinder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

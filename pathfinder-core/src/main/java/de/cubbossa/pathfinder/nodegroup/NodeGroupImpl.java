@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.nodegroup;
 
-import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.Changes;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.ModifiedHashMap;
 import de.cubbossa.pathfinder.util.ModifiedHashSet;
 import lombok.Getter;

@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;

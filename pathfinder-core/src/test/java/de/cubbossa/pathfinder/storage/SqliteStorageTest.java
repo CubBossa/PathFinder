@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.storage;
 
-import de.cubbossa.pathapi.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.SqliteStorage;
 import java.io.File;

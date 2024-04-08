@@ -4,21 +4,21 @@ import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.group.NavigableModifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeSelection;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.StorageAdapter;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
-import de.cubbossa.pathapi.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.group.NavigableModifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.Keyed;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.NodeSelection;
+import de.cubbossa.pathfinder.node.NodeType;
+import de.cubbossa.pathfinder.storage.StorageAdapter;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
@@ -104,14 +104,14 @@ public class Arguments {
     }));
   }
 
-  public CommandArgument<de.cubbossa.pathapi.misc.Location, CustomArgument<de.cubbossa.pathapi.misc.Location, Location>> location(
+  public CommandArgument<de.cubbossa.pathfinder.misc.Location, CustomArgument<de.cubbossa.pathfinder.misc.Location, Location>> location(
       String node, LocationType type) {
     return CommandArgument.arg(new CustomArgument<>(new LocationArgument(node, type), customArgumentInfo -> {
       return BukkitVectorUtils.toInternal(customArgumentInfo.currentInput());
     }));
   }
 
-  public CommandArgument<de.cubbossa.pathapi.misc.Location, CustomArgument<de.cubbossa.pathapi.misc.Location, Location>> location(
+  public CommandArgument<de.cubbossa.pathfinder.misc.Location, CustomArgument<de.cubbossa.pathfinder.misc.Location, Location>> location(
       String node) {
     return location(node, LocationType.PRECISE_POSITION);
   }

@@ -1,14 +1,11 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import de.cubbossa.pathapi.group.VisualizerModifier;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.misc.Task;
-import de.cubbossa.pathapi.node.GroupedNode;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.visualizer.PathView;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.group.VisualizerModifier;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.Task;
+import de.cubbossa.pathfinder.node.GroupedNode;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import java.util.ArrayList;

@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.group.ModifierRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathapi.misc.World;
+import de.cubbossa.pathfinder.misc.World;
 import org.bukkit.Bukkit;
 
 import java.util.Objects;

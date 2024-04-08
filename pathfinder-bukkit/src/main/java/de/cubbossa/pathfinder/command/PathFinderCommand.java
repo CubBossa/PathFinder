@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderExtension;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.dump.DumpWriterProvider;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.NodeType;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderExtension;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.dump.DumpWriterProvider;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;

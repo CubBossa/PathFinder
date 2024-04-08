@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathapi.event.NodeDeleteEvent;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.event.NodeDeleteEvent;
+import de.cubbossa.pathfinder.node.Node;
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

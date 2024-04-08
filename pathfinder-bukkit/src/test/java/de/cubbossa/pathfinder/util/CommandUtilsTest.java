@@ -3,8 +3,8 @@ package de.cubbossa.pathfinder.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.misc.Range;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.misc.Range;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import org.junit.jupiter.api.Test;
 

@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.base.Preconditions;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeSelection;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.NodeSelection;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;

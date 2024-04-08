@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.NodeStorageImplementation;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.storage.NodeStorageImplementation;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.implementation.NodeStorageImplementationWrapper;
 import org.pf4j.Extension;

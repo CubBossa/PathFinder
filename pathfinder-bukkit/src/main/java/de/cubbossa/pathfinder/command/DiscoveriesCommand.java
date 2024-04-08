@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.DiscoverProgressModifier;
-import de.cubbossa.pathapi.misc.Pagination;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;

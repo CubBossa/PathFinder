@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.events.path;
 
-import de.cubbossa.pathapi.event.PathCancelledEvent;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.visualizer.VisualizerPath;
+import de.cubbossa.pathfinder.event.PathCancelledEvent;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;

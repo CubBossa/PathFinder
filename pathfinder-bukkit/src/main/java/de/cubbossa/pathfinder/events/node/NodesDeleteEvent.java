@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
 import java.util.List;
 import lombok.Getter;

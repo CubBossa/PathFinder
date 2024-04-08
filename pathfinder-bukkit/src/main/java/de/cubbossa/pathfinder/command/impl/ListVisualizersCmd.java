@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.command.impl;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.misc.Keyed;
-import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.misc.Keyed;
+import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;

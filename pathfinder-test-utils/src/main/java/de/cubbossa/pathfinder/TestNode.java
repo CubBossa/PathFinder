@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.Node;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

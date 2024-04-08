@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
 import com.google.common.collect.Lists;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

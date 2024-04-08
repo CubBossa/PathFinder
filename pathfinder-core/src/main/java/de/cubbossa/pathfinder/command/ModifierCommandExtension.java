@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathapi.group.Modifier;
+import de.cubbossa.pathfinder.group.Modifier;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.ComponentLike;

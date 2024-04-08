@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
 
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathPlayer;
 import de.cubbossa.pathfinder.BukkitPathSender;
 import org.bukkit.Location;

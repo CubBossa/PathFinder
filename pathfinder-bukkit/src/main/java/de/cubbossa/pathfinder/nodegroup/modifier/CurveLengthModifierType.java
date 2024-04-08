@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.CurveLengthModifier;
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathfinder.group.CurveLengthModifier;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import dev.jorel.commandapi.arguments.Argument;
@@ -21,7 +21,7 @@ public class CurveLengthModifierType implements ModifierType<CurveLengthModifier
 
   @Override
   public NamespacedKey getKey() {
-    return de.cubbossa.pathapi.group.CurveLengthModifier.KEY;
+    return de.cubbossa.pathfinder.group.CurveLengthModifier.KEY;
   }
 
   @Override

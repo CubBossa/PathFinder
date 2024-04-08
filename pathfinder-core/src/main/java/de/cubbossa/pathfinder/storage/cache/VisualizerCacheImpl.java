@@ -2,14 +2,14 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 
 import java.util.*;
 
 public class VisualizerCacheImpl
-    implements de.cubbossa.pathapi.storage.cache.VisualizerCache {
+    implements de.cubbossa.pathfinder.storage.cache.VisualizerCache {
 
   private final Cache<NamespacedKey, PathVisualizer<?, ?>> cache;
   private boolean cachedAll = false;

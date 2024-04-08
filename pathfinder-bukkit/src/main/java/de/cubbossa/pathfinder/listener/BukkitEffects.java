@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.listener;
 
-import de.cubbossa.pathapi.event.*;
-import de.cubbossa.pathapi.group.DiscoverProgressModifier;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.event.*;
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.command.CmdTagResolver;

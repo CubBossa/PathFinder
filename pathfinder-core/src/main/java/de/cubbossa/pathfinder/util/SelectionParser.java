@@ -6,7 +6,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
@@ -34,7 +34,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class SelectionParser<TypeT, ContextT extends SelectionParser.ArgumentContext<?, TypeT>> {

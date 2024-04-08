@@ -1,15 +1,14 @@
 package de.cubbossa.pathfinder.storage.cache;
 
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeType;
-import de.cubbossa.pathapi.storage.CacheLayer;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.cache.*;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
-import de.cubbossa.pathapi.visualizer.VisualizerType;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Range;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.NodeType;
+import de.cubbossa.pathfinder.storage.CacheLayer;
+import de.cubbossa.pathfinder.storage.DiscoverInfo;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 

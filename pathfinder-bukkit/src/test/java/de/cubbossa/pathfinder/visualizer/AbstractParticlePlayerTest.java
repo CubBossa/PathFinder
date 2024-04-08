@@ -2,17 +2,11 @@ package de.cubbossa.pathfinder.visualizer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.misc.World;
-import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
-import de.cubbossa.pathfinder.util.WorldImpl;
+import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +16,7 @@ class AbstractParticlePlayerTest {
 
   @RequiredArgsConstructor
   @Getter
-  private class TestWorld implements de.cubbossa.pathapi.misc.World {
+  private class TestWorld implements de.cubbossa.pathfinder.misc.World {
 
     private final UUID uniqueId;
 

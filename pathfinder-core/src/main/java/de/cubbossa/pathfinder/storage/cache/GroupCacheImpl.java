@@ -2,12 +2,10 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.storage.cache.GroupCache;
-import de.cubbossa.pathapi.storage.cache.StorageCache;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Range;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 
 import java.util.Collection;

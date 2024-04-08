@@ -1,7 +1,5 @@
 package de.cubbossa.pathfinder.node;
 
-import de.cubbossa.pathapi.node.Node;
-import de.cubbossa.pathapi.node.NodeSelection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;

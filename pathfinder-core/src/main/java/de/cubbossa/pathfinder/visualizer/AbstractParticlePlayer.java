@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathapi.misc.Location;
+import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;

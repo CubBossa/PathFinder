@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.group.NavigableModifier;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.visualizer.query.SearchTerm;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.group.NavigableModifier;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.navigationquery.SearchTermImpl;

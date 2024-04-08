@@ -71,7 +71,7 @@ public class BukkitVectorUtils {
     return closestPointOnSegment(point, a, b).distance(point);
   }
 
-  public static de.cubbossa.pathapi.misc.Vector closestPointOnSegment(de.cubbossa.pathapi.misc.Vector point, de.cubbossa.pathapi.misc.Vector lineSupport, de.cubbossa.pathapi.misc.Vector lineTarget) {
+  public static de.cubbossa.pathfinder.misc.Vector closestPointOnSegment(de.cubbossa.pathfinder.misc.Vector point, de.cubbossa.pathfinder.misc.Vector lineSupport, de.cubbossa.pathfinder.misc.Vector lineTarget) {
     return toInternal(closestPointOnSegment(toBukkit(point), toBukkit(lineSupport), toBukkit(lineTarget)));
   }
 
@@ -114,21 +114,21 @@ public class BukkitVectorUtils {
     return (yaw + 180) % 360;
   }
 
-  public static Location toBukkit(de.cubbossa.pathapi.misc.Location internal) {
+  public static Location toBukkit(de.cubbossa.pathfinder.misc.Location internal) {
     return new Location(Bukkit.getWorld(internal.getWorld().getUniqueId()), internal.getX(),
         internal.getY(), internal.getZ());
   }
 
-  public static Vector toBukkit(de.cubbossa.pathapi.misc.Vector internal) {
+  public static Vector toBukkit(de.cubbossa.pathfinder.misc.Vector internal) {
     return new Vector(internal.getX(), internal.getY(), internal.getZ());
   }
 
-  public static de.cubbossa.pathapi.misc.Location toInternal(Location bukkit) {
-    return new de.cubbossa.pathapi.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(),
+  public static de.cubbossa.pathfinder.misc.Location toInternal(Location bukkit) {
+    return new de.cubbossa.pathfinder.misc.Location(bukkit.getX(), bukkit.getY(), bukkit.getZ(),
         new WorldImpl(bukkit.getWorld().getUID()));
   }
 
-  public static de.cubbossa.pathapi.misc.Vector toInternal(Vector bukkit) {
-    return new de.cubbossa.pathapi.misc.Vector(bukkit.getX(), bukkit.getY(), bukkit.getZ());
+  public static de.cubbossa.pathfinder.misc.Vector toInternal(Vector bukkit) {
+    return new de.cubbossa.pathfinder.misc.Vector(bukkit.getX(), bukkit.getY(), bukkit.getZ());
   }
 }

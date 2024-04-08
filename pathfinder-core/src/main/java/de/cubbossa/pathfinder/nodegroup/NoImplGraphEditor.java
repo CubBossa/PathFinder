@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.nodegroup;
 
-import de.cubbossa.pathapi.editor.GraphEditor;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.editor.GraphEditor;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

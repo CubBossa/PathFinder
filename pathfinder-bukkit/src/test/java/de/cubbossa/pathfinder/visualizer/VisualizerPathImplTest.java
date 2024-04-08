@@ -2,11 +2,10 @@ package de.cubbossa.pathfinder.visualizer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.PathPlayer;
-import de.cubbossa.pathapi.node.GroupedNode;
-import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestPlayer;
 import de.cubbossa.pathfinder.TestVisualizer;

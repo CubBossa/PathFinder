@@ -2,8 +2,8 @@ package de.cubbossa.pathfinder.node.selection.attribute;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.ArgumentType;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser;
 import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute;
 import de.cubbossa.pathfinder.util.SelectionParser;

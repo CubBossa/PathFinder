@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.nodegroup;
 
-import de.cubbossa.pathapi.event.NodeGroupCreateEvent;
-import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathfinder.event.NodeGroupCreateEvent;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

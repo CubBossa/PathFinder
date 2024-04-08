@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathapi.misc.Vector;
+import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.splinelib.SplineLib;
 import de.cubbossa.splinelib.util.BezierVector;
 

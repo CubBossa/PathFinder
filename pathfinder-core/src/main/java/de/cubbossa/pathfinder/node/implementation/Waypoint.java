@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.node.implementation;
 
-import de.cubbossa.pathapi.Changes;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.Location;
-import de.cubbossa.pathapi.node.Edge;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.Changes;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.util.ModifiedHashSet;
 import lombok.Getter;

@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder;
 
-import de.cubbossa.pathapi.PathFinderExtension;
 import lombok.Getter;
 import lombok.Setter;
 

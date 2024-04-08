@@ -1,10 +1,10 @@
 package de.cubbossa.pathfinder.editmode;
 
-import de.cubbossa.pathapi.PathFinder;
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.editor.GraphEditor;
-import de.cubbossa.pathapi.editor.GraphEditorFactory;
-import de.cubbossa.pathapi.group.NodeGroup;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.editor.GraphEditor;
+import de.cubbossa.pathfinder.editor.GraphEditorFactory;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeEntityRenderer;

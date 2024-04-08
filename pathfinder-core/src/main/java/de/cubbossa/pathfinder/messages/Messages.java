@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.messages;
 
-import de.cubbossa.pathapi.PathFinderProvider;
-import de.cubbossa.pathapi.group.Modifier;
-import de.cubbossa.pathapi.group.ModifierType;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.misc.Range;
-import de.cubbossa.pathapi.misc.Vector;
-import de.cubbossa.pathapi.node.Node;
+import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.ModifierType;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.Range;
+import de.cubbossa.pathfinder.misc.Vector;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;

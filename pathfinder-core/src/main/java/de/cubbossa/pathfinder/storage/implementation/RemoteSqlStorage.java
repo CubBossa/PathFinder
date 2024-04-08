@@ -2,10 +2,10 @@ package de.cubbossa.pathfinder.storage.implementation;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import de.cubbossa.pathapi.PathFinderConfig;
-import de.cubbossa.pathapi.group.ModifierRegistry;
-import de.cubbossa.pathapi.node.NodeTypeRegistry;
-import de.cubbossa.pathapi.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.pathfinder.PathFinderConfig;
+import de.cubbossa.pathfinder.group.ModifierRegistry;
+import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import org.jooq.SQLDialect;
 
 import javax.sql.DataSource;

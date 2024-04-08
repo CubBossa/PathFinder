@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.events.discovering;
 
-import de.cubbossa.pathapi.event.PlayerDiscoverLocationEvent;
-import de.cubbossa.pathapi.group.DiscoverableModifier;
-import de.cubbossa.pathapi.group.NodeGroup;
-import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathfinder.event.PlayerDiscoverLocationEvent;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

@@ -2,10 +2,8 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.cubbossa.pathapi.misc.NamespacedKey;
-import de.cubbossa.pathapi.storage.DiscoverInfo;
-import de.cubbossa.pathapi.storage.cache.DiscoverInfoCache;
-import de.cubbossa.pathapi.storage.cache.StorageCache;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.storage.DiscoverInfo;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

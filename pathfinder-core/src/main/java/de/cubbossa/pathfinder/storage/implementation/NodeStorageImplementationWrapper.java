@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
-import de.cubbossa.pathapi.storage.NodeStorageImplementation;
-import de.cubbossa.pathapi.storage.StorageAdapter;
+import de.cubbossa.pathfinder.storage.NodeStorageImplementation;
+import de.cubbossa.pathfinder.storage.StorageAdapter;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
 import java.util.Collection;
