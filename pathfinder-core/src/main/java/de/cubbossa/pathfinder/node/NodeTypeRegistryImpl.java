@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathapi.PathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.KeyedRegistry;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.Node;
@@ -41,15 +42,17 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry {
   @Override
   public <N extends Node> void register(NodeType<N> type) {
     this.types.put(type);
+    PathFinderProvider.get().getDisposer().register(this, type);
   }
 
   @Override
   public <N extends Node> void unregister(NodeType<N> type) {
     unregister(type.getKey());
+    PathFinderProvider.get().getDisposer().unregister(type);
   }
 
   @Override
   public void unregister(NamespacedKey key) {
-    this.types.remove(key);
+    PathFinderProvider.get().getDisposer().unregister(this.types.remove(key));
   }
 }

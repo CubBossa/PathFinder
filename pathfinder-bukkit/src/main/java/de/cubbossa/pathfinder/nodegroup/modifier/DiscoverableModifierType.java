@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.DiscoverableModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -16,8 +15,9 @@ import java.util.function.Function;
 import lombok.Getter;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.pf4j.Extension;
 
-@AutoService(ModifierType.class)
+@Extension(points = ModifierType.class)
 public class DiscoverableModifierType implements ModifierType<DiscoverableModifier>,
     ModifierCommandExtension<DiscoverableModifier> {
 

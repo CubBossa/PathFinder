@@ -1,14 +1,14 @@
 package de.cubbossa.pathfinder.node;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.node.NodeType;
 import de.cubbossa.pathapi.storage.NodeStorageImplementation;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.storage.implementation.NodeStorageImplementationWrapper;
+import org.pf4j.Extension;
 
-@AutoService(NodeType.class)
+@Extension(points = NodeType.class)
 public class WaypointType extends AbstractNodeType<Waypoint> {
 
   public WaypointType() {

@@ -19,6 +19,7 @@ import de.cubbossa.pathapi.misc.GraphEntrySolver;
 import de.cubbossa.pathapi.misc.Location;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import de.cubbossa.pathapi.navigation.NavigationFilter;
 import de.cubbossa.pathapi.navigation.NavigationHandler;
 import de.cubbossa.pathapi.node.Edge;
 import de.cubbossa.pathapi.node.GroupedNode;
@@ -34,6 +35,7 @@ import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
+import de.cubbossa.pathfinder.util.ExtensionPoint;
 import de.cubbossa.pathfinder.visualizer.VisualizerPathImpl;
 import de.cubbossa.translations.Message;
 import java.util.ArrayList;
@@ -49,7 +51,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -68,13 +69,15 @@ public class AbstractNavigationHandler<PlayerT>
   @Getter
   private static AbstractNavigationHandler<?> instance;
 
+  private ExtensionPoint<NavigationFilter> filterExtensionPoint = new ExtensionPoint<>(NavigationFilter.class);
+
   @Getter
   private final NamespacedKey key = AbstractPathFinder.pathfinder("navigation");
   protected final PathFinder pathFinder;
   protected EventDispatcher<PlayerT> eventDispatcher;
 
   protected final Map<PathPlayer<PlayerT>, SearchInfo<PlayerT>> activePaths;
-  protected final List<Function<NavigationRequestContext, Collection<Node>>> navigationFilter;
+  protected final List<NavigationFilter> navigationFilter;
   private final PathSolver<GroupedNode> pathSolver = new DynamicDijkstra<>();
 
   // Caches
@@ -89,6 +92,8 @@ public class AbstractNavigationHandler<PlayerT>
     this.pathFinder = PathFinderProvider.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.navigationFilter = new ArrayList<>();
+
+    this.filterExtensionPoint.getExtensions().forEach(this::registerFindPredicate);
   }
 
   @Override
@@ -112,7 +117,7 @@ public class AbstractNavigationHandler<PlayerT>
   }
 
   @Override
-  public void registerFindPredicate(Function<NavigationRequestContext, Collection<Node>> filter) {
+  public void registerFindPredicate(NavigationFilter filter) {
     navigationFilter.add(filter);
   }
 
@@ -124,8 +129,8 @@ public class AbstractNavigationHandler<PlayerT>
   @Override
   public Collection<Node> filterFindables(UUID player, Collection<Node> nodes) {
     Collection<Node> nodeSet = new HashSet<>(nodes);
-    for (Function<NavigationRequestContext, Collection<Node>> f : navigationFilter) {
-      nodeSet = f.apply(new NavigationRequestContext(player, nodeSet));
+    for (NavigationFilter f : navigationFilter) {
+      nodeSet = f.filterTargetNodes(player, nodeSet);
     }
     return nodeSet;
   }
@@ -325,9 +330,9 @@ public class AbstractNavigationHandler<PlayerT>
 
   public void onEnable(PathFinder pathPlugin) {
 
-    registerFindPredicate(c -> {
-      PathPlayer<?> player = AbstractPathFinder.getInstance().wrap(c.playerId());
-      Map<Node, Collection<NodeGroup>> groups = PathFinderProvider.get().getStorage().loadGroupsOfNodes(c.nodes()).join();
+    registerFindPredicate((playerId, scope) -> {
+      PathPlayer<?> player = AbstractPathFinder.getInstance().wrap(playerId);
+      Map<Node, Collection<NodeGroup>> groups = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
 
       if (player.unwrap() == null) {
         return new HashSet<>();
@@ -359,7 +364,7 @@ public class AbstractNavigationHandler<PlayerT>
    * The result might again be cached if all NavigateLocations are either static or agile but haven't changed their
    * location since the last call.
    *
-   * @param locations A collection of NavigateLocation instances. The first one might represent the start point. All points
+   * @param exits A collection of NavigateLocation instances. The first one might represent the start point. All points
    *                  will be inserted by finding their closest edge and creating two edges from the point to both edge ends.
    */
   private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigateLocation> entries, Collection<NavigateLocation> exits) {

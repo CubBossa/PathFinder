@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.group.NavigableModifier;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -20,8 +19,9 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.pf4j.Extension;
 
-@AutoService(ModifierType.class)
+@Extension(points = ModifierType.class)
 public class NavigableModifierType implements ModifierType<NavigableModifier>,
     ModifierCommandExtension<NavigableModifier> {
 

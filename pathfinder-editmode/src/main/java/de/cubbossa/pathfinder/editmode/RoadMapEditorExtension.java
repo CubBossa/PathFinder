@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.editmode;
 
 import com.github.retrooper.packetevents.PacketEvents;
-import com.google.auto.service.AutoService;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
@@ -12,8 +11,9 @@ import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.pf4j.Extension;
 
-@AutoService(PathFinderExtension.class)
+@Extension(points = PathFinderExtension.class)
 public class RoadMapEditorExtension extends PathFinderExtensionBase implements PathFinderExtension {
 
   @NotNull

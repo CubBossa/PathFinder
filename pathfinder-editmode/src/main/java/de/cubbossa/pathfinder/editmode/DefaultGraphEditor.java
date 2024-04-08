@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.editmode;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
@@ -60,7 +61,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
 
   private final Collection<GraphRenderer<Player>> renderers;
   private final Collection<de.cubbossa.pathapi.event.Listener<?>> listeners;
-  private final EntityInteractListener entityInteractListener = new EntityInteractListener();
+  private final EntityInteractListener entityInteractListener;
 
   private final ExecutorService renderExecutor;
 
@@ -77,6 +78,9 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
     EventDispatcher<?> eventDispatcher = PathFinderProvider.get().getEventDispatcher();
     listeners = new HashSet<>();
 
+    entityInteractListener = new EntityInteractListener();
+    PathFinderProvider.get().getDisposer().register(this, entityInteractListener);
+
     listeners.add(eventDispatcher.listen(NodeCreateEvent.class, e -> renderAll(e.getNode())));
     listeners.add(eventDispatcher.listen(NodeSaveEvent.class, e -> renderAll(e.getNode())));
     listeners.add(eventDispatcher.listen(NodeDeleteEvent.class, e -> eraseAll(e.getNode())));
@@ -90,10 +94,15 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
         setEditMode(player, false);
         player.sendMessage(Messages.EDITM_NG_DELETED);
       }
-      dispose();
+      PathFinderProvider.get().getDisposer().dispose(this);
     });
 
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+  }
+
+  public void addRenderer(GraphRenderer<Player> renderer) {
+    this.renderers.add(renderer);
+    PathFinderProvider.get().getDisposer().register(this, renderer);
   }
 
   private void renderAll(Node node) {
@@ -134,13 +143,10 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
 
   @SneakyThrows
   public void dispose() {
+    cancelEditModes();
+
     PlayerInteractEvent.getHandlerList().unregister(this);
     listeners.forEach(pathFinder.getEventDispatcher()::drop);
-    entityInteractListener.close();
-
-    for (GraphRenderer<Player> renderer : renderers) {
-      renderer.close();
-    }
     renderExecutor.shutdown();
   }
 
@@ -246,7 +252,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
         });
   }
 
-  private class EntityInteractListener implements Listener, AutoCloseable {
+  private class EntityInteractListener implements Listener, Disposable {
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent e) {
       PathPlayer<Player> player = BukkitUtils.wrap(e.getPlayer());
@@ -263,7 +269,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
     }
 
     @Override
-    public void close() throws Exception {
+    public void dispose() {
       PlayerInteractAtEntityEvent.getHandlerList().unregister(this);
     }
   }

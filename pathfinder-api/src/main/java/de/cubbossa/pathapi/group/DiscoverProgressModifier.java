@@ -1,12 +1,13 @@
 package de.cubbossa.pathapi.group;
 
+import de.cubbossa.pathapi.misc.Named;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import net.kyori.adventure.text.Component;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public interface DiscoverProgressModifier extends Modifier {
+public interface DiscoverProgressModifier extends Modifier, Named {
 
   NamespacedKey KEY = NamespacedKey.fromString("pathfinder:discover-progress");
 
@@ -16,10 +17,6 @@ public interface DiscoverProgressModifier extends Modifier {
   }
 
   NamespacedKey getOwningGroup();
-
-  Component getDisplayName();
-
-  String getNameFormat();
 
   CompletableFuture<Double> calculateProgress(UUID playerId);
 }

@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.FindDistanceModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -15,8 +14,9 @@ import java.util.Map;
 import java.util.function.Function;
 import lombok.Getter;
 import net.kyori.adventure.text.ComponentLike;
+import org.pf4j.Extension;
 
-@AutoService(ModifierType.class)
+@Extension(points = ModifierType.class)
 public class FindDistanceModifierType implements ModifierType<FindDistanceModifier>,
     ModifierCommandExtension<FindDistanceModifier> {
 

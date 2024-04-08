@@ -31,7 +31,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    *
    * @param filter The filter function that maps the node collection into the filtered node collection.
    */
-  void registerFindPredicate(Function<NavigationRequestContext, Collection<Node>> filter);
+  void registerFindPredicate(NavigationFilter filter);
 
   /**
    * Checks, if a player can cross a node after applying all registered filters.
@@ -98,9 +98,6 @@ public interface NavigationHandler<PlayerT> extends Disposable {
   }
 
   record SearchInfo<PlayerT2>(PathPlayer<PlayerT2> player, VisualizerPath<PlayerT2> path, Location target, float distance) {
-  }
-
-  record NavigationRequestContext(UUID playerId, Collection<Node> nodes) {
   }
 
   /**

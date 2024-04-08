@@ -5,27 +5,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.pf4j.DefaultPluginManager;
+import org.pf4j.JarPluginManager;
+import org.pf4j.PluginManager;
 
+@Getter
 public class ExtensionPoint<T> implements Disposable {
 
-  @Getter
+  static PluginManager pluginManager;
+
   private final Class<T> type;
-  private List<T> cache;
 
   public ExtensionPoint(final @NotNull Class<T> type) {
     this.type = type;
-    this.cache = null;
+    if (pluginManager == null) {
+      pluginManager = new DefaultPluginManager();
+    }
   }
 
   public final Collection<T> getExtensions() {
-    if (cache == null) {
-      cache = new ArrayList<>();
-      ServiceLoader<T> loader = ServiceLoader.load(type, this.getClass().getClassLoader());
-      loader.forEach(cache::add);
-    }
-    return Collections.unmodifiableCollection(cache);
+    return pluginManager.getExtensions(type);
+  }
+
+  public final Optional<T> getExtension() {
+    return pluginManager.getExtensions(type).stream().findFirst();
   }
 }

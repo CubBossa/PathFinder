@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.node.selection.attribute;
 
-import com.google.auto.service.AutoService;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.suggestion.Suggestion;
 import de.cubbossa.pathapi.misc.Location;
@@ -13,9 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.pf4j.Extension;
 
 @Getter
-@AutoService(NodeSelectionAttribute.class)
+@Extension(points = NodeSelectionAttribute.class)
 public class DistanceSelectionAttribute implements NodeSelectionAttribute<NumberRange> {
 
   private final String key = "distance";

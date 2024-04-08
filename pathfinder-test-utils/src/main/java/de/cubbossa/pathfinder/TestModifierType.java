@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import java.io.IOException;
 import java.util.Map;
+import org.pf4j.Extension;
 
-@AutoService(ModifierType.class)
+@Extension(points = ModifierType.class)
 public class TestModifierType implements ModifierType<TestModifier> {
 
   public static final NamespacedKey KEY = NamespacedKey.fromString("pathfinder:test-modifier");

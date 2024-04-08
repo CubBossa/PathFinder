@@ -54,13 +54,13 @@ public class AbstractDiscoverHandler<PlayerT>
     }
 
     if (pathFinder.getConfiguration().getNavigation().isRequireDiscovery()) {
-      AbstractNavigationHandler.getInstance().registerFindPredicate(context -> {
-        Map<Node, Collection<NodeGroup>> map = PathFinderProvider.get().getStorage().loadGroupsOfNodes(context.nodes()).join();
+      AbstractNavigationHandler.getInstance().registerFindPredicate((playerId, scope) -> {
+        Map<Node, Collection<NodeGroup>> map = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
 
         return map.entrySet().stream()
             .filter(e -> e.getValue().stream().allMatch(group -> {
               return !group.hasModifier(DiscoverableModifierImpl.class)
-                  || !this.hasDiscovered(context.playerId(), group).join();
+                  || !this.hasDiscovered(playerId, group).join();
             }))
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());

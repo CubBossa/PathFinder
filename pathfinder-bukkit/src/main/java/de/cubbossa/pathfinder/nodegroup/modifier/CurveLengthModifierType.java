@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.group.CurveLengthModifier;
 import de.cubbossa.pathapi.group.ModifierType;
 import de.cubbossa.pathapi.misc.NamespacedKey;
@@ -14,8 +13,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import net.kyori.adventure.text.ComponentLike;
+import org.pf4j.Extension;
 
-@AutoService(ModifierType.class)
+@Extension(points = ModifierType.class)
 public class CurveLengthModifierType implements ModifierType<CurveLengthModifier>,
     ModifierCommandExtension<CurveLengthModifier> {
 

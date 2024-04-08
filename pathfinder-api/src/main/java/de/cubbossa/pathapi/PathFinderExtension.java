@@ -2,6 +2,7 @@ package de.cubbossa.pathapi;
 
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.Keyed;
+import org.pf4j.ExtensionPoint;
 
 /**
  * A PathFinderExtension is an interface that includes functions for different lifecycles of the
@@ -11,7 +12,7 @@ import de.cubbossa.pathapi.misc.Keyed;
  * To make this class recognizable to PathFinder, you must register it as Service in your manifest.
  * PathFinder will use the {@link java.util.ServiceLoader} class to retrieve all possible extensions.
  */
-public interface PathFinderExtension extends Keyed, Disposable {
+public interface PathFinderExtension extends Keyed, Disposable, ExtensionPoint {
 
   void disable();
 

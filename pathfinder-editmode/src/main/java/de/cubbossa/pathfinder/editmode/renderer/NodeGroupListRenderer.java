@@ -86,8 +86,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
   }
 
   @Override
-  public void close() throws Exception {
-    GraphRenderer.super.close();
+  public void dispose() {
     contextMap.values().forEach(context -> {
       try {
         context.playerSpace.close();

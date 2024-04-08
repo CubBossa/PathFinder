@@ -10,6 +10,7 @@ import de.cubbossa.menuframework.inventory.Menu;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathapi.editor.GraphRenderer;
 import de.cubbossa.pathapi.misc.PathPlayer;
+import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -55,9 +56,13 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
   }
 
   @Override
-  public void close() throws Exception {
+  public void dispose() {
     listeners.forEach(playerSpace::unregisterListener);
-    playerSpace.close();
+    try {
+      playerSpace.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void setRenderDistance(double renderDistance) {

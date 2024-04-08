@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module.papi;
 
-import com.google.auto.service.AutoService;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
@@ -27,10 +26,11 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.pf4j.Extension;
 
 @Getter
 @Setter
-@AutoService(VisualizerType.class)
+@Extension(points = VisualizerType.class)
 public class PlaceholderVisualizerType
     extends AbstractVisualizerType<PlaceholderVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<PlaceholderVisualizer> {

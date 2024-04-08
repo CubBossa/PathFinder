@@ -21,12 +21,12 @@ subprojects {
 
     repositories {
         mavenCentral()
-        maven("https://jitpack.io")
     }
 
     dependencies {
-        // Service
-        implementation("com.google.auto.service:auto-service:1.0")
-        annotationProcessor("com.google.auto.service:auto-service:1.0-rc5")
+        implementation("org.pf4j:pf4j:3.11.0")
+        annotationProcessor("org.pf4j:pf4j:3.11.0")
+        testImplementation("org.pf4j:pf4j:3.11.0")
+        testAnnotationProcessor("org.pf4j:pf4j:3.11.0")
     }
 }

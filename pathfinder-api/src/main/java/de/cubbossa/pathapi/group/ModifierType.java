@@ -4,10 +4,13 @@ import de.cubbossa.pathapi.misc.Keyed;
 
 import java.io.IOException;
 import java.util.Map;
+import org.pf4j.ExtensionPoint;
 
-public interface ModifierType<M extends Modifier> extends Keyed {
+public interface ModifierType<M extends Modifier> extends Keyed, ExtensionPoint {
 
-  String getSubCommandLiteral();
+  default String getSubCommandLiteral() {
+    return getKey().getKey();
+  }
 
   Map<String, Object> serialize(M modifier);
 

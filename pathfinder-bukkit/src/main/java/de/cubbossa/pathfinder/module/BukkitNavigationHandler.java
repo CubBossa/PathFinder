@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.event.PathStartEvent;
@@ -18,8 +17,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.pf4j.Extension;
 
-@AutoService(PathFinderExtension.class)
+@Extension(points = PathFinderExtension.class)
 public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> implements Listener {
 
   @Getter

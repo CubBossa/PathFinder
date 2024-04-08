@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.module;
 
-import com.google.auto.service.AutoService;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.PathFinderExtension;
 import de.cubbossa.pathapi.misc.PathPlayer;
@@ -17,8 +16,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.pf4j.Extension;
 
-@AutoService(PathFinderExtension.class)
+@Extension(points = PathFinderExtension.class)
 public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
 
   private final Collection<UUID> playerLock = ConcurrentHashMap.newKeySet();

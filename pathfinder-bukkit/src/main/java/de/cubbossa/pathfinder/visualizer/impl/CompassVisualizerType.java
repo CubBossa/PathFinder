@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import com.google.auto.service.AutoService;
+
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
@@ -13,8 +13,9 @@ import dev.jorel.commandapi.arguments.Argument;
 import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.pf4j.Extension;
 
-@AutoService(VisualizerType.class)
+@Extension(points = VisualizerType.class)
 public class CompassVisualizerType extends IntervalVisualizerType<CompassVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CompassVisualizer> {
 

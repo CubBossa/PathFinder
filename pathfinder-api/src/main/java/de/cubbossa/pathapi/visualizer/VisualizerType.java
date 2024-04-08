@@ -4,6 +4,7 @@ import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.Keyed;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
+import org.pf4j.ExtensionPoint;
 
 /**
  * Extension point for implementation of custom PathVisualizers.
@@ -25,7 +26,7 @@ import de.cubbossa.pathapi.storage.VisualizerStorageImplementation;
  * @param <VisualizerT> The type of the visualizer that is being handled by this type.
  */
 public interface VisualizerType<VisualizerT extends PathVisualizer<?, ?>>
-    extends Keyed, VisualizerStorageImplementation<VisualizerT>, Disposable {
+    extends Keyed, VisualizerStorageImplementation<VisualizerT>, Disposable, ExtensionPoint {
 
   /**
    * Creates a new visualizer in storage.

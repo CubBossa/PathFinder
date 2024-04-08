@@ -7,8 +7,9 @@ import de.cubbossa.pathfinder.util.SelectionParser;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.pf4j.ExtensionPoint;
 
-public interface NodeSelectionAttribute<ValueT> {
+public interface NodeSelectionAttribute<ValueT> extends ExtensionPoint {
 
   String getKey();
 

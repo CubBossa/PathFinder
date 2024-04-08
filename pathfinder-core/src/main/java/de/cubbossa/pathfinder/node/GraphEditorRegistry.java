@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.node;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.PathFinder;
 import de.cubbossa.pathapi.editor.GraphEditor;
-import de.cubbossa.pathapi.editor.NodeGroupEditorFactory;
+import de.cubbossa.pathapi.editor.GraphEditorFactory;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.nodegroup.NoImplGraphEditor;
@@ -16,14 +16,14 @@ import lombok.Getter;
 
 public class GraphEditorRegistry implements Disposable {
 
-  public static final ExtensionPoint<NodeGroupEditorFactory> EXTENSION_POINT = new ExtensionPoint<>(NodeGroupEditorFactory.class);
+  public static final ExtensionPoint<GraphEditorFactory> EXTENSION_POINT = new ExtensionPoint<>(GraphEditorFactory.class);
 
   @Getter
   private static GraphEditorRegistry instance;
 
   private final PathFinder pathFinder;
 
-  private final NodeGroupEditorFactory editModeFactory;
+  private final GraphEditorFactory editModeFactory;
   @Getter
   private final Map<NamespacedKey, GraphEditor> editors;
 
@@ -60,20 +60,18 @@ public class GraphEditorRegistry implements Disposable {
     GraphEditor<PlayerT> editor = (GraphEditor<PlayerT>) editors.get(key);
     if (editor == null) {
       pathFinder.getStorage().loadGroup(key).thenAccept(g -> {
-        GraphEditor e = editModeFactory.apply(
+        GraphEditor e = editModeFactory.createGraphEditor(
             g.orElseThrow(() -> new IllegalArgumentException(
-                "No group exists with key '" + key + "'. Cannot create editor."))
+                "No group found with key '" + key + "'. Cannot create editor."))
         );
         editors.put(key, e);
+        pathFinder.getDisposer().register(this, e);
         future.complete(e);
       });
     } else {
       future.complete(editor);
     }
-    return future.exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
-    });
+    return future;
   }
 
   public void cancelAllEditModes() {
@@ -82,10 +80,6 @@ public class GraphEditorRegistry implements Disposable {
 
   @Override
   public void dispose() {
-    editors.forEach((key, nodeGroupEditor) -> {
-      nodeGroupEditor.cancelEditModes();
-      nodeGroupEditor.dispose();
-    });
     instance = null;
   }
 }

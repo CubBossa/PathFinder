@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import com.google.auto.service.AutoService;
+
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.PathVisualizer;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.pf4j.Extension;
 
-@AutoService(VisualizerType.class)
+@Extension(points = VisualizerType.class)
 public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<CombinedVisualizer> {
 

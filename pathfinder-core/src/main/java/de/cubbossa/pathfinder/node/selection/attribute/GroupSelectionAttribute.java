@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.node.selection.attribute;
 
-import com.google.auto.service.AutoService;
 import com.mojang.brigadier.arguments.ArgumentType;
 import de.cubbossa.pathapi.PathFinderProvider;
 import de.cubbossa.pathapi.group.NodeGroup;
@@ -16,9 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.pf4j.Extension;
 
 @Getter
-@AutoService(NodeSelectionAttribute.class)
+@Extension(points = NodeSelectionAttribute.class)
 public class GroupSelectionAttribute implements NodeSelectionAttribute<Collection<NodeGroup>> {
 
   private final String key = "group";

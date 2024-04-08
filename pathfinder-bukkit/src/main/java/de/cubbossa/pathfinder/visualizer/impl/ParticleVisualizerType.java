@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import com.google.auto.service.AutoService;
+
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
@@ -21,8 +21,9 @@ import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.pf4j.Extension;
 
-@AutoService(VisualizerType.class)
+@Extension(points = VisualizerType.class)
 public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisualizer>
     implements VisualizerTypeCommandExtension, VisualizerTypeMessageExtension<ParticleVisualizer> {
 

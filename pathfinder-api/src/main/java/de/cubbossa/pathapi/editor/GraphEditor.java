@@ -1,9 +1,10 @@
 package de.cubbossa.pathapi.editor;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathapi.misc.NamespacedKey;
 import de.cubbossa.pathapi.misc.PathPlayer;
 
-public interface GraphEditor<Player> {
+public interface GraphEditor<Player> extends Disposable {
 
     NamespacedKey getGroupKey();
 
