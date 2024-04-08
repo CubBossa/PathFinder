@@ -40,7 +40,7 @@ public class NoImplGraphEditor implements GraphEditor<Object> {
   }
 
   @Override
-  public boolean isEditing(PathPlayer<Object> uuid) {
+  public boolean isEditing(PathPlayer<Object> player) {
     return false;
   }
 }

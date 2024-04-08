@@ -4,8 +4,8 @@
 package de.cubbossa.pathfinder.jooq.tables.records;
 
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

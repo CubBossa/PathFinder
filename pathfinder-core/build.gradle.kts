@@ -141,7 +141,7 @@ jooq {
                         name = "org.jooq.meta.sqlite.SQLiteDatabase"
                         forcedTypes = listOf(
                             ForcedType().apply {
-                                userType = "de.cubbossa.pathapi.misc.NamespacedKey"
+                                userType = "de.cubbossa.pathfinder.misc.NamespacedKey"
                                 converter =
                                     "de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter"
                                 includeExpression = ".*key|.*type"

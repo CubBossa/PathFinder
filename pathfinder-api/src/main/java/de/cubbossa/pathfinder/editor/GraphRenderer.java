@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * An object that is responsible for the rendering of a set of nodes and therefore a graph.
+ * Renders a set of nodes and connecting edges.
  *
  * @param <Player> Defines the type of class that is wrapped within the {@link PathPlayer} object.
  */
