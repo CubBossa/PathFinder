@@ -24,6 +24,8 @@ import de.cubbossa.pathfinder.navigation.NavigationHandler;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.visualizer.PathView;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
@@ -141,12 +143,22 @@ public class AbstractNavigationHandler<PlayerT>
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPathToLocation(PathPlayer<PlayerT> player, Location target) {
+  public Collection<VisualizerPath<PlayerT>> getActivePaths(PathPlayer<PlayerT> player) {
+    return null;
+  }
+
+  @Override
+  public VisualizerPath<PlayerT> findPathToClosestLocation(PathPlayer<PlayerT> player, Collection<Location> targets) {
+    return findPath(player, targets.stream().map(NavigateLocationImpl::staticLocation).toList());
+  }
+
+  @Override
+  public VisualizerPath<PlayerT> findPathToLocation(PathPlayer<PlayerT> player, Location target) {
     return findPath(player, Set.of(NavigateLocationImpl.staticLocation(target)));
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPathToNodes(PathPlayer<PlayerT> player, Collection<Node> targets) {
+  public VisualizerPath<PlayerT> findPathToClosestNode(PathPlayer<PlayerT> player, Collection<Node> targets) {
     NavigateLocation location = new NavigateLocationImpl(new PlayerNode(player));
     location.setAgile(true);
     return findPath(player, location, targets.stream()
@@ -155,24 +167,24 @@ public class AbstractNavigationHandler<PlayerT>
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target) {
+  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target) {
     return findPath(viewer, NavigateLocationImpl.agileNode(new PlayerNode(viewer)), target);
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target,
+  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target,
                                                     double maxDist) {
     return findPath(viewer, NavigateLocationImpl.agileNode(new PlayerNode(viewer)), target, maxDist);
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
+  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
                                                     Collection<NavigateLocation> target) {
     return findPath(viewer, start, target, pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance());
   }
 
   @Override
-  public CompletableFuture<NavigateResult> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
+  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
                                                     Collection<NavigateLocation> target, double maxDist) {
 
     Preconditions.checkNotNull(start);
@@ -240,12 +252,24 @@ public class AbstractNavigationHandler<PlayerT>
     });
   }
 
-  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
-                                float distance) {
+  @Override
+  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path) {
+    return null;
+  }
+
+  @Override
+  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path, double reachDist) {
+    return null;
+  }
+
+  @Override
+  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
+                                         float distance) {
     return setPath(player, pathNodes, target, distance, null);
   }
 
-  public NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull Supplier<List<GroupedNode>> pathNodeSupplier,
+  @Override
+  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull Supplier<List<GroupedNode>> pathNodeSupplier,
                                 Location target, float distance) {
 
     List<GroupedNode> pathNodes = pathNodeSupplier.get();
@@ -258,7 +282,8 @@ public class AbstractNavigationHandler<PlayerT>
     return setPath(player, pathNodes, target, distance, pathNodeSupplier);
   }
 
-  private NavigateResult setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
+  @Override
+  private VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
                                  float distance, @Nullable Supplier<List<GroupedNode>> pathNodeSupplier) {
     VisualizerPath<PlayerT> visualizerPath = new VisualizerPathImpl<>(pathNodes, player);
 
@@ -278,6 +303,19 @@ public class AbstractNavigationHandler<PlayerT>
     }
 
     return NavigateResult.SUCCESS;
+  }
+
+  @Override
+  public <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(PathPlayer<PlayerT> viewer, List<Node> path,
+                                                                              PathVisualizer<ViewT, PlayerT> renderer) {
+    return null;
+  }
+
+  @Override
+  public <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(PathPlayer<PlayerT> viewer, List<Node> path,
+                                                                              PathVisualizer<ViewT, PlayerT> renderer,
+                                                                              double reachDist) {
+    return null;
   }
 
   @Override
