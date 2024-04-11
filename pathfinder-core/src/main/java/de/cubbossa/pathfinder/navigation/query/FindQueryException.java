@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.navigationquery;
+package de.cubbossa.pathfinder.navigation.query;
 
 public class FindQueryException extends RuntimeException {
 

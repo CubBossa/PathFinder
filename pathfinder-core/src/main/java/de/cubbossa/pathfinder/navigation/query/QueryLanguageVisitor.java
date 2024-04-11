@@ -1,9 +1,9 @@
-package de.cubbossa.pathfinder.navigationquery;
+package de.cubbossa.pathfinder.navigation.query;
 
-import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
-import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
 import de.cubbossa.pathfinder.antlr.QueryLanguageBaseVisitor;
 import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
+import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
+import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -71,7 +71,7 @@ public class QueryLanguageVisitor<T extends SearchTermHolder>
   }
 
   public SearchQueryAttribute visitAnAttribute(QueryLanguageParser.AttributeContext context) {
-    return new de.cubbossa.pathfinder.navigationquery.SearchQueryAttribute(
+    return new de.cubbossa.pathfinder.navigation.query.SearchQueryAttribute(
         context.IDENTIFIER().getText(),
         SearchQueryAttribute.Comparator.fromString(context.comparator().getText()),
         context.value().getText()

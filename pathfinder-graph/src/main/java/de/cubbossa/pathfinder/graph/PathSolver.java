@@ -1,18 +1,17 @@
 package de.cubbossa.pathfinder.graph;
 
 import com.google.common.graph.ValueGraph;
-
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * An algorithm to find a path on a graph. This might be the shortest possible path, but
  * it might also be a trade-off where the outcome is not guaranteed to be the shortest path to increase performance.
  *
  * @param <N> The type that represents one node of the graph.
+ * @param <E> The type that represents one edge of the graph. Use {@link this#getEdgeValue(Object)} to supply costs.
  */
-public interface PathSolver<N> {
+public interface PathSolver<N, E> {
 
   /**
    * Sets the graph instance where the search should be run upon. Some pathfinding
@@ -21,7 +20,15 @@ public interface PathSolver<N> {
    *
    * @param graph A graph where edges are weighted by doubles.
    */
-  void setGraph(ValueGraph<N, Double> graph);
+  void setGraph(ValueGraph<N, E> graph);
+
+  /**
+   * Costs function for edges of this graph.
+   *
+   * @param edge
+   * @return
+   */
+  double getEdgeValue(E edge);
 
   /**
    * Find a path from one start location to one target location.
@@ -32,7 +39,7 @@ public interface PathSolver<N> {
    * start node instance, the last node the target.
    * @throws NoPathFoundException if the solver could not find any path from start to target node.
    */
-  default List<N> solvePath(N start, N target) throws NoPathFoundException {
+  default PathSolverResult<N, E> solvePath(N start, N target) throws NoPathFoundException {
     return solvePath(start, Collections.singleton(target));
   }
 
@@ -45,5 +52,5 @@ public interface PathSolver<N> {
    * start node instance, the last node the first matching target that was found.
    * @throws NoPathFoundException if the solver could not find any path from start to any target node.
    */
-  List<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException;
+  PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException;
 }

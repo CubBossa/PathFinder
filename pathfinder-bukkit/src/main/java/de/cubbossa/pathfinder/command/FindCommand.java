@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
+import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
@@ -24,6 +25,19 @@ public class FindCommand extends CommandTree {
           }
 
           PathPlayer<Player> p = BukkitPathFinder.wrap(player);
+
+          BukkitNavigationHandler.getInstance().renderPath(p, Route
+                  .from()//player loc
+                  .toAny(targets))
+              .whenComplete((path, throwable) -> {
+                if (throwable != null) {
+                  player.sendMessage(throwable.getMessage()); // TODO
+                  return;
+                }
+                path.startUpdater(1000);
+                BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
+              });
+
           BukkitNavigationHandler.getInstance().findPathToNodes(p, targets).thenAccept(result -> {
             AbstractNavigationHandler.printResult(result, p);
           }).exceptionally(throwable -> {

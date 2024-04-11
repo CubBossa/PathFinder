@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.navigationquery;
+package de.cubbossa.pathfinder.navigation.query;
 
 import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.visualizer.query.SearchTerm;

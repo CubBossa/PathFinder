@@ -1,10 +1,10 @@
-package de.cubbossa.pathfinder.navigationquery;
+package de.cubbossa.pathfinder.navigation.query;
 
+import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
+import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
 import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
-import de.cubbossa.pathfinder.antlr.QueryLanguageLexer;
-import de.cubbossa.pathfinder.antlr.QueryLanguageParser;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

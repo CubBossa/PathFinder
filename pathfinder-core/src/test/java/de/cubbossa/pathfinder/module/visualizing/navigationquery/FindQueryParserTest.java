@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder.module.visualizing.navigationquery;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import de.cubbossa.pathfinder.navigation.query.FindQueryException;
+import de.cubbossa.pathfinder.navigation.query.FindQueryParser;
 import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
 import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
-import de.cubbossa.pathfinder.navigationquery.FindQueryException;
-import de.cubbossa.pathfinder.navigationquery.FindQueryParser;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

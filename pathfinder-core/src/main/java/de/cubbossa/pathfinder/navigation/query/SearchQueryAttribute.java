@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.navigationquery;
+package de.cubbossa.pathfinder.navigation.query;
 
 public record SearchQueryAttribute(String identifier, Comparator comparator, Object value)
     implements

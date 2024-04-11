@@ -1,10 +1,11 @@
 package de.cubbossa.pathfinder.module;
 
-import com.google.common.base.Preconditions;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
+import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.event.NodeCreateEvent;
@@ -12,6 +13,9 @@ import de.cubbossa.pathfinder.event.NodeDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
 import de.cubbossa.pathfinder.event.NodeSaveEvent;
+import de.cubbossa.pathfinder.graph.DynamicDijkstra;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
@@ -21,52 +25,37 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationFilter;
 import de.cubbossa.pathfinder.navigation.NavigationHandler;
+import de.cubbossa.pathfinder.navigation.NavigationLocation;
+import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.GroupedNode;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.PathView;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.graph.DynamicDijkstra;
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
-import de.cubbossa.pathfinder.graph.PathSolver;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.node.GroupedNodeImpl;
-import de.cubbossa.pathfinder.node.implementation.PlayerNode;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
-import de.cubbossa.pathfinder.visualizer.VisualizerPathImpl;
-import de.cubbossa.translations.Message;
+import de.cubbossa.pathfinder.visualizer.GroupedVisualizerPathImpl;
+import de.cubbossa.pathfinder.visualizer.PathView;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.SingleVisualizerPathImpl;
+import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class AbstractNavigationHandler<PlayerT>
     extends PathFinderExtensionBase
     implements PathFinderExtension, NavigationHandler<PlayerT> {
-
-  // TODO player paths separate
 
   @Getter
   private static AbstractNavigationHandler<?> instance;
@@ -78,9 +67,9 @@ public class AbstractNavigationHandler<PlayerT>
   protected final PathFinder pathFinder;
   protected EventDispatcher<PlayerT> eventDispatcher;
 
-  protected final Map<PathPlayer<PlayerT>, SearchInfo<PlayerT>> activePaths;
+  protected final Collection<VisualizerPath<PlayerT>> activePaths;
   protected final List<NavigationFilter> navigationFilter;
-  private final PathSolver<GroupedNode> pathSolver = new DynamicDijkstra<>();
+  private final PathSolver<GroupedNode, Double> pathSolver = new DynamicDijkstra<>();
 
   // Caches
   private CompletableFuture<MutableValueGraph<GroupedNode, Double>> generatingFuture = null;
@@ -90,7 +79,7 @@ public class AbstractNavigationHandler<PlayerT>
 
   public AbstractNavigationHandler() {
     instance = this;
-    this.activePaths = new HashMap<>();
+    this.activePaths = new HashSet<>();
     this.pathFinder = PathFinderProvider.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.navigationFilter = new ArrayList<>();
@@ -101,21 +90,6 @@ public class AbstractNavigationHandler<PlayerT>
   @Override
   public void dispose() {
     instance = null;
-  }
-
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
-  public static <PlayerT> void printResult(NavigateResult result, PathPlayer<PlayerT> player) {
-    // success played from effects.
-    Message message = switch (result) {
-      case FAIL_BLOCKED, FAIL_EVENT_CANCELLED -> Messages.CMD_FIND_BLOCKED;
-      case FAIL_EMPTY -> Messages.CMD_FIND_EMPTY;
-      case FAIL_TOO_FAR_AWAY -> Messages.CMD_FIND_TOO_FAR;
-      case FAIL_UNKNOWN -> Messages.CMD_FIND_UNKNOWN;
-      default -> null;
-    };
-    if (message != null) {
-      player.sendMessage(message);
-    }
   }
 
   @Override
@@ -138,224 +112,70 @@ public class AbstractNavigationHandler<PlayerT>
   }
 
   @Override
-  public @Nullable SearchInfo<PlayerT> getActivePath(PathPlayer<PlayerT> player) {
-    return activePaths.get(player);
-  }
-
-  @Override
   public Collection<VisualizerPath<PlayerT>> getActivePaths(PathPlayer<PlayerT> player) {
-    return null;
+    return activePaths.stream().filter(p -> p.getTargetViewer().equals(player)).toList();
   }
 
   @Override
-  public VisualizerPath<PlayerT> findPathToClosestLocation(PathPlayer<PlayerT> player, Collection<Location> targets) {
-    return findPath(player, targets.stream().map(NavigateLocationImpl::staticLocation).toList());
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPathToLocation(PathPlayer<PlayerT> player, Location target) {
-    return findPath(player, Set.of(NavigateLocationImpl.staticLocation(target)));
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPathToClosestNode(PathPlayer<PlayerT> player, Collection<Node> targets) {
-    NavigateLocation location = new NavigateLocationImpl(new PlayerNode(player));
-    location.setAgile(true);
-    return findPath(player, location, targets.stream()
-        .map(NavigateLocationImpl::staticNode)
-        .collect(Collectors.toList()));
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target) {
-    return findPath(viewer, NavigateLocationImpl.agileNode(new PlayerNode(viewer)), target);
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target,
-                                                    double maxDist) {
-    return findPath(viewer, NavigateLocationImpl.agileNode(new PlayerNode(viewer)), target, maxDist);
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
-                                                    Collection<NavigateLocation> target) {
-    return findPath(viewer, start, target, pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance());
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
-                                                    Collection<NavigateLocation> target, double maxDist) {
-
-    Preconditions.checkNotNull(start);
-    Preconditions.checkNotNull(target);
-    Preconditions.checkArgument(!target.isEmpty(), "Targets must contain at least one valid node.");
-
-    Collection<NavigateLocation> navigateLocations = new LinkedList<>();
-    navigateLocations.add(start);
-    navigateLocations.addAll(target);
-
-    // graph becomes static, so this step and all following must be repeated for each path update.
-    return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).thenApply((path) -> {
-
-      NodeGroup highest = path.get(path.size() - 1).groups().stream()
-          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-          .max(NodeGroup::compareTo).orElse(null);
-
-      double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-          .map(FindDistanceModifier::distance).orElse(1.5);
-
-      boolean updating = navigateLocations.stream().anyMatch(NavigateLocation::isAgile);
-
-      return setPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
-        return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
-      });
-    }).exceptionally(t -> {
-      if (t.getCause().getCause() instanceof NoPathFoundException) {
-        return NavigateResult.FAIL_BLOCKED;
+  public List<Node> removeIdenticalNeighbours(List<Node> path) {
+    List<Node> result = new ArrayList<>();
+    GroupedNode last = null;
+    for (Node node : path) {
+      if (last != null && Objects.equals(last.node().getLocation(), groupedNode.node().getLocation())) {
+        last.groups().addAll(groupedNode.groups());
+        path.remove(groupedNode);
       }
-      pathFinder.getLogger().log(Level.SEVERE, "Unknown error", t);
-      return NavigateResult.FAIL_UNKNOWN;
-    });
+      last = groupedNode;
+    }
+
+    return path;
   }
 
-  private CompletableFuture<List<GroupedNode>> findPath(MutableValueGraph<GroupedNode, Double> graph, NavigateLocation start,
-                                                        Collection<NavigateLocation> targets) {
+  @Override
+  public CompletableFuture<VisualizerPath<PlayerT>> renderPath(PathPlayer<PlayerT> viewer, Route route) {
 
-    return pathFinder.getStorage().loadNodes().thenApply(nodes -> {
+    return fetchGraph().thenApply(g -> {
+      VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, route.calculatePaths(g));
 
-      Map<UUID, GroupedNode> graphMapping = new HashMap<>();
-      graph.nodes().forEach(groupedNode -> graphMapping.put(groupedNode.node().getNodeId(), groupedNode));
-      Collection<GroupedNode> convertedTargets = targets.stream()
-          .map(node -> graphMapping.get(node.getNode().getNodeId()))
-          .toList();
-      List<GroupedNode> path;
-
-      try {
-        pathSolver.setGraph(graph); // TODO fix for performance improvement
-        path = pathSolver.solvePath(graphMapping.get(start.getNode().getNodeId()), convertedTargets);
-      } catch (NoPathFoundException e) {
-        throw new RuntimeException(e);
-      }
-
-      // Drop all duplicate nodes, if they share the same location and are next to each other in path
-      GroupedNode last = null;
-      for (GroupedNode groupedNode : new LinkedList<>(path)) {
-        if (last != null && Objects.equals(last.node().getLocation(), groupedNode.node().getLocation())) {
-          last.groups().addAll(groupedNode.groups());
-          path.remove(groupedNode);
-        }
-        last = groupedNode;
-      }
-
+      activePaths.add(path);
+      path.startUpdater(1000);
       return path;
     });
+
   }
 
   @Override
-  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path) {
-    return null;
+  public <ViewT extends PathView<PlayerT>> CompletableFuture<VisualizerPath<PlayerT>> renderPath(
+      PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
+  ) throws NoPathFoundException {
+
+    return fetchGraph().thenApply(g -> {
+      return new SingleVisualizerPathImpl<>(
+          route.calculatePath(g).getPath(), renderer, viewer
+      );
+    });
   }
 
   @Override
-  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path, double reachDist) {
-    return null;
+  public void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path) {
+    NodeGroup highest = path.get(path.size() - 1).groups().stream()
+        .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+        .max(NodeGroup::compareTo).orElse(null);
+
+    double findDist = highest == null ? 1.5 : highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
+        .map(FindDistanceModifier::distance).orElse(1.5);
+
+    boolean updating = navigateLocations.stream().anyMatch(NavigateLocation::isFixedPosition);
+
+    return renderPath(viewer, path, path.get(path.size() - 1).node().getLocation(), (float) findDist, !updating ? null : () -> {
+      return getGraph(Collections.singleton(start), target).thenCompose(graph -> findPath(graph, start, target)).join();
+    });
   }
 
-  @Override
-  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
-                                         float distance) {
-    return setPath(player, pathNodes, target, distance, null);
-  }
-
-  @Override
-  public VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull Supplier<List<GroupedNode>> pathNodeSupplier,
-                                Location target, float distance) {
-
-    List<GroupedNode> pathNodes = pathNodeSupplier.get();
-    VisualizerPath<PlayerT> visualizerPath = new VisualizerPathImpl<>(pathNodes, player);
-
-    boolean success = eventDispatcher.dispatchPathStart(player, visualizerPath, target, distance);
-    if (!success) {
-      return NavigateResult.FAIL_EVENT_CANCELLED;
-    }
-    return setPath(player, pathNodes, target, distance, pathNodeSupplier);
-  }
-
-  @Override
-  private VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> player, @NotNull List<GroupedNode> pathNodes, Location target,
-                                 float distance, @Nullable Supplier<List<GroupedNode>> pathNodeSupplier) {
-    VisualizerPath<PlayerT> visualizerPath = new VisualizerPathImpl<>(pathNodes, player);
-
-    boolean success = eventDispatcher.dispatchPathStart(player, visualizerPath, target, distance);
-    if (!success) {
-      return NavigateResult.FAIL_EVENT_CANCELLED;
-    }
-
-    SearchInfo<PlayerT> current = activePaths.put(player, new SearchInfo<>(player, visualizerPath, target, distance));
-    if (current != null) {
-      current.path().removeViewer(player);
-    }
-    visualizerPath.addViewer(player);
-
-    if (false && pathNodeSupplier != null) {
-      visualizerPath.startUpdater(pathNodeSupplier, 1000);
-    }
-
-    return NavigateResult.SUCCESS;
-  }
-
-  @Override
-  public <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(PathPlayer<PlayerT> viewer, List<Node> path,
-                                                                              PathVisualizer<ViewT, PlayerT> renderer) {
-    return null;
-  }
-
-  @Override
-  public <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(PathPlayer<PlayerT> viewer, List<Node> path,
-                                                                              PathVisualizer<ViewT, PlayerT> renderer,
-                                                                              double reachDist) {
-    return null;
-  }
-
-  @Override
   public void unsetPath(PathPlayer<PlayerT> playerId) {
     if (activePaths.containsKey(playerId)) {
       unsetPath(activePaths.get(playerId));
     }
-  }
-
-  @Override
-  public void unsetPath(SearchInfo<PlayerT> info) {
-    activePaths.remove(info.player());
-    info.path().removeViewer(info.player());
-    info.path().stopUpdater();
-
-    eventDispatcher.dispatchPathStopped(info.player(), info.path(), info.target(), info.distance());
-  }
-
-  @Override
-  public void cancelPath(PathPlayer<PlayerT> playerId) {
-    if (activePaths.containsKey(playerId)) {
-      cancelPath(activePaths.get(playerId));
-    }
-  }
-
-  @Override
-  public void cancelPath(SearchInfo<PlayerT> info) {
-    if (!eventDispatcher.dispatchPathCancel(info.player(), info.path())) {
-      return;
-    }
-    unsetPath(info);
-  }
-
-  @Override
-  public void reachTarget(SearchInfo<PlayerT> info) {
-
-    if (!eventDispatcher.dispatchPathTargetReached(info.player(), info.path())) {
-      return;
-    }
-    unsetPath(info);
   }
 
   public void onLoad(PathFinder pathPlugin) {
@@ -403,16 +223,16 @@ public class AbstractNavigationHandler<PlayerT>
    * location since the last call.
    *
    * @param exits A collection of NavigateLocation instances. The first one might represent the start point. All points
-   *                  will be inserted by finding their closest edge and creating two edges from the point to both edge ends.
+   *              will be inserted by finding their closest edge and creating two edges from the point to both edge ends.
    */
-  private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigateLocation> entries, Collection<NavigateLocation> exits) {
+  private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigationLocation> entries, Collection<NavigationLocation> exits) {
 
-    Collection<NavigateLocation> locations = new HashSet<>(entries);
+    Collection<NavigationLocation> locations = new HashSet<>(entries);
     locations.addAll(exits);
 
     // TODO
     // check if any agile location has changed. If not, just return the last graph.
-    if (false && cachedGraphWithTargets != null && locations.stream().filter(NavigateLocation::isAgile).map(NavigateLocation::getNode)
+    if (false && cachedGraphWithTargets != null && locations.stream().filter(l -> !l.isFixedPosition()).map(NavigationLocation::getNode)
         .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
       return CompletableFuture.completedFuture(cachedGraphWithTargets);
     }
@@ -421,7 +241,7 @@ public class AbstractNavigationHandler<PlayerT>
     return fetchGraph().thenApply(graph -> {
       GraphEntrySolver<GroupedNode> solver = new EdgeBasedGraphEntrySolver();
 
-      for (NavigateLocation location : entries) {
+      for (NavigationLocation location : entries) {
         if (!location.isExternal()) {
           continue;
         }
@@ -431,7 +251,7 @@ public class AbstractNavigationHandler<PlayerT>
         graph = solver.solveEntry(g, graph);
         graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
       }
-      for (NavigateLocation location : exits) {
+      for (NavigationLocation location : exits) {
         if (!location.isExternal()) {
           continue;
         }
@@ -445,8 +265,8 @@ public class AbstractNavigationHandler<PlayerT>
       // cache results
       cachedGraphWithTargets = graph;
       cachedAgileLocations.clear();
-      cachedAgileLocations.addAll(locations.stream().filter(NavigateLocation::isAgile)
-          .map(NavigateLocation::getNode).map(Node::getLocation).toList());
+      cachedAgileLocations.addAll(locations.stream().filter(NavigationLocation::isFixedPosition)
+          .map(NavigationLocation::getNode).map(Node::getLocation).toList());
       return graph;
     });
   }
@@ -510,44 +330,5 @@ public class AbstractNavigationHandler<PlayerT>
           pathSolver.setGraph(graph);
           return graph;
         });
-  }
-
-  @RequiredArgsConstructor
-  @Getter
-  @Setter
-  static class NavigateLocationImpl implements NavigateLocation {
-
-    private final Node node;
-    private boolean external = true;
-    private boolean agile;
-
-    public static NavigateLocation agileNode(Node node) {
-      NavigateLocation loc = new NavigateLocationImpl(node);
-      loc.setAgile(true);
-      return loc;
-    }
-
-    public static NavigateLocation agileLocation(Supplier<Location> loc) {
-      NavigateLocation navloc = new NavigateLocationImpl(new Waypoint(UUID.randomUUID()) {
-        @Override
-        public Location getLocation() {
-          return loc.get();
-        }
-      });
-      navloc.setAgile(true);
-      return navloc;
-    }
-
-    public static NavigateLocation staticNode(Node node) {
-      var n = new NavigateLocationImpl(node);
-      n.setExternal(false);
-      return n;
-    }
-
-    public static NavigateLocation staticLocation(Location location) {
-      Node n = new Waypoint(UUID.randomUUID());
-      n.setLocation(location);
-      return new NavigateLocationImpl(n);
-    }
   }
 }

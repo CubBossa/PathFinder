@@ -3,25 +3,17 @@ package de.cubbossa.pathfinder.visualizer;
 import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.misc.Task;
+import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.GroupedNodeImpl;
-import de.cubbossa.pathfinder.storage.StorageUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
@@ -29,59 +21,46 @@ import lombok.experimental.Accessors;
  *
  * @param <PlayerT> The abstract path player type.
  */
-public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
+public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<PlayerT> {
 
-  @Getter
-  @Setter
-  protected PathPlayer<PlayerT> targetViewer;
-  @Getter
-  protected final HashSet<PathPlayer<PlayerT>> viewers;
+  protected final Route route;
   protected final Collection<SubPath<?>> paths;
 
-  private Supplier<List<GroupedNode>> updaterPathSupplier;
-  private final Timer updateTimer = new Timer();
-
-  public static <PlayerT> VisualizerPathImpl<PlayerT> fromNodes(List<Node> path, PathPlayer<PlayerT> player) {
-    return new VisualizerPathImpl<>(path.stream().parallel()
-        .map(node -> new GroupedNodeImpl(node, StorageUtil.getGroups(node)))
-        .collect(Collectors.toList()), player);
-  }
-
-  public VisualizerPathImpl(List<GroupedNode> path, PathPlayer<PlayerT> player) {
-    this.viewers = new HashSet<>();
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, Route route) {
+    this.route = route;
     this.paths = new HashSet<>();
-    targetViewer = player;
-    this.viewers.add(targetViewer);
-
-    update(path);
+    setTargetViewer(target);
+    update();
   }
 
-  public void update(List<GroupedNode> path) {
+  @Override
+  public void update() {
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
-    for (GroupedNode node : path) {
-      AtomicDouble highest = new AtomicDouble();
-      node.groups().stream()
-          .filter(g -> g.hasModifier(VisualizerModifier.KEY))
-          .peek(group -> {
-            if (highest.get() < group.getWeight()) {
-              highest.set(group.getWeight());
-            }
-          })
-          .filter(g -> g.getWeight() == highest.get())
-          .sorted()
-          .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .map(VisualizerModifier::getVisualizer)
-          .map(CompletableFuture::join)
-          .filter(Optional::isPresent).map(Optional::get)
-          .forEach(vis -> {
-            nodeVisualizerMap.computeIfAbsent(node.node(), n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
-          });
+    for (Node ungrouped : route.calculateNodes()) {
+      if (ungrouped instanceof GroupedNode node) {
+        AtomicDouble highest = new AtomicDouble();
+        node.groups().stream()
+            .filter(g -> g.hasModifier(VisualizerModifier.KEY))
+            .peek(group -> {
+              if (highest.get() < group.getWeight()) {
+                highest.set(group.getWeight());
+              }
+            })
+            .filter(g -> g.getWeight() == highest.get())
+            .sorted()
+            .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(VisualizerModifier::getVisualizer)
+            .map(CompletableFuture::join)
+            .filter(Optional::isPresent).map(Optional::get)
+            .forEach(vis -> {
+              nodeVisualizerMap.computeIfAbsent(node.node(), n -> new HashSet<>()).add((PathVisualizer<?, PlayerT>) vis);
+            });
+      }
     }
-
 
     // reduce collection with each iteration until no subpaths are left
     while (!nodeVisualizerMap.isEmpty()) {
@@ -125,32 +104,12 @@ public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
       }
     }
     for (SubPath<?> subPath : paths) {
-      injectSubPathView(subPath, targetViewer);
+      injectSubPathView(subPath);
     }
   }
 
-  @Override
-  public void startUpdater(Supplier<List<GroupedNode>> path, int ms) {
-    updaterPathSupplier = path;
-    updateTimer.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        update(updaterPathSupplier.get());
-      }
-    }, ms, ms);
-  }
-
-  public void forceExecuteUpdater() {
-    update(updaterPathSupplier.get());
-  }
-
-  @Override
-  public void stopUpdater() {
-    updateTimer.cancel();
-  }
-
-  private <ViewT extends PathView<PlayerT>> void injectSubPathView(SubPath<ViewT> subPath, PathPlayer<PlayerT> player) {
-    subPath.data = subPath.visualizer.createView(subPath.path, player);
+  private <ViewT extends PathView<PlayerT>> void injectSubPathView(SubPath<ViewT> subPath) {
+    subPath.data = subPath.visualizer.createView(subPath.path, getTargetViewer());
   }
 
   @Override
@@ -186,6 +145,5 @@ public class VisualizerPathImpl<PlayerT> implements VisualizerPath<PlayerT> {
     protected final List<Node> path;
     protected final PathVisualizer<ViewT, PlayerT> visualizer;
     protected ViewT data;
-    protected Task task;
   }
 }

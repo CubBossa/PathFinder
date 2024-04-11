@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.nodegroup.modifier;
 
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.NavigableModifier;
+import de.cubbossa.pathfinder.navigation.query.SearchTermImpl;
 import de.cubbossa.pathfinder.visualizer.query.SearchQueryAttribute;
 import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
-import de.cubbossa.pathfinder.navigationquery.SearchTermImpl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

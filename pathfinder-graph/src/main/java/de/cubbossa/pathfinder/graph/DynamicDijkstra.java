@@ -2,23 +2,40 @@ package de.cubbossa.pathfinder.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.graph.ValueGraph;
-import lombok.Getter;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 public class DynamicDijkstra<N> implements PathSolver<N> {
 
   private final Map<N, Node> nodeMapping = new HashMap<>();
-  private ValueGraph<N, Double> graph;
+  private ValueGraph<N, ? extends Number> graph;
 
-  private List<N> extractResult(Node node) {
+  private PathSolverResult<N> extractResult(Node node) {
+    double cost = node.distance;
     LinkedList<N> result = new LinkedList<>();
     while (node != null) {
       result.add(0, node.getNode());
       node = node.parent;
     }
-    return result;
+    return new PathSolverResult<N>() {
+      @Override
+      public List<N> getPath() {
+        return result;
+      }
+
+      @Override
+      public double getCost() {
+        return cost;
+      }
+    };
   }
 
   private Node node(N n) {
@@ -32,13 +49,13 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
   }
 
   @Override
-  public void setGraph(ValueGraph<N, Double> graph) {
+  public void setGraph(ValueGraph<N, ? extends Number> graph) {
     this.nodeMapping.clear();
     this.graph = graph;
   }
 
   @Override
-  public List<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
+  public PathSolverResult<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
     Preconditions.checkState(targets.size() > 0);
@@ -62,7 +79,7 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
         if (adjacentNode.equals(current)) return;
         if (adjacentNode.settled) return;
 
-        double d = current.distance + graph.edgeValue(current.node, adjacent).orElseThrow();
+        double d = current.distance + graph.edgeValue(current.node, adjacent).orElseThrow().doubleValue();
         if (d < adjacentNode.distance) {
           adjacentNode.distance = d;
           adjacentNode.parent = current;

@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.navigation;
 
 import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.misc.GraphEntrySolver;
-import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.PathView;
@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * The core element to manage path visualizations on an existing graph.
@@ -62,71 +61,26 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    */
   Collection<VisualizerPath<PlayerT>> getActivePaths(PathPlayer<PlayerT> player);
 
+  CompletableFuture<List<Node>> createPath(Route route) throws NoPathFoundException;
 
-  VisualizerPath<PlayerT> findPathToLocation(PathPlayer<PlayerT> player, Location target);
+  List<Node> removeIdenticalNeighbours(List<Node> path);
 
-  VisualizerPath<PlayerT> findPathToClosestLocation(PathPlayer<PlayerT> player, Collection<Location> targets);
+  CompletableFuture<VisualizerPath<PlayerT>> renderPath(
+      PathPlayer<PlayerT> viewer, Route route
+  ) throws NoPathFoundException;
 
-  VisualizerPath<PlayerT> findPathToClosestNode(PathPlayer<PlayerT> player, Collection<Node> targets);
+  <ViewT extends PathView<PlayerT>> CompletableFuture<VisualizerPath<PlayerT>> renderPath(
+      PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
+  ) throws NoPathFoundException;
 
-  VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target);
-
-  VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, Collection<NavigateLocation> target,
-                                             double maxDist);
-
-  VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
-                                             Collection<NavigateLocation> target);
-
-  VisualizerPath<PlayerT> findPath(PathPlayer<PlayerT> viewer, NavigateLocation start,
-                                             Collection<NavigateLocation> target, double maxDist);
-
-  VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path);
-
-  VisualizerPath<PlayerT> setPath(PathPlayer<PlayerT> viewer, List<Node> path, double reachDist);
-
-  <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(
-      PathPlayer<PlayerT> viewer,
-      List<Node> path,
-      PathVisualizer<ViewT, PlayerT> renderer
-  );
-
-  <ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> renderPath(
-      PathPlayer<PlayerT> viewer,
-      List<Node> path,
-      PathVisualizer<ViewT, PlayerT> renderer,
-      double reachDist
-  );
-
-  enum NavigateResult {
-    SUCCESS, FAIL_BLOCKED, FAIL_EMPTY, FAIL_EVENT_CANCELLED,
-    FAIL_TOO_FAR_AWAY, FAIL_UNKNOWN;
-  }
-
-  record SearchInfo<PlayerT2>(PathPlayer<PlayerT2> player, VisualizerPath<PlayerT2> path, Location target, float distance) {
-  }
-
-  /**
-   * A navigation target represents any possible and possibly moving node in the navigation graph.
-   * It is used to define a path starting point and end point on a graph.
-   */
-  interface NavigateLocation {
-    Node getNode();
-
-    boolean isExternal();
-
-    void setExternal(boolean external);
-
-    boolean isAgile();
-
-    void setAgile(boolean agile);
-  }
+  void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path);
 
   @NoArgsConstructor
   @AllArgsConstructor
   @Getter
   @Setter
   class NavigationConfig {
-    private PathSolver<Node> pathSolver;
+    private PathSolver<Node, Double> pathSolver;
     private GraphEntrySolver<Node> insertionSolver;
     private double maxInsertionDistance;
   }
