@@ -44,11 +44,11 @@ public interface EventDispatcher<PlayerT> extends Disposable {
 
   boolean dispatchVisualizerChangeEvent(PathVisualizer<?, ?> visualizer);
 
-  boolean dispatchPathStart(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target, float findDistanceRadius);
+  boolean dispatchPathStart(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 
   boolean dispatchPathTargetReached(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 
-  void dispatchPathStopped(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path, Location target, float distance);
+  void dispatchPathStopped(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 
   boolean dispatchPathCancel(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 

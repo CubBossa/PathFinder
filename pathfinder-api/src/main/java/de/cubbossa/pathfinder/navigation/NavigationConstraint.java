@@ -9,7 +9,7 @@ import java.util.UUID;
  * This might be used to filter nodes that have certain {@link de.cubbossa.pathfinder.group.Modifier}s applied.
  * If the result is empty, navigation will be cancelled.
  */
-public interface NavigationFilter {
+public interface NavigationConstraint {
 
   /**
    * Filters the requested target locations, for some might not be supposed to navigate to in certain contexts.

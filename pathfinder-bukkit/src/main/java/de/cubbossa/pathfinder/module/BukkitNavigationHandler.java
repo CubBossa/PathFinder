@@ -61,9 +61,9 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> i
     Player p = event.getPlayer();
     PathPlayer<Player> pathPlayer = AbstractPathFinder.getInstance().wrap(p);
 
-    AbstractNavigationHandler.SearchInfo<Player> info = BukkitNavigationHandler.getInstance().getActivePath(pathPlayer);
-    if (info != null && pathPlayer.getLocation().distanceSquared(info.target()) < Math.pow(info.distance(), 2)) {
-      BukkitNavigationHandler.getInstance().reachTarget(info);
+    AbstractNavigationHandler<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
+    if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), 2)) {
+      reach(info.path());
     }
   }
 }

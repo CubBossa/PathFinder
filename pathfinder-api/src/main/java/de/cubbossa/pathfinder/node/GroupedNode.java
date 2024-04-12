@@ -4,7 +4,7 @@ import de.cubbossa.pathfinder.group.NodeGroup;
 
 import java.util.Collection;
 
-public interface GroupedNode {
+public interface GroupedNode extends Node {
 
   Node node();
 

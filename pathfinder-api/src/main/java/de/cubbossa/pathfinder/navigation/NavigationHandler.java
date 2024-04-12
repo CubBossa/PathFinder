@@ -1,16 +1,12 @@
 package de.cubbossa.pathfinder.navigation;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.PathView;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import lombok.AllArgsConstructor;
@@ -31,7 +27,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    *
    * @param filter The filter function that maps the node collection into the filtered node collection.
    */
-  void registerFindPredicate(NavigationFilter filter);
+  void registerNavigationConstraint(NavigationConstraint filter);
 
   /**
    * Checks, if a player can cross a node after applying all registered filters.
@@ -41,7 +37,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    * @param scope The original graph without the appliance of any filters.
    * @return true, if the node can be crossed by the user.
    */
-  boolean canFind(UUID uuid, Node node, Collection<Node> scope);
+  boolean canNavigateTo(UUID uuid, Node node, Collection<Node> scope);
 
   /**
    * Filters a collection of nodes with all existing node filters. The result represents all nodes that the player
@@ -51,7 +47,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    * @param nodes  The scope nodes that are being filtered by all registered predicates.
    * @return The filtered collection of nodes.
    */
-  Collection<Node> filterFindables(UUID player, Collection<Node> nodes);
+  Collection<Node> applyNavigationConstraints(UUID player, Collection<Node> nodes);
 
   /**
    * Finds the potentially existing {@link SearchInfo}, which resembles an active path view.
@@ -59,21 +55,15 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    * @param player The player to search active paths for.
    * @return
    */
-  Collection<VisualizerPath<PlayerT>> getActivePaths(PathPlayer<PlayerT> player);
+  VisualizerPath<PlayerT> getActivePath(PathPlayer<PlayerT> player);
 
-  CompletableFuture<List<Node>> createPath(Route route) throws NoPathFoundException;
+  CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route);
 
-  List<Node> removeIdenticalNeighbours(List<Node> path);
+  void cancel(VisualizerPath<PlayerT> path);
 
-  CompletableFuture<VisualizerPath<PlayerT>> renderPath(
-      PathPlayer<PlayerT> viewer, Route route
-  ) throws NoPathFoundException;
+  void reach(VisualizerPath<PlayerT> path);
 
-  <ViewT extends PathView<PlayerT>> CompletableFuture<VisualizerPath<PlayerT>> renderPath(
-      PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
-  ) throws NoPathFoundException;
-
-  void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path);
+  void unset(VisualizerPath<PlayerT> path);
 
   @NoArgsConstructor
   @AllArgsConstructor

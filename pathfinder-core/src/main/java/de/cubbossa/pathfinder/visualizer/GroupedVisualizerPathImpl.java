@@ -26,7 +26,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
   protected final Route route;
   protected final Collection<SubPath<?>> paths;
 
-  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, Route route) {
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<Node> route) {
     this.route = route;
     this.paths = new HashSet<>();
     setTargetViewer(target);

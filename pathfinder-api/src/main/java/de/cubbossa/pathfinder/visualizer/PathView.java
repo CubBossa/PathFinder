@@ -2,9 +2,13 @@ package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
+import java.util.List;
 
 public interface PathView<PlayerT> extends Disposable {
+
+  List<Node> getPath();
 
   PathPlayer<PlayerT> getTargetViewer();
 
