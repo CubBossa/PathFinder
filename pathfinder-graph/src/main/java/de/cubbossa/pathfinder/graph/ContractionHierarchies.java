@@ -4,12 +4,16 @@ import com.google.common.graph.ElementOrder;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
-public class ContractionHierarchies<N> implements PathSolver<N> {
+public class ContractionHierarchies<N, E> implements PathSolver<N, E> {
 
   @RequiredArgsConstructor
   class Node implements Comparable<Node> {
@@ -38,7 +42,7 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
     }
 
     @Override
-    public int compareTo(@NotNull ContractionHierarchies<N>.Node o) {
+    public int compareTo(@NotNull ContractionHierarchies<N, E>.Node o) {
       if (edgeDiff != o.edgeDiff) {
         return edgeDiff > o.edgeDiff ? 1 : -1;
       }
@@ -57,12 +61,17 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
     mapping = new HashMap<>();
   }
 
-  public void setGraph(ValueGraph<N, Double> graph) {
+  public void setGraph(ValueGraph<N, E> graph) {
     populate(graph);
     contractNodes();
   }
 
-  protected void populate(ValueGraph<N, Double> graph) {
+  @Override
+  public double getEdgeValue(E edge) {
+    return 1;
+  }
+
+  protected void populate(ValueGraph<N, E> graph) {
     MutableValueGraph<Node, Double> temp = ValueGraphBuilder.directed()
         .expectedNodeCount(10_000)
         .nodeOrder(ElementOrder.sorted(Node::compareTo))
@@ -79,7 +88,7 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
     graph.edges().forEach(ns -> {
       Node u = mapping.get(ns.nodeU());
       Node v = mapping.get(ns.nodeV());
-      double weight = graph.edgeValue(ns).orElseThrow();
+      double weight = getEdgeValue(graph.edgeValue(ns).orElseThrow());
       if (!graph.isDirected()) {
         temp.putEdgeValue(v, u, weight);
       }
@@ -126,7 +135,7 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
     graph.edges().forEach(ns -> {
       Node u = mapping.get(ns.nodeU());
       Node v = mapping.get(ns.nodeV());
-      double weight = graph.edgeValue(ns).orElseThrow();
+      double weight = getEdgeValue(graph.edgeValue(ns).orElseThrow());
       if (!graph.isDirected()) {
         this.graph.putEdgeValue(v, u, weight);
         this.optimized.putEdgeValue(v, u, weight);
@@ -210,7 +219,7 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
   }
 
   @Override
-  public List<N> solvePath(N start, N target) throws NoPathFoundException {
+  public PathSolverResult<N, E> solvePath(N start, N target) throws NoPathFoundException {
     // full dijkstra on upwards optimized
     // collect all visited nodes in a set
     // full dijkstra on downwards optimized
@@ -279,7 +288,7 @@ public class ContractionHierarchies<N> implements PathSolver<N> {
   }
 
   @Override
-  public List<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
-    return new LinkedList<>();
+  public PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
+    return null;
   }
 }

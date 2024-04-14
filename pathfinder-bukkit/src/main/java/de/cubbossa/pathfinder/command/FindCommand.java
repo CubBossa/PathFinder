@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
@@ -26,7 +25,7 @@ public class FindCommand extends CommandTree {
 
           PathPlayer<Player> p = BukkitPathFinder.wrap(player);
 
-          BukkitNavigationHandler.getInstance().renderPath(p, Route
+          BukkitNavigationHandler.getInstance().navigate(p, Route
                   .from()//player loc
                   .toAny(targets))
               .whenComplete((path, throwable) -> {
@@ -37,13 +36,6 @@ public class FindCommand extends CommandTree {
                 path.startUpdater(1000);
                 BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
               });
-
-          BukkitNavigationHandler.getInstance().findPathToNodes(p, targets).thenAccept(result -> {
-            AbstractNavigationHandler.printResult(result, p);
-          }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-          });
         })
     );
   }

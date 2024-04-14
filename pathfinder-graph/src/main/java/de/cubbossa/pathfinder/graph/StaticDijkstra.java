@@ -4,28 +4,49 @@ import com.google.common.base.Preconditions;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-public class StaticDijkstra<N> implements PathSolver<N> {
+public class StaticDijkstra<N, E> implements PathSolver<N, E> {
 
   private final Map<N, Node> nodeMapping = new HashMap<>();
+  private ValueGraph<N, E> originalGraph;
   private MutableValueGraph<Node, Double> graph;
+  private final Function<E, Double> costFunction;
 
-  private List<N> extractResult(Node node) {
+  public StaticDijkstra(Function<E, Double> costFunction) {
+    this.costFunction = costFunction;
+  }
+
+  private PathSolverResult<N, E> extractResult(Node node) {
     LinkedList<N> result = new LinkedList<>();
+    LinkedList<E> edges = new LinkedList<>();
+    double costs = 0;
     while (node != null) {
       result.add(0, node.getNode());
-      node = node.parent;
+      if (node.parent != null) {
+        originalGraph.edgeValue(node.parent.getNode(), node.getNode()).ifPresent(e -> {
+          edges.add(0, e);
+        });
+        node = node.parent;
+      } else {
+        costs = node.distance;
+      }
     }
-    return result;
+    return new PathSolverResultImpl<>(result, edges, costs);
   }
 
   @Override
-  public void setGraph(ValueGraph<N, Double> graph) {
+  public void setGraph(ValueGraph<N, E> graph) {
+    this.originalGraph = graph;
     this.nodeMapping.clear();
     this.graph = ValueGraphBuilder.directed()
         .allowsSelfLoops(false)
@@ -37,7 +58,7 @@ public class StaticDijkstra<N> implements PathSolver<N> {
       this.graph.addNode(node);
     });
     graph.edges().forEach(ns -> {
-      double v = graph.edgeValue(ns).orElseThrow();
+      double v = getEdgeValue(graph.edgeValue(ns).orElseThrow());
       this.graph.putEdgeValue(nodeMapping.get(ns.nodeU()), nodeMapping.get(ns.nodeV()), v);
       if (!graph.isDirected()) {
         this.graph.putEdgeValue(nodeMapping.get(ns.nodeV()), nodeMapping.get(ns.nodeU()), v);
@@ -46,7 +67,12 @@ public class StaticDijkstra<N> implements PathSolver<N> {
   }
 
   @Override
-  public List<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
+  public double getEdgeValue(E edge) {
+    return costFunction.apply(edge);
+  }
+
+  @Override
+  public PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
     Preconditions.checkState(targets.size() > 0);

@@ -10,25 +10,36 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
 
-public class DynamicDijkstra<N> implements PathSolver<N> {
+public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
 
   private final Map<N, Node> nodeMapping = new HashMap<>();
-  private ValueGraph<N, ? extends Number> graph;
+  private ValueGraph<N, E> graph;
+  private final Function<E, Double> valueFunction;
 
-  private PathSolverResult<N> extractResult(Node node) {
+  public DynamicDijkstra(Function<E, Double> valueFunction) {
+    this.valueFunction = valueFunction;
+  }
+
+  private PathSolverResult<N, E> extractResult(Node node) {
     double cost = node.distance;
     LinkedList<N> result = new LinkedList<>();
     while (node != null) {
       result.add(0, node.getNode());
       node = node.parent;
     }
-    return new PathSolverResult<N>() {
+    return new PathSolverResult<>() {
       @Override
       public List<N> getPath() {
         return result;
+      }
+
+      @Override
+      public List<E> getEdges() {
+        return null;
       }
 
       @Override
@@ -49,13 +60,18 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
   }
 
   @Override
-  public void setGraph(ValueGraph<N, ? extends Number> graph) {
+  public void setGraph(ValueGraph<N, E> graph) {
     this.nodeMapping.clear();
     this.graph = graph;
   }
 
   @Override
-  public PathSolverResult<N> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
+  public double getEdgeValue(E edge) {
+    return valueFunction.apply(edge);
+  }
+
+  @Override
+  public PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
     Preconditions.checkState(targets.size() > 0);
@@ -79,7 +95,7 @@ public class DynamicDijkstra<N> implements PathSolver<N> {
         if (adjacentNode.equals(current)) return;
         if (adjacentNode.settled) return;
 
-        double d = current.distance + graph.edgeValue(current.node, adjacent).orElseThrow().doubleValue();
+        double d = current.distance + getEdgeValue(graph.edgeValue(current.node, adjacent).orElseThrow());
         if (d < adjacentNode.distance) {
           adjacentNode.distance = d;
           adjacentNode.parent = current;

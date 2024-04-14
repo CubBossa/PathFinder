@@ -12,7 +12,6 @@ import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
-import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationConstraint;
@@ -23,11 +22,9 @@ import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,10 +33,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 public class AbstractNavigationHandler<PlayerT>
     extends PathFinderExtensionBase

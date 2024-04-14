@@ -2,29 +2,41 @@ package de.cubbossa.pathfinder.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.graph.ValueGraph;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+public class AStarImpl<N, E> implements PathSolver<N, E> {
 
-public class AStarImpl<N> implements PathSolver<N> {
+  private final Function<E, Double> distanceFunction;
+  private ValueGraph<N, E> graph;
 
-  private final BiFunction<N, N, Double> distanceFunction;
-  private ValueGraph<N, Double> graph;
-
-  public AStarImpl(BiFunction<N, N, Double> distanceFunction) {
+  public AStarImpl(Function<E, Double> distanceFunction) {
     this.distanceFunction = distanceFunction;
   }
 
   @Override
-  public void setGraph(ValueGraph<N, Double> graph) {
+  public void setGraph(ValueGraph<N, E> graph) {
     this.graph = graph;
   }
 
   @Override
-  public List<N> solvePath(N startNode, Collection<N> targets)
+  public double getEdgeValue(E edge) {
+    return 0;
+  }
+
+  @Override
+  public PathSolverResult<N, E> solvePath(N startNode, Collection<N> targets)
       throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(startNode);
@@ -68,15 +80,15 @@ public class AStarImpl<N> implements PathSolver<N> {
         break;
       }
 
-      for (Map.Entry<Node, Double> entry : current.adjacent.entrySet()) {
+      for (Map.Entry<Node, E> entry : current.adjacent.entrySet()) {
         Node successor = entry.getKey();
 
         if (close.contains(successor)) {
           continue;
         }
 
-        double cost = current.g + entry.getValue() * distanceFunction
-            .apply(current.node, successor.node);
+        double cost = current.g + distanceFunction.apply(entry.getValue()) * distanceFunction
+            .apply(current.adjacent.get(successor.node));
 
         if (open.contains(successor)) {
           if (cost >= successor.g) {
@@ -105,7 +117,7 @@ public class AStarImpl<N> implements PathSolver<N> {
     return path;
   }
 
-  private Map<N, Node> buildGraph(ValueGraph<N, Double> graph, N start, Collection<N> targets) {
+  private Map<N, Node> buildGraph(ValueGraph<N, E> graph, N start, Collection<N> targets) {
     Map<N, Node> computed = new HashMap<>();
     Queue<Node> queue = new LinkedList<>();
 
@@ -115,7 +127,7 @@ public class AStarImpl<N> implements PathSolver<N> {
       Node current = queue.poll();
 
       current.h = targets.stream()
-          .mapToDouble(t -> distanceFunction.apply(current.node, t))
+          .mapToDouble(t -> distanceFunction.apply(current.adjacent.get(t)))
           .min().orElse(Double.MAX_VALUE);
       computed.put(current.node, current);
 
@@ -136,7 +148,7 @@ public class AStarImpl<N> implements PathSolver<N> {
   @Getter
   private class Node implements Comparable<Node> {
     private final N node;
-    private final Map<Node, Double> adjacent = new HashMap<>();
+    private final Map<Node, E> adjacent = new HashMap<>();
     private final List<Node> path = new LinkedList<>();
     private Node predecessor;
     // total cost
@@ -157,7 +169,7 @@ public class AStarImpl<N> implements PathSolver<N> {
     }
 
     @Override
-    public int compareTo(@NotNull AStarImpl<N>.Node o) {
+    public int compareTo(@NotNull AStarImpl<N, E>.Node o) {
       return Double.compare(this.f, o.f);
     }
   }

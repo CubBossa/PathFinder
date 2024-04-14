@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.graph.DynamicDijkstra;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
+import de.cubbossa.pathfinder.graph.PathSolverResultImpl;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class AbstractRoute implements Route {
@@ -26,17 +28,20 @@ public class AbstractRoute implements Route {
   AbstractRoute(Route other) {
     this.targets = new ArrayList<>();
     this.targets.add(List.of(other));
-    this.baseGraphSolver = new DynamicDijkstra<>();
+    this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
   AbstractRoute(NavigationLocation start) {
     this.targets = new ArrayList<>();
     this.targets.add(List.of(start));
-    this.baseGraphSolver = new DynamicDijkstra<>();
+    this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
-  private NavigationLocation location(Node node) {
-
+  private NavigationLocation loc(Node node) {
+    if (node instanceof NavigationLocation nav) {
+      return nav;
+    }
+    return NavigationLocation.fixedGraphNode(node);
   }
 
   @Override
@@ -67,7 +72,7 @@ public class AbstractRoute implements Route {
     if (route.isEmpty()) {
       throw new IllegalArgumentException("Cannot create empty route. No targets provided.");
     }
-    Route r = new AbstractRoute(location(route.get(0)));
+    Route r = new AbstractRoute(loc(route.get(0)));
     for (Node node : route.subList(1, route.size())) {
       r = r.to(node);
     }
@@ -76,7 +81,7 @@ public class AbstractRoute implements Route {
 
   @Override
   public Route to(Node node) {
-    return to(location(node));
+    return to(loc(node));
   }
 
   @Override
@@ -87,13 +92,13 @@ public class AbstractRoute implements Route {
 
   @Override
   public Route toAny(Node... nodes) {
-    targets.add(Arrays.stream(nodes).map(this::location).collect(Collectors.toList()));
+    targets.add(Arrays.stream(nodes).map(this::loc).collect(Collectors.toList()));
     return this;
   }
 
   @Override
   public Route toAny(Collection<Node> nodes) {
-    targets.add(nodes.stream().map(this::location).collect(Collectors.toList()));
+    targets.add(nodes.stream().map(this::loc).collect(Collectors.toList()));
     return this;
   }
 
@@ -150,7 +155,7 @@ public class AbstractRoute implements Route {
       }
     }
 
-    DynamicDijkstra<RouteEl> abstractSolver = new DynamicDijkstra<>();
+    DynamicDijkstra<RouteEl, PathSolverResult<Node, Double>> abstractSolver = new DynamicDijkstra<>(PathSolverResult::getCost);
     abstractSolver.setGraph(abstractGraph);
 
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
@@ -167,7 +172,7 @@ public class AbstractRoute implements Route {
         edges.addAll(edge.getEdges());
         cost += edge.getCost();
       }
-      results.add(new PathSolverResultImpl(nodePath, edges, cost));
+      results.add(new PathSolverResultImpl<>(nodePath, edges, cost));
     }
     if (results.isEmpty()) {
       throw new NoPathFoundException();
@@ -176,24 +181,7 @@ public class AbstractRoute implements Route {
     return results;
   }
 
-  record PathSolverResultImpl(List<Node> path, List<Double> edge,
-                              double cost) implements PathSolverResult<Node, Double> {
 
-    @Override
-    public List<Node> getPath() {
-      return path;
-    }
-
-    @Override
-    public List<Double> getEdges() {
-      return edge;
-    }
-
-    @Override
-    public double getCost() {
-      return cost;
-    }
-  }
 
   private PathSolverResult<Node, Double> costs(RouteEl a, RouteEl b) throws NoPathFoundException {
     return baseGraphSolver.solvePath(a.end, b.start);

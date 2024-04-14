@@ -14,7 +14,10 @@ public interface Route {
   }
 
   static Route from(Node location) {
-
+    if (location instanceof NavigationLocation nav) {
+      return from(nav);
+    }
+    return from(NavigationLocation.fixedGraphNode(location));
   }
 
   static Route from(Route route) {
