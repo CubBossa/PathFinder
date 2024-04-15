@@ -15,23 +15,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class AbstractRoute implements Route {
+class RouteImpl implements Route {
 
   private final List<Collection<Object>> targets;
   private final PathSolver<Node, Double> baseGraphSolver;
 
-  AbstractRoute(Route other) {
+  RouteImpl(Route other) {
     this.targets = new ArrayList<>();
     this.targets.add(List.of(other));
     this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
-  AbstractRoute(NavigationLocation start) {
+  RouteImpl(NavigationLocation start) {
     this.targets = new ArrayList<>();
     this.targets.add(List.of(start));
     this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
@@ -72,7 +73,7 @@ public class AbstractRoute implements Route {
     if (route.isEmpty()) {
       throw new IllegalArgumentException("Cannot create empty route. No targets provided.");
     }
-    Route r = new AbstractRoute(loc(route.get(0)));
+    Route r = new RouteImpl(loc(route.get(0)));
     for (Node node : route.subList(1, route.size())) {
       r = r.to(node);
     }
@@ -121,7 +122,11 @@ public class AbstractRoute implements Route {
 
   @Override
   public PathSolverResult<Node, Double> calculatePath(ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    return calculatePaths(environment).iterator().next();
+    var res = calculatePaths(environment);
+    if (res.isEmpty()) {
+      throw new NoPathFoundException();
+    }
+    return res.iterator().next();
   }
 
   @Override
@@ -138,7 +143,7 @@ public class AbstractRoute implements Route {
     for (Collection<Object> target : targets) {
       Collection<RouteEl> inner = new HashSet<>();
       for (Object o : target) {
-        inner.addAll(resolve(o, environment));
+        inner.addAll(newElement(o, environment));
       }
       convertedTargets.add(inner);
     }
@@ -149,7 +154,7 @@ public class AbstractRoute implements Route {
         abstractGraph.addNode(inner);
 
         for (RouteEl p : prev) {
-          abstractGraph.putEdgeValue(p, inner, costs(p, inner));
+          abstractGraph.putEdgeValue(p, inner, solveForSection(p, inner));
         }
         prev = target;
       }
@@ -164,15 +169,7 @@ public class AbstractRoute implements Route {
           convertedTargets.get(0).iterator().next(),
           lastTarget
       );
-      List<Node> nodePath = new ArrayList<>();
-      List<Double> edges = new ArrayList<>();
-      double cost = 0;
-      for (PathSolverResult<Node, Double> edge : res.getEdges()) {
-        nodePath.addAll(edge.getPath());
-        edges.addAll(edge.getEdges());
-        cost += edge.getCost();
-      }
-      results.add(new PathSolverResultImpl<>(nodePath, edges, cost));
+      results.add(join(res));
     }
     if (results.isEmpty()) {
       throw new NoPathFoundException();
@@ -181,26 +178,96 @@ public class AbstractRoute implements Route {
     return results;
   }
 
+  private PathSolverResult<Node, Double> merge(Iterable<PathSolverResult<Node, Double>> iterable) {
+    boolean first = true;
 
-
-  private PathSolverResult<Node, Double> costs(RouteEl a, RouteEl b) throws NoPathFoundException {
-    return baseGraphSolver.solvePath(a.end, b.start);
+    List<Node> nodePath = new ArrayList<>();
+    List<Double> edges = new ArrayList<>();
+    double cost = 0;
+    for (PathSolverResult<Node, Double> result : iterable) {
+      if (!first && !result.getPath().isEmpty()) {
+        nodePath.addAll(result.getPath().subList(1, result.getPath().size()));
+      } else {
+        nodePath.addAll(result.getPath());
+        first = false;
+      }
+      edges.addAll(result.getEdges());
+      cost += result.getCost();
+    }
+    return new PathSolverResultImpl<>(nodePath, edges, cost);
   }
 
-  private Collection<RouteEl> resolve(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {
+  private PathSolverResult<Node, Double> join(PathSolverResult<RouteEl, PathSolverResult<Node, Double>> els) throws NoPathFoundException {
+    List<PathSolverResult<Node, Double>> results = new LinkedList<>();
+    Iterator<RouteEl> nit = els.getPath().iterator();
+    Iterator<PathSolverResult<Node, Double>> eit = els.getEdges().iterator();
+    if (!nit.hasNext()) {
+      throw new IllegalStateException();
+    }
+    RouteEl el;
+    while (nit.hasNext()) {
+      el = nit.next();
+      results.add(el.solve());
+      if (eit.hasNext()) {
+        results.add(eit.next());
+      }
+    }
+    return merge(results);
+  }
+
+  private PathSolverResult<Node, Double> solveForSection(RouteEl a, RouteEl b) throws NoPathFoundException {
+    return merge(List.of(a.solve(), baseGraphSolver.solvePath(a.end, b.start)));
+  }
+
+  private Collection<RouteEl> newElement(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {
     if (o instanceof NavigationLocation loc) {
       Node n = loc.getNode();
-      return Collections.singleton(new RouteEl(n, n, 0));
+      return Collections.singleton(new RouteEl(n, n) {
+        @Override
+        PathSolverResult<Node, Double> solve() {
+          return new PathSolverResultImpl<>(Collections.singletonList(n), Collections.emptyList(), 0);
+        }
+      });
     } else if (o instanceof Route route) {
       Collection<RouteEl> els = new LinkedList<>();
       for (PathSolverResult<Node, Double> result : route.calculatePaths(environment)) {
-        els.add(new RouteEl(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1), result.getCost()));
+        els.add(new RouteEl(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1)) {
+          @Override
+          PathSolverResult<Node, Double> solve() {
+            return result;
+          }
+        });
       }
       return els;
     }
     throw new IllegalStateException("Don't know how to convert object into RouteEl");
   }
 
-  private record RouteEl(Node start, Node end, double cost) {
-  }
+  private static abstract class RouteEl {
+    private final Node start;
+    private final Node end;
+
+    private RouteEl(Node start, Node end) {
+      this.start = start;
+      this.end = end;
+    }
+
+    abstract PathSolverResult<Node, Double> solve();
+
+    public Node start() {
+      return start;
+    }
+
+    public Node end() {
+      return end;
+    }
+
+    @Override
+    public String toString() {
+      return "RouteEl[" +
+          "start=" + start + ", " +
+          "end=" + end + ']';
+    }
+
+    }
 }

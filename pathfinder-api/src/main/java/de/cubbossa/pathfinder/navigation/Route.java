@@ -10,18 +10,18 @@ import java.util.List;
 public interface Route {
 
   static Route from(NavigationLocation location) {
-    return new AbstractRoute(location);
+    return new RouteImpl(location);
   }
 
-  static Route from(Node location) {
-    if (location instanceof NavigationLocation nav) {
+  static Route from(Node fixedGraphNode) {
+    if (fixedGraphNode instanceof NavigationLocation nav) {
       return from(nav);
     }
-    return from(NavigationLocation.fixedGraphNode(location));
+    return from(NavigationLocation.fixedGraphNode(fixedGraphNode));
   }
 
   static Route from(Route route) {
-    return new AbstractRoute(route);
+    return new RouteImpl(route);
   }
 
   NavigationLocation getStart();

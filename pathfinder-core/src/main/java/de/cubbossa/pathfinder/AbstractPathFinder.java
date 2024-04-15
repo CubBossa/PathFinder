@@ -87,10 +87,6 @@ public abstract class AbstractPathFinder implements PathFinder {
 
   public abstract World getWorld(UUID worldId);
 
-  public abstract <PlayerT> PathPlayer<PlayerT> wrap(UUID playerId);
-
-  public abstract <PlayerT> PathPlayer<PlayerT> wrap(PlayerT player);
-
   public AbstractPathFinder() {
     disposer = createDisposer();
   }

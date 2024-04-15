@@ -9,6 +9,9 @@ import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
+import de.cubbossa.pathfinder.navigation.NavigationLocation;
+import de.cubbossa.pathfinder.navigation.Route;
+import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import dev.jorel.commandapi.CommandTree;
@@ -146,11 +149,16 @@ public class FindPlayerManager implements Disposable {
     ));
 
     PathPlayer<Player> requesterPathPlayer = BukkitUtils.wrap(requesterPlayer);
-    BukkitNavigationHandler.getInstance().findPathToLocation(requesterPathPlayer, BukkitVectorUtils.toInternal(target.getLocation().add(0, 1, 0))).thenAccept(result -> {
-      AbstractNavigationHandler.printResult(result, requesterPathPlayer);
-    }).exceptionally(throwable -> {
-      throwable.printStackTrace();
-      return null;
+    BukkitNavigationHandler.getInstance().navigate(requesterPathPlayer, Route
+        .from(NavigationLocation.movingExternalNode(new PlayerNode(requesterPathPlayer)))
+        .to(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(target))))
+    ).whenComplete((path, throwable) -> {
+      if (throwable != null) {
+        requesterPlayer.sendMessage(throwable.getMessage()); // TODO
+        return;
+      }
+      path.startUpdater(1000);
+      BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
     });
   }
 

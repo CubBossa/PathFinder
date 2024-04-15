@@ -185,8 +185,8 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
-  public boolean dispatchPathStart(PathPlayer<Player> player, VisualizerPath<Player> path, Location target, float findDistanceRadius) {
-    return dispatchEvent(new PathStartEvent(player, path, target, findDistanceRadius));
+  public boolean dispatchPathStart(PathPlayer<Player> player, VisualizerPath<Player> path) {
+    return dispatchEvent(new PathStartEvent(player, path));
   }
 
   @Override
@@ -195,7 +195,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   }
 
   @Override
-  public void dispatchPathStopped(PathPlayer<Player> player, VisualizerPath<Player> path, Location target, float distance) {
+  public void dispatchPathStopped(PathPlayer<Player> player, VisualizerPath<Player> path) {
 
   }
 

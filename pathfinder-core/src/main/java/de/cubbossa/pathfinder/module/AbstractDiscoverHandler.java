@@ -54,7 +54,7 @@ public class AbstractDiscoverHandler<PlayerT>
     }
 
     if (pathFinder.getConfiguration().getNavigation().isRequireDiscovery()) {
-      AbstractNavigationHandler.getInstance().registerFindPredicate((playerId, scope) -> {
+      AbstractNavigationHandler.getInstance().registerNavigationConstraint((playerId, scope) -> {
         Map<Node, Collection<NodeGroup>> map = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
 
         return map.entrySet().stream()

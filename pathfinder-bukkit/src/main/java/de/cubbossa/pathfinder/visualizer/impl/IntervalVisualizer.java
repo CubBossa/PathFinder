@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.node.Node;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +30,8 @@ public abstract class IntervalVisualizer<ViewT extends IntervalVisualizer<ViewT>
 
     private BukkitTask task;
 
-    public IntervalView(PathPlayer<Player> player) {
-      super(player);
+    public IntervalView(PathPlayer<Player> player, List<Node> path) {
+      super(player, path);
       start();
     }
 

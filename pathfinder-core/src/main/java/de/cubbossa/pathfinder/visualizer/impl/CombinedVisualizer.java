@@ -71,7 +71,7 @@ public class CombinedVisualizer extends
 
   @Override
   public CombinedView<Object> createView(List<Node> nodes, PathPlayer<Object> player) {
-    return new CombinedView<Object>(player, visualizers.stream()
+    return new CombinedView<Object>(player, nodes, visualizers.stream()
         .filter(v -> v.getTargetType().isInstance(getTargetType()))
         // safely assume that the player type matches for all sub visualizers that matched the filter
         .collect(Collectors.toMap(Keyed::getKey, v -> v.createView(nodes, (PathPlayer) player))));
@@ -82,8 +82,8 @@ public class CombinedVisualizer extends
 
     private final Map<NamespacedKey, PathView<T>> childData;
 
-    public CombinedView(PathPlayer<T> targetViewer, Map<NamespacedKey, PathView<T>> childData) {
-      super(targetViewer);
+    public CombinedView(PathPlayer<T> targetViewer, List<Node> path, Map<NamespacedKey, PathView<T>> childData) {
+      super(targetViewer, path);
       this.childData = childData;
     }
 

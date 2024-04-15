@@ -2,8 +2,10 @@ package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -31,11 +33,13 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
   public abstract class AbstractView implements PathView<PlayerT> {
 
     private final UUID targetViewerUuid;
+    private final List<Node> path;
     private PathPlayer<PlayerT> targetViewer;
     Collection<PathPlayer<PlayerT>> viewers;
 
-    public AbstractView(PathPlayer<PlayerT> targetViewer) {
+    public AbstractView(PathPlayer<PlayerT> targetViewer, List<Node> path) {
       this.targetViewerUuid = targetViewer.getUniqueId();
+      this.path = path;
       this.targetViewer = targetViewer;
       viewers = new HashSet<>();
     }

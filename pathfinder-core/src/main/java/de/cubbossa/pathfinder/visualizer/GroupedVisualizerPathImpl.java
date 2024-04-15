@@ -23,11 +23,10 @@ import lombok.experimental.Accessors;
  */
 public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<PlayerT> {
 
-  protected final Route route;
   protected final Collection<SubPath<?>> paths;
 
-  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<Node> route) {
-    this.route = route;
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<? extends Node> route) {
+    super(route);
     this.paths = new HashSet<>();
     setTargetViewer(target);
     update();
@@ -38,7 +37,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
-    for (Node ungrouped : route.calculateNodes()) {
+    for (Node ungrouped : path) {
       if (ungrouped instanceof GroupedNode node) {
         AtomicDouble highest = new AtomicDouble();
         node.groups().stream()

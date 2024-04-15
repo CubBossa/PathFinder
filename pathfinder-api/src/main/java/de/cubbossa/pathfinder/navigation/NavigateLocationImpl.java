@@ -1,10 +1,14 @@
 package de.cubbossa.pathfinder.navigation;
 
 import com.google.common.graph.MutableValueGraph;
+import de.cubbossa.pathfinder.misc.GraphEntrySolver;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import lombok.Getter;
 
 class NavigateLocationImpl implements NavigationLocation {
+
+  private static GraphEntrySolver<Node> GRAPH_ENTRY_SOLVER;
 
   @Getter
   private final Node node;
@@ -25,6 +29,8 @@ class NavigateLocationImpl implements NavigationLocation {
     if (graph.nodes().contains(node)) {
       return;
     }
+    GRAPH_ENTRY_SOLVER.solveEntry(node, graph);
+    GRAPH_ENTRY_SOLVER.solveExit(node, graph);
   }
 
   @Override

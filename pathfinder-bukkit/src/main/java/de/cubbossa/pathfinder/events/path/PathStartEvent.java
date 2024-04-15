@@ -18,16 +18,11 @@ public class PathStartEvent extends Event implements Cancellable, de.cubbossa.pa
 
   private final PathPlayer<Player> player;
   private final VisualizerPath<Player> path;
-  private Location target;
-  private float distance;
   private boolean cancelled = false;
 
-  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<Player> path, Location target,
-                        float distance) {
+  public PathStartEvent(PathPlayer<Player> player, VisualizerPath<Player> path) {
     this.player = player;
     this.path = path;
-    this.target = target;
-    this.distance = distance;
   }
 
   public static HandlerList getHandlerList() {

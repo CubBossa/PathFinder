@@ -57,7 +57,7 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
     private Location lastPlayerLocation;
 
     public EdgeBasedView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
-      super(player);
+      super(player, nodes);
       this.nodes = nodes;
       this.edges = edges;
     }

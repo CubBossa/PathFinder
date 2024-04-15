@@ -51,13 +51,10 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
         targets.stream()
             .map(nodeMap::get)
             .collect(Collectors.toList())
-    )
-        .stream()
-        .map(Node::getNode)
-        .collect(Collectors.toList());
+    );
   }
 
-  private List<Node> shortestPath(Node start, Collection<Node> target)
+  private PathSolverResult<N, E> shortestPath(Node start, Collection<Node> target)
       throws NoPathFoundException {
 
     if (target.isEmpty()) {
@@ -108,13 +105,17 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
       throw new NoPathFoundException();
     }
 
-    List<Node> path = new ArrayList<>();
+    List<N> path = new ArrayList<>();
+    List<E> edges = new ArrayList<>();
+    double cost = 0;
     Node c = matchedTarget;
     while (c != null) {
-      path.add(0, c);
+      path.add(0, c.node);
+      edges.add(c.predecessor.adjacent.get(c));
       c = c.predecessor;
+      cost = c.g;
     }
-    return path;
+    return new PathSolverResultImpl<>(path, edges, cost);
   }
 
   private Map<N, Node> buildGraph(ValueGraph<N, E> graph, N start, Collection<N> targets) {

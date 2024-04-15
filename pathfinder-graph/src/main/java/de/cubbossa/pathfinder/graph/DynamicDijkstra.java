@@ -26,20 +26,24 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
 
   private PathSolverResult<N, E> extractResult(Node node) {
     double cost = node.distance;
-    LinkedList<N> result = new LinkedList<>();
+    LinkedList<N> nodes = new LinkedList<>();
+    LinkedList<E> edges = new LinkedList<>();
     while (node != null) {
-      result.add(0, node.getNode());
+      nodes.add(0, node.getNode());
+      if (node.parent != null) {
+        graph.edgeValue(node.parent.node, node.node).ifPresent(e -> edges.add(0, e));
+      }
       node = node.parent;
     }
     return new PathSolverResult<>() {
       @Override
       public List<N> getPath() {
-        return result;
+        return nodes;
       }
 
       @Override
       public List<E> getEdges() {
-        return null;
+        return edges;
       }
 
       @Override
@@ -77,6 +81,12 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
     Preconditions.checkState(targets.size() > 0);
     Preconditions.checkState(targets.size() == targets.stream().filter(Objects::nonNull).toList().size());
 
+    nodeMapping.values().forEach(node -> {
+      node.settled = false;
+      node.parent = null;
+      node.distance = Integer.MAX_VALUE;
+    });
+
     FibonacciHeap<Node> unsettled = new FibonacciHeap<>();
     Node startNode = node(start);
     Collection<Node> targetNodes = targets.stream()
@@ -87,8 +97,6 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
 
     while (!unsettled.isEmpty()) {
       Node current = unsettled.dequeueMin().getValue();
-      // actually, no settled node can end up in the queue but for some reason it happens anyways
-      if (current.settled) continue;
 
       graph.successors(current.node).forEach(adjacent -> {
         Node adjacentNode = node(adjacent);

@@ -415,7 +415,7 @@ public class Arguments {
               String search = context.currentInput().replace(" ", "");
               StorageAdapter storage = PathFinderProvider.get().getStorage();
               Map<Node, Collection<NavigableModifier>> scope = storage.<NavigableModifier>loadNodes(NavigableModifier.KEY).join();
-              Collection<Node> valids = AbstractNavigationHandler.getInstance().filterFindables(player.getUniqueId(), scope.keySet());
+              Collection<Node> valids = AbstractNavigationHandler.getInstance().applyNavigationConstraints(player.getUniqueId(), scope.keySet());
 
               Map<Node, Collection<NavigableModifier>> result = new HashMap<>();
               valids.forEach(node -> result.put(node, scope.get(node)));

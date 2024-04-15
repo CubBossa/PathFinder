@@ -21,7 +21,9 @@ import de.cubbossa.pathfinder.navigation.NavigatorImpl;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -109,7 +111,7 @@ public class AbstractNavigationHandler<PlayerT>
 
     var current = activePaths.get(viewer.getUniqueId());
     if (current != null) {
-      cancel(current.path);
+      cancel(current.playerId);
     }
 
     VisualizerPath<PlayerT> path;
@@ -160,25 +162,44 @@ public class AbstractNavigationHandler<PlayerT>
     return new NavigationContext(playerId, path, last, dist);
   }
 
-  @Override
-  public void unset(VisualizerPath<PlayerT> path) {
-    eventDispatcher.dispatchPathStopped(path.getTargetViewer(), path);
+  private void unset(NavigationContext context) {
+    if (activePaths.remove(context.playerId) != null) {
+      eventDispatcher.dispatchPathStopped(PathPlayer.wrap(context.playerId), context.path);
+    }
   }
 
   @Override
-  public void cancel(VisualizerPath<PlayerT> path) {
+  public void unset(UUID viewer) {
+    var context = activePaths.get(viewer);
+    if (context != null) {
+      unset(context);
+    }
+  }
+
+  @Override
+  public void cancel(UUID viewer) {
+    var context = activePaths.get(viewer);
+    if (context == null) {
+      return;
+    }
+    var path = context.path();
     if (!eventDispatcher.dispatchPathCancel(path.getTargetViewer(), path)) {
       return;
     }
-    unset(path);
+    unset(context);
   }
 
   @Override
-  public void reach(VisualizerPath<PlayerT> path) {
+  public void reach(UUID viewer) {
+    var context = activePaths.get(viewer);
+    if (context == null) {
+      return;
+    }
+    var path = context.path();
     if (!eventDispatcher.dispatchPathTargetReached(path.getTargetViewer(), path)) {
       return;
     }
-    unset(path);
+    unset(context);
   }
 
   @Override
@@ -267,58 +288,4 @@ public class AbstractNavigationHandler<PlayerT>
           "dist=" + dist + ']';
     }
   }
-//
-//  /**
-//   * Fetches the node setup as graph (might be cached) and inserts a collection of NavigateLocations into the graph.
-//   * The result might again be cached if all NavigateLocations are either static or agile but haven't changed their
-//   * location since the last call.
-//   *
-//   * @param exits A collection of NavigateLocation instances. The first one might represent the start point. All points
-//   *              will be inserted by finding their closest edge and creating two edges from the point to both edge ends.
-//   */
-//  private CompletableFuture<MutableValueGraph<GroupedNode, Double>> getGraph(Collection<NavigationLocation> entries, Collection<NavigationLocation> exits) {
-//
-//    Collection<NavigationLocation> locations = new HashSet<>(entries);
-//    locations.addAll(exits);
-//
-//    // TODO
-//    // check if any agile location has changed. If not, just return the last graph.
-//    if (false && cachedGraphWithTargets != null && locations.stream().filter(l -> !l.isFixedPosition()).map(NavigationLocation::getNode)
-//        .map(Node::getLocation).toList().equals(cachedAgileLocations)) {
-//      return CompletableFuture.completedFuture(cachedGraphWithTargets);
-//    }
-//
-//    // a location has changed, we recreate the path with inserted targets
-//    return fetchGraph().thenApply(graph -> {
-//      GraphEntrySolver<GroupedNode> solver = new EdgeBasedGraphEntrySolver();
-//
-//      for (NavigationLocation location : entries) {
-//        if (!location.isExternal()) {
-//          continue;
-//        }
-//
-//        GroupedNode g = new GroupedNodeImpl(location.getNode(), new HashSet<>());
-//        graph.addNode(g);
-//        graph = solver.solveEntry(g, graph);
-//        graph.successors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
-//      }
-//      for (NavigationLocation location : exits) {
-//        if (!location.isExternal()) {
-//          continue;
-//        }
-//
-//        GroupedNode g = new GroupedNodeImpl(location.getNode(), new HashSet<>());
-//        graph.addNode(g);
-//        graph = solver.solveExit(g, graph);
-//        graph.predecessors(g).forEach((groupedNode) -> g.groups().addAll(groupedNode.groups()));
-//      }
-//
-//      // cache results
-//      cachedGraphWithTargets = graph;
-//      cachedAgileLocations.clear();
-//      cachedAgileLocations.addAll(locations.stream().filter(NavigationLocation::isFixedPosition)
-//          .map(NavigationLocation::getNode).map(Node::getLocation).toList());
-//      return graph;
-//    });
-//  }
 }

@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.misc;
 
 import com.google.common.graph.MutableValueGraph;
-import de.cubbossa.pathfinder.node.GroupedNode;
 
-public interface GraphEntrySolver<T> {
+public interface GraphEntrySolver<NodeT> {
 
-    MutableValueGraph<GroupedNode, Double> solveEntry(T in, MutableValueGraph<GroupedNode, Double> scope);
+    MutableValueGraph<NodeT, Double> solveEntry(NodeT in, MutableValueGraph<NodeT, Double> scope);
 
-    MutableValueGraph<GroupedNode, Double> solveExit(T out, MutableValueGraph<GroupedNode, Double> scope);
+    MutableValueGraph<NodeT, Double> solveExit(NodeT out, MutableValueGraph<NodeT, Double> scope);
 }

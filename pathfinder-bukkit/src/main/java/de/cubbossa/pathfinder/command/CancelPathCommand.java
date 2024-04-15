@@ -14,10 +14,10 @@ public class CancelPathCommand extends CommandTree {
     super("cancelpath");
     withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
-        && BukkitNavigationHandler.getInstance().getActivePath(BukkitPathFinder.wrap(player)) != null);
+        && BukkitNavigationHandler.getInstance().getActivePath(PathPlayer.wrap(player)) != null);
 
     executesPlayer((player, args) -> {
-      BukkitNavigationHandler.getInstance().cancelPath(BukkitPathFinder.wrap(player));
+      BukkitNavigationHandler.getInstance().cancel(player.getUniqueId());
     });
   }
 

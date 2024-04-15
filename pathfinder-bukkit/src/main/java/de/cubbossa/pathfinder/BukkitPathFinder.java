@@ -5,6 +5,7 @@ import de.cubbossa.disposablesbukkit.BukkitDisposer;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.PathPlayerProvider;
 import de.cubbossa.pathfinder.misc.Task;
 import de.cubbossa.pathfinder.misc.World;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
@@ -24,6 +25,7 @@ import lombok.Getter;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -53,35 +55,37 @@ public class BukkitPathFinder extends AbstractPathFinder {
     return new NamespacedKey(key.getNamespace(), key.getKey());
   }
 
-  public static PathPlayer<Player> wrap(Player player) {
-    return new BukkitPathPlayer(player.getUniqueId());
-  }
-
   private final JavaPlugin javaPlugin;
 
   public BukkitPathFinder(JavaPlugin javaPlugin) {
     instance = this;
     this.javaPlugin = javaPlugin;
+
+    PathPlayerProvider.set(new PathPlayerProvider<CommandSender>() {
+
+      @Override
+      public PathPlayer<CommandSender> wrap(CommandSender player) {
+        if (player instanceof Player p) {
+          return (PathPlayer) new BukkitPathPlayer(p.getUniqueId());
+        }
+        return (PathPlayer) new BukkitPathSender();
+      }
+
+      @Override
+      public PathPlayer<CommandSender> wrap(UUID uuid) {
+        return (PathPlayer) new BukkitPathPlayer(uuid);
+      }
+
+      @Override
+      public PathPlayer<CommandSender> consoleSender() {
+        return (PathPlayer) new BukkitPathSender();
+      }
+    });
   }
 
   @Override
   public World getWorld(UUID worldId) {
     return new WorldImpl(worldId);
-  }
-
-  @Override
-  public <PlayerT> PathPlayer<PlayerT> wrap(UUID playerId) {
-    return (PathPlayer<PlayerT>) new BukkitPathPlayer(playerId);
-  }
-
-  @Override
-  public <PlayerT> PathPlayer<PlayerT> wrap(PlayerT player) {
-    if (player instanceof Player bukkitPlayer) {
-      return (PathPlayer<PlayerT>) new BukkitPathPlayer(bukkitPlayer.getUniqueId());
-    } else if (player instanceof ConsoleCommandSender) {
-      return (PathPlayer<PlayerT>) new BukkitPathSender();
-    }
-    throw new IllegalStateException("Illegal player type '" + player.getClass() + "'.");
   }
 
   @Override

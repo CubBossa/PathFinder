@@ -40,7 +40,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
 
   @Override
   public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
-    return new BezierView(player, nodes.toArray(Node[]::new)) {
+    return new BezierView(player, nodes) {
 
       private long lastException = 0;
 

@@ -10,6 +10,7 @@ public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> 
   private final ViewT view;
 
   public SingleVisualizerPathImpl(List<Node> route, PathVisualizer<ViewT, PlayerT> visualizer, PathPlayer<PlayerT> targetViewer) {
+    super(route);
     setTargetViewer(targetViewer);
     this.view = visualizer.createView(route, targetViewer);
   }

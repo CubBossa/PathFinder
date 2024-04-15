@@ -11,6 +11,7 @@ import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -68,13 +69,13 @@ public abstract class BezierPathVisualizer
   public abstract class BezierView extends IntervalVisualizer<BezierView>.IntervalView {
     List<Location> points;
 
-    public BezierView(PathPlayer<Player> player, List<Location> points) {
-      super(player);
+    public BezierView(PathPlayer<Player> player, List<Node> path, List<Location> points) {
+      super(player, path);
       this.points = points;
     }
 
-    public BezierView(PathPlayer<Player> player, Node... nodes) {
-      super(player);
+    public BezierView(PathPlayer<Player> player, List<Node> nodes) {
+      super(player, nodes);
 
       // split the path into segments for each appearing world change
       List<PathSegment> segments = new ArrayList<>();

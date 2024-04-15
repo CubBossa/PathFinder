@@ -59,11 +59,11 @@ public interface NavigationHandler<PlayerT> extends Disposable {
 
   CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route);
 
-  void cancel(VisualizerPath<PlayerT> path);
+  void cancel(UUID viewer);
 
-  void reach(VisualizerPath<PlayerT> path);
+  void reach(UUID viewer);
 
-  void unset(VisualizerPath<PlayerT> path);
+  void unset(UUID viewer);
 
   @NoArgsConstructor
   @AllArgsConstructor

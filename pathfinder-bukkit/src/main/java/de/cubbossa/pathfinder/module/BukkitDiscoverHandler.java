@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.DiscoveriesCommand;
+import de.cubbossa.pathfinder.misc.PathPlayerProvider;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.UUID;
@@ -50,7 +51,7 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
     }
     playerLock.add(uuid);
 
-    PathPlayer<Player> player = BukkitPathFinder.wrap(event.getPlayer());
+    PathPlayer<Player> player = PathPlayer.wrap(event.getPlayer());
     super.getFulfillingGroups(player).thenCompose(groups -> {
       return CompletableFuture.allOf(groups.stream()
           .map(group -> super.discover(player, group, LocalDateTime.now()))

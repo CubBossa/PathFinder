@@ -36,7 +36,7 @@ public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
 
   @Override
   public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
-    BezierView bezierView = new BezierView(player) {
+    BezierView bezierView = new BezierView(player, nodes) {
       @Override
       void play(int interval) {
       }
@@ -57,7 +57,7 @@ public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
           .add(up.multiply(pathOffsetY.apply(c)))
           .add(dir.multiply(pathOffsetZ.apply(c))));
     }
-    return new BezierView(player, points) {
+    return new BezierView(player, nodes, points) {
       @Override
       void play(int interval) {
         int step = interval % schedulerSteps;

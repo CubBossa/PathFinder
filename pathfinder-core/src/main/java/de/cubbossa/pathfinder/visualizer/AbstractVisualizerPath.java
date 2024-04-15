@@ -1,8 +1,10 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import lombok.Getter;
@@ -14,10 +16,17 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   @Setter
   PathPlayer<PlayerT> targetViewer = null;
   final Collection<PathPlayer<PlayerT>> viewers = new HashSet<>();
+  final List<? extends Node> path;
   final Timer timer;
 
-  public AbstractVisualizerPath() {
-    timer = new Timer();
+  public AbstractVisualizerPath(List<? extends Node> path) {
+    this.path = path;
+    this.timer = new Timer();
+  }
+
+  @Override
+  public List<? extends Node> getPath() {
+    return path;
   }
 
   @Override

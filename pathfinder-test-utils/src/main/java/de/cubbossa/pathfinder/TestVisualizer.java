@@ -37,7 +37,7 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
     List<Node> nodes;
 
     public View(PathPlayer<Logger> player, List<Node> nodes) {
-      super(player);
+      super(player, nodes);
       this.nodes = nodes;
     }
   }

@@ -3,9 +3,12 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.PathPlayerProvider;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
+import de.cubbossa.pathfinder.navigation.NavigationLocation;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
+import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
 
@@ -23,10 +26,10 @@ public class FindCommand extends CommandTree {
             return;
           }
 
-          PathPlayer<Player> p = BukkitPathFinder.wrap(player);
+          PathPlayer<Player> p = PathPlayer.wrap(player);
 
           BukkitNavigationHandler.getInstance().navigate(p, Route
-                  .from()//player loc
+                  .from(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(player))))
                   .toAny(targets))
               .whenComplete((path, throwable) -> {
                 if (throwable != null) {
