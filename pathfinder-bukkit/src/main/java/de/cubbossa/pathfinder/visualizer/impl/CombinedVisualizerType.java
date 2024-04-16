@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
@@ -60,7 +61,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
-                  AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD.formatted(
+                  PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD.formatted(
                       Messages.formatter().namespacedKey("visualizer", vis.getKey()),
                       Messages.formatter().namespacedKey("child", target.getKey())
                   ));
@@ -75,7 +76,7 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                           CombinedVisualizerChangedEvent.Action.REMOVE,
                           Collections.singleton(target))));
-                  AbstractPathFinder.getInstance().wrap(sender)
+                  PathPlayer.wrap(sender)
                       .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.formatted(
                           Messages.formatter().namespacedKey("visualizer", vis.getKey()),
                           Messages.formatter().namespacedKey("child", target.getKey())

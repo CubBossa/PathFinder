@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.graph;
 
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import java.util.function.Function;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ class AStarImplTest {
   Node f = n("f", 5, 0.0);
   Node g = n("g", 1, 0.0);
   private MutableValueGraph<Node, Double> graph;
-  private AStarImpl<Node> solver;
+  private AStarImpl<Node, Double> solver;
 
   private static double distSquared(Node a, Node b) {
     return Math.pow(b.x() - a.x(), 2) + Math.pow(b.y() - a.y(), 2);
@@ -54,28 +55,28 @@ class AStarImplTest {
     graph.putEdgeValue(e, f, 3.);
     graph.putEdgeValue(g, d, 1.);
 
-    solver = new AStarImpl<>(AStarImplTest::distSquared);
+    solver = new AStarImpl<>(AStarImplTest::distSquared, e -> e);
     solver.setGraph(graph);
   }
 
   @Test
   void shortestPath1() throws NoPathFoundException {
-    Assertions.assertEquals(List.of(a, b, e, f), solver.solvePath(a, f));
+    Assertions.assertEquals(List.of(a, b, e, f), solver.solvePath(a, f).getPath());
   }
 
   @Test
   void shortestPath2() {
-    Assertions.assertThrows(NoPathFoundException.class, () -> solver.solvePath(a, g));
+    Assertions.assertThrows(NoPathFoundException.class, () -> solver.solvePath(a, g).getPath());
   }
 
   @Test
   void shortestPathSelf() throws NoPathFoundException {
-    Assertions.assertEquals(List.of(a), solver.solvePath(a, a));
+    Assertions.assertEquals(List.of(a), solver.solvePath(a, a).getPath());
   }
 
   @Test
   void shortestPathAny() throws NoPathFoundException {
-    Assertions.assertEquals(List.of(a, b, c), solver.solvePath(a, List.of(c, f)));
+    Assertions.assertEquals(List.of(a, b, c), solver.solvePath(a, List.of(c, f)).getPath());
   }
 
   private record Node(String name, double x, double y) {

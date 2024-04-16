@@ -69,7 +69,6 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
     this.graph = graph;
   }
 
-  @Override
   public double getEdgeValue(E edge) {
     return valueFunction.apply(edge);
   }

@@ -66,7 +66,6 @@ public class ContractionHierarchies<N, E> implements PathSolver<N, E> {
     contractNodes();
   }
 
-  @Override
   public double getEdgeValue(E edge) {
     return 1;
   }

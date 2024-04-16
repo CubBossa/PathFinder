@@ -165,7 +165,7 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
       if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-        setProperty(AbstractPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+        setProperty(PathPlayer.wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),

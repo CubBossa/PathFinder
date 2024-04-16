@@ -66,7 +66,6 @@ public class StaticDijkstra<N, E> implements PathSolver<N, E> {
     });
   }
 
-  @Override
   public double getEdgeValue(E edge) {
     return costFunction.apply(edge);
   }

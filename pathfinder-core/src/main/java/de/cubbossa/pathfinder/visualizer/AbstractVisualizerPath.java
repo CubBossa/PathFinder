@@ -24,6 +24,11 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
     this.timer = new Timer();
   }
 
+  public void setTargetViewer(PathPlayer<PlayerT> targetViewer) {
+    this.targetViewer = targetViewer;
+    this.addViewer(targetViewer);
+  }
+
   @Override
   public List<? extends Node> getPath() {
     return path;

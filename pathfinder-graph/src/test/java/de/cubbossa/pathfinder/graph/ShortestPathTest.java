@@ -18,7 +18,7 @@ public abstract class ShortestPathTest {
 
   private MutableValueGraph<String, Double> graph;
 
-  abstract <T> PathSolver<T> solver();
+  abstract <T> PathSolver<T, Double> solver();
 
   @BeforeAll
   void setup() {
@@ -58,21 +58,21 @@ public abstract class ShortestPathTest {
 
   @Test
   void shortestPath1() throws NoPathFoundException {
-    PathSolver<String> solver = solver();
+    PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
     Assertions.assertEquals(List.of("a", "b"), solver.solvePath("a", "b"));
   }
 
   @Test
   void shortestPathSelf() throws NoPathFoundException {
-    PathSolver<String> solver = solver();
+    PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
     Assertions.assertEquals(List.of("a"), solver.solvePath("a", "a"));
   }
 
   @Test
   void shortestPathAny() throws NoPathFoundException {
-    PathSolver<String> solver = solver();
+    PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
     Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")));
     Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")));
@@ -80,7 +80,7 @@ public abstract class ShortestPathTest {
 
   @Test
   void shortestPathAnySeparated() throws NoPathFoundException {
-    PathSolver<String> solver = solver();
+    PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
     Assertions.assertEquals(List.of("b", "c", "j", "h", "g"), solver.solvePath("b", List.of("g")));
   }
@@ -121,7 +121,7 @@ public abstract class ShortestPathTest {
     }
 
     long startTime = System.currentTimeMillis();
-    PathSolver<StaticDijkstraTest.Heavy> d = solver();
+    PathSolver<StaticDijkstraTest.Heavy, Double> d = solver();
     d.setGraph(g);
     System.out.println(System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();

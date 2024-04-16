@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.module.papi;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
@@ -88,7 +89,7 @@ public class PlaceholderVisualizerType
                                                                        AbstractVisualizer.Property<V, A> property) {
     return new LiteralArgument(node).then(argument.executes((commandSender, args) -> {
       if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
-        setProperty(AbstractPathFinder.getInstance().wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
+        setProperty(PathPlayer.wrap(commandSender), (V) visualizer, property, args.getUnchecked(1));
       } else {
         throw new WrapperCommandSyntaxException(new CommandSyntaxException(
             CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect(),

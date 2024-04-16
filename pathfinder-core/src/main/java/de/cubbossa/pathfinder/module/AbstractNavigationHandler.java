@@ -82,7 +82,7 @@ public class AbstractNavigationHandler<PlayerT>
   public void onEnable(PathFinder pathPlugin) {
 
     registerNavigationConstraint((playerId, scope) -> {
-      PathPlayer<?> player = AbstractPathFinder.getInstance().wrap(playerId);
+      PathPlayer<?> player = PathPlayer.wrap(playerId);
       Map<Node, Collection<NodeGroup>> groups = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
 
       if (player.unwrap() == null) {

@@ -16,7 +16,7 @@ public abstract class PathPlayerProvider<P> {
 
   public abstract PathPlayer<? extends P> wrap(P player);
 
-  public abstract PathPlayer<P> wrap(UUID uuid);
+  public abstract PathPlayer<? extends P> wrap(UUID uuid);
 
-  public abstract PathPlayer<P> consoleSender();
+  public abstract PathPlayer<? extends P> consoleSender();
 }

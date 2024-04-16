@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.graph;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.graph.ValueGraph;
 import java.util.ArrayList;
@@ -11,28 +12,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.TreeSet;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 public class AStarImpl<N, E> implements PathSolver<N, E> {
 
-  private final Function<E, Double> distanceFunction;
+  private final BiFunction<N, N, Double> distanceFunction;
+  private final Function<E, Double> edgeFunction;
   private ValueGraph<N, E> graph;
 
-  public AStarImpl(Function<E, Double> distanceFunction) {
+  public AStarImpl(BiFunction<N, N, Double> distanceFunction, Function<E, Double> edgeFunction) {
     this.distanceFunction = distanceFunction;
+    this.edgeFunction = edgeFunction;
   }
 
   @Override
   public void setGraph(ValueGraph<N, E> graph) {
     this.graph = graph;
-  }
-
-  @Override
-  public double getEdgeValue(E edge) {
-    return 0;
   }
 
   @Override
@@ -84,8 +82,7 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
           continue;
         }
 
-        double cost = current.g + distanceFunction.apply(entry.getValue()) * distanceFunction
-            .apply(current.adjacent.get(successor.node));
+        double cost = current.g + edgeFunction.apply(entry.getValue()) * distanceFunction.apply(current.node, successor.node);
 
         if (open.contains(successor)) {
           if (cost >= successor.g) {
@@ -111,9 +108,12 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
     Node c = matchedTarget;
     while (c != null) {
       path.add(0, c.node);
-      edges.add(c.predecessor.adjacent.get(c));
+      if (c.predecessor != null) {
+        edges.add(c.predecessor.adjacent.get(c));
+      } else {
+        cost = c.g;
+      }
       c = c.predecessor;
-      cost = c.g;
     }
     return new PathSolverResultImpl<>(path, edges, cost);
   }
@@ -128,7 +128,7 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
       Node current = queue.poll();
 
       current.h = targets.stream()
-          .mapToDouble(t -> distanceFunction.apply(current.adjacent.get(t)))
+          .mapToDouble(t -> distanceFunction.apply(current.node, t))
           .min().orElse(Double.MAX_VALUE);
       computed.put(current.node, current);
 

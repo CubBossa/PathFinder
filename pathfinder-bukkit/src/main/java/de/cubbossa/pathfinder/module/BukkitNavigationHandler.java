@@ -59,7 +59,7 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> i
   @EventHandler
   public void onMove(PlayerMoveEvent event) {
     Player p = event.getPlayer();
-    PathPlayer<Player> pathPlayer = AbstractPathFinder.getInstance().wrap(p);
+    PathPlayer<Player> pathPlayer = PathPlayer.wrap(p);
 
     AbstractNavigationHandler<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
     if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), 2)) {

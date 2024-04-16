@@ -37,6 +37,9 @@ class RouteTest {
     result = Route.from(a).to(b).to(a).to(b).calculatePath(graph);
     assertEquals(List.of(a, b, a, b), result.getPath());
     assertEquals(30, result.getCost());
+
+    result = Route.from(a).to(a).to(a).calculatePath(graph);
+    assertEquals(List.of(a), result.getPath());
   }
 
   @Test
@@ -70,6 +73,14 @@ class RouteTest {
         .calculatePath(graph);
     assertEquals(50, result.getCost());
     assertEquals(List.of(a, c, b, a, b), result.getPath());
+
+    result = Route
+        .from(a)
+        .to(Route.from(a).to(b).to(a))
+        .to(a)
+        .calculatePath(graph);
+    assertEquals(20, result.getCost());
+    assertEquals(List.of(a, b, a), result.getPath());
   }
 
 

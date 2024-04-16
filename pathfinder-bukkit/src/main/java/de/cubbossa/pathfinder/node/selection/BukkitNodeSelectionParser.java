@@ -2,6 +2,8 @@ package de.cubbossa.pathfinder.node.selection;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.misc.PathPlayerProvider;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.util.SelectionParser;
@@ -42,7 +44,7 @@ public class BukkitNodeSelectionParser extends AbstractNodeSelectionParser<Comma
 
     @Override
     public Location getSenderLocation() {
-      return BukkitPathFinder.getInstance().wrap(sender).getLocation();
+      return PathPlayer.wrap(sender).getLocation();
     }
   }
 }

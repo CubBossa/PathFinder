@@ -10,6 +10,7 @@ import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.arguments.Argument;
@@ -79,7 +80,7 @@ public class GroupCmd extends PathFinderSubCommand {
   private void addModifier(CommandSender sender, NodeGroupImpl group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
+      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
           Messages.formatter().namespacedKey("group", group.getKey()),
           Messages.formatter().namespacedKey("type", modifier.getKey())
       ));
@@ -92,7 +93,7 @@ public class GroupCmd extends PathFinderSubCommand {
   private void removeModifier(CommandSender sender, NodeGroupImpl group, NamespacedKey mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      AbstractPathFinder.getInstance().wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
+      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
           Messages.formatter().namespacedKey("group", group.getKey()),
           Messages.formatter().namespacedKey("type", mod)
       ));

@@ -20,11 +20,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 
 class RouteImpl implements Route {
 
   private final List<Collection<Object>> targets;
-  private final PathSolver<Node, Double> baseGraphSolver;
+  private PathSolver<Node, Double> baseGraphSolver;
 
   RouteImpl(Route other) {
     this.targets = new ArrayList<>();
@@ -46,7 +47,13 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public NavigationLocation getStart() {
+  public Route withSolver(@NotNull PathSolver<Node, Double> solver) {
+    this.baseGraphSolver = solver;
+    return this;
+  }
+
+  @Override
+  public @NotNull NavigationLocation getStart() {
     Object first = targets.get(0).stream().findAny().orElse(null);
     if (first instanceof NavigationLocation loc) {
       return loc;
@@ -55,7 +62,7 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Collection<NavigationLocation> getEnd() {
+  public @NotNull Collection<NavigationLocation> getEnd() {
     return targets.get(targets.size() - 1).stream()
         .filter(object -> object instanceof NavigationLocation)
         .map(object -> (NavigationLocation) object)
@@ -63,13 +70,13 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Route to(Route route) {
+  public Route to(@NotNull Route route) {
     targets.add(List.of(route));
     return this;
   }
 
   @Override
-  public Route to(List<Node> route) {
+  public Route to(@NotNull List<Node> route) {
     if (route.isEmpty()) {
       throw new IllegalArgumentException("Cannot create empty route. No targets provided.");
     }
@@ -81,12 +88,12 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Route to(Node node) {
+  public Route to(@NotNull Node node) {
     return to(loc(node));
   }
 
   @Override
-  public Route to(NavigationLocation location) {
+  public Route to(@NotNull NavigationLocation location) {
     targets.add(List.of(location));
     return this;
   }
@@ -98,7 +105,7 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Route toAny(Collection<Node> nodes) {
+  public Route toAny(@NotNull Collection<Node> nodes) {
     targets.add(nodes.stream().map(this::loc).collect(Collectors.toList()));
     return this;
   }
@@ -110,7 +117,7 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Route toAny(String searchString) {
+  public Route toAny(@NotNull String searchString) {
     return null;
   }
 
@@ -121,7 +128,7 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public PathSolverResult<Node, Double> calculatePath(ValueGraph<Node, Double> environment) throws NoPathFoundException {
+  public PathSolverResult<Node, Double> calculatePath(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
     var res = calculatePaths(environment);
     if (res.isEmpty()) {
       throw new NoPathFoundException();
@@ -130,7 +137,7 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public List<PathSolverResult<Node, Double>> calculatePaths(ValueGraph<Node, Double> environment) throws NoPathFoundException {
+  public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
     baseGraphSolver.setGraph(environment);
 
     MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
@@ -216,7 +223,7 @@ class RouteImpl implements Route {
   }
 
   private PathSolverResult<Node, Double> solveForSection(RouteEl a, RouteEl b) throws NoPathFoundException {
-    return merge(List.of(a.solve(), baseGraphSolver.solvePath(a.end, b.start)));
+    return baseGraphSolver.solvePath(a.end, b.start);
   }
 
   private Collection<RouteEl> newElement(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {

@@ -151,7 +151,7 @@ public class EditModeMenu {
         })
 
         .withClickHandler(Action.LEFT_CLICK_AIR, context -> {
-          PathPlayer<Player> p = AbstractPathFinder.getInstance().wrap(context.getPlayer());
+          PathPlayer<Player> p = PathPlayer.wrap(context.getPlayer());
           // cancel chain
           if (chainEdgeStart == null) {
             return;
@@ -163,7 +163,7 @@ public class EditModeMenu {
 
         .withClickHandler(RIGHT_CLICK_NODE, context -> {
           Player p = context.getPlayer();
-          PathPlayer<Player> pp = AbstractPathFinder.getInstance().wrap(p);
+          PathPlayer<Player> pp = PathPlayer.wrap(p);
           if (chainEdgeStart == null) {
             chainEdgeStart = context.getTarget().getNodeId();
             context.getMenu().refresh(context.getSlot());
@@ -190,7 +190,7 @@ public class EditModeMenu {
           CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             chainEdgeStart = null;
             context.getMenu().refresh(context.getSlot());
-            AbstractPathFinder.getInstance().wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
+            PathPlayer.wrap(context.getPlayer()).sendMessage(Messages.E_NODE_CHAIN_NEW);
           }).whenComplete((unused, throwable) -> {
             if (throwable != null) {
               throwable.printStackTrace();

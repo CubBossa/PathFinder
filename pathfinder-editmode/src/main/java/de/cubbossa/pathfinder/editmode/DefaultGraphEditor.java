@@ -216,7 +216,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
   }
 
   public boolean isEditing(Player player) {
-    return isEditing(AbstractPathFinder.getInstance().wrap(player));
+    return isEditing(PathPlayer.wrap(player));
   }
 
   @Override

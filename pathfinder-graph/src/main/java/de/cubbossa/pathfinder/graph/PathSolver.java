@@ -23,14 +23,6 @@ public interface PathSolver<N, E> {
   void setGraph(ValueGraph<N, E> graph);
 
   /**
-   * Costs function for edges of this graph.
-   *
-   * @param edge
-   * @return
-   */
-  double getEdgeValue(E edge);
-
-  /**
    * Find a path from one start location to one target location.
    *
    * @param start  The start node to navigate from.
