@@ -81,12 +81,32 @@ public interface Route {
    */
   Route withSolver(final @NotNull PathSolver<Node, Double> solver);
 
+  /**
+   * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
+   * @param route A route object to embed. Its variation will be picked so that the upmost Route will provide the shortest path.
+   * @return this Route instance.
+   */
   Route to(final @NotNull Route route);
 
+  /**
+   * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
+   * @param nodes A list of nodes. They will be treated as path segment as is.
+   * @return this Route instance.
+   */
   Route to(final @NotNull List<Node> nodes);
 
+  /**
+   * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
+   * @param node A node to visit.
+   * @return this Route instance.
+   */
   Route to(final @NotNull Node node);
 
+  /**
+   * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
+   * @param location A location to visit.
+   * @return this Route instance.
+   */
   Route to(final @NotNull NavigationLocation location);
 
   Route toAny(final @NotNull Node... nodes);

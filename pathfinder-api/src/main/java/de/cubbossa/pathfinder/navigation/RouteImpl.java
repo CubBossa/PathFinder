@@ -77,14 +77,29 @@ class RouteImpl implements Route {
 
   @Override
   public Route to(@NotNull List<Node> route) {
-    if (route.isEmpty()) {
-      throw new IllegalArgumentException("Cannot create empty route. No targets provided.");
+
+    List<Double> edges = new LinkedList<>();
+    double cost = 0;
+    Node prev = null;
+    for (Node node : route) {
+      if (prev == null) {
+        prev = node;
+        continue;
+      }
+      double edge = node.getLocation().distance(prev.getLocation());
+      edges.add(edge);
+      cost += edge;
+      prev = node;
     }
-    Route r = new RouteImpl(loc(route.get(0)));
-    for (Node node : route.subList(1, route.size())) {
-      r = r.to(node);
-    }
-    return to(r);
+
+    double finalCost = cost;
+    targets.add(List.of(new RouteEl(route.get(0), route.get(route.size() - 1)) {
+      @Override
+      PathSolverResult<Node, Double> solve() {
+        return new PathSolverResultImpl<>(route, edges, finalCost);
+      }
+    }));
+    return this;
   }
 
   @Override
@@ -227,7 +242,9 @@ class RouteImpl implements Route {
   }
 
   private Collection<RouteEl> newElement(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    if (o instanceof NavigationLocation loc) {
+    if (o instanceof RouteEl el) {
+      return List.of(el);
+    } else if (o instanceof NavigationLocation loc) {
       Node n = loc.getNode();
       return Collections.singleton(new RouteEl(n, n) {
         @Override
