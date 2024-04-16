@@ -36,10 +36,10 @@ public class StaticDijkstra<N, E> implements PathSolver<N, E> {
         originalGraph.edgeValue(node.parent.getNode(), node.getNode()).ifPresent(e -> {
           edges.add(0, e);
         });
-        node = node.parent;
       } else {
         costs = node.distance;
       }
+      node = node.parent;
     }
     return new PathSolverResultImpl<>(result, edges, costs);
   }

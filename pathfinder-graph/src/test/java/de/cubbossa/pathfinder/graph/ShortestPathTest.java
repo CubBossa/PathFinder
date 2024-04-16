@@ -60,29 +60,29 @@ public abstract class ShortestPathTest {
   void shortestPath1() throws NoPathFoundException {
     PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
-    Assertions.assertEquals(List.of("a", "b"), solver.solvePath("a", "b"));
+    Assertions.assertEquals(List.of("a", "b"), solver.solvePath("a", "b").getPath());
   }
 
   @Test
   void shortestPathSelf() throws NoPathFoundException {
     PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
-    Assertions.assertEquals(List.of("a"), solver.solvePath("a", "a"));
+    Assertions.assertEquals(List.of("a"), solver.solvePath("a", "a").getPath());
   }
 
   @Test
   void shortestPathAny() throws NoPathFoundException {
     PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
-    Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")));
-    Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")));
+    Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")).getPath());
+    Assertions.assertEquals(List.of("b", "a", "k"), solver.solvePath("b", List.of("k", "f")).getPath());
   }
 
   @Test
   void shortestPathAnySeparated() throws NoPathFoundException {
     PathSolver<String, Double> solver = solver();
     solver.setGraph(graph);
-    Assertions.assertEquals(List.of("b", "c", "j", "h", "g"), solver.solvePath("b", List.of("g")));
+    Assertions.assertEquals(List.of("b", "c", "j", "h", "g"), solver.solvePath("b", List.of("g")).getPath());
   }
 
   @RequiredArgsConstructor
