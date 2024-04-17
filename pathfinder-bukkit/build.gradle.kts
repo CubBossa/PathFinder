@@ -211,6 +211,7 @@ tasks {
             include(dependency("de.exlll:configlib-yaml:.*"))
             include(dependency("de.exlll:configlib-core:.*"))
             include(dependency("org.flywaydb:flyway-core:.*"))
+            include(dependency("org.pf4j:pf4j:.*"))
         }
 
         fun relocate(from: String, to: String) {
@@ -227,6 +228,7 @@ tasks {
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.exlll", "exlll")
         relocate("org.flywaydb", "flywaydb")
+        relocate("org.pf4j", "pf4j")
     }
     test {
         useJUnitPlatform()
