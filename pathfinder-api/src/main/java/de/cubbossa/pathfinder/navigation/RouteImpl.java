@@ -8,24 +8,32 @@ import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
 import de.cubbossa.pathfinder.graph.PathSolverResultImpl;
+import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class RouteImpl implements Route {
 
   private final List<Collection<Object>> targets;
   private PathSolver<Node, Double> baseGraphSolver;
+
+  // caching
+  private @Nullable ValueGraph<Node, Double> modifiedBaseGraph = null;
+  private final Map<NavigationLocation, Location> lastLocations = new HashMap<>();
 
   RouteImpl(Route other) {
     this.targets = new ArrayList<>();
@@ -153,7 +161,7 @@ class RouteImpl implements Route {
 
   @Override
   public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    baseGraphSolver.setGraph(environment);
+    baseGraphSolver.setGraph(prepareBaseGraph(environment));
 
     MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
         .directed()
@@ -265,6 +273,24 @@ class RouteImpl implements Route {
       return els;
     }
     throw new IllegalStateException("Don't know how to convert object into RouteEl");
+  }
+
+  private ValueGraph<Node, Double> prepareBaseGraph(ValueGraph<Node, Double> graph) {
+    MutableValueGraph<Node, Double> g;
+    if (graph instanceof MutableValueGraph<Node, Double> mGraph) {
+      g = mGraph;
+    } else {
+      g = ValueGraphBuilder.from(graph).build();
+    }
+
+    for (Collection<Object> target : targets) {
+      for (Object o : target) {
+        if (o instanceof NavigationLocation navLoc) {
+          navLoc.connect(g);
+        }
+      }
+    }
+    return g;
   }
 
   private static abstract class RouteEl {

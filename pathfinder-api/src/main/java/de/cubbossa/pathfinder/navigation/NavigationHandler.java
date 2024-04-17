@@ -1,18 +1,12 @@
 package de.cubbossa.pathfinder.navigation;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.graph.PathSolver;
-import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * The core element to manage path visualizations on an existing graph.
@@ -64,14 +58,4 @@ public interface NavigationHandler<PlayerT> extends Disposable {
   void reach(UUID viewer);
 
   void unset(UUID viewer);
-
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Getter
-  @Setter
-  class NavigationConfig {
-    private PathSolver<Node, Double> pathSolver;
-    private GraphEntrySolver<Node> insertionSolver;
-    private double maxInsertionDistance;
-  }
 }

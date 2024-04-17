@@ -5,27 +5,34 @@ import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.GroupedNode;
+import de.cubbossa.pathfinder.node.GroupedNodeImpl;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
-public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> {
+public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
   @Override
-  public MutableValueGraph<GroupedNode, Double> solveEntry(GroupedNode in, MutableValueGraph<GroupedNode, Double> scope) {
+  public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope) {
     return solve(in, true, scope);
   }
 
   @Override
-  public MutableValueGraph<GroupedNode, Double> solveExit(GroupedNode out, MutableValueGraph<GroupedNode, Double> scope) {
+  public MutableValueGraph<Node, Double> solveExit(Node out, MutableValueGraph<Node, Double> scope) {
     return solve(out, false, scope);
   }
 
-  private MutableValueGraph<GroupedNode, Double> solve(GroupedNode start, boolean entry, MutableValueGraph<GroupedNode, Double> scope) {
+  private MutableValueGraph<Node, Double> solve(Node start, boolean entry, MutableValueGraph<Node, Double> scope) {
 
     List<WeightedEdge> sortedEdges = new LinkedList<>();
     scope.edges().forEach((e) -> {
-      double d = VectorUtils.distancePointToSegment(start.node().getLocation().asVector(), e.nodeU().node().getLocation().asVector(), e.nodeV().node().getLocation().asVector());
+      double d = VectorUtils.distancePointToSegment(start.getLocation().asVector(), e.nodeU().getLocation().asVector(), e.nodeV().getLocation().asVector());
       sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), d));
     });
     Collections.sort(sortedEdges);
@@ -46,20 +53,31 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
       }
       result.add(edge);
     }
-    MutableValueGraph<GroupedNode, Double> graph = ValueGraphBuilder.directed()
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed()
         .build();
     scope.nodes().forEach(graph::addNode);
     scope.edges().forEach(e -> graph.putEdgeValue(e, scope.edgeValue(e).orElseThrow()));
 
     result.forEach(edge -> {
-      GroupedNode w = edge.start.merge(edge.end);
-      Vector closest = VectorUtils.closestPointOnSegment(start.node().getLocation(), edge.start.node().getLocation(), edge.end.node().getLocation());
-      w.node().setLocation(closest.toLocation(edge.start.node().getLocation().getWorld()));
+      Node w;
+      if (edge.start instanceof GroupedNode startGrouped && edge.end instanceof GroupedNode endGrouped) {
+        w = startGrouped.merge(endGrouped);
+      } else {
+        if (edge.start instanceof GroupedNode startGrouped) {
+          w = new GroupedNodeImpl(new Waypoint(UUID.randomUUID()), startGrouped.groups());
+        } else if (edge.end instanceof GroupedNode endGrouped) {
+          w = new GroupedNodeImpl(new Waypoint(UUID.randomUUID()), endGrouped.groups());
+        } else {
+          w = new Waypoint(UUID.randomUUID());
+        }
+      }
+      Vector closest = VectorUtils.closestPointOnSegment(start.getLocation(), edge.start.getLocation(), edge.end.getLocation());
+      w.setLocation(closest.toLocation(edge.start.getLocation().getWorld()));
 
       graph.removeEdge(edge.start, edge.end);
       graph.addNode(w);
-      graph.putEdgeValue(edge.start, w, edge.start.node().getLocation().distance(w.node().getLocation()));
-      graph.putEdgeValue(w, edge.end, edge.end.node().getLocation().distance(w.node().getLocation()));
+      graph.putEdgeValue(edge.start, w, edge.start.getLocation().distance(w.getLocation()));
+      graph.putEdgeValue(w, edge.end, edge.end.getLocation().distance(w.getLocation()));
       if (entry) {
         graph.putEdgeValue(start, w, 0.);
       } else {
@@ -69,7 +87,8 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<GroupedNode> 
     return graph;
   }
 
-  private record WeightedEdge(GroupedNode start, GroupedNode end, double weight) implements Comparable<WeightedEdge> {
+  private record WeightedEdge(Node start, Node end,
+                              double weight) implements Comparable<WeightedEdge> {
 
     @Override
     public boolean equals(Object obj) {

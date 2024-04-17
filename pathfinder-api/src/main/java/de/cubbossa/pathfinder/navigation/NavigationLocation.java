@@ -6,19 +6,19 @@ import de.cubbossa.pathfinder.node.Node;
 public interface NavigationLocation {
 
   static NavigationLocation fixedGraphNode(Node node) {
-    return new NavigateLocationImpl(node, true, false);
+    return new NavigationLocationImpl(node, true, false);
   }
 
   static NavigationLocation fixedExternalNode(Node node) {
-    return new NavigateLocationImpl(node, true, true);
+    return new NavigationLocationImpl(node, true, true);
   }
 
   static NavigationLocation movingGraphNode(Node node) {
-    return new NavigateLocationImpl(node, false, false);
+    return new NavigationLocationImpl(node, false, false);
   }
 
   static NavigationLocation movingExternalNode(Node node) {
-    return new NavigateLocationImpl(node, false, true);
+    return new NavigationLocationImpl(node, false, true);
   }
 
   Node getNode();

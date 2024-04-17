@@ -12,18 +12,19 @@ import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
+import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationConstraint;
 import de.cubbossa.pathfinder.navigation.NavigationHandler;
+import de.cubbossa.pathfinder.navigation.NavigationLocationImpl;
 import de.cubbossa.pathfinder.navigation.Navigator;
 import de.cubbossa.pathfinder.navigation.NavigatorImpl;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.NodeType;
+import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,6 +70,8 @@ public class AbstractNavigationHandler<PlayerT>
 
     ExtensionPoint<NavigationConstraint> extensionPoint = new ExtensionPoint<>(NavigationConstraint.class);
     extensionPoint.getExtensions().forEach(this::registerNavigationConstraint);
+
+    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver();
   }
 
   public void onLoad(PathFinder pathPlugin) {
