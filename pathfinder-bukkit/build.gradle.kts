@@ -33,7 +33,7 @@ dependencies {
 
     api(project(":pathfinder-api"))
     api(project(":pathfinder-core"))
-    api("de.cubbossa:disposables-bukkit:1.0")
+    api("de.cubbossa:disposables-bukkit:1.1")
     runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
 
@@ -190,6 +190,11 @@ tasks {
 
         archiveFileName.set("PathFinder-${parent?.version}.jar")
         mergeServiceFiles()
+        mergeServiceFiles {
+            setPath("META-INF/")
+            include("extensions.idx")
+            exclude("*")
+        }
 
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
         // otherwise jar grows from ~8mb to ~30mb

@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     api(project(":pathfinder-graph"))
-    api("de.cubbossa:disposables-api:1.0")
+    api("de.cubbossa:disposables-api:1.1")
     implementation("org.jetbrains:annotations:24.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")

@@ -1,16 +1,19 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.util.ExtensionPoint;
+import java.util.Collection;
 import java.util.logging.Level;
 
 public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> implements ExtensionsRegistry {
 
   private final PathFinder pathFinder;
+  private final Collection<PathFinderExtension> extensions;
 
   public ExtensionsRegistryImpl(PathFinder pathFinder) {
     super(PathFinderExtension.class);
     this.pathFinder = pathFinder;
     this.pathFinder.getDisposer().register(pathFinder, this);
+    this.extensions = getExtensions();
   }
 
   @Override
@@ -20,7 +23,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
 
   @Override
   public void loadExtensions() {
-    getExtensions().forEach(e -> {
+    extensions.forEach(e -> {
       if (e.isDisabled()) {
         return;
       }
@@ -35,7 +38,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
 
   @Override
   public void enableExtensions() {
-    getExtensions().forEach(e -> {
+    extensions.forEach(e -> {
       if (e.isDisabled()) {
         return;
       }
@@ -50,7 +53,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
 
   @Override
   public void disableExtensions() {
-    getExtensions().forEach(e -> {
+    extensions.forEach(e -> {
       if (e.isDisabled()) {
         return;
       }
