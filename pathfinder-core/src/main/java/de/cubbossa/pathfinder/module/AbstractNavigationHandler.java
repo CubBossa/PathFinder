@@ -7,12 +7,12 @@ import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.event.EventCancelledException;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
-import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationConstraint;
@@ -38,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 public class AbstractNavigationHandler<PlayerT>
     extends PathFinderExtensionBase
@@ -127,19 +128,16 @@ public class AbstractNavigationHandler<PlayerT>
         return nodes;
       })).createRenderer(viewer, route);
     } catch (NoPathFoundException noPathFoundException) {
-      // TODO message
-      return null;
+      return CompletableFuture.failedFuture(noPathFoundException);
     }
     boolean result = eventDispatcher.dispatchPathStart(viewer, path);
     if (!result) {
-      // TODO message
-      return null;
+      return CompletableFuture.failedFuture(new EventCancelledException());
     }
-
     path.startUpdater(1000);
 
     activePaths.put(viewer.getUniqueId(), context(viewer.getUniqueId(), path));
-    return null;
+    return CompletableFuture.completedFuture(path);
   }
 
   private NavigationContext context(UUID playerId, VisualizerPath<PlayerT> path) {
@@ -225,8 +223,9 @@ public class AbstractNavigationHandler<PlayerT>
   }
 
   @Override
-  public VisualizerPath<PlayerT> getActivePath(PathPlayer<PlayerT> player) {
-    return activePaths.get(player.getUniqueId()).path;
+  public VisualizerPath<PlayerT> getActivePath(final @NotNull PathPlayer<PlayerT> player) {
+    var ctx = activePaths.get(player.getUniqueId());
+    return ctx == null ? null : ctx.path;
   }
 
   public void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path) {

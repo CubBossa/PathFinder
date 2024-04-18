@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.misc.PathPlayerProvider;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
 import de.cubbossa.pathfinder.navigation.Route;
@@ -25,19 +25,28 @@ public class FindCommand extends CommandTree {
           if (targets == null) {
             return;
           }
-
           PathPlayer<Player> p = PathPlayer.wrap(player);
-
+          if (targets.isEmpty()) {
+            p.sendMessage(Messages.CMD_FIND_EMPTY);
+            return;
+          }
           BukkitNavigationHandler.getInstance().navigate(p, Route
                   .from(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(player))))
                   .toAny(targets))
               .whenComplete((path, throwable) -> {
                 if (throwable != null) {
-                  player.sendMessage(throwable.getMessage()); // TODO
+                  if (throwable instanceof NoPathFoundException) {
+                    p.sendMessage(Messages.CMD_FIND_BLOCKED);
+//                  } else if (throwable instanceof ) {
+//                    p.sendMessage();
+                  } else {
+                    p.sendMessage(Messages.CMD_FIND_UNKNOWN);
+                  }
                   return;
                 }
                 path.startUpdater(1000);
                 BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
+                p.sendMessage(Messages.CMD_FIND);
               });
         })
     );

@@ -23,7 +23,7 @@ public interface NavigationLocation {
 
   Node getNode();
 
-  void connect(MutableValueGraph<Node, Double> graph);
+  MutableValueGraph<Node, Double> connect(MutableValueGraph<Node, Double> graph);
 
   boolean isFixedPosition();
 }

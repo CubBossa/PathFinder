@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.navigation;
 
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -184,7 +185,12 @@ class RouteImpl implements Route {
         abstractGraph.addNode(inner);
 
         for (RouteEl p : prev) {
-          abstractGraph.putEdgeValue(p, inner, solveForSection(p, inner));
+          // Only make edge in abstract graph if it can actually be used. Otherwise skip
+          try {
+            var solved = solveForSection(p, inner);
+            abstractGraph.putEdgeValue(p, inner, solved);
+          } catch (NoPathFoundException e) {
+          }
         }
         prev = target;
       }
@@ -281,12 +287,16 @@ class RouteImpl implements Route {
       g = mGraph;
     } else {
       g = ValueGraphBuilder.from(graph).build();
+      graph.nodes().forEach(g::addNode);
+      for (EndpointPair<Node> e : graph.edges()) {
+        g.putEdgeValue(e.nodeU(), e.nodeV(), g.edgeValue(e.nodeU(), e.nodeV()).orElse(0d));
+      }
     }
 
     for (Collection<Object> target : targets) {
       for (Object o : target) {
         if (o instanceof NavigationLocation navLoc) {
-          navLoc.connect(g);
+          g = navLoc.connect(g);
         }
       }
     }

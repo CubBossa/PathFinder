@@ -21,15 +21,16 @@ public class NavigationLocationImpl implements NavigationLocation {
   }
 
   @Override
-  public void connect(MutableValueGraph<Node, Double> graph) {
+  public MutableValueGraph<Node, Double> connect(MutableValueGraph<Node, Double> graph) {
     if (!external) {
-      return;
+      return graph;
     }
     if (graph.nodes().contains(node)) {
-      return;
+      return graph;
     }
-    GRAPH_ENTRY_SOLVER.solveEntry(node, graph);
-    GRAPH_ENTRY_SOLVER.solveExit(node, graph);
+    graph = GRAPH_ENTRY_SOLVER.solveEntry(node, graph);
+    graph = GRAPH_ENTRY_SOLVER.solveExit(node, graph);
+    return graph;
   }
 
   @Override

@@ -7,6 +7,8 @@ import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The core element to manage path visualizations on an existing graph.
@@ -49,7 +51,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
    * @param player The player to search active paths for.
    * @return
    */
-  VisualizerPath<PlayerT> getActivePath(PathPlayer<PlayerT> player);
+  @Nullable VisualizerPath<PlayerT> getActivePath(final @NotNull PathPlayer<PlayerT> player);
 
   CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route);
 
