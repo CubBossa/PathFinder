@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.graph;
 
 import com.google.common.graph.MutableValueGraph;
 

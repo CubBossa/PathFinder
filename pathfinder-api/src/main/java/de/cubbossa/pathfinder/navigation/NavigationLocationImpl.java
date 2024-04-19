@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.navigation;
 
 import com.google.common.graph.MutableValueGraph;
-import de.cubbossa.pathfinder.misc.GraphEntrySolver;
+import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.node.Node;
 import lombok.Getter;
 

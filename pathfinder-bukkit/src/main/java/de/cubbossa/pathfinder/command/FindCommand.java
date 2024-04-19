@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
