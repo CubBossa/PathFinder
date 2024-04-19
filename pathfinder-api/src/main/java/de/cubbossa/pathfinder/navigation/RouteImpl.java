@@ -141,11 +141,6 @@ class RouteImpl implements Route {
   }
 
   @Override
-  public Route toAny(@NotNull String searchString) {
-    return null;
-  }
-
-  @Override
   public Route toAny(Route... other) {
     targets.add(Arrays.stream(other).collect(Collectors.toList()));
     return this;

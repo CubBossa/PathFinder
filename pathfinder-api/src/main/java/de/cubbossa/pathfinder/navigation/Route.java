@@ -109,17 +109,53 @@ public interface Route {
    */
   Route to(final @NotNull NavigationLocation location);
 
+  /**
+   * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
+   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @return this Route instance.
+   */
   Route toAny(final @NotNull Node... nodes);
 
+  /**
+   * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
+   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @return this Route instance.
+   */
   Route toAny(final @NotNull Collection<Node> nodes);
 
+  /**
+   * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
+   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @return this Route instance.
+   */
   Route toAny(final @NotNull NavigationLocation... locations);
 
-  Route toAny(final @NotNull String searchString);
+  /**
+   * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
+   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @return this Route instance.
+   */
+  Route toAny(final @NotNull Route... routes);
 
-  Route toAny(final @NotNull Route... other);
-
+  /**
+   * Uses an environment graph to find the shortest path of the start point of this route to any of the target nodes of the
+   * route. All route points are either Routes or NavigationLocations. NavigationLocations connect themselves to the graph
+   * if not concluded. This operation will not modify the input graph but run on a copy.
+   *
+   * @param environment A graph of Nodes and weighted Edges to navigate on.
+   * @return The shortest route from the start point to any of the target points.
+   * @throws NoPathFoundException If no path was found.
+   */
   PathSolverResult<Node, Double> calculatePath(final @NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException;
 
+  /**
+   * Uses an environment graph to find the shortest path of the start point of this route to all target nodes of the
+   * route. All route points are either Routes or NavigationLocations. NavigationLocations connect themselves to the graph
+   * if not concluded. This operation will not modify the input graph but run on a copy.
+   *
+   * @param environment A graph of Nodes and weighted Edges to navigate on.
+   * @return The shortest path from the start node to each target node. The list is sorted and the first result is the shortest among all.
+   * @throws NoPathFoundException If no path was found.
+   */
   List<PathSolverResult<Node, Double>> calculatePaths(final @NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException;
 }
