@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.util;
 
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import de.cubbossa.pathfinder.misc.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.misc.GraphEntrySolver;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.GroupedNode;
@@ -19,20 +20,24 @@ import org.jetbrains.annotations.NotNull;
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
   @Override
-  public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope) {
+  public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope)
+      throws GraphEntryNotEstablishedException {
     return solve(in, true, scope);
   }
 
   @Override
-  public MutableValueGraph<Node, Double> solveExit(Node out, MutableValueGraph<Node, Double> scope) {
+  public MutableValueGraph<Node, Double> solveExit(Node out, MutableValueGraph<Node, Double> scope)
+      throws GraphEntryNotEstablishedException {
     return solve(out, false, scope);
   }
 
-  private MutableValueGraph<Node, Double> solve(Node start, boolean entry, MutableValueGraph<Node, Double> scope) {
+  private MutableValueGraph<Node, Double> solve(Node start, boolean entry, MutableValueGraph<Node, Double> scope)
+      throws GraphEntryNotEstablishedException {
 
     List<WeightedEdge> sortedEdges = new LinkedList<>();
     scope.edges().forEach((e) -> {
-      double d = VectorUtils.distancePointToSegment(start.getLocation().asVector(), e.nodeU().getLocation().asVector(), e.nodeV().getLocation().asVector());
+      double d = VectorUtils.distancePointToSegment(start.getLocation().asVector(), e.nodeU().getLocation().asVector(),
+          e.nodeV().getLocation().asVector());
       sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), d));
     });
     Collections.sort(sortedEdges);

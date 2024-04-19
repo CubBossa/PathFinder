@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.command;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
@@ -37,8 +38,8 @@ public class FindCommand extends CommandTree {
                 if (throwable != null) {
                   if (throwable instanceof NoPathFoundException) {
                     p.sendMessage(Messages.CMD_FIND_BLOCKED);
-//                  } else if (throwable instanceof ) {
-//                    p.sendMessage();
+                  } else if (throwable instanceof GraphEntryNotEstablishedException) {
+                    p.sendMessage(Messages.CMD_FIND_TOO_FAR);
                   } else {
                     p.sendMessage(Messages.CMD_FIND_UNKNOWN);
                   }
