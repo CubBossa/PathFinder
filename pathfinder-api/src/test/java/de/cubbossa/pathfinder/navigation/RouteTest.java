@@ -1,25 +1,62 @@
 package de.cubbossa.pathfinder.navigation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.Changes;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class RouteTest {
+
+  @BeforeAll
+  static void beforeAll() {
+    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<Node>() {
+      @Override
+      public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope)
+          throws GraphEntryNotEstablishedException {
+        return solveBoth(in, scope);
+      }
+
+      @Override
+      public MutableValueGraph<Node, Double> solveExit(Node out, MutableValueGraph<Node, Double> scope)
+          throws GraphEntryNotEstablishedException {
+        return solveBoth(out, scope);
+      }
+
+      private MutableValueGraph<Node, Double> solveBoth(Node node, MutableValueGraph<Node, Double> scope)
+          throws GraphEntryNotEstablishedException {
+
+        Node nearest = scope.nodes().stream()
+            .filter(n -> !n.getNodeId().equals(node.getNodeId()))
+            .min(Comparator.comparingDouble(o -> o.getLocation().distance(node.getLocation())))
+            .orElse(null);
+        if (!scope.nodes().contains(node)) {
+          scope.addNode(node);
+        }
+        double d = node.getLocation().distance(nearest.getLocation());
+        scope.putEdgeValue(nearest, node, d);
+        scope.putEdgeValue(node, nearest, d);
+        return scope;
+      }
+    };
+  }
 
   @Test
   void testA() throws NoPathFoundException {
@@ -83,8 +120,26 @@ class RouteTest {
     assertEquals(List.of(a, b, a), result.getPath());
   }
 
+  @Test
+  void testC() throws NoPathFoundException {
+    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, null));
+    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
+    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
+    Node d = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, null));
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(b);
+    graph.addNode(c);
+    graph.putEdgeValue(c, b, 10d);
+    graph.putEdgeValue(b, c, 10d);
 
+    var result = Route
+        .from(NavigationLocation.fixedExternalNode(a))
+        .to(NavigationLocation.fixedExternalNode(d))
+        .calculatePath(graph);
 
+    assertEquals(30, result.getCost());
+    assertEquals(List.of(a, b, c, d), result.getPath());
+  }
 
   @Getter
   @Setter
