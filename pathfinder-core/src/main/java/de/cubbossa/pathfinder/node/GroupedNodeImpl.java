@@ -6,11 +6,21 @@ import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public record GroupedNodeImpl(Node node, Collection<NodeGroup> groups) implements GroupedNode {
+public final class GroupedNodeImpl implements GroupedNode {
+
+  private final Node node;
+  private final Collection<NodeGroup> groups;
+
+  public GroupedNodeImpl(Node node, Collection<NodeGroup> groups) {
+    this.node = node;
+    this.groups = new LinkedList<>(groups);
+  }
+
   @Override
   public GroupedNode merge(GroupedNode other) {
     Node node = new Waypoint(UUID.randomUUID());
@@ -22,14 +32,18 @@ public record GroupedNodeImpl(Node node, Collection<NodeGroup> groups) implement
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) {
+      if (o instanceof Node node) {
+        return Objects.equals(this.node, node);
+      } else return false;
+    }
     GroupedNodeImpl that = (GroupedNodeImpl) o;
     return Objects.equals(node, that.node);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(node);
+    return node.hashCode();
   }
 
   @Override
@@ -71,4 +85,22 @@ public record GroupedNodeImpl(Node node, Collection<NodeGroup> groups) implement
   public Node clone(UUID id) {
     return new GroupedNodeImpl(node.clone(id), groups);
   }
+
+  @Override
+  public Node node() {
+    return node;
+  }
+
+  @Override
+  public Collection<NodeGroup> groups() {
+    return groups;
+  }
+
+  @Override
+  public String toString() {
+    return "GroupedNodeImpl[" +
+        "node=" + node + ", " +
+        "groups=" + groups + ']';
+  }
+
 }

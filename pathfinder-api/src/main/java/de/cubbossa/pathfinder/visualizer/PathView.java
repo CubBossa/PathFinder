@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface PathView<PlayerT> extends Disposable {
 
-  List<? extends Node> getPath();
+  List<Node> getPath();
 
   PathPlayer<PlayerT> getTargetViewer();
 

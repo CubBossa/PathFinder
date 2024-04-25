@@ -10,7 +10,7 @@ public class NavigationLocationImpl implements NavigationLocation {
   public static GraphEntrySolver<Node> GRAPH_ENTRY_SOLVER;
 
   @Getter
-  private final Node node;
+  private Node node;
   private final boolean fixed;
   private final boolean external;
 
@@ -25,12 +25,11 @@ public class NavigationLocationImpl implements NavigationLocation {
     if (!external) {
       return graph;
     }
-    if (graph.nodes().contains(node)) {
-      return graph;
-    }
-    graph = GRAPH_ENTRY_SOLVER.solveEntry(node, graph);
-    graph = GRAPH_ENTRY_SOLVER.solveExit(node, graph);
-    return graph;
+    MutableValueGraph<Node, Double> g = GRAPH_ENTRY_SOLVER.solve(node, graph);
+    this.node = g.nodes().stream()
+        .filter(n -> n.getNodeId().equals(node.getNodeId())).findAny()
+        .orElse(null);
+    return g;
   }
 
   @Override

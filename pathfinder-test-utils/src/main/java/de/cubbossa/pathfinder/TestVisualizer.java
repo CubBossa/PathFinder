@@ -34,11 +34,9 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
   @Getter
   @Setter
   public class View extends AbstractVisualizer<View, Logger>.AbstractView {
-    List<Node> nodes;
 
     public View(PathPlayer<Logger> player, List<Node> nodes) {
       super(player, nodes);
-      this.nodes = nodes;
     }
   }
 }

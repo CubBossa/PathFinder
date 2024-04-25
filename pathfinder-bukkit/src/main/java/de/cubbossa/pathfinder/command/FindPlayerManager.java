@@ -1,19 +1,17 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.CommandRegistry;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import dev.jorel.commandapi.CommandTree;
 import java.util.HashMap;
 import java.util.Map;
@@ -157,7 +155,6 @@ public class FindPlayerManager implements Disposable {
         requesterPlayer.sendMessage(throwable.getMessage()); // TODO
         return;
       }
-      path.startUpdater(1000);
       BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
     });
   }

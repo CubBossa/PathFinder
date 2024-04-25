@@ -125,14 +125,14 @@ public interface Route {
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
-   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @param locations A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
   Route toAny(final @NotNull NavigationLocation... locations);
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
-   * @param nodes A collection of objects of which one must be visited in the solve process.
+   * @param routes A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
   Route toAny(final @NotNull Route... routes);

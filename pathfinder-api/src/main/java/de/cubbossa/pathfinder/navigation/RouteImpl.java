@@ -9,19 +9,17 @@ import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
 import de.cubbossa.pathfinder.graph.PathSolverResultImpl;
-import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +32,6 @@ class RouteImpl implements Route {
 
   // caching
   private @Nullable ValueGraph<Node, Double> modifiedBaseGraph = null;
-  private final Map<NavigationLocation, Location> lastLocations = new HashMap<>();
 
   RouteImpl(Route other) {
     this.targets = new ArrayList<>();
@@ -157,7 +154,8 @@ class RouteImpl implements Route {
 
   @Override
   public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    baseGraphSolver.setGraph(prepareBaseGraph(environment));
+    modifiedBaseGraph = prepareBaseGraph(environment);
+    baseGraphSolver.setGraph(modifiedBaseGraph);
 
     MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
         .directed()
@@ -185,6 +183,10 @@ class RouteImpl implements Route {
             var solved = solveForSection(p, inner);
             abstractGraph.putEdgeValue(p, inner, solved);
           } catch (NoPathFoundException e) {
+            System.out.println("No path found from " + p.end + " to " + inner.start);
+            for (EndpointPair<Node> edge : modifiedBaseGraph.edges()) {
+              System.out.println(edge.source().getNodeId() + " " + edge.source().getLocation().getX() + " -> " + edge.target().getNodeId() + " " + edge.target().getLocation().getX());
+            }
           }
         }
         prev = target;
@@ -195,12 +197,16 @@ class RouteImpl implements Route {
     abstractSolver.setGraph(abstractGraph);
 
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
+    var start = convertedTargets.get(0).iterator().next();
     for (RouteEl lastTarget : convertedTargets.get(convertedTargets.size() - 1)) {
-      PathSolverResult<RouteEl, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
-          convertedTargets.get(0).iterator().next(),
-          lastTarget
-      );
-      results.add(join(res));
+      try {
+        PathSolverResult<RouteEl, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
+            start,
+            lastTarget
+        );
+        results.add(join(res));
+      } catch (Throwable t) {
+      }
     }
     if (results.isEmpty()) {
       throw new NoPathFoundException();
@@ -247,7 +253,19 @@ class RouteImpl implements Route {
   }
 
   private PathSolverResult<Node, Double> solveForSection(RouteEl a, RouteEl b) throws NoPathFoundException {
-    return baseGraphSolver.solvePath(a.end, b.start);
+    Node start;
+    if (!(a.end instanceof GroupedNode)) {
+      start = modifiedBaseGraph.nodes().stream().filter(node -> node.getNodeId().equals(a.end.getNodeId())).findAny().get();
+    } else {
+      start = a.end;
+    }
+    Node end;
+    if (!(b.start instanceof GroupedNode)) {
+      end = modifiedBaseGraph.nodes().stream().filter(node -> node.getNodeId().equals(b.start.getNodeId())).findAny().get();
+    } else {
+      end = b.start;
+    }
+    return baseGraphSolver.solvePath(start, end);
   }
 
   private Collection<RouteEl> newElement(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {

@@ -1,14 +1,11 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.module.AbstractNavigationHandler;
 import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
 import de.cubbossa.pathfinder.navigation.Route;
-import de.cubbossa.pathfinder.node.implementation.EmptyNode;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -38,7 +35,6 @@ public class FindLocationCommand extends CommandTree {
               player.sendMessage(throwable.getMessage()); // TODO
               return;
             }
-            path.startUpdater(1000);
             BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
           });
         })

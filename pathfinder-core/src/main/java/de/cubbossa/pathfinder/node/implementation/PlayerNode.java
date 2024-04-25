@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeType;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.node.AbstractNodeType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -103,13 +103,18 @@ public class PlayerNode implements Node {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) {
+      if (o instanceof Node node) {
+        return node.getNodeId().equals(getNodeId());
+      }
+      return false;
+    }
     PlayerNode that = (PlayerNode) o;
     return Objects.equals(getPlayer().getUniqueId(), that.getPlayer().getUniqueId());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getPlayer().getUniqueId());
+    return getPlayer().getUniqueId().hashCode();
   }
 }

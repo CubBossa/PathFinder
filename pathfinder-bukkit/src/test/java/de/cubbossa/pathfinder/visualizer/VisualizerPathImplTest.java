@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifierImpl;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,11 +74,11 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, path);
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(1, visPath.paths.size());
     assertEquals(Set.of(vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
-    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
+    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.data.getPath().size() == 2));
 
     storage.deleteVisualizer(vis).join();
   }
@@ -93,7 +94,7 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, path);
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(2, visPath.paths.size());
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(a)));
@@ -114,14 +115,14 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, path);
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(3, visPath.paths.size());
     assertEquals(2, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(a)).count());
     assertEquals(1, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(b)).count());
     assertTrue(visPath.paths.stream()
         .filter(subPath -> !subPath.visualizer.getKey().toString().contains("default"))
-        .allMatch(subPath -> subPath.path.size() == 1));
+        .allMatch(subPath -> subPath.data.getPath().size() == 1));
 
     storage.deleteVisualizer(a).join();
     storage.deleteVisualizer(b).join();
@@ -136,10 +137,10 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, path);
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(1, visPath.paths.size());
-    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.path.size() == 2));
+    assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.data.getPath().size() == 2));
 
     storage.deleteVisualizer(vis).join();
   }

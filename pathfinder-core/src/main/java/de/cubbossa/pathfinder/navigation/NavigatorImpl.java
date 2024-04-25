@@ -107,6 +107,7 @@ public class NavigatorImpl implements Navigator {
 
     List<Node> nodeList = createPath(route);
     VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, nodeList);
+    path.addViewer(viewer);
 
     path.startUpdater(1000);
     return path;

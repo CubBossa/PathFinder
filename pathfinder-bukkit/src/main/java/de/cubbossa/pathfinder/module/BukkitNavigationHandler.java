@@ -1,16 +1,15 @@
 package de.cubbossa.pathfinder.module;
 
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
-import de.cubbossa.pathfinder.event.PathStartEvent;
-import de.cubbossa.pathfinder.event.PathStoppedEvent;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.CancelPathCommand;
 import de.cubbossa.pathfinder.command.FindCommand;
 import de.cubbossa.pathfinder.command.FindLocationCommand;
+import de.cubbossa.pathfinder.event.PathStartEvent;
+import de.cubbossa.pathfinder.event.PathStoppedEvent;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -62,7 +61,7 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> i
     PathPlayer<Player> pathPlayer = PathPlayer.wrap(p);
 
     AbstractNavigationHandler<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
-    if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), 2)) {
+    if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), info.dist())) {
       reach(info.playerId());
     }
   }

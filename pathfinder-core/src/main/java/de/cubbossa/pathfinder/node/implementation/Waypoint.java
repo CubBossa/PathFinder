@@ -4,16 +4,15 @@ import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.EdgeImpl;
+import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.ModifiedHashSet;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -42,10 +41,10 @@ public class Waypoint implements Node {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof Waypoint waypoint)) {
+    if (!(o instanceof Node waypoint)) {
       return false;
     }
-    return nodeId.equals(waypoint.nodeId);
+    return nodeId.equals(waypoint.getNodeId());
   }
 
   @Override

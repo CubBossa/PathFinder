@@ -16,12 +16,11 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   @Setter
   PathPlayer<PlayerT> targetViewer = null;
   final Collection<PathPlayer<PlayerT>> viewers = new HashSet<>();
-  final List<? extends Node> path;
-  final Timer timer;
+  final List<Node> path;
+  Timer timer;
 
-  public AbstractVisualizerPath(List<? extends Node> path) {
+  public AbstractVisualizerPath(List<Node> path) {
     this.path = path;
-    this.timer = new Timer();
   }
 
   public void setTargetViewer(PathPlayer<PlayerT> targetViewer) {
@@ -30,7 +29,7 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   }
 
   @Override
-  public List<? extends Node> getPath() {
+  public List<Node> getPath() {
     return path;
   }
 
@@ -66,7 +65,10 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
 
   @Override
   public void startUpdater(int interval) {
-    timer.cancel();
+    if (timer != null) {
+      timer.cancel();
+    }
+    timer = new Timer();
     timer.scheduleAtFixedRate(new TimerTask() {
       @Override
       public void run() {

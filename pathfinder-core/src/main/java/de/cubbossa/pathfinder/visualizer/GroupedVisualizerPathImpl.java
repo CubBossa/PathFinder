@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.visualizer;
 import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.ArrayList;
@@ -13,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -25,7 +23,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
   protected final Collection<SubPath<?>> paths;
 
-  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<? extends Node> route) {
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<Node> route) {
     super(route);
     this.paths = new HashSet<>();
     setTargetViewer(target);
@@ -93,7 +91,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
       }
 
       // store sub path with given visualizer
-      paths.add(new SubPath<>(new ArrayList<>(subPathCollection), selection));
+      paths.add(new SubPath<>(selection, new ArrayList<>(subPathCollection)));
       // prepare restart from first node by resetting
       subPathCollection.clear();
 
@@ -102,47 +100,35 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
         nodeVisualizerMap.remove(nodeVisualizerMap.keySet().iterator().next());
       }
     }
-    for (SubPath<?> subPath : paths) {
-      injectSubPathView(subPath);
-    }
-  }
-
-  private <ViewT extends PathView<PlayerT>> void injectSubPathView(SubPath<ViewT> subPath) {
-    subPath.data = subPath.visualizer.createView(subPath.path, getTargetViewer());
-  }
-
-  @Override
-  public boolean isActive() {
-    return viewers.size() > 0;
-  }
-
-  @Override
-  public boolean isActive(PathPlayer<PlayerT> player) {
-    return viewers.contains(player);
   }
 
   @Override
   public void addViewer(PathPlayer<PlayerT> player) {
-    viewers.add(player);
+    super.addViewer(player);
     paths.forEach(subPath -> subPath.data.addViewer(player));
   }
 
   @Override
   public void removeViewer(PathPlayer<PlayerT> player) {
-    viewers.remove(player);
+    super.removeViewer(player);
     paths.forEach(subPath -> subPath.data.removeViewer(player));
   }
 
   @Override
   public void removeAllViewers() {
-    getViewers().forEach(this::removeViewer);
+    super.removeAllViewers();
+    paths.forEach(subPath -> subPath.data.removeAllViewers());
   }
 
-  @RequiredArgsConstructor
   @Accessors(fluent = true)
   protected class SubPath<ViewT extends PathView<PlayerT>> {
-    protected final List<Node> path;
+
     protected final PathVisualizer<ViewT, PlayerT> visualizer;
     protected ViewT data;
+
+    SubPath(PathVisualizer<ViewT, PlayerT> visualizer, List<Node> path) {
+      this.visualizer = visualizer;
+      this.data = visualizer.createView(path, getTargetViewer());
+    }
   }
 }

@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -112,37 +113,38 @@ public class AbstractNavigationHandler<PlayerT>
 
   @Override
   public CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route) {
+    return CompletableFuture.supplyAsync(() -> {
 
-    var current = activePaths.get(viewer.getUniqueId());
-    if (current != null) {
-      cancel(current.playerId);
-    }
+      var current = activePaths.get(viewer.getUniqueId());
+      if (current != null) {
+        unset(current);
+      }
 
-    VisualizerPath<PlayerT> path;
-    try {
-      path = navigators.get(viewer.getUniqueId(), uuid -> new NavigatorImpl(c -> {
-        Collection<Node> nodes = c;
-        for (NavigationConstraint navigationConstraint : navigationConstraints) {
-          nodes = navigationConstraint.filterTargetNodes(uuid, nodes);
-        }
-        return nodes;
-      })).createRenderer(viewer, route);
-    } catch (NoPathFoundException noPathFoundException) {
-      return CompletableFuture.failedFuture(noPathFoundException);
-    }
-    boolean result = eventDispatcher.dispatchPathStart(viewer, path);
-    if (!result) {
-      return CompletableFuture.failedFuture(new EventCancelledException());
-    }
-    path.startUpdater(1000);
+      VisualizerPath<PlayerT> path;
+      try {
+        path = navigators.get(viewer.getUniqueId(), uuid -> new NavigatorImpl(c -> {
+          Collection<Node> nodes = c;
+          for (NavigationConstraint navigationConstraint : navigationConstraints) {
+            nodes = navigationConstraint.filterTargetNodes(uuid, nodes);
+          }
+          return nodes;
+        })).createRenderer(viewer, route);
+      } catch (NoPathFoundException noPathFoundException) {
+        throw new CompletionException(noPathFoundException);
+      }
+      boolean result = eventDispatcher.dispatchPathStart(viewer, path);
+      if (!result) {
+        throw new EventCancelledException();
+      }
 
-    activePaths.put(viewer.getUniqueId(), context(viewer.getUniqueId(), path));
-    return CompletableFuture.completedFuture(path);
+      activePaths.put(viewer.getUniqueId(), context(viewer.getUniqueId(), path));
+      return path;
+    });
   }
 
   private NavigationContext context(UUID playerId, VisualizerPath<PlayerT> path) {
 
-    Node last = path.getPath().get(0);
+    Node last = path.getPath().get(path.getPath().size() - 1);
     if (last == null) {
       throw new IllegalStateException("Path containing no nodes");
     }
@@ -167,6 +169,7 @@ public class AbstractNavigationHandler<PlayerT>
     if (activePaths.remove(context.playerId) != null) {
       eventDispatcher.dispatchPathStopped(PathPlayer.wrap(context.playerId), context.path);
     }
+    context.path.removeViewer(PathPlayer.wrap(context.playerId));
   }
 
   @Override
