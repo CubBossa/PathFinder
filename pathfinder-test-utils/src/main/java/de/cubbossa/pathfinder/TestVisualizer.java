@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import java.util.List;
@@ -34,7 +35,7 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
   @Setter
   public class View extends AbstractVisualizer<View, Logger>.AbstractView {
 
-    public View(PathPlayer<Logger> player, List<Node> nodes) {
+    public View(PathPlayer<Logger> player, UpdatingPath nodes) {
       super(player, nodes);
     }
   }

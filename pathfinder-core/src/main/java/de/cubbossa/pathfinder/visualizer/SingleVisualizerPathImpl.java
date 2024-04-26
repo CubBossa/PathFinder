@@ -11,6 +11,7 @@ public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> 
     super(route);
     setTargetViewer(targetViewer);
     this.view = visualizer.createView(route, targetViewer);
+    update();
   }
 
   @Override
@@ -39,6 +40,7 @@ public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> 
 
   @Override
   public void update() {
+    super.update();
     this.view.update();
   }
 }

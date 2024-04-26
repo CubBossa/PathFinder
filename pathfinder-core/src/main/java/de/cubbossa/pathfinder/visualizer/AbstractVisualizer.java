@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -37,17 +38,23 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
 
     private final UUID targetViewerUuid;
     private final UpdatingPath path;
+    private final List<Node> pathCache;
     private PathPlayer<PlayerT> targetViewer;
     Collection<PathPlayer<PlayerT>> viewers;
 
     public AbstractView(PathPlayer<PlayerT> targetViewer, UpdatingPath path) {
       this.targetViewerUuid = targetViewer.getUniqueId();
       this.path = path;
+      this.pathCache = new ArrayList<>(calculatePath());
       this.targetViewer = targetViewer;
       viewers = new HashSet<>();
     }
 
     public List<Node> getPath() {
+      return pathCache;
+    }
+
+    public List<Node> calculatePath() {
       try {
         return path.getNodes();
       } catch (NoPathFoundException e) {
@@ -84,6 +91,8 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
 
     @Override
     public void update() {
+      pathCache.clear();
+      pathCache.addAll(calculatePath());
     }
   }
 

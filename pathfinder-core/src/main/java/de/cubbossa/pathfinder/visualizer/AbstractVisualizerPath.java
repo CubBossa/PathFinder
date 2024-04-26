@@ -26,7 +26,6 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   public AbstractVisualizerPath(UpdatingPath path) {
     this.path = path;
     this.pathCache = new ArrayList<>();
-    update();
   }
 
   @Override

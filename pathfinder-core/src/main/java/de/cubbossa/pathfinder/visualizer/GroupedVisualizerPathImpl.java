@@ -33,6 +33,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
   @Override
   public void update() {
+    super.update();
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
@@ -130,7 +131,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
     SubPath(PathVisualizer<ViewT, PlayerT> visualizer, UpdatingPath path) {
       this.visualizer = visualizer;
-      this.data = visualizer.createView(path, getTargetViewer());
+      this.data = visualizer.createView(path, GroupedVisualizerPathImpl.this.getTargetViewer());
     }
   }
 }

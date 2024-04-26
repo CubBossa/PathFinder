@@ -29,39 +29,31 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
     super(key);
   }
 
-  @Override
-  public ViewT createView(UpdatingPath nodes, PathPlayer<Player> player) {
-
-    List<Edge> edges = new ArrayList<>();
-    Node prev = null;
-    int index = 0;
-    for (Node node : nodes) {
-      if (prev == null) {
-        prev = node;
-        continue;
-      }
-      edges.add(new Edge(index++, BukkitVectorUtils.toBukkit(prev.getLocation()),
-          BukkitVectorUtils.toBukkit(node.getLocation())));
-      prev = node;
-    }
-    return createView(nodes, edges, player);
-  }
-
-  public List<Edge> getEdges() {
-
-  }
-
-  public abstract ViewT createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player);
-
   @Getter
   public abstract class EdgeBasedView extends IntervalVisualizer<ViewT>.IntervalView {
 
     private final List<Edge> edges;
     private Location lastPlayerLocation;
 
-    public EdgeBasedView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges) {
+    public EdgeBasedView(PathPlayer<Player> player, UpdatingPath nodes) {
       super(player, nodes);
-      this.edges = edges;
+      this.edges = calculateEdges();
+    }
+
+    public List<Edge> calculateEdges() {
+      List<Edge> edges = new ArrayList<>();
+      Node prev = null;
+      int index = 0;
+      for (Node node : getPath()) {
+        if (prev == null) {
+          prev = node;
+          continue;
+        }
+        edges.add(new Edge(index++, BukkitVectorUtils.toBukkit(prev.getLocation()),
+            BukkitVectorUtils.toBukkit(node.getLocation())));
+        prev = node;
+      }
+      return edges;
     }
 
     @Override

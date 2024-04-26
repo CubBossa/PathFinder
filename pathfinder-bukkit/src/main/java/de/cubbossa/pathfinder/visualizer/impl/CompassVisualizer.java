@@ -59,8 +59,8 @@ public class CompassVisualizer
   }
 
   @Override
-  public CompassBossbarView createView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
-    return new CompassBossbarView(player, nodes, edges, bossBar);
+  public CompassBossbarView createView(PathPlayer<Player> player, UpdatingPath nodes, BossBar bossBar) {
+    return new CompassBossbarView(player, nodes, bossBar);
   }
 
   @Getter
@@ -68,8 +68,8 @@ public class CompassVisualizer
     private final StringCompass compass;
     private Location leadPoint = new Location(null, 0, 0, 0);
 
-    public CompassBossbarView(PathPlayer<Player> p, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
-      super(p, nodes, edges, bossBar);
+    public CompassBossbarView(PathPlayer<Player> p, UpdatingPath nodes, BossBar bossBar) {
+      super(p, nodes, bossBar);
       this.compass = new StringCompass(backgroundFormat, radius, null);
       compass.addMarker("N", north, 0.);
       compass.addMarker("E", east, 90.);

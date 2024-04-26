@@ -34,20 +34,20 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
   }
 
   @Override
-  public ViewT createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player) {
+  public ViewT createView(UpdatingPath nodes, PathPlayer<Player> player) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
-    return createView(player, nodes, edges, bossBar);
+    return createView(player, nodes, bossBar);
   }
 
-  public abstract ViewT createView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar);
+  public abstract ViewT createView(PathPlayer<Player> player, UpdatingPath nodes, BossBar bossBar);
 
   @Getter
   public abstract class BossbarView extends EdgeBasedView {
 
     private final BossBar bossBar;
 
-    public BossbarView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
-      super(player, nodes, edges);
+    public BossbarView(PathPlayer<Player> player, UpdatingPath nodes, BossBar bossBar) {
+      super(player, nodes);
       this.bossBar = bossBar;
     }
 

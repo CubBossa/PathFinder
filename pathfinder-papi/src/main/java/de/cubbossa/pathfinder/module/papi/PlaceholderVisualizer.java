@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.module.papi;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
@@ -76,16 +77,11 @@ public class PlaceholderVisualizer
 
   @Override
   public PlaceholderView createView(UpdatingPath nodes, PathPlayer<Player> player) {
-    PlaceholderView placeholderView = super.createView(nodes, player);
+    PlaceholderView placeholderView = new PlaceholderView(player, nodes);
     Player bp = player.unwrap();
     PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, placeholderView::getDirection);
     PlaceholderHook.getInstance().register(PlaceholderHook.DISTANCE, bp, placeholderView::getDistance);
     return placeholderView;
-  }
-
-  @Override
-  public PlaceholderView createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player) {
-    return new PlaceholderView(player, nodes, edges);
   }
 
   public String resolveDistance(double distance) {
@@ -100,8 +96,8 @@ public class PlaceholderVisualizer
 
     private String direction = "", distance = "";
 
-    public PlaceholderView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
-      super(player, nodes, edges);
+    public PlaceholderView(PathPlayer<Player> player, UpdatingPath nodes) {
+      super(player, nodes);
     }
 
     @Override
