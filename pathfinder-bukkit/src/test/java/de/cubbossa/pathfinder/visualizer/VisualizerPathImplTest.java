@@ -74,7 +74,7 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, () -> new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(1, visPath.paths.size());
     assertEquals(Set.of(vis.getKey()), visPath.paths.stream().map(s -> s.visualizer.getKey()).collect(Collectors.toSet()));
@@ -94,7 +94,7 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, () -> new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(2, visPath.paths.size());
     assertTrue(visPath.paths.stream().anyMatch(subPath -> subPath.visualizer.equals(a)));
@@ -115,7 +115,7 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, () -> new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(3, visPath.paths.size());
     assertEquals(2, visPath.paths.stream().filter(subPath -> subPath.visualizer.equals(a)).count());
@@ -137,7 +137,7 @@ class VisualizerPathImplTest extends PathFinderTest {
     );
 
     PathPlayer<Object> p = new TestPlayer();
-    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, new ArrayList<>(path));
+    GroupedVisualizerPathImpl<Object> visPath = new GroupedVisualizerPathImpl<>(p, () -> new ArrayList<>(path));
     assertTrue(visPath.isActive());
     assertEquals(1, visPath.paths.size());
     assertTrue(visPath.paths.stream().allMatch(subPath -> subPath.data.getPath().size() == 2));

@@ -2,17 +2,16 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 @Getter
 @Setter
@@ -35,7 +34,7 @@ public abstract class AdvancedParticleVisualizer extends BezierPathVisualizer {
   }
 
   @Override
-  public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
+  public BezierView createView(UpdatingPath nodes, PathPlayer<Player> player) {
     BezierView bezierView = new BezierView(player, nodes) {
       @Override
       void play(int interval) {

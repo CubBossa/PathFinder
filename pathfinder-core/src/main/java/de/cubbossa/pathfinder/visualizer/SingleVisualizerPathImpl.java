@@ -1,15 +1,13 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
-import java.util.List;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 
 public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> extends AbstractVisualizerPath<PlayerT> {
 
   private final ViewT view;
 
-  public SingleVisualizerPathImpl(List<Node> route, PathVisualizer<ViewT, PlayerT> visualizer, PathPlayer<PlayerT> targetViewer) {
+  public SingleVisualizerPathImpl(UpdatingPath route, PathVisualizer<ViewT, PlayerT> visualizer, PathPlayer<PlayerT> targetViewer) {
     super(route);
     setTargetViewer(targetViewer);
     this.view = visualizer.createView(route, targetViewer);

@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.visualizer;
 import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
   protected final Collection<SubPath<?>> paths;
 
-  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, List<Node> route) {
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, UpdatingPath route) {
     super(route);
     this.paths = new HashSet<>();
     setTargetViewer(target);
@@ -35,7 +36,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
-    for (Node ungrouped : path) {
+    for (Node ungrouped : pathCache) {
       if (ungrouped instanceof GroupedNode node) {
         AtomicDouble highest = new AtomicDouble();
         node.groups().stream()
@@ -91,7 +92,8 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
       }
 
       // store sub path with given visualizer
-      paths.add(new SubPath<>(selection, new ArrayList<>(subPathCollection)));
+      List<Node> copy = new ArrayList<>(subPathCollection);
+      paths.add(new SubPath<>(selection, () -> copy));
       // prepare restart from first node by resetting
       subPathCollection.clear();
 
@@ -126,7 +128,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
     protected final PathVisualizer<ViewT, PlayerT> visualizer;
     protected ViewT data;
 
-    SubPath(PathVisualizer<ViewT, PlayerT> visualizer, List<Node> path) {
+    SubPath(PathVisualizer<ViewT, PlayerT> visualizer, UpdatingPath path) {
       this.visualizer = visualizer;
       this.data = visualizer.createView(path, getTargetViewer());
     }

@@ -105,8 +105,13 @@ public class NavigatorImpl implements Navigator {
       PathPlayer<PlayerT> viewer, Route route
   ) throws NoPathFoundException {
 
-    List<Node> nodeList = createPath(route);
-    VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, nodeList);
+    VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, () -> {
+      try {
+        return createPath(route);
+      } catch (NoPathFoundException ignored) {
+        return new ArrayList<>();
+      }
+    });
     path.addViewer(viewer);
 
     path.startUpdater(1000);
@@ -118,8 +123,13 @@ public class NavigatorImpl implements Navigator {
       PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
   ) throws NoPathFoundException {
 
-    List<Node> nodeList = createPath(route);
-    return new SingleVisualizerPathImpl<>(nodeList, renderer, viewer);
+    return new SingleVisualizerPathImpl<>(() -> {
+      try {
+        return createPath(route);
+      } catch (NoPathFoundException ignored) {
+        return new ArrayList<>();
+      }
+    }, renderer, viewer);
   }
 
   /**

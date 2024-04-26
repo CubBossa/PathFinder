@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.StringCompass;
@@ -58,7 +59,7 @@ public class CompassVisualizer
   }
 
   @Override
-  public CompassBossbarView createView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+  public CompassBossbarView createView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
     return new CompassBossbarView(player, nodes, edges, bossBar);
   }
 
@@ -67,7 +68,7 @@ public class CompassVisualizer
     private final StringCompass compass;
     private Location leadPoint = new Location(null, 0, 0, 0);
 
-    public CompassBossbarView(PathPlayer<Player> p, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+    public CompassBossbarView(PathPlayer<Player> p, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
       super(p, nodes, edges, bossBar);
       this.compass = new StringCompass(backgroundFormat, radius, null);
       compass.addMarker("N", north, 0.);

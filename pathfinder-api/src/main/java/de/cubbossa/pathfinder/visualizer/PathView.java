@@ -22,6 +22,5 @@ public interface PathView<PlayerT> extends Disposable {
 
   Collection<PathPlayer<PlayerT>> getViewers();
 
-  default void update() {
-  }
+  void update();
 }

@@ -1,9 +1,12 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -33,15 +36,23 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
   public abstract class AbstractView implements PathView<PlayerT> {
 
     private final UUID targetViewerUuid;
-    private final List<Node> path;
+    private final UpdatingPath path;
     private PathPlayer<PlayerT> targetViewer;
     Collection<PathPlayer<PlayerT>> viewers;
 
-    public AbstractView(PathPlayer<PlayerT> targetViewer, List<Node> path) {
+    public AbstractView(PathPlayer<PlayerT> targetViewer, UpdatingPath path) {
       this.targetViewerUuid = targetViewer.getUniqueId();
       this.path = path;
       this.targetViewer = targetViewer;
       viewers = new HashSet<>();
+    }
+
+    public List<Node> getPath() {
+      try {
+        return path.getNodes();
+      } catch (NoPathFoundException e) {
+        return Collections.emptyList();
+      }
     }
 
     @Override
@@ -69,6 +80,10 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
     @Override
     public Collection<PathPlayer<PlayerT>> getViewers() {
       return new HashSet<>(viewers);
+    }
+
+    @Override
+    public void update() {
     }
   }
 

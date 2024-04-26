@@ -1,7 +1,10 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +19,24 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   @Setter
   PathPlayer<PlayerT> targetViewer = null;
   final Collection<PathPlayer<PlayerT>> viewers = new HashSet<>();
-  final List<Node> path;
+  final UpdatingPath path;
+  final List<Node> pathCache;
   Timer timer;
 
-  public AbstractVisualizerPath(List<Node> path) {
+  public AbstractVisualizerPath(UpdatingPath path) {
     this.path = path;
+    this.pathCache = new ArrayList<>();
+    update();
+  }
+
+  @Override
+  public void update() {
+    pathCache.clear();
+    try {
+      pathCache.addAll(path.getNodes());
+    } catch (NoPathFoundException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void setTargetViewer(PathPlayer<PlayerT> targetViewer) {
@@ -28,9 +44,8 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
     this.addViewer(targetViewer);
   }
 
-  @Override
   public List<Node> getPath() {
-    return path;
+    return pathCache;
   }
 
   @Override
@@ -68,6 +83,7 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
     if (timer != null) {
       timer.cancel();
     }
+
     timer = new Timer();
     timer.scheduleAtFixedRate(new TimerTask() {
       @Override

@@ -3,17 +3,16 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathfinder.misc.Keyed;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.PathView;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 public class CombinedVisualizer extends
     AbstractVisualizer<CombinedVisualizer.CombinedView<Object>, Object> {
@@ -70,7 +69,7 @@ public class CombinedVisualizer extends
   }
 
   @Override
-  public CombinedView<Object> createView(List<Node> nodes, PathPlayer<Object> player) {
+  public CombinedView<Object> createView(UpdatingPath nodes, PathPlayer<Object> player) {
     return new CombinedView<Object>(player, nodes, visualizers.stream()
         .filter(v -> v.getTargetType().isInstance(getTargetType()))
         // safely assume that the player type matches for all sub visualizers that matched the filter
@@ -82,7 +81,7 @@ public class CombinedVisualizer extends
 
     private final Map<NamespacedKey, PathView<T>> childData;
 
-    public CombinedView(PathPlayer<T> targetViewer, List<Node> path, Map<NamespacedKey, PathView<T>> childData) {
+    public CombinedView(PathPlayer<T> targetViewer, UpdatingPath path, Map<NamespacedKey, PathView<T>> childData) {
       super(targetViewer, path);
       this.childData = childData;
     }

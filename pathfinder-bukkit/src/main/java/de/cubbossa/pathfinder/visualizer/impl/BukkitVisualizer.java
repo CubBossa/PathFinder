@@ -2,9 +2,8 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import java.util.List;
 import org.bukkit.entity.Player;
 
 public abstract class BukkitVisualizer<ViewT extends BukkitVisualizer<ViewT>.BukkitView>
@@ -20,7 +19,7 @@ public abstract class BukkitVisualizer<ViewT extends BukkitVisualizer<ViewT>.Buk
   }
 
   public abstract class BukkitView extends AbstractVisualizer<ViewT, Player>.AbstractView {
-    public BukkitView(PathPlayer<Player> targetViewer, List<Node> path) {
+    public BukkitView(PathPlayer<Player> targetViewer, UpdatingPath path) {
       super(targetViewer, path);
     }
   }

@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.visualizer.impl;
 import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import java.util.List;
 import lombok.Getter;
@@ -34,19 +34,19 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
   }
 
   @Override
-  public ViewT createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player) {
+  public ViewT createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player) {
     BossBar bossBar = BossBar.bossBar(Component.empty(), progress.floatValue(), color, overlay);
     return createView(player, nodes, edges, bossBar);
   }
 
-  public abstract ViewT createView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar);
+  public abstract ViewT createView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar);
 
   @Getter
   public abstract class BossbarView extends EdgeBasedView {
 
     private final BossBar bossBar;
 
-    public BossbarView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges, BossBar bossBar) {
+    public BossbarView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges, BossBar bossBar) {
       super(player, nodes, edges);
       this.bossBar = bossBar;
     }

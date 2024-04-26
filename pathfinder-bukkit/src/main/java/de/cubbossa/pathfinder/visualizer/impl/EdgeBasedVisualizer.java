@@ -2,17 +2,17 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -30,7 +30,7 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
   }
 
   @Override
-  public ViewT createView(List<Node> nodes, PathPlayer<Player> player) {
+  public ViewT createView(UpdatingPath nodes, PathPlayer<Player> player) {
 
     List<Edge> edges = new ArrayList<>();
     Node prev = null;
@@ -47,18 +47,20 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
     return createView(nodes, edges, player);
   }
 
-  public abstract ViewT createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player);
+  public List<Edge> getEdges() {
+
+  }
+
+  public abstract ViewT createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player);
 
   @Getter
   public abstract class EdgeBasedView extends IntervalVisualizer<ViewT>.IntervalView {
 
-    private final List<Node> nodes;
     private final List<Edge> edges;
     private Location lastPlayerLocation;
 
-    public EdgeBasedView(PathPlayer<Player> player, List<Node> nodes, List<Edge> edges) {
+    public EdgeBasedView(PathPlayer<Player> player, UpdatingPath nodes, List<Edge> edges) {
       super(player, nodes);
-      this.nodes = nodes;
       this.edges = edges;
     }
 

@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.module.papi;
 
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
 import java.util.List;
@@ -75,7 +75,7 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public PlaceholderView createView(List<Node> nodes, PathPlayer<Player> player) {
+  public PlaceholderView createView(UpdatingPath nodes, PathPlayer<Player> player) {
     PlaceholderView placeholderView = super.createView(nodes, player);
     Player bp = player.unwrap();
     PlaceholderHook.getInstance().register(PlaceholderHook.DIRECTION, bp, placeholderView::getDirection);
@@ -84,7 +84,7 @@ public class PlaceholderVisualizer
   }
 
   @Override
-  public PlaceholderView createView(List<Node> nodes, List<Edge> edges, PathPlayer<Player> player) {
+  public PlaceholderView createView(UpdatingPath nodes, List<Edge> edges, PathPlayer<Player> player) {
     return new PlaceholderView(player, nodes, edges);
   }
 

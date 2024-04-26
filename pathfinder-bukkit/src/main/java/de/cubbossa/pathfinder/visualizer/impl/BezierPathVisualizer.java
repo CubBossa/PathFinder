@@ -1,17 +1,17 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.group.CurveLengthModifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.misc.World;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.util.NodeUtils;
 import de.cubbossa.splinelib.interpolate.Interpolation;
 import de.cubbossa.splinelib.util.Spline;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -69,19 +69,24 @@ public abstract class BezierPathVisualizer
   public abstract class BezierView extends IntervalVisualizer<BezierView>.IntervalView {
     List<Location> points;
 
-    public BezierView(PathPlayer<Player> player, List<Node> path, List<Location> points) {
+    public BezierView(PathPlayer<Player> player, UpdatingPath path, List<Location> points) {
       super(player, path);
       this.points = points;
     }
 
-    public BezierView(PathPlayer<Player> player, List<Node> nodes) {
+    public BezierView(PathPlayer<Player> player, UpdatingPath nodes) {
       super(player, nodes);
+    }
+
+    @Override
+    public void update() {
+      super.update();
 
       // split the path into segments for each appearing world change
       List<PathSegment> segments = new ArrayList<>();
       World last = null;
       List<Node> open = new ArrayList<>();
-      for (Node node : nodes) {
+      for (Node node : getPath()) {
         if (!Objects.equals(last, node.getLocation().getWorld())) {
           if (last != null) {
             segments.add(new PathSegment(last, new ArrayList<>(open)));

@@ -4,11 +4,10 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.List;
 import java.util.logging.Logger;
+import lombok.Getter;
+import lombok.Setter;
 
 public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logger> {
 
@@ -22,7 +21,7 @@ public class TestVisualizer extends AbstractVisualizer<TestVisualizer.View, Logg
   }
 
   @Override
-  public View createView(List<Node> nodes, PathPlayer<Logger> player) {
+  public View createView(UpdatingPath nodes, PathPlayer<Logger> player) {
     return new View(player, nodes);
   }
 

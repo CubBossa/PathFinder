@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +40,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   }
 
   @Override
-  public BezierView createView(List<Node> nodes, PathPlayer<Player> player) {
+  public BezierView createView(UpdatingPath nodes, PathPlayer<Player> player) {
     return new BezierView(player, nodes) {
 
       private long lastException = 0;
