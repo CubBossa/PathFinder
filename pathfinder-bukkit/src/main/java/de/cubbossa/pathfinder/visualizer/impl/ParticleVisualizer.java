@@ -4,6 +4,8 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.visualizer.BukkitParticlePlayer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
@@ -41,34 +43,23 @@ public class ParticleVisualizer extends BezierPathVisualizer {
 
   @Override
   public BezierView createView(UpdatingPath nodes, PathPlayer<Player> player) {
+    final BukkitParticlePlayer particlePlayer = new BukkitParticlePlayer(
+        new ArrayList<>(), player.unwrap(), particle, particleData, amount, offset, speed
+    );
     return new BezierView(player, nodes) {
 
-      private long lastException = 0;
+      @Override
+      public void update() {
+        super.update();
+        particlePlayer.setNewestPathAndConvert(getPoints());
+      }
 
       @Override
       void play(int interval) {
         if (points == null) {
           return;
         }
-        for (int i = interval % getSchedulerSteps(); i < points.size();
-             i += getSchedulerSteps()) {
-          for (PathPlayer<Player> player : getViewers()) {
-            Player bukkitPlayer = player.unwrap();
-            Location point = points.get(i);
-            var data = particleData;
-            if (particle.getDataType().equals(Void.class)) {
-              data = null;
-            } else if (!Objects.equals(particleData.getClass(), particle.getDataType())) {
-              if (System.currentTimeMillis() - lastException < 3000) {
-                return;
-              }
-              lastException = System.currentTimeMillis();
-              throw new IllegalStateException("Particle data is of wrong type - given: "
-                  + particleData.getClass().getName() + ", required: " + particle.getDataType().getName());
-            }
-            bukkitPlayer.spawnParticle(particle, point, amount, offset.getX(), offset.getY(), offset.getZ(), speed, data);
-          }
-        }
+        particlePlayer.run();
       }
     };
   }
