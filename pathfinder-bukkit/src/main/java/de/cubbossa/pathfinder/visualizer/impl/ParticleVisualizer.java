@@ -5,7 +5,6 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.visualizer.BukkitParticlePlayer;
-import java.util.ArrayList;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Particle;
@@ -41,7 +40,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
   @Override
   public BezierView createView(UpdatingPath nodes, PathPlayer<Player> player) {
     final BukkitParticlePlayer particlePlayer = new BukkitParticlePlayer(
-        new ArrayList<>(), player.unwrap(), particle, particleData, amount, offset, speed
+        player.unwrap(), particle, particleData, amount, offset, speed
     );
     particlePlayer.setSteps(schedulerSteps);
     var view = new BezierView(player, nodes) {

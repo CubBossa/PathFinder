@@ -38,8 +38,7 @@ class AbstractParticlePlayerTest extends PathFinderTest {
 
     Collection<UUID> played;
 
-    public TestParticlePlayer(Collection<UUID> played, List<Location> path) {
-      super(path);
+    public TestParticlePlayer(Collection<UUID> played) {
       this.played = played;
     }
 
@@ -79,7 +78,8 @@ class AbstractParticlePlayerTest extends PathFinderTest {
     Location l1 = new Location(0, 0, 0, new TestWorld(UUID.randomUUID()));
     Location l2 = new Location(0, 0, 0, new TestWorld(UUID.randomUUID()));
     Location l3 = new Location(10_000, 0, 0, new TestWorld(UUID.randomUUID()));
-    TestParticlePlayer player = new TestParticlePlayer(played, List.of(l1, l2, l3));
+    TestParticlePlayer player = new TestParticlePlayer(played);
+    player.setNewestPath(List.of(l1, l2, l3));
     player.setSteps(3);
 
     player.run();

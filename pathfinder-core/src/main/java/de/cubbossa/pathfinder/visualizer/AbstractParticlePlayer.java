@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,16 +62,11 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask implem
 
   private volatile List<Location> pathUpdate = null;
 
-  public AbstractParticlePlayer(List<Location> path) {
-    this.newestPath = new AbstractParticleTrailPlayer<>(this, path);
-    PathFinderProvider.get().getDisposer().register(this, newestPath);
-  }
-
   @Override
   public void dispose() {
     Disposable.super.dispose();
+    oldPaths.add(newestPath);
     newestPath = null;
-    oldPaths.clear();
   }
 
   /**
@@ -126,10 +122,14 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask implem
   @Override
   public void run() {
     int s = currentStep.getAndIncrement();
+
+
     // Make sure to apply new path
     if (pathUpdate != null) {
       // Add the previously newest path to the old paths
-      oldPaths.add(newestPath);
+      if (newestPath != null) {
+        oldPaths.add(newestPath);
+      }
       // Make path update the newest path
       newestPath = new AbstractParticleTrailPlayer<>(this, pathUpdate);
       PathFinderProvider.get().getDisposer().register(this, newestPath);
@@ -141,10 +141,14 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask implem
       currentStep.set(0);
     }
 
-    newestPath.setUpperBound(newestPath.getUpperBound() + updateIncrement);
-    newestPath.run(s, steps);
+    if (newestPath != null) {
+      newestPath.setUpperBound(newestPath.getUpperBound() + updateIncrement);
+      newestPath.run(s, steps);
+    }
 
-    oldPaths = oldPaths.stream()
+    oldPaths = oldPaths.stream().parallel()
+        .filter(Objects::nonNull)
+        .peek(p -> p.setUpperBound(p.getUpperBound() + updateIncrement))
         .peek(p -> p.setLowerBound(p.getLowerBound() + updateIncrement))
         .filter(p -> p.getUpperBound() > p.getLowerBound())
         .peek(p -> p.run(s, steps))

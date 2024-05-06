@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import java.util.List;
 import java.util.Objects;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -18,9 +17,8 @@ public class BukkitParticlePlayer extends AbstractParticlePlayer<org.bukkit.Loca
   private final double speed;
   private long lastException = 0;
 
-  public BukkitParticlePlayer(List<Location> locations, Player player, Particle particle, Object particleData, int amount,
+  public BukkitParticlePlayer(Player player, Particle particle, Object particleData, int amount,
                               Vector offset, double speed) {
-    super(locations);
     this.player = player;
     this.particle = particle;
     this.particleData = particleData;

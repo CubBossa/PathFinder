@@ -1,26 +1,25 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import com.google.common.base.Preconditions;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
-import lombok.Setter;
 
 public class AbstractParticleTrailPlayer<LocationT> implements Disposable {
 
   private final AbstractParticlePlayer<LocationT> owner;
 
   @Getter
-  @Setter
   private int lowerBound = 0;
   @Getter
-  @Setter
   private int upperBound = 0;
   private final Point<LocationT>[] points;
 
   public AbstractParticleTrailPlayer(AbstractParticlePlayer<LocationT> owner, List<Location> points) {
+    Preconditions.checkArgument(!points.isEmpty());
     this.owner = owner;
     this.points = new Point[points.size()];
     int i = 0;
@@ -52,13 +51,20 @@ public class AbstractParticleTrailPlayer<LocationT> implements Disposable {
         .forEach(e -> owner.playParticle(e.platformLocation()));
   }
 
+  public void setLowerBound(int lowerBound) {
+    this.lowerBound = Math.max(0, lowerBound);
+  }
+
+  public void setUpperBound(int upperBound) {
+    this.upperBound = Math.min(points.length, upperBound);
+  }
+
   public List<Point<LocationT>> asList() {
     return new LinkedList<>(Arrays.asList(points));
   }
 
   public List<Point<LocationT>> asBoundedList() {
-    return new LinkedList<>(Arrays.asList(points)
-        .subList(Math.max(lowerBound, 0), Math.min(upperBound, points.length)));
+    return new LinkedList<>(Arrays.asList(points).subList(lowerBound, upperBound));
   }
 
   public void resetBounds() {

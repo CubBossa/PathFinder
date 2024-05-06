@@ -111,6 +111,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
         nodeVisualizerMap.remove(nodeVisualizerMap.keySet().iterator().next());
       }
     }
+    paths.forEach(subPath -> viewers.forEach(v -> subPath.data.addViewer(v)));
   }
 
   @Override
@@ -140,6 +141,9 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
     SubPath(PathVisualizer<ViewT, PlayerT> visualizer, UpdatingPath path) {
       this.visualizer = visualizer;
       this.data = visualizer.createView(path, GroupedVisualizerPathImpl.this.getTargetViewer());
+
+      PathFinderProvider.get().getDisposer().register(GroupedVisualizerPathImpl.this, this);
+      PathFinderProvider.get().getDisposer().register(visualizer, this);
     }
 
     @Override
