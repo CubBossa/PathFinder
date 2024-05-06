@@ -11,12 +11,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import lombok.Getter;
-import lombok.Setter;
 
 public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<PlayerT> {
 
   @Getter
-  @Setter
   PathPlayer<PlayerT> targetViewer = null;
   final Collection<PathPlayer<PlayerT>> viewers = new HashSet<>();
   final UpdatingPath path;
@@ -26,6 +24,13 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   public AbstractVisualizerPath(UpdatingPath path) {
     this.path = path;
     this.pathCache = new ArrayList<>();
+  }
+
+  @Override
+  public void dispose() {
+    VisualizerPath.super.dispose();
+    removeAllViewers();
+    stopUpdater();
   }
 
   @Override

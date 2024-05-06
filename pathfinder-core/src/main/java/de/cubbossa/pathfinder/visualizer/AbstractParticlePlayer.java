@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,7 @@ import lombok.Setter;
  *
  * @param <LocationT> An abstraction of the actual location class implementation. For Bukkit org.bukkit.Location.
  */
-public abstract class AbstractParticlePlayer<LocationT> extends TimerTask {
+public abstract class AbstractParticlePlayer<LocationT> extends TimerTask implements Disposable {
 
   /**
    * Interval in milliseconds
@@ -57,10 +59,18 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask {
   private AbstractParticleTrailPlayer<LocationT> newestPath;
   private List<AbstractParticleTrailPlayer<LocationT>> oldPaths = new ArrayList<>();
 
-  private List<Location> pathUpdate = null;
+  private volatile List<Location> pathUpdate = null;
 
   public AbstractParticlePlayer(List<Location> path) {
     this.newestPath = new AbstractParticleTrailPlayer<>(this, path);
+    PathFinderProvider.get().getDisposer().register(this, newestPath);
+  }
+
+  @Override
+  public void dispose() {
+    Disposable.super.dispose();
+    newestPath = null;
+    oldPaths.clear();
   }
 
   /**
@@ -117,12 +127,12 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask {
   public void run() {
     int s = currentStep.getAndIncrement();
     // Make sure to apply new path
-    if (s == 0 && pathUpdate != null) {
+    if (pathUpdate != null) {
       // Add the previously newest path to the old paths
-      // Make path update the newest path
       oldPaths.add(newestPath);
-      newestPath.resetBounds();
+      // Make path update the newest path
       newestPath = new AbstractParticleTrailPlayer<>(this, pathUpdate);
+      PathFinderProvider.get().getDisposer().register(this, newestPath);
       newestPath.setLowerBound(0);
       newestPath.setUpperBound(updateIncrement);
       pathUpdate = null;

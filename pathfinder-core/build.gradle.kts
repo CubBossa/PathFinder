@@ -47,7 +47,7 @@ dependencies {
     implementation("org.reactivestreams:reactive-streams:1.0.4")
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("de.cubbossa:disposables-api:1.1")
+    implementation("de.cubbossa:disposables-api:1.2")
     api("org.flywaydb:flyway-core:8.0.0")
 
     // Particles

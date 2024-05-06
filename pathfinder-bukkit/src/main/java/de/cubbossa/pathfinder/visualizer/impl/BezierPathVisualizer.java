@@ -76,6 +76,7 @@ public abstract class BezierPathVisualizer
 
     public BezierView(PathPlayer<Player> player, UpdatingPath nodes) {
       super(player, nodes);
+      update();
     }
 
     @Override

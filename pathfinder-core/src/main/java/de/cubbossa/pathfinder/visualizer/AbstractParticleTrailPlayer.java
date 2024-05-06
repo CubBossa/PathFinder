@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -7,7 +8,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
-public class AbstractParticleTrailPlayer<LocationT> {
+public class AbstractParticleTrailPlayer<LocationT> implements Disposable {
 
   private final AbstractParticlePlayer<LocationT> owner;
 
@@ -26,6 +27,7 @@ public class AbstractParticleTrailPlayer<LocationT> {
     for (Location p : points) {
       this.points[i] = new Point<>(p, owner.convert(p), i++);
     }
+    resetBounds();
   }
 
   public AbstractParticleTrailPlayer(AbstractParticleTrailPlayer<LocationT> other) {
@@ -55,7 +57,8 @@ public class AbstractParticleTrailPlayer<LocationT> {
   }
 
   public List<Point<LocationT>> asBoundedList() {
-    return new LinkedList<>(Arrays.asList(points).subList(lowerBound, upperBound));
+    return new LinkedList<>(Arrays.asList(points)
+        .subList(Math.max(lowerBound, 0), Math.min(upperBound, points.length)));
   }
 
   public void resetBounds() {

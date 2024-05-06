@@ -168,6 +168,7 @@ public class AbstractNavigationHandler<PlayerT>
   private void unset(NavigationContext context) {
     if (activePaths.remove(context.playerId) != null) {
       eventDispatcher.dispatchPathStopped(PathPlayer.wrap(context.playerId), context.path);
+      PathFinderProvider.get().getDisposer().dispose(context.path);
     }
     context.path.removeViewer(PathPlayer.wrap(context.playerId));
   }

@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.util.concurrent.AtomicDouble;
+import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
@@ -34,6 +36,12 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
   @Override
   public void update() {
     super.update();
+    if (!this.paths.isEmpty()) {
+      for (SubPath<?> subPath : this.paths) {
+        PathFinderProvider.get().getDisposer().dispose(subPath.data);
+      }
+      this.paths.clear();
+    }
 
     // build sub paths for every visualizer change
     LinkedHashMap<Node, Collection<PathVisualizer<?, PlayerT>>> nodeVisualizerMap = new LinkedHashMap<>();
@@ -124,7 +132,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
   }
 
   @Accessors(fluent = true)
-  protected class SubPath<ViewT extends PathView<PlayerT>> {
+  protected class SubPath<ViewT extends PathView<PlayerT>> implements Disposable {
 
     protected final PathVisualizer<ViewT, PlayerT> visualizer;
     protected ViewT data;
@@ -132,6 +140,13 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
     SubPath(PathVisualizer<ViewT, PlayerT> visualizer, UpdatingPath path) {
       this.visualizer = visualizer;
       this.data = visualizer.createView(path, GroupedVisualizerPathImpl.this.getTargetViewer());
+    }
+
+    @Override
+    public void dispose() {
+      Disposable.super.dispose();
+      data.removeAllViewers();
+      data = null;
     }
   }
 }

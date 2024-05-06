@@ -2,11 +2,10 @@ package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import java.util.List;
 import java.util.Objects;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 import org.bukkit.util.Vector;
 
 public class BukkitParticlePlayer extends AbstractParticlePlayer<org.bukkit.Location> {
@@ -37,7 +36,7 @@ public class BukkitParticlePlayer extends AbstractParticlePlayer<org.bukkit.Loca
 
   @Override
   void playParticle(org.bukkit.Location location) {
-    if (!Objects.equals(particleData.getClass(), particle.getDataType())) {
+    if (particle.getDataType() != Void.class && !Objects.equals(particleData.getClass(), particle.getDataType())) {
       if (System.currentTimeMillis() - lastException < 3000) {
         return;
       }

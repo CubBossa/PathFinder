@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder.visualizer;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,9 +11,10 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class AbstractParticlePlayerTest {
+class AbstractParticlePlayerTest extends PathFinderTest {
 
   @RequiredArgsConstructor
   @Getter
@@ -62,9 +64,9 @@ class AbstractParticlePlayerTest {
     }
   }
 
-  @Test
-  void setNewestPath() {
-
+  @BeforeEach
+  void beforeAll() {
+    setupPathFinder();
   }
 
   @Test
