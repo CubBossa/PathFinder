@@ -191,9 +191,7 @@ tasks {
         archiveFileName.set("PathFinder-${parent?.version}.jar")
         mergeServiceFiles()
         mergeServiceFiles {
-            setPath("META-INF/")
-            include("extensions.idx")
-            exclude("*")
+            setPath("META-INF/extensions.idx")
         }
 
         // "whitelist" approach, only include transitive dependencies that are truly necessary.
