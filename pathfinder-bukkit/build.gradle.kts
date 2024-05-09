@@ -33,7 +33,7 @@ dependencies {
 
     api(project(":pathfinder-api"))
     api(project(":pathfinder-core"))
-    api("de.cubbossa:disposables-bukkit:1.2")
+    api("de.cubbossa:disposables-bukkit:1.3")
     runtimeOnly(project(path = ":pathfinder-editmode", configuration = "shadow"))
     runtimeOnly(project(":pathfinder-scripted-visualizer"))
 

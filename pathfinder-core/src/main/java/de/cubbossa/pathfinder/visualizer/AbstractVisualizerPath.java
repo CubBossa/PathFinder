@@ -87,6 +87,9 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
     if (timer != null) {
       timer.cancel();
     }
+    if (interval <= 0) {
+      return;
+    }
 
     timer = new Timer();
     timer.scheduleAtFixedRate(new TimerTask() {

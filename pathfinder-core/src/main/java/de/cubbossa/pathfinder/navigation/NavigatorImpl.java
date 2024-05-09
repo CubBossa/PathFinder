@@ -114,7 +114,8 @@ public class NavigatorImpl implements Navigator {
     });
     path.addViewer(viewer);
 
-    path.startUpdater(1000);
+    // load config value
+    path.startUpdater(0);
     return path;
   }
 

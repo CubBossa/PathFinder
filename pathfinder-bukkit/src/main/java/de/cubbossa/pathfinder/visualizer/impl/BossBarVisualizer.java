@@ -5,7 +5,6 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
@@ -61,6 +60,14 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
     public void removeViewer(PathPlayer<Player> player) {
       super.removeViewer(player);
       PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).hideBossBar(bossBar);
+    }
+
+    @Override
+    public void removeAllViewers() {
+      for (PathPlayer<Player> viewer : getViewers()) {
+        PathFinderProvider.get().getAudiences().player(viewer.unwrap().getUniqueId()).hideBossBar(bossBar);
+      }
+      super.removeAllViewers();
     }
   }
 }

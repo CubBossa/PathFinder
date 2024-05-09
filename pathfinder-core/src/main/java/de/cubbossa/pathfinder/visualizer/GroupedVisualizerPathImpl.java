@@ -116,20 +116,20 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
   @Override
   public void addViewer(PathPlayer<PlayerT> player) {
-    super.addViewer(player);
     paths.forEach(subPath -> subPath.data.addViewer(player));
+    super.addViewer(player);
   }
 
   @Override
   public void removeViewer(PathPlayer<PlayerT> player) {
-    super.removeViewer(player);
     paths.forEach(subPath -> subPath.data.removeViewer(player));
+    super.removeViewer(player);
   }
 
   @Override
   public void removeAllViewers() {
-    super.removeAllViewers();
     paths.forEach(subPath -> subPath.data.removeAllViewers());
+    super.removeAllViewers();
   }
 
   @Accessors(fluent = true)
@@ -144,13 +144,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
       PathFinderProvider.get().getDisposer().register(GroupedVisualizerPathImpl.this, this);
       PathFinderProvider.get().getDisposer().register(visualizer, this);
-    }
-
-    @Override
-    public void dispose() {
-      Disposable.super.dispose();
-      data.removeAllViewers();
-      data = null;
+      PathFinderProvider.get().getDisposer().register(this, this.data);
     }
   }
 }

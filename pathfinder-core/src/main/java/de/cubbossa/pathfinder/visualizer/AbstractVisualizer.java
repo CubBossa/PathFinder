@@ -94,6 +94,11 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
       pathCache.clear();
       pathCache.addAll(calculatePath());
     }
+
+    @Override
+    public void dispose() {
+      removeAllViewers();
+    }
   }
 
   public interface Property<VisualizerT extends PathVisualizer<?, ?>, TypeT> {
