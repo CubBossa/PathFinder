@@ -19,61 +19,61 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
  */
 public interface PathFinder extends Disposable {
 
-    enum ApplicationState {
-        /**
-         * The application prepares for state RUNNING.
-         */
-        LOADING,
-        /**
-         * The application converts old config files into new config files.
-         */
-        CONFIG_CONVERSION,
-        /**
-         * The application converts older data into new data.
-         */
-        DATA_CONVERSION,
-        /**
-         * The application is running, runtime features are enabled.
-         */
-        RUNNING,
-        /**
-         * Something went wrong that stopped the application from working.
-         * Same as DISABLED but for an unexpected reason.
-         */
-        EXCEPTIONALLY,
-        /**
-         * An intended disable, for example when server stops.
-         */
-        DISABLED
-    }
-
+  enum ApplicationState {
     /**
-     * @return a logger that is used for the whole application.
+     * The application prepares for state RUNNING.
      */
-    Logger getLogger();
-
+    LOADING,
     /**
-     * @return the current application state.
+     * The application converts old config files into new config files.
      */
-    ApplicationState getState();
+    CONFIG_CONVERSION,
+    /**
+     * The application converts older data into new data.
+     */
+    DATA_CONVERSION,
+    /**
+     * The application is running, runtime features are enabled.
+     */
+    RUNNING,
+    /**
+     * Something went wrong that stopped the application from working.
+     * Same as DISABLED but for an unexpected reason.
+     */
+    EXCEPTIONALLY,
+    /**
+     * An intended disable, for example when server stops.
+     */
+    DISABLED
+  }
 
-    void load();
+  /**
+   * @return a logger that is used for the whole application.
+   */
+  Logger getLogger();
 
-    void shutdown();
+  /**
+   * @return the current application state.
+   */
+  ApplicationState getState();
 
-    void shutdownExceptionally(Throwable t);
+  void load();
+
+  void shutdown();
+
+  void shutdownExceptionally(Throwable t);
 
   Disposer getDisposer();
 
-    /**
-     * The storage is the main class to handle read and write. Use it to load, modify and save PathFinder data.
-     *
-     * @return a storage instance.
-     */
-    StorageAdapter getStorage();
+  /**
+   * The storage is the main class to handle read and write. Use it to load, modify and save PathFinder data.
+   *
+   * @return a storage instance.
+   */
+  StorageAdapter getStorage();
 
-    /**
-     * The extension registry handles all plugins to the PathFinder Application. There must be only one
+  /**
+   * The extension registry handles all plugins to the PathFinder Application. There must be only one
    * ExtensionRegistry instance for each application.
    *
    * @return The ExtensionRegistry instance.

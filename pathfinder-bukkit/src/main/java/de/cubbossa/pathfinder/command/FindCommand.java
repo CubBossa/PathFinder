@@ -1,11 +1,13 @@
 package de.cubbossa.pathfinder.command;
 
+import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
+import de.cubbossa.pathfinder.navigation.NavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
@@ -31,8 +33,12 @@ public class FindCommand extends CommandTree {
             p.sendMessage(Messages.CMD_FIND_EMPTY);
             return;
           }
-          BukkitNavigationHandler.getInstance().navigate(p, Route
-                  .from(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(player))))
+          NavigationHandler<Player> navigationHandler = (NavigationHandler<Player>) PathFinderProvider.get().getExtensionRegistry()
+              .getExtensions().stream()
+              .filter(e -> e.getKey().equals(NamespacedKey.fromString("pathfinder:navigation")))
+              .findFirst().orElseThrow();
+          navigationHandler.navigate(p, Route
+                  .from(NavigationLocation.movingExternalNode(new PlayerNode(p)))
                   .toAny(targets))
               .whenComplete((path, throwable) -> {
                 if (throwable != null) {
@@ -45,7 +51,7 @@ public class FindCommand extends CommandTree {
                   }
                   return;
                 }
-                BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
+                navigationHandler.cancelPathWhenTargetReached(path);
               });
         })
     );

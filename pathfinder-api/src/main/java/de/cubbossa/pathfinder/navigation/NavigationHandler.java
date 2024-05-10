@@ -57,6 +57,8 @@ public interface NavigationHandler<PlayerT> extends Disposable {
 
   void cancel(UUID viewer);
 
+  void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path);
+
   void reach(UUID viewer);
 
   void unset(UUID viewer);
