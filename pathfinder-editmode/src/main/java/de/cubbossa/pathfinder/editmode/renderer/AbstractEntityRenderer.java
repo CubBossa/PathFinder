@@ -11,6 +11,11 @@ import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -22,12 +27,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Getter
 @Setter
@@ -41,7 +40,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
   double renderDistance;
   double renderDistanceSquared;
 
-  private Collection<PlayerSpace.ListenerHandle> listeners = new HashSet<>();
+  private Collection<PlayerSpace.Listener<?>> listeners = new HashSet<>();
 
   public AbstractEntityRenderer(JavaPlugin plugin, Class<DisplayT> displayClass) {
     this.entityClass = displayClass;
