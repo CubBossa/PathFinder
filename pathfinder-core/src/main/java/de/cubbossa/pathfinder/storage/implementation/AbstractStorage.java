@@ -2,11 +2,11 @@ package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathfinder.group.ModifierRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
+import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.StorageImplementation;
+import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
 import de.cubbossa.pathfinder.storage.WorldLoader;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
-import de.cubbossa.pathfinder.storage.WaypointStorageImplementation;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import lombok.Getter;

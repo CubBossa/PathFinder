@@ -16,8 +16,9 @@ import de.cubbossa.pathfinder.group.PermissionModifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationConstraint;
-import de.cubbossa.pathfinder.navigation.NavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocationImpl;
+import de.cubbossa.pathfinder.navigation.NavigationModule;
+import de.cubbossa.pathfinder.navigation.NavigationModuleProvider;
 import de.cubbossa.pathfinder.navigation.Navigator;
 import de.cubbossa.pathfinder.navigation.NavigatorImpl;
 import de.cubbossa.pathfinder.navigation.Route;
@@ -41,12 +42,9 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-public class AbstractNavigationHandler<PlayerT>
+public class AbstractNavigationModule<PlayerT>
     extends PathFinderExtensionBase
-    implements PathFinderExtension, NavigationHandler<PlayerT> {
-
-  @Getter
-  private static AbstractNavigationHandler<?> instance;
+    implements PathFinderExtension, NavigationModule<PlayerT> {
 
   @Getter
   private final NamespacedKey key = AbstractPathFinder.pathfinder("navigation");
@@ -59,10 +57,11 @@ public class AbstractNavigationHandler<PlayerT>
   protected final Map<UUID, NavigationContext> activePaths;
   protected final List<NavigationConstraint> navigationConstraints;
 
-  public AbstractNavigationHandler() {
-    instance = this;
+  public AbstractNavigationModule() {
+    NavigationModuleProvider.set(this);
+
     this.activePaths = new HashMap<>();
-    this.pathFinder = PathFinderProvider.get();
+    this.pathFinder = PathFinder.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.navigationConstraints = new ArrayList<>();
 
@@ -88,7 +87,7 @@ public class AbstractNavigationHandler<PlayerT>
 
     registerNavigationConstraint((playerId, scope) -> {
       PathPlayer<?> player = PathPlayer.wrap(playerId);
-      Map<Node, Collection<NodeGroup>> groups = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
+      Map<Node, Collection<NodeGroup>> groups = PathFinder.get().getStorage().loadGroupsOfNodes(scope).join();
 
       if (player.unwrap() == null) {
         return new HashSet<>();
@@ -108,7 +107,7 @@ public class AbstractNavigationHandler<PlayerT>
 
   @Override
   public void dispose() {
-    instance = null;
+    NavigationModuleProvider.set(null);
   }
 
   @Override
@@ -168,7 +167,7 @@ public class AbstractNavigationHandler<PlayerT>
   private void unset(NavigationContext context) {
     if (activePaths.remove(context.playerId) != null) {
       eventDispatcher.dispatchPathStopped(PathPlayer.wrap(context.playerId), context.path);
-      PathFinderProvider.get().getDisposer().dispose(context.path);
+      PathFinder.get().getDisposer().dispose(context.path);
     }
     context.path.removeViewer(PathPlayer.wrap(context.playerId));
   }

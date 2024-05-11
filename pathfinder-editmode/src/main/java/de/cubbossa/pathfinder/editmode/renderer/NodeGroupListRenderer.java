@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.cliententities.PlayerSpace;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
 import de.cubbossa.pathfinder.group.NodeGroup;
@@ -9,6 +9,17 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -21,12 +32,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
 
@@ -68,7 +73,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     angleDot = Math.cos(angle * Math.PI / 180);
     distanceSquared = Math.pow(distance, 2);
 
-    groupChangeListener = PathFinderProvider.get().getEventDispatcher().listen(NodeGroupSaveEvent.class, e -> {
+    groupChangeListener = PathFinder.get().getEventDispatcher().listen(NodeGroupSaveEvent.class, e -> {
       CompletableFuture.runAsync(() -> {
         contextMap.forEach((uuid, context) -> {
           Player player = Bukkit.getPlayer(uuid);
@@ -94,7 +99,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
         throw new RuntimeException(e);
       }
     });
-    PathFinderProvider.get().getEventDispatcher().drop(groupChangeListener);
+    PathFinder.get().getEventDispatcher().drop(groupChangeListener);
     PlayerMoveEvent.getHandlerList().unregister(this);
   }
 
@@ -165,7 +170,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
       return CompletableFuture.completedFuture(null);
     }
 
-    return PathFinderProvider.get().getStorage().loadGroupsOfNodes(Collections.singleton(node)).thenAccept(nodeCollectionMap -> {
+    return PathFinder.get().getStorage().loadGroupsOfNodes(Collections.singleton(node)).thenAccept(nodeCollectionMap -> {
       Collection<NodeGroup> groups = nodeCollectionMap.get(node);
       if (groups.size() == 0 || groups.size() == 1 && groups.stream().findAny().get().getKey().equals(NamespacedKey.fromString("pathfinder:global"))) {
         return;

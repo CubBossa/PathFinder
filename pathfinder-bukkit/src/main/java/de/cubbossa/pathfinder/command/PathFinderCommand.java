@@ -1,15 +1,9 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderExtension;
-import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.dump.DumpWriterProvider;
-import de.cubbossa.pathfinder.group.DiscoverableModifier;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.impl.CreateGroupCmd;
@@ -25,9 +19,14 @@ import de.cubbossa.pathfinder.command.impl.ListNodesCmd;
 import de.cubbossa.pathfinder.command.impl.ListVisualizersCmd;
 import de.cubbossa.pathfinder.command.impl.NodesCmd;
 import de.cubbossa.pathfinder.command.impl.VisualizerCmd;
+import de.cubbossa.pathfinder.dump.DumpWriterProvider;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.GraphEditorRegistry;
+import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.translations.MessageBundle;
@@ -94,7 +93,7 @@ public class PathFinderCommand extends CommandTree {
 
     executes((sender, args) -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.HELP.formatted(
-          Placeholder.parsed("version", PathFinderProvider.get().getVersion())
+          Placeholder.parsed("version", PathFinder.get().getVersion())
       ));
     });
 
@@ -121,7 +120,7 @@ public class PathFinderCommand extends CommandTree {
         .withPermission(PathPerms.PERM_CMD_PF_INFO)
         .executes((commandSender, objects) -> {
           BukkitUtils.wrap(commandSender).sendMessage(Messages.INFO.formatted(
-              Placeholder.unparsed("version", PathFinderProvider.get().getVersion())
+              Placeholder.unparsed("version", PathFinder.get().getVersion())
           ));
         }));
 
@@ -129,7 +128,7 @@ public class PathFinderCommand extends CommandTree {
         .withPermission(PathPerms.PERM_CMD_PF_MODULES)
         .executes((commandSender, args) -> {
           List<String> list =
-              PathFinderProvider.get().getExtensionRegistry().getExtensions().stream()
+              PathFinder.get().getExtensionRegistry().getExtensions().stream()
                   .map(PathFinderExtension::getKey)
                   .map(NamespacedKey::toString).toList();
 
@@ -176,7 +175,7 @@ public class PathFinderCommand extends CommandTree {
               BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(Placeholder.component("error", Component.text(throwable.getMessage()
                   .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
               );
-              PathFinderProvider.get().getLogger()
+              PathFinder.get().getLogger()
                   .log(Level.SEVERE, "Error occured while reloading files: ", throwable);
             } else {
               BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS.formatted(
@@ -204,7 +203,7 @@ public class PathFinderCommand extends CommandTree {
                       Placeholder.component("error", Component.text(throwable.getMessage()
                           .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", "")))
                   ));
-                  PathFinderProvider.get().getLogger()
+                  PathFinder.get().getLogger()
                       .log(Level.SEVERE, "Error occured while reloading files: ", throwable);
                 } else {
                   BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS_LANG.formatted(
@@ -222,7 +221,7 @@ public class PathFinderCommand extends CommandTree {
               CompletableFuture.runAsync(() -> {
                 try {
                   // TODO bah
-                  ((AbstractPathFinder) PathFinderProvider.get()).getConfigFileLoader().loadConfig();
+                  ((AbstractPathFinder) PathFinder.get()).getConfigFileLoader().loadConfig();
                 } catch (Throwable t) {
                   throw new RuntimeException(t);
                 }
@@ -233,7 +232,7 @@ public class PathFinderCommand extends CommandTree {
                           throwable.getMessage()
                               .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
                       .build()));
-                  PathFinderProvider.get().getLogger()
+                  PathFinder.get().getLogger()
                       .log(Level.SEVERE, "Error occured while reloading configuration: ",
                           throwable);
                 } else {

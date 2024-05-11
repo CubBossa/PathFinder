@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.node.selection.attribute;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser;
 import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute;
@@ -37,7 +37,7 @@ public class IdSelectionAttribute implements NodeSelectionAttribute<UUID> {
 
   @Override
   public List<String> getStringSuggestions(SelectionParser.SuggestionContext context) {
-    return PathFinderProvider.get().getStorage().loadNodes().join().stream()
+    return PathFinder.get().getStorage().loadNodes().join().stream()
         .map(Node::getNodeId)
         .map(integer -> integer + "")
         .collect(Collectors.toList());

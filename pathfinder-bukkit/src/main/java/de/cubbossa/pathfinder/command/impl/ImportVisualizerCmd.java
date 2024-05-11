@@ -1,20 +1,19 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.examples.ExamplesLoader;
 import de.cubbossa.pathfinder.examples.ExamplesFileReader;
+import de.cubbossa.pathfinder.examples.ExamplesLoader;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.util.BukkitUtils;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import org.bukkit.command.CommandSender;
-
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import org.bukkit.command.CommandSender;
 
 public class ImportVisualizerCmd extends PathFinderSubCommand {
 

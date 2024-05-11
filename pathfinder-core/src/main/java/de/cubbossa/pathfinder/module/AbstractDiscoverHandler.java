@@ -1,8 +1,10 @@
 package de.cubbossa.pathfinder.module;
 
 import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
+import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
@@ -12,12 +14,11 @@ import de.cubbossa.pathfinder.group.PermissionModifier;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.NavigationModule;
 import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierImpl;
 import de.cubbossa.pathfinder.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.storage.StorageAdapter;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierImpl;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ public class AbstractDiscoverHandler<PlayerT>
 
   public AbstractDiscoverHandler() {
     instance = this;
-    this.pathFinder = PathFinderProvider.get();
+    this.pathFinder = PathFinder.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.eventDispatcher = (EventDispatcher<PlayerT>) pathFinder.getEventDispatcher();
 
@@ -54,8 +55,8 @@ public class AbstractDiscoverHandler<PlayerT>
     }
 
     if (pathFinder.getConfiguration().getNavigation().isRequireDiscovery()) {
-      AbstractNavigationHandler.getInstance().registerNavigationConstraint((playerId, scope) -> {
-        Map<Node, Collection<NodeGroup>> map = PathFinderProvider.get().getStorage().loadGroupsOfNodes(scope).join();
+      NavigationModule.get().registerNavigationConstraint((playerId, scope) -> {
+        Map<Node, Collection<NodeGroup>> map = PathFinder.get().getStorage().loadGroupsOfNodes(scope).join();
 
         return map.entrySet().stream()
             .filter(e -> e.getValue().stream().allMatch(group -> {
@@ -74,7 +75,7 @@ public class AbstractDiscoverHandler<PlayerT>
   }
 
   public CompletableFuture<Collection<NodeGroup>> getFulfillingGroups(PathPlayer<?> player) {
-    StorageAdapter storage = PathFinderProvider.get().getStorage();
+    StorageAdapter storage = PathFinder.get().getStorage();
     return storage.loadGroups(DiscoverableModifier.KEY).thenCompose(groups -> {
       Collection<UUID> allNodes = groups.stream().flatMap(Collection::stream).toList();
       if (allNodes.isEmpty()) {

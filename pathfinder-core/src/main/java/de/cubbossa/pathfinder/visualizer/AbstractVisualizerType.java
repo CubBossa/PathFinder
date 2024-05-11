@@ -2,11 +2,9 @@ package de.cubbossa.pathfinder.visualizer;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementationWrapper;
@@ -51,11 +49,11 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
 
   public VisualizerStorageImplementationWrapper<VisualizerT> getStorage() {
     // TODO cache pls
-    PathFinder pathFinder = PathFinderProvider.get();
+    PathFinder pathFinder = PathFinder.get();
     if (pathFinder == null || pathFinder.getStorage() == null) {
       return null;
     }
-    if (PathFinderProvider.get().getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation visStorage) {
+    if (PathFinder.get().getStorage().getImplementation() instanceof InternalVisualizerStorageImplementation visStorage) {
       setStorage(new VisualizerStorageImplementationWrapper<>(this, visStorage));
     }
     return storage;
@@ -74,7 +72,7 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
 
   public VisualizerT createVisualizer(NamespacedKey key) {
     VisualizerT vis = createVisualizerInstance(key);
-    PathFinderProvider.get().getDisposer().register(this, vis);
+    PathFinder.get().getDisposer().register(this, vis);
     return vis;
   }
 
@@ -130,7 +128,7 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
                                String property, Supplier<T2> getter,
                                Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
     T2 old = getter.get();
-    if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
+    if (!PathFinder.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
       sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
           Messages.formatter().namespacedKey("key", visualizer.getKey()),
           Placeholder.parsed("property", property)
@@ -138,9 +136,9 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
       return;
     }
     setter.accept(value);
-    PathFinderProvider.get().getStorage()
+    PathFinder.get().getStorage()
         .saveVisualizer(visualizer)
-        .thenCompose(unused -> PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
+        .thenCompose(unused -> PathFinder.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
           sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
               Messages.formatter().namespacedKey("key", visualizer.getKey()),
               Placeholder.component("type", Component.text(

@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.navigation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.Changes;

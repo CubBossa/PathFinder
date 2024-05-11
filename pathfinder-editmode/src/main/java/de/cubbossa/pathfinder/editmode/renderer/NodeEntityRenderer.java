@@ -1,11 +1,15 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_NODE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_NODE;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
@@ -15,12 +19,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3f;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_NODE;
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_NODE;
-
 public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDisplay> {
 
 
@@ -28,7 +26,7 @@ public class NodeEntityRenderer extends AbstractEntityRenderer<Node, BlockDispla
 
   public NodeEntityRenderer(JavaPlugin plugin) {
     super(plugin, BlockDisplay.class);
-    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getNodeArmorStandRenderDistance());
+    setRenderDistance(PathFinder.get().getConfiguration().getEditMode().getNodeArmorStandRenderDistance());
   }
 
   @Override

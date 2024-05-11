@@ -2,23 +2,25 @@ package de.cubbossa.pathfinder.nodegroup;
 
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.ModifiedHashMap;
 import de.cubbossa.pathfinder.util.ModifiedHashSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
 public class NodeGroupImpl extends ModifiedHashSet<UUID> implements NodeGroup {
 
-  private final PathFinder pathFinder = PathFinderProvider.get();
+  private final PathFinder pathFinder = PathFinder.get();
   private final NamespacedKey key;
   private final ModifiedHashMap<NamespacedKey, Modifier> modifiers;
   @Getter

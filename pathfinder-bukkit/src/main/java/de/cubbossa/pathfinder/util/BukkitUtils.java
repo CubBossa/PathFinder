@@ -1,17 +1,16 @@
 package de.cubbossa.pathfinder.util;
 
 
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.BukkitPathPlayer;
 import de.cubbossa.pathfinder.BukkitPathSender;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import java.util.Objects;
+import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
-import java.util.Objects;
-import java.util.UUID;
 
 public class BukkitUtils {
 

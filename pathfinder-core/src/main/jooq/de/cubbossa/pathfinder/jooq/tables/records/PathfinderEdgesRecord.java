@@ -5,9 +5,7 @@ package de.cubbossa.pathfinder.jooq.tables.records;
 
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderEdges;
-
 import java.util.UUID;
-
 import org.jooq.Field;
 import org.jooq.Record2;
 import org.jooq.Record3;

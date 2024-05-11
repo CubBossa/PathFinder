@@ -1,10 +1,9 @@
 package de.cubbossa.pathfinder.misc;
 
-import lombok.Getter;
-
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import lombok.Getter;
 
 @Getter
 public final class NamespacedKey {

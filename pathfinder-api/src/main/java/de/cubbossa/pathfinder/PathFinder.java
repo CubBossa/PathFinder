@@ -19,6 +19,10 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
  */
 public interface PathFinder extends Disposable {
 
+  static PathFinder get() {
+    return PathFinderProvider.get();
+  }
+
   enum ApplicationState {
     /**
      * The application prepares for state RUNNING.

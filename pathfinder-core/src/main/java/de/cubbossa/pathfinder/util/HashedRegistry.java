@@ -3,12 +3,11 @@ package de.cubbossa.pathfinder.util;
 import de.cubbossa.pathfinder.misc.Keyed;
 import de.cubbossa.pathfinder.misc.KeyedRegistry;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class HashedRegistry<K extends Keyed> extends HashMap<NamespacedKey, K>
     implements KeyedRegistry<K> {

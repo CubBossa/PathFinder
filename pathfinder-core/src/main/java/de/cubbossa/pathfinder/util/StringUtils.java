@@ -1,13 +1,12 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+import java.awt.Color;
+import java.util.Random;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-
-import java.awt.*;
-import java.util.Random;
 
 public class StringUtils {
 

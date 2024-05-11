@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.examples;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.io.StringReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;

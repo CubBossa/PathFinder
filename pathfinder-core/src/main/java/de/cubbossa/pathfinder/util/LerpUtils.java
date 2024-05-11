@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.util;
 
-import java.awt.*;
+import java.awt.Color;
 
 public class LerpUtils {
 

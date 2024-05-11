@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.group;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.query.SearchTermHolder;
-
 import java.util.Collection;
 
 public interface NavigableModifier extends Modifier, SearchTermHolder {

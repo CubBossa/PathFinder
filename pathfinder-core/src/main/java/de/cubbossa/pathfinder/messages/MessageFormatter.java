@@ -4,17 +4,16 @@ import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.Node;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Particle;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface MessageFormatter {
 

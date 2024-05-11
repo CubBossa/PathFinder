@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.misc.World;
-import org.bukkit.Bukkit;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 
 public class WorldImpl implements World {
 

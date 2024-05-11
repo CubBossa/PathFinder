@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder;
 
 import org.junit.jupiter.api.Test;
 
-class AbstractNavigationHandlerTest extends PathFinderTest {
+class AbstractNavigationModuleTest extends PathFinderTest {
 
   @Test
   void registerFindPredicate() {
@@ -31,12 +31,12 @@ class AbstractNavigationHandlerTest extends PathFinderTest {
     makeEdge(c, a);
     assertEdge(a.getNodeId(), b.getNodeId());
 
-    AbstractNavigationHandler<Object> nav = new AbstractNavigationHandler<>();
+    AbstractNavigationModule<Object> nav = new AbstractNavigationModule<>();
     PathPlayer<Object> player = new TestPlayer();
 
-    nav.findPath(player, AbstractNavigationHandler.NavigateLocationImpl.staticLocation(
+    nav.findPath(player, AbstractNavigationModule.NavigateLocationImpl.staticLocation(
         new Location(-10, 0, -10, world)
-    ), Set.of(AbstractNavigationHandler.NavigateLocationImpl.staticLocation(
+    ), Set.of(AbstractNavigationModule.NavigateLocationImpl.staticLocation(
         new Location(10, 0, 10, world)
     )));
 

@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.util;
 
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.translations.ComponentSplit;
 import de.cubbossa.translations.Message;
 import net.kyori.adventure.audience.Audience;

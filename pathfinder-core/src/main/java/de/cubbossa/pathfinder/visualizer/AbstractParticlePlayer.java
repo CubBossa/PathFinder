@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.misc.Location;
 import java.util.ArrayList;
 import java.util.List;
@@ -132,7 +132,7 @@ public abstract class AbstractParticlePlayer<LocationT> extends TimerTask implem
       }
       // Make path update the newest path
       newestPath = new AbstractParticleTrailPlayer<>(this, pathUpdate);
-      PathFinderProvider.get().getDisposer().register(this, newestPath);
+      PathFinder.get().getDisposer().register(this, newestPath);
       newestPath.setLowerBound(0);
       newestPath.setUpperBound(updateIncrement);
       pathUpdate = null;

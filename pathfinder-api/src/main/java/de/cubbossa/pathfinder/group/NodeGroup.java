@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.group;
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.misc.Keyed;
 import de.cubbossa.pathfinder.node.Node;
-
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;

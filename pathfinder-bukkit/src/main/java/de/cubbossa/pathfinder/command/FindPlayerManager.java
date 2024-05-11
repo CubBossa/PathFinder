@@ -7,8 +7,8 @@ import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
+import de.cubbossa.pathfinder.navigation.NavigationModule;
 import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import de.cubbossa.pathfinder.util.BukkitUtils;
@@ -147,7 +147,8 @@ public class FindPlayerManager implements Disposable {
     ));
 
     PathPlayer<Player> requesterPathPlayer = BukkitUtils.wrap(requesterPlayer);
-    BukkitNavigationHandler.getInstance().navigate(requesterPathPlayer, Route
+    NavigationModule<Player> module = NavigationModule.get();
+    module.navigate(requesterPathPlayer, Route
         .from(NavigationLocation.movingExternalNode(new PlayerNode(requesterPathPlayer)))
         .to(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(target))))
     ).whenComplete((path, throwable) -> {
@@ -155,7 +156,7 @@ public class FindPlayerManager implements Disposable {
         requesterPlayer.sendMessage(throwable.getMessage()); // TODO
         return;
       }
-      BukkitNavigationHandler.getInstance().cancelPathWhenTargetReached(path);
+      module.cancelPathWhenTargetReached(path);
     });
   }
 

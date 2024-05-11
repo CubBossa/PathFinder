@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.storage.StorageAdapter;
 import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
+import de.cubbossa.pathfinder.storage.StorageAdapter;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +25,7 @@ public class DiscoverProgressModifierImpl implements DiscoverProgressModifier {
   public DiscoverProgressModifierImpl(NamespacedKey ownerGroup, String nameFormat) {
     this.owningGroup = ownerGroup;
     this.nameFormat = nameFormat;
-    this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
+    this.displayName = PathFinder.get().getMiniMessage().deserialize(nameFormat);
   }
 
   @Override
@@ -40,7 +40,7 @@ public class DiscoverProgressModifierImpl implements DiscoverProgressModifier {
 
   @Override
   public CompletableFuture<Double> calculateProgress(UUID playerId) {
-    StorageAdapter storage = PathFinderProvider.get().getStorage();
+    StorageAdapter storage = PathFinder.get().getStorage();
     AbstractDiscoverHandler<Player> dh = AbstractDiscoverHandler.getInstance();
 
     return storage.loadGroup(owningGroup).thenCompose(group -> {

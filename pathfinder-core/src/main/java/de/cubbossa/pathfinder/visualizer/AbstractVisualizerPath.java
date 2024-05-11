@@ -102,6 +102,9 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
 
   @Override
   public void stopUpdater() {
-    timer.cancel();
+    if (timer != null) {
+      timer.cancel();
+      timer = null;
+    }
   }
 }

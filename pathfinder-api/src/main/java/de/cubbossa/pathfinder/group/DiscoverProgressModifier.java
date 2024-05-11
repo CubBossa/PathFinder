@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.group;
 
 import de.cubbossa.pathfinder.misc.Named;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 

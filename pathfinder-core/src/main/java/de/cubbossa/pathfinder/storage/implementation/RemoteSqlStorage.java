@@ -6,9 +6,8 @@ import de.cubbossa.pathfinder.PathFinderConfig;
 import de.cubbossa.pathfinder.group.ModifierRegistry;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
-import org.jooq.SQLDialect;
-
 import javax.sql.DataSource;
+import org.jooq.SQLDialect;
 
 public class RemoteSqlStorage extends SqlStorage {
 

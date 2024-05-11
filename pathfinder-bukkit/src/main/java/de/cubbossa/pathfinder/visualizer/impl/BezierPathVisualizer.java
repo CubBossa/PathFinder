@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.CurveLengthModifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
@@ -105,7 +105,7 @@ public abstract class BezierPathVisualizer
       List<Location> calculatedPoints = new ArrayList<>();
       for (PathSegment segment : segments) {
         LinkedHashMap<Node, Double> path = new LinkedHashMap<>();
-        PathFinderProvider.get().getStorage().loadGroupsOfNodes(segment.nodes).join().forEach((node, groups) -> {
+        PathFinder.get().getStorage().loadGroupsOfNodes(segment.nodes).join().forEach((node, groups) -> {
           CurveLengthModifier mod = groups.stream()
               .filter(g -> g.hasModifier(CurveLengthModifier.class))
               .sorted()

@@ -2,11 +2,10 @@ package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.misc.Location;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A node instance is the main structure of the virtual graph that is managed by PathFinder.

@@ -1,14 +1,14 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.base.Preconditions;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeSelection;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.splinelib.util.BezierVector;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class NodeUtils {
         n -> {
           Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
           Collection<Node> resolvedNeighbours =
-              PathFinderProvider.get().getStorage().loadNodes(neighbours).join();
+              PathFinder.get().getStorage().loadNodes(neighbours).join();
 
           TagResolver r = TagResolver.builder()
               .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))

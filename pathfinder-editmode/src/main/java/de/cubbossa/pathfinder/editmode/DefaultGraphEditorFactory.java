@@ -1,10 +1,6 @@
 package de.cubbossa.pathfinder.editmode;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.editor.GraphEditor;
-import de.cubbossa.pathfinder.editor.GraphEditorFactory;
-import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeEntityRenderer;
@@ -12,6 +8,9 @@ import de.cubbossa.pathfinder.editmode.renderer.NodeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeEntityRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.NodeGroupListRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.ParticleEdgeRenderer;
+import de.cubbossa.pathfinder.editor.GraphEditor;
+import de.cubbossa.pathfinder.editor.GraphEditorFactory;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.util.Version;
 import org.bukkit.entity.Player;
 import org.pf4j.Extension;
@@ -21,7 +20,7 @@ public class DefaultGraphEditorFactory implements GraphEditorFactory {
 
   @Override
   public GraphEditor<Player> createGraphEditor(NodeGroup group) {
-    PathFinder pathFinder = PathFinderProvider.get();
+    PathFinder pathFinder = PathFinder.get();
     DefaultGraphEditor editor = new DefaultGraphEditor(group);
 
     editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));

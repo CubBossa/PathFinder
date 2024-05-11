@@ -4,14 +4,13 @@ import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.storage.DatabaseType;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
-import lombok.Getter;
-import lombok.ToString;
-import org.jooq.SQLDialect;
-
-import java.awt.*;
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
+import lombok.Getter;
+import lombok.ToString;
+import org.jooq.SQLDialect;
 
 @Getter
 @Configuration
@@ -35,7 +34,7 @@ public class PathFinderConfigImpl implements PathFinderConfig {
   public String version = "-1";
 
   public PathFinderConfigImpl() {
-    pathFinder = PathFinderProvider.get();
+    pathFinder = PathFinder.get();
     version = pathFinder.getVersion();
   }
 
@@ -123,7 +122,7 @@ public class PathFinderConfigImpl implements PathFinderConfig {
   @Getter
   @ToString
   public static class EmbeddedSqlStorageConfigImpl implements EmbeddedSqlStorageConfig {
-    public File file = new File(PathFinderProvider.get().getDataFolder(), "data/database.db");
+    public File file = new File(PathFinder.get().getDataFolder(), "data/database.db");
   }
 
   @Configuration

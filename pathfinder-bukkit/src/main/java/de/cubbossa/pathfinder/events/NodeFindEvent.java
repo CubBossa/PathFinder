@@ -1,14 +1,13 @@
 package de.cubbossa.pathfinder.events;
 
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
+import java.util.Date;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-
-import java.util.Date;
-import java.util.UUID;
 
 public class NodeFindEvent extends Event implements Cancellable {
 

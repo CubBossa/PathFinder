@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.misc;
 
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Objects;
 
 @Getter
 @Setter

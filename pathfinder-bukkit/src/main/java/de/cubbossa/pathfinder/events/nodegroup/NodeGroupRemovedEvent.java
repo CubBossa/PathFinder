@@ -3,14 +3,13 @@ package de.cubbossa.pathfinder.events.nodegroup;
 import com.google.common.collect.Lists;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 @Getter
 @Setter

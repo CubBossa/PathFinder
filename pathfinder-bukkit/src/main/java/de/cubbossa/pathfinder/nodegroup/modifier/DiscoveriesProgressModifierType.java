@@ -1,12 +1,12 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
+import de.cubbossa.pathfinder.command.Arguments;
+import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
 import de.cubbossa.pathfinder.group.ModifierType;
 import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import java.io.IOException;

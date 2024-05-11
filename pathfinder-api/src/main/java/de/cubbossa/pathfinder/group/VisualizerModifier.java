@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.group;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 

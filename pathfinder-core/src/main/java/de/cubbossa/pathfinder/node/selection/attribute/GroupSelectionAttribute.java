@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.node.selection.attribute;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.node.Node;
@@ -34,7 +34,7 @@ public class GroupSelectionAttribute implements NodeSelectionAttribute<Collectio
       } catch (Throwable t) {
         throw new IllegalArgumentException("Invalid namespaced key: '" + in + "'.");
       }
-      Optional<NodeGroup> group = PathFinderProvider.get().getStorage().loadGroup(key).join();
+      Optional<NodeGroup> group = PathFinder.get().getStorage().loadGroup(key).join();
       groups.add(group.orElseThrow(
           () -> new IllegalArgumentException("There is no group with the key '" + key + "'")));
       return groups;
@@ -55,7 +55,7 @@ public class GroupSelectionAttribute implements NodeSelectionAttribute<Collectio
 
   @Override
   public List<String> getStringSuggestions(SelectionParser.SuggestionContext context) {
-    return PathFinderProvider.get().getStorage().loadAllGroups().join().stream()
+    return PathFinder.get().getStorage().loadAllGroups().join().stream()
         .map(NodeGroup::getKey)
         .map(NamespacedKey::toString)
         .collect(Collectors.toList());

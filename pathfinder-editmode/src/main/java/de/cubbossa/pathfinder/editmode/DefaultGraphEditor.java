@@ -5,7 +5,8 @@ import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
 import de.cubbossa.pathfinder.editor.GraphEditor;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.event.EventDispatcher;
@@ -14,13 +15,10 @@ import de.cubbossa.pathfinder.event.NodeDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeSaveEvent;
 import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinderPlugin;
-import de.cubbossa.pathfinder.editmode.menu.EditModeMenu;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,7 +64,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
   private final ExecutorService renderExecutor;
 
   public DefaultGraphEditor(NodeGroup group) {
-    this.pathFinder = PathFinderProvider.get();
+    this.pathFinder = PathFinder.get();
     this.groupKey = group.getKey();
 
     this.renderers = new ArrayList<>();
@@ -75,11 +73,11 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
 
     this.renderExecutor = Executors.newSingleThreadExecutor();
 
-    EventDispatcher<?> eventDispatcher = PathFinderProvider.get().getEventDispatcher();
+    EventDispatcher<?> eventDispatcher = PathFinder.get().getEventDispatcher();
     listeners = new HashSet<>();
 
     entityInteractListener = new EntityInteractListener();
-    PathFinderProvider.get().getDisposer().register(this, entityInteractListener);
+    PathFinder.get().getDisposer().register(this, entityInteractListener);
 
     listeners.add(eventDispatcher.listen(NodeCreateEvent.class, e -> renderAll(e.getNode())));
     listeners.add(eventDispatcher.listen(NodeSaveEvent.class, e -> renderAll(e.getNode())));
@@ -94,7 +92,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
         setEditMode(player, false);
         player.sendMessage(Messages.EDITM_NG_DELETED);
       }
-      PathFinderProvider.get().getDisposer().dispose(this);
+      PathFinder.get().getDisposer().dispose(this);
     });
 
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
@@ -102,7 +100,7 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
 
   public void addRenderer(GraphRenderer<Player> renderer) {
     this.renderers.add(renderer);
-    PathFinderProvider.get().getDisposer().register(this, renderer);
+    PathFinder.get().getDisposer().register(this, renderer);
   }
 
   private void renderAll(Node node) {

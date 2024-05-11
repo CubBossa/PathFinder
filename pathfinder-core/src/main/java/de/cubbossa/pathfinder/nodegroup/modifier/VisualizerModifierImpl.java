@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,6 +32,6 @@ public class VisualizerModifierImpl implements Modifier, VisualizerModifier {
 
   @Override
   public CompletableFuture<Optional<PathVisualizer<?, ?>>> getVisualizer() {
-    return PathFinderProvider.get().getStorage().loadVisualizer(visualizerKey);
+    return PathFinder.get().getStorage().loadVisualizer(visualizerKey);
   }
 }

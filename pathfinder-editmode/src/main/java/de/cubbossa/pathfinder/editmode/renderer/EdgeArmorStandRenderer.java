@@ -1,16 +1,22 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
@@ -21,14 +27,6 @@ import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
-
 public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
     implements GraphRenderer<Player> {
 
@@ -38,7 +36,7 @@ public class EdgeArmorStandRenderer extends AbstractArmorstandRenderer<Edge>
 
   public EdgeArmorStandRenderer(JavaPlugin plugin) {
     super(plugin);
-    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getEdgeArmorStandRenderDistance());
+    setRenderDistance(PathFinder.get().getConfiguration().getEditMode().getEdgeArmorStandRenderDistance());
   }
 
   @Override

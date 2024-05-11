@@ -8,10 +8,16 @@ import de.cubbossa.menuframework.inventory.context.ContextConsumer;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
+import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderConfig;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.editmode.DefaultGraphEditor;
+import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.event.NodeDeleteEvent;
 import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Named;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
@@ -19,12 +25,6 @@ import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.storage.StorageAdapter;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.pathfinder.PathFinderPlugin;
-import de.cubbossa.pathfinder.editmode.DefaultGraphEditor;
-import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
@@ -95,7 +95,7 @@ public class EditModeMenu {
     this.types = types;
     this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
 
-    PathFinderProvider.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
+    PathFinder.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
       if (Objects.equals(chainEdgeStart, e.getNode().getNodeId())) {
         chainEdgeStart = null;
       }

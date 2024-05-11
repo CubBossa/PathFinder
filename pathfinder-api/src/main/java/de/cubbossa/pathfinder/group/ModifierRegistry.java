@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.group;
 
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-
 import java.util.Collection;
 import java.util.Optional;
 

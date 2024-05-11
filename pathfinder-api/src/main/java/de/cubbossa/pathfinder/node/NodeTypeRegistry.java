@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-
 import java.util.Collection;
 
 public interface NodeTypeRegistry extends Disposable {

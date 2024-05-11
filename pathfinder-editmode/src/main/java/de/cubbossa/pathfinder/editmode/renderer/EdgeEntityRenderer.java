@@ -1,8 +1,10 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Edge;
@@ -10,6 +12,11 @@ import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
@@ -20,15 +27,6 @@ import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_EDGE;
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_EDGE;
-
 public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDisplay>
     implements GraphRenderer<Player> {
 
@@ -36,7 +34,7 @@ public class EdgeEntityRenderer extends AbstractEntityRenderer<Edge, BlockDispla
 
   public EdgeEntityRenderer(JavaPlugin plugin) {
     super(plugin, BlockDisplay.class);
-    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getEdgeArmorStandRenderDistance());
+    setRenderDistance(PathFinder.get().getConfiguration().getEditMode().getEdgeArmorStandRenderDistance());
   }
 
   @Override

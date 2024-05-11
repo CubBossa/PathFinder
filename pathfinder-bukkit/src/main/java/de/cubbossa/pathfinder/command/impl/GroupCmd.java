@@ -1,15 +1,14 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.group.Modifier;
-import de.cubbossa.pathfinder.group.ModifierType;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.group.Modifier;
+import de.cubbossa.pathfinder.group.ModifierType;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;

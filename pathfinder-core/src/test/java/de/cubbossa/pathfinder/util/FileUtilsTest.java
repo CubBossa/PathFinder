@@ -1,10 +1,9 @@
 package de.cubbossa.pathfinder.util;
 
+import java.io.File;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
 
 class FileUtilsTest {
 

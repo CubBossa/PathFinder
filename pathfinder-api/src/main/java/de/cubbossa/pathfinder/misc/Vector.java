@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.misc;
 
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 @AllArgsConstructor
 public class Vector implements Cloneable {

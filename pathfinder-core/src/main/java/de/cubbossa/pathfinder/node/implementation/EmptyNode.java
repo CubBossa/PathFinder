@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.node.implementation;
 
+import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.World;
+import de.cubbossa.pathfinder.node.AbstractNodeType;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeType;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.node.AbstractNodeType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;

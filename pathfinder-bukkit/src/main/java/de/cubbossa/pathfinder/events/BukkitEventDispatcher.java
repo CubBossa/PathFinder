@@ -1,19 +1,23 @@
 package de.cubbossa.pathfinder.events;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.event.Listener;
-import de.cubbossa.pathfinder.event.*;
-import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
-import de.cubbossa.pathfinder.group.DiscoverableModifier;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import de.cubbossa.pathfinder.BukkitPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
+import de.cubbossa.pathfinder.event.EventDispatcher;
+import de.cubbossa.pathfinder.event.Listener;
+import de.cubbossa.pathfinder.event.NodeCreateEvent;
+import de.cubbossa.pathfinder.event.NodeDeleteEvent;
+import de.cubbossa.pathfinder.event.NodeGroupCreateEvent;
+import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
+import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
+import de.cubbossa.pathfinder.event.NodeSaveEvent;
+import de.cubbossa.pathfinder.event.PathCancelledEvent;
+import de.cubbossa.pathfinder.event.PathFinderEvent;
+import de.cubbossa.pathfinder.event.PathStoppedEvent;
+import de.cubbossa.pathfinder.event.PathTargetReachedEvent;
+import de.cubbossa.pathfinder.event.PlayerDiscoverLocationEvent;
+import de.cubbossa.pathfinder.event.PlayerDiscoverProgressEvent;
+import de.cubbossa.pathfinder.event.PlayerForgetLocationEvent;
 import de.cubbossa.pathfinder.events.discovering.PlayerDiscoverEvent;
 import de.cubbossa.pathfinder.events.discovering.PlayerForgetEvent;
 import de.cubbossa.pathfinder.events.node.NodeCreatedEvent;
@@ -26,11 +30,14 @@ import de.cubbossa.pathfinder.events.path.PathCancelEvent;
 import de.cubbossa.pathfinder.events.path.PathStartEvent;
 import de.cubbossa.pathfinder.events.path.PathStopEvent;
 import de.cubbossa.pathfinder.events.path.PathTargetFoundEvent;
-import lombok.SneakyThrows;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.event.*;
-
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
+import de.cubbossa.pathfinder.group.NodeGroup;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -43,6 +50,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import lombok.SneakyThrows;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 
 public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
@@ -160,7 +175,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   @Override
   public boolean dispatchPlayerFindEvent(PathPlayer<Player> player, NodeGroup group, DiscoverableModifier modifier, LocalDateTime findDate) {
     if (dispatchEvent(new PlayerDiscoverEvent(player, group, modifier, findDate))) {
-      PathFinderProvider.get().getStorage().loadGroups(group).thenAccept(uuidCollectionMap -> {
+      PathFinder.get().getStorage().loadGroups(group).thenAccept(uuidCollectionMap -> {
         uuidCollectionMap.values()
             .stream().flatMap(Collection::stream)
             .distinct()
@@ -174,7 +189,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   @Override
   public boolean dispatchPlayerForgetEvent(PathPlayer<Player> player, NamespacedKey group) {
-    NodeGroup g = PathFinderProvider.get().getStorage().loadGroup(group).join().orElseThrow();
+    NodeGroup g = PathFinder.get().getStorage().loadGroup(group).join().orElseThrow();
     DiscoverableModifier modifier = g.<DiscoverableModifier>getModifier(DiscoverableModifier.KEY).orElseThrow();
     return dispatchEvent(new PlayerForgetEvent(player, g, modifier));
   }

@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
-import lombok.SneakyThrows;
-
 import java.io.File;
 import java.nio.file.Files;
+import lombok.SneakyThrows;
 
 public class FileUtils {
 

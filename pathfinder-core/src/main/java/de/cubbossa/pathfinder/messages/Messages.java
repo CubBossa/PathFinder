@@ -1,16 +1,26 @@
 package de.cubbossa.pathfinder.messages;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.ModifierType;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.Range;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.command.ModifierCommandExtension;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.MessageBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.Setter;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.AudienceProvider;
@@ -31,11 +41,6 @@ import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("checkstyle:LineLength")
 public class Messages {
@@ -824,7 +829,7 @@ public class Messages {
     @Override
     public TagResolver modifiers(String key, Collection<Modifier> modifiers) {
       return list(key, modifiers, modifier -> {
-        Optional<ModifierType<Modifier>> type = PathFinderProvider.get().getModifierRegistry().getType(modifier.getKey());
+        Optional<ModifierType<Modifier>> type = PathFinder.get().getModifierRegistry().getType(modifier.getKey());
         return type.isPresent() && type.get() instanceof ModifierCommandExtension ext
             ? ext.toComponents(modifier)
             : Component.text("Unknown modifier '" + modifier.getKey() + "'.");

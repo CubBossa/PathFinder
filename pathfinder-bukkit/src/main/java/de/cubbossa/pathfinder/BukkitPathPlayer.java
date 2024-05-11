@@ -4,16 +4,15 @@ import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.translations.Message;
+import java.util.Objects;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-
-import javax.annotation.Nullable;
-import java.util.Objects;
-import java.util.UUID;
 
 public class BukkitPathPlayer implements PathPlayer<Player> {
 
@@ -81,7 +80,7 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
 
   @Override
   public void sendMessage(ComponentLike message) {
-    Audience audience = PathFinderProvider.get().getAudiences().player(unwrap().getUniqueId());
+    Audience audience = PathFinder.get().getAudiences().player(unwrap().getUniqueId());
     ComponentLike resolved = message;
     if (message instanceof Message msg) {
       resolved = msg.asComponent(audience);

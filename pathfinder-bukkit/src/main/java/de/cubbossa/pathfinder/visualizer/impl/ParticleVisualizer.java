@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
@@ -62,7 +62,7 @@ public class ParticleVisualizer extends BezierPathVisualizer {
         particlePlayer.run();
       }
     };
-    PathFinderProvider.get().getDisposer().register(view, particlePlayer);
+    PathFinder.get().getDisposer().register(view, particlePlayer);
     return view;
   }
 }

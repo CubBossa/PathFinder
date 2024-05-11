@@ -1,8 +1,7 @@
 package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.storage.DatabaseType;
-
-import java.awt.*;
+import java.awt.Color;
 import java.io.File;
 import java.util.Locale;
 

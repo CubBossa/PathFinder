@@ -5,8 +5,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
 
 public class VisualizerCacheImpl
     implements de.cubbossa.pathfinder.storage.cache.VisualizerCache {

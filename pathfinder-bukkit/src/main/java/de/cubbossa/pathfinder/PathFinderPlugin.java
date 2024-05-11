@@ -2,16 +2,15 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.dump.DumpWriter;
 import de.cubbossa.pathfinder.dump.DumpWriterProvider;
+import java.util.Arrays;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Arrays;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class PathFinderPlugin extends JavaPlugin {
 

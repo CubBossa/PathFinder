@@ -4,7 +4,6 @@ import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.event.NodeCreateEvent;
 import de.cubbossa.pathfinder.event.NodeDeleteEvent;
@@ -50,7 +49,7 @@ public class NavigatorImpl implements Navigator {
   public NavigatorImpl(Function<Collection<Node>, Collection<Node>> constraint) {
     this.constraint = constraint;
 
-    pathFinder = PathFinderProvider.get();
+    pathFinder = PathFinder.get();
     EventDispatcher<?> eventDispatcher = pathFinder.getEventDispatcher();
     pathFinder.getDisposer().register(pathFinder, this);
 

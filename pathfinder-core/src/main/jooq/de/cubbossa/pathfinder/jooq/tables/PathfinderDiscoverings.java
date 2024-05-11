@@ -10,11 +10,9 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderDiscoveringsRecord;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
 import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.function.Function;
-
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function3;

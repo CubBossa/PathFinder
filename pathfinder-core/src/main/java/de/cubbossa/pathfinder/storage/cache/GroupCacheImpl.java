@@ -7,7 +7,6 @@ import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.Range;
 import de.cubbossa.pathfinder.util.CollectionUtils;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;

@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.command.impl;
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import org.bukkit.command.CommandSender;
 

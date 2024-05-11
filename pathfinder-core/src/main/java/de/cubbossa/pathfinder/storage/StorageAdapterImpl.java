@@ -1,7 +1,8 @@
 package de.cubbossa.pathfinder.storage;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
@@ -12,15 +13,14 @@ import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.storage.cache.StorageCache;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.nodegroup.modifier.CurveLengthModifierImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.FindDistanceModifierImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifierImpl;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
+import de.cubbossa.pathfinder.storage.cache.StorageCache;
 import de.cubbossa.pathfinder.util.CollectionUtils;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -654,7 +654,7 @@ public class StorageAdapterImpl implements StorageAdapter {
           for (UUID id : group) {
             Node node = nodeMap.get(id);
             if (node == null) {
-              PathFinderProvider.get().getLogger().log(Level.WARNING, "Node unexpectedly null for id " + id + ".");
+              PathFinder.get().getLogger().log(Level.WARNING, "Node unexpectedly null for id " + id + ".");
               continue;
             }
             group.<M>getModifier(modifier).ifPresent(m -> {

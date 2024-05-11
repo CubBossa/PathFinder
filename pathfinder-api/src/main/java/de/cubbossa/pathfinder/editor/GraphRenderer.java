@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.editor;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 

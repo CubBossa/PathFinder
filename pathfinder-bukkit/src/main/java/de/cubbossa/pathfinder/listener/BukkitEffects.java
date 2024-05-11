@@ -1,17 +1,25 @@
 package de.cubbossa.pathfinder.listener;
 
-import de.cubbossa.pathfinder.event.*;
-import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
-import de.cubbossa.pathfinder.group.DiscoverableModifier;
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.command.CmdTagResolver;
 import de.cubbossa.pathfinder.command.CommandPlaceholderProcessor;
 import de.cubbossa.pathfinder.command.CommandPlaceholderProcessorImpl;
+import de.cubbossa.pathfinder.event.EventDispatcher;
+import de.cubbossa.pathfinder.event.PathCancelledEvent;
+import de.cubbossa.pathfinder.event.PathStartEvent;
+import de.cubbossa.pathfinder.event.PathStoppedEvent;
+import de.cubbossa.pathfinder.event.PathTargetReachedEvent;
+import de.cubbossa.pathfinder.event.PlayerDiscoverLocationEvent;
+import de.cubbossa.pathfinder.event.PlayerDiscoverProgressEvent;
+import de.cubbossa.pathfinder.event.PlayerForgetLocationEvent;
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
+import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.Translator;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -23,8 +31,6 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 public class BukkitEffects {
 

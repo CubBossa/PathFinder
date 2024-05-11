@@ -2,14 +2,13 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderConfig;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.storage.StorageAdapter;
-import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.CollectionUtils;
@@ -56,7 +55,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   }
 
   public ParticleEdgeRenderer(PathFinderConfig.EditModeConfig editModeConfig) {
-    pathFinder = PathFinderProvider.get();
+    pathFinder = PathFinder.get();
     rendered = new HashSet<>();
     edges = new MultiMap<>();
     editModeTasks = ConcurrentHashMap.newKeySet();
@@ -86,7 +85,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
         .map(Node::getEdges).flatMap(Collection::stream)
         .collect(Collectors.toSet());
     // all edges from adjacent nodes to rendered nodes
-    StorageAdapter storage = PathFinderProvider.get().getStorage();
+    StorageAdapter storage = PathFinder.get().getStorage();
     return storage.loadEdgesTo(nodes.stream().map(Node::getNodeId).collect(Collectors.toSet())).thenCompose(uuidCollectionMap -> {
       toRender.addAll(uuidCollectionMap.values().stream()
           .flatMap(Collection::stream)

@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.node;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser;
 import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute;
 import de.cubbossa.pathfinder.util.ExtensionPoint;
@@ -64,7 +64,7 @@ public class NodeSelectionProviderImpl<SenderT, ContextT extends AbstractNodeSel
 
   @Override
   protected NodeSelection of(String selection) {
-    List<Node> scope = new ArrayList<>(PathFinderProvider.get().getStorage().loadNodes().join());
+    List<Node> scope = new ArrayList<>(PathFinder.get().getStorage().loadNodes().join());
     scope = parser.parse(selection, scope, null);
     return new NodeSelectionImpl(scope, selection);
   }
@@ -86,7 +86,7 @@ public class NodeSelectionProviderImpl<SenderT, ContextT extends AbstractNodeSel
 
   @Override
   protected NodeSelection ofSender(String selection, Object sender) {
-    List<Node> scope = new ArrayList<>(PathFinderProvider.get().getStorage().loadNodes().join());
+    List<Node> scope = new ArrayList<>(PathFinder.get().getStorage().loadNodes().join());
     scope = parser.parse(selection, scope, sender);
     return new NodeSelectionImpl(scope, selection);
   }

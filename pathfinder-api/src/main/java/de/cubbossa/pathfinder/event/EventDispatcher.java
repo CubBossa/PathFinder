@@ -3,13 +3,11 @@ package de.cubbossa.pathfinder.event;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.function.Consumer;

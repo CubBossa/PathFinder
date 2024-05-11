@@ -1,11 +1,10 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import de.cubbossa.pathfinder.messages.Messages;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PlaceholderVisualizerTest {
 

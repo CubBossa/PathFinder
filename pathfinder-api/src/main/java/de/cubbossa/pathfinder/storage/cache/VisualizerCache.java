@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.storage.cache;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
-
 import java.util.Collection;
 import java.util.Optional;
 

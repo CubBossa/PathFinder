@@ -1,13 +1,17 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_NODE;
+import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_NODE;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.context.TargetContext;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -15,12 +19,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.LEFT_CLICK_NODE;
-import static de.cubbossa.pathfinder.editmode.menu.EditModeMenu.RIGHT_CLICK_NODE;
 
 public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
     implements GraphRenderer<Player> {
@@ -31,7 +29,7 @@ public class NodeArmorStandRenderer extends AbstractArmorstandRenderer<Node>
 
   public NodeArmorStandRenderer(JavaPlugin plugin) {
     super(plugin);
-    setRenderDistance(PathFinderProvider.get().getConfiguration().getEditMode().getNodeArmorStandRenderDistance());
+    setRenderDistance(PathFinder.get().getConfiguration().getEditMode().getNodeArmorStandRenderDistance());
   }
 
   @Override

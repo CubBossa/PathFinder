@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
@@ -53,19 +53,19 @@ public abstract class BossBarVisualizer<ViewT extends BossBarVisualizer<ViewT>.B
     @Override
     public void addViewer(PathPlayer<Player> player) {
       super.addViewer(player);
-      PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).showBossBar(bossBar);
+      PathFinder.get().getAudiences().player(player.unwrap().getUniqueId()).showBossBar(bossBar);
     }
 
     @Override
     public void removeViewer(PathPlayer<Player> player) {
       super.removeViewer(player);
-      PathFinderProvider.get().getAudiences().player(player.unwrap().getUniqueId()).hideBossBar(bossBar);
+      PathFinder.get().getAudiences().player(player.unwrap().getUniqueId()).hideBossBar(bossBar);
     }
 
     @Override
     public void removeAllViewers() {
       for (PathPlayer<Player> viewer : getViewers()) {
-        PathFinderProvider.get().getAudiences().player(viewer.unwrap().getUniqueId()).hideBossBar(bossBar);
+        PathFinder.get().getAudiences().player(viewer.unwrap().getUniqueId()).hideBossBar(bossBar);
       }
       super.removeAllViewers();
     }

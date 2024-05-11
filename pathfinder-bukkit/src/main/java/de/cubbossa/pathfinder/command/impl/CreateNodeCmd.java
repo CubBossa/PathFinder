@@ -1,17 +1,16 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import org.bukkit.command.CommandSender;
-
 import java.util.function.Supplier;
+import org.bukkit.command.CommandSender;
 
 public class CreateNodeCmd extends PathFinderSubCommand {
 

@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.nodegroup.modifier;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.group.Modifier;
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class DiscoverableModifierImpl implements DiscoverableModifier {
   @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
-    this.displayName = PathFinderProvider.get().getMiniMessage().deserialize(nameFormat);
+    this.displayName = PathFinder.get().getMiniMessage().deserialize(nameFormat);
   }
 
   @Override

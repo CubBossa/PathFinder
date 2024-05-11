@@ -1,9 +1,9 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import dev.jorel.commandapi.arguments.Argument;
 import java.util.Map;

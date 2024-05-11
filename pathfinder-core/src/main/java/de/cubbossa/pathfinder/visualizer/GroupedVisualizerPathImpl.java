@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.visualizer;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
@@ -38,7 +38,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
     super.update();
     if (!this.paths.isEmpty()) {
       for (SubPath<?> subPath : this.paths) {
-        PathFinderProvider.get().getDisposer().dispose(subPath.data);
+        PathFinder.get().getDisposer().dispose(subPath.data);
       }
       this.paths.clear();
     }
@@ -142,9 +142,9 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
       this.visualizer = visualizer;
       this.data = visualizer.createView(path, GroupedVisualizerPathImpl.this.getTargetViewer());
 
-      PathFinderProvider.get().getDisposer().register(GroupedVisualizerPathImpl.this, this);
-      PathFinderProvider.get().getDisposer().register(visualizer, this);
-      PathFinderProvider.get().getDisposer().register(this, this.data);
+      PathFinder.get().getDisposer().register(GroupedVisualizerPathImpl.this, this);
+      PathFinder.get().getDisposer().register(visualizer, this);
+      PathFinder.get().getDisposer().register(this, this.data);
     }
   }
 }

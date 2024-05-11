@@ -1,11 +1,11 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.node.NodeSelection;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.node.NodeSelection;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.util.NodeUtils;
 

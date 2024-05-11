@@ -1,24 +1,22 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
-import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.Pagination;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import dev.jorel.commandapi.CommandTree;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class DiscoveriesCommand extends CommandTree {
 
@@ -29,7 +27,7 @@ public class DiscoveriesCommand extends CommandTree {
 
     withPermission(PathPerms.PERM_CMD_DISCOVERIES);
 
-    pathFinder = PathFinderProvider.get();
+    pathFinder = PathFinder.get();
 
     executesPlayer((sender, args) -> {
       printList(sender, Pagination.page(0, 10));

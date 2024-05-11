@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.node;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderProvider;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +17,7 @@ public final class EdgeImpl implements Edge {
   private final float weightModifier;
 
   public EdgeImpl(UUID start, UUID end, float weightModifier) {
-    this.pathFinder = PathFinderProvider.get();
+    this.pathFinder = PathFinder.get();
     this.start = start;
     this.end = end;
     this.weightModifier = weightModifier;

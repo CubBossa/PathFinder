@@ -10,7 +10,6 @@ import de.cubbossa.pathfinder.command.FindLocationCommand;
 import de.cubbossa.pathfinder.event.PathStartEvent;
 import de.cubbossa.pathfinder.event.PathStoppedEvent;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,18 +18,18 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.pf4j.Extension;
 
 @Extension(points = PathFinderExtension.class)
-public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> implements Listener {
-
-  @Getter
-  private static BukkitNavigationHandler instance;
+public class BukkitNavigationModule extends AbstractNavigationModule<Player> implements Listener {
 
   private FindCommand findCommand;
   private FindLocationCommand findLocationCommand;
   private CancelPathCommand cancelPathCommand;
 
+  public BukkitNavigationModule() {
+    super();
+  }
+
   @Override
   public void onLoad(PathFinder pathPlugin) {
-    instance = this;
 
     super.onLoad(pathPlugin);
 
@@ -60,7 +59,7 @@ public class BukkitNavigationHandler extends AbstractNavigationHandler<Player> i
     Player p = event.getPlayer();
     PathPlayer<Player> pathPlayer = PathPlayer.wrap(p);
 
-    AbstractNavigationHandler<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
+    AbstractNavigationModule<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
     if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), info.dist())) {
       reach(info.playerId());
     }

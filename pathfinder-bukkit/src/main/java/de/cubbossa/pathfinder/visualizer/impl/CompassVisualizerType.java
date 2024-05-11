@@ -1,13 +1,13 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.translations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import java.util.Map;

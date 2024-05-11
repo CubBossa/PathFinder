@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.storage.cache;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.DiscoverInfo;
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;

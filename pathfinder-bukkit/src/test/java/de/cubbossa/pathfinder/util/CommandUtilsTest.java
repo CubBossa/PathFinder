@@ -1,17 +1,15 @@
 package de.cubbossa.pathfinder.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.misc.Range;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
-import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 class CommandUtilsTest {
 

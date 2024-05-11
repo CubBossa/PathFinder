@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.events.path;
 
-import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import lombok.Getter;

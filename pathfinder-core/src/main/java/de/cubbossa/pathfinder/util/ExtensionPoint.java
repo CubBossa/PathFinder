@@ -1,16 +1,11 @@
 package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.disposables.Disposable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.pf4j.DefaultPluginManager;
-import org.pf4j.JarPluginManager;
 import org.pf4j.PluginManager;
 
 @Getter

@@ -1,15 +1,14 @@
 package de.cubbossa.pathfinder.command.impl;
 
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import org.bukkit.command.CommandSender;
-
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import java.util.logging.Level;
+import org.bukkit.command.CommandSender;
 
 public class DeleteVisualizerCmd extends PathFinderSubCommand {
   public DeleteVisualizerCmd(PathFinder pathFinder) {

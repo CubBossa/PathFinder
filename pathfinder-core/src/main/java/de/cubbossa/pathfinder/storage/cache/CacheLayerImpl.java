@@ -9,10 +9,14 @@ import de.cubbossa.pathfinder.storage.CacheLayer;
 import de.cubbossa.pathfinder.storage.DiscoverInfo;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
 
 @Getter
 public class CacheLayerImpl implements CacheLayer {

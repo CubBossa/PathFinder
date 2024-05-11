@@ -2,7 +2,6 @@ package de.cubbossa.pathfinder.events.visualizer;
 
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.impl.CombinedVisualizer;
-
 import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

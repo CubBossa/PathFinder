@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder;
 
-import lombok.Getter;
-
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
 
 @Getter
 public final class Changes<E> {

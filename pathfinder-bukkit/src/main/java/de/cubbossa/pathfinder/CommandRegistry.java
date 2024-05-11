@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.command.PathFinderCommand;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import dev.jorel.commandapi.CommandTree;
-
 import java.util.ArrayList;
 import java.util.List;
 

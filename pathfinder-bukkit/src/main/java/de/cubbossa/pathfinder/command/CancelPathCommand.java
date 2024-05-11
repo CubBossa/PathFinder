@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.command;
 
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.module.BukkitNavigationHandler;
+import de.cubbossa.pathfinder.misc.PathPlayer;
+import de.cubbossa.pathfinder.navigation.NavigationModule;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandTree;
 import org.bukkit.entity.Player;
@@ -12,12 +11,14 @@ public class CancelPathCommand extends CommandTree {
 
   public CancelPathCommand() {
     super("cancelpath");
+    NavigationModule<Player> module = NavigationModule.get();
+
     withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
-        && BukkitNavigationHandler.getInstance().getActivePath(PathPlayer.wrap(player)) != null);
+        && module.getActivePath(PathPlayer.wrap(player)) != null);
 
     executesPlayer((player, args) -> {
-      BukkitNavigationHandler.getInstance().cancel(player.getUniqueId());
+      module.cancel(player.getUniqueId());
     });
   }
 

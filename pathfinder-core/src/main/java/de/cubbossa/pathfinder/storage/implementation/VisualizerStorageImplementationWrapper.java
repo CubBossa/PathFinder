@@ -1,8 +1,8 @@
 package de.cubbossa.pathfinder.storage.implementation;
 
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.storage.VisualizerStorageImplementation;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
+import de.cubbossa.pathfinder.storage.VisualizerStorageImplementation;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import java.util.Map;

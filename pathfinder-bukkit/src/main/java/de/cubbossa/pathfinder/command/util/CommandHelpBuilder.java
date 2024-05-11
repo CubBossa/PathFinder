@@ -1,14 +1,13 @@
 package de.cubbossa.pathfinder.command.util;
 
-import de.cubbossa.pathfinder.PathFinderProvider;
+import de.cubbossa.pathfinder.PathFinder;
+import java.util.ArrayList;
+import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CommandHelpBuilder {
 
@@ -46,7 +45,7 @@ public class CommandHelpBuilder {
   }
 
   public List<Component> build() {
-    MiniMessage mm = PathFinderProvider.get().getMiniMessage();
+    MiniMessage mm = PathFinder.get().getMiniMessage();
     List<Component> result = new ArrayList<>();
     for (Entry entry : entries) {
       TagResolver resolver = TagResolver.builder()

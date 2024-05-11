@@ -15,7 +15,11 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <PlayerT> The environment implementation that is wrapped by the {@link PathPlayer} class.
  */
-public interface NavigationHandler<PlayerT> extends Disposable {
+public interface NavigationModule<PlayerT> extends Disposable {
+
+  static <PlayerT> NavigationModule<PlayerT> get() {
+    return NavigationModuleProvider.get();
+  }
 
   /**
    * Adds a filter that maps the graph nodes on new nodes. Only nodes that are contained in the node collection
@@ -46,7 +50,7 @@ public interface NavigationHandler<PlayerT> extends Disposable {
   Collection<Node> applyNavigationConstraints(UUID player, Collection<Node> nodes);
 
   /**
-   * Finds the potentially existing {@link SearchInfo}, which resembles an active path view.
+   * Finds the currently active path for a player or null if none is active.
    *
    * @param player The player to search active paths for.
    * @return

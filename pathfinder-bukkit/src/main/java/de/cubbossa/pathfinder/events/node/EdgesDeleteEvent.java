@@ -1,7 +1,7 @@
 package de.cubbossa.pathfinder.events.node;
 
-import de.cubbossa.pathfinder.node.NodeSelection;
 import de.cubbossa.pathfinder.node.EdgeImpl;
+import de.cubbossa.pathfinder.node.NodeSelection;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
