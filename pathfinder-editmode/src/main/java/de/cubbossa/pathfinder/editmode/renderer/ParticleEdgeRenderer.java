@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
+import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderConfig;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
@@ -15,6 +16,7 @@ import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import de.cubbossa.pathfinder.util.MultiMap;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -203,7 +205,7 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
     return Bukkit.getScheduler().runTaskTimerAsynchronously(ReflectionUtils.getPlugin(), () -> {
       Player p = player.unwrap();
       for (ParticleInfo c : packets.get()) {
-        p.spawnParticle(Particle.REDSTONE, c.location(), 1, new Particle.DustOptions(c.color(), 1));
+        p.spawnParticle((Particle) SpigotConversionUtil.toBukkitParticle(ParticleTypes.DUST), c.location(), 1, new Particle.DustOptions(c.color(), 1));
       }
     }, delay, config.getEdgeParticleTickDelay()).getTaskId();
   }

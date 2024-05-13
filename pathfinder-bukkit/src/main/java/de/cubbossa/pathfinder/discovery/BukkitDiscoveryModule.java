@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module;
+package de.cubbossa.pathfinder.discovery;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
@@ -19,12 +19,12 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.pf4j.Extension;
 
 @Extension(points = PathFinderExtension.class)
-public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> implements Listener {
+public class BukkitDiscoveryModule extends AbstractDiscoveryModule<Player> implements Listener {
 
   private final Collection<UUID> playerLock = ConcurrentHashMap.newKeySet();
   private final DiscoveriesCommand discoveriesCommand;
 
-  public BukkitDiscoverHandler() {
+  public BukkitDiscoveryModule() {
     discoveriesCommand = new DiscoveriesCommand();
   }
 
@@ -55,6 +55,6 @@ public class BukkitDiscoverHandler extends AbstractDiscoverHandler<Player> imple
       return CompletableFuture.allOf(groups.stream()
           .map(group -> super.discover(player, group, LocalDateTime.now()))
           .toArray(CompletableFuture[]::new));
-    }).thenRun(() -> playerLock.remove(uuid));
+    }).whenComplete((r, t) -> playerLock.remove(uuid));
   }
 }

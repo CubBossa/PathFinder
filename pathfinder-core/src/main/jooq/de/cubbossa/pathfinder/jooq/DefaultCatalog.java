@@ -6,6 +6,7 @@ package de.cubbossa.pathfinder.jooq;
 
 import java.util.Arrays;
 import java.util.List;
+
 import org.jooq.Constants;
 import org.jooq.Schema;
 import org.jooq.impl.CatalogImpl;

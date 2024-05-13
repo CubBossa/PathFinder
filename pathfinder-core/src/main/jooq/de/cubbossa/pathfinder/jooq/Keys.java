@@ -24,6 +24,7 @@ import de.cubbossa.pathfinder.jooq.tables.records.PathfinderSearchTermsRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderVisualizerTypeRelationRecord;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderWaypointsRecord;
+
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;

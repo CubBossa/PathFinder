@@ -19,12 +19,12 @@ import de.cubbossa.pathfinder.command.impl.ListNodesCmd;
 import de.cubbossa.pathfinder.command.impl.ListVisualizersCmd;
 import de.cubbossa.pathfinder.command.impl.NodesCmd;
 import de.cubbossa.pathfinder.command.impl.VisualizerCmd;
+import de.cubbossa.pathfinder.discovery.AbstractDiscoveryModule;
 import de.cubbossa.pathfinder.dump.DumpWriterProvider;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.module.AbstractDiscoverHandler;
 import de.cubbossa.pathfinder.node.GraphEditorRegistry;
 import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
@@ -283,7 +283,7 @@ public class PathFinderCommand extends CommandTree {
             return;
           }
 
-          AbstractDiscoverHandler.<Player>getInstance().discover(target, group, LocalDateTime.now());
+          AbstractDiscoveryModule.<Player>getInstance().discover(target, group, LocalDateTime.now());
 
           BukkitUtils.wrap(sender).sendMessage(Messages.CMD_FORCE_FIND.formatted(
               Placeholder.component("name", target.getDisplayName()),
@@ -301,7 +301,7 @@ public class PathFinderCommand extends CommandTree {
             return;
           }
 
-          AbstractDiscoverHandler.<Player>getInstance().forget(target, group);
+          AbstractDiscoveryModule.<Player>getInstance().forget(target, group);
 
           sender.sendMessage(Messages.CMD_FORCE_FORGET.formatted(
               Placeholder.unparsed("name", target.getName()),

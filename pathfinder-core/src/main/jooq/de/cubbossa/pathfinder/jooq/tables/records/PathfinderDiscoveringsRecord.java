@@ -6,8 +6,10 @@ package de.cubbossa.pathfinder.jooq.tables.records;
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderDiscoverings;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 import org.jooq.Field;
 import org.jooq.Record2;
 import org.jooq.Record3;

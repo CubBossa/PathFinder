@@ -6,6 +6,7 @@ package de.cubbossa.pathfinder.jooq.tables.records;
 
 import de.cubbossa.pathfinder.jooq.tables.PathfinderNodegroups;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
+
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record2;

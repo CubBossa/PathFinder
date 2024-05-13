@@ -51,7 +51,7 @@ dependencies {
 
     // Client ArmorStands
     implementation("de.cubbossa:ClientEntities:1.3.0")
-    implementation("com.github.retrooper.packetevents:spigot:2.3.0")
+    implementation("com.github.retrooper.packetevents:spigot:2.3.1-SNAPSHOT")
 }
 
 tasks {

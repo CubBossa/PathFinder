@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module;
+package de.cubbossa.pathfinder.navigation;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -6,7 +6,6 @@ import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.event.EventCancelledException;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
@@ -15,13 +14,6 @@ import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.navigation.NavigationConstraint;
-import de.cubbossa.pathfinder.navigation.NavigationLocationImpl;
-import de.cubbossa.pathfinder.navigation.NavigationModule;
-import de.cubbossa.pathfinder.navigation.NavigationModuleProvider;
-import de.cubbossa.pathfinder.navigation.Navigator;
-import de.cubbossa.pathfinder.navigation.NavigatorImpl;
-import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;

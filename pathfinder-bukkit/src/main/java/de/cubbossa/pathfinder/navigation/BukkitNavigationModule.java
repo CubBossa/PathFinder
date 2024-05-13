@@ -1,4 +1,4 @@
-package de.cubbossa.pathfinder.module;
+package de.cubbossa.pathfinder.navigation;
 
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;

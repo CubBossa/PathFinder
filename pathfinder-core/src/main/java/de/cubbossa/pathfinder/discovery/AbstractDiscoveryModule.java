@@ -1,11 +1,10 @@
-package de.cubbossa.pathfinder.module;
+package de.cubbossa.pathfinder.discovery;
 
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.PathFinderProvider;
 import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
@@ -30,21 +29,21 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class AbstractDiscoverHandler<PlayerT>
+public class AbstractDiscoveryModule<PlayerT>
     extends PathFinderExtensionBase implements PathFinderExtension, Disposable {
 
-  public static <T> AbstractDiscoverHandler<T> getInstance() {
-    return (AbstractDiscoverHandler<T>) instance;
+  public static <T> AbstractDiscoveryModule<T> getInstance() {
+    return (AbstractDiscoveryModule<T>) instance;
   }
 
-  private static AbstractDiscoverHandler<?> instance;
+  private static AbstractDiscoveryModule<?> instance;
 
   private final NamespacedKey key = AbstractPathFinder.pathfinder("discovery");
 
   final PathFinder pathFinder;
   final EventDispatcher<PlayerT> eventDispatcher;
 
-  public AbstractDiscoverHandler() {
+  public AbstractDiscoveryModule() {
     instance = this;
     this.pathFinder = PathFinder.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);

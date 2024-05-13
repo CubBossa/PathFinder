@@ -199,7 +199,7 @@ public class ItemStackUtils {
       meta = Bukkit.getItemFactory().getItemMeta(item.getType());
     }
     if (meta != null) {
-      meta.addEnchant(Enchantment.LUCK, 1, true);
+      meta.addEnchant(Enchantment.FLAME, 1, true);
       meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
       item.setItemMeta(meta);
     }

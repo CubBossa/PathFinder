@@ -9,7 +9,9 @@ import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderNodegroupsRecord;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.misc.NamespacedKeyConverter;
+
 import java.util.function.Function;
+
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function2;

@@ -8,8 +8,10 @@ import de.cubbossa.pathfinder.jooq.DefaultSchema;
 import de.cubbossa.pathfinder.jooq.Keys;
 import de.cubbossa.pathfinder.jooq.tables.records.PathfinderEdgesRecord;
 import de.cubbossa.pathfinder.storage.misc.UUIDConverter;
+
 import java.util.UUID;
 import java.util.function.Function;
+
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Function3;
