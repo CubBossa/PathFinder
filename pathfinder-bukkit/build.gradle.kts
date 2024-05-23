@@ -207,7 +207,6 @@ tasks {
             include(dependency("de.cubbossa:Translations:.*"))
             include(dependency("de.cubbossa:splinelib:.*"))
             include(dependency("net.kyori:.*"))
-            include(dependency("net.kyori:.*"))
             include(dependency("org.bstats:.*"))
             include(dependency("xyz.xenondevs:particle:.*"))
             include(dependency("dev.jorel:commandapi-bukkit-shade:.*"))
