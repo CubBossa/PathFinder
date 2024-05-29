@@ -44,7 +44,7 @@ public abstract class AbstractEntityRenderer<ElementT, DisplayT extends Display>
 
   public AbstractEntityRenderer(JavaPlugin plugin, Class<DisplayT> displayClass) {
     this.entityClass = displayClass;
-    this.playerSpace = PlayerSpace.builder().withEventSupport().build();
+    this.playerSpace = PlayerSpace.create().withEventSupport().build();
 
     entityNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     interactionNodeMap = Maps.synchronizedBiMap(HashBiMap.create());

@@ -25,6 +25,8 @@ public class RoadMapEditorExtension extends PathFinderExtensionBase implements P
   @Override
   public void onLoad(PathFinder pathPlugin) {
     if (pathPlugin instanceof BukkitPathFinder bukkitPathFinder) {
+      de.cubbossa.cliententities.lib.packetevents.api.PacketEvents.setAPI(de.cubbossa.cliententities.lib.packetevents.impl.factory.spigot.SpigotPacketEventsBuilder
+          .build(bukkitPathFinder.getJavaPlugin()));
       PacketEvents.setAPI(SpigotPacketEventsBuilder.build(bukkitPathFinder.getJavaPlugin()));
       PacketEvents.getAPI().getSettings()
           .checkForUpdates(true)

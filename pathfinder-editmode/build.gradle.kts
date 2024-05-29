@@ -50,7 +50,7 @@ dependencies {
     implementation("xyz.xenondevs:particle:1.8.4")
 
     // Client ArmorStands
-    implementation("de.cubbossa:ClientEntities:1.3.0")
+    implementation("de.cubbossa:ClientEntities:1.3.2")
     implementation("com.github.retrooper.packetevents:spigot:2.3.1-SNAPSHOT")
 }
 

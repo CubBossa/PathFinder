@@ -43,7 +43,7 @@ public class NodeGroupListRenderer implements Listener, GraphRenderer<Player> {
     private final Map<UUID, NodeContext> displayed;
 
     public Context(UUID player) {
-        playerSpace = PlayerSpace.builder().withPlayer(player).build();
+      playerSpace = PlayerSpace.create().withPlayer(player).build();
         rendered = new HashSet<>();
       displayed = new ConcurrentHashMap<>();
     }

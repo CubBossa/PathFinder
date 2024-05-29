@@ -136,7 +136,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
 
   protected PlayerSpace ps(Player player) {
     return playerSpaces.computeIfAbsent(player.getUniqueId(), uuid -> {
-      PlayerSpace playerSpace = PlayerSpace.builder().withPlayer(uuid).build();
+      PlayerSpace playerSpace = PlayerSpace.create().withPlayer(uuid).build();
       playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick);
       playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit);
       return playerSpace;
