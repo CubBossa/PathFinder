@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.editmode.renderer;
 
-import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
+import de.cubbossa.cliententities.lib.packetevents.api.protocol.particle.type.ParticleTypes;
+import de.cubbossa.cliententities.lib.packetevents.impl.util.SpigotConversionUtil;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderConfig;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
@@ -16,7 +17,6 @@ import de.cubbossa.pathfinder.util.CollectionUtils;
 import de.cubbossa.pathfinder.util.FutureUtils;
 import de.cubbossa.pathfinder.util.LerpUtils;
 import de.cubbossa.pathfinder.util.MultiMap;
-import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

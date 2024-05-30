@@ -51,7 +51,6 @@ dependencies {
 
     // Client ArmorStands
     implementation("de.cubbossa:ClientEntities:1.3.2")
-    implementation("com.github.retrooper.packetevents:spigot:2.3.1-SNAPSHOT")
 }
 
 tasks {
@@ -76,8 +75,6 @@ tasks {
             include(dependency("xyz.xenondevs:particle:.*"))
             include(dependency("de.tr7zw:item-nbt-api:.*"))
             include(dependency("de.item-nbt-api:.*"))
-            include(dependency("com.github.retrooper.packetevents:spigot:.*"))
-            include(dependency("com.github.retrooper.packetevents:api:.*"))
         }
 
         fun relocate(from: String, to: String) {
@@ -88,8 +85,6 @@ tasks {
         relocate("de.cubbossa.cliententities", "cliententities")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("de.tr7zw.changeme.nbtapi", "nbtapi")
-        relocate("com.github.retrooper.packetevents", "packetevents.api")
-        relocate("io.github.retrooper.packetevents", "packetevents.impl")
     }
     test {
         useJUnitPlatform()

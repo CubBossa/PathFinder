@@ -221,6 +221,8 @@ tasks {
         }
 
         relocate("org.bstats", "bstats")
+        relocate("net.kyori", "kyori")
+        relocate("com.google.gson", "gson")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.cubbossa.translations", "translations")

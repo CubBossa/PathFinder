@@ -2,6 +2,9 @@
 # Compiled class file
 *.class
 
+# Jooq
+/pathfinder-core/src/main/jooq/
+
 # Log file
 *.log
 

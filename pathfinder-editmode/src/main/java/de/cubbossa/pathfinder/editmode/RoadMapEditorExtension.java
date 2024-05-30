@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.editmode;
 
-import com.github.retrooper.packetevents.PacketEvents;
+import de.cubbossa.cliententities.lib.packetevents.api.PacketEvents;
+import de.cubbossa.cliententities.lib.packetevents.impl.factory.spigot.SpigotPacketEventsBuilder;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
@@ -9,7 +10,6 @@ import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.pf4j.Extension;
 
@@ -25,8 +25,6 @@ public class RoadMapEditorExtension extends PathFinderExtensionBase implements P
   @Override
   public void onLoad(PathFinder pathPlugin) {
     if (pathPlugin instanceof BukkitPathFinder bukkitPathFinder) {
-      de.cubbossa.cliententities.lib.packetevents.api.PacketEvents.setAPI(de.cubbossa.cliententities.lib.packetevents.impl.factory.spigot.SpigotPacketEventsBuilder
-          .build(bukkitPathFinder.getJavaPlugin()));
       PacketEvents.setAPI(SpigotPacketEventsBuilder.build(bukkitPathFinder.getJavaPlugin()));
       PacketEvents.getAPI().getSettings()
           .checkForUpdates(true)
