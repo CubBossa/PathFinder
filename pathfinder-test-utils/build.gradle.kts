@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("io.freefair.lombok") version "6.6.2"
+    kotlin("jvm")
 }
 
 group = "de.cubbossa"
@@ -22,8 +23,12 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     implementation("org.xerial:sqlite-jdbc:3.41.2.1")
     implementation("com.h2database:h2:2.1.214")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }

@@ -2,6 +2,8 @@ plugins {
     idea
     java
     eclipse
+    kotlin("jvm")
+    id("com.google.devtools.ksp") version "2.0.0-1.0.21"
 }
 
 java {
@@ -17,6 +19,7 @@ subprojects {
 
     apply {
         plugin("java")
+        plugin("com.google.devtools.ksp")
     }
 
     repositories {
@@ -24,10 +27,12 @@ subprojects {
     }
 
     dependencies {
-        implementation("org.pf4j:pf4j:3.11.0")
-        annotationProcessor("org.pf4j:pf4j:3.11.0")
-        testImplementation("org.pf4j:pf4j:3.11.0")
-        testAnnotationProcessor("org.pf4j:pf4j:3.11.0")
+        val pf4jVer = "3.11.0"
+        implementation("org.pf4j:pf4j:${pf4jVer}")
+        ksp("care.better.pf4j:pf4j-kotlin-symbol-processing:2.0.0-1.0.1")
+        annotationProcessor("org.pf4j:pf4j:${pf4jVer}")
+        testImplementation("org.pf4j:pf4j:${pf4jVer}")
+        testAnnotationProcessor("org.pf4j:pf4j:${pf4jVer}")
         testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
         testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
@@ -38,4 +43,10 @@ subprojects {
             useJUnitPlatform()
         }
     }
+}
+dependencies {
+    implementation(kotlin("stdlib-jdk8"))
+}
+repositories {
+    mavenCentral()
 }

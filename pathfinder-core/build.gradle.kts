@@ -9,6 +9,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
     id("nu.studer.jooq") version "8.1"
+    kotlin("jvm")
 }
 
 val minecraftVersion = project.property("minecraft_version") as String
@@ -81,6 +82,7 @@ dependencies {
     // Utility
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
     implementation(files("generated/plugin-yml/Bukkit/plugin.yml"))
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {

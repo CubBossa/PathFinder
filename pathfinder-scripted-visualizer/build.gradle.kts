@@ -2,6 +2,7 @@ plugins {
     java
     id("io.freefair.lombok") version "6.6.2"
     id("com.github.johnrengelman.shadow") version "8.1.0"
+    kotlin("jvm")
 }
 
 java {
@@ -41,6 +42,7 @@ dependencies {
     // JavaScript
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("org.snakeyaml:snakeyaml-engine:2.0")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {

@@ -1,6 +1,7 @@
 plugins {
     id("io.freefair.lombok") version "6.6.2"
     id("com.github.johnrengelman.shadow") version "8.1.0"
+    kotlin("jvm")
 }
 
 java {
@@ -52,6 +53,9 @@ dependencies {
     // Client ArmorStands
     implementation("de.cubbossa:ClientEntities:1.3.2")
     implementation("com.github.retrooper.packetevents:spigot:2.3.1-SNAPSHOT")
+    implementation(kotlin("stdlib-jdk8"))
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 }
 
 tasks {

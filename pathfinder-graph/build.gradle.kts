@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     id("io.freefair.lombok") version "6.6.2"
+    kotlin("jvm")
 }
 
 java {
@@ -18,10 +19,14 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {
     test {
         useJUnitPlatform()
     }
+}
+repositories {
+    mavenCentral()
 }

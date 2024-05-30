@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     id("io.freefair.lombok") version "6.6.2"
+    kotlin("jvm")
 }
 
 group = "de.cubbossa"
@@ -22,8 +23,12 @@ dependencies {
     api("net.kyori:adventure-platform-bukkit:4.3.0")
     api("net.kyori:adventure-text-minimessage:4.13.0")
     api("net.kyori:adventure-text-serializer-plain:4.13.0")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }

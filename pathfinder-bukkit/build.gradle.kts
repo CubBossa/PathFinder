@@ -7,6 +7,7 @@ plugins {
     id("io.freefair.lombok") version "6.6.2"
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
+    kotlin("jvm")
 }
 
 group = "de.cubbossa"
@@ -59,6 +60,7 @@ dependencies {
 
     // Utility
     implementation(files("generated/plugin-yml/Bukkit/plugin.yml"))
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 sourceSets {
