@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.navigation.Route;
 import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.node.implementation.PlayerNode;
 import dev.jorel.commandapi.CommandTree;
+import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 import org.bukkit.entity.Player;
 
@@ -39,6 +40,9 @@ public class FindCommand extends CommandTree {
                   .toAny(targets))
               .whenComplete((path, throwable) -> {
                 if (throwable != null) {
+                  if (throwable instanceof CompletionException) {
+                    throwable = throwable.getCause();
+                  }
                   if (throwable instanceof NoPathFoundException) {
                     p.sendMessage(Messages.CMD_FIND_BLOCKED);
                   } else if (throwable instanceof GraphEntryNotEstablishedException) {

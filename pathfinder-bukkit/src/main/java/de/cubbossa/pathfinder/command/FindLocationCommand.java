@@ -1,6 +1,10 @@
 package de.cubbossa.pathfinder.command;
 
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
@@ -11,6 +15,8 @@ import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import dev.jorel.commandapi.CommandTree;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
+import java.util.logging.Level;
 import org.bukkit.entity.Player;
 
 public class FindLocationCommand extends CommandTree {
@@ -33,8 +39,17 @@ public class FindLocationCommand extends CommandTree {
               .to(NavigationLocation.movingExternalNode(waypoint))
           ).whenComplete((path, throwable) -> {
             if (throwable != null) {
-              player.sendMessage(throwable.getMessage()); // TODO
-              return;
+              if (throwable instanceof CompletionException) {
+                throwable = throwable.getCause();
+              }
+              if (throwable instanceof NoPathFoundException) {
+                p.sendMessage(Messages.CMD_FIND_BLOCKED);
+              } else if (throwable instanceof GraphEntryNotEstablishedException) {
+                p.sendMessage(Messages.CMD_FIND_TOO_FAR);
+              } else {
+                p.sendMessage(Messages.CMD_FIND_UNKNOWN);
+                PathFinder.get().getLogger().log(Level.SEVERE, "Unknown error while finding path.", throwable);
+              }
             }
             module.cancelPathWhenTargetReached(path);
           });

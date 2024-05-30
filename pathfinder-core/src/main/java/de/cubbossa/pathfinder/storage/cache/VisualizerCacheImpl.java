@@ -20,7 +20,6 @@ public class VisualizerCacheImpl
 
   public VisualizerCacheImpl() {
     cache = Caffeine.newBuilder()
-        .maximumSize(100)
         .build();
   }
 

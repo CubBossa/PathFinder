@@ -123,18 +123,29 @@ public class AbstractNavigationModule<PlayerT>
       } catch (NoPathFoundException noPathFoundException) {
         throw new CompletionException(noPathFoundException);
       }
+
+      NavigationContext ctx;
+      try {
+        ctx = context(viewer.getUniqueId(), path);
+      } catch (IllegalStateException t) {
+        throw new CompletionException(new NoPathFoundException());
+      }
+
       boolean result = eventDispatcher.dispatchPathStart(viewer, path);
       if (!result) {
         throw new EventCancelledException();
       }
 
-      activePaths.put(viewer.getUniqueId(), context(viewer.getUniqueId(), path));
+      activePaths.put(viewer.getUniqueId(), ctx);
       return path;
     });
   }
 
   private NavigationContext context(UUID playerId, VisualizerPath<PlayerT> path) {
 
+    if (path.getPath().isEmpty()) {
+      throw new IllegalStateException("Path containing no nodes");
+    }
     Node last = path.getPath().get(path.getPath().size() - 1);
     if (last == null) {
       throw new IllegalStateException("Path containing no nodes");

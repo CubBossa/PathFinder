@@ -182,11 +182,7 @@ class RouteImpl implements Route {
           try {
             var solved = solveForSection(p, inner);
             abstractGraph.putEdgeValue(p, inner, solved);
-          } catch (NoPathFoundException e) {
-            System.out.println("No path found from " + p.end + " to " + inner.start);
-            for (EndpointPair<Node> edge : modifiedBaseGraph.edges()) {
-              System.out.println(edge.source().getNodeId() + " " + edge.source().getLocation().getX() + " -> " + edge.target().getNodeId() + " " + edge.target().getLocation().getX());
-            }
+          } catch (NoPathFoundException ignored) {
           }
         }
         prev = target;

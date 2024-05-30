@@ -5,6 +5,8 @@ import de.cubbossa.pathfinder.CommandRegistry;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.PathPerms;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.NavigationLocation;
@@ -17,7 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -153,7 +157,17 @@ public class FindPlayerManager implements Disposable {
         .to(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(target))))
     ).whenComplete((path, throwable) -> {
       if (throwable != null) {
-        requesterPlayer.sendMessage(throwable.getMessage()); // TODO
+        if (throwable instanceof CompletionException) {
+          throwable = throwable.getCause();
+        }
+        if (throwable instanceof NoPathFoundException) {
+          requesterPathPlayer.sendMessage(Messages.CMD_FIND_BLOCKED);
+        } else if (throwable instanceof GraphEntryNotEstablishedException) {
+          requesterPathPlayer.sendMessage(Messages.CMD_FIND_TOO_FAR);
+        } else {
+          requesterPathPlayer.sendMessage(Messages.CMD_FIND_UNKNOWN);
+          PathFinder.get().getLogger().log(Level.SEVERE, "Unknown error while finding path.", throwable);
+        }
         return;
       }
       module.cancelPathWhenTargetReached(path);

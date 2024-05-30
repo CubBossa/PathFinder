@@ -53,7 +53,7 @@ public class DiscoverInfoCacheImpl implements StorageCache<DiscoverInfo>, Discov
       return;
     }
     cache.get(info.playerId()).invalidate(info.discoverable());
-    if (cache.get(info.playerId()).asMap().size() == 0) {
+    if (cache.get(info.playerId()).asMap().isEmpty()) {
       cache.remove(info.playerId());
     }
   }
