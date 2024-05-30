@@ -22,7 +22,6 @@ public class GroupCacheImpl implements StorageCache<NodeGroup>, GroupCache {
 
   public GroupCacheImpl() {
     this.cache = Caffeine.newBuilder()
-        .maximumSize(100)
         .build();
     this.nodeGroupCache = Caffeine.newBuilder()
         .build();
