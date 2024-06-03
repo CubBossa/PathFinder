@@ -11,7 +11,7 @@ java {
 }
 
 group = "de.cubbossa"
-version = "5.1.1"
+version = "5.1.2"
 
 subprojects {
 
