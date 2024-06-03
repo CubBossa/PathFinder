@@ -1,11 +1,8 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import de.cubbossa.pathfinder.Changes;
-import de.cubbossa.pathfinder.misc.Location;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
-import org.jetbrains.annotations.NotNull;
+import de.cubbossa.pathfinder.Changes
+import de.cubbossa.pathfinder.misc.Location
+import java.util.*
 
 /**
  * A node instance is the main structure of the virtual graph that is managed by PathFinder.
@@ -14,82 +11,82 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see Edge serves as connecting structure.
  */
-public interface Node extends Comparable<Node>, Cloneable {
+@JvmDefaultWithCompatibility
+interface Node : Comparable<Node>, Cloneable {
 
-  /**
-   * The UUID of nodes must be unique for each node and serves as primary key.
-   *
-   * @return The UUID of this Node.
-   */
-  UUID getNodeId();
+    /**
+     * The UUID of nodes must be unique for each node and serves as primary key.
+     *
+     * @return The UUID of this Node.
+     */
+    val nodeId: UUID
 
-  /**
-   * The current location of this Node. A location consists of a vec3 and a world. Worlds are abstract
-   * and must not be minecraft worlds, bust most commonly are. For example, a world could also resemble a website.
-   *
-   * @return A referenced location of this Node.
-   */
-  Location getLocation();
+    /**
+     * The current location of this Node. A location consists of a vec3 and a world. Worlds are abstract
+     * and must not be minecraft worlds, bust most commonly are. For example, a world could also resemble a website.
+     *
+     * @return A referenced location of this Node.
+     */
+    var location: Location
 
-  void setLocation(Location location);
+    val edgeChanges: Changes<Edge>
 
-  Changes<Edge> getEdgeChanges();
+    val edges: Collection<Edge>
 
-  Collection<Edge> getEdges();
+    fun connect(other: Node): Edge? {
+        return connect(other.nodeId)
+    }
 
-  default Optional<Edge> connect(Node other) {
-    return connect(other.getNodeId());
-  }
+    fun connect(other: UUID): Edge? {
+        return connect(other, 1.0)
+    }
 
-  default Optional<Edge> connect(UUID other) {
-    return connect(other, 1);
-  }
+    fun connect(other: Node, weight: Double): Edge? {
+        return connect(other.nodeId, weight)
+    }
 
-  default Optional<Edge> connect(Node other, double weight) {
-    return connect(other.getNodeId(), weight);
-  }
+    fun connect(other: UUID, weight: Double): Edge?
 
-  Optional<Edge> connect(UUID other, double weight);
+    fun disconnectAll() {
+        (edges as? MutableCollection)?.clear()
+    }
 
-  default void disconnectAll() {
-    getEdges().clear();
-  }
+    fun disconnect(other: Node): Edge? {
+        return disconnect(other.nodeId)
+    }
 
-  default Optional<Edge> disconnect(Node other) {
-    return disconnect(other.getNodeId());
-  }
+    fun disconnect(other: UUID): Edge? {
+        val opt = edges.stream().filter { edge: Edge -> edge.end == other }
+            .findAny()
+        opt.ifPresent { edge: Edge -> (edges as? MutableCollection)?.remove(edge) }
+        return opt.orElse(null)
+    }
 
-  default Optional<Edge> disconnect(UUID other) {
-    Optional<Edge> opt = getEdges().stream().filter(edge -> edge.getEnd().equals(other)).findAny();
-    opt.ifPresent(edge -> getEdges().remove(edge));
-    return opt;
-  }
+    fun hasConnection(other: Node): Boolean {
+        return hasConnection(other.nodeId)
+    }
 
-  default boolean hasConnection(Node other) {
-    return hasConnection(other.getNodeId());
-  }
+    fun hasConnection(other: UUID): Boolean {
+        return edges.stream()
+            .map { obj: Edge -> obj.end }
+            .anyMatch { obj: UUID? -> other.equals(obj) }
+    }
 
-  default boolean hasConnection(UUID other) {
-    return getEdges().stream()
-        .map(Edge::getEnd)
-        .anyMatch(other::equals);
-  }
+    fun getConnection(other: Node): Edge? {
+        return getConnection(other.nodeId)
+    }
 
-  default Optional<Edge> getConnection(Node other) {
-    return getConnection(other.getNodeId());
-  }
-
-  default Optional<Edge> getConnection(UUID other) {
-    return getEdges().stream().filter(edge -> edge.getEnd().equals(other)).findAny();
-  }
+    fun getConnection(other: UUID): Edge? {
+        return edges.stream().filter { edge: Edge -> edge.end == other }
+            .findAny().orElse(null)
+    }
 
 
-  @Override
-  default int compareTo(@NotNull Node o) {
-    return getNodeId().compareTo(o.getNodeId());
-  }
+    override fun compareTo(other: Node): Int {
+        return nodeId.compareTo(other.nodeId)
+    }
 
-  Node clone();
+    public override fun clone(): Node
 
-  Node clone(UUID id);
+    fun clone(id: UUID): Node
 }

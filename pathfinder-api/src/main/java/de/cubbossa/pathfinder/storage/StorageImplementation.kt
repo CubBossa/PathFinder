@@ -1,118 +1,109 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.group.Modifier;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.Range;
-import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.NodeType;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.logging.Logger;
-import org.jetbrains.annotations.Nullable;
+import de.cubbossa.pathfinder.group.Modifier
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.Range
+import de.cubbossa.pathfinder.node.Edge
+import de.cubbossa.pathfinder.node.NodeType
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ThreadFactory
+import java.util.logging.Logger
 
 /**
- * A {@link StorageImplementation} handles the actual serializing and deserializing of the given objects.
- * To access pathfinder data, use an instance of {@link StorageAdapter} instead, which also handles caching and
+ * A [StorageImplementation] handles the actual serializing and deserializing of the given objects.
+ * To access pathfinder data, use an instance of [StorageAdapter] instead, which also handles caching and
  * combines different loading methods (e.g. loading a node, its edges and its groups) into one.
  */
-public interface StorageImplementation {
+interface StorageImplementation {
+    fun service(factory: ThreadFactory?): ExecutorService? {
+        return null
+    }
 
-  default @Nullable ExecutorService service(ThreadFactory factory) {
-    return null;
-  }
+    /**
+     * Initializes this storage implementation. Will be called by [StorageAdapter.init] and will create
+     * necessary files or objects. It assures that the instance can be used without issues afterward.
+     *
+     * @throws Exception Might call an exception. Not specified due to different implementations.
+     */
+    @Throws(Exception::class)
+    fun init()
 
-  /**
-   * Initializes this storage implementation. Will be called by {@link StorageAdapter#init()} and will create
-   * necessary files or objects. It assures that the instance can be used without issues afterward.
-   *
-   * @throws Exception Might call an exception. Not specified due to different implementations.
-   */
-  void init() throws Exception;
+    fun shutdown()
 
-  void shutdown();
+    var logger: Logger
 
-  Logger getLogger();
+    fun setWorldLoader(worldLoader: WorldLoader?)
 
-  void setLogger(Logger logger);
+    // ################################
+    // #   Node Types
+    // ################################
+    fun saveNodeTypeMapping(typeMapping: Map<UUID, NodeType<*>>)
 
-  void setWorldLoader(WorldLoader worldLoader);
+    fun loadNodeTypeMapping(nodes: Collection<UUID>): Map<UUID, NodeType<*>>
 
-  // ################################
-  // #   Node Types
-  // ################################
+    fun deleteNodeTypeMapping(nodes: Collection<UUID>)
 
-  void saveNodeTypeMapping(Map<UUID, NodeType<?>> typeMapping);
+    // ################################
+    // #   Edges
+    // ################################
+    fun loadEdgesFrom(start: Collection<UUID>): Map<UUID, Collection<Edge>>
 
-  Map<UUID, NodeType<?>> loadNodeTypeMapping(Collection<UUID> nodes);
+    fun loadEdgesTo(end: Collection<UUID>): Map<UUID, Collection<Edge>>
 
-  void deleteNodeTypeMapping(Collection<UUID> nodes);
+    fun deleteEdgesTo(end: Collection<UUID>)
 
-  // ################################
-  // #   Edges
-  // ################################
+    // ################################
+    // #   Groups
+    // ################################
+    fun createAndLoadGroup(key: NamespacedKey): NodeGroup?
 
-  Map<UUID, Collection<Edge>> loadEdgesFrom(Collection<UUID> start);
+    fun loadGroupsByMod(key: Collection<NamespacedKey>): Collection<NodeGroup>
 
-  Map<UUID, Collection<Edge>> loadEdgesTo(Collection<UUID> end);
+    fun loadGroup(key: NamespacedKey): NodeGroup? {
+        return loadGroups(mutableSetOf(key)).stream().findAny().orElse(null)
+    }
 
-  void deleteEdgesTo(Collection<UUID> end);
+    fun loadGroups(keys: Collection<NamespacedKey>): Collection<NodeGroup>
 
-  // ################################
-  // #   Groups
-  // ################################
+    fun loadGroupsByNodes(ids: Collection<UUID>): Map<UUID, Collection<NodeGroup>>
 
-  NodeGroup createAndLoadGroup(NamespacedKey key);
+    fun loadGroupsByNode(node: UUID): Collection<NodeGroup>
 
-  Collection<NodeGroup> loadGroupsByMod(Collection<NamespacedKey> key);
+    fun loadGroups(range: Range): List<NodeGroup>
 
-  default Optional<NodeGroup> loadGroup(NamespacedKey key) {
-    return loadGroups(Set.of(key)).stream().findAny();
-  }
+    fun <M : Modifier> loadGroups(modifier: NamespacedKey): Collection<NodeGroup>
 
-  Collection<NodeGroup> loadGroups(Collection<NamespacedKey> keys);
+    fun loadAllGroups(): Collection<NodeGroup>
 
-  Map<UUID, Collection<NodeGroup>> loadGroupsByNodes(Collection<UUID> ids);
+    fun loadGroupNodes(group: NodeGroup): Collection<UUID>
 
-  Collection<NodeGroup> loadGroupsByNode(UUID node);
+    fun saveGroup(group: NodeGroup)
 
-  List<NodeGroup> loadGroups(Range range);
+    fun deleteGroup(group: NodeGroup)
 
-  <M extends Modifier> Collection<NodeGroup> loadGroups(NamespacedKey modifier);
+    // ################################
+    // #   Find Data
+    // ################################
+    fun createAndLoadDiscoverinfo(
+        player: UUID,
+        key: NamespacedKey,
+        time: LocalDateTime
+    ): DiscoverInfo?
 
-  Collection<NodeGroup> loadAllGroups();
+    fun loadDiscoverInfo(player: UUID, key: NamespacedKey): DiscoverInfo?
 
-  Collection<UUID> loadGroupNodes(NodeGroup group);
+    fun deleteDiscoverInfo(info: DiscoverInfo?)
 
-  void saveGroup(NodeGroup group);
+    // ################################
+    // #   Visualizer Types
+    // ################################
+    fun saveVisualizerTypeMapping(types: Map<NamespacedKey, VisualizerType<*>>)
 
-  void deleteGroup(NodeGroup group);
+    fun loadVisualizerTypeMapping(keys: Collection<NamespacedKey>): Map<NamespacedKey, VisualizerType<*>>
 
-  // ################################
-  // #   Find Data
-  // ################################
-
-  DiscoverInfo createAndLoadDiscoverinfo(UUID player, NamespacedKey key, LocalDateTime time);
-
-  Optional<DiscoverInfo> loadDiscoverInfo(UUID player, NamespacedKey key);
-
-  void deleteDiscoverInfo(DiscoverInfo info);
-
-  // ################################
-  // #   Visualizer Types
-  // ################################
-
-  void saveVisualizerTypeMapping(Map<NamespacedKey, VisualizerType<?>> types);
-
-  Map<NamespacedKey, VisualizerType<?>> loadVisualizerTypeMapping(Collection<NamespacedKey> keys);
-
-  void deleteVisualizerTypeMapping(Collection<NamespacedKey> keys);
+    fun deleteVisualizerTypeMapping(keys: Collection<NamespacedKey>)
 }

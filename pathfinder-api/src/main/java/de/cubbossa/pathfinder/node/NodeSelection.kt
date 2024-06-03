@@ -1,56 +1,43 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Contract
+import java.util.*
 
-public interface NodeSelection extends List<Node> {
+interface NodeSelection : MutableList<Node> {
 
-  static NodeSelection of(String selection) {
-    if (NodeSelectionProvider.provider == null) {
-      throw new IllegalStateException("NodeSelectionProvider not yet assigned!");
+    val selectionString: String?
+    val ids: Collection<UUID>
+        get() = stream().map(Node::nodeId).toList()
+
+    @Contract(pure = true)
+    fun apply(selectionFilter: String): NodeSelection {
+        return of(selectionFilter, this)
     }
-    return NodeSelectionProvider.provider.of(selection);
-  }
 
-  static NodeSelection of(String selection, Iterable<Node> scope) {
-    if (NodeSelectionProvider.provider == null) {
-      throw new IllegalStateException("NodeSelectionProvider not yet assigned!");
+    companion object {
+        fun of(selection: String): NodeSelection {
+            checkNotNull(NodeSelectionProvider.provider) { "NodeSelectionProvider not yet assigned!" }
+            return NodeSelectionProvider.provider.of(selection)
+        }
+
+        fun of(selection: String, scope: Iterable<Node>): NodeSelection {
+            checkNotNull(NodeSelectionProvider.provider) { "NodeSelectionProvider not yet assigned!" }
+            return NodeSelectionProvider.provider.of(selection, scope)
+        }
+
+        fun of(scope: Iterable<Node>): NodeSelection {
+            checkNotNull(NodeSelectionProvider.provider) { "NodeSelectionProvider not yet assigned!" }
+            return NodeSelectionProvider.provider.of(scope)
+        }
+
+        fun ofSender(selection: String, sender: Any): NodeSelection {
+            checkNotNull(NodeSelectionProvider.provider) { "NodeSelectionProvider not yet assigned!" }
+            return NodeSelectionProvider.provider.ofSender(selection, sender)
+        }
+
+        fun ofSender(selection: String, scope: Iterable<Node>, sender: Any): NodeSelection {
+            checkNotNull(NodeSelectionProvider.provider) { "NodeSelectionProvider not yet assigned!" }
+            return NodeSelectionProvider.provider.ofSender(selection, scope, sender)
+        }
     }
-    return NodeSelectionProvider.provider.of(selection, scope);
-  }
-
-  static NodeSelection of(Iterable<Node> scope) {
-    if (NodeSelectionProvider.provider == null) {
-      throw new IllegalStateException("NodeSelectionProvider not yet assigned!");
-    }
-    return NodeSelectionProvider.provider.of(scope);
-  }
-
-  static NodeSelection ofSender(String selection, Object sender) {
-    if (NodeSelectionProvider.provider == null) {
-      throw new IllegalStateException("NodeSelectionProvider not yet assigned!");
-    }
-    return NodeSelectionProvider.provider.ofSender(selection, sender);
-  }
-
-  static NodeSelection ofSender(String selection, Iterable<Node> scope, Object sender) {
-    if (NodeSelectionProvider.provider == null) {
-      throw new IllegalStateException("NodeSelectionProvider not yet assigned!");
-    }
-    return NodeSelectionProvider.provider.ofSender(selection, scope, sender);
-  }
-
-  @Nullable String getSelectionString();
-
-  default Collection<UUID> getIds() {
-    return this.stream().map(Node::getNodeId).toList();
-  }
-
-  @Contract(pure = true)
-  default NodeSelection apply(String selectionFilter) {
-    return of(selectionFilter, this);
-  }
 }

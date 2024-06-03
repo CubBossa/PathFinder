@@ -50,31 +50,31 @@ public class BukkitEffects {
 
     dispatcher.listen(PathStartEvent.class, e -> {
       runCommands(e.getPath().getTargetViewer(), config.onPathStart,
-          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
       );
     });
 
     dispatcher.listen(PathTargetReachedEvent.class, e -> {
       runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach,
-          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
       );
     });
 
     dispatcher.listen(PathCancelledEvent.class, e -> {
       runCommands(e.getPath().getTargetViewer(), config.onPathCancel,
-          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
       );
     });
 
     dispatcher.listen(PathStoppedEvent.class, e -> {
       runCommands(e.getPath().getTargetViewer(), config.onPathStop,
-          Placeholder.component("player", e.getPath().getTargetViewer().getDisplayName())
+          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
       );
     });
 
     dispatcher.listen(PlayerDiscoverLocationEvent.class, e -> {
       runCommands(e.getPlayer(), config.onDiscover,
-          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("player", e.getPlayer().displayName),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
           Messages.formatter().namespacedKey("group", e.getGroup().getKey())
       );
@@ -88,17 +88,17 @@ public class BukkitEffects {
           .orElseThrow();
 
       runCommands(e.getPlayer(), config.onDiscoverProgress, //"player", "discoverable", "group", "name", "percent", "ratio", "count-found", "count-all"
-          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("player", e.getPlayer().displayName),
           Placeholder.component("discoverable", discoverableModifier.getDisplayName()),
           Messages.formatter().namespacedKey("group", e.getProgressObserverGroup().getKey()),
           Placeholder.component("name", discoverProgressModifier.getDisplayName()),
-          Formatter.number("percentage", discoverProgressModifier.calculateProgress(e.getPlayer().getUniqueId()).join() * 100)
+          Formatter.number("percentage", discoverProgressModifier.calculateProgress(e.getPlayer().uniqueId).join() * 100)
       );
     });
 
     dispatcher.listen(PlayerForgetLocationEvent.class, e -> {
       runCommands(e.getPlayer(), config.onForget,
-          Placeholder.component("player", e.getPlayer().getDisplayName()),
+          Placeholder.component("player", e.getPlayer().displayName),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
           Messages.formatter().namespacedKey("group", e.getGroup().getKey())
       );
@@ -111,10 +111,10 @@ public class BukkitEffects {
         CmdTagResolver.tag("player", strings -> {
           String arg1 = strings.poll();
           if (arg1 == null) {
-            return player.getName();
+            return player.name;
           }
           return switch (arg1) {
-            case "id" -> player.getUniqueId().toString();
+            case "id" -> player.uniqueId.toString();
             case "world" -> {
               String arg2 = strings.poll();
               if (arg2 != null && arg2.equalsIgnoreCase("id")) {
@@ -138,7 +138,7 @@ public class BukkitEffects {
                 default -> loc.getX() + " " + loc.getY() + " " + loc.getZ();
               };
             }
-            default -> player.getName();
+            default -> player.name;
           };
         }),
         CmdTagResolver.tag("translation", strings -> {
@@ -154,7 +154,7 @@ public class BukkitEffects {
 
           Component cmp = translator.translate(new Message(messageKey, translator).formatted(
               msgResolvers
-          ), AbstractPathFinder.getInstance().getAudiences().player(player.getUniqueId()));
+          ), AbstractPathFinder.getInstance().getAudiences().player(player.uniqueId));
 
           return (switch (serializer) {
             case "miniMessage", "mini" -> miniMessage;

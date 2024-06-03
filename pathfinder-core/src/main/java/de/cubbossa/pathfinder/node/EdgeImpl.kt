@@ -1,77 +1,57 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import de.cubbossa.pathfinder.PathFinder;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import lombok.Getter;
+import de.cubbossa.pathfinder.PathFinder
+import lombok.Getter
+import java.util.*
 
 @Getter
-public final class EdgeImpl implements Edge {
+class EdgeImpl(
+    override val start: UUID,
+    override val end: UUID,
+    override val weight: Float
+) : Edge {
 
-  private final PathFinder pathFinder;
+    private val pathFinder: PathFinder = PathFinder.get()
 
-  private final UUID start;
-  private final UUID end;
-  private final float weightModifier;
-
-  public EdgeImpl(UUID start, UUID end, float weightModifier) {
-    this.pathFinder = PathFinder.get();
-    this.start = start;
-    this.end = end;
-    this.weightModifier = weightModifier;
-  }
-
-  public EdgeImpl(Node start, Node end, float weightModifier) {
-    this(start.getNodeId(), end.getNodeId(), weightModifier);
-  }
-
-  public CompletableFuture<Node> resolveStart() {
-    return pathFinder.getStorage().loadNode(start).thenApply(Optional::orElseThrow);
-  }
-
-  public CompletableFuture<Node> resolveEnd() {
-    return pathFinder.getStorage().loadNode(end).thenApply(Optional::orElseThrow);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof EdgeImpl edge)) {
-      return false;
+    override suspend fun resolveStart(): Node? {
+        return pathFinder.storage.loadNode(start)
     }
 
-    if (Float.compare(edge.weightModifier, weightModifier) != 0) {
-      return false;
+    override suspend fun resolveEnd(): Node? {
+        return pathFinder.storage.loadNode(end)
     }
-    if (!Objects.equals(start, edge.start)) {
-      return false;
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other !is EdgeImpl) {
+            return false
+        }
+
+        if (other.weight.compareTo(weight) != 0) {
+            return false
+        }
+        if (start != other.start) {
+            return false
+        }
+        return end == other.end
     }
-    return Objects.equals(end, edge.end);
-  }
 
-  @Override
-  public int hashCode() {
-    int result = start != null ? start.hashCode() : 0;
-    result = 31 * result + (end != null ? end.hashCode() : 0);
-    result = 31 * result + (weightModifier != +0.0f ? Float.floatToIntBits(weightModifier) : 0);
-    return result;
-  }
+    override fun hashCode(): Int {
+        var result = start.hashCode()
+        result = 31 * result + end.hashCode()
+        result = 31 * result + (if (weight != 0.0f) java.lang.Float.floatToIntBits(
+            weight
+        ) else 0)
+        return result
+    }
 
-  @Override
-  public String toString() {
-    return "Edge{" +
-        "start=" + start +
-        ", end=" + end +
-        ", weightModifier=" + weightModifier +
-        '}';
-  }
-
-  @Override
-  public float getWeight() {
-    return weightModifier;
-  }
+    override fun toString(): String {
+        return "Edge{" +
+                "start=" + start +
+                ", end=" + end +
+                ", weightModifier=" + weight +
+                '}'
+    }
 }

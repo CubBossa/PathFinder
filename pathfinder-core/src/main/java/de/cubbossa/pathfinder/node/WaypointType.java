@@ -16,8 +16,8 @@ public class WaypointType extends AbstractNodeType<Waypoint> {
 
   @Override
   public Waypoint createNodeInstance(Context context) {
-    Waypoint waypoint = new Waypoint(context.id());
-    waypoint.setLocation(context.location());
+    Waypoint waypoint = new Waypoint(context.id);
+    waypoint.setLocation(context.location);
     return waypoint;
   }
 

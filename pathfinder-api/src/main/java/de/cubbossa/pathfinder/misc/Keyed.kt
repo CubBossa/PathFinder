@@ -1,6 +1,6 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-public interface Keyed {
+interface Keyed {
 
-  NamespacedKey getKey();
+    val key: NamespacedKey
 }

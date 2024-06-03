@@ -1,17 +1,14 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import java.util.Map;
-import java.util.Optional;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
 
-public interface VisualizerStorageImplementation<VisualizerT extends PathVisualizer<?, ?>> {
+interface VisualizerStorageImplementation<VisualizerT : PathVisualizer<*, *>> {
+    fun loadVisualizers(): Map<NamespacedKey, VisualizerT>
 
-  Map<NamespacedKey, VisualizerT> loadVisualizers();
+    fun loadVisualizer(key: NamespacedKey): VisualizerT?
 
-  Optional<VisualizerT> loadVisualizer(NamespacedKey key);
+    fun saveVisualizer(visualizer: VisualizerT)
 
-  void saveVisualizer(VisualizerT visualizer);
-
-  void deleteVisualizer(VisualizerT visualizer);
+    fun deleteVisualizer(visualizer: VisualizerT)
 }

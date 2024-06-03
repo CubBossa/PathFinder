@@ -1,94 +1,75 @@
-package de.cubbossa.pathfinder.node.implementation;
+package de.cubbossa.pathfinder.node.implementation
 
-import de.cubbossa.pathfinder.Changes;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.EdgeImpl;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.util.ModifiedHashSet;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
-import lombok.Getter;
-import lombok.Setter;
+import de.cubbossa.pathfinder.Changes
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.misc.Location
+import de.cubbossa.pathfinder.node.Edge
+import de.cubbossa.pathfinder.node.EdgeImpl
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.util.ModifiedHashSet
+import lombok.Getter
+import lombok.Setter
+import java.util.*
 
 @Getter
 @Setter
-public class Waypoint implements Node {
+class Waypoint(
+    override val nodeId: UUID,
+    override var location: Location
+) : Node, Cloneable {
 
-  private final UUID nodeId;
-  private final ModifiedHashSet<Edge> edges;
-  private final Collection<NodeGroup> groups;
+    override val edges: ModifiedHashSet<Edge> = ModifiedHashSet()
+    private val groups: MutableCollection<NodeGroup> = HashSet()
 
-  private Location location;
+    override val edgeChanges: Changes<Edge>
+        get() = edges.changes
 
-  public Waypoint(UUID databaseId) {
-    this.nodeId = databaseId;
-    this.groups = new HashSet<>();
-
-    edges = new ModifiedHashSet<>();
-  }
-
-  @Override
-  public Changes<Edge> getEdgeChanges() {
-    return edges.getChanges();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other !is Node) {
+            return false
+        }
+        return nodeId == other.nodeId
     }
-    if (!(o instanceof Node waypoint)) {
-      return false;
+
+    override fun hashCode(): Int {
+        return nodeId.hashCode()
     }
-    return nodeId.equals(waypoint.getNodeId());
-  }
 
-  @Override
-  public int hashCode() {
-    return nodeId.hashCode();
-  }
-
-  public Collection<NodeGroup> getGroups() {
-    return new HashSet<>(groups);
-  }
-
-  @Override
-  public String toString() {
-    return "Waypoint{" +
-        "nodeId=" + nodeId +
-        ", location=" + location +
-        '}';
-  }
-
-  @Override
-  public Optional<Edge> connect(UUID other, double weight) {
-    if (getConnection(other).isPresent()) {
-      return Optional.empty();
+    fun getGroups(): Collection<NodeGroup> {
+        return HashSet(groups)
     }
-    Edge e = new EdgeImpl(nodeId, other, (float) weight);
-    edges.add(e);
-    return Optional.of(e);
-  }
 
-  @Override
-  public Waypoint clone(UUID uuid) {
-    Waypoint clone = new Waypoint(uuid);
-    clone.location = location.clone();
-    clone.edges.addAll(this.edges);
-    clone.groups.addAll(groups);
-    return clone;
-  }
-
-  @Override
-  public Waypoint clone() {
-    try {
-      return (Waypoint) super.clone();
-    } catch (CloneNotSupportedException e) {
-      return clone(nodeId);
+    override fun toString(): String {
+        return "Waypoint{" +
+                "nodeId=" + nodeId +
+                ", location=" + location +
+                '}'
     }
-  }
+
+    override fun connect(other: UUID, weight: Double): Edge? {
+        if (getConnection(other) == null) {
+            return null
+        }
+        val e: Edge = EdgeImpl(nodeId, other, weight.toFloat())
+        edges.add(e)
+        return e
+    }
+
+    override fun clone(id: UUID): Waypoint {
+        val clone = Waypoint(id, location)
+        clone.edges.addAll(this.edges)
+        clone.groups.addAll(groups)
+        return clone
+    }
+
+    override fun clone(): Waypoint {
+        return try {
+            super<Cloneable>.clone() as Waypoint
+        } catch (e: CloneNotSupportedException) {
+            clone(nodeId)
+        }
+    }
 }

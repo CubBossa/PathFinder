@@ -1,89 +1,84 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import java.util.Objects;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Getter
+import lombok.Setter
+import java.util.*
 
 @Getter
 @Setter
-public final class Location extends Vector {
-
-  World world;
-
-  public Location(double x, double y, double z, World world) {
-    super(x, y, z);
-    this.world = world;
-  }
-
-  public Vector asVector() {
-    return this;
-  }
-
-  public Location toBlockCoordinates() {
-    return new Location((int) x, (int) y, (int) z, world);
-  }
-
-  @Override
-  public Location clone() {
-    return new Location(x, y, z, world);
-  }
-
-  public Location add(double x, double y, double z) {
-    return (Location) super.add(x, y, z);
-  }
-
-  public Location add(Vector location) {
-    return (Location) super.add(location);
-  }
-
-  public Location subtract(Vector location) {
-    return (Location) super.subtract(location);
-  }
-
-  public Location multiply(Vector location) {
-    return (Location) super.multiply(location);
-  }
-
-  public Location multiply(double value) {
-    return (Location) super.multiply(value);
-  }
-
-  public Location divide(Vector location) {
-    return (Location) super.divide(location);
-  }
-
-  public Location divide(double value) {
-    return (Location) super.divide(value);
-  }
-
-  public Location normalize() {
-    return divide(length());
-  }
-
-  @Override
-  public String toString() {
-    return "Location{" +
-        "world=" + world.getName() +
-        ", x=" + x +
-        ", y=" + y +
-        ", z=" + z +
-        '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+class Location(
+    x: Double,
+    y: Double,
+    z: Double,
+    var world: World
+) : Vector(x, y, z) {
+    fun asVector(): Vector {
+        return this
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Location l = (Location) o;
-    return world.equals(l.world) && l.getX() == x && l.getY() == y && l.getZ() == z;
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(world, x, y, z);
-  }
+    fun toBlockCoordinates(): Location {
+        return Location(
+            x.toInt().toDouble(), y.toInt().toDouble(), z.toInt().toDouble(), world
+        )
+    }
+
+    override fun clone(): Location {
+        return Location(x, y, z, world)
+    }
+
+    override fun add(x: Double, y: Double, z: Double): Location {
+        return super.add(x, y, z) as Location
+    }
+
+    override fun add(location: Vector): Location {
+        return super.add(location) as Location
+    }
+
+    override fun subtract(location: Vector): Location {
+        return super.subtract(location) as Location
+    }
+
+    override fun multiply(location: Vector): Location {
+        return super.multiply(location) as Location
+    }
+
+    override fun multiply(value: Double): Location {
+        return super.multiply(value) as Location
+    }
+
+    override fun divide(location: Vector): Location {
+        return super.divide(location) as Location
+    }
+
+    override fun divide(value: Double): Location {
+        return super.divide(value) as Location
+    }
+
+    override fun normalize(): Location {
+        return divide(length())
+    }
+
+    override fun toString(): String {
+        return "Location{" +
+                "world=" + world.name +
+                ", x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                '}'
+    }
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) {
+            return true
+        }
+        if (o == null || javaClass != o.javaClass) {
+            return false
+        }
+        val l = o as Location
+        return world == l.world && l.x == x && l.y == y && l.z == z
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(world, x, y, z)
+    }
 }

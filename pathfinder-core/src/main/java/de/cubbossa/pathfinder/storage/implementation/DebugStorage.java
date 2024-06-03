@@ -75,7 +75,7 @@ public class DebugStorage implements StorageImplementation, WaypointStorageImple
   @Override
   public void setLogger(Logger logger) {
     debug("> setLogger(Logger logger)");
-    implementation.setLogger(logger);
+    implementation.logger = logger;
     debug("< setLogger(Logger logger)");
   }
 

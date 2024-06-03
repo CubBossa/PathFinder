@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.navigation;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.Changes;
@@ -8,25 +7,43 @@ import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.misc.World;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class RouteTest {
 
+  World world = new World() {
+
+    UUID uuid = UUID.randomUUID();
+
+    @NotNull
+    @Override
+    public UUID getUniqueId() {
+      return uuid;
+    }
+
+    @NotNull
+    @Override
+    public String getName() {
+      return uuid.toString();
+    }
+  };
+
   @BeforeAll
   static void beforeAll() {
-    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<Node>() {
+    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<>() {
       @Override
       public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope)
           throws GraphEntryNotEstablishedException {
@@ -59,8 +76,8 @@ class RouteTest {
 
   @Test
   void testA() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
+    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, world));
+    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, world));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(a);
     graph.addNode(b);
@@ -80,9 +97,9 @@ class RouteTest {
 
   @Test
   void testB() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
-    Node c = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, null));
+    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, world));
+    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, world));
+    Node c = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, world));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(a);
     graph.addNode(b);
@@ -121,10 +138,10 @@ class RouteTest {
 
   @Test
   void testC() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
-    Node d = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, null));
+    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, world));
+    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, world));
+    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, world));
+    Node d = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, world));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(b);
     graph.addNode(c);
@@ -149,27 +166,27 @@ class RouteTest {
     private Location location;
 
     @Override
-    public Changes<Edge> getEdgeChanges() {
+    public @NotNull Changes<Edge> getEdgeChanges() {
       return new Changes<>();
     }
 
     @Override
-    public Collection<Edge> getEdges() {
+    public @NotNull Collection<Edge> getEdges() {
       return Collections.emptyList();
     }
 
     @Override
-    public Optional<Edge> connect(UUID other, double weight) {
-      return Optional.empty();
+    public Edge connect(@NotNull UUID other, double weight) {
+      return null;
     }
 
     @Override
-    public Node clone() {
+    public @NotNull Node clone() {
       return new TestNode(nodeId, location);
     }
 
     @Override
-    public Node clone(UUID id) {
+    public @NotNull Node clone(@NotNull UUID id) {
       return new TestNode(id, location);
     }
 

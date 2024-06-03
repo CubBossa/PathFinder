@@ -1,16 +1,13 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.storage.DiscoverInfo;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.storage.DiscoverInfo
+import java.util.*
 
-public interface DiscoverInfoCache extends StorageCache<DiscoverInfo> {
+interface DiscoverInfoCache : StorageCache<DiscoverInfo> {
+    fun getDiscovery(player: UUID, key: NamespacedKey): DiscoverInfo?
 
-  Optional<DiscoverInfo> getDiscovery(UUID player, NamespacedKey key);
+    fun getDiscovery(player: UUID): Collection<DiscoverInfo>?
 
-  Optional<Collection<DiscoverInfo>> getDiscovery(UUID player);
-
-  void invalidate(UUID player);
+    fun invalidate(player: UUID)
 }

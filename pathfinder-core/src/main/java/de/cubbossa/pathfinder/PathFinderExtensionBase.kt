@@ -1,16 +1,14 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Getter
+import lombok.Setter
 
 @Setter
 @Getter
-public abstract class PathFinderExtensionBase implements PathFinderExtension {
+abstract class PathFinderExtensionBase : PathFinderExtension {
+    private var disabled = false
 
-  private boolean disabled = false;
-
-  @Override
-  public void disable() {
-    disabled = true;
-  }
+    override fun disable() {
+        disabled = true
+    }
 }

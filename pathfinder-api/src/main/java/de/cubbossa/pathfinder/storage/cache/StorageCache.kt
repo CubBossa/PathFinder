@@ -1,32 +1,32 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import com.google.common.base.Preconditions;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import com.google.common.base.Preconditions
 
-public interface StorageCache<E> {
+interface StorageCache<E> {
+    fun write(e: E)
 
-  void write(E e);
+    fun invalidate(e: E)
 
-  void invalidate(E e);
+    fun invalidateAll()
 
-  void invalidateAll();
-
-  record CacheCollection<K, V>(Collection<V> present, Collection<K> absent) {
-
-    public static <K, V> CacheCollection<K, V> empty(Collection<K> absent) {
-      Preconditions.checkNotNull(absent);
-      return new CacheCollection<>(new HashSet<>(), absent);
+    @JvmRecord
+    data class CacheCollection<K, V>(val present: Collection<V>, val absent: Collection<K>) {
+        companion object {
+            fun <K, V> empty(absent: Collection<K>): CacheCollection<K, V> {
+                Preconditions.checkNotNull(absent)
+                return CacheCollection(HashSet(), absent)
+            }
+        }
     }
-  }
 
-  record CacheMap<K, V>(Map<K, V> present, Collection<K> absent) {
+    @JvmRecord
+    data class CacheMap<K, V>(val present: Map<K, V>, val absent: Collection<K>) {
 
-    public static <K, V> CacheMap<K, V> empty(Collection<K> absent) {
-      Preconditions.checkNotNull(absent);
-      return new CacheMap<>(new HashMap<>(), absent);
+        companion object {
+            fun <K, V> empty(absent: Collection<K>): CacheMap<K, V> {
+                Preconditions.checkNotNull(absent)
+                return CacheMap(HashMap(), absent)
+            }
+        }
     }
-  }
 }

@@ -1,22 +1,20 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.node.Node;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.storage.cache.StorageCache.CacheCollection
+import java.util.*
 
-public interface NodeCache extends StorageCache<Node> {
+interface NodeCache : StorageCache<Node> {
+    fun <N : Node> getNode(uuid: UUID): N?
 
-  <N extends Node> Optional<N> getNode(UUID uuid);
+    val allNodes: Collection<Node>?
 
-  Optional<Collection<Node>> getAllNodes();
+    fun getNodes(ids: Collection<UUID>): CacheCollection<UUID, Node>
 
-  CacheCollection<UUID, Node> getNodes(Collection<UUID> ids);
+    fun writeAll(nodes: Collection<Node>)
 
-  void writeAll(Collection<Node> nodes);
+    fun write(group: NodeGroup)
 
-  void write(NodeGroup group);
-
-  void invalidate(UUID uuid);
+    fun invalidate(uuid: UUID)
 }

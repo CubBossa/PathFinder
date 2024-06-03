@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.editmode.menu
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import de.cubbossa.menuframework.inventory.Action
 import de.cubbossa.menuframework.inventory.Button
 import de.cubbossa.menuframework.inventory.MenuPreset
@@ -9,11 +10,8 @@ import de.cubbossa.menuframework.inventory.context.ContextConsumer
 import de.cubbossa.menuframework.inventory.context.TargetContext
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu
 import de.cubbossa.menuframework.inventory.implementations.ListMenu
-import de.cubbossa.pathfinder.AbstractPathFinder
-import de.cubbossa.pathfinder.BukkitPathFinder
-import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.*
 import de.cubbossa.pathfinder.PathFinderConfig.EditModeConfig
-import de.cubbossa.pathfinder.PathFinderPlugin
 import de.cubbossa.pathfinder.editmode.DefaultGraphEditor
 import de.cubbossa.pathfinder.editmode.createItemStack
 import de.cubbossa.pathfinder.editmode.setGlow
@@ -33,7 +31,6 @@ import de.cubbossa.pathfinder.util.BukkitVectorUtils
 import de.cubbossa.pathfinder.util.LocalizedItem
 import de.cubbossa.pathfinder.util.VectorUtils
 import kotlinx.coroutines.*
-import kotlinx.coroutines.future.await
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.bukkit.*
@@ -93,11 +90,31 @@ class EditModeMenu(
         }
     }
 
+    fun Button.withItemStack(supplier: () -> ItemStack): Button {
+        val btn = this
+        PathFinderPlugin.getInstance().launch {
+            btn.withItemStack(supplier)
+        }
+        return btn
+    }
+
+    fun <T : TargetContext<*>?> Button.withClickHandler(
+        action: Action<T>,
+        clickHandler: ContextConsumer<T>
+    ): Button {
+        val btn = this
+        PathFinderPlugin.getInstance().launch {
+            btn.withClickHandler(action, clickHandler)
+        }
+        return btn
+    }
+
     fun createHotbarMenu(editor: DefaultGraphEditor, editingPlayer: Player?): BottomInventoryMenu {
         val menu = BottomInventoryMenu(0, 1, 2, 3, 4)
 
         menu.setDefaultClickHandler(Action.HOTBAR_DROP) { c: ClickContext ->
-            Bukkit.getScheduler().runTaskLater(PathFinderPlugin.getInstance(),
+            Bukkit.getScheduler().runTaskLater(
+                PathFinderPlugin.getInstance(),
                 Runnable { editor.setEditMode(BukkitUtils.wrap(c.player), false) }, 1L
             )
         }
@@ -148,14 +165,19 @@ class EditModeMenu(
             }
 
             .withClickHandler(LEFT_CLICK_NODE) { context: TargetContext<Node> ->
-                val p = context.player
-                if (!lock.compareAndSet(false, true)) {
-                    BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST)
-                    return@withClickHandler
+                runBlocking {
+                    val p = context.player
+                    if (!lock.compareAndSet(false, true)) {
+                        BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST)
+                        return@runBlocking
+                    }
+                    try {
+                        storage.deleteNodes(setOf(context.target.nodeId))
+                        p.playSound(p.location, Sound.ENTITY_ARMOR_STAND_BREAK, 1f, 1f)
+                    } finally {
+                        lock.set(false)
+                    }
                 }
-                storage.deleteNodes(setOf(context.target.nodeId))
-                    .thenRun { p.playSound(p.location, Sound.ENTITY_ARMOR_STAND_BREAK, 1f, 1f) }
-                    .whenComplete { unused: Void?, throwable: Throwable? -> lock.set(false) }
             }
 
             .withClickHandler(Action.LEFT_CLICK_AIR) { context: ClickContext ->
@@ -170,45 +192,43 @@ class EditModeMenu(
             }
 
             .withClickHandler(RIGHT_CLICK_NODE) { context: TargetContext<Node> ->
-                val p = context.player
-                val pp = PathPlayer.wrap(p)
-                if (chainEdgeStart == null) {
-                    chainEdgeStart = context.target.nodeId
-                    context.menu.refresh(context.slot)
-                    pp.sendMessage(Messages.E_NODE_CHAIN_START)
-                    return@withClickHandler
-                }
-                if (chainEdgeStart == context.target.nodeId) {
-                    p.playSound(p.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
-                    return@withClickHandler
-                }
-                if (!lock.compareAndSet(false, true)) {
-                    BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST)
-                    return@withClickHandler
-                }
-                runBlocking {
+                PathFinderPlugin.getInstance().launch(Dispatchers.Default) {
+                    val p = context.player
+                    val pp = PathPlayer.wrap(p)
+                    if (chainEdgeStart == null) {
+                        chainEdgeStart = context.target.nodeId
+                        context.menu.refresh(context.slot)
+                        pp.sendMessage(Messages.E_NODE_CHAIN_START)
+                        return@launch
+                    }
+                    if (chainEdgeStart == context.target.nodeId) {
+                        p.playSound(p.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
+                        return@launch
+                    }
+                    if (!lock.compareAndSet(false, true)) {
+                        BukkitUtils.wrap(p).sendMessage(Messages.GEN_TOO_FAST)
+                        return@launch
+                    }
                     val jobs = HashSet<Deferred<Any>>()
-                    jobs.add(async {
-                        storage.modifyNode(chainEdgeStart) { node: Node ->
+                    jobs.add(async(Dispatchers.IO) {
+                        storage.modifyNode(chainEdgeStart!!) { node: Node ->
                             node.connect(context.target.nodeId)
-                        }.join()
+                        }
                     })
                     if (undirectedEdgesMode) {
-                        jobs.add(async {
+                        jobs.add(async(Dispatchers.IO) {
                             storage.modifyNode(context.target.nodeId) { node: Node ->
-                                node.connect(chainEdgeStart)
-                            }.join()
+                                node.connect(chainEdgeStart!!)
+                            }
                         })
                     }
-                    launch {
-                        try {
-                            jobs.joinAll()
-                            chainEdgeStart = null
-                            context.menu.refresh(context.slot)
-                            PathPlayer.wrap(context.player).sendMessage(Messages.E_NODE_CHAIN_NEW)
-                        } finally {
-                            lock.set(false)
-                        }
+                    try {
+                        jobs.joinAll()
+                        chainEdgeStart = null
+                        context.menu.refresh(context.slot)
+                        PathPlayer.wrap(context.player).sendMessage(Messages.E_NODE_CHAIN_NEW)
+                    } finally {
+                        lock.set(false)
                     }
                 }
             }
@@ -255,12 +275,11 @@ class EditModeMenu(
 
                 runBlocking {
                     launch {
-                        val node: Node =
-                            storage.createAndLoadNode(type, BukkitVectorUtils.toInternal(pos))
-                                .await();
+                        val node =
+                            storage.createAndLoadNode(type, BukkitVectorUtils.toInternal(pos))!!
 
                         try {
-                            storage.modifyNode(node.getNodeId()) { n: Node ->
+                            storage.modifyNode(node.nodeId) { n: Node ->
                                 if (chainEdgeStart != null) {
                                     storage.modifyNode(chainEdgeStart) { o: Node ->
                                         o.connect(node)
@@ -270,14 +289,11 @@ class EditModeMenu(
                                     }
                                 }
                                 chainEdgeStart = n.nodeId
-                            }.await()
-                            storage.modifyGroup(key) { group: NodeGroup -> group.add(node.getNodeId()) }
-                                .await()
-                            storage.modifyGroup(AbstractPathFinder.globalGroupKey()) { group: NodeGroup ->
-                                group.add(
-                                    node.getNodeId()
-                                )
-                            }.await()
+                            }
+                            storage.modifyGroup(key) { it.add(node.nodeId) }
+                            storage.modifyGroup(AbstractPathFinder.globalGroupKey()) {
+                                it.add(node.nodeId)
+                            }
                         } catch (t: Throwable) {
                             t.printStackTrace()
                         } finally {
@@ -292,35 +308,40 @@ class EditModeMenu(
                     BukkitUtils.wrap(context.player).sendMessage(Messages.GEN_TOO_FAST)
                     return@withClickHandler
                 }
-                storage.modifyNode(context.target.start) { node: Node ->
-                    node.disconnect(context.target.end)
-                }.whenComplete { x: Void?, throwable: Throwable? ->
-                    throwable?.printStackTrace()
-                    lock.set(false)
+                launchIO {
+                    try {
+                        storage.modifyNode(context.target.start) { node: Node ->
+                            node.disconnect(context.target.end)
+                        }
+                    } finally {
+                        lock.set(false)
+                    }
                 }
             }
         )
 
-        menu.setButton(3, Button.builder()
-            .withItemStack(
-                LocalizedItem(
-                    Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
-                    Messages.E_TP_TOOL_L
-                ).createItem(editingPlayer)
-            )
-            .withClickHandler({ context: TargetContext<*> ->
-                if (!lock.compareAndSet(false, true)) {
-                    BukkitUtils.wrap(context.player).sendMessage(Messages.GEN_TOO_FAST)
-                    return@withClickHandler
-                }
-                storage.loadGroup(key)
-                    .thenCompose { group: Optional<NodeGroup> -> storage.loadNodes(group.get()) }
-                    .thenAccept { nodes: Collection<Node> ->
+        menu.setButton(
+            3, Button.builder()
+                .withItemStack(
+                    LocalizedItem(
+                        Material.ENDER_PEARL, Messages.E_TP_TOOL_N,
+                        Messages.E_TP_TOOL_L
+                    ).createItem(editingPlayer)
+                )
+                .withClickHandler({ context: TargetContext<*> ->
+                    launchCalc {
+                        if (!lock.compareAndSet(false, true)) {
+                            BukkitUtils.wrap(context.player).sendMessage(Messages.GEN_TOO_FAST)
+                            return@runBlocking
+                        }
+                        val group = storage.loadGroup(key)!!
+                        val nodes = storage.loadNodes(group)
+
                         val p = context.player
                         if (nodes.isEmpty()) {
                             // no nodes in the current editing
                             p.playSound(p.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
-                            return@thenAccept
+                            return@runBlocking
                         }
 
                         var dist = -1.0
@@ -336,15 +357,14 @@ class EditModeMenu(
 
                         val newLoc = BukkitVectorUtils.toBukkit(nearest!!.location)
                             .setDirection(p.location.direction)
+
                         Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), Runnable {
                             p.teleport(newLoc)
                             p.playSound(newLoc, Sound.ENTITY_FOX_TELEPORT, 1f, 1f)
                         })
-                    }.whenComplete { _, throwable: Throwable? ->
-                        throwable?.printStackTrace()
                         lock.set(false)
                     }
-            }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR)
+                }, Action.RIGHT_CLICK_ENTITY, Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR)
         )
 
         menu.setButton(1, Button.builder()
@@ -355,8 +375,9 @@ class EditModeMenu(
                 ).createItem(editingPlayer)
             )
             .withClickHandler(RIGHT_CLICK_NODE) { context: TargetContext<Node> ->
-                storage.loadNode<Node>(context.target.nodeId).thenAccept { node: Optional<Node> ->
-                    node.ifPresent { value: Node -> openGroupMenu(context.player, value) }
+                runBlocking {
+                    val node = storage.loadNode<Node>(context.target.nodeId)
+                    node?.let { openGroupMenu(context.player, it) }
                 }
             }
             .withClickHandler(LEFT_CLICK_NODE) { context: TargetContext<Node> ->
@@ -383,47 +404,46 @@ class EditModeMenu(
                 ).createItem(editingPlayer)
             )
             .withClickHandler(RIGHT_CLICK_NODE) { context: TargetContext<Node> ->
-                if (!lock.compareAndSet(false, true)) {
-                    BukkitUtils.wrap(context.player).sendMessage(Messages.GEN_TOO_FAST)
-                    return@withClickHandler
-                }
-                storage.loadGroupsByMod(multiTool).thenCompose { groups: Collection<NodeGroup?>? ->
-                    StorageUtil.addGroups(
-                        groups,
-                        context.target.nodeId
-                    )
-                }.thenRun {
-                    context.player.playSound(
-                        context.player.location,
-                        Sound.BLOCK_CHEST_CLOSE, 1f, 1f
-                    )
-                }.whenComplete { ex: Void?, throwable: Throwable? ->
-                    throwable?.printStackTrace()
-                    lock.set(false)
+                runBlocking {
+                    if (!lock.compareAndSet(false, true)) {
+                        BukkitUtils.wrap(context.player).sendMessage(Messages.GEN_TOO_FAST)
+                        return@runBlocking
+                    }
+                    try {
+                        val groups = storage.loadGroupsByMod(multiTool)
+                        StorageUtil.addGroups(groups, context.target.nodeId)
+                        context.player.playSound(
+                            context.player.location,
+                            Sound.BLOCK_CHEST_CLOSE,
+                            1f,
+                            1f
+                        )
+                    } finally {
+                        lock.set(false)
+                    }
                 }
             }
-            .withClickHandler(LEFT_CLICK_NODE) { context: TargetContext<Node> ->
-                storage.loadGroupsByMod(multiTool).thenCompose { groups: Collection<NodeGroup?>? ->
+            .withClickHandler(LEFT_CLICK_NODE) {
+                runBlocking {
+                    val groups = storage.loadGroupsByMod(multiTool)
                     StorageUtil.removeGroups(
                         groups,
-                        context.target.nodeId
+                        it.target.nodeId
                     )
-                }.thenRun {
-                    context.player.playSound(
-                        context.player.location,
+                    it.player.playSound(
+                        it.player.location,
                         Sound.ENTITY_WANDERING_TRADER_DRINK_MILK, 1f, 1f
                     )
-                }.exceptionally { throwable: Throwable ->
-                    throwable.printStackTrace()
-                    null
                 }
             }
-            .withClickHandler(Action.RIGHT_CLICK_AIR) { context: ClickContext ->
+            .withClickHandler(Action.RIGHT_CLICK_AIR)
+            { context: ClickContext ->
                 openMultiToolMenu(
                     context.player
                 )
             }
-            .withClickHandler(Action.RIGHT_CLICK_BLOCK) { context: TargetContext<Block?> ->
+            .withClickHandler(Action.RIGHT_CLICK_BLOCK)
+            { context: TargetContext<Block?> ->
                 openMultiToolMenu(
                     context.player
                 )

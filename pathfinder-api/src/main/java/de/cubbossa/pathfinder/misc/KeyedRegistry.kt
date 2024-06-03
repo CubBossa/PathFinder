@@ -1,8 +1,6 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import java.util.Map;
+interface KeyedRegistry<T : Keyed> : MutableMap<NamespacedKey, T>, Iterable<T> {
 
-public interface KeyedRegistry<T extends Keyed> extends Map<NamespacedKey, T>, Iterable<T> {
-
-  T put(T value);
+    fun put(value: T): T
 }

@@ -1,20 +1,21 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import java.util.Collection;
-import java.util.Optional;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import java.util.*
 
-public interface VisualizerCache extends StorageCache<PathVisualizer<?, ?>> {
+interface VisualizerCache : StorageCache<PathVisualizer<*, *>> {
+    fun <VisualizerT : PathVisualizer<*, *>> getVisualizer(key: NamespacedKey): VisualizerT?
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerT> getVisualizer(NamespacedKey key);
+    val visualizers: Optional<Collection<PathVisualizer<*, *>>>
 
-  Optional<Collection<PathVisualizer<?, ?>>> getVisualizers();
+    fun <VisualizerT : PathVisualizer<*, *>> getVisualizers(type: VisualizerType<VisualizerT>): Collection<VisualizerT>?
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<Collection<VisualizerT>> getVisualizers(VisualizerType<VisualizerT> type);
+    fun <VisualizerT : PathVisualizer<*, *>> writeAll(
+        type: VisualizerType<VisualizerT>,
+        v: Collection<VisualizerT>
+    )
 
-  <VisualizerT extends PathVisualizer<?, ?>> void writeAll(VisualizerType<VisualizerT> type, Collection<VisualizerT> v);
-
-  void writeAll(Collection<PathVisualizer<?, ?>> visualizers);
+    fun writeAll(visualizers: Collection<PathVisualizer<*, *>>)
 }

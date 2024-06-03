@@ -286,7 +286,7 @@ public class PathFinderCommand extends CommandTree {
           AbstractDiscoveryModule.<Player>getInstance().discover(target, group, LocalDateTime.now());
 
           BukkitUtils.wrap(sender).sendMessage(Messages.CMD_FORCE_FIND.formatted(
-              Placeholder.component("name", target.getDisplayName()),
+              Placeholder.component("name", target.displayName),
               Placeholder.component("discovery", mod.get().getDisplayName()))
           );
         });
@@ -304,8 +304,8 @@ public class PathFinderCommand extends CommandTree {
           AbstractDiscoveryModule.<Player>getInstance().forget(target, group);
 
           sender.sendMessage(Messages.CMD_FORCE_FORGET.formatted(
-              Placeholder.unparsed("name", target.getName()),
-              Placeholder.component("name", target.getDisplayName()),
+              Placeholder.unparsed("name", target.name),
+              Placeholder.component("name", target.displayName),
               Placeholder.component("discovery", mod.get().getDisplayName()))
           );
         })

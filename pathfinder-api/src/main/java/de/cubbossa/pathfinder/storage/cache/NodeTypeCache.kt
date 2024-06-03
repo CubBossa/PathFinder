@@ -1,16 +1,13 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.NodeType;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.NodeType
+import java.util.*
 
-public interface NodeTypeCache extends StorageCache<UUID> {
+interface NodeTypeCache : StorageCache<UUID> {
+    fun <N : Node> getType(uuid: UUID): NodeType<N>?
 
-  <N extends Node> Optional<NodeType<N>> getType(UUID uuid);
+    fun getTypes(uuids: Collection<UUID>): StorageCache.CacheMap<UUID, NodeType<*>>
 
-  CacheMap<UUID, NodeType<?>> getTypes(Collection<UUID> uuids);
-
-  void write(UUID uuid, NodeType<?> type);
+    fun write(uuid: UUID, type: NodeType<*>)
 }

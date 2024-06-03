@@ -1,33 +1,16 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+open class Range(
+    val start: Int = 0,
+    val limit: Int = 1
+) {
+    val endExclusive: Int
+        get() = start + limit
 
-@Getter
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class Range {
-
-  private final int offset;
-  private final int limit;
-
-  public static Range range(int offset, int limit) {
-    return new Range(offset, limit);
-  }
-
-  public int getStart() {
-    return offset;
-  }
-
-  public int getEndExclusive() {
-    return offset + limit;
-  }
-
-  @Override
-  public String toString() {
-    return "Pagination{" +
-        "offset=" + offset +
-        ", limit=" + limit +
-        '}';
-  }
+    override fun toString(): String {
+        return "Pagination{" +
+                "offset=" + start +
+                ", limit=" + limit +
+                '}'
+    }
 }

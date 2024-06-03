@@ -1,37 +1,33 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import de.cubbossa.disposables.Disposable;
-import java.util.UUID;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
+import de.cubbossa.disposables.Disposable
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.ComponentLike
+import java.util.*
 
-public interface PathPlayer<P> extends Disposable {
+fun <P> pathPlayer(player: P): PathPlayer<P> {
+    return PathPlayerProvider.get<P>().wrap(player) as PathPlayer<P>
+}
 
-    static <P> PathPlayer<P> wrap(P player) {
-        return (PathPlayer<P>) PathPlayerProvider.<P>get().wrap(player);
-    }
+fun <P> pathPlayer(uuid: UUID?): PathPlayer<P> {
+    return PathPlayerProvider.get<P>().wrap(uuid) as PathPlayer<P>
+}
 
-    static <P> PathPlayer<P> wrap(UUID uuid) {
-        return (PathPlayer<P>) PathPlayerProvider.<P>get().wrap(uuid);
-    }
+fun <P> pathConsoleSender(): PathPlayer<P> {
+    return PathPlayerProvider.get<P>().consoleSender() as PathPlayer<P>
+}
 
-    static <P> PathPlayer<P> consoleSender() {
-        return (PathPlayer<P>) PathPlayerProvider.<P>get().consoleSender();
-    }
+interface PathPlayer<P> : Disposable {
 
-    UUID getUniqueId();
+    val uniqueId: UUID
+    val playerClass: Class<P>
+    val name: String?
+    val displayName: Component?
+    val location: Location
 
-    Class<P> getPlayerClass();
+    fun hasPermission(permission: String): Boolean
 
-    String getName();
+    fun unwrap(): P
 
-    Component getDisplayName();
-
-    Location getLocation();
-
-    boolean hasPermission(String permission);
-
-    P unwrap();
-
-    void sendMessage(ComponentLike message);
+    fun sendMessage(message: ComponentLike)
 }

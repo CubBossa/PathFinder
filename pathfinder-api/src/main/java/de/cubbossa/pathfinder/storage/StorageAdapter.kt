@@ -1,184 +1,186 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.event.EventDispatcher;
-import de.cubbossa.pathfinder.event.NodeDeleteEvent;
-import de.cubbossa.pathfinder.group.Modifier;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.Range;
-import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.NodeType;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import de.cubbossa.disposables.Disposable
+import de.cubbossa.pathfinder.event.EventDispatcher
+import de.cubbossa.pathfinder.group.Modifier
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.misc.Location
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.Range
+import de.cubbossa.pathfinder.node.Edge
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.NodeType
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 
 /**
- * Holds an instance of {@link StorageImplementation}. It manages caching and calls the implementation
+ * Holds an instance of [StorageImplementation]. It manages caching and calls the implementation
  * methods where needed.
  */
-public interface StorageAdapter extends Disposable {
+interface StorageAdapter : Disposable {
+    /**
+     * Initializes the storage by initializing the underlying implementation and all caches.
+     */
+    @Throws(Exception::class)
+    fun init()
 
-  /**
-   * Initializes the storage by initializing the underlying implementation and all caches.
-   */
-  void init() throws Exception;
+    /**
+     * Shuts down the storage by shutting down the underlying implementation and invalidating all caches.
+     */
+    fun shutdown()
 
-  /**
-   * Shuts down the storage by shutting down the underlying implementation and invalidating all caches.
-   */
-  void shutdown();
+    var eventDispatcher: EventDispatcher<*>?
 
-  EventDispatcher<?> getEventDispatcher();
+    /**
+     * @return The implementation instance.
+     */
+    val implementation: StorageImplementation?
 
-  void setEventDispatcher(EventDispatcher<?> eventDispatcher);
-
-  /**
-   * @return The implementation instance.
-   */
-  StorageImplementation getImplementation();
-
-  CacheLayer getCache();
-
-  void setCache(CacheLayer cacheLayer);
+    var cache: CacheLayer
 
 
-  /**
-   * Check if global group exists and if not create.
-   * Global group will use default visualizer, so if default visualizer has been deleted, it will be recreated.
-   */
-  CompletableFuture<NodeGroup> createGlobalNodeGroup(VisualizerType<?> defaultVisualizerType);
+    /**
+     * Check if global group exists and if not create.
+     * Global group will use default visualizer, so if default visualizer has been deleted, it will be recreated.
+     */
+    suspend fun createGlobalNodeGroup(defaultVisualizerType: VisualizerType<*>): NodeGroup?
 
-  /**
-   * Loads the node type for a node with given {@link UUID}.
-   *
-   * @param node The {@link UUID}
-   * @param <N>  The Node type.
-   * @return The {@link NodeType} instance wrapped in {@link CompletableFuture}.
-   */
-  <N extends Node> CompletableFuture<Optional<NodeType<N>>> loadNodeType(UUID node);
+    /**
+     * Loads the node type for a node with given [UUID].
+     *
+     * @param node The [UUID]
+     * @param <N>  The Node type.
+     * @return The [NodeType] instance wrapped in [CompletableFuture].
+    </N> */
+    suspend fun <N : Node> loadNodeType(node: UUID): NodeType<N>?
 
-  /**
-   * Loads the node type for multiple nodes by their {@link UUID}s.
-   *
-   * @param nodes A set of {@link UUID}s to retrieve {@link NodeType}s for.
-   * @return A map of all uuids with their found node types. If no type was found, it is not included
-   * in the map. Therefore, the size of the return map must not be equal to the size of the input collection.
-   */
-  CompletableFuture<Map<UUID, NodeType<?>>> loadNodeTypes(Collection<UUID> nodes);
+    /**
+     * Loads the node type for multiple nodes by their [UUID]s.
+     *
+     * @param nodes A set of [UUID]s to retrieve [NodeType]s for.
+     * @return A map of all uuids with their found node types. If no type was found, it is not included
+     * in the map. Therefore, the size of the return map must not be equal to the size of the input collection.
+     */
+    suspend fun loadNodeTypes(nodes: Collection<UUID>): Map<UUID, NodeType<*>?>
 
-  // Nodes
+    // Nodes
+    /**
+     * Creates a [Node] of a given [NodeType] asynchronously.
+     *
+     * @param type     The [NodeType] instance that shall be used to create the node.
+     * @param location The [Location] at which the new node shall be.
+     * @param <N>      The Node type.
+     * @return A node instance matching the type parameter wrapped in [CompletableFuture].
+    </N> */
+    suspend fun <N : Node> createAndLoadNode(
+        type: NodeType<N>,
+        location: Location
+    ): N?
 
-  /**
-   * Creates a {@link Node} of a given {@link NodeType} asynchronously.
-   *
-   * @param type     The {@link NodeType} instance that shall be used to create the node.
-   * @param location The {@link Location} at which the new node shall be.
-   * @param <N>      The Node type.
-   * @return A node instance matching the type parameter wrapped in {@link CompletableFuture}.
-   */
-  <N extends Node> CompletableFuture<N> createAndLoadNode(NodeType<N> type, Location location);
+    /**
+     * Loads, modifies and saves a node with given [UUID] asynchronously.
+     *
+     * @param id      The [UUID] of the node to edit.
+     * @param updater A consumer that will be applied to the requested node once loaded.
+     * @return A [CompletableFuture] indicating the completion of the process.
+     */
+    suspend fun <N : Node> modifyNode(id: UUID, updater: suspend (N) -> Unit)
 
-  /**
-   * Loads, modifies and saves a node with given {@link UUID} asynchronously.
-   *
-   * @param id      The {@link UUID} of the node to edit.
-   * @param updater A consumer that will be applied to the requested node once loaded.
-   * @return A {@link CompletableFuture} indicating the completion of the process.
-   */
-  CompletableFuture<Void> modifyNode(UUID id, Consumer<Node> updater);
+    suspend fun <N : Node> loadNode(id: UUID): N?
 
-  <N extends Node> CompletableFuture<Optional<N>> loadNode(UUID id);
+    suspend fun <N : Node> insertGlobalGroupAndSave(node: N): N
 
-  <N extends Node> CompletableFuture<N> insertGlobalGroupAndSave(N node);
+    suspend fun <N : Node> loadNode(type: NodeType<N>, id: UUID): N?
 
-  <N extends Node> CompletableFuture<Optional<N>> loadNode(NodeType<N> type, UUID id);
+    suspend fun loadNodes(): Collection<Node>
 
-  CompletableFuture<Collection<Node>> loadNodes();
+    suspend fun loadNodes(ids: Collection<UUID>): Collection<Node>
 
-  CompletableFuture<Collection<Node>> loadNodes(Collection<UUID> ids);
+    suspend fun <M : Modifier> loadNodes(modifier: NamespacedKey): Map<Node, Collection<M>>
 
-  <M extends Modifier> CompletableFuture<Map<Node, Collection<M>>> loadNodes(NamespacedKey modifier);
+    suspend fun saveNode(node: Node)
 
-  CompletableFuture<Void> saveNode(Node node);
+    /**
+     * Deletes a collection of nodes from storage asynchronously.
+     * A call of this method must fire the according [NodeDeleteEvent].
+     * After successfull completion, all given [Node]s, all according [Edge]s,
+     * [NodeGroup]- and [NodeType] mappings must be deleted.
+     *
+     * @param uuids A collection of nodes to delete.
+     * @return A [CompletableFuture] indicating the completion of the process.
+     */
+    suspend fun deleteNodes(uuids: Collection<UUID>)
 
-  /**
-   * Deletes a collection of nodes from storage asynchronously.
-   * A call of this method must fire the according {@link NodeDeleteEvent}.
-   * After successfull completion, all given {@link Node}s, all according {@link Edge}s,
-   * {@link NodeGroup}- and {@link NodeType} mappings must be deleted.
-   *
-   * @param nodes A collection of nodes to delete.
-   * @return A {@link CompletableFuture} indicating the completion of the process.
-   */
-  CompletableFuture<Void> deleteNodes(Collection<UUID> nodes);
+    suspend fun loadEdgesTo(nodes: Collection<UUID>): Map<UUID, Collection<Edge?>?>?
 
-  CompletableFuture<Map<UUID, Collection<Edge>>> loadEdgesTo(Collection<UUID> nodes);
+    // Groups
+    suspend fun createAndLoadGroup(key: NamespacedKey): NodeGroup?
 
-  // Groups
-  CompletableFuture<NodeGroup> createAndLoadGroup(NamespacedKey key);
+    suspend fun loadGroup(key: NamespacedKey): NodeGroup?
 
-  CompletableFuture<Optional<NodeGroup>> loadGroup(NamespacedKey key);
+    suspend fun loadGroups(ids: Collection<UUID>): Map<UUID, Collection<NodeGroup>>
 
-  CompletableFuture<Map<UUID, Collection<NodeGroup>>> loadGroups(Collection<UUID> ids);
+    suspend fun loadGroupsOfNodes(ids: Collection<Node>): Map<Node, Collection<NodeGroup>>
 
-  CompletableFuture<Map<Node, Collection<NodeGroup>>> loadGroupsOfNodes(Collection<Node> ids);
+    suspend fun loadGroups(range: Range): Collection<NodeGroup>
 
-  CompletableFuture<Collection<NodeGroup>> loadGroups(Range range);
+    suspend fun loadGroups(node: UUID): Collection<NodeGroup>
 
-  CompletableFuture<Collection<NodeGroup>> loadGroups(UUID node);
+    suspend fun loadGroupsByMod(keys: Collection<NamespacedKey>): Collection<NodeGroup>
 
-  CompletableFuture<Collection<NodeGroup>> loadGroupsByMod(Collection<NamespacedKey> keys);
+    suspend fun loadGroups(modifier: NamespacedKey): Collection<NodeGroup>
 
-  <M extends Modifier> CompletableFuture<Collection<NodeGroup>> loadGroups(NamespacedKey modifier);
+    suspend fun loadAllGroups(): Collection<NodeGroup>
 
-  CompletableFuture<Collection<NodeGroup>> loadAllGroups();
+    suspend fun saveGroup(group: NodeGroup)
 
-  CompletableFuture<Void> saveGroup(NodeGroup group);
+    suspend fun deleteGroup(group: NodeGroup)
 
-  CompletableFuture<Void> deleteGroup(NodeGroup group);
+    suspend fun modifyGroup(key: NamespacedKey, update: Consumer<NodeGroup>)
 
-  CompletableFuture<Void> modifyGroup(NamespacedKey key, Consumer<NodeGroup> update);
+    // Find Data
+    suspend fun createAndLoadDiscoverInfo(
+        player: UUID, key: NamespacedKey, time: LocalDateTime
+    ): DiscoverInfo?
 
-  // Find Data
-  CompletableFuture<DiscoverInfo> createAndLoadDiscoverinfo(UUID player, NamespacedKey key,
-                                                            LocalDateTime time);
+    suspend fun loadDiscoverInfo(
+        player: UUID, key: NamespacedKey
+    ): DiscoverInfo?
 
-  CompletableFuture<Optional<DiscoverInfo>> loadDiscoverInfo(UUID player, NamespacedKey key);
+    suspend fun deleteDiscoverInfo(info: DiscoverInfo)
 
-  CompletableFuture<Void> deleteDiscoverInfo(DiscoverInfo info);
+    // Visualizer
+    suspend fun <VisualizerT : PathVisualizer<*, *>> loadVisualizerType(
+        key: NamespacedKey
+    ): VisualizerType<VisualizerT>?
 
-  // Visualizer
+    suspend fun loadVisualizerTypes(
+        keys: Collection<NamespacedKey>
+    ): Map<NamespacedKey, VisualizerType<*>>
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerType<VisualizerT>>> loadVisualizerType(
-      NamespacedKey key);
+    suspend fun <VisualizerT : PathVisualizer<*, *>> saveVisualizerType(
+        key: NamespacedKey, type: VisualizerType<VisualizerT>
+    )
 
-  CompletableFuture<Map<NamespacedKey, VisualizerType<?>>> loadVisualizerTypes(
-      Collection<NamespacedKey> keys);
+    suspend fun <VisualizerT : PathVisualizer<*, *>> createAndLoadVisualizer(
+        type: VisualizerType<VisualizerT>, key: NamespacedKey
+    ): VisualizerT?
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Void> saveVisualizerType(
-      NamespacedKey key, VisualizerType<VisualizerT> type);
+    suspend fun loadVisualizers(): Collection<PathVisualizer<*, *>>
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<VisualizerT> createAndLoadVisualizer(
-      VisualizerType<VisualizerT> type, NamespacedKey key);
+    suspend fun <VisualizerT : PathVisualizer<*, *>> loadVisualizers(
+        type: VisualizerType<VisualizerT>
+    ): Collection<VisualizerT>
 
-  CompletableFuture<Collection<PathVisualizer<?, ?>>> loadVisualizers();
+    suspend fun <VisualizerT : PathVisualizer<*, *>> loadVisualizer(
+        key: NamespacedKey
+    ): VisualizerT?
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Collection<VisualizerT>> loadVisualizers(
-      VisualizerType<VisualizerT> type);
+    suspend fun saveVisualizer(visualizer: PathVisualizer<*, *>)
 
-  <VisualizerT extends PathVisualizer<?, ?>> CompletableFuture<Optional<VisualizerT>> loadVisualizer(
-      NamespacedKey key);
-
-  CompletableFuture<Void> saveVisualizer(PathVisualizer<?, ?> visualizer);
-
-  CompletableFuture<Void> deleteVisualizer(PathVisualizer<?, ?> visualizer);
+    suspend fun deleteVisualizer(visualizer: PathVisualizer<*, *>)
 }

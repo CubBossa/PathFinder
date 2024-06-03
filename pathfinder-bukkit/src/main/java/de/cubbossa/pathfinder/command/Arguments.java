@@ -323,7 +323,7 @@ public class Arguments {
       return type;
     })).includeSuggestions(
         suggestNamespacedKeys(sender -> CompletableFuture.completedFuture(
-            PathFinder.get().getNodeTypeRegistry().getTypeKeys())));
+            PathFinder.get().getNodeTypeRegistry().typeKeys)));
   }
 
   /**

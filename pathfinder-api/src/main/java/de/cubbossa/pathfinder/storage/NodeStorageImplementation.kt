@@ -1,19 +1,17 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.node.Node;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.node.Node
+import java.util.*
 
-public interface NodeStorageImplementation<N extends Node> {
+interface NodeStorageImplementation<N : Node> {
 
-  Optional<N> loadNode(UUID uuid);
+    fun loadNode(uuid: UUID): N?
 
-  Collection<N> loadNodes(Collection<UUID> ids);
+    fun loadNodes(ids: Collection<UUID>): Collection<N>
 
-  Collection<N> loadAllNodes();
+    fun loadAllNodes(): Collection<N>
 
-  void saveNode(N node);
+    fun saveNode(node: N)
 
-  void deleteNodes(Collection<N> node);
+    fun deleteNodes(node: Collection<N>)
 }

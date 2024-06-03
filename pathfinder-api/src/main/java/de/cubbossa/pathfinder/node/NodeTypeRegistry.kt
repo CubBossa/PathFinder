@@ -1,19 +1,18 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import java.util.Collection;
+import de.cubbossa.disposables.Disposable
+import de.cubbossa.pathfinder.misc.NamespacedKey
 
-public interface NodeTypeRegistry extends Disposable {
-  <N extends Node> NodeType<N> getType(NamespacedKey key);
+interface NodeTypeRegistry : Disposable {
 
-  Collection<NamespacedKey> getTypeKeys();
+    val typeKeys: Collection<NamespacedKey>
+    val types: Collection<NodeType<*>>
 
-    Collection<NodeType<?>> getTypes();
+    fun <N : Node> getType(key: NamespacedKey): NodeType<N>?
 
-  <N extends Node> void register(NodeType<N> type);
+    fun <N : Node> register(type: NodeType<N>)
 
-  <N extends Node> void unregister(NodeType<N> type);
+    fun <N : Node> unregister(type: NodeType<N>)
 
-  void unregister(NamespacedKey key);
+    fun unregister(key: NamespacedKey)
 }

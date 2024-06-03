@@ -42,7 +42,7 @@ public class BukkitNodeSelectionParser extends AbstractNodeSelectionParser<Comma
 
     @Override
     public Location getSenderLocation() {
-      return PathPlayer.wrap(sender).getLocation();
+      return PathPlayer.wrap(sender).location;
     }
   }
 }

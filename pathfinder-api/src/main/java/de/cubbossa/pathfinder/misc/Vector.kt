@@ -1,154 +1,127 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import java.util.Objects;
-import lombok.AllArgsConstructor;
-import org.jetbrains.annotations.NotNull;
+import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
-@AllArgsConstructor
-public class Vector implements Cloneable {
 
-  double x;
-  double y;
-  double z;
+open class Vector(
+    var x: Double,
+    var y: Double,
+    var z: Double,
+) : Cloneable {
 
-  public Vector add(double x, double y, double z) {
-    this.x += x;
-    this.y += y;
-    this.z += z;
-    return this;
-  }
-
-  public Vector add(Vector location) {
-    this.x += location.x;
-    this.y += location.y;
-    this.z += location.z;
-    return this;
-  }
-
-  public Vector subtract(Vector location) {
-    this.x -= location.x;
-    this.y -= location.y;
-    this.z -= location.z;
-    return this;
-  }
-
-  public Vector multiply(Vector location) {
-    this.x *= location.x;
-    this.y *= location.y;
-    this.z *= location.z;
-    return this;
-  }
-
-  public Vector multiply(double value) {
-    this.x *= value;
-    this.y *= value;
-    this.z *= value;
-    return this;
-  }
-
-  public Vector divide(Vector location) {
-    this.x /= location.x;
-    this.y /= location.y;
-    this.z /= location.z;
-    return this;
-  }
-
-  public Vector divide(double value) {
-    this.x /= value;
-    this.y /= value;
-    this.z /= value;
-    return this;
-  }
-
-  public Vector normalize() {
-    return divide(length());
-  }
-
-  public double dot(@NotNull Vector other) {
-    return this.x * other.x + this.y * other.y + this.z * other.z;
-  }
-
-  public Vector crossProduct(@NotNull Vector o) {
-    double newX = this.y * o.z - o.y * this.z;
-    double newY = this.z * o.x - o.z * this.x;
-    double newZ = this.x * o.y - o.x * this.y;
-    this.x = newX;
-    this.y = newY;
-    this.z = newZ;
-    return this;
-  }
-
-  public double distanceSquared(Vector location) {
-    return clone().subtract(location).lengthSquared();
-  }
-
-  public double distance(Vector location) {
-    return clone().subtract(location).length();
-  }
-
-  public double length() {
-    return Math.sqrt(lengthSquared());
-  }
-
-  public double lengthSquared() {
-    return Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2);
-  }
-
-  public Vector clone() {
-    return new Vector(x, y, z);
-  }
-
-  public double getX() {
-    return this.x;
-  }
-
-  public void setX(double x) {
-    this.x = x;
-  }
-
-  public double getY() {
-    return this.y;
-  }
-
-  public void setY(double y) {
-    this.y = y;
-  }
-
-  public double getZ() {
-    return this.z;
-  }
-
-  public void setZ(double z) {
-    this.z = z;
-  }
-
-  public Location toLocation(World world) {
-    return new Location(x, y, z, world);
-  }
-
-  @Override
-  public String toString() {
-    return "Vector{" +
-        "x=" + x +
-        ", y=" + y +
-        ", z=" + z +
-        '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    open fun add(x: Double, y: Double, z: Double): Vector? {
+        this.x += x
+        this.y += y
+        this.z += z
+        return this
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Vector vector = (Vector) o;
-    return Double.compare(vector.x, x) == 0 && Double.compare(vector.y, y) == 0 && Double.compare(vector.z, z) == 0;
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(x, y, z);
-  }
+    open fun add(location: Vector): Vector {
+        this.x += location.x
+        this.y += location.y
+        this.z += location.z
+        return this
+    }
+
+    open fun subtract(location: Vector): Vector {
+        this.x -= location.x
+        this.y -= location.y
+        this.z -= location.z
+        return this
+    }
+
+    open fun multiply(location: Vector): Vector {
+        this.x *= location.x
+        this.y *= location.y
+        this.z *= location.z
+        return this
+    }
+
+    open fun multiply(value: Double): Vector {
+        this.x *= value
+        this.y *= value
+        this.z *= value
+        return this
+    }
+
+    open fun divide(location: Vector): Vector {
+        this.x /= location.x
+        this.y /= location.y
+        this.z /= location.z
+        return this
+    }
+
+    open fun divide(value: Double): Vector {
+        this.x /= value
+        this.y /= value
+        this.z /= value
+        return this
+    }
+
+    open fun normalize(): Vector {
+        return divide(length())
+    }
+
+    fun dot(other: Vector): Double {
+        return this.x * other.x + (this.y * other.y) + (this.z * other.z)
+    }
+
+    fun crossProduct(o: Vector): Vector {
+        val newX = this.y * o.z - o.y * this.z
+        val newY = this.z * o.x - o.z * this.x
+        val newZ = this.x * o.y - o.x * this.y
+        this.x = newX
+        this.y = newY
+        this.z = newZ
+        return this
+    }
+
+    fun distanceSquared(location: Vector): Double {
+        return clone().subtract(location).lengthSquared()
+    }
+
+    fun distance(location: Vector): Double {
+        return clone().subtract(location).length()
+    }
+
+    fun length(): Double {
+        return sqrt(lengthSquared())
+    }
+
+    fun lengthSquared(): Double {
+        return x.pow(2.0) + y.pow(2.0) + z.pow(2.0)
+    }
+
+    public override fun clone(): Vector {
+        return Vector(x, y, z)
+    }
+
+    fun toLocation(world: World?): Location {
+        return Location(x, y, z, world!!)
+    }
+
+    override fun toString(): String {
+        return "Vector{" +
+                "x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                '}'
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other == null || javaClass != other.javaClass) {
+            return false
+        }
+        val vector = other as Vector
+        return vector.x.compareTo(x) == 0 && vector.y.compareTo(y) == 0 && vector.z.compareTo(z) == 0
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(x, y, z)
+    }
 }

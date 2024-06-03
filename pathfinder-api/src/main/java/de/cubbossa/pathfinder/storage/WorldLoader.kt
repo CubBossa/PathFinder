@@ -1,10 +1,8 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.misc.World;
-import java.util.UUID;
+import de.cubbossa.pathfinder.misc.World
+import java.util.*
 
-@FunctionalInterface
-public interface WorldLoader {
-
-  World loadWorld(UUID uuid);
+fun interface WorldLoader {
+    fun loadWorld(uuid: UUID): World?
 }

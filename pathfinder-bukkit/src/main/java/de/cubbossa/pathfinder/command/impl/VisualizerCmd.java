@@ -43,9 +43,9 @@ public class VisualizerCmd extends PathFinderSubCommand {
                   // just what we do with internal visualizers, but we cannot use property objects here because
                   // we want this code to be abstract and to work with all kind of visualizers.
 
-                  String old = visualizer.getPermission();
+                  String old = visualizer.permission;
                   String perm = args.getUnchecked(1);
-                  visualizer.setPermission(perm);
+                  visualizer.permission = perm;
 
                   pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
                     BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
@@ -89,7 +89,7 @@ public class VisualizerCmd extends PathFinderSubCommand {
       Message message = ext.getInfoMessage(visualizer).formatted(TagResolver.builder()
           .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
           .resolver(Messages.formatter().namespacedKey("type", type.get().getKey()))
-          .resolver(Messages.formatter().permission("permission", visualizer.getPermission()))
+          .resolver(Messages.formatter().permission("permission", visualizer.permission))
           .build());
       p.sendMessage(message);
     });

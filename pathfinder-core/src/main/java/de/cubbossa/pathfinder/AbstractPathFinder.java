@@ -138,7 +138,7 @@ public abstract class AbstractPathFinder implements PathFinder {
     this.extensionRegistry = new ExtensionsRegistryImpl(this);
     extensionRegistry.loadExtensions();
     dumpWriter.addProperty("extensions", () -> extensionRegistry.getExtensions().stream()
-        .map(e -> e.isDisabled() ? ("~ " + e.getKey()) : e.getKey().toString())
+        .map(e -> e.isDisabled ? ("~ " + e.getKey()) : e.getKey().toString())
         .toList());
   }
 
@@ -173,7 +173,7 @@ public abstract class AbstractPathFinder implements PathFinder {
     disposer.register(this, new GraphEditorRegistry(this));
     extensionRegistry.enableExtensions();
 
-    dumpWriter.addProperty("node-types", () -> nodeTypeRegistry.getTypes().stream()
+    dumpWriter.addProperty("node-types", () -> nodeTypeRegistry.types.stream()
         .map(Keyed::getKey).map(Objects::toString).toList());
     dumpWriter.addProperty("modifier-types", () -> modifierRegistry.getTypes().stream()
         .map(Keyed::getKey).map(Objects::toString).toList());
@@ -247,7 +247,7 @@ public abstract class AbstractPathFinder implements PathFinder {
     };
     // impl = new DebugStorage(impl, getLogger());
     impl.setWorldLoader(this::getWorld);
-    impl.setLogger(getLogger());
+    impl.logger = getLogger();
     return impl;
   }
 

@@ -55,7 +55,6 @@ dependencies {
     implementation("com.github.retrooper.packetevents:spigot:2.3.1-SNAPSHOT")
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 }
 
 tasks {

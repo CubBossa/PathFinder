@@ -15,7 +15,7 @@ public class CancelPathCommand extends CommandTree {
 
     withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
-        && module.getActivePath(PathPlayer.wrap(player)) != null);
+        && module.getActivePath(player.asPathPlayer()) != null);
 
     executesPlayer((player, args) -> {
       module.cancel(player.getUniqueId());

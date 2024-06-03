@@ -1,33 +1,31 @@
-package de.cubbossa.pathfinder.storage.cache;
+package de.cubbossa.pathfinder.storage.cache
 
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.Range;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.Range
+import de.cubbossa.pathfinder.storage.cache.StorageCache.CacheCollection
+import java.util.*
 
-public interface GroupCache extends StorageCache<NodeGroup> {
+interface GroupCache : StorageCache<NodeGroup?> {
+    val groups: Collection<NodeGroup>?
 
-  Optional<NodeGroup> getGroup(NamespacedKey key);
+    fun getGroup(key: NamespacedKey): NodeGroup?
 
-  Optional<Collection<NodeGroup>> getGroups(NamespacedKey modifier);
+    fun getGroups(modifier: NamespacedKey): Collection<NodeGroup>?
 
-  CacheCollection<NamespacedKey, NodeGroup> getGroups(Collection<NamespacedKey> keys);
+    fun getGroups(keys: Collection<NamespacedKey>): CacheCollection<NamespacedKey, NodeGroup>
 
-  Optional<Collection<NodeGroup>> getGroups();
+    fun getGroups(node: UUID): Collection<NodeGroup>?
 
-  Optional<Collection<NodeGroup>> getGroups(UUID node);
+    fun getGroups(range: Range): Collection<NodeGroup>?
 
-  Optional<Collection<NodeGroup>> getGroups(Range range);
+    fun write(node: UUID, groups: Collection<NodeGroup>)
 
-  void write(UUID node, Collection<NodeGroup> groups);
+    fun write(modifier: NamespacedKey, groups: Collection<NodeGroup>)
 
-  void write(NamespacedKey modifier, Collection<NodeGroup> groups);
+    fun writeAll(groups: Collection<NodeGroup>)
 
-  void writeAll(Collection<NodeGroup> groups);
+    fun invalidate(node: UUID)
 
-  void invalidate(UUID node);
-
-  void invalidate(NamespacedKey modifier);
+    fun invalidate(modifier: NamespacedKey)
 }

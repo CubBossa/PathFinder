@@ -1,10 +1,10 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
-import java.util.UUID;
+import java.util.*
 
-public interface World {
+interface World {
 
-  UUID getUniqueId();
+    val uniqueId: UUID
 
-  String getName();
+    val name: String
 }

@@ -1,15 +1,15 @@
-package de.cubbossa.pathfinder.misc;
+package de.cubbossa.pathfinder.misc
 
 /**
- * A {@link Named} that can also be renamed.
+ * A [Named] that can also be renamed.
  */
-public interface Nameable extends Named {
+interface Nameable : Named {
 
-  /**
-   * Sets the display name. The call if this method must also refresh the display name component if stored locally.
-   *
-   * @param name The display name formatted in the MiniMessage style.
-   * @see "https://docs.adventure.kyori.net/minimessage/format.html"
-   */
-  void setNameFormat(String name);
+    /**
+     * Sets the display name. The call if this method must also refresh the display name component if stored locally.
+     *
+     * @param name The display name formatted in the MiniMessage style.
+     * @see "https://docs.adventure.kyori.net/minimessage/format.html"
+     */
+    override var nameFormat: String
 }

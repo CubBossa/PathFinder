@@ -4,10 +4,8 @@ import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
-import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.visualizer.impl.EdgeBasedVisualizer;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -102,7 +100,7 @@ public class PlaceholderVisualizer
 
     @Override
     public void play(Location nearestPoint, Location leadPoint, Edge nearestEdge) {
-      Location playerLoc = BukkitVectorUtils.toBukkit(getTargetViewer().getLocation());
+      Location playerLoc = BukkitVectorUtils.toBukkit(getTargetViewer().location);
 
       double dist = playerLoc.distance(nearestPoint) + nearestPoint.distance(nearestEdge.target());
       int nearestEdgeIndex = getEdges().indexOf(nearestEdge);

@@ -43,7 +43,7 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
     Collection<PathPlayer<PlayerT>> viewers;
 
     public AbstractView(PathPlayer<PlayerT> targetViewer, UpdatingPath path) {
-      this.targetViewerUuid = targetViewer.getUniqueId();
+      this.targetViewerUuid = targetViewer.uniqueId;
       this.path = path;
       this.pathCache = new ArrayList<>(calculatePath());
       this.targetViewer = targetViewer;
@@ -65,7 +65,7 @@ public abstract class AbstractVisualizer<ViewT extends PathView<PlayerT>, Player
     @Override
     public void addViewer(PathPlayer<PlayerT> player) {
       viewers.add(player);
-      if (targetViewer == null && player.getUniqueId().equals(targetViewerUuid)) {
+      if (targetViewer == null && player.uniqueId.equals(targetViewerUuid)) {
         targetViewer = player;
       }
     }

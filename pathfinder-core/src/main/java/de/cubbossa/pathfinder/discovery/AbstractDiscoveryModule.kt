@@ -1,169 +1,155 @@
-package de.cubbossa.pathfinder.discovery;
+package de.cubbossa.pathfinder.discovery
 
-import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderExtension;
-import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.event.EventDispatcher;
-import de.cubbossa.pathfinder.group.DiscoverableModifier;
-import de.cubbossa.pathfinder.group.FindDistanceModifier;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.group.PermissionModifier;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.navigation.NavigationModule;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierImpl;
-import de.cubbossa.pathfinder.storage.DiscoverInfo;
-import de.cubbossa.pathfinder.storage.StorageAdapter;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import de.cubbossa.disposables.Disposable
+import de.cubbossa.pathfinder.AbstractPathFinder
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathFinderExtension
+import de.cubbossa.pathfinder.PathFinderExtensionBase
+import de.cubbossa.pathfinder.event.EventDispatcher
+import de.cubbossa.pathfinder.group.*
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.PathPlayer
+import de.cubbossa.pathfinder.navigation.NavigationModule.Companion.get
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.nodegroup.modifier.DiscoverableModifierImpl
+import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
+import java.util.*
+import java.util.stream.Collectors
+import kotlin.math.pow
 
-public class AbstractDiscoveryModule<PlayerT>
-    extends PathFinderExtensionBase implements PathFinderExtension, Disposable {
+open class AbstractDiscoveryModule<PlayerT>
+    : PathFinderExtensionBase(), PathFinderExtension, Disposable {
+    override val key: NamespacedKey = AbstractPathFinder.pathfinder("discovery")
 
-  public static <T> AbstractDiscoveryModule<T> getInstance() {
-    return (AbstractDiscoveryModule<T>) instance;
-  }
+    val pathFinder: PathFinder
+    val eventDispatcher: EventDispatcher<PlayerT>
 
-  private static AbstractDiscoveryModule<?> instance;
-
-  private final NamespacedKey key = AbstractPathFinder.pathfinder("discovery");
-
-  final PathFinder pathFinder;
-  final EventDispatcher<PlayerT> eventDispatcher;
-
-  public AbstractDiscoveryModule() {
-    instance = this;
-    this.pathFinder = PathFinder.get();
-    this.pathFinder.getDisposer().register(this.pathFinder, this);
-    this.eventDispatcher = (EventDispatcher<PlayerT>) pathFinder.getEventDispatcher();
-
-    if (!pathFinder.getConfiguration().getModuleConfig().isDiscoveryModule()) {
-      return;
+    init {
+        instance = this
+        this.pathFinder = PathFinder.get()
+        pathFinder.disposer.register(this.pathFinder, this)
+        this.eventDispatcher = pathFinder.eventDispatcher as EventDispatcher<PlayerT>
     }
 
-    if (pathFinder.getConfiguration().getNavigation().isRequireDiscovery()) {
-      NavigationModule.get().registerNavigationConstraint((playerId, scope) -> {
-        Map<Node, Collection<NodeGroup>> map = PathFinder.get().getStorage().loadGroupsOfNodes(scope).join();
-
-        return map.entrySet().stream()
-            .filter(e -> e.getValue().stream().allMatch(group -> {
-              return !group.hasModifier(DiscoverableModifierImpl.class)
-                  || !this.hasDiscovered(playerId, group).join();
-            }))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-      });
-    }
-  }
-
-  @Override
-  public void dispose() {
-    instance = null;
-  }
-
-  public CompletableFuture<Collection<NodeGroup>> getFulfillingGroups(PathPlayer<?> player) {
-    StorageAdapter storage = PathFinder.get().getStorage();
-    return storage.loadGroups(DiscoverableModifier.KEY).thenCompose(groups -> {
-      Collection<UUID> allNodes = groups.stream().flatMap(Collection::stream).toList();
-      if (allNodes.isEmpty()) {
-        return CompletableFuture.completedFuture(new HashSet<>());
-      }
-      return storage.loadNodes(allNodes).thenCompose(nodes -> {
-        return storage.loadGroups(allNodes).thenApply(nodeGroupMap -> {
-          Map<UUID, Node> nodeMap = new HashMap<>();
-          nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
-
-          return groups.stream()
-              .filter(group -> {
-                Optional<PermissionModifier> perm = group.getModifier(PermissionModifier.KEY);
-                return perm.isEmpty() || player.hasPermission(perm.get().permission());
-              })
-              .filter(group -> {
-                return group.stream().anyMatch(uuid -> {
-                  Location location = nodeMap.get(uuid).getLocation();
-                  if (!Objects.equals(player.getLocation().getWorld(), location.getWorld())) {
-                    return false;
-                  }
-                  float dist = getDiscoveryDistance(nodeGroupMap.get(uuid));
-                  if (location.getX() - player.getLocation().getX() > dist
-                      || location.getY() - player.getLocation().getY() > dist) {
-                    return false;
-                  }
-                  return !(location.distanceSquared(player.getLocation()) > Math.pow(dist, 2));
-                });
-              })
-              .collect(Collectors.toSet());
-        });
-      });
-    });
-  }
-
-  public CompletableFuture<Void> discover(PathPlayer<PlayerT> player, NodeGroup group, LocalDateTime date) {
-    if (!group.hasModifier(DiscoverableModifier.KEY)) {
-      return CompletableFuture.completedFuture(null);
-    }
-    UUID playerId = player.getUniqueId();
-    return pathFinder.getStorage().loadDiscoverInfo(playerId, group.getKey()).thenCompose(discoverInfo -> {
-      if (discoverInfo.isPresent()) {
-        return CompletableFuture.completedFuture(null);
-      }
-
-      Optional<DiscoverableModifier> discoverable = group.getModifier(DiscoverableModifier.KEY);
-      if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable.get(), date)) {
-        return CompletableFuture.completedFuture(null);
-      }
-
-      return pathFinder.getStorage().createAndLoadDiscoverinfo(playerId, group.getKey(), date);
-    }).thenRun(() -> {
-    });
-  }
-
-  public CompletableFuture<Void> forget(PathPlayer<PlayerT> player, NodeGroup group) {
-    if (!group.hasModifier(DiscoverableModifierImpl.class)) {
-      return CompletableFuture.completedFuture(null);
+    init {
+        if (pathFinder.configuration.moduleConfig.isDiscoveryModule && pathFinder.configuration.navigation.isRequireDiscovery) {
+            get<Any>().registerNavigationConstraint { playerId: UUID, scope: Collection<Node> ->
+                runBlocking {
+                    val map = PathFinder.get().storage.loadGroupsOfNodes(scope)
+                    map.entries.stream()
+                        .filter { e ->
+                            e.value.stream().allMatch { group: NodeGroup ->
+                                runBlocking {
+                                    (!group.hasModifier(DiscoverableModifierImpl::class.java)
+                                            || !hasDiscovered(playerId, group))
+                                }
+                            }
+                        }
+                        .map { e -> e.key }
+                        .collect(Collectors.toSet())
+                }
+            }
+        }
     }
 
-    return pathFinder.getStorage().loadDiscoverInfo(player.getUniqueId(), group.getKey()).thenAccept(discoverInfo -> {
-      if (discoverInfo.isEmpty()) {
-        return;
-      }
-      DiscoverInfo info = discoverInfo.get();
-      if (!eventDispatcher.dispatchPlayerForgetEvent(player, info.discoverable())) {
-        return;
-      }
-      pathFinder.getStorage().deleteDiscoverInfo(discoverInfo.get());
-    });
-  }
+    override fun dispose() {
+        instance = null
+    }
 
-  public CompletableFuture<Boolean> hasDiscovered(UUID playerId, NodeGroup group) {
-    return pathFinder.getStorage().loadDiscoverInfo(playerId, group.getKey())
-        .thenApply(Optional::isPresent);
-  }
+    suspend fun getFulfillingGroups(player: PathPlayer<*>): Collection<NodeGroup> {
+        val storage = PathFinder.get().storage
+        val groups = storage.loadGroups(DiscoverableModifier.KEY)
+        val allNodes: Collection<UUID> = groups.stream()
+            .flatMap { l -> l.stream() }
+            .toList()
+        if (allNodes.isEmpty()) {
+            return HashSet()
+        }
+        val nodes = storage.loadNodes(allNodes)
+        val nodeGroupMap = storage.loadGroups(allNodes)
+        val nodeMap: MutableMap<UUID, Node> = HashMap()
 
-  public float getDiscoveryDistance(Collection<NodeGroup> groups) {
-    FindDistanceModifier mod = groups.stream()
-        .filter(group -> group.hasModifier(FindDistanceModifier.KEY))
-        .sorted()
-        .findFirst()
-        .map(group -> group.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY).get())
-        .orElse(null);
-    return mod == null ? 1.5f : (float) mod.distance();
-  }
+        nodes.forEach { node -> nodeMap[node.nodeId] = node }
 
-  @Override
-  public NamespacedKey getKey() {
-    return key;
-  }
+        return groups.stream()
+            .filter { group ->
+                val perm: Optional<PermissionModifier> =
+                    group.getModifier(PermissionModifier.KEY)
+                perm.isEmpty || player.hasPermission(perm.get().permission())
+            }
+            .filter { group ->
+                group.stream().anyMatch { uuid ->
+                    val location = nodeMap[uuid]?.location ?: return@anyMatch false
+                    if (player.location.world != location.world) {
+                        return@anyMatch false
+                    }
+                    val dist = nodeGroupMap[uuid]?.let { getDiscoveryDistance(it) } ?: 0f
+                    if (location.x - player.location.x > dist || location.y - player.location.y > dist) {
+                        return@anyMatch false
+                    }
+                    !(location.distanceSquared(player.location) > dist.pow(2.0f))
+                }
+            }
+            .collect(Collectors.toSet())
+    }
+
+    suspend fun discover(
+        player: PathPlayer<PlayerT>,
+        group: NodeGroup,
+        date: LocalDateTime
+    ) {
+        if (!group.hasModifier<Modifier>(DiscoverableModifier.KEY)) {
+            return
+        }
+        val playerId = player.uniqueId
+        val info = pathFinder.storage.loadDiscoverInfo(playerId, group.key)
+        if (info != null) {
+            return
+        }
+
+        val discoverable = group.getModifier<DiscoverableModifier>(DiscoverableModifier.KEY)
+        if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable.get(), date)) {
+            return
+        }
+        pathFinder.storage.createAndLoadDiscoverInfo(playerId, group.key, date)
+    }
+
+    suspend fun forget(player: PathPlayer<PlayerT>, group: NodeGroup) {
+        if (!group.hasModifier(DiscoverableModifierImpl::class.java)) {
+            return
+        }
+
+        val info = pathFinder.storage.loadDiscoverInfo(player.uniqueId, group.key)
+        if (!eventDispatcher.dispatchPlayerForgetEvent(player, info?.discoverable)) {
+            return
+        }
+        info?.let {
+            pathFinder.storage.deleteDiscoverInfo(it)
+        }
+    }
+
+    suspend fun hasDiscovered(playerId: UUID, group: NodeGroup): Boolean {
+        return pathFinder.storage.loadDiscoverInfo(playerId, group.key) == null
+    }
+
+    private fun getDiscoveryDistance(groups: Collection<NodeGroup>): Float {
+        val mod = groups.stream()
+            .filter { group: NodeGroup -> group.hasModifier<Modifier>(FindDistanceModifier.KEY) }
+            .sorted()
+            .findFirst()
+            .map { group: NodeGroup ->
+                group.getModifier<FindDistanceModifier>(FindDistanceModifier.KEY).get()
+            }
+            .orElse(null)
+        return mod?.distance()?.toFloat() ?: 1.5f
+    }
+
+    companion object {
+        fun <T> getInstance(): AbstractDiscoveryModule<T>? {
+            return instance as AbstractDiscoveryModule<T>?
+        }
+
+        private var instance: AbstractDiscoveryModule<*>? = null
+    }
 }

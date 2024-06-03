@@ -1,75 +1,54 @@
-package de.cubbossa.pathfinder.util;
+package de.cubbossa.pathfinder.util
 
-import de.cubbossa.pathfinder.Changes;
-import lombok.Getter;
+import de.cubbossa.pathfinder.Changes
+import java.util.function.Predicate
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.function.Predicate;
+open class ModifiedHashSet<E>(
+    val changes: Changes<E> = Changes()
+) : HashSet<E>() {
 
-public class ModifiedHashSet<E> extends HashSet<E> {
-
-  @Getter
-  private final Changes<E> changes;
-
-  public ModifiedHashSet(Changes<E> changes) {
-    this.changes = changes;
-  }
-
-  public ModifiedHashSet() {
-    this(new Changes<>());
-  }
-
-  public ModifiedHashSet(Changes<E> changes, Collection<E> iterable) {
-    this(changes);
-    Collection<E> temp = new HashSet<>(changes.getAddList());
-    addAll(iterable);
-    changes.getAddList().clear();
-    changes.getAddList().addAll(temp);
-  }
-
-  public ModifiedHashSet(Collection<E> iterable) {
-    this(new Changes<>(), iterable);
-  }
-
-  @Override
-  public boolean add(E e) {
-    if (super.add(e)) {
-      changes.getAddList().add(e);
-      return true;
+    constructor(changes: Changes<E>, iterable: Collection<E>) : this(changes) {
+        val temp: Collection<E> = HashSet(changes.addList)
+        addAll(iterable)
+        changes.addList.clear()
+        changes.addList.addAll(temp)
     }
-    return false;
-  }
 
-  @Override
-  public boolean addAll(Collection<? extends E> c) {
-    changes.getAddList().addAll(c);
-    return super.addAll(c);
-  }
+    constructor(iterable: Collection<E>) : this(Changes<E>(), iterable)
 
-  @Override
-  public boolean remove(Object o) {
-    if (super.remove(o)) {
-      changes.getRemoveList().add((E) o);
-      return true;
+    override fun add(element: E): Boolean {
+        if (super.add(element)) {
+            changes.addList.add(element)
+            return true
+        }
+        return false
     }
-    return false;
-  }
 
-  @Override
-  public boolean removeAll(Collection<?> c) {
-    changes.getRemoveList().addAll((Collection<? extends E>) c);
-    return super.removeAll(c);
-  }
+    final override fun addAll(elements: Collection<E>): Boolean {
+        changes.addList.addAll(elements)
+        return super.addAll(elements)
+    }
 
-  @Override
-  public boolean removeIf(Predicate<? super E> filter) {
-    return super.removeIf(e -> {
-      if (filter.test(e)) {
-        changes.getRemoveList().add(e);
-        return true;
-      }
-      return false;
-    });
-  }
+    override fun remove(element: E): Boolean {
+        if (super.remove(element)) {
+            changes.removeList.add(element)
+            return true
+        }
+        return false
+    }
+
+    override fun removeAll(elements: Collection<E>): Boolean {
+        changes.removeList.addAll(elements)
+        return super.removeAll(elements.toSet())
+    }
+
+    override fun removeIf(filter: Predicate<in E>): Boolean {
+        return super.removeIf { e: E ->
+            if (filter.test(e)) {
+                changes.removeList.add(e)
+                return@removeIf true
+            }
+            false
+        }
+    }
 }
