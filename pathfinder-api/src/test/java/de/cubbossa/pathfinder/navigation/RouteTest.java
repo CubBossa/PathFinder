@@ -1,5 +1,7 @@
 package de.cubbossa.pathfinder.navigation;
 
+import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedExternalNode;
+import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -132,12 +134,47 @@ class RouteTest {
     graph.putEdgeValue(b, c, 10d);
 
     var result = Route
-        .from(NavigationLocation.fixedExternalNode(a))
-        .to(NavigationLocation.fixedExternalNode(d))
+        .from(fixedExternalNode(a))
+        .to(fixedExternalNode(d))
         .calculatePath(graph);
 
     assertEquals(30, result.getCost());
     assertEquals(List.of(a, b, c, d), result.getPath());
+  }
+
+  @Test
+  void testD() throws NoPathFoundException {
+    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, null));
+    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
+    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
+    Node d = new TestNode(UUID.randomUUID(), new Location(0, 15, 0, null));
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(a);
+    graph.addNode(b);
+    graph.addNode(c);
+    graph.addNode(d);
+    graph.putEdgeValue(a, b, 10d);
+    graph.putEdgeValue(b, c, 10d);
+    graph.putEdgeValue(b, d, 15d);
+
+    var results = Route
+        .from(fixedGraphNode(a))
+        .toAny(fixedExternalNode(c), fixedGraphNode(d))
+        .calculatePaths(graph);
+    assertEquals(2, results.size());
+    assertEquals(results.get(0).getPath().get(0), a);
+    assertEquals(3, results.get(0).getPath().size());
+    assertEquals(3, results.get(1).getPath().size());
+    assertEquals(c, results.get(0).getPath().get(results.get(0).getPath().size() - 1));
+    assertEquals(d, results.get(1).getPath().get(results.get(1).getPath().size() - 1));
+
+    var result = Route
+        .from(fixedGraphNode(a))
+        .toAny(fixedExternalNode(c), fixedGraphNode(d))
+        .calculatePath(graph);
+
+    assertEquals(List.of(a, b, c), result.getPath());
+    assertEquals(20, result.getCost());
   }
 
   @Getter

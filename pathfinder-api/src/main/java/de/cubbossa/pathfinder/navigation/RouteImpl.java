@@ -4,6 +4,7 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
@@ -21,27 +22,28 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class RouteImpl implements Route {
 
-  private final List<Collection<Object>> targets;
+  private final List<Collection<Object>> checkPoints;
   private PathSolver<Node, Double> baseGraphSolver;
 
   // caching
   private @Nullable ValueGraph<Node, Double> modifiedBaseGraph = null;
 
   RouteImpl(Route other) {
-    this.targets = new ArrayList<>();
-    this.targets.add(List.of(other));
+    this.checkPoints = new ArrayList<>();
+    this.checkPoints.add(List.of(other));
     this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
   RouteImpl(NavigationLocation start) {
-    this.targets = new ArrayList<>();
-    this.targets.add(List.of(start));
+    this.checkPoints = new ArrayList<>();
+    this.checkPoints.add(List.of(start));
     this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
@@ -60,7 +62,7 @@ class RouteImpl implements Route {
 
   @Override
   public @NotNull NavigationLocation getStart() {
-    Object first = targets.get(0).stream().findAny().orElse(null);
+    Object first = checkPoints.get(0).stream().findAny().orElse(null);
     if (first instanceof NavigationLocation loc) {
       return loc;
     }
@@ -69,7 +71,7 @@ class RouteImpl implements Route {
 
   @Override
   public @NotNull Collection<NavigationLocation> getEnd() {
-    return targets.get(targets.size() - 1).stream()
+    return checkPoints.get(checkPoints.size() - 1).stream()
         .filter(object -> object instanceof NavigationLocation)
         .map(object -> (NavigationLocation) object)
         .toList();
@@ -77,7 +79,7 @@ class RouteImpl implements Route {
 
   @Override
   public Route to(@NotNull Route route) {
-    targets.add(List.of(route));
+    checkPoints.add(List.of(route));
     return this;
   }
 
@@ -99,7 +101,7 @@ class RouteImpl implements Route {
     }
 
     double finalCost = cost;
-    targets.add(List.of(new RouteEl(route.get(0), route.get(route.size() - 1)) {
+    checkPoints.add(List.of(new RouteEl(route.get(0), route.get(route.size() - 1)) {
       @Override
       PathSolverResult<Node, Double> solve() {
         return new PathSolverResultImpl<>(route, edges, finalCost);
@@ -115,31 +117,31 @@ class RouteImpl implements Route {
 
   @Override
   public Route to(@NotNull NavigationLocation location) {
-    targets.add(List.of(location));
+    checkPoints.add(List.of(location));
     return this;
   }
 
   @Override
   public Route toAny(Node... nodes) {
-    targets.add(Arrays.stream(nodes).map(this::loc).collect(Collectors.toList()));
+    checkPoints.add(Arrays.stream(nodes).map(this::loc).collect(Collectors.toList()));
     return this;
   }
 
   @Override
   public Route toAny(@NotNull Collection<Node> nodes) {
-    targets.add(nodes.stream().map(this::loc).collect(Collectors.toList()));
+    checkPoints.add(nodes.stream().map(this::loc).collect(Collectors.toList()));
     return this;
   }
 
   @Override
   public Route toAny(NavigationLocation... locations) {
-    targets.add(Arrays.stream(locations).collect(Collectors.toList()));
+    checkPoints.add(Arrays.stream(locations).collect(Collectors.toList()));
     return this;
   }
 
   @Override
   public Route toAny(Route... other) {
-    targets.add(Arrays.stream(other).collect(Collectors.toList()));
+    checkPoints.add(Arrays.stream(other).collect(Collectors.toList()));
     return this;
   }
 
@@ -160,48 +162,56 @@ class RouteImpl implements Route {
     MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
         .directed()
         .allowsSelfLoops(false)
-        .expectedNodeCount(targets.stream().mapToInt(Collection::size).sum())
+        .expectedNodeCount(checkPoints.stream().mapToInt(Collection::size).sum())
         .build();
 
-    List<Collection<RouteEl>> convertedTargets = new ArrayList<>();
-    for (Collection<Object> target : targets) {
+    // convert all checkpoint values into RouteEl instances
+    List<Collection<RouteEl>> routeElCheckPoints = new ArrayList<>();
+    for (Collection<Object> target : checkPoints) {
       Collection<RouteEl> inner = new HashSet<>();
       for (Object o : target) {
         inner.addAll(newElement(o, environment));
       }
-      convertedTargets.add(inner);
+      routeElCheckPoints.add(inner);
     }
 
+    // Create n*m relation edges from each checkpoint to the next
     Collection<RouteEl> prev = new HashSet<>();
-    for (Collection<RouteEl> target : convertedTargets) {
-      for (RouteEl inner : target) {
-        abstractGraph.addNode(inner);
+    for (Collection<RouteEl> checkPoint : routeElCheckPoints) {
+      for (RouteEl checkPointElement : checkPoint) {
+        // each end point will be its own node on the abstract graph
+        abstractGraph.addNode(checkPointElement);
 
-        for (RouteEl p : prev) {
+        // Make an edge from each previous checkpoint point to this point
+        for (RouteEl previousCheckPointElement : prev) {
+          if (previousCheckPointElement.equals(checkPointElement)) {
+            continue;
+          }
           // Only make edge in abstract graph if it can actually be used. Otherwise skip
           try {
-            var solved = solveForSection(p, inner);
-            abstractGraph.putEdgeValue(p, inner, solved);
+            var solved = solveForSection(previousCheckPointElement, checkPointElement);
+            abstractGraph.putEdgeValue(previousCheckPointElement, checkPointElement, solved);
           } catch (NoPathFoundException ignored) {
           }
         }
-        prev = target;
       }
+      prev = checkPoint;
     }
 
     DynamicDijkstra<RouteEl, PathSolverResult<Node, Double>> abstractSolver = new DynamicDijkstra<>(PathSolverResult::getCost);
     abstractSolver.setGraph(abstractGraph);
 
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
-    var start = convertedTargets.get(0).iterator().next();
-    for (RouteEl lastTarget : convertedTargets.get(convertedTargets.size() - 1)) {
+    var start = routeElCheckPoints.get(0).iterator().next();
+    for (RouteEl end : routeElCheckPoints.get(routeElCheckPoints.size() - 1)) {
+      PathSolverResult<RouteEl, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
+          start,
+          end
+      );
       try {
-        PathSolverResult<RouteEl, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
-            start,
-            lastTarget
-        );
         results.add(join(res));
       } catch (Throwable t) {
+        PathFinder.get().getLogger().log(Level.WARNING, "Error while finding shortest path", t);
       }
     }
     if (results.isEmpty()) {
@@ -302,7 +312,7 @@ class RouteImpl implements Route {
       }
     }
 
-    for (Collection<Object> target : targets) {
+    for (Collection<Object> target : checkPoints) {
       for (Object o : target) {
         if (o instanceof NavigationLocation navLoc) {
           g = navLoc.connect(g);
