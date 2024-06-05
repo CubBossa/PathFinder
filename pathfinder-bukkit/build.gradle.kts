@@ -46,6 +46,7 @@ dependencies {
 
     // Commands
     api("dev.jorel:commandapi-bukkit-shade:9.4.2")
+    api("dev.jorel:commandapi-bukkit-kotlin:9.4.2")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")

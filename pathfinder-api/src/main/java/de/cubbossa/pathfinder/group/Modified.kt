@@ -1,30 +1,32 @@
-package de.cubbossa.pathfinder.group;
+package de.cubbossa.pathfinder.group
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import java.util.Collection;
-import java.util.Optional;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import java.util.*
 
-public interface Modified {
+interface Modified {
+    val modifiers: Collection<Modifier>
 
-  Collection<Modifier> getModifiers();
+    fun <M : Modifier> hasModifier(modifierClass: Class<M>): Boolean
 
-  <M extends Modifier> boolean hasModifier(Class<M> modifierClass);
+    fun <M : Modifier> hasModifier(modifierType: NamespacedKey): Boolean
 
-  <M extends Modifier> boolean hasModifier(NamespacedKey modifierType);
+    fun <M : Modifier> addModifier(modifier: M) {
+        addModifier(modifier.key, modifier)
+    }
 
-  default <M extends Modifier> void addModifier(M modifier) {
-    addModifier(modifier.getKey(), modifier);
-  }
+    fun addModifier(key: NamespacedKey, modifier: Modifier)
 
-  void addModifier(NamespacedKey key, Modifier modifier);
+    fun <M : Modifier> getModifier(key: NamespacedKey): Optional<M>
 
-  <M extends Modifier> Optional<M> getModifier(NamespacedKey key);
+    fun <M : Modifier> removeModifier(modifierClass: Class<M>)
 
-  <M extends Modifier> void removeModifier(Class<M> modifierClass);
+    fun <M : Modifier> removeModifier(modifier: M)
 
-  <M extends Modifier> void removeModifier(M modifier);
+    fun <M : Modifier> removeModifier(key: NamespacedKey)
 
-  <M extends Modifier> void removeModifier(NamespacedKey key);
+    fun clearModifiers()
+}
 
-  void clearModifiers();
+inline fun <reified M : Modifier> Modified.hasModifier(): Boolean {
+    return hasModifier(M::class.java)
 }

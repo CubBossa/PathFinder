@@ -1,53 +1,66 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.node.NodeType;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import java.util.function.Supplier;
-import org.bukkit.command.CommandSender;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.Arguments
+import de.cubbossa.pathfinder.command.PathFinderSubCommand
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.misc.Location
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.NodeType
+import de.cubbossa.pathfinder.sendMessage
+import de.cubbossa.pathfinder.util.BukkitVectorUtils
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 
-public class CreateNodeCmd extends PathFinderSubCommand {
+class CreateNodeCmd(pathFinder: PathFinder, fallbackWaypointType: () -> NodeType<*>) :
+    PathFinderSubCommand(pathFinder, "createnode") {
 
-  public CreateNodeCmd(PathFinder pathFinder, Supplier<NodeType<?>> fallbackWaypointType) {
-    super(pathFinder, "createnode");
-
-    withPermission(PathPerms.PERM_CMD_WP_CREATE);
-    executesPlayer((player, args) -> {
-      createNode(player, fallbackWaypointType.get(),
-          BukkitVectorUtils.toInternal(player.getLocation()));
-    });
-    then(Arguments.location("location")
-        .displayAsOptional()
-        .executesPlayer((player, args) -> {
-          createNode(player, fallbackWaypointType.get(), args.getUnchecked(0));
+    init {
+        withPermission(PathPerms.PERM_CMD_WP_CREATE)
+        executesPlayer(PlayerCommandExecutor { player: Player, _: CommandArguments ->
+            createNode(
+                player, fallbackWaypointType(),
+                BukkitVectorUtils.toInternal(player.location)
+            )
         })
-    );
-    then(Arguments.nodeTypeArgument("type")
-        .executesPlayer((player, args) -> {
-          createNode(player, args.getUnchecked(0),
-              BukkitVectorUtils.toInternal(player.getLocation()));
-        })
-        .then(Arguments.location("location")
-            .executesPlayer((player, args) -> {
-              createNode(player, args.getUnchecked(0),
-                  args.getUnchecked(1));
-            })
+        then(
+            Arguments.location("location")
+                .displayAsOptional()
+                .executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                    createNode(player, fallbackWaypointType(), args.getUnchecked(0)!!)
+                })
         )
-    );
-  }
+        then(
+            Arguments.nodeTypeArgument<Node>("type")
+                .executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                    createNode(
+                        player, args.getUnchecked(0)!!,
+                        BukkitVectorUtils.toInternal(player.location)
+                    )
+                })
+                .then(
+                    Arguments.location("location")
+                        .executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                            createNode(
+                                player, args.getUnchecked(0)!!,
+                                args.getUnchecked(1)!!
+                            )
+                        })
+                )
+        )
+    }
 
 
-  private void createNode(CommandSender sender, NodeType<?> type, Location location) {
-    getPathfinder().getStorage().createAndLoadNode(type, location).thenAccept(n -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CREATE.formatted(
-          Messages.formatter().uuid("id", n.getNodeId())
-      ));
-    });
-  }
+    private fun createNode(sender: CommandSender, type: NodeType<*>, location: Location) =
+        launchIO {
+            pathfinder.storage.createAndLoadNode(type, location)?.let {
+                sender.sendMessage(
+                    Messages.CMD_N_CREATE.formatted(Messages.formatter().uuid("id", it.nodeId))
+                )
+            }
+        }
 }

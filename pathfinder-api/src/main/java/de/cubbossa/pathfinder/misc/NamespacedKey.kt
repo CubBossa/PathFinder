@@ -6,8 +6,8 @@ import java.util.regex.Pattern
 
 @Getter
 class NamespacedKey(
-    private val namespace: String,
-    private val key: String
+    val namespace: String,
+    val key: String
 ) {
 
     override fun toString(): String {

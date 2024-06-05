@@ -1,28 +1,28 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.navigation.NavigationModule;
-import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandTree;
-import org.bukkit.entity.Player;
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.asPathPlayer
+import de.cubbossa.pathfinder.misc.PathPlayer
+import de.cubbossa.pathfinder.navigation.NavigationModule
+import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandTree
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import org.bukkit.entity.Player
 
-public class CancelPathCommand extends CommandTree {
+class CancelPathCommand : CommandTree("cancelpath") {
 
-  public CancelPathCommand() {
-    super("cancelpath");
-    NavigationModule<Player> module = NavigationModule.get();
+    init {
+        val module: NavigationModule<Player> = NavigationModule.get();
 
-    withPermission(PathPerms.PERM_CMD_CANCELPATH);
-    withRequirement(sender -> sender instanceof Player player
-        && module.getActivePath(player.asPathPlayer()) != null);
+        withPermission(PathPerms.PERM_CMD_CANCELPATH)
+        withRequirement { sender -> sender is Player && module.getActivePath(sender.asPathPlayer()) != null }
 
-    executesPlayer((player, args) -> {
-      module.cancel(player.getUniqueId());
-    });
-  }
+        executesPlayer(PlayerCommandExecutor { player, args ->
+            module.cancel(player.uniqueId);
+        })
+    }
 
-  public void refresh(PathPlayer<Player> player) {
-    CommandAPI.updateRequirements(player.unwrap());
-  }
+    fun refresh(player: PathPlayer<Player>) {
+        CommandAPI.updateRequirements(player.unwrap());
+    }
 }

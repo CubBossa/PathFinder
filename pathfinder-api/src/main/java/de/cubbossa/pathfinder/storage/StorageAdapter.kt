@@ -118,7 +118,7 @@ interface StorageAdapter : Disposable {
     suspend fun loadEdgesTo(nodes: Collection<UUID>): Map<UUID, Collection<Edge?>?>?
 
     // Groups
-    suspend fun createAndLoadGroup(key: NamespacedKey): NodeGroup?
+    suspend fun createAndLoadGroup(key: NamespacedKey): NodeGroup
 
     suspend fun loadGroup(key: NamespacedKey): NodeGroup?
 

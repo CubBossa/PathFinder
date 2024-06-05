@@ -1,81 +1,76 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
-import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.arguments.CommandAPIArgumentType;
-import dev.jorel.commandapi.executors.CommandArguments;
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.exceptions.CommandSyntaxException
+import de.cubbossa.pathfinder.command.util.CommandUtils
+import dev.jorel.commandapi.arguments.Argument
+import dev.jorel.commandapi.arguments.CommandAPIArgumentType
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.CommandExecutor
+import org.bukkit.command.CommandSender
 
-public class CommandArgument<S, T extends Argument<S>> extends Argument<S> {
+class CommandArgument<S, T : Argument<S>?>(private val argument: T) : Argument<S>(
+    argument!!.nodeName, argument.rawType
+) {
+    var wiki: String? = null
+        private set
+    var description: String? = null
+        private set
+    private var optional = false
 
-  private final T argument;
-  private String wiki;
-  private String description;
-  private boolean optional;
+    @Throws(CommandSyntaxException::class)
+    override fun <Source> parseArgument(
+        cmdCtx: CommandContext<Source>,
+        key: String,
+        previousArgs: CommandArguments
+    ): S {
+        return argument!!.parseArgument(cmdCtx, key, previousArgs)
+    }
 
-  public CommandArgument(final T argument) {
-    super(argument.getNodeName(), argument.getRawType());
-    this.argument = argument;
-  }
+    fun withGeneratedHelp(): CommandArgument<S, T> {
+        executes(CommandExecutor { sender: CommandSender?, args: CommandArguments? ->
+            CommandUtils.sendHelp(sender, this)
+        })
+        return this
+    }
 
-  static <S, T extends Argument<S>> CommandArgument<S, T> arg(T argument) {
-    return new CommandArgument<>(argument);
-  }
+    fun withGeneratedHelp(depth: Int): CommandArgument<S, T> {
+        executes(CommandExecutor { sender: CommandSender?, args: CommandArguments? ->
+            CommandUtils.sendHelp(sender, this, depth)
+        })
+        return this
+    }
 
-  @Override
-  public <Source> S parseArgument(CommandContext<Source> cmdCtx, String key, CommandArguments previousArgs) throws CommandSyntaxException {
-    return argument.parseArgument(cmdCtx, key, previousArgs);
-  }
+    fun withWiki(url: String?): CommandArgument<S, T> {
+        this.wiki = url
+        return this
+    }
 
-  public CommandArgument<S, T> withGeneratedHelp() {
-    executes((sender, args) -> {
-      CommandUtils.sendHelp(sender, this);
-    });
-    return this;
-  }
+    fun withDescription(description: String?): CommandArgument<S, T> {
+        this.description = description
+        return this
+    }
 
-  public CommandArgument<S, T> withGeneratedHelp(int depth) {
-    executes((sender, args) -> {
-      CommandUtils.sendHelp(sender, this, depth);
-    });
-    return this;
-  }
+    fun displayAsOptional(): CommandArgument<S, T> {
+        this.optional = true
+        return this
+    }
 
-  public CommandArgument<S, T> withWiki(String url) {
-    this.wiki = url;
-    return this;
-  }
+    override fun isOptional(): Boolean {
+        return optional
+    }
 
-  public CommandArgument<S, T> withDescription(String description) {
-    this.description = description;
-    return this;
-  }
+    override fun getPrimitiveType(): Class<S> {
+        return argument!!.primitiveType
+    }
 
-  public CommandArgument<S, T> displayAsOptional() {
-    this.optional = true;
-    return this;
-  }
+    override fun getArgumentType(): CommandAPIArgumentType {
+        return argument!!.argumentType
+    }
 
-  public boolean isOptional() {
-    return optional;
-  }
-
-  public String getWiki() {
-    return this.wiki;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  @Override
-  public Class<S> getPrimitiveType() {
-    return argument.getPrimitiveType();
-  }
-
-  @Override
-  public CommandAPIArgumentType getArgumentType() {
-    return argument.getArgumentType();
-  }
+    companion object {
+        fun <S, T : Argument<S>> arg(argument: T): CommandArgument<S, T> {
+            return CommandArgument(argument)
+        }
+    }
 }
