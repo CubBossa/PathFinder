@@ -11,7 +11,7 @@ java {
 }
 
 group = "de.cubbossa"
-version = "5.1.2"
+version = "5.2.0"
 
 subprojects {
 
@@ -21,6 +21,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
     }
 
     dependencies {

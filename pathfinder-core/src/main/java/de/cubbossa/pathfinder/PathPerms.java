@@ -18,6 +18,7 @@ public class PathPerms {
   public static final String PERM_CMD_FIND_PLAYER_ACCEPT = "pathfinder.command.findplayer.accept";
   public static final String PERM_CMD_FIND_PLAYER_DECLINE = "pathfinder.command.findplayer.decline";
   public static final String PERM_CMD_CANCELPATH = "pathfinder.command.cancel_path";
+  public static final String PERM_CMD_NAVIGATE = "pathfinder.command.navigate";
   public static final String PERM_CMD_NG_INFO = "pathfinder.command.nodegroup.info";
   public static final String PERM_CMD_NG_LIST = "pathfinder.command.nodegroup.list";
   public static final String PERM_CMD_NG_CREATE = "pathfinder.command.nodegroup.create";

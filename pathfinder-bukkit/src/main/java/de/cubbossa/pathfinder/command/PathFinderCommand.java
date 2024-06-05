@@ -17,6 +17,7 @@ import de.cubbossa.pathfinder.command.impl.ImportVisualizerCmd;
 import de.cubbossa.pathfinder.command.impl.ListGroupsCmd;
 import de.cubbossa.pathfinder.command.impl.ListNodesCmd;
 import de.cubbossa.pathfinder.command.impl.ListVisualizersCmd;
+import de.cubbossa.pathfinder.command.impl.NavigateCmd;
 import de.cubbossa.pathfinder.command.impl.NodesCmd;
 import de.cubbossa.pathfinder.command.impl.VisualizerCmd;
 import de.cubbossa.pathfinder.discovery.AbstractDiscoveryModule;
@@ -64,6 +65,8 @@ public class PathFinderCommand extends CommandTree {
     this.pathFinder = pathFinder;
 
     withAliases("pf");
+
+    then(new NavigateCmd(pathFinder));
 
     then(new NodesCmd(pathFinder));
     NodeType<?> type = pathFinder.getNodeTypeRegistry().getType(AbstractPathFinder.pathfinder("waypoint"));

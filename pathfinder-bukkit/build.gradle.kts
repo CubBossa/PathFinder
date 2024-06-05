@@ -27,6 +27,7 @@ repositories {
     maven("https://libraries.minecraft.net/")
     maven("https://repo.codemc.org/repository/maven-snapshots/")
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
 dependencies {
@@ -44,7 +45,7 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Commands
-    api("dev.jorel:commandapi-bukkit-shade:9.4.2")
+    api("dev.jorel:commandapi-bukkit-shade:9.5.0-SNAPSHOT")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")
