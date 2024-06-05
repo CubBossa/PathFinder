@@ -99,10 +99,8 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
                                  @Nullable Float speed, @Nullable Vector offset) {
     setProperty(BukkitUtils.wrap(sender), visualizer, particle.particle(), "particle",
         visualizer::getParticle, visualizer::setParticle);
-    if (particle.data() != null) {
-      setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data",
-          visualizer::getParticleData, visualizer::setParticleData);
-    }
+    setProperty(BukkitUtils.wrap(sender), visualizer, particle.data(), "particle-data",
+        visualizer::getParticleData, visualizer::setParticleData);
     if (amount != null) {
       setProperty(BukkitUtils.wrap(sender), visualizer, amount, "amount", visualizer::getAmount,
           visualizer::setAmount);
