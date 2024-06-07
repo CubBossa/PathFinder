@@ -17,13 +17,13 @@ public class RemoteSqlStorage extends SqlStorage {
                           NodeTypeRegistry nodeTypeRegistry,
                           ModifierRegistry modifierRegistry,
                           VisualizerTypeRegistry visualizerTypeRegistry) {
-    super(SQLDialect.valueOf(configuration.getDialect()), nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
+    super(SQLDialect.valueOf(configuration.dialect), nodeTypeRegistry, modifierRegistry, visualizerTypeRegistry);
 
     HikariConfig config = new HikariConfig();
-    config.setUsername(configuration.getUsername());
-    config.setPassword(configuration.getPassword());
+    config.setUsername(configuration.username);
+    config.setPassword(configuration.password);
     config.setAutoCommit(false);
-    config.setJdbcUrl(configuration.getJdbcUrl());
+    config.setJdbcUrl(configuration.jdbcUrl);
     config.setMaximumPoolSize(2);
     config.setMinimumIdle(1);
     dataSource = new HikariDataSource(config);

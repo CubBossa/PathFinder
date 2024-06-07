@@ -1,4 +1,6 @@
-package de.cubbossa.pathfinder.node.selection;
+package de.cubbossa.pathfinder.node.selection
 
-public record ParsedSelectionAttribute(String identifier, String value) {
-}
+data class ParsedSelectionAttribute(
+    val identifier: String,
+    val value: String
+)

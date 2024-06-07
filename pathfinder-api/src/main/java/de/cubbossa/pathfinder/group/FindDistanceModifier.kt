@@ -1,15 +1,12 @@
-package de.cubbossa.pathfinder.group;
+package de.cubbossa.pathfinder.group
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
 
-public interface FindDistanceModifier extends Modifier {
+interface FindDistanceModifier : Modifier {
+    val distance: Double
 
-  NamespacedKey KEY = NamespacedKey.fromString("pathfinder:find-distance");
-
-  @Override
-  default NamespacedKey getKey() {
-    return KEY;
-  }
-
-  double distance();
+    companion object {
+        val key: NamespacedKey = fromString("pathfinder:find-distance")
+    }
 }

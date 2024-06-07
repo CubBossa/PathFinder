@@ -1,97 +1,99 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
-import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
-import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.LiteralArgument;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.command.CommandSender;
+import de.cubbossa.pathfinder.*
+import de.cubbossa.pathfinder.command.*
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import dev.jorel.commandapi.arguments.LiteralArgument
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.CommandExecutor
+import dev.jorel.commandapi.kotlindsl.greedyStringArgument
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import org.bukkit.command.CommandSender
 
-public class VisualizerCmd extends PathFinderSubCommand {
-
-  public VisualizerCmd(PathFinder pathFinder) {
-    super(pathFinder, "visualizer");
-    withGeneratedHelp();
+class VisualizerCmd(pathFinder: PathFinder) : PathFinderSubCommand(pathFinder, "visualizer") {
+    init {
+        withGeneratedHelp()
 
 
-    for (VisualizerType<? extends PathVisualizer<?, ?>> type : VisualizerTypeRegistryImpl.getInstance().getTypes()) {
+        for (type: VisualizerType<out PathVisualizer<*, *>> in pathFinder.visualizerTypeRegistry.types) {
+            if (type !is VisualizerTypeCommandExtension) {
+                continue
+            }
 
-      if (!(type instanceof VisualizerTypeCommandExtension cmdExt)) {
-        continue;
-      }
+            val set = LiteralArgument("set")
+                .withPermission(PathPerms.PERM_CMD_PV_MODIFY) as LiteralArgument
 
-      LiteralArgument set = (LiteralArgument) new LiteralArgument("set")
-          .withPermission(PathPerms.PERM_CMD_PV_MODIFY);
+            set.literalArgument("permission") {
+                greedyStringArgument("permission") {
+                    executes(CommandExecutor { commandSender: CommandSender, args: CommandArguments ->
+                        if (args[0] is PathVisualizer<*, *>) {
+                            // just what we do with internal visualizers, but we cannot use property objects here because
+                            // we want this code to be abstract and to work with all kind of visualizers.
+                            val visualizer = args[0] as PathVisualizer<*, *>
 
-      set.then(Arguments.literal("permission")
-          .then(new GreedyStringArgument("permission")
-              .executes((commandSender, args) -> {
-                if (args.get(0) instanceof PathVisualizer<?, ?> visualizer) {
+                            val old: String? = visualizer.permission
+                            val perm = args.getUnchecked<String>(1)
+                            visualizer.permission = perm
 
-                  // just what we do with internal visualizers, but we cannot use property objects here because
-                  // we want this code to be abstract and to work with all kind of visualizers.
-
-                  String old = visualizer.permission;
-                  String perm = args.getUnchecked(1);
-                  visualizer.permission = perm;
-
-                  pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
-                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-                        Messages.formatter().namespacedKey("key", visualizer.getKey()),
-                        Messages.formatter().namespacedKey("type", type.getKey()),
-                        Placeholder.parsed("property", "permission"),
-                        Messages.formatter().permission("old-value", old),
-                        Messages.formatter().permission("value", perm)
-                    ));
-                  });
+                            launchIO {
+                                pathFinder.storage.saveVisualizer(visualizer)
+                                commandSender.sendMessage(
+                                    Messages.CMD_VIS_SET_PROP.formatted(
+                                        Messages.formatter()
+                                            .namespacedKey("key", visualizer.key),
+                                        Messages.formatter().namespacedKey("type", type.key),
+                                        Placeholder.parsed("property", "permission"),
+                                        Messages.formatter().permission("old-value", old),
+                                        Messages.formatter().permission("value", perm)
+                                    )
+                                )
+                            }
+                        }
+                    })
                 }
-              })));
-
-      cmdExt.appendEditCommand(set, 0, 1);
-      then(new LiteralArgument(type.getCommandName())
-          .then(Arguments.pathVisualizerArgument("visualizer", type)
-              .then(set)
-              .then(Arguments.literal("info")
-                  .withPermission(PathPerms.PERM_CMD_PV_INFO)
-                  .executes((commandSender, objects) -> {
-                    onInfo(commandSender, (PathVisualizer<?, ?>) objects.getUnchecked(0));
-                  })
-              )
-          )
-      );
+            }
+            type.appendEditCommand(set, 0, 1)
+            literalArgument(type.commandName) {
+                pathVisualizerArgument("visualizer", type) {
+                    then(set)
+                    literalArgument("info") {
+                        withPermission(PathPerms.PERM_CMD_PV_INFO)
+                        executes(CommandExecutor { commandSender: CommandSender?, objects: CommandArguments ->
+                            onInfo(
+                                commandSender!!,
+                                objects.getUnchecked(0)!!
+                            )
+                        })
+                    }
+                }
+            }
+        }
     }
-  }
 
-  public <T extends PathVisualizer<?, ?>> void onInfo(CommandSender sender, T visualizer) {
-    PathPlayer<CommandSender> p = BukkitUtils.wrap(sender);
-    getPathfinder().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(type -> {
-      if (type.isEmpty()) {
-        p.sendMessage(Messages.CMD_VIS_NO_TYPE_FOUND);
-        return;
-      }
-      if (!(type.get() instanceof VisualizerTypeMessageExtension ext)) {
-        p.sendMessage(Messages.CMD_VIS_NO_INFO);
-        return;
-      }
+    private fun onInfo(sender: CommandSender, visualizer: PathVisualizer<*, *>) =
+        launchIO thenAccept@{
+            val p = sender.asPathPlayer()
+            val type = pathfinder.storage.loadVisualizerType<PathVisualizer<*, *>>(visualizer.key)
+            if (type == null) {
+                p.sendMessage(Messages.CMD_VIS_NO_TYPE_FOUND)
+                return@thenAccept
+            }
+            if (type !is VisualizerTypeMessageExtension<*>) {
+                p.sendMessage(Messages.CMD_VIS_NO_INFO)
+                return@thenAccept
+            }
 
-      Message message = ext.getInfoMessage(visualizer).formatted(TagResolver.builder()
-          .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
-          .resolver(Messages.formatter().namespacedKey("type", type.get().getKey()))
-          .resolver(Messages.formatter().permission("permission", visualizer.permission))
-          .build());
-      p.sendMessage(message);
-    });
-  }
+            type.getInfoMessage(visualizer)?.formatted(
+                TagResolver.builder()
+                    .resolver(Messages.formatter().namespacedKey("key", visualizer.key))
+                    .resolver(Messages.formatter().namespacedKey("type", type.key))
+                    .resolver(
+                        Messages.formatter().permission("permission", visualizer.permission)
+                    )
+                    .build()
+            )?.let { p.sendMessage(it) }
+        }
 }

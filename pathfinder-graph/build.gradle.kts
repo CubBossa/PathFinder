@@ -1,6 +1,5 @@
 plugins {
     `java-library`
-    id("io.freefair.lombok") version "6.6.2"
     kotlin("jvm")
 }
 

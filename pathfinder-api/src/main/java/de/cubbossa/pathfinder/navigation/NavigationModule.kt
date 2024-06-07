@@ -51,7 +51,7 @@ interface NavigationModule<PlayerT> : Disposable {
     suspend fun navigate(
         viewer: PathPlayer<PlayerT>,
         route: Route
-    ): VisualizerPath<PlayerT>?
+    ): VisualizerPath<PlayerT>
 
     fun cancel(viewer: UUID)
 

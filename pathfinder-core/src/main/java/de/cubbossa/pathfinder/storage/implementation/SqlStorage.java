@@ -565,10 +565,10 @@ public abstract class SqlStorage extends AbstractStorage {
       var ctx = configuration.dsl();
       ctx
           .update(PATHFINDER_NODEGROUPS)
-          .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.getWeight())
+          .set(PATHFINDER_NODEGROUPS.WEIGHT, (double) group.weight)
           .where(PATHFINDER_NODEGROUPS.KEY.eq(group.getKey()))
           .execute();
-      for (UUID nodeId : group.getContentChanges().getAddList()) {
+      for (UUID nodeId : group.contentChanges.getAddList()) {
         ctx
             .insertInto(PATHFINDER_NODEGROUP_NODES)
             .columns(PATHFINDER_NODEGROUP_NODES.GROUP_KEY, PATHFINDER_NODEGROUP_NODES.NODE_ID)
@@ -579,16 +579,16 @@ public abstract class SqlStorage extends AbstractStorage {
       ctx
           .deleteFrom(PATHFINDER_NODEGROUP_NODES)
           .where(PATHFINDER_NODEGROUP_NODES.GROUP_KEY.eq(group.getKey()))
-          .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(group.getContentChanges().getRemoveList()))
+          .and(PATHFINDER_NODEGROUP_NODES.NODE_ID.in(group.contentChanges.getRemoveList()))
           .execute();
-      group.getContentChanges().flush();
-      for (Modifier mod : group.getModifierChanges().getAddList()) {
+      group.contentChanges.flush();
+      for (Modifier mod : group.modifierChanges.getAddList()) {
         assignNodeGroupModifier(ctx, group, mod);
       }
-      for (Modifier mod : group.getModifierChanges().getRemoveList()) {
+      for (Modifier mod : group.modifierChanges.getRemoveList()) {
         removeNodeGroupModifier(ctx, group.getKey(), mod.getKey());
       }
-      group.getModifierChanges().flush();
+      group.modifierChanges.flush();
     });
   }
 

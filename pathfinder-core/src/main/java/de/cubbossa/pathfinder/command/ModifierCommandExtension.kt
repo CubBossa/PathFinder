@@ -1,15 +1,15 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import de.cubbossa.pathfinder.group.Modifier;
-import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.executors.CommandExecutor;
-import net.kyori.adventure.text.ComponentLike;
+import de.cubbossa.pathfinder.group.Modifier
+import dev.jorel.commandapi.arguments.Argument
+import dev.jorel.commandapi.executors.CommandExecutor
+import net.kyori.adventure.text.ComponentLike
 
-import java.util.function.Function;
+interface ModifierCommandExtension<M : Modifier> {
+    fun registerAddCommand(
+        tree: Argument<*>,
+        consumer: (M) -> CommandExecutor
+    ): Argument<*>
 
-public interface ModifierCommandExtension<M extends Modifier> {
-
-  Argument<?> registerAddCommand(Argument<?> tree, Function<M, CommandExecutor> consumer);
-
-  ComponentLike toComponents(M modifier);
+    fun toComponents(modifier: M): ComponentLike
 }

@@ -1,23 +1,25 @@
-package de.cubbossa.pathfinder.navigation;
+package de.cubbossa.pathfinder.navigation
 
-import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.PathView;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-import java.util.List;
+import de.cubbossa.disposables.Disposable
+import de.cubbossa.pathfinder.graph.NoPathFoundException
+import de.cubbossa.pathfinder.misc.PathPlayer
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.visualizer.PathView
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerPath
 
-public interface Navigator extends Disposable {
+interface Navigator : Disposable {
 
-  List<Node> createPath(Route route) throws NoPathFoundException;
+    @Throws(NoPathFoundException::class)
+    fun createPath(route: Route): List<Node>
 
-  <PlayerT> VisualizerPath<PlayerT> createRenderer(
-      PathPlayer<PlayerT> viewer, Route route
-  ) throws NoPathFoundException;
+    @Throws(NoPathFoundException::class)
+    fun <PlayerT> createRenderer(
+        viewer: PathPlayer<PlayerT>, route: Route
+    ): VisualizerPath<PlayerT>
 
-  <PlayerT, ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> createRenderer(
-      PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
-  ) throws NoPathFoundException;
+    @Throws(NoPathFoundException::class)
+    fun <PlayerT, ViewT : PathView<PlayerT>> createRenderer(
+        viewer: PathPlayer<PlayerT>, route: Route, renderer: PathVisualizer<ViewT, PlayerT>
+    ): VisualizerPath<PlayerT>
 }

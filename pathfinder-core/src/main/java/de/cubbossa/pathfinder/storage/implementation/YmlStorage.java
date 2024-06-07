@@ -308,7 +308,7 @@ public abstract class YmlStorage extends AbstractStorage {
   private void writeGroup(NodeGroup group) {
     workOnFile(fileGroup(group.getKey()), cfg -> {
       cfg.set("key", group.getKey().toString());
-      cfg.set("weight", group.getWeight());
+      cfg.set("weight", group.weight);
       cfg.set("modifier", null);
       group.getModifiers().forEach(modifier -> {
         Optional<ModifierType<Modifier>> type = modifierRegistry.getType(modifier.getKey());
@@ -319,8 +319,8 @@ public abstract class YmlStorage extends AbstractStorage {
         cfg.set("modifier." + modifier.getKey(), type.get().serialize(modifier));
       });
       cfg.set("nodes", group.stream().map(UUID::toString).toList());
-      group.getModifierChanges().flush();
-      group.getContentChanges().flush();
+      group.modifierChanges.flush();
+      group.contentChanges.flush();
     });
   }
 

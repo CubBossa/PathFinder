@@ -1,54 +1,60 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.Keyed;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.CollectionUtils;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.command.CommandSender;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.PathFinderSubCommand
+import de.cubbossa.pathfinder.command.paginationArgument
+import de.cubbossa.pathfinder.command.util.CommandUtils
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.misc.Keyed
+import de.cubbossa.pathfinder.misc.Pagination
+import de.cubbossa.pathfinder.sendMessage
+import de.cubbossa.pathfinder.util.CollectionUtils
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.CommandExecutor
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import org.bukkit.command.CommandSender
+import java.util.stream.Collectors
 
-public class ListVisualizersCmd extends PathFinderSubCommand {
-  public ListVisualizersCmd(PathFinder pathFinder) {
-    super(pathFinder, "listvisualizers");
-
-    withPermission(PathPerms.PERM_CMD_PV_LIST);
-    executes((commandSender, objects) -> {
-      onList(commandSender, Pagination.page(0, 10));
-    });
-    then(Arguments.pagination(10)
-        .executes((commandSender, objects) -> {
-          onList(commandSender, objects.getUnchecked(0));
+class ListVisualizersCmd(pathFinder: PathFinder) :
+    PathFinderSubCommand(pathFinder, "listvisualizers") {
+    init {
+        withPermission(PathPerms.PERM_CMD_PV_LIST)
+        executes(CommandExecutor { commandSender: CommandSender, objects: CommandArguments? ->
+            onList(commandSender, Pagination.page(0, 10))
         })
-    );
-  }
+        paginationArgument(10) {
+            executes(CommandExecutor { commandSender: CommandSender, objects: CommandArguments ->
+                onList(commandSender, objects.getUnchecked(0)!!)
+            })
+        }
+    }
 
-  public void onList(CommandSender sender, Pagination pagination) {
-    getPathfinder().getStorage().loadVisualizers().thenAccept(pathVisualizers -> {
-      getPathfinder().getStorage().loadVisualizerTypes(pathVisualizers.stream()
-          .map(Keyed::getKey).collect(Collectors.toList())).thenAccept(map -> {
+    private fun onList(sender: CommandSender, pagination: Pagination) = launchIO {
+        val pathVisualizers = pathfinder.storage.loadVisualizers()
+        val map = pathfinder.storage.loadVisualizerTypes(
+            pathVisualizers.stream()
+                .map(Keyed::key).collect(Collectors.toList())
+        )
 
         //TODO pagination in load
-        CommandUtils.printList(sender, pagination,
-            CollectionUtils.subList(new ArrayList<>(pathVisualizers), pagination),
-            visualizer -> {
-              TagResolver r = TagResolver.builder()
-                  .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
-                  .resolver(Messages.formatter().namespacedKey("type", map.get(visualizer.getKey()).getKey()))
-                  .build();
-
-              BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_LIST_ENTRY.formatted(r));
+        CommandUtils.printList(
+            sender, pagination,
+            CollectionUtils.subList(ArrayList(pathVisualizers), pagination),
+            {
+                val r = TagResolver.builder()
+                    .resolver(
+                        Messages.formatter().namespacedKey("key", it.key)
+                    )
+                    .resolver(
+                        Messages.formatter().namespacedKey("type", map[it.key]?.key)
+                    )
+                    .build()
+                sender.sendMessage(Messages.CMD_VIS_LIST_ENTRY.formatted(r))
             },
             Messages.CMD_VIS_LIST_HEADER,
-            Messages.CMD_VIS_LIST_FOOTER);
-      });
-    });
-  }
+            Messages.CMD_VIS_LIST_FOOTER
+        )
+    }
 }

@@ -1,20 +1,17 @@
-package de.cubbossa.pathfinder.group;
+package de.cubbossa.pathfinder.group
 
-import de.cubbossa.pathfinder.misc.Named;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import de.cubbossa.pathfinder.misc.Named
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
+import java.util.*
 
-public interface DiscoverProgressModifier extends Modifier, Named {
+interface DiscoverProgressModifier : Modifier, Named {
 
-  NamespacedKey KEY = NamespacedKey.fromString("pathfinder:discover-progress");
+    val owningGroup: NamespacedKey
 
-  @Override
-  default NamespacedKey getKey() {
-    return KEY;
-  }
+    suspend fun calculateProgress(playerId: UUID): Double
 
-  NamespacedKey getOwningGroup();
-
-  CompletableFuture<Double> calculateProgress(UUID playerId);
+    companion object {
+        val key: NamespacedKey = fromString("pathfinder:discover-progress")
+    }
 }

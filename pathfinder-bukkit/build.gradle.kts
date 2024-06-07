@@ -4,7 +4,6 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.0"
-    id("io.freefair.lombok") version "6.6.2"
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
     kotlin("jvm")

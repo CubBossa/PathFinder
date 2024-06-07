@@ -1,21 +1,18 @@
-package de.cubbossa.pathfinder.visualizer;
+package de.cubbossa.pathfinder.visualizer
 
-import de.cubbossa.disposables.Disposable;
-import de.cubbossa.pathfinder.misc.KeyedRegistry;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import java.util.Optional;
+import de.cubbossa.disposables.Disposable
+import de.cubbossa.pathfinder.misc.KeyedRegistry
+import de.cubbossa.pathfinder.misc.NamespacedKey
 
-public interface VisualizerTypeRegistry extends Disposable {
+interface VisualizerTypeRegistry : Disposable {
 
-  <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getDefaultType();
+    var defaultType: VisualizerType<PathVisualizer<*, *>>
 
-  <VisualizerT extends PathVisualizer<?, ?>> void setDefaultType(VisualizerType<VisualizerT> type);
+    fun <VisualizerT : PathVisualizer<*, *>> getType(typeKey: NamespacedKey): VisualizerType<VisualizerT>?
 
-  <VisualizerT extends PathVisualizer<?, ?>> Optional<VisualizerType<VisualizerT>> getType(NamespacedKey typeKey);
+    fun <VisualizerT : PathVisualizer<*, *>> registerVisualizerType(type: VisualizerType<VisualizerT>)
 
-  <VisualizerT extends PathVisualizer<?, ?>> void registerVisualizerType(VisualizerType<VisualizerT> type);
+    fun unregisterVisualizerType(type: VisualizerType<out PathVisualizer<*, *>>)
 
-  void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type);
-
-  KeyedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> getTypes();
+    val types: KeyedRegistry<VisualizerType<out PathVisualizer<*, *>>>
 }

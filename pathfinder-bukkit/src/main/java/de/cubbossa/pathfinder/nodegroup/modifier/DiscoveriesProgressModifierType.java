@@ -53,7 +53,7 @@ public class DiscoveriesProgressModifierType implements ModifierType<DiscoverPro
   @Override
   public Map<String, Object> serialize(DiscoverProgressModifier modifier) {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-    map.put("group-key", modifier.getOwningGroup().toString());
+    map.put("group-key", modifier.owningGroup.toString());
     map.put("name-format", modifier.getNameFormat());
     return map;
   }

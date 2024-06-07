@@ -41,6 +41,7 @@ public class Migrator implements Disposable {
         .baselineVersion("5.0.0")
         .javaMigrations(migrations)
         .locations("classpath:db/migration")
+        .loggers("PathFinder")
         .load();
   }
 

@@ -5,6 +5,7 @@ import de.cubbossa.pathfinder.group.NodeGroup
 import de.cubbossa.pathfinder.misc.NamespacedKey
 import de.cubbossa.pathfinder.misc.Range
 import de.cubbossa.pathfinder.node.Edge
+import de.cubbossa.pathfinder.node.Node
 import de.cubbossa.pathfinder.node.NodeType
 import de.cubbossa.pathfinder.visualizer.VisualizerType
 import java.time.LocalDateTime
@@ -43,7 +44,7 @@ interface StorageImplementation {
     // ################################
     fun saveNodeTypeMapping(typeMapping: Map<UUID, NodeType<*>>)
 
-    fun loadNodeTypeMapping(nodes: Collection<UUID>): Map<UUID, NodeType<*>>
+    fun loadNodeTypeMapping(nodes: Collection<UUID>): Map<UUID, NodeType<out Node>>
 
     fun deleteNodeTypeMapping(nodes: Collection<UUID>)
 

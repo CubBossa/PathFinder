@@ -87,8 +87,8 @@ open class AbstractNavigationModule<PlayerT>
                 groups.entries.stream()
                     .filter { e ->
                         e.value.stream().allMatch { group: NodeGroup ->
-                            val mod = group.getModifier<PermissionModifier>(PermissionModifier.KEY)
-                            mod.isEmpty || player.hasPermission(mod.get().permission())
+                            val mod = group.getModifier<PermissionModifier>(PermissionModifier.key)
+                            mod == null || player.hasPermission(mod.permission)
                         }
                     }
                     .map { e -> e.key }
@@ -142,13 +142,13 @@ open class AbstractNavigationModule<PlayerT>
 
         if (last is GroupedNode) {
             val highest: NodeGroup = last.groups().stream()
-                .filter { g: NodeGroup -> g.hasModifier<Modifier>(FindDistanceModifier.KEY) }
+                .filter { g: NodeGroup -> g.hasModifier<Modifier>(FindDistanceModifier.key) }
                 .max { obj: NodeGroup, o: NodeGroup -> obj.compareTo(o) }
                 .orElse(null)
 
-            dist = highest.getModifier<FindDistanceModifier>(FindDistanceModifier.KEY)
-                .map { obj: FindDistanceModifier -> obj.distance() }
-                .orElse(1.5)
+            dist = highest.getModifier<FindDistanceModifier>(FindDistanceModifier.key)
+                ?.distance
+                ?: 1.5
         }
         return NavigationContext(playerId, path, last, dist)
     }

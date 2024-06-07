@@ -84,7 +84,7 @@ public class BukkitEffects {
 
       DiscoverableModifier discoverableModifier = e.getFoundGroup().<DiscoverableModifier>getModifier(DiscoverableModifier.KEY)
           .orElseThrow();
-      DiscoverProgressModifier discoverProgressModifier = e.getProgressObserverGroup().<DiscoverProgressModifier>getModifier(DiscoverProgressModifier.KEY)
+      DiscoverProgressModifier discoverProgressModifier = e.getProgressObserverGroup().<DiscoverProgressModifier>getModifier(DiscoverProgressModifier.key)
           .orElseThrow();
 
       runCommands(e.getPlayer(), config.onDiscoverProgress, //"player", "discoverable", "group", "name", "percent", "ratio", "count-found", "count-all"

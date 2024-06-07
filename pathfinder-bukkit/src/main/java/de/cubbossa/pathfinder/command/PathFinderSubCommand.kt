@@ -1,32 +1,19 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import de.cubbossa.pathfinder.PathFinder;
-import dev.jorel.commandapi.arguments.LiteralArgument;
+import de.cubbossa.pathfinder.PathFinder
+import dev.jorel.commandapi.arguments.LiteralArgument
+import dev.jorel.commandapi.executors.CommandExecutor
 
-public class PathFinderSubCommand extends LiteralArgument {
+open class PathFinderSubCommand(val pathfinder: PathFinder, commandName: String) :
+    LiteralArgument(commandName) {
 
-  private PathFinder pathFinder;
+    fun withGeneratedHelp(): PathFinderSubCommand {
+        executes(CommandExecutor { _, _ -> })
+        return this
+    }
 
-  public PathFinderSubCommand(PathFinder pathFinder, String commandName) {
-    super(commandName);
-    this.pathFinder = pathFinder;
-  }
-
-  public PathFinderSubCommand withGeneratedHelp() {
-    executes((sender, args) -> {
-      //CommandUtils.sendHelp(sender, this);
-    });
-    return this;
-  }
-
-  public PathFinderSubCommand withGeneratedHelp(int depth) {
-    executes((sender, args) -> {
-      //CommandUtils.sendHelp(sender, this, depth);
-    });
-    return this;
-  }
-
-  public PathFinder getPathfinder() {
-    return pathFinder;
-  }
+    fun withGeneratedHelp(depth: Int): PathFinderSubCommand {
+        executes(CommandExecutor { _, _ -> })
+        return this
+    }
 }

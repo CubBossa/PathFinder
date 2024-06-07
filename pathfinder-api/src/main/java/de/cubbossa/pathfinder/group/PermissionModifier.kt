@@ -1,15 +1,13 @@
-package de.cubbossa.pathfinder.group;
+package de.cubbossa.pathfinder.group
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
 
-public interface PermissionModifier extends Modifier {
+interface PermissionModifier : Modifier {
 
-  NamespacedKey KEY = NamespacedKey.fromString("pathfinder:permission");
+    val permission: String
 
-  @Override
-  default NamespacedKey getKey() {
-    return KEY;
-  }
-
-  String permission();
+    companion object {
+        val key: NamespacedKey = fromString("pathfinder:permission")
+    }
 }

@@ -126,7 +126,7 @@ public class NodeGroupImpl extends ModifiedHashSet<UUID> implements NodeGroup {
 
   @Override
   public int compareTo(@NotNull NodeGroup o) {
-    return Double.compare(weight, o.getWeight());
+    return Double.compare(weight, o.weight);
   }
 
   @Override

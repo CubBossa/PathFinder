@@ -1,39 +1,35 @@
-package de.cubbossa.pathfinder.node.selection;
+package de.cubbossa.pathfinder.node.selection
 
-import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.suggestion.Suggestion;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.util.SelectionParser;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import org.pf4j.ExtensionPoint;
+import com.mojang.brigadier.arguments.ArgumentType
+import com.mojang.brigadier.suggestion.Suggestion
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser.NodeArgumentContext
+import de.cubbossa.pathfinder.util.SelectionParser
+import org.pf4j.ExtensionPoint
 
-public interface NodeSelectionAttribute<ValueT> extends ExtensionPoint {
+interface NodeSelectionAttribute<ValueT> : ExtensionPoint {
 
-  String getKey();
+    val key: String
+    val valueType: ArgumentType<ValueT>
+    val attributeType: Type
 
-  ArgumentType<ValueT> getValueType();
+    fun executeAfter(): Collection<String> {
+        return emptyList()
+    }
 
-  Type getAttributeType();
+    fun execute(context: NodeArgumentContext<ValueT>): List<Node>
 
-  default Collection<String> executeAfter() {
-    return Collections.emptyList();
-  }
+    fun getSuggestions(context: SelectionParser.SuggestionContext): List<Suggestion> {
+        return emptyList()
+    }
 
-  List<Node> execute(AbstractNodeSelectionParser.NodeArgumentContext<ValueT> context);
+    fun getStringSuggestions(context: SelectionParser.SuggestionContext): List<String> {
+        return emptyList()
+    }
 
-  default List<Suggestion> getSuggestions(SelectionParser.SuggestionContext context) {
-    return Collections.emptyList();
-  }
-
-  default List<String> getStringSuggestions(SelectionParser.SuggestionContext context) {
-    return Collections.emptyList();
-  }
-
-  enum Type {
-    SORT,
-    FILTER,
-    PEEK
-  }
+    enum class Type {
+        SORT,
+        FILTER,
+        PEEK
+    }
 }

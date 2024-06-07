@@ -1,54 +1,38 @@
-package de.cubbossa.pathfinder.node.selection;
+package de.cubbossa.pathfinder.node.selection
 
-import de.cubbossa.pathfinder.antlr.SelectionLanguageBaseVisitor;
-import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import de.cubbossa.pathfinder.antlr.SelectionLanguageBaseVisitor
+import de.cubbossa.pathfinder.antlr.SelectionLanguageParser
 
-public class SelectionVisitor extends SelectionLanguageBaseVisitor<List<ParsedSelectionAttribute>> {
-
-  private final Collection<String> identifiers;
-
-  public SelectionVisitor(Collection<String> identifiers) {
-    this.identifiers = identifiers;
-  }
-
-  @Override
-  public List<ParsedSelectionAttribute> visitProgram(SelectionLanguageParser.ProgramContext ctx) {
-    return visitExpression(ctx.expression());
-  }
-
-  @Override
-  public List<ParsedSelectionAttribute> visitExpression(SelectionLanguageParser.ExpressionContext ctx) {
-    if (!identifiers.contains(ctx.selector().IDENTIFIER().getSymbol().getText())) {
-      throw new IllegalStateException(
-          "Invalid identifier: " + ctx.selector().IDENTIFIER().getSymbol().getText());
+class SelectionVisitor(private val identifiers: Collection<String>) :
+    SelectionLanguageBaseVisitor<List<ParsedSelectionAttribute>>() {
+    override fun visitProgram(ctx: SelectionLanguageParser.ProgramContext): List<ParsedSelectionAttribute>? {
+        return visitExpression(ctx.expression())
     }
-    return ctx.conditions() == null ? null : visitConditions(ctx.conditions());
-  }
 
-  @Override
-  public List<ParsedSelectionAttribute> visitConditions(SelectionLanguageParser.ConditionsContext ctx) {
-    return ctx.attributelist() == null ? null : visitAttributelist(ctx.attributelist());
-  }
-
-  @Override
-  public List<ParsedSelectionAttribute> visitAttributelist(
-      SelectionLanguageParser.AttributelistContext ctx) {
-
-    List<ParsedSelectionAttribute> list = new ArrayList<>();
-    if (ctx.attributelist() != null) {
-      list.addAll(visitAttributelist(ctx.attributelist()));
+    override fun visitExpression(ctx: SelectionLanguageParser.ExpressionContext): List<ParsedSelectionAttribute>? {
+        check(identifiers.contains(ctx.selector().IDENTIFIER().symbol.text)) {
+            "Invalid identifier: " + ctx.selector().IDENTIFIER().symbol.text
+        }
+        return if (ctx.conditions() == null) null else visitConditions(ctx.conditions())
     }
-    list.addAll(visitAttribute(ctx.attribute()));
-    return list;
-  }
 
-  @Override
-  public List<ParsedSelectionAttribute> visitAttribute(SelectionLanguageParser.AttributeContext ctx) {
+    override fun visitConditions(ctx: SelectionLanguageParser.ConditionsContext): List<ParsedSelectionAttribute>? {
+        return if (ctx.attributelist() == null) null else visitAttributelist(ctx.attributelist())
+    }
 
-    String identifier = ctx.IDENTIFIER().getText();
-    return List.of(new ParsedSelectionAttribute(identifier, ctx.value().getText()));
-  }
+    override fun visitAttributelist(
+        ctx: SelectionLanguageParser.AttributelistContext
+    ): List<ParsedSelectionAttribute> {
+        val list: MutableList<ParsedSelectionAttribute> = ArrayList()
+        if (ctx.attributelist() != null) {
+            list.addAll(visitAttributelist(ctx.attributelist()))
+        }
+        list.addAll(visitAttribute(ctx.attribute()))
+        return list
+    }
+
+    override fun visitAttribute(ctx: SelectionLanguageParser.AttributeContext): List<ParsedSelectionAttribute> {
+        val identifier = ctx.IDENTIFIER().text
+        return listOf(ParsedSelectionAttribute(identifier, ctx.value().text))
+    }
 }

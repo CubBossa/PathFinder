@@ -7,7 +7,6 @@ plugins {
     `maven-publish`
     `java-test-fixtures`
     id("com.github.johnrengelman.shadow") version "8.1.0"
-    id("io.freefair.lombok") version "6.6.2"
     id("nu.studer.jooq") version "8.1"
     kotlin("jvm")
 }
@@ -89,6 +88,9 @@ tasks {
     generateGrammarSource {
         // Tell ANTLR to generate visitor classes
         arguments.plusAssign("-visitor")
+    }
+    compileKotlin {
+        dependsOn(generateGrammarSource)
     }
     test {
         useJUnitPlatform()

@@ -28,15 +28,15 @@ public class NodeSelectionProviderImpl<SenderT, ContextT extends AbstractNodeSel
   }
 
   private <T> void add(NodeSelectionAttribute<T> i) {
-    parser.addResolver(new AbstractNodeSelectionParser.NodeSelectionArgument<>(i.getValueType()) {
+    parser.addResolver(new AbstractNodeSelectionParser.NodeSelectionArgument<>(i.valueType) {
       @Override
       public String getKey() {
-        return i.getKey();
+        return i.key;
       }
 
       @Override
       public SelectionParser.SelectionModification modificationType() {
-        return SelectionParser.SelectionModification.valueOf(i.getAttributeType().name());
+        return SelectionParser.SelectionModification.valueOf(i.attributeType.name());
       }
 
       @Override

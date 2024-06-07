@@ -1,70 +1,81 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder
 
-import de.cubbossa.disposables.Disposable;
-import de.exlll.configlib.NameFormatters;
-import de.exlll.configlib.Serializer;
-import de.exlll.configlib.YamlConfigurationProperties;
-import de.exlll.configlib.YamlConfigurations;
-import java.awt.Color;
-import java.io.File;
-import java.util.Locale;
-import lombok.AllArgsConstructor;
+import de.cubbossa.disposables.Disposable
+import de.exlll.configlib.NameFormatters
+import de.exlll.configlib.Serializer
+import de.exlll.configlib.YamlConfigurationProperties
+import de.exlll.configlib.YamlConfigurations
+import lombok.AllArgsConstructor
+import java.awt.Color
+import java.io.File
+import java.util.*
 
-@AllArgsConstructor
-public class ConfigFileLoader implements Disposable {
+class ConfigFileLoader(
+    private val dataFolder: File? = null
+) : Disposable {
 
-  private static final YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder()
-      .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
-      .addSerializer(Locale.class, new Serializer<Locale, String>() {
-        @Override
-        public String serialize(Locale element) {
-          return element.toLanguageTag();
+    fun loadConfig(): PathFinderConfigImpl {
+        val configuration: PathFinderConfigImpl
+
+        val configFile = File(dataFolder, "config.yml")
+        if (!configFile.exists()) {
+            configuration = PathFinderConfigImpl()
+            YamlConfigurations.save(
+                configFile.toPath(),
+                PathFinderConfigImpl::class.java,
+                configuration,
+                properties
+            )
+            return configuration
         }
+        return YamlConfigurations.load(
+            configFile.toPath(),
+            PathFinderConfigImpl::class.java,
+            properties
+        )
+    }
 
-        @Override
-        public Locale deserialize(String element) {
-          return Locale.forLanguageTag(element.replace("_", "-"));
-        }
-      })
-      .addSerializer(Color.class, new Serializer<Color, String>() {
-        @Override
-        public String serialize(Color element) {
-          return Integer.toHexString(element.getRGB() & 0xffffff);
-        }
+    companion object {
+        private val properties: YamlConfigurationProperties =
+            YamlConfigurationProperties.newBuilder()
+                .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
+                .addSerializer(Locale::class.java, object : Serializer<Locale, String> {
+                    override fun serialize(element: Locale): String {
+                        return element.toLanguageTag()
+                    }
 
-        @Override
-        public Color deserialize(String element) {
-          return new Color(Integer.parseInt(element, 16));
-        }
-      })
-      .createParentDirectories(true)
-      .header("""
+                    override fun deserialize(element: String): Locale {
+                        return Locale.forLanguageTag(element.replace("_", "-"))
+                    }
+                })
+                .addSerializer(Color::class.java, object : Serializer<Color, String> {
+                    override fun serialize(element: Color): String {
+                        return Integer.toHexString(element.rgb and 0xffffff)
+                    }
+
+                    override fun deserialize(element: String): Color {
+                        return Color(element.toInt(16))
+                    }
+                })
+                .createParentDirectories(true)
+                .header(
+                    """
           #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
           #                                                               #
           #       _____      _   _     ______ _           _               #
-          #      |  __ \\    | | | |   |  ____(_)         | |              #
+          #      |  __ \    | | | |   |  ____(_)         | |              #
           #      | |__) |_ _| |_| |__ | |__   _ _ __   __| | ___ _ __     #
-          #      |  ___/ _` | __| '_ \\|  __| | | '_ \\ / _` |/ _ \\ '__|    #
+          #      |  ___/ _` | __| '_ \|  __| | | '_ \ / _` |/ _ \ '__|    #
           #      | |  | (_| | |_| | | | |    | | | | | (_| |  __/ |       #
-          #      |_|   \\__,_|\\__|_| |_|_|    |_|_| |_|\\__,_|\\___|_|       #
+          #      |_|   \__,_|\__|_| |_|_|    |_|_| |_|\__,_|\___|_|       #
           #                        Configuration                          #
           #                                                               #
           #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
                       
-          """)
-      .build();
-
-  private final File dataFolder;
-
-  public PathFinderConfigImpl loadConfig() {
-    PathFinderConfigImpl configuration;
-
-    File configFile = new File(dataFolder, "config.yml");
-    if (!configFile.exists()) {
-      configuration = new PathFinderConfigImpl();
-      YamlConfigurations.save(configFile.toPath(), PathFinderConfigImpl.class, configuration, properties);
-      return configuration;
+          
+                      
+          """.trimIndent()
+                )
+                .build()
     }
-    return YamlConfigurations.load(configFile.toPath(), PathFinderConfigImpl.class, properties);
-  }
 }

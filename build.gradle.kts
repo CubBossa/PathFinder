@@ -5,6 +5,8 @@ plugins {
     eclipse
     kotlin("jvm")
     id("com.google.devtools.ksp") version "2.0.0-1.0.21"
+    kotlin("plugin.lombok") version "2.0.0"
+    id("io.freefair.lombok") version "8.1.0"
 }
 
 java {
@@ -27,6 +29,8 @@ subprojects {
     apply {
         plugin("java")
         plugin("com.google.devtools.ksp")
+        plugin("io.freefair.lombok")
+        plugin("org.jetbrains.kotlin.plugin.lombok")
     }
 
     repositories {

@@ -1,13 +1,11 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import de.cubbossa.pathfinder.group.NodeGroup;
-import java.util.Collection;
+import de.cubbossa.pathfinder.group.NodeGroup
 
-public interface GroupedNode extends Node {
+interface GroupedNode : Node {
+    fun node(): Node
 
-  Node node();
+    fun groups(): MutableCollection<NodeGroup>
 
-  Collection<NodeGroup> groups();
-
-  GroupedNode merge(GroupedNode other);
+    fun merge(other: GroupedNode): GroupedNode
 }

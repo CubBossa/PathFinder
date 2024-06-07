@@ -1,15 +1,13 @@
 package de.cubbossa.pathfinder
 
-import de.cubbossa.pathfinder.misc.PathPlayer
-import de.cubbossa.pathfinder.misc.pathConsoleSender
-import de.cubbossa.pathfinder.misc.pathPlayer
+import de.cubbossa.pathfinder.misc.*
 import de.cubbossa.pathfinder.util.BukkitVectorUtils
 import net.kyori.adventure.text.ComponentLike
-import org.bukkit.Location
-import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.util.Vector
+import org.bukkit.Location as BukkitLoc
+import org.bukkit.NamespacedKey as BukkitNamespacedKey
+import org.bukkit.util.Vector as BukkitVec
 
 fun Player.asPathPlayer(): PathPlayer<Player> = pathPlayer(this)
 
@@ -25,26 +23,26 @@ fun CommandSender.sendMessage(component: ComponentLike) {
     this.asPathPlayer().sendMessage(component)
 }
 
-fun NamespacedKey.toPathFinder(): de.cubbossa.pathfinder.misc.NamespacedKey {
+fun BukkitNamespacedKey.toPathFinder(): NamespacedKey {
     return BukkitPathFinder.convert(this)
 }
 
-fun de.cubbossa.pathfinder.misc.NamespacedKey.toBukkit(): NamespacedKey {
-    return NamespacedKey(this.namespace, this.key)
+fun NamespacedKey.toBukkit(): BukkitNamespacedKey {
+    return BukkitNamespacedKey(this.namespace, this.key)
 }
 
-fun Vector.toPathFinder(): de.cubbossa.pathfinder.misc.Vector {
+fun BukkitVec.toPathFinder(): Vector {
     return BukkitVectorUtils.toInternal(this)
 }
 
-fun de.cubbossa.pathfinder.misc.Vector.toPathFinder(): Vector {
+fun Vector.toPathFinder(): BukkitVec {
     return BukkitVectorUtils.toBukkit(this)
 }
 
-fun Location.toPathFinder(): de.cubbossa.pathfinder.misc.Location {
+fun BukkitLoc.toPathFinder(): Location {
     return BukkitVectorUtils.toInternal(this)
 }
 
-fun de.cubbossa.pathfinder.misc.Location.toPathFinder(): Location {
+fun Location.toPathFinder(): BukkitLoc {
     return BukkitVectorUtils.toBukkit(this)
 }

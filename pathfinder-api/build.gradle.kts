@@ -1,7 +1,7 @@
 plugins {
     `java-library`
-    id("io.freefair.lombok") version "6.6.2"
     kotlin("jvm")
+    id("io.freefair.lombok") version "8.1.0"
 }
 
 group = "de.cubbossa"

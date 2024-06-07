@@ -1,79 +1,54 @@
-package de.cubbossa.pathfinder.visualizer;
+package de.cubbossa.pathfinder.visualizer
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.misc.KeyedRegistry;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.util.ExtensionPoint;
-import de.cubbossa.pathfinder.util.HashedRegistry;
-import java.util.Optional;
-import lombok.Getter;
-import lombok.Setter;
-import org.jetbrains.annotations.Nullable;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.misc.KeyedRegistry
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.util.ExtensionPoint
+import de.cubbossa.pathfinder.util.HashedRegistry
+import lombok.Getter
 
 @Getter
-public class VisualizerTypeRegistryImpl implements VisualizerTypeRegistry {
+class VisualizerTypeRegistryImpl(pathFinder: PathFinder) : VisualizerTypeRegistry {
 
-  @Getter
-  private static VisualizerTypeRegistryImpl instance;
+    private val EXTENSION_POINT: ExtensionPoint<VisualizerType<*>> = ExtensionPoint(
+        VisualizerType::class.java
+    )
 
-  public final ExtensionPoint<VisualizerType> EXTENSION_POINT = new ExtensionPoint<>(VisualizerType.class);
+    override var defaultType: VisualizerType<PathVisualizer<*, *>>
+    private val visualizerTypes = HashedRegistry<VisualizerType<out PathVisualizer<*, *>>>()
+    override val types: KeyedRegistry<VisualizerType<out PathVisualizer<*, *>>>
+        get() = HashedRegistry(visualizerTypes)
 
-  @Getter
-  @Setter
-  private VisualizerType<?> defaultVisualizerType;
-  private final HashedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> visualizerTypes;
+    init {
+        pathFinder.disposer.register(pathFinder, this)
 
-  public VisualizerTypeRegistryImpl(PathFinder pathFinder) {
-    instance = this;
+        EXTENSION_POINT.extensions.forEach {
+            this.registerVisualizerType(it)
+        }
 
-    this.visualizerTypes = new HashedRegistry<>();
-    pathFinder.getDisposer().register(pathFinder, this);
-
-    EXTENSION_POINT.getExtensions().forEach(this::registerVisualizerType);
-
-    if (!visualizerTypes.isEmpty()) {
-      defaultVisualizerType = visualizerTypes.values().stream()
-          .filter(visualizerType -> visualizerType.getKey().getKey().equals("particle"))
-          .findFirst()
-          .orElse(visualizerTypes.values().iterator().next());
+        if (!visualizerTypes.isEmpty()) {
+            defaultType = visualizerTypes.values.stream()
+                .filter { it.key.key == "particle" }
+                .findFirst()
+                .orElse(
+                    visualizerTypes.values.iterator().next()
+                ) as VisualizerType<PathVisualizer<*, *>>
+        } else {
+            throw IllegalStateException("No path visualizers found.")
+        }
     }
-  }
 
-  @Override
-  public void dispose() {
-    instance = null;
-  }
+    override fun <T : PathVisualizer<*, *>> getType(typeKey: NamespacedKey): VisualizerType<T>? {
+        return visualizerTypes[typeKey] as VisualizerType<T>
+    }
 
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> VisualizerType<VisualizerT> getDefaultType() {
-    return (VisualizerType<VisualizerT>) defaultVisualizerType;
-  }
+    override fun <T : PathVisualizer<*, *>> registerVisualizerType(type: VisualizerType<T>) {
+        visualizerTypes.put(type)
+        PathFinder.get().disposer.register(this, type)
+    }
 
-  @Override
-  public <VisualizerT extends PathVisualizer<?, ?>> void setDefaultType(VisualizerType<VisualizerT> type) {
-    defaultVisualizerType = type;
-  }
-
-  @Override
-  public @Nullable <T extends PathVisualizer<?, ?>> Optional<VisualizerType<T>> getType(
-          NamespacedKey typeKey) {
-    return Optional.ofNullable((VisualizerType<T>) visualizerTypes.get(typeKey));
-  }
-
-  @Override
-  public <T extends PathVisualizer<?, ?>> void registerVisualizerType(VisualizerType<T> type) {
-    visualizerTypes.put(type);
-    PathFinder.get().getDisposer().register(this, type);
-  }
-
-  @Override
-  public void unregisterVisualizerType(VisualizerType<? extends PathVisualizer<?, ?>> type) {
-    PathFinder.get().getDisposer().unregister(type);
-    visualizerTypes.remove(type.getKey());
-  }
-
-  @Override
-  public KeyedRegistry<VisualizerType<? extends PathVisualizer<?, ?>>> getTypes() {
-    return new HashedRegistry<>(visualizerTypes);
-  }
+    override fun unregisterVisualizerType(type: VisualizerType<out PathVisualizer<*, *>>) {
+        PathFinder.get().disposer.unregister(type)
+        visualizerTypes.remove(type.key)
+    }
 }

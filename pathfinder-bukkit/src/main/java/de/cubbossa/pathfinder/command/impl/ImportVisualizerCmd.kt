@@ -1,89 +1,125 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.examples.ExamplesFileReader;
-import de.cubbossa.pathfinder.examples.ExamplesLoader;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import org.bukkit.command.CommandSender;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.PathFinderSubCommand
+import de.cubbossa.pathfinder.examples.ExamplesFileReader.ExampleFile
+import de.cubbossa.pathfinder.examples.ExamplesLoader
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
+import de.cubbossa.pathfinder.util.BukkitUtils
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.CommandExecutor
+import dev.jorel.commandapi.kotlindsl.greedyStringArgument
+import org.bukkit.command.CommandSender
+import java.util.*
+import java.util.function.Consumer
 
-public class ImportVisualizerCmd extends PathFinderSubCommand {
+class ImportVisualizerCmd(pathFinder: PathFinder) :
+    PathFinderSubCommand(pathFinder, "importvisualizer") {
+    private val loader: ExamplesLoader
 
-  private final ExamplesLoader loader;
+    init {
+        withPermission(PathPerms.PERM_CMD_PF_IMPORT_VIS)
+        withGeneratedHelp()
 
-  public ImportVisualizerCmd(PathFinder pathFinder) {
-    super(pathFinder, "importvisualizer");
-    withPermission(PathPerms.PERM_CMD_PF_IMPORT_VIS);
-    withGeneratedHelp();
-    
-    loader = new ExamplesLoader(pathFinder.getVisualizerTypeRegistry());
+        loader = ExamplesLoader(pathFinder.visualizerTypeRegistry)
 
-    then(new GreedyStringArgument("name")
-        .replaceSuggestions((suggestionInfo, suggestionsBuilder) -> {
-          return loader.getExampleFiles().thenApply(files -> {
-            files.stream()
-                .map(ExamplesFileReader.ExampleFile::name)
-                .forEach(suggestionsBuilder::suggest);
-            suggestionsBuilder.suggest("*");
-            return suggestionsBuilder.build();
-          });
-        })
-        .executes((commandSender, objects) -> {
-          if (Objects.equals(objects.<String>getUnchecked(0), "*")) {
-            loader.getExampleFiles().thenAccept(files -> files
-                .forEach(exampleFile -> importVisualizer(commandSender, exampleFile)));
-            return;
-          }
-          loader.getExampleFiles()
-              .thenApply(files -> files.stream().filter(f -> f.name().equalsIgnoreCase(objects.getUnchecked(0))).findFirst())
-              .thenCompose(exampleFile -> importVisualizer(commandSender, exampleFile.orElse(null)))
-              .exceptionally(throwable -> {
-                BukkitUtils.wrap(commandSender).sendMessage(Messages.throwable(throwable));
-                return null;
-              });
-        })
-    );
-  }
-
-  private CompletableFuture<Void> importVisualizer(CommandSender commandSender, ExamplesFileReader.ExampleFile exampleFile) {
-    if (exampleFile == null) {
-      BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_NOT_EXISTS);
-      return CompletableFuture.completedFuture(null);
+        greedyStringArgument("name") {
+            replaceSuggestions { _, suggestionsBuilder: SuggestionsBuilder ->
+                loader.exampleFiles.thenApply { files: Collection<ExampleFile> ->
+                    files.stream()
+                        .map { it.name }
+                        .forEach { text: String? -> suggestionsBuilder.suggest(text) }
+                    suggestionsBuilder.suggest("*")
+                    suggestionsBuilder.build()
+                }
+            }
+            executes(CommandExecutor { commandSender: CommandSender, objects: CommandArguments ->
+                if (objects.getUnchecked<String>(0) == "*") {
+                    loader.exampleFiles.thenAccept { files: Collection<ExampleFile> ->
+                        files
+                            .forEach(Consumer { exampleFile: ExampleFile ->
+                                importVisualizer(
+                                    commandSender,
+                                    exampleFile
+                                )
+                            })
+                    }
+                    return@CommandExecutor
+                }
+                loader.exampleFiles
+                    .thenApply { files: Collection<ExampleFile?> ->
+                        files.stream().filter { f: ExampleFile? ->
+                            f!!.name.equals(
+                                objects.getUnchecked(0),
+                                ignoreCase = true
+                            )
+                        }
+                            .findFirst()
+                    }
+                    .thenAccept { exampleFile: ExampleFile? ->
+                        importVisualizer(
+                            commandSender,
+                            exampleFile
+                        )
+                    }
+                    .exceptionally { throwable: Throwable? ->
+                        BukkitUtils.wrap(commandSender).sendMessage(Messages.throwable(throwable))
+                        null
+                    }
+            })
+        }
     }
-    NamespacedKey key = NamespacedKey.fromString(exampleFile.name().replace(".yml", "").replace("$", ":"));
-    return getPathfinder().getStorage().loadVisualizer(key).thenCompose(pathVisualizer -> {
-      if (pathVisualizer.isPresent()) {
-        BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_EXISTS);
-        return CompletableFuture.completedFuture(null);
-      }
-      return loader
-          .loadVisualizer(exampleFile)
-          .thenCompose(v -> save(v.getValue(), v.getKey()))
-          .thenAccept(visualizer -> {
-            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.formatted(
-                Messages.formatter().namespacedKey("key", key)
-            ));
-          })
-          .exceptionally(throwable -> {
-            BukkitUtils.wrap(commandSender).sendMessage(Messages.GEN_ERROR.formatted(
-                Messages.formatter().throwable(throwable)
-            ));
-            return null;
-          });
-    });
-  }
 
-  private <V extends PathVisualizer<?, ?>> CompletableFuture<V> save(VisualizerType<V> type, V vis) {
-    return getPathfinder().getStorage()
-        .createAndLoadVisualizer(type, vis.getKey())
-        .thenCompose(v -> getPathfinder().getStorage().saveVisualizer(vis).thenApply(u -> v));
-  }
+    private fun importVisualizer(
+        commandSender: CommandSender,
+        exampleFile: ExampleFile?
+    ) = launchIO {
+        if (exampleFile == null) {
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_NOT_EXISTS)
+            return@launchIO
+        }
+        val key = fromString(exampleFile.name.replace(".yml", "").replace("$", ":"))
+        val pathVisualizer = pathfinder.storage.loadVisualizer<PathVisualizer<*, *>>(key)
+        if (pathVisualizer != null) {
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_EXISTS)
+            return@launchIO
+        }
+        loader
+            .loadVisualizer<PathVisualizer<*, *>>(exampleFile)
+            .thenCompose { v: Map.Entry<PathVisualizer<*, *>, VisualizerType<PathVisualizer<*, *>>> ->
+                save(
+                    v.value,
+                    v.key
+                )
+            }
+            .thenAccept {
+                BukkitUtils.wrap(commandSender).sendMessage(
+                    Messages.CMD_VIS_IMPORT_SUCCESS.formatted(
+                        Messages.formatter().namespacedKey("key", key)
+                    )
+                )
+            }
+            .exceptionally { throwable: Throwable? ->
+                BukkitUtils.wrap(commandSender).sendMessage(
+                    Messages.GEN_ERROR.formatted(
+                        Messages.formatter().throwable(throwable)
+                    )
+                )
+                null
+            }
+    }
+
+    private fun <V : PathVisualizer<*, *>> save(
+        type: VisualizerType<V>,
+        vis: V
+    ) = launchIO {
+        pathFinder.storage.createAndLoadVisualizer(type, vis.key)
+        pathFinder.storage.saveVisualizer(vis)
+    }
 }

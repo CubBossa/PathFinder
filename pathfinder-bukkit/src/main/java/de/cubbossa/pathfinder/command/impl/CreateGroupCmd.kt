@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.AbstractPathFinder.pathfinder
+import de.cubbossa.pathfinder.AbstractPathFinder.Companion.pathfinder
 import de.cubbossa.pathfinder.PathFinder
 import de.cubbossa.pathfinder.PathPerms
 import de.cubbossa.pathfinder.command.PathFinderSubCommand
@@ -21,7 +21,7 @@ class CreateGroupCmd(pathFinder: PathFinder) : PathFinderSubCommand(pathFinder, 
 
         withPermission(PathPerms.PERM_CMD_NG_CREATE)
 
-        then(stringArgument("name") {
+        stringArgument("name") {
             anyExecutor { sender: CommandSender, args: CommandArguments ->
                 createGroup(
                     sender,
@@ -30,7 +30,7 @@ class CreateGroupCmd(pathFinder: PathFinder) : PathFinderSubCommand(pathFinder, 
                     )
                 )
             }
-        })
+        }
     }
 
     private fun createGroup(sender: CommandSender, name: String) = launchIO {

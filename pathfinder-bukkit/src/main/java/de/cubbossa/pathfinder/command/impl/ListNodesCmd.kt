@@ -1,31 +1,35 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.node.NodeSelection;
-import de.cubbossa.pathfinder.node.NodeSelectionImpl;
-import de.cubbossa.pathfinder.util.NodeUtils;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.PathFinderSubCommand
+import de.cubbossa.pathfinder.command.nodeSelectionArgument
+import de.cubbossa.pathfinder.command.paginationArgument
+import de.cubbossa.pathfinder.misc.Pagination
+import de.cubbossa.pathfinder.node.NodeSelection
+import de.cubbossa.pathfinder.node.NodeSelectionImpl
+import de.cubbossa.pathfinder.util.NodeUtils
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import org.bukkit.entity.Player
 
-public class ListNodesCmd extends PathFinderSubCommand {
-  public ListNodesCmd(PathFinder pathFinder) {
-    super(pathFinder, "listnodes");
+class ListNodesCmd(pathFinder: PathFinder) : PathFinderSubCommand(pathFinder, "listnodes") {
 
-    withPermission(PathPerms.PERM_CMD_WP_LIST);
-    executesPlayer((sender, args) -> {
-      NodeSelection selection = NodeSelection.ofSender("@n", sender);
-      NodeUtils.onList(sender, new NodeSelectionImpl(selection), Pagination.page(0, 10));
-    });
-    then(Arguments.nodeSelectionArgument("nodes")
-        .executesPlayer((player, args) -> {
-          NodeUtils.onList(player, args.getUnchecked(0), Pagination.page(0, 10));
+    init {
+        withPermission(PathPerms.PERM_CMD_WP_LIST)
+        executesPlayer(PlayerCommandExecutor { sender: Player?, _ ->
+            val selection = NodeSelection.ofSender("@n", sender!!)
+            NodeUtils.onList(sender, NodeSelectionImpl(selection), Pagination.page(0, 10))
         })
-        .then(Arguments.pagination(10)
-            .executesPlayer((player, args) -> {
-              NodeUtils.onList(player, args.getUnchecked(0), args.getUnchecked(1));
+        nodeSelectionArgument("nodes") {
+            executesPlayer(PlayerCommandExecutor { player: Player?, args: CommandArguments ->
+                NodeUtils.onList(player, args.getUnchecked(0), Pagination.page(0, 10))
             })
-        ));
-  }
+            paginationArgument(10) {
+                executesPlayer(PlayerCommandExecutor { player: Player?, args: CommandArguments ->
+                    NodeUtils.onList(player, args.getUnchecked(0), args.getUnchecked(1))
+                })
+            }
+        }
+    }
 }

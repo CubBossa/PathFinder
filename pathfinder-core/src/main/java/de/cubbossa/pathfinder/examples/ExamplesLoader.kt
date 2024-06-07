@@ -1,96 +1,93 @@
-package de.cubbossa.pathfinder.examples;
+package de.cubbossa.pathfinder.examples
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
-import java.io.StringReader;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import lombok.Getter;
-import org.bukkit.configuration.file.YamlConfiguration;
+import de.cubbossa.pathfinder.examples.ExamplesFileReader.ExampleFile
+import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.pathfinder.visualizer.VisualizerType
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry
+import lombok.Getter
+import org.bukkit.configuration.file.YamlConfiguration
+import java.io.StringReader
+import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.stream.Collectors
 
-public class ExamplesLoader {
+class ExamplesLoader @JvmOverloads constructor(
+    private val registry: VisualizerTypeRegistry,
+    private val url: String = COMMON_REPO
+) {
 
-  private static final String COMMON_REPO = "https://api.github.com/repos/CubBossa/PathFinder/contents/examples";
+    private val files: MutableList<ExampleFile> = ArrayList()
+    private val reader = ExamplesFileReader()
 
-  private final String url;
-  private final List<ExamplesFileReader.ExampleFile> files;
-  private final ExamplesFileReader reader;
-  private final VisualizerTypeRegistry registry;
-  @Getter
-  private boolean cached = false;
+    @Getter
+    private var cached = false
 
-  public ExamplesLoader(VisualizerTypeRegistry registry, String url) {
-    this.registry = registry;
-    this.reader = new ExamplesFileReader();
-    this.files = new ArrayList<>();
-    this.url = url;
-  }
+    val exampleFiles: CompletableFuture<Collection<ExampleFile>>
+        get() = if (!cached) {
+            reader.getExamples(url).thenApply { exampleFiles: Collection<ExampleFile>? ->
+                files.addAll(
+                    exampleFiles!!
+                )
+                cached = true
+                HashSet(this.files)
+            }
+        } else {
+            CompletableFuture.completedFuture(HashSet(this.files))
+        }
 
-  public ExamplesLoader(VisualizerTypeRegistry registry) {
-    this(registry, COMMON_REPO);
-  }
+    val examples: CompletableFuture<Collection<PathVisualizer<*, *>>>
+        get() = exampleFiles
+            .thenApply { exampleFiles: Collection<ExampleFile> ->
+                exampleFiles.stream().parallel()
+                    .map<CompletableFuture<Map.Entry<PathVisualizer<*, *>, VisualizerType<PathVisualizer<*, *>>>>> {
+                        this.loadVisualizer(it)
+                    }
+                    .map { it.join() }
+                    .map { it.key }
+                    .collect(Collectors.toSet())
+            }
 
-  public CompletableFuture<Collection<ExamplesFileReader.ExampleFile>> getExampleFiles() {
-    if (!cached) {
-      return reader.getExamples(url).thenApply(exampleFiles -> {
-        this.files.addAll(exampleFiles);
-        cached = true;
-        return new HashSet<>(this.files);
-      });
-    } else {
-      return CompletableFuture.completedFuture(new HashSet<>(this.files));
+    fun <V : PathVisualizer<*, *>>
+            loadVisualizer(file: ExampleFile): CompletableFuture<Map.Entry<V, VisualizerType<V>>> {
+        return reader.read(file.fetchUrl).thenApply { s: String? ->
+            val values = YamlConfiguration.loadConfiguration(StringReader(s)).getValues(false)
+            val typeString = values["type"] as String
+            val type: VisualizerType<V>? = registry.getType(
+                fromString(typeString)
+            )
+            if (type == null) {
+                throw RuntimeException(
+                    "Could not load visualizer of type '$typeString'. Make sure that required PathFinder extensions are installed."
+                )
+            }
+            AbstractMap.SimpleEntry(parse(file, type, values), type)
+        }
     }
-  }
 
-  public CompletableFuture<Collection<PathVisualizer<?, ?>>> getExamples() {
-    return getExampleFiles()
-        .thenApply(exampleFiles -> exampleFiles.stream().parallel()
-            .map(this::loadVisualizer)
-            .map(CompletableFuture::join)
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet()));
-  }
+    private fun <VisualizerT : PathVisualizer<*, *>> parse(
+        file: ExampleFile,
+        type: VisualizerType<VisualizerT>,
+        values: Map<String, Any>
+    ): VisualizerT {
+        val name = fromString(
+            file.name
+                .replace(".yml", "")
+                .replace("$", ":")
+        )
 
-  public <V extends PathVisualizer<?, ?>>
-  CompletableFuture<Map.Entry<V, VisualizerType<V>>> loadVisualizer(ExamplesFileReader.ExampleFile file) {
-    return reader.read(file.fetchUrl()).thenApply(s -> {
-      Map<String, Object> values = YamlConfiguration.loadConfiguration(new StringReader(s)).getValues(false);
-      String typeString = (String) values.get("type");
-      Optional<VisualizerType<V>> type = registry.<V>getType(NamespacedKey.fromString(typeString));
-      if (type.isEmpty()) {
-        throw new RuntimeException(
-            "Could not load visualizer of type '" + typeString + "'. Make sure that required PathFinder extensions are installed.");
-      }
-      return new AbstractMap.SimpleEntry<>(parse(file, type.get(), values), type.get());
-    });
-  }
-
-  private <VisualizerT extends PathVisualizer<?, ?>> VisualizerT parse(
-      ExamplesFileReader.ExampleFile file, VisualizerType<VisualizerT> type,
-      Map<String, Object> values
-  ) {
-    NamespacedKey name = NamespacedKey.fromString(file.name()
-        .replace(".yml", "")
-        .replace("$", ":"));
-
-
-    if (type instanceof AbstractVisualizerType abstractType) {
-      VisualizerT visualizer = (VisualizerT) abstractType.createVisualizer(name);
-      abstractType.deserialize((AbstractVisualizer<?, ?>) visualizer, values);
-      return visualizer;
-    } else {
-      throw new RuntimeException("Only visualizers of a type that extends 'AbstractVisualizerType' can be loaded from yml files.");
+        if (type is AbstractVisualizerType<*>) {
+            val visualizer = type.createVisualizer(name)
+            type.deserialize(visualizer, values)
+            return visualizer as VisualizerT
+        } else {
+            throw RuntimeException("Only visualizers of a type that extends 'AbstractVisualizerType' can be loaded from yml files.")
+        }
     }
-  }
+
+    companion object {
+        private const val COMMON_REPO =
+            "https://api.github.com/repos/CubBossa/PathFinder/contents/examples"
+    }
 }

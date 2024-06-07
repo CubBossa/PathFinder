@@ -20,7 +20,6 @@ import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl
 import de.cubbossa.pathfinder.util.CollectionUtils
 import de.cubbossa.pathfinder.visualizer.PathVisualizer
 import de.cubbossa.pathfinder.visualizer.VisualizerType
-import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl
 import lombok.Getter
 import lombok.Setter
 import java.time.LocalDateTime
@@ -37,8 +36,8 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     private var ioExecutor: ExecutorService? = null
     override var cache: CacheLayer = CacheLayerImpl()
     override var eventDispatcher: EventDispatcher<*>? = null
-    private val logger: Logger? = null
-    override val implementation: StorageImplementation? = null
+    var logger: Logger? = null
+    override lateinit var implementation: StorageImplementation
 
     override fun dispose() {
         shutdown()
@@ -51,7 +50,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     @Throws(Exception::class)
     override fun init() {
         val factory = ThreadFactoryBuilder().setNameFormat("pathfinder-io-%d").build()
-        ioExecutor = implementation!!.service(factory)
+        ioExecutor = implementation.service(factory)
         if (ioExecutor == null) {
             ioExecutor = Executors.newCachedThreadPool(factory)
         }
@@ -75,7 +74,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         }
     }
 
-    override suspend fun createGlobalNodeGroup(defaultVisualizerType: VisualizerType<*>): NodeGroup? {
+    override suspend fun createGlobalNodeGroup(defaultVisualizerType: VisualizerType<*>): NodeGroup {
         var group = loadGroup(AbstractPathFinder.globalGroupKey())
         if (group != null) {
             return group
@@ -88,7 +87,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
             )
 
         group = createAndLoadGroup(AbstractPathFinder.globalGroupKey())
-        group?.let {
+        group.let {
             group.weight = 0f
             group.addModifier(CurveLengthModifierImpl(3.0))
             group.addModifier(FindDistanceModifierImpl(1.5))
@@ -104,7 +103,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val typeMapping = implementation!!.loadNodeTypeMapping(mutableSetOf(node))
+        val typeMapping = implementation.loadNodeTypeMapping(mutableSetOf(node))
         val type = typeMapping[node] as NodeType<N>?
         type?.let { cache.nodeTypeCache.write(node, it) }
         return type
@@ -117,7 +116,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (map.absent.isEmpty()) {
             return result
         }
-        val newResult = implementation!!.loadNodeTypeMapping(map.absent)
+        val newResult = implementation.loadNodeTypeMapping(map.absent)
         result.putAll(newResult)
         newResult.forEach { (uuid: UUID, type: NodeType<*>) ->
             cache.nodeTypeCache.write(uuid, type)
@@ -131,7 +130,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         location: Location
     ): N? {
         val node = type.createAndLoadNode(NodeType.Context(UUID.randomUUID(), location))
-        implementation!!.saveNodeTypeMapping(mapOf(Pair(node!!.nodeId, type)))
+        implementation.saveNodeTypeMapping(mapOf(Pair(node!!.nodeId, type)))
         cache.nodeTypeCache.write(node.nodeId, type)
 
         cache.nodeCache.write(node)
@@ -152,7 +151,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     }
 
     private fun insertEdges(nodes: Collection<Node>): Collection<Node> {
-        val edges = implementation!!.loadEdgesFrom(
+        val edges = implementation.loadEdgesFrom(
             nodes.stream().map(
                 Node::nodeId
             ).toList()
@@ -242,8 +241,8 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
             return
         }
         val types = loadNodeTypes(nodes.stream().map(Node::nodeId).toList())
-        implementation!!.deleteNodeTypeMapping(uuids)
-        deleteNode(nodes, types[nodes.stream().findAny().get().nodeId]!!)
+        implementation.deleteNodeTypeMapping(uuids)
+        deleteNode(nodes, types[nodes.stream().findAny().get().nodeId]!! as NodeType<in Node>)
         implementation.deleteEdgesTo(uuids)
 
         uuids.forEach {
@@ -262,16 +261,16 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (nodes.isEmpty()) {
             return HashMap()
         }
-        return implementation!!.loadEdgesTo(nodes)
+        return implementation.loadEdgesTo(nodes)
     }
 
     // Groups
-    override suspend fun createAndLoadGroup(key: NamespacedKey): NodeGroup? {
-        val group = implementation!!.createAndLoadGroup(key)
+    override suspend fun createAndLoadGroup(key: NamespacedKey): NodeGroup {
+        val group = implementation.createAndLoadGroup(key)
         group?.let {
             cache.groupCache.write(group)
         }
-        return group
+        return group!!
     }
 
     override suspend fun loadGroup(key: NamespacedKey): NodeGroup? {
@@ -279,7 +278,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (group != null) {
             return group
         }
-        val loaded = implementation!!.loadGroup(key)
+        val loaded = implementation.loadGroup(key)
         loaded.let { cache.groupCache.write(it) }
         return loaded
     }
@@ -296,10 +295,10 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
             }
         }
         if (toLoad.isNotEmpty()) {
-            result.putAll(implementation!!.loadGroupsByNodes(toLoad))
+            result.putAll(implementation.loadGroupsByNodes(toLoad))
             toLoad.forEach(Consumer { uuid: UUID -> result.computeIfAbsent(uuid) { HashSet() } })
         }
-        result.forEach { (uuid: UUID?, groups: Collection<NodeGroup>?) ->
+        result.forEach { (uuid: UUID, groups: Collection<NodeGroup>) ->
             cache.groupCache.write(uuid, groups)
         }
         return CollectionUtils.sort(result, ids)
@@ -324,7 +323,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        return implementation!!.loadGroups(range)
+        return implementation.loadGroups(range)
     }
 
     override suspend fun loadGroupsByMod(keys: Collection<NamespacedKey>): Collection<NodeGroup> {
@@ -333,7 +332,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached.absent.isEmpty()) {
             return result
         }
-        val loaded = implementation!!.loadGroupsByMod(cached.absent)
+        val loaded = implementation.loadGroupsByMod(cached.absent)
         loaded.forEach(Consumer { e: NodeGroup -> cache.groupCache.write(e) })
         result.addAll(loaded)
         return result
@@ -344,7 +343,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val loaded = implementation!!.loadGroupsByNode(node)
+        val loaded = implementation.loadGroupsByNode(node)
         cache.groupCache.write(node, loaded)
         return loaded
     }
@@ -354,7 +353,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val loaded = implementation!!.loadGroups<Modifier>(modifier)
+        val loaded = implementation.loadGroups<Modifier>(modifier)
         cache.groupCache.write(modifier, loaded)
         return loaded
     }
@@ -364,7 +363,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val groups = implementation!!.loadAllGroups()
+        val groups = implementation.loadAllGroups()
         cache.groupCache.writeAll(groups)
         return groups
     }
@@ -379,7 +378,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
             mods.addAll(group.modifierChanges.removeList)
         }
 
-        implementation!!.saveGroup(group)
+        implementation.saveGroup(group)
         cache.nodeCache.write(group)
         cache.groupCache.write(group)
         for (uuid in before) {
@@ -399,7 +398,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     }
 
     override suspend fun deleteGroup(group: NodeGroup) {
-        implementation!!.deleteGroup(group)
+        implementation.deleteGroup(group)
         cache.groupCache.invalidate(group)
     }
 
@@ -407,7 +406,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     override suspend fun createAndLoadDiscoverInfo(
         player: UUID, key: NamespacedKey, time: LocalDateTime
     ): DiscoverInfo? {
-        val info = implementation!!.createAndLoadDiscoverinfo(player, key, time)
+        val info = implementation.createAndLoadDiscoverinfo(player, key, time)
         info?.let { cache.discoverInfoCache.write(it) }
         return info
     }
@@ -420,13 +419,13 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val info = implementation!!.loadDiscoverInfo(player, key)
+        val info = implementation.loadDiscoverInfo(player, key)
         info?.let { cache.discoverInfoCache.write(it) }
         return info
     }
 
     override suspend fun deleteDiscoverInfo(info: DiscoverInfo) {
-        implementation!!.deleteDiscoverInfo(info)
+        implementation.deleteDiscoverInfo(info)
         cache.discoverInfoCache.invalidate(info)
     }
 
@@ -437,7 +436,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (cached != null) {
             return cached
         }
-        val types = implementation!!.loadVisualizerTypeMapping(mutableSetOf(key))
+        val types = implementation.loadVisualizerTypeMapping(mutableSetOf(key))
         val loaded = types[key] as VisualizerType<VisualizerT>?
         loaded?.let {
             cache.visualizerTypeCache.write(key, it)
@@ -451,7 +450,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         if (map.absent.isEmpty()) {
             return result
         }
-        val loaded = implementation!!.loadVisualizerTypeMapping(map.absent)
+        val loaded = implementation.loadVisualizerTypeMapping(map.absent)
         result.putAll(loaded)
         loaded.entries.forEach(Consumer<Map.Entry<NamespacedKey, VisualizerType<*>>> { e: Map.Entry<NamespacedKey, VisualizerType<*>> ->
             cache.visualizerTypeCache.write(
@@ -464,7 +463,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     override suspend fun <VisualizerT : PathVisualizer<*, *>> saveVisualizerType(
         key: NamespacedKey, type: VisualizerType<VisualizerT>
     ) {
-        implementation!!.saveVisualizerTypeMapping(mapOf(Pair(key, type)))
+        implementation.saveVisualizerTypeMapping(mapOf(Pair(key, type)))
         cache.visualizerTypeCache.write(key, type)
     }
 
@@ -480,7 +479,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
 
     override suspend fun loadVisualizers(): Collection<PathVisualizer<*, *>> {
         val result: MutableCollection<PathVisualizer<*, *>> = HashSet()
-        for (value in VisualizerTypeRegistryImpl.getInstance().types.values) {
+        for (value in PathFinder.get().visualizerTypeRegistry.types.values) {
             result.addAll(this.loadVisualizers(value))
         }
         return result
@@ -525,7 +524,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         type?.let {
             type.deleteVisualizer(visualizer)
             cache.visualizerCache.invalidate(visualizer)
-            implementation!!.deleteVisualizerTypeMapping(mutableSetOf(visualizer.key))
+            implementation.deleteVisualizerTypeMapping(mutableSetOf(visualizer.key))
         }
     }
 
@@ -547,9 +546,8 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
                     )
                     continue
                 }
-                group.getModifier<M>(modifier).ifPresent { m: M ->
-                    results.computeIfAbsent(node) { ArrayList() }
-                        .add(m)
+                group.getModifier<M>(modifier)?.let {
+                    results.computeIfAbsent(node) { ArrayList() }.add(it)
                 }
             }
         }

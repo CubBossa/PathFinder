@@ -51,11 +51,11 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
         node.groups().stream()
             .filter(g -> g.hasModifier(VisualizerModifier.KEY))
             .peek(group -> {
-              if (highest.get() < group.getWeight()) {
-                highest.set(group.getWeight());
+              if (highest.get() < group.weight) {
+                highest.set(group.weight);
               }
             })
-            .filter(g -> g.getWeight() == highest.get())
+            .filter(g -> g.weight == highest.get())
             .sorted()
             .map(g -> g.<VisualizerModifier>getModifier(VisualizerModifier.KEY))
             .filter(Optional::isPresent)

@@ -1,216 +1,271 @@
-package de.cubbossa.pathfinder.command.impl;
+package de.cubbossa.pathfinder.command.impl
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.Arguments;
-import de.cubbossa.pathfinder.command.PathFinderSubCommand;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.NodeSelection;
-import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
-import de.cubbossa.pathfinder.storage.StorageAdapter;
-import de.cubbossa.pathfinder.storage.StorageUtil;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import de.cubbossa.pathfinder.util.NodeUtils;
-import de.cubbossa.translations.Message;
-import dev.jorel.commandapi.arguments.LocationType;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.*
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.misc.Location
+import de.cubbossa.pathfinder.misc.Pagination
+import de.cubbossa.pathfinder.node.Edge
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.NodeSelection
+import de.cubbossa.pathfinder.storage.getGroups
+import de.cubbossa.pathfinder.util.BukkitUtils
+import de.cubbossa.pathfinder.util.BukkitVectorUtils
+import de.cubbossa.pathfinder.util.NodeUtils
+import dev.jorel.commandapi.executors.CommandArguments
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.joinAll
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
+import java.util.*
 
-public class NodesCmd extends PathFinderSubCommand {
+class NodesCmd(pathFinder: PathFinder?) : PathFinderSubCommand(pathFinder!!, "nodes") {
 
-  public NodesCmd(PathFinder pathFinder) {
-    super(pathFinder, "nodes");
-    withGeneratedHelp();
-
-    withRequirement(sender -> sender.hasPermission(PathPerms.PERM_CMD_WP_INFO)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_LIST)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_CREATE)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_DELETE)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_TPHERE)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_TP)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_CONNECT)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_SET_CURVE)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
-        || sender.hasPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
-    );
-
-    then(Arguments.nodeSelectionArgument("nodes")
-        .then(Arguments.literal("info")
-            .withPermission(PathPerms.PERM_CMD_WP_INFO)
-            .executesPlayer((player, args) -> {
-              onInfo(player, args.getUnchecked(0));
-            })
+    companion object {
+        val PERMS = listOf(
+            PathPerms.PERM_CMD_WP_INFO,
+            PathPerms.PERM_CMD_WP_LIST,
+            PathPerms.PERM_CMD_WP_CREATE,
+            PathPerms.PERM_CMD_WP_DELETE,
+            PathPerms.PERM_CMD_WP_TPHERE,
+            PathPerms.PERM_CMD_WP_TP,
+            PathPerms.PERM_CMD_WP_CONNECT,
+            PathPerms.PERM_CMD_WP_DISCONNECT,
+            PathPerms.PERM_CMD_WP_SET_CURVE,
+            PathPerms.PERM_CMD_WP_ADD_GROUP,
+            PathPerms.PERM_CMD_WP_REMOVE_GROUP,
+            PathPerms.PERM_CMD_WP_CLEAR_GROUPS,
         )
-        .then(Arguments.literal("tphere")
-            .withPermission(PathPerms.PERM_CMD_WP_TPHERE)
-            .executesPlayer((player, args) -> {
-              teleportNodes(player, args.getUnchecked(0), BukkitVectorUtils.toInternal(player.getLocation()));
-            })
-        )
-        .then(Arguments.literal("tp")
-            .withPermission(PathPerms.PERM_CMD_WP_TP)
-            .then(Arguments.location("location", LocationType.PRECISE_POSITION)
-                .executesPlayer((player, args) -> {
-                  teleportNodes(player, args.getUnchecked(0), args.getUnchecked(1));
-                })
-            )
-        )
-        .then(Arguments.literal("connect")
-            .withPermission(PathPerms.PERM_CMD_WP_CONNECT)
-            .then(Arguments.nodeSelectionArgument("end")
-                .executesPlayer((player, args) -> {
-                  connectNodes(player, args.getUnchecked(0), args.getUnchecked(1));
-                })
-            )
-        )
-        .then(Arguments.literal("disconnect")
-            .withPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
-            .then(Arguments.nodeSelectionArgument("end")
-                .executesPlayer((player, args) -> {
-                  disconnectNodes(player, args.getUnchecked(0), args.getUnchecked(1));
-                })
-            )
-
-        )
-        .then(Arguments.literal("groups")
-            .then(Arguments.literal("add")
-                .withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
-                .then(Arguments.nodeGroupArgument("group")
-                    .executesPlayer((player, args) -> {
-                      addGroup(player, args.getUnchecked(0), args.getUnchecked(1));
-                    })
-                )
-            )
-            .then(Arguments.literal("remove")
-                .withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
-                .then(Arguments.nodeGroupArgument("group")
-                    .executesPlayer((player, args) -> {
-                      removeGroup(player, args.getUnchecked(0), args.getUnchecked(1));
-                    })
-                )
-            )
-            .then(Arguments.literal("clear")
-                .withPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
-                .executesPlayer((player, args) -> {
-                  clearGroups(player, args.getUnchecked(0));
-                })
-            )
-        )
-    );
-  }
-
-  private void addGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
-    group.addAll(nodes.getIds());
-    getPathfinder().getStorage().saveGroup(group);
-
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_ADD_GROUP.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes),
-        Messages.formatter().namespacedKey("group", group.getKey())
-    ));
-  }
-
-  private void removeGroup(CommandSender sender, NodeSelection nodes, NodeGroupImpl group) {
-    group.removeAll(nodes.getIds());
-    getPathfinder().getStorage().saveGroup(group);
-
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_REMOVE_GROUP.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes)
-    ));
-  }
-
-  private void clearGroups(CommandSender sender, NodeSelection nodes) {
-    Collection<NodeGroup> groups = nodes.stream().map(StorageUtil::getGroups).flatMap(Collection::stream).toList();
-    StorageAdapter storage = getPathfinder().getStorage();
-    groups.forEach(group -> {
-      nodes.getIds().forEach(group::remove);
-      storage.saveGroup(group);
-    });
-
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CLEAR_GROUPS.formatted(
-        Messages.formatter().nodeSelection("nodes", () -> nodes)
-    ));
-  }
-
-  private void disconnectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
-    for (Node s : start) {
-      for (Node e : end) {
-        s.disconnect(e);
-        getPathfinder().getStorage().saveNode(s);
-      }
     }
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DISCONNECT.formatted(
-        Messages.formatter().nodeSelection("start", () -> start),
-        Messages.formatter().nodeSelection("end", () -> end)
-    ));
-  }
 
-  private void connectNodes(CommandSender sender, NodeSelection start, NodeSelection end) {
-    for (Node s : start) {
-      for (Node e : end) {
-        if (s.equals(e)) {
-          continue;
+
+    init {
+        withGeneratedHelp()
+
+        withRequirement { sender: CommandSender ->
+            PERMS.stream().anyMatch { sender.hasPermission(it) }
         }
-        if (s.hasConnection(e)) {
-          continue;
+
+        nodeSelectionArgument("nodes") {
+            literalArgument("info") {
+                withPermission(PathPerms.PERM_CMD_WP_INFO)
+                executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                    onInfo(player, args.getUnchecked(0)!!)
+                })
+            }
+            literalArgument("tphere") {
+                withPermission(PathPerms.PERM_CMD_WP_TPHERE)
+                executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                    teleportNodes(
+                        player,
+                        args.getUnchecked(0)!!,
+                        BukkitVectorUtils.toInternal(player.location)
+                    )
+                })
+            }
+            literalArgument("tp") {
+                withPermission(PathPerms.PERM_CMD_WP_TP)
+                locationArgument("location") {
+                    executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                        teleportNodes(
+                            player,
+                            args.getUnchecked(0)!!,
+                            args.getUnchecked(1)!!
+                        )
+                    })
+                }
+            }
+            literalArgument("connect") {
+                withPermission(PathPerms.PERM_CMD_WP_CONNECT)
+                nodeSelectionArgument("end") {
+                    executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                        connectNodes(player, args.getUnchecked(0)!!, args.getUnchecked(1)!!)
+                    })
+                }
+            }
+            literalArgument("disconnect") {
+                withPermission(PathPerms.PERM_CMD_WP_DISCONNECT)
+                nodeSelectionArgument("end") {
+                    executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                        disconnectNodes(
+                            player,
+                            args.getUnchecked(0)!!,
+                            args.getUnchecked(1)!!
+                        )
+                    })
+                }
+            }
+            literalArgument("groups") {
+                literalArgument("add") {
+                    withPermission(PathPerms.PERM_CMD_WP_ADD_GROUP)
+                    nodeGroupArgument("group") {
+                        executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                            addGroup(
+                                player,
+                                args.getUnchecked(0)!!,
+                                args.getUnchecked(1)!!
+                            )
+                        })
+                    }
+                }
+                literalArgument("remove") {
+                    withPermission(PathPerms.PERM_CMD_WP_REMOVE_GROUP)
+                    nodeGroupArgument("group") {
+                        executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                            removeGroup(
+                                player,
+                                args.getUnchecked(0)!!,
+                                args.getUnchecked(1)!!
+                            )
+                        })
+                    }
+                }
+                literalArgument("clear") {
+                    withPermission(PathPerms.PERM_CMD_WP_CLEAR_GROUPS)
+                    executesPlayer(PlayerCommandExecutor { player: Player, args: CommandArguments ->
+                        clearGroups(player, args.getUnchecked(0)!!)
+                    })
+                }
+            }
         }
-        s.connect(e);
-        getPathfinder().getStorage().saveNode(s);
-      }
     }
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CONNECT.formatted(
-        Messages.formatter().nodeSelection("start", () -> start),
-        Messages.formatter().nodeSelection("end", () -> end)
-    ));
-  }
 
-  private void teleportNodes(CommandSender sender, NodeSelection nodes, Location location) {
-    Collection<CompletableFuture<?>> futures = new HashSet<>();
-    for (Node node : nodes) {
-      node.setLocation(location);
-      futures.add(getPathfinder().getStorage().saveNode(node));
+    private fun addGroup(sender: CommandSender, nodes: NodeSelection, group: NodeGroup) = launchIO {
+        group.addAll(nodes.ids)
+        pathfinder.storage.saveGroup(group)
+
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_ADD_GROUP.formatted(
+                Messages.formatter().nodeSelection("nodes") { nodes },
+                Messages.formatter().namespacedKey("group", group.key)
+            )
+        )
     }
-    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_UPDATED.formatted(
-          Messages.formatter().nodeSelection("selection", () -> nodes)
-      ));
-    });
-  }
 
-  private void onInfo(Player player, NodeSelection selection) {
+    private fun removeGroup(
+        sender: CommandSender,
+        nodes: NodeSelection,
+        group: NodeGroup
+    ) = launchIO {
+        group.removeAll(nodes.ids.toSet())
+        pathfinder.storage.saveGroup(group)
 
-    if (selection.size() == 0) {
-      BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_INFO_NO_SEL);
-      return;
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_REMOVE_GROUP.formatted(
+                Messages.formatter().nodeSelection("nodes") { nodes }
+            ))
     }
-    if (selection.size() > 1) {
-      NodeUtils.onList(player, selection, Pagination.page(0, 10));
-      return;
+
+    public inline fun <T, R> Flow<T>.map(crossinline transform: suspend (value: T) -> R): Flow<R> =
+        transform { value ->
+            return@transform emit(transform(value))
+        }
+
+    private fun clearGroups(sender: CommandSender, nodes: NodeSelection) = launchIO {
+        val storage = pathfinder.storage
+        nodes.asFlow()
+            .map { storage.getGroups(it) }
+            .flatMapMerge { it.asFlow() }
+            .onEach { g -> nodes.ids.forEach { g.remove(it) } }
+            .onEach { storage.saveGroup(it) }
+            .collect()
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_CLEAR_GROUPS.formatted(
+                Messages.formatter().nodeSelection("nodes") { nodes }
+            )
+        )
     }
-    Node node = selection.get(0);
 
-    Collection<UUID> neighbours = node.getEdges().stream().map(Edge::getEnd).toList();
-    Collection<Node> resolvedNeighbours =
-        getPathfinder().getStorage().loadNodes(neighbours).join();
+    private fun disconnectNodes(
+        sender: CommandSender,
+        start: NodeSelection,
+        end: NodeSelection
+    ) = launchIO {
+        for (s in start) {
+            for (e in end) {
+                s.disconnect(e)
+                pathfinder.storage.saveNode(s)
+            }
+        }
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_DISCONNECT.formatted(
+                Messages.formatter().nodeSelection("start") { start },
+                Messages.formatter().nodeSelection("end") { end }
+            ))
+    }
 
-    Message message = Messages.CMD_N_INFO.formatted(
-        Messages.formatter().uuid("id", node.getNodeId()),
-        Messages.formatter().vector("position", node.getLocation()),
-        Placeholder.unparsed("world", node.getLocation().getWorld().getName()),
-        Messages.formatter().nodeSelection("edges", () -> resolvedNeighbours)
-    );
-    BukkitUtils.wrap(player).sendMessage(message);
-  }
+    private fun connectNodes(
+        sender: CommandSender,
+        start: NodeSelection,
+        end: NodeSelection
+    ) = launchIO {
+        for (s in start) {
+            for (e in end) {
+                if (s == e) {
+                    continue
+                }
+                if (s.hasConnection(e)) {
+                    continue
+                }
+                s.connect(e)
+                pathfinder.storage.saveNode(s)
+            }
+        }
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_CONNECT.formatted(
+                Messages.formatter().nodeSelection("start") { start },
+                Messages.formatter().nodeSelection("end") { end }
+            ))
+    }
+
+    private fun teleportNodes(
+        sender: CommandSender,
+        nodes: NodeSelection,
+        location: Location
+    ) = launchIO {
+        val jobs = ArrayList<Job>()
+        for (node in nodes) {
+            node.location = location
+            jobs.add(async {
+                pathfinder.storage.saveNode(node)
+            })
+        }
+        jobs.joinAll()
+        BukkitUtils.wrap(sender).sendMessage(
+            Messages.CMD_N_UPDATED.formatted(
+                Messages.formatter().nodeSelection("selection") { nodes }
+            )
+        )
+    }
+
+    private fun onInfo(player: Player, selection: NodeSelection) = launchIO {
+        if (selection.size == 0) {
+            BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_INFO_NO_SEL)
+            return@launchIO
+        }
+        if (selection.size > 1) {
+            NodeUtils.onList(player, selection, Pagination.page(0, 10))
+            return@launchIO
+        }
+        val node = selection[0]
+
+        val neighbours: Collection<UUID> = node.edges.stream().map(Edge::end).toList()
+        val resolvedNeighbours: Collection<Node> =
+            pathfinder.storage.loadNodes(neighbours)
+
+        val message = Messages.CMD_N_INFO.formatted(
+            Messages.formatter().uuid("id", node.nodeId),
+            Messages.formatter().vector("position", node.location),
+            Placeholder.unparsed("world", node.location.world.name),
+            Messages.formatter().nodeSelection("edges") { resolvedNeighbours }
+        )
+        BukkitUtils.wrap(player).sendMessage(message)
+    }
 }

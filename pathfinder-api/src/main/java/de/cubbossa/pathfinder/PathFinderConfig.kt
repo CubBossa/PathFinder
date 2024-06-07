@@ -1,223 +1,222 @@
-package de.cubbossa.pathfinder;
+package de.cubbossa.pathfinder
 
-import de.cubbossa.pathfinder.storage.DatabaseType;
-import java.awt.Color;
-import java.io.File;
-import java.util.Locale;
+import de.cubbossa.pathfinder.storage.DatabaseType
+import java.awt.Color
+import java.io.File
+import java.util.*
 
-public interface PathFinderConfig {
+interface PathFinderConfig {
 
-  LanguageConfig getLanguage();
+    val language: LanguageConfig
+    val database: DatabaseConfig
+    val navigation: NavigationConfig
+    val moduleConfig: ModuleConfig
+    val editMode: EditModeConfig
 
-  DatabaseConfig getDatabase();
+    enum class DistancePolicy {
+        SMALLEST,
+        LARGEST,
+        NATURAL
+    }
 
-  NavigationConfig getNavigation();
+    interface LanguageConfig {
+        /**
+         * If client language is set to true plugin messages will appear in the according client
+         * language. You need to add according language files if you want to use this feature.
+         *
+         *
+         * See also: https://docs.leonardbausenwein.de/configuration/config.html#client-language
+         */
+        val isClientLanguage: Boolean
 
-  ModuleConfig getModuleConfig();
+        /**
+         * The fallback language serves as default language for all users. If the client language
+         * setting is enabled but no file for a client language is present the fallback language
+         * will be used instead.
+         *
+         *
+         * The input value is a string that refers to the name of the language file in the
+         * /pathfinder/lang/ directory.
+         *
+         *
+         * See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language
+         */
+        val fallbackLanguage: Locale
+    }
 
-  EditModeConfig getEditMode();
+    interface DatabaseConfig {
+        /**
+         * Choose a database type.
+         * Valid types: IN_MEMORY, YAML, SQLITE, REMOTE_SQL
+         *
+         *
+         *
+         * See also: https://docs.leonardbausenwein.de/configuration/config.html#type
+         */
+        val type: DatabaseType
 
-  enum DistancePolicy {
-    SMALLEST,
-    LARGEST,
-    NATURAL
-  }
+        /**
+         * This should be true to immensely boost performance and can only be disabled for testing purposes.
+         *
+         * @return if data is being cached.
+         */
+        val isCaching: Boolean
 
-  interface LanguageConfig {
-    /**
-     * If client language is set to true plugin messages will appear in the according client
-     * language. You need to add according language files if you want to use this feature.
-     * <p>
-     * See also: https://docs.leonardbausenwein.de/configuration/config.html#client-language
-     */
-    boolean isClientLanguage();
+        val embeddedSql: EmbeddedSqlStorageConfig
 
-    /**
-     * The fallback language serves as default language for all users. If the client language
-     * setting is enabled but no file for a client language is present the fallback language
-     * will be used instead.
-     * <p>
-     * The input value is a string that refers to the name of the language file in the
-     * /pathfinder/lang/ directory.
-     * <p>
-     * See also: https://docs.leonardbausenwein.de/configuration/config.html#fallback-language
-     */
-    Locale getFallbackLanguage();
-  }
+        val remoteSql: SqlStorageConfig
+    }
 
-  interface DatabaseConfig {
+    interface NavigationConfig {
+        /**
+         * Set this to true, if players have to discover nodegroups first to use the /find location
+         * <filter> command. If set to false, one can always navigate to every group, even if it hasn't
+         * been discovered first.
+        </filter> */
+        val isRequireDiscovery: Boolean
 
-    /**
-     * Choose a database type.
-     * Valid types: IN_MEMORY, YAML, SQLITE, REMOTE_SQL
-     *
-     * <p>
-     * See also: https://docs.leonardbausenwein.de/configuration/config.html#type
-     */
-    DatabaseType getType();
+        val findLocation: FindLocationCommandConfig
 
-    /**
-     * This should be true to immensely boost performance and can only be disabled for testing purposes.
-     *
-     * @return if data is being cached.
-     */
-    boolean isCaching();
+        /**
+         * This setting decides whether a player has to have all permissions of all groups of a node
+         * or just one matching permission. True means all, so the permission query is linked by AND
+         * operator. False means OR, so the player has to match only one permission node.
+         */
+        val isRequireAllGroupPermissions: Boolean
 
-    EmbeddedSqlStorageConfig getEmbeddedSql();
+        /**
+         * This setting decides whether all groups of a node have to be navigable to make it navigable
+         * or just one. True means that all groups have to be navigable.
+         */
+        val isRequireAllGroupsNavigable: Boolean
 
-    SqlStorageConfig getRemoteSql();
-  }
+        /**
+         * This setting decides whether all groups of a node have to be discoverable to make it discoverable
+         * or just one. True means that all groups have to be discoverable.
+         */
+        val isRequireAllGroupsDiscoverable: Boolean
 
-  interface NavigationConfig {
-    /**
-     * Set this to true, if players have to discover nodegroups first to use the /find location
-     * <filter> command. If set to false, one can always navigate to every group, even if it hasn't
-     * been discovered first.
-     */
-    boolean isRequireDiscovery();
+        /**
+         * This settings decides, which node group find distance applies to the node.
+         * LARGEST: the group with largest find distance applies
+         * SMALLEST: the group with smallest find distance applies
+         * NATURAL: the first group applies. (later groups might be sortable with weights)
+         */
+        val distancePolicy: DistancePolicy
+    }
 
-    FindLocationCommandConfig getFindLocation();
+    interface ModuleConfig {
+        val isDiscoveryModule: Boolean
 
-    /**
-     * This setting decides whether a player has to have all permissions of all groups of a node
-     * or just one matching permission. True means all, so the permission query is linked by AND
-     * operator. False means OR, so the player has to match only one permission node.
-     */
-    boolean isRequireAllGroupPermissions();
+        val isNavigationModule: Boolean
+    }
 
-    /**
-     * This setting decides whether all groups of a node have to be navigable to make it navigable
-     * or just one. True means that all groups have to be navigable.
-     */
-    boolean isRequireAllGroupsNavigable();
+    interface EmbeddedSqlStorageConfig {
+        val file: File
+    }
 
-    /**
-     * This setting decides whether all groups of a node have to be discoverable to make it discoverable
-     * or just one. True means that all groups have to be discoverable.
-     */
-    boolean isRequireAllGroupsDiscoverable();
+    interface SqlStorageConfig {
+        val dialect: String
 
-    /**
-     * This settings decides, which node group find distance applies to the node.
-     * LARGEST: the group with largest find distance applies
-     * SMALLEST: the group with smallest find distance applies
-     * NATURAL: the first group applies. (later groups might be sortable with weights)
-     */
-    DistancePolicy getDistancePolicy();
-  }
+        val jdbcUrl: String
 
-  interface ModuleConfig {
-    boolean isDiscoveryModule();
+        val username: String
 
-    boolean isNavigationModule();
-  }
+        val password: String
+    }
 
-  interface EmbeddedSqlStorageConfig {
-    File getFile();
-  }
+    interface FindLocationCommandConfig {
+        /**
+         * The command /findlocation <location> creates a virtual waypoint at the given location
+         * and connects it with the nearest waypoint around. The maximum distance can be set to
+         * not allow commands with locations far away from the actual roadmap. Default's set to 20.
+         * -1 can be set to disable a distance check.
+        </location> */
+        val maxDistance: Float
+    }
 
-  interface SqlStorageConfig {
-    String getDialect();
+    interface SimpleLocationWeightSolverConfig {
+        /**
+         * Finds the closest n amount of nodes and connects them to a virtual node at the players position.
+         * Default is 1, but it can also be increased to let the pathfinding algorithm find the shortest
+         * of the n connections.
+         */
+        val connectionCount: Int
+    }
 
-    String getJdbcUrl();
+    interface RaycastLocationWeightSolverConfig {
+        /**
+         * The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
+         * nodes. Default: 10
+         */
+        val raycastCount: Int
 
-    String getUsername();
+        /**
+         * If nodes in the players view direction should be preferred.
+         * 1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1
+         */
+        val startLocationDirectionWeight: Float
 
-    String getPassword();
-  }
+        /**
+         * If the node location direction should have an effect on its closeness to the player. Similar
+         * to start-direction-weight but for nodes instead of player. Default: 0
+         */
+        val scopeLocationDirectionWeight: Float
 
-  interface FindLocationCommandConfig {
-    /**
-     * The command /findlocation <location> creates a virtual waypoint at the given location
-     * and connects it with the nearest waypoint around. The maximum distance can be set to
-     * not allow commands with locations far away from the actual roadmap. Default's set to 20.
-     * -1 can be set to disable a distance check.
-     */
-    float getMaxDistance();
-  }
+        /**
+         * Each block between the player/a node and another node will count as the given amount of
+         * distance in blocks. Default of 10.000 means that two blocks between a player and a node
+         * will count as a distance of 20.000 blocks. While another node that is further away from the
+         * player but not obstructed will have 0 extra weight and will therefore be prioritized.
+         */
+        val blockCollisionWeight: Float
+    }
 
-  interface SimpleLocationWeightSolverConfig {
-    /**
-     * Finds the closest n amount of nodes and connects them to a virtual node at the players position.
-     * Default is 1, but it can also be increased to let the pathfinding algorithm find the shortest
-     * of the n connections.
-     */
-    int getConnectionCount();
-  }
+    interface EditModeConfig {
+        /**
+         * If the edit mode should start with the edges tool set to directed edges or undirected edges.
+         * A directed edge only goes one way while undirected edges go in both directions.
+         */
+        val isDirectedEdgesByDefault: Boolean
 
-  interface RaycastLocationWeightSolverConfig {
-    /**
-     * The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
-     * nodes. Default: 10
-     */
-    int getRaycastCount();
+        /**
+         * The spacing of the particles that are used to display edit mode edges. A spacing of 0.3 blocks is default.
+         * Increase this value if you are having client side performance issues while in edit mode.
+         */
+        val edgeParticleSpacing: Float
 
-    /**
-     * If nodes in the players view direction should be preferred.
-     * 1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1
-     */
-    float getStartLocationDirectionWeight();
+        /**
+         * The delay in ticks to wait before showing an edge particle again.
+         * 1s = 20t
+         */
+        val edgeParticleTickDelay: Int
 
-    /**
-     * If the node location direction should have an effect on its closeness to the player. Similar
-     * to start-direction-weight but for nodes instead of player. Default: 0
-     */
-    float getScopeLocationDirectionWeight();
+        /**
+         * The edge color that indicates an outgoing or undirected edge.
+         */
+        val edgeParticleColorFrom: Color
 
-    /**
-     * Each block between the player/a node and another node will count as the given amount of
-     * distance in blocks. Default of 10.000 means that two blocks between a player and a node
-     * will count as a distance of 20.000 blocks. While another node that is further away from the
-     * player but not obstructed will have 0 extra weight and will therefore be prioritized.
-     */
-    float getBlockCollisionWeight();
-  }
+        /**
+         * The edge color that indicates an incoming edge.
+         */
+        val edgeParticleColorTo: Color
 
-  interface EditModeConfig {
-    /**
-     * If the edit mode should start with the edges tool set to directed edges or undirected edges.
-     * A directed edge only goes one way while undirected edges go in both directions.
-     */
-    boolean isDirectedEdgesByDefault();
+        /**
+         * The distance up to which the player can see edit mode particles.
+         * You may want to decrease this value if you run into client side performance issues.
+         */
+        val edgeParticleRenderDistance: Float
 
-    /**
-     * The spacing of the particles that are used to display edit mode edges. A spacing of 0.3 blocks is default.
-     * Increase this value if you are having client side performance issues while in edit mode.
-     */
-    float getEdgeParticleSpacing();
+        /**
+         * The distance up to which the player can see node armorstands.
+         * You may want to decrease this value if you run into client side performance issues.
+         */
+        val nodeArmorStandRenderDistance: Float
 
-    /**
-     * The delay in ticks to wait before showing an edge particle again.
-     * 1s = 20t
-     */
-    int getEdgeParticleTickDelay();
-
-    /**
-     * The edge color that indicates an outgoing or undirected edge.
-     */
-    Color getEdgeParticleColorFrom();
-
-    /**
-     * The edge color that indicates an incoming edge.
-     */
-    Color getEdgeParticleColorTo();
-
-    /**
-     * The distance up to which the player can see edit mode particles.
-     * You may want to decrease this value if you run into client side performance issues.
-     */
-    float getEdgeParticleRenderDistance();
-
-    /**
-     * The distance up to which the player can see node armorstands.
-     * You may want to decrease this value if you run into client side performance issues.
-     */
-    float getNodeArmorStandRenderDistance();
-
-    /**
-     * The distance up to which the player can see edge armorstands.
-     * You may want to decrease this value if you run into client side performance issues.
-     */
-    float getEdgeArmorStandRenderDistance();
-  }
+        /**
+         * The distance up to which the player can see edge armorstands.
+         * You may want to decrease this value if you run into client side performance issues.
+         */
+        val edgeArmorStandRenderDistance: Float
+    }
 }

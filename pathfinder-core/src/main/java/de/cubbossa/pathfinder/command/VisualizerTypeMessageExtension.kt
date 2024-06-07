@@ -1,9 +1,8 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.translations.Message;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer
+import de.cubbossa.translations.Message
 
-public interface VisualizerTypeMessageExtension<VisualizerT extends PathVisualizer<?, ?>> {
-
-  Message getInfoMessage(VisualizerT element);
+interface VisualizerTypeMessageExtension<in VisualizerT : PathVisualizer<*, *>> {
+    fun getInfoMessage(element: VisualizerT): Message?
 }

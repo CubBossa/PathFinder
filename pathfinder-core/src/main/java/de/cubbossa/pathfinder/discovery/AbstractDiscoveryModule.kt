@@ -74,9 +74,8 @@ open class AbstractDiscoveryModule<PlayerT>
 
         return groups.stream()
             .filter { group ->
-                val perm: Optional<PermissionModifier> =
-                    group.getModifier(PermissionModifier.KEY)
-                perm.isEmpty || player.hasPermission(perm.get().permission())
+                val perm = group.getModifier<PermissionModifier>(PermissionModifier.key)
+                perm == null || player.hasPermission(perm.permission)
             }
             .filter { group ->
                 group.stream().anyMatch { uuid ->
@@ -109,7 +108,7 @@ open class AbstractDiscoveryModule<PlayerT>
         }
 
         val discoverable = group.getModifier<DiscoverableModifier>(DiscoverableModifier.KEY)
-        if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable.get(), date)) {
+        if (!eventDispatcher.dispatchPlayerFindEvent(player, group, discoverable, date)) {
             return
         }
         pathFinder.storage.createAndLoadDiscoverInfo(playerId, group.key, date)
@@ -135,14 +134,14 @@ open class AbstractDiscoveryModule<PlayerT>
 
     private fun getDiscoveryDistance(groups: Collection<NodeGroup>): Float {
         val mod = groups.stream()
-            .filter { group: NodeGroup -> group.hasModifier<Modifier>(FindDistanceModifier.KEY) }
+            .filter { group: NodeGroup -> group.hasModifier<Modifier>(FindDistanceModifier.key) }
             .sorted()
             .findFirst()
             .map { group: NodeGroup ->
-                group.getModifier<FindDistanceModifier>(FindDistanceModifier.KEY).get()
+                group.getModifier<FindDistanceModifier>(FindDistanceModifier.key)
             }
             .orElse(null)
-        return mod?.distance()?.toFloat() ?: 1.5f
+        return mod?.distance?.toFloat() ?: 1.5f
     }
 
     companion object {

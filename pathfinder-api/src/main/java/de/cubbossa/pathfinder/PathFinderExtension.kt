@@ -15,7 +15,7 @@ import org.pf4j.ExtensionPoint
 interface PathFinderExtension : Keyed, Disposable, ExtensionPoint {
     fun disable()
 
-    val isDisabled: Boolean
+    fun isDisabled(): Boolean
 
     /**
      * LifeCycle hook that is called in the loading stage of the environment. Mostly, this will be a Bukkit servers

@@ -11,4 +11,8 @@ abstract class PathFinderExtensionBase : PathFinderExtension {
     override fun disable() {
         disabled = true
     }
+
+    override fun isDisabled(): Boolean {
+        return disabled
+    }
 }

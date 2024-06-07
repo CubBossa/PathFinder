@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.group
 
 import de.cubbossa.pathfinder.misc.NamespacedKey
-import java.util.*
 
 interface Modified {
     val modifiers: Collection<Modifier>
@@ -16,13 +15,13 @@ interface Modified {
 
     fun addModifier(key: NamespacedKey, modifier: Modifier)
 
-    fun <M : Modifier> getModifier(key: NamespacedKey): Optional<M>
+    fun <M : Modifier> getModifier(key: NamespacedKey): M?
 
     fun <M : Modifier> removeModifier(modifierClass: Class<M>)
 
     fun <M : Modifier> removeModifier(modifier: M)
 
-    fun <M : Modifier> removeModifier(key: NamespacedKey)
+    fun removeModifier(key: NamespacedKey)
 
     fun clearModifiers()
 }

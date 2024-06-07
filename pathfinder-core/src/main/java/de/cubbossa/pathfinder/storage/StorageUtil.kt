@@ -1,86 +1,91 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.node.Node;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.node.Node
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.joinAll
+import java.util.*
 
-public class StorageUtil {
-
-  public static StorageAdapter storage;
-
-  public static Collection<NodeGroup> getGroups(Node node) {
-    return getGroups(node.getNodeId());
-  }
-
-  public static Collection<NodeGroup> getGroups(UUID node) {
-    return storage.loadGroups(node).join();
-  }
-
-  public static CompletableFuture<Void> addGroups(NodeGroup group, UUID node) {
-    return addGroups(Collections.singleton(group), Collections.singleton(node));
-  }
-
-  public static CompletableFuture<Void> addGroups(NodeGroup group, Collection<UUID> nodes) {
-    return addGroups(Collections.singleton(group), nodes);
-  }
-
-  public static CompletableFuture<Void> addGroups(Collection<NodeGroup> groups, UUID node) {
-    return addGroups(groups, Collections.singleton(node));
-  }
-
-  public static CompletableFuture<Void> addGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    return CompletableFuture.allOf(groups.stream().parallel()
-            .peek(group -> group.addAll(nodes))
-            .map(storage::saveGroup)
-            .toArray(CompletableFuture[]::new)
-    );
-  }
-
-  public static CompletableFuture<Void> removeGroups(NodeGroup group, UUID node) {
-    return removeGroups(Collections.singleton(group), Collections.singleton(node));
-  }
-
-  public static CompletableFuture<Void> removeGroups(NodeGroup group, Collection<UUID> nodes) {
-    return removeGroups(Collections.singleton(group), nodes);
-  }
-
-  public static CompletableFuture<Void> removeGroups(Collection<NodeGroup> groups, UUID node) {
-    return removeGroups(groups, Collections.singleton(node));
-  }
-
-  public static CompletableFuture<Void> removeGroups(Collection<NodeGroup> groups, Collection<UUID> nodes) {
-    return CompletableFuture.allOf(groups.stream().parallel()
-        .peek(group -> group.removeAll(nodes))
-        .map(storage::saveGroup)
-        .toArray(CompletableFuture[]::new)
-    );
-  }
-
-  public static CompletableFuture<Void> clearGroups(Node... node) {
-    return clearGroups(Set.of(node).stream().map(Node::getNodeId).toList());
-  }
-
-  public static CompletableFuture<Void> clearGroups(UUID... node) {
-    return clearGroups(Set.of(node));
-  }
-
-  public static CompletableFuture<Void> clearGroups(Collection<UUID> nodes) {
-    return CompletableFuture.supplyAsync(() -> nodes.stream()
-        .map(storage::loadGroups)
-        .map(CompletableFuture::join)
-        .flatMap(Collection::stream)
-        .toList()
-    ).thenAccept(groups -> {
-      groups.forEach(group -> group.removeAll(nodes));
-      groups.stream()
-          .peek(group -> group.removeAll(nodes))
-          .forEach(storage::saveGroup);
-    });
-  }
-
-
+suspend fun StorageAdapter.getGroups(node: Node): Collection<NodeGroup> {
+    return getGroups(node.nodeId)
 }
+
+suspend fun StorageAdapter.getGroups(node: UUID): Collection<NodeGroup> {
+    return loadGroups(node)
+}
+
+suspend fun StorageAdapter.addGroups(group: NodeGroup, node: UUID) {
+    return addGroups(setOf(group), setOf(node))
+}
+
+suspend fun StorageAdapter.addGroups(group: NodeGroup, nodes: Collection<UUID>) {
+    return addGroups(setOf(group), nodes)
+}
+
+suspend fun StorageAdapter.addGroups(groups: Collection<NodeGroup>, node: UUID) {
+    return addGroups(groups, setOf(node))
+}
+
+suspend fun StorageAdapter.addGroups(
+    groups: Collection<NodeGroup>,
+    nodes: Collection<UUID>
+) {
+    launchIO {
+        val jobs = ArrayList<Job>()
+        for (group in groups) {
+            jobs.add(async {
+                group.addAll(nodes)
+                saveGroup(group)
+            })
+        }
+        jobs.joinAll()
+    }
+}
+
+suspend fun StorageAdapter.removeGroups(group: NodeGroup, node: UUID) {
+    return removeGroups(setOf(group), setOf(node))
+}
+
+suspend fun StorageAdapter.removeGroups(group: NodeGroup, nodes: Collection<UUID>) {
+    return removeGroups(setOf(group), nodes)
+}
+
+suspend fun StorageAdapter.removeGroups(groups: Collection<NodeGroup>, node: UUID) {
+    return removeGroups(groups, setOf(node))
+}
+
+suspend fun StorageAdapter.removeGroups(
+    groups: Collection<NodeGroup>,
+    nodes: Collection<UUID>
+) {
+    launchIO {
+        val jobs = ArrayList<Job>()
+        for (group in groups) {
+            group.removeAll(nodes.toSet())
+            jobs.add(async {
+                saveGroup(group)
+            })
+        }
+        jobs.joinAll()
+    }
+}
+
+suspend fun StorageAdapter.clearGroups(vararg nodes: UUID) =
+    launchIO {
+        val jobs = HashSet<Job>()
+        val groups = HashSet<NodeGroup>()
+        for (node in nodes) {
+            jobs.add(async {
+                groups.addAll(loadGroups(node))
+            })
+        }
+        jobs.joinAll()
+        jobs.clear()
+        groups.forEach {
+            it.removeAll(nodes.toSet())
+            jobs.add(async { saveGroup(it) })
+        }
+        jobs.joinAll()
+    }

@@ -483,7 +483,7 @@ public class Arguments {
       }
       return type.get();
     })).includeSuggestions(suggestNamespacedKeys(sender -> {
-      return CompletableFuture.completedFuture(PathFinder.get().getVisualizerTypeRegistry().getTypes().keySet());
+      return CompletableFuture.completedFuture(PathFinder.get().getVisualizerTypeRegistry().types.keySet());
     }));
   }
 }

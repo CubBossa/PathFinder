@@ -24,7 +24,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
   @Override
   public void loadExtensions() {
     extensions.forEach(e -> {
-      if (e.isDisabled) {
+      if (e.isDisabled()) {
         return;
       }
       try {
@@ -39,7 +39,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
   @Override
   public void enableExtensions() {
     extensions.forEach(e -> {
-      if (e.isDisabled) {
+      if (e.isDisabled()) {
         return;
       }
       try {
@@ -54,7 +54,7 @@ public class ExtensionsRegistryImpl extends ExtensionPoint<PathFinderExtension> 
   @Override
   public void disableExtensions() {
     extensions.forEach(e -> {
-      if (e.isDisabled) {
+      if (e.isDisabled()) {
         return;
       }
       try {

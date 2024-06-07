@@ -6,11 +6,11 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionLanguageParser;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageLexer;
 import de.cubbossa.pathfinder.antlr.SelectionSuggestionLanguageParser;
+import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.selection.ParsedSelectionAttribute;
 import de.cubbossa.pathfinder.node.selection.SelectSuggestionVisitor;
 import de.cubbossa.pathfinder.node.selection.SelectionVisitor;
@@ -80,10 +80,10 @@ public abstract class SelectionParser<TypeT, ContextT extends SelectionParser.Ar
     List<TypeT> scopeHolder = new ArrayList<>(scope);
     for (Argument<?, TypeT, ContextT, ?> argument : arguments) {
       for (ParsedSelectionAttribute a : attributes) {
-        if (!a.identifier().equals(argument.getKey())) {
+        if (!a.identifier.equals(argument.getKey())) {
           continue;
         }
-        ValueT value = (ValueT) argument.getParse().apply(a.value());
+        ValueT value = (ValueT) argument.getParse().apply(a.value);
         scopeHolder = argument.getExecute().apply(
             createContext(value, scopeHolder, sender)
         );

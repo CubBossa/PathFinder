@@ -1,195 +1,186 @@
-package de.cubbossa.pathfinder.navigation;
+package de.cubbossa.pathfinder.navigation
 
-import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.event.EventDispatcher;
-import de.cubbossa.pathfinder.event.NodeCreateEvent;
-import de.cubbossa.pathfinder.event.NodeDeleteEvent;
-import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
-import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
-import de.cubbossa.pathfinder.event.NodeSaveEvent;
-import de.cubbossa.pathfinder.graph.NoPathFoundException;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Edge;
-import de.cubbossa.pathfinder.node.GroupedNode;
-import de.cubbossa.pathfinder.node.GroupedNodeImpl;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.GroupedVisualizerPathImpl;
-import de.cubbossa.pathfinder.visualizer.PathView;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.SingleVisualizerPathImpl;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.logging.Level;
+import com.google.common.graph.MutableValueGraph
+import com.google.common.graph.ValueGraph
+import com.google.common.graph.ValueGraphBuilder
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.event.*
+import de.cubbossa.pathfinder.graph.NoPathFoundException
+import de.cubbossa.pathfinder.misc.PathPlayer
+import de.cubbossa.pathfinder.node.GroupedNode
+import de.cubbossa.pathfinder.node.GroupedNodeImpl
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.visualizer.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import java.util.*
+import java.util.concurrent.ExecutionException
+import java.util.logging.Level
 
-public class NavigatorImpl implements Navigator {
+class NavigatorImpl @JvmOverloads constructor(
+    private val constraint: (Collection<Node>) -> Collection<Node> = { o -> o }
+) : Navigator {
 
-  private final PathFinder pathFinder;
-  private final Function<Collection<Node>, Collection<Node>> constraint;
+    private val pathFinder: PathFinder = PathFinder.get()
 
-  // Caches
-  private CompletableFuture<MutableValueGraph<Node, Double>> generatingFuture = null;
-  private MutableValueGraph<Node, Double> cachedGraph = null;
+    // Caches
+    private var generatingFuture: Deferred<MutableValueGraph<Node, Double>>? = null
+    private var cachedGraph: MutableValueGraph<Node, Double>? = null
 
-  public NavigatorImpl() {
-    this(Function.identity());
-  }
+    init {
+        val eventDispatcher = pathFinder.eventDispatcher
+        pathFinder.disposer.register(pathFinder, this)
 
-  public NavigatorImpl(Function<Collection<Node>, Collection<Node>> constraint) {
-    this.constraint = constraint;
-
-    pathFinder = PathFinder.get();
-    EventDispatcher<?> eventDispatcher = pathFinder.getEventDispatcher();
-    pathFinder.getDisposer().register(pathFinder, this);
-
-    eventDispatcher.listen(NodeCreateEvent.class, e -> cachedGraph = null);
-    eventDispatcher.listen(NodeGroupDeleteEvent.class, e -> cachedGraph = null);
-    eventDispatcher.listen(NodeSaveEvent.class, e -> cachedGraph = null);
-    eventDispatcher.listen(NodeGroupSaveEvent.class, e -> cachedGraph = null);
-    eventDispatcher.listen(NodeDeleteEvent.class, e -> cachedGraph = null);
-    eventDispatcher.listen(NodeGroupDeleteEvent.class, e -> cachedGraph = null);
-  }
-
-  @Override
-  public List<Node> createPath(Route route) throws NoPathFoundException {
-    try {
-      ValueGraph<Node, Double> graph = fetchGraph().get();
-      List<Node> path = route.calculatePath(graph).getPath();
-      return removeIdenticalNeighbours(path);
-    } catch (ExecutionException e) {
-      if (e.getCause() instanceof NoPathFoundException np) {
-        throw np;
-      }
-      throw new RuntimeException(e);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+        eventDispatcher.listen(NodeCreateEvent::class.java) { e: NodeCreateEvent? ->
+            cachedGraph = null
+        }
+        eventDispatcher.listen(NodeGroupDeleteEvent::class.java) { e: NodeGroupDeleteEvent? ->
+            cachedGraph = null
+        }
+        eventDispatcher.listen(NodeSaveEvent::class.java) { e: NodeSaveEvent? ->
+            cachedGraph = null
+        }
+        eventDispatcher.listen(NodeGroupSaveEvent::class.java) { e: NodeGroupSaveEvent? ->
+            cachedGraph = null
+        }
+        eventDispatcher.listen(NodeDeleteEvent::class.java) { e: NodeDeleteEvent? ->
+            cachedGraph = null
+        }
+        eventDispatcher.listen(NodeGroupDeleteEvent::class.java) { e: NodeGroupDeleteEvent? ->
+            cachedGraph = null
+        }
     }
-  }
 
-  private List<Node> removeIdenticalNeighbours(List<Node> path) {
-    List<Node> result = new ArrayList<>();
-    GroupedNode last = null;
-    for (Node node : path) {
-      if (!(node instanceof GroupedNode groupedNode)) {
-        last = null;
-        result.add(node);
-        continue;
-      }
-      if (last != null && Objects.equals(last.node().getLocation(), groupedNode.node().getLocation())) {
-        GroupedNode n = (GroupedNode) last.clone();
-        n.groups().addAll(groupedNode.groups());
-        result.remove(result.size() - 1);
-        result.add(n);
-      } else {
-        result.add(node);
-      }
-      last = groupedNode;
-    }
-    return path;
-  }
-
-  @Override
-  public <PlayerT> VisualizerPath<PlayerT> createRenderer(
-      PathPlayer<PlayerT> viewer, Route route
-  ) throws NoPathFoundException {
-
-    VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, () -> {
-      try {
-        return createPath(route);
-      } catch (NoPathFoundException ignored) {
-        return new ArrayList<>();
-      }
-    });
-    path.addViewer(viewer);
-
-    // load config value
-    path.startUpdater(0);
-    return path;
-  }
-
-  @Override
-  public <PlayerT, ViewT extends PathView<PlayerT>> VisualizerPath<PlayerT> createRenderer(
-      PathPlayer<PlayerT> viewer, Route route, PathVisualizer<ViewT, PlayerT> renderer
-  ) throws NoPathFoundException {
-
-    return new SingleVisualizerPathImpl<>(() -> {
-      try {
-        return createPath(route);
-      } catch (NoPathFoundException ignored) {
-        return new ArrayList<>();
-      }
-    }, renderer, viewer);
-  }
-
-  /**
-   * Returns the (potentially completed) graph creation process or starts a new one if none exists.
-   */
-  private CompletableFuture<MutableValueGraph<Node, Double>> fetchGraph() {
-    if (cachedGraph != null) {
-      return CompletableFuture.completedFuture(cachedGraph);
-    }
-    if (generatingFuture == null) {
-      generatingFuture = createGraph().thenApply(graph -> {
-        cachedGraph = graph;
-        generatingFuture = null;
-        return graph;
-      });
-    }
-    return generatingFuture;
-  }
-
-  /**
-   * Generates the current world into one graph representation
-   */
-  private CompletableFuture<MutableValueGraph<Node, Double>> createGraph() {
-    return pathFinder.getStorage().loadNodes()
-        .thenCompose(nodes -> {
-          Map<UUID, Node> nodeMap = new HashMap<>();
-          nodes = constraint.apply(nodes);
-          nodes.forEach(node -> nodeMap.put(node.getNodeId(), node));
-          Map<UUID, GroupedNode> map = new HashMap<>();
-
-          return pathFinder.getStorage().loadGroupsOfNodes(nodeMap.values()).thenApply(groups -> {
-            groups.forEach((node, gs) -> {
-              map.put(node.getNodeId(), new GroupedNodeImpl(node, gs));
-            });
-            return map;
-          });
-        })
-        .thenApply(map -> {
-
-          MutableValueGraph<Node, Double> graph = ValueGraphBuilder
-              .directed().allowsSelfLoops(false)
-              .build();
-
-          map.values().forEach(graph::addNode);
-          for (var entry : map.entrySet()) {
-            Node node = entry.getValue().node();
-            for (Edge e : node.getEdges()) {
-              GroupedNode endGrouped = map.get(e.getEnd());
-              Node end = endGrouped == null ? null : endGrouped.node();
-              GroupedNode startGrouped = map.get(e.getStart());
-              Node start = startGrouped == null ? null : startGrouped.node();
-              if (end == null || start == null) {
-                pathFinder.getLogger().log(Level.WARNING, "Could not resolve edge while creating graph: " + e
-                    + ". Apparently, not all nodes are part of the global group.");
-                continue;
-              }
-              graph.putEdgeValue(startGrouped, endGrouped, node.getLocation().distance(end.getLocation()) * e.getWeight());
+    @Throws(NoPathFoundException::class)
+    override fun createPath(route: Route): List<Node> {
+        try {
+            val graph: ValueGraph<Node, Double> = fetchGraph()
+            val path = route.calculatePath(graph).path
+            return removeIdenticalNeighbours(path)
+        } catch (e: ExecutionException) {
+            if (e.cause is NoPathFoundException) {
+                throw e
             }
-          }
-          return graph;
-        });
-  }
+            throw RuntimeException(e)
+        } catch (e: InterruptedException) {
+            throw RuntimeException(e)
+        }
+    }
+
+    private fun removeIdenticalNeighbours(path: List<Node>): List<Node> {
+        val result: MutableList<Node> = ArrayList()
+        var last: GroupedNode? = null
+        for (node in path) {
+            if (node !is GroupedNode) {
+                last = null
+                result.add(node)
+                continue
+            }
+            if (last != null && last.node().location == node.node().location) {
+                val n = last.clone() as GroupedNode
+                n.groups().addAll(node.groups())
+                result.removeAt(result.size - 1)
+                result.add(n)
+            } else {
+                result.add(node)
+            }
+            last = node
+        }
+        return path
+    }
+
+    @Throws(NoPathFoundException::class)
+    override fun <PlayerT> createRenderer(
+        viewer: PathPlayer<PlayerT>, route: Route
+    ): VisualizerPath<PlayerT> {
+        val path: VisualizerPath<PlayerT> = GroupedVisualizerPathImpl(viewer, UpdatingPath {
+            try {
+                return@UpdatingPath createPath(route)
+            } catch (ignored: NoPathFoundException) {
+                return@UpdatingPath ArrayList<Node>()
+            }
+        })
+        path.addViewer(viewer)
+
+        // load config value
+        path.startUpdater(0)
+        return path
+    }
+
+    @Throws(NoPathFoundException::class)
+    override fun <PlayerT, ViewT : PathView<PlayerT>> createRenderer(
+        viewer: PathPlayer<PlayerT>, route: Route, renderer: PathVisualizer<ViewT, PlayerT>
+    ): VisualizerPath<PlayerT> {
+        return SingleVisualizerPathImpl(UpdatingPath {
+            try {
+                return@UpdatingPath createPath(route)
+            } catch (ignored: NoPathFoundException) {
+                return@UpdatingPath ArrayList<Node>()
+            }
+        }, renderer, viewer)
+    }
+
+    /**
+     * Returns the (potentially completed) graph creation process or starts a new one if none exists.
+     */
+    private fun fetchGraph(): MutableValueGraph<Node, Double> {
+        if (cachedGraph != null) {
+            return cachedGraph!!
+        }
+        if (generatingFuture == null) {
+            generatingFuture = createGraph()
+        }
+        return runBlocking {
+            cachedGraph = generatingFuture?.await()
+            generatingFuture = null
+            return@runBlocking cachedGraph!!
+        }
+    }
+
+    /**
+     * Generates the current world into one graph representation
+     */
+    private fun createGraph(): Deferred<MutableValueGraph<Node, Double>> = runBlocking {
+        async {
+            val nodes = constraint(pathFinder.storage.loadNodes())
+            val nodeMap: MutableMap<UUID, Node> = HashMap()
+
+            nodes.forEach { node -> nodeMap[node.nodeId] = node }
+
+            val map: MutableMap<UUID, GroupedNode> = HashMap()
+
+            val groups = pathFinder.storage.loadGroupsOfNodes(nodeMap.values)
+            groups.forEach { (node, gs) ->
+                map[node.nodeId] = GroupedNodeImpl(node, gs)
+            }
+            val graph = ValueGraphBuilder
+                .directed().allowsSelfLoops(false)
+                .build<Node, Double>()
+
+            map.values.forEach { graph.addNode(it) }
+            for (entry in map.entries) {
+                val node: Node = entry.value.node()
+                for (e in node.edges) {
+                    val endGrouped = map[e.end]
+                    val end = endGrouped?.node()
+                    val startGrouped = map[e.start]
+                    val start = startGrouped?.node()
+                    if (end == null || start == null) {
+                        pathFinder.logger.log(
+                            Level.WARNING,
+                            """Could not resolve edge while creating graph: $e. Apparently, not all nodes are part of the global group."""
+                        )
+                        continue
+                    }
+                    graph.putEdgeValue(
+                        startGrouped,
+                        endGrouped,
+                        node.location.distance(end.location) * e.weight
+                    )
+                }
+            }
+            graph
+        }
+    }
 }

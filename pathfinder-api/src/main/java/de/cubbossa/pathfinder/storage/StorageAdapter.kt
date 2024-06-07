@@ -38,7 +38,7 @@ interface StorageAdapter : Disposable {
     /**
      * @return The implementation instance.
      */
-    val implementation: StorageImplementation?
+    var implementation: StorageImplementation
 
     var cache: CacheLayer
 
@@ -47,7 +47,7 @@ interface StorageAdapter : Disposable {
      * Check if global group exists and if not create.
      * Global group will use default visualizer, so if default visualizer has been deleted, it will be recreated.
      */
-    suspend fun createGlobalNodeGroup(defaultVisualizerType: VisualizerType<*>): NodeGroup?
+    suspend fun createGlobalNodeGroup(defaultVisualizerType: VisualizerType<*>): NodeGroup
 
     /**
      * Loads the node type for a node with given [UUID].
@@ -79,7 +79,7 @@ interface StorageAdapter : Disposable {
     suspend fun <N : Node> createAndLoadNode(
         type: NodeType<N>,
         location: Location
-    ): N?
+    ): N
 
     /**
      * Loads, modifies and saves a node with given [UUID] asynchronously.
@@ -168,7 +168,7 @@ interface StorageAdapter : Disposable {
 
     suspend fun <VisualizerT : PathVisualizer<*, *>> createAndLoadVisualizer(
         type: VisualizerType<VisualizerT>, key: NamespacedKey
-    ): VisualizerT?
+    ): VisualizerT
 
     suspend fun loadVisualizers(): Collection<PathVisualizer<*, *>>
 

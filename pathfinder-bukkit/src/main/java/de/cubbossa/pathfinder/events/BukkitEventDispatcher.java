@@ -179,7 +179,7 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
         uuidCollectionMap.values()
             .stream().flatMap(Collection::stream)
             .distinct()
-            .filter(g -> g.hasModifier(DiscoverProgressModifier.KEY))
+            .filter(g -> g.hasModifier(DiscoverProgressModifier.key))
             .forEach(g -> dispatchPlayerFindProgressEvent(player, group, g));
       });
       return true;

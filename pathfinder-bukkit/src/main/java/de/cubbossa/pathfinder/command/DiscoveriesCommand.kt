@@ -1,65 +1,72 @@
-package de.cubbossa.pathfinder.command;
+package de.cubbossa.pathfinder.command
 
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
-import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
-import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.CollectionUtils;
-import dev.jorel.commandapi.CommandTree;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.PathPerms
+import de.cubbossa.pathfinder.command.util.CommandUtils
+import de.cubbossa.pathfinder.group.DiscoverProgressModifier
+import de.cubbossa.pathfinder.launchIO
+import de.cubbossa.pathfinder.messages.Messages
+import de.cubbossa.pathfinder.misc.Pagination
+import de.cubbossa.pathfinder.util.BukkitUtils
+import de.cubbossa.pathfinder.util.CollectionUtils
+import dev.jorel.commandapi.CommandTree
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import kotlinx.coroutines.runBlocking
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 
-public class DiscoveriesCommand extends CommandTree {
+class DiscoveriesCommand : CommandTree("discoveries") {
+    private val pathFinder: PathFinder
 
-  private final PathFinder pathFinder;
+    init {
+        withPermission(PathPerms.PERM_CMD_DISCOVERIES)
 
-  public DiscoveriesCommand() {
-    super("discoveries");
+        pathFinder = PathFinder.get()
 
-    withPermission(PathPerms.PERM_CMD_DISCOVERIES);
+        executesPlayer(PlayerCommandExecutor { sender, _ ->
+            printList(sender, Pagination.page(0, 10))
+        })
+        then(
+            Arguments.pagination(10)
+                .executesPlayer(PlayerCommandExecutor { sender, args ->
+                    printList(sender, args.getUnchecked(0))
+                })
+        )
+    }
 
-    pathFinder = PathFinder.get();
+    private fun printList(sender: Player, pagination: Pagination?) {
+        launchIO {
+            val groups = pathFinder.storage.loadGroups(DiscoverProgressModifier.key)
+            val l = groups.stream()
+                .map { group -> group.getModifier<DiscoverProgressModifier>(DiscoverProgressModifier.key) }
+                .parallel()
+                .filter { it != null }.map { it as DiscoverProgressModifier }
+                .map { modifier ->
+                    java.util.Map.entry(
+                        modifier,
+                        runBlocking { modifier.calculateProgress(sender.uniqueId) }
+                    )
+                }
+                .sorted(Comparator.comparingDouble { it.value })
+                .toList()
 
-    executesPlayer((sender, args) -> {
-      printList(sender, Pagination.page(0, 10));
-    });
-    then(Arguments.pagination(10).executesPlayer((sender, args) -> {
-      printList(sender, args.getUnchecked(0));
-    }));
-  }
-
-  private void printList(Player sender, Pagination pagination) {
-    pathFinder.getStorage().loadGroups(DiscoverProgressModifier.KEY).thenAccept(groups -> {
-      List<Map.Entry<DiscoverProgressModifier, Double>> l = groups.stream()
-          .map(group -> group.getModifier(DiscoverProgressModifier.KEY))
-          .parallel()
-          .filter(Optional::isPresent).map(Optional::get)
-          .map(m -> (DiscoverProgressModifier) m)
-          .map(modifier -> Map.entry(modifier, modifier.calculateProgress(sender.getUniqueId()).join()))
-          .sorted(Comparator.comparingDouble(Map.Entry::getValue))
-          .toList();
-
-      PathPlayer<CommandSender> p = BukkitUtils.wrap(sender);
-      CommandUtils.printList(sender, pagination,
-          CollectionUtils.subList(l, pagination),
-          e -> {
-            p.sendMessage(Messages.CMD_DISCOVERIES_ENTRY.formatted(
-                    Placeholder.component("name", e.getKey().getDisplayName()),
-                    Messages.formatter().number("percentage", e.getValue() * 100),
-                    Messages.formatter().number("ratio", e.getValue())
-            ));
-          },
-          Messages.CMD_DISCOVERIES_HEADER,
-          Messages.CMD_DISCOVERIES_FOOTER);
-    });
-  }
+            val p = BukkitUtils.wrap<CommandSender>(sender)
+            CommandUtils.printList(
+                sender, pagination,
+                CollectionUtils.subList(l, pagination),
+                { (mod, prog) ->
+                    p.sendMessage(
+                        Messages.CMD_DISCOVERIES_ENTRY.formatted(
+                            Placeholder.component("name", mod.displayName),
+                            Messages.formatter().number("percentage", prog * 100),
+                            Messages.formatter().number("ratio", prog)
+                        )
+                    )
+                },
+                Messages.CMD_DISCOVERIES_HEADER,
+                Messages.CMD_DISCOVERIES_FOOTER
+            )
+        }
+    }
 }
