@@ -22,6 +22,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://nexus.leonardbausenwein.de/repository/maven-public/")
     maven("https://libraries.minecraft.net/")
