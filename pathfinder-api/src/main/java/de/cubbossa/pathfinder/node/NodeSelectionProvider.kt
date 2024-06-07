@@ -1,16 +1,18 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-public abstract class NodeSelectionProvider {
+abstract class NodeSelectionProvider {
 
-  protected static NodeSelectionProvider provider;
+    abstract suspend fun of(selection: String): NodeSelection
 
-  protected abstract NodeSelection of(String selection);
+    abstract fun of(selection: String, scope: Iterable<Node>): NodeSelection
 
-  protected abstract NodeSelection of(String selection, Iterable<Node> scope);
+    abstract fun of(scope: Iterable<Node>): NodeSelection
 
-  protected abstract NodeSelection of(Iterable<Node> scope);
+    abstract suspend fun ofSender(selection: String, sender: Any): NodeSelection
 
-  protected abstract NodeSelection ofSender(String selection, Object sender);
+    abstract fun ofSender(selection: String, scope: Iterable<Node>, sender: Any): NodeSelection
 
-  protected abstract NodeSelection ofSender(String selection, Iterable<Node> scope, Object sender);
+    companion object {
+        var provider: NodeSelectionProvider? = null
+    }
 }

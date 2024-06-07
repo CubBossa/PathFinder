@@ -1,140 +1,96 @@
-package de.cubbossa.pathfinder.nodegroup;
+package de.cubbossa.pathfinder.nodegroup
 
-import de.cubbossa.pathfinder.Changes;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.group.Modifier;
-import de.cubbossa.pathfinder.group.NodeGroup;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.util.ModifiedHashMap;
-import de.cubbossa.pathfinder.util.ModifiedHashSet;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import lombok.Getter;
-import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
+import de.cubbossa.pathfinder.Changes
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.group.Modifier
+import de.cubbossa.pathfinder.group.NodeGroup
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.util.ModifiedHashMap
+import de.cubbossa.pathfinder.util.ModifiedHashSet
+import lombok.Getter
+import lombok.Setter
+import java.util.*
+import java.util.concurrent.CompletableFuture
 
-public class NodeGroupImpl extends ModifiedHashSet<UUID> implements NodeGroup {
+class NodeGroupImpl(override val key: NamespacedKey, nodes: Collection<Node> = HashSet()) :
+    ModifiedHashSet<UUID>(nodes.stream().map(Node::nodeId).toList()), NodeGroup {
+    
+    private val pathFinder: PathFinder = PathFinder.get()
+    private val modifierMap: ModifiedHashMap<NamespacedKey, Modifier> =
+        ModifiedHashMap()
+    override val modifiers: Collection<Modifier>
+        get() = modifierMap.values
+    override var weight = 1f
 
-  private final PathFinder pathFinder = PathFinder.get();
-  private final NamespacedKey key;
-  private final ModifiedHashMap<NamespacedKey, Modifier> modifiers;
-  @Getter
-  @Setter
-  private float weight = 1;
+    override val modifierChanges: Changes<Modifier>
+        get() = modifierMap.changes
 
-  public NodeGroupImpl(NamespacedKey key) {
-    this(key, new HashSet<>());
-  }
+    override val contentChanges: Changes<UUID>
+        get() = changes
 
-  public NodeGroupImpl(NamespacedKey key, Collection<Node> nodes) {
-    super(nodes.stream().map(Node::getNodeId).toList());
-    this.key = key;
-    this.modifiers = new ModifiedHashMap<>();
-  }
-
-  @Override
-  public Changes<Modifier> getModifierChanges() {
-    return modifiers.getChanges();
-  }
-
-  @Override
-  public Changes<UUID> getContentChanges() {
-    return getChanges();
-  }
-
-  @Override
-  public CompletableFuture<Collection<Node>> resolve() {
-    return pathFinder.getStorage().loadNodes(this);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    override suspend fun resolve(): Collection<Node> {
+        return pathFinder.storage.loadNodes(this)
     }
-    if (!(o instanceof NodeGroupImpl group)) {
-      return false;
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) {
+            return true
+        }
+        if (o !is NodeGroupImpl) {
+            return false
+        }
+        if (!super.equals(o)) {
+            return false
+        }
+        return key.equals(o.key)
     }
-    if (!super.equals(o)) {
-      return false;
+
+    override fun hashCode(): Int {
+        return key.hashCode()
     }
-    return key.equals(group.key);
-  }
 
-  @Override
-  public int hashCode() {
-    return key.hashCode();
-  }
+    override fun <C: Modifier> hasModifier(modifierClass: Class<C>): Boolean {
+        return modifiers.stream().anyMatch { obj: Modifier? -> modifierClass.isInstance(obj) }
+    }
 
-  @Override
-  public NamespacedKey getKey() {
-    return key;
-  }
+    override fun <M : Modifier> hasModifier(modifierType: NamespacedKey): Boolean {
+        return modifierMap.containsKey(modifierType)
+    }
 
-  public Collection<Modifier> getModifiers() {
-    return modifiers.values();
-  }
+    override fun addModifier(key: NamespacedKey, modifier: Modifier) {
+        modifierMap[key] = modifier
+    }
 
-  @Override
-  public <C extends Modifier> boolean hasModifier(Class<C> modifierClass) {
-    return modifiers.values().stream().anyMatch(modifierClass::isInstance);
-  }
+    override fun <M : Modifier> getModifier(key: NamespacedKey): M? {
+        return modifierMap[key] as M?
+    }
 
-  @Override
-  public <M extends Modifier> boolean hasModifier(NamespacedKey modifierType) {
-    return modifiers.containsKey(modifierType);
-  }
+    override fun <C : Modifier> removeModifier(modifierClass: Class<C>) {
+        HashMap(modifierMap).forEach { (k: NamespacedKey, modifier: Modifier) ->
+            if (modifier.javaClass == modifierClass || modifier.javaClass.isInstance(modifierClass.name)) {
+                modifierMap.remove(k)
+            }
+        }
+    }
 
-  @Override
-  public void addModifier(NamespacedKey key, Modifier modifier) {
-    modifiers.put(key, modifier);
-  }
+    override fun <C: Modifier> removeModifier(modifier: C) {
+        modifierMap.values.remove(modifier)
+    }
 
-  @Override
-  public <M extends Modifier> Optional<M> getModifier(NamespacedKey key) {
-    return Optional.ofNullable((M) modifiers.get(key));
-  }
+    override fun removeModifier(key: NamespacedKey) {
+        modifierMap.remove(key)
+    }
 
-  @Override
-  public <C extends Modifier> void removeModifier(Class<C> modifierClass) {
-    new HashMap<>(modifiers).forEach((k, modifier) -> {
-      if (modifier.getClass().equals(modifierClass) || modifier.getClass().isInstance(modifierClass.getName())) {
-        modifiers.remove(k);
-      }
-    });
-  }
+    override fun clearModifiers() {
+        modifierMap.clear()
+    }
 
-  @Override
-  public <C extends Modifier> void removeModifier(C modifier) {
-    modifiers.values().remove(modifier);
-  }
+    override fun compareTo(other: NodeGroup): Int {
+        return weight.toDouble().compareTo(other.weight.toDouble())
+    }
 
-  @Override
-  public <C extends Modifier> void removeModifier(NamespacedKey key) {
-    modifiers.remove(key);
-  }
-
-  @Override
-  public void clearModifiers() {
-    modifiers.clear();
-  }
-
-  @Override
-  public int compareTo(@NotNull NodeGroup o) {
-    return Double.compare(weight, o.weight);
-  }
-
-  @Override
-  public String toString() {
-    return "NodeGroupImpl{"
-        + ", key=" + key
-        + ", modifiers=" + modifiers
-        + ", weight=" + weight
-        + '}';
-  }
+    override fun toString(): String {
+        return ("""NodeGroupImpl{, key=$key, modifiers=$modifiers, weight=$weight}""")
+    }
 }

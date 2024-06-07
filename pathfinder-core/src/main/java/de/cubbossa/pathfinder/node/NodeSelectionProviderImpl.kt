@@ -1,107 +1,101 @@
-package de.cubbossa.pathfinder.node;
+package de.cubbossa.pathfinder.node
 
-import com.mojang.brigadier.context.StringRange;
-import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser;
-import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute;
-import de.cubbossa.pathfinder.util.ExtensionPoint;
-import de.cubbossa.pathfinder.util.SelectionParser;
-import dev.jorel.commandapi.SuggestionInfo;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import com.mojang.brigadier.context.StringRange
+import com.mojang.brigadier.suggestion.Suggestion
+import com.mojang.brigadier.suggestion.Suggestions
+import de.cubbossa.pathfinder.PathFinder
+import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser
+import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser.NodeArgumentContext
+import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser.NodeSelectionArgument
+import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute
+import de.cubbossa.pathfinder.util.ExtensionPoint
+import de.cubbossa.pathfinder.util.SelectionParser
+import de.cubbossa.pathfinder.util.SelectionParser.SelectionModification
+import dev.jorel.commandapi.SuggestionInfo
+import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
+import java.util.function.Function
 
-public class NodeSelectionProviderImpl<SenderT, ContextT extends AbstractNodeSelectionParser.NodeArgumentContext<?>> extends NodeSelectionProvider {
+class NodeSelectionProviderImpl<SenderT, ContextT : NodeArgumentContext<*>>(
+    private val parser: AbstractNodeSelectionParser<SenderT, ContextT>
+) : NodeSelectionProvider() {
 
-  static final ExtensionPoint<NodeSelectionAttribute> EXTENSION_POINT = new ExtensionPoint<>(NodeSelectionAttribute.class);
+    private val pathFinder = PathFinder.get()
 
-  private final AbstractNodeSelectionParser<SenderT, ContextT> parser;
+    init {
+        EXTENSION_POINT.extensions.forEach{ this.add(it) }
+        provider = this
+    }
 
-  public NodeSelectionProviderImpl(AbstractNodeSelectionParser<SenderT, ContextT> parser) {
-    this.parser = parser;
-    EXTENSION_POINT.getExtensions().forEach(this::add);
-    NodeSelectionProvider.provider = this;
-  }
+    private fun <T> add(i: NodeSelectionAttribute<T>) {
+        val arg = object: NodeSelectionArgument<T>(i.valueType) {
 
-  private <T> void add(NodeSelectionAttribute<T> i) {
-    parser.addResolver(new AbstractNodeSelectionParser.NodeSelectionArgument<>(i.valueType) {
-      @Override
-      public String getKey() {
-        return i.key;
-      }
+            override val key: String
+                get() = i.key
 
-      @Override
-      public SelectionParser.SelectionModification modificationType() {
-        return SelectionParser.SelectionModification.valueOf(i.attributeType.name());
-      }
+            override fun modificationType(): SelectionModification {
+                return SelectionModification.valueOf(i.attributeType.name)
+            }
 
-      @Override
-      public Collection<String> executeAfter() {
-        return i.executeAfter();
-      }
+            override fun executeAfter(): Collection<String> {
+                return i.executeAfter()
+            }
+        }
+        arg.execute = { i.execute(it).toMutableList() }
+        arg.suggest = { c: SelectionParser.SuggestionContext ->
+                val suggestions = ArrayList(i.getSuggestions(c))
+                suggestions.addAll(i.getStringSuggestions(c).stream()
+                    .map { Suggestion(StringRange.between(0, c.input.length), it) }
+                    .toList())
+                suggestions
+        }
+        parser.addResolver(arg)
+    }
 
-      @Override
-      public Function<AbstractNodeSelectionParser.NodeArgumentContext<T>, List<Node>> getExecute() {
-        return i::execute;
-      }
+    override suspend fun of(selection: String): NodeSelection {
+        var scope: MutableList<Node> = ArrayList(pathFinder.storage.loadNodes())
+        scope = parser.parse<Any>(selection, scope, null)
+        return NodeSelectionImpl(scope, selection)
+    }
 
-      @Override
-      public Function<SelectionParser.SuggestionContext, List<Suggestion>> getSuggest() {
-        return c -> {
-          ArrayList<Suggestion> suggestions = new ArrayList<>(i.getSuggestions(c));
-          suggestions.addAll(i.getStringSuggestions(c).stream()
-              .map(string -> new Suggestion(StringRange.between(0, c.getInput().length()), string))
-              .toList());
-          return suggestions;
-        };
-      }
-    });
-  }
+    override fun of(selection: String, scope: Iterable<Node>): NodeSelection {
+        var s: MutableList<Node> = ArrayList()
+        scope.forEach(Consumer { e: Node -> s.add(e) })
+        s = parser.parse<Node>(selection, s, null)
+        return NodeSelectionImpl(s, selection)
+    }
 
-  @Override
-  protected NodeSelection of(String selection) {
-    List<Node> scope = new ArrayList<>(PathFinder.get().getStorage().loadNodes().join());
-    scope = parser.parse(selection, scope, null);
-    return new NodeSelectionImpl(scope, selection);
-  }
+    override fun of(scope: Iterable<Node>): NodeSelection {
+        val s: MutableList<Node> = ArrayList()
+        scope.forEach(Consumer { e: Node -> s.add(e) })
+        return NodeSelectionImpl(s)
+    }
 
-  @Override
-  protected NodeSelection of(String selection, Iterable<Node> scope) {
-    List<Node> _scope = new ArrayList<>();
-    scope.forEach(_scope::add);
-    _scope = parser.parse(selection, _scope, null);
-    return new NodeSelectionImpl(_scope, selection);
-  }
+    override suspend fun ofSender(selection: String, sender: Any): NodeSelection {
+        var scope: MutableList<Node> = ArrayList(pathFinder.storage.loadNodes())
+        scope = parser.parse<Node>(selection, scope, sender)
+        return NodeSelectionImpl(scope, selection)
+    }
 
-  @Override
-  protected NodeSelection of(Iterable<Node> scope) {
-    List<Node> _scope = new ArrayList<>();
-    scope.forEach(_scope::add);
-    return new NodeSelectionImpl(_scope);
-  }
+    override fun ofSender(selection: String, scope: Iterable<Node>, sender: Any): NodeSelection {
+        var _scope: MutableList<Node> = ArrayList()
+        scope.forEach(Consumer { e: Node -> _scope.add(e) })
+        _scope = parser.parse<Any>(selection, _scope, sender)
+        return NodeSelectionImpl(_scope, selection)
+    }
 
-  @Override
-  protected NodeSelection ofSender(String selection, Object sender) {
-    List<Node> scope = new ArrayList<>(PathFinder.get().getStorage().loadNodes().join());
-    scope = parser.parse(selection, scope, sender);
-    return new NodeSelectionImpl(scope, selection);
-  }
+    companion object {
+        val EXTENSION_POINT: ExtensionPoint<NodeSelectionAttribute<*>> = ExtensionPoint(
+            NodeSelectionAttribute::class.java
+        )
 
-  @Override
-  protected NodeSelection ofSender(String selection, Iterable<Node> scope, Object sender) {
-    List<Node> _scope = new ArrayList<>();
-    scope.forEach(_scope::add);
-    _scope = parser.parse(selection, _scope, sender);
-    return new NodeSelectionImpl(_scope, selection);
-  }
-
-  public static CompletableFuture<Suggestions> getNodeSelectionSuggestions(SuggestionInfo suggestionInfo) {
-    return ((NodeSelectionProviderImpl) provider).parser.applySuggestions(suggestionInfo.currentArg(), suggestionInfo.currentArg().length() > 0
-        ? suggestionInfo.currentArg().substring(1)
-        : "");
-  }
+        @JvmStatic
+        fun getNodeSelectionSuggestions(suggestionInfo: SuggestionInfo<*>): CompletableFuture<Suggestions> {
+            return (provider as NodeSelectionProviderImpl<*, *>).parser.applySuggestions(
+                suggestionInfo.currentArg(), if (suggestionInfo.currentArg().length > 0
+                ) suggestionInfo.currentArg().substring(1)
+                else ""
+            )
+        }
+    }
 }

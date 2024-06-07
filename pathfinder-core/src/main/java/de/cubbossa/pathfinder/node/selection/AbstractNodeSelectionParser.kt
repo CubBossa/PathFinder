@@ -1,30 +1,22 @@
-package de.cubbossa.pathfinder.node.selection;
+package de.cubbossa.pathfinder.node.selection
 
-import com.mojang.brigadier.arguments.ArgumentType;
-import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.util.SelectionParser;
-import java.util.List;
+import com.mojang.brigadier.arguments.ArgumentType
+import de.cubbossa.pathfinder.node.Node
+import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser.NodeArgumentContext
+import de.cubbossa.pathfinder.util.SelectionParser
 
-public abstract class AbstractNodeSelectionParser<SenderT, ContextT extends AbstractNodeSelectionParser.NodeArgumentContext<?>> extends SelectionParser<Node, ContextT> {
-  public AbstractNodeSelectionParser(String identifier, String... alias) {
-    super(identifier, alias);
-  }
+abstract class AbstractNodeSelectionParser<SenderT, ContextT : NodeArgumentContext<*>>(
+    identifier: String,
+    vararg alias: String
+) : SelectionParser<Node, ContextT>(identifier, *alias) {
 
-  public void addResolver(NodeSelectionArgument<?> argument) {
-    super.addResolver((Argument<?, ? extends Node, ? extends ContextT, ?>) argument);
-  }
-
-  public static abstract class NodeArgumentContext<ValueT> extends ArgumentContext<ValueT, Node> {
-
-    public NodeArgumentContext(ValueT value, List<Node> scope) {
-      super(value, scope);
+    fun addResolver(argument: NodeSelectionArgument<*>) {
+        super.addResolver(argument as Argument<*, out Node, out ContextT, *>)
     }
-  }
 
-  public static abstract class NodeSelectionArgument<TypeT> extends Argument<TypeT, Node, NodeArgumentContext<TypeT>, NodeSelectionArgument<TypeT>> {
+    abstract class NodeArgumentContext<ValueT>(value: ValueT, scope: MutableList<Node>) :
+        ArgumentContext<ValueT, Node>(value, scope)
 
-    public NodeSelectionArgument(ArgumentType<TypeT> type) {
-      super(type);
-    }
-  }
+    abstract class NodeSelectionArgument<TypeT>(type: ArgumentType<TypeT>) :
+        Argument<TypeT, Node, NodeArgumentContext<TypeT>, NodeSelectionArgument<TypeT>>(type)
 }

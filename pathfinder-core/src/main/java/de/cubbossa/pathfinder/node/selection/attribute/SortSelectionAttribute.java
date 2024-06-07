@@ -32,7 +32,7 @@ public class SortSelectionAttribute implements NodeSelectionAttribute<SortSelect
 
   @Override
   public List<Node> execute(AbstractNodeSelectionParser.NodeArgumentContext<SortMethod> context) {
-    Location playerLocation = context.getSenderLocation();
+    Location playerLocation = context.senderLocation;
     return switch (context.getValue()) {
       case NEAREST -> context.getScope().stream()
           .sorted(Comparator.comparingDouble(o -> o.getLocation().distance(playerLocation)))

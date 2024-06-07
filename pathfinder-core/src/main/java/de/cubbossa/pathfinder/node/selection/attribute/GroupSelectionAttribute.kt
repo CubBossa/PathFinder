@@ -8,8 +8,11 @@ import de.cubbossa.pathfinder.misc.NamespacedKey.Companion.fromString
 import de.cubbossa.pathfinder.node.Node
 import de.cubbossa.pathfinder.node.selection.AbstractNodeSelectionParser.NodeArgumentContext
 import de.cubbossa.pathfinder.node.selection.NodeSelectionAttribute
-import de.cubbossa.pathfinder.storage.StorageUtil
+import de.cubbossa.pathfinder.storage.getGroups
 import de.cubbossa.pathfinder.util.SelectionParser
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import lombok.Getter
 import org.pf4j.Extension
@@ -44,10 +47,11 @@ class GroupSelectionAttribute : NodeSelectionAttribute<Collection<NodeGroup>> {
     override val attributeType: NodeSelectionAttribute.Type
         get() = NodeSelectionAttribute.Type.FILTER
 
-    override fun execute(context: NodeArgumentContext<Collection<NodeGroup>>): List<Node> {
-        return context.scope.stream()
-            .filter { StorageUtil.getGroups(it).containsAll(context.value) }
-            .collect(Collectors.toList())
+    override fun execute(context: NodeArgumentContext<Collection<NodeGroup>>): MutableList<Node> = runBlocking {
+        return@runBlocking context.scope.asFlow()
+            .filter { PathFinder.get().storage.getGroups(it).containsAll(context.value) }
+            .toList()
+            .toMutableList()
     }
 
     override fun getStringSuggestions(context: SelectionParser.SuggestionContext): List<String> =

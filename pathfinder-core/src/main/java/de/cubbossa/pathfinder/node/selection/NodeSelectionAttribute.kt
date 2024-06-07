@@ -17,7 +17,7 @@ interface NodeSelectionAttribute<ValueT> : ExtensionPoint {
         return emptyList()
     }
 
-    fun execute(context: NodeArgumentContext<ValueT>): List<Node>
+    fun execute(context: NodeArgumentContext<ValueT>): MutableList<Node>
 
     fun getSuggestions(context: SelectionParser.SuggestionContext): List<Suggestion> {
         return emptyList()

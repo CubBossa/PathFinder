@@ -1,17 +1,21 @@
-package de.cubbossa.pathfinder.nodegroup.modifier;
+package de.cubbossa.pathfinder.nodegroup.modifier
 
-import de.cubbossa.pathfinder.group.Modifier;
-import de.cubbossa.pathfinder.group.PermissionModifier;
+import de.cubbossa.pathfinder.group.Modifier
+import de.cubbossa.pathfinder.group.PermissionModifier
+import de.cubbossa.pathfinder.misc.NamespacedKey
 
-public record PermissionModifierImpl(String permission) implements PermissionModifier {
+class PermissionModifierImpl(
+    override val permission: String
+) : PermissionModifier {
 
-  @Override
-  public boolean equals(Object obj) {
-    return !(obj instanceof Modifier mod) || getKey().equals(mod.getKey());
-  }
+    override val key: NamespacedKey
+        get() = PermissionModifier.key
 
-  @Override
-  public int hashCode() {
-    return getKey().hashCode();
-  }
+    override fun equals(other: Any?): Boolean {
+        return other !is Modifier || key == other.key
+    }
+
+    override fun hashCode(): Int {
+        return key.hashCode()
+    }
 }

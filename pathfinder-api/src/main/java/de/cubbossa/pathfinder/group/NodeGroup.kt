@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
  * the more important is the group. If two groups apply two conflicting modifiers to the same node, the modifier from
  * the group with the higher weight will be preferred.
  */
-interface NodeGroup : Keyed, Modified, MutableSet<UUID?>, Comparable<NodeGroup?> {
+interface NodeGroup : Keyed, Modified, MutableSet<UUID>, Comparable<NodeGroup> {
     /**
      * If multiple groups apply to a node, the weight of the group decides its priority. The higher the weight,
      * * the more important is the group. If two groups apply two conflicting modifiers to the same node, the modifier from
@@ -28,7 +28,7 @@ interface NodeGroup : Keyed, Modified, MutableSet<UUID?>, Comparable<NodeGroup?>
      * Results might be cached.
      * @return The resolved collection of Node instances
      */
-    fun resolve(): CompletableFuture<Collection<Node>>
+    suspend fun resolve(): Collection<Node>
 
     val contentChanges: Changes<UUID>
 

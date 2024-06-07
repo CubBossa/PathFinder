@@ -104,7 +104,7 @@ open class AbstractNavigationModule<PlayerT>
     override suspend fun navigate(
         viewer: PathPlayer<PlayerT>,
         route: Route
-    ): VisualizerPath<PlayerT>? {
+    ): VisualizerPath<PlayerT> {
 
         val current = activePaths[viewer.uniqueId]
         if (current != null) {

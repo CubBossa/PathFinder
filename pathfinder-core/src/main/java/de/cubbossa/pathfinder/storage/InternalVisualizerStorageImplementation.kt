@@ -1,18 +1,28 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
-import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import java.util.Map;
-import java.util.Optional;
+import de.cubbossa.pathfinder.misc.NamespacedKey
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizer
+import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType
+import java.util.*
 
-public interface InternalVisualizerStorageImplementation {
+interface InternalVisualizerStorageImplementation {
 
-  <VisualizerT extends AbstractVisualizer<?, ?>> Optional<VisualizerT> loadInternalVisualizer(AbstractVisualizerType<VisualizerT> type, NamespacedKey key);
+    fun <VisualizerT : AbstractVisualizer<*, *>> loadInternalVisualizer(
+        type: AbstractVisualizerType<VisualizerT>,
+        key: NamespacedKey
+    ): VisualizerT?
 
-  <VisualizerT extends AbstractVisualizer<?, ?>> Map<NamespacedKey, VisualizerT> loadInternalVisualizers(AbstractVisualizerType<VisualizerT> type);
+    fun <VisualizerT : AbstractVisualizer<*, *>> loadInternalVisualizers(
+        type: AbstractVisualizerType<VisualizerT>
+    ): Map<NamespacedKey, VisualizerT>
 
-  <VisualizerT extends AbstractVisualizer<?, ?>> void saveInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer);
+    fun <VisualizerT : AbstractVisualizer<*, *>> saveInternalVisualizer(
+        type: AbstractVisualizerType<VisualizerT>,
+        visualizer: VisualizerT
+    )
 
-  <VisualizerT extends AbstractVisualizer<?, ?>> void deleteInternalVisualizer(AbstractVisualizerType<VisualizerT> type, VisualizerT visualizer);
+    fun <VisualizerT : AbstractVisualizer<*, *>> deleteInternalVisualizer(
+        type: AbstractVisualizerType<VisualizerT>,
+        visualizer: VisualizerT
+    )
 }

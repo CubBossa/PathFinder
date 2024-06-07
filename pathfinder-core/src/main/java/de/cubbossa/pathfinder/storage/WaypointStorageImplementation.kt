@@ -1,20 +1,17 @@
-package de.cubbossa.pathfinder.storage;
+package de.cubbossa.pathfinder.storage
 
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import de.cubbossa.pathfinder.node.implementation.Waypoint
+import java.util.*
 
-public interface WaypointStorageImplementation {
+interface WaypointStorageImplementation {
 
-  Optional<Waypoint> loadWaypoint(UUID uuid);
+    fun loadWaypoint(uuid: UUID): Waypoint?
 
-  Collection<Waypoint> loadWaypoints(Collection<UUID> ids);
+    fun loadWaypoints(ids: Collection<UUID>): Collection<Waypoint>
 
-  Collection<Waypoint> loadAllWaypoints();
+    fun loadAllWaypoints(): Collection<Waypoint>
 
-  void saveWaypoint(Waypoint node);
+    fun saveWaypoint(node: Waypoint)
 
-  void deleteWaypoints(Collection<Waypoint> waypoints);
-
+    fun deleteWaypoints(waypoints: Collection<Waypoint>)
 }

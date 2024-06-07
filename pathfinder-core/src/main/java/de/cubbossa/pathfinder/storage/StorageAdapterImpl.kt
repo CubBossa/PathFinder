@@ -128,7 +128,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     override suspend fun <N : Node> createAndLoadNode(
         type: NodeType<N>,
         location: Location
-    ): N? {
+    ): N {
         val node = type.createAndLoadNode(NodeType.Context(UUID.randomUUID(), location))
         implementation.saveNodeTypeMapping(mapOf(Pair(node!!.nodeId, type)))
         cache.nodeTypeCache.write(node.nodeId, type)
@@ -452,11 +452,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
         }
         val loaded = implementation.loadVisualizerTypeMapping(map.absent)
         result.putAll(loaded)
-        loaded.entries.forEach(Consumer<Map.Entry<NamespacedKey, VisualizerType<*>>> { e: Map.Entry<NamespacedKey, VisualizerType<*>> ->
-            cache.visualizerTypeCache.write(
-                e
-            )
-        })
+        loaded.entries.forEach { cache.visualizerTypeCache.write(it) }
         return result
     }
 
@@ -470,7 +466,7 @@ class StorageAdapterImpl(private val nodeTypeRegistry: NodeTypeRegistry) : Stora
     // Visualizer
     override suspend fun <VisualizerT : PathVisualizer<*, *>> createAndLoadVisualizer(
         type: VisualizerType<VisualizerT>, key: NamespacedKey
-    ): VisualizerT? {
+    ): VisualizerT {
         saveVisualizerType(key, type)
         val visualizer = type.createAndSaveVisualizer(key)
         cache.visualizerCache.write(visualizer)

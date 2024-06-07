@@ -12,10 +12,11 @@ import java.util.stream.Collectors
 
 class SelectSuggestionVisitor(
     private val identifiers: Collection<String>,
-    private val arguments: Map<String, Function<SelectionParser.SuggestionContext, List<Suggestion>>>,
+    private val arguments: Map<String, (SelectionParser.SuggestionContext) -> List<Suggestion>>,
     private val inputString: String,
-    private val player: Player
-) : SelectionSuggestionLanguageBaseVisitor<List<Suggestion?>?>() {
+    private val player: Player?
+) : SelectionSuggestionLanguageBaseVisitor<List<Suggestion>>() {
+
     override fun visitProgram(ctx: SelectionSuggestionLanguageParser.ProgramContext): List<Suggestion> {
         return visitExpression(ctx.expression())
     }
@@ -84,7 +85,7 @@ class SelectSuggestionVisitor(
     private fun suggestValues(key: String, input: String, offset: Int): List<Suggestion> {
         val argument = arguments[key]
             ?: return ArrayList()
-        val suggestions = argument.apply(
+        val suggestions = argument(
             SelectionParser.SuggestionContext(
                 player,
                 input

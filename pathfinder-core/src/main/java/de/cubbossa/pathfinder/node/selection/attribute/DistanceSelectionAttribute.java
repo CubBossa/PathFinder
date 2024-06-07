@@ -32,7 +32,7 @@ public class DistanceSelectionAttribute implements NodeSelectionAttribute<Number
 
   @Override
   public List<Node> execute(AbstractNodeSelectionParser.NodeArgumentContext<NumberRange> context) {
-    Location senderLocation = context.getSenderLocation();
+    Location senderLocation = context.senderLocation;
     if (senderLocation == null) {
       return Collections.emptyList();
     }
