@@ -11,6 +11,11 @@ import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementa
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import lombok.Getter;
+import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -120,39 +125,29 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
   public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
                                String property, Supplier<T2> getter,
                                Consumer<T2> setter, Function<T2, ComponentLike> formatter) {
-    setProperty(sender, visualizer, value, property, getter, setter,
-        (s, t) -> Placeholder.component(s, formatter.apply(t)));
-  }
-
-  public <T2> void setProperty(PathPlayer<?> sender, PathVisualizer<?, ?> visualizer, T2 value,
-                               String property, Supplier<T2> getter,
-                               Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
     T2 old = getter.get();
-    if (!PathFinder.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
-      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey()),
-          Placeholder.parsed("property", property)
-      ));
+    if (!PathFinderProvider.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
+      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+          .insertObject("visualizer", visualizer)
+          .insertString("property", property));
       return;
     }
     setter.accept(value);
     PathFinder.get().getStorage()
         .saveVisualizer(visualizer)
-        .thenCompose(unused -> PathFinder.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.component("type", Component.text(
-                  optType.map(VisualizerType::getCommandName).orElse("unknown"))),
-              Placeholder.parsed("property", property),
-              formatter.apply("old-value", old),
-              formatter.apply("value", value)
-          ));
+        .thenCompose(unused -> PathFinderProvider.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP
+              .insertObject("visualizer", visualizer)
+              .insertComponent("type", Component.text(optType.map(VisualizerType::getCommandName).orElse("unknown")))
+              .insertString("property", property)
+              .insertComponent("old-value", formatter.apply(old))
+              .insertComponent("value", formatter.apply(value))
+          );
         }))
         .exceptionally(throwable -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.parsed("property", property)
-          ));
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+              .insertObject("visualizer", visualizer)
+              .insertString("property", property));
           throwable.printStackTrace();
           return null;
         });

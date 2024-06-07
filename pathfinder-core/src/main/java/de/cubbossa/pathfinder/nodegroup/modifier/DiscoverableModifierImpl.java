@@ -19,7 +19,7 @@ public class DiscoverableModifierImpl implements DiscoverableModifier {
   @Override
   public void setNameFormat(String name) {
     this.nameFormat = name;
-    this.displayName = PathFinder.get().getMiniMessage().deserialize(nameFormat);
+    this.displayName = PathFinder.get().getTranslations().translate(nameFormat);
   }
 
   @Override

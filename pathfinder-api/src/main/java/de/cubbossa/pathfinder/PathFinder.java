@@ -8,6 +8,8 @@ import de.cubbossa.pathfinder.misc.Task;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
 import de.cubbossa.pathfinder.storage.StorageAdapter;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
+import de.cubbossa.tinytranslations.MessageTranslator;
+import net.kyori.adventure.platform.AudienceProvider;
 import java.io.File;
 import java.util.logging.Logger;
 import net.kyori.adventure.platform.AudienceProvider;
@@ -126,13 +128,15 @@ public interface PathFinder extends Disposable {
 
   ClassLoader getClassLoader();
 
-  MiniMessage getMiniMessage();
+  MessageTranslator getTranslations();
 
   AudienceProvider getAudiences();
 
   Task repeatingTask(Runnable runnable, long delay, long interval);
 
   void cancelTask(Task task);
+
+  void reloadLocales(PathFinderConfig configuration);
 
   default Object[] getMigrations() {
     return new Object[0];

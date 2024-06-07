@@ -43,9 +43,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import de.cubbossa.tinytranslations.MessageTranslator;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.h2.jdbcx.JdbcDataSource;
 import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Assertions;
@@ -69,8 +69,8 @@ public abstract class PathFinderTest {
     }
   };
   protected static World world;
+  protected static MessageTranslator translations;
   protected static Logger logger = Logger.getLogger("TESTS");
-  protected static MiniMessage miniMessage;
 
   protected PathFinder pathFinder;
 
@@ -173,8 +173,8 @@ public abstract class PathFinderTest {
       }
 
       @Override
-      public MiniMessage getMiniMessage() {
-        return miniMessage;
+      public MessageTranslator getTranslations() {
+        return translations;
       }
 
       @Override
@@ -191,6 +191,11 @@ public abstract class PathFinderTest {
       public void cancelTask(Task task) {
 
       }
+
+    @Override
+    public void reloadLocales(PathFinderConfig configuration) {
+
+    }
     };
     disposer = Disposer.disposer();
 
@@ -213,10 +218,6 @@ public abstract class PathFinderTest {
   public void setupWorldMock() {
     UUID uuid = UUID.randomUUID();
     world = WORLD_LOADER.loadWorld(uuid);
-  }
-
-  public void setupMiniMessage() {
-    miniMessage = MiniMessage.miniMessage();
   }
 
   @SneakyThrows

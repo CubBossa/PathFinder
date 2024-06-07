@@ -80,11 +80,10 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
 
   @Override
   public void sendMessage(ComponentLike message) {
-    Audience audience = PathFinder.get().getAudiences().player(unwrap().getUniqueId());
-    ComponentLike resolved = message;
-    if (message instanceof Message msg) {
-      resolved = msg.asComponent(audience);
+    Audience audience = PathFinderProvider.get().getAudiences().player(unwrap().getUniqueId());
+    if (message.asComponent().compact().equals(Component.empty())) {
+      return;
     }
-    audience.sendMessage(resolved);
+    audience.sendMessage(message);
   }
 }

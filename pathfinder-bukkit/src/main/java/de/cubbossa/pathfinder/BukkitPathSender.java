@@ -67,11 +67,10 @@ public class BukkitPathSender implements PathPlayer<ConsoleCommandSender> {
 
   @Override
   public void sendMessage(ComponentLike message) {
-    Audience audience = PathFinder.get().getAudiences().console();
-    ComponentLike resolved = message;
-    if (message instanceof Message msg) {
-      resolved = msg.asComponent(audience);
+    Audience audience = PathFinderProvider.get().getAudiences().console();
+    if (message.asComponent().compact().equals(Component.empty())) {
+      return;
     }
-    audience.sendMessage(resolved);
+    audience.sendMessage(message);
   }
 }

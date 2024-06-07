@@ -49,7 +49,6 @@ public abstract class StorageTest extends PathFinderTest {
 
 
   public StorageTest() {
-    setupMiniMessage();
     setupWorldMock();
   }
 

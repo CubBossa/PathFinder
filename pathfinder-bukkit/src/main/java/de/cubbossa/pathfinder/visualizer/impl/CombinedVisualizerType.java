@@ -1,6 +1,11 @@
 package de.cubbossa.pathfinder.visualizer.impl;
 
 
+import com.google.auto.service.AutoService;
+import de.cubbossa.pathapi.misc.Keyed;
+import de.cubbossa.pathapi.misc.NamespacedKey;
+import de.cubbossa.pathapi.visualizer.PathVisualizer;
+import de.cubbossa.pathapi.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.Arguments;
@@ -14,15 +19,15 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.pf4j.Extension;
 
@@ -41,10 +46,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
 
   @Override
   public Message getInfoMessage(CombinedVisualizer element) {
-    return Messages.CMD_VIS_COMBINED_INFO.formatted(
-        Messages.formatter().list("entries", element.getVisualizers(),
-            v -> Component.text(v == null ? "undefined" : v.getKey().toString()))
-    );
+    return Messages.CMD_VIS_COMBINED_INFO
+        .insertObject("visualizer", element)
+        .insertList("entries", element.getVisualizers().stream().map(Keyed::getKey).map(Objects::toString).toList());
   }
 
   @Override
@@ -61,10 +65,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                       Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
-                  PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD.formatted(
-                      Messages.formatter().namespacedKey("visualizer", vis.getKey()),
-                      Messages.formatter().namespacedKey("child", target.getKey())
-                  ));
+                  PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD
+                      .insertObject("visualizer", vis)
+                      .insertObject("child", target));
                 })))
         .then(Arguments.literal("remove")
             .then(Arguments.pathVisualizerArgument("child")
@@ -77,10 +80,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           CombinedVisualizerChangedEvent.Action.REMOVE,
                           Collections.singleton(target))));
                   PathPlayer.wrap(sender)
-                      .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE.formatted(
-                          Messages.formatter().namespacedKey("visualizer", vis.getKey()),
-                          Messages.formatter().namespacedKey("child", target.getKey())
-                      ));
+                      .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE
+                          .insertObject("visualizer", vis)
+                          .insertObject("child", target));
                 })))
         .then(Arguments.literal("clear")
             .executes((commandSender, args) -> {
@@ -90,9 +92,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
               Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () ->
                   Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                       CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
-              BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_COMBINED_CLEAR.formatted(
-                  Messages.formatter().namespacedKey("visualizer", vis.getKey())
-              ));
+              BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_COMBINED_CLEAR
+                  .insertObject("visualizer", vis));
             }));
   }
 

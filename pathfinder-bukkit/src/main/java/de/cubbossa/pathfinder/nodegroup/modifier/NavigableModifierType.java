@@ -10,6 +10,9 @@ import de.cubbossa.pathfinder.visualizer.query.SearchTerm;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.executors.CommandExecutor;
+import lombok.Getter;
+import net.kyori.adventure.text.ComponentLike;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -53,9 +56,7 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
 
   @Override
   public ComponentLike toComponents(NavigableModifier modifier) {
-    return Messages.CMD_NG_MOD_SEARCH.formatted(
-        Messages.formatter().list("terms", modifier.getSearchTermStrings(), Component::text)
-    );
+    return Messages.CMD_NG_MOD_SEARCH.insertList("terms", modifier.getSearchTermStrings());
   }
 
   @Override

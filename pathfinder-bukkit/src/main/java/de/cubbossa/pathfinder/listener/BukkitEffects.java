@@ -1,6 +1,18 @@
 package de.cubbossa.pathfinder.listener;
 
 import de.cubbossa.pathfinder.AbstractPathFinder;
+import de.cubbossa.pathapi.PathFinderProvider;
+import de.cubbossa.pathapi.event.EventDispatcher;
+import de.cubbossa.pathapi.event.PathCancelledEvent;
+import de.cubbossa.pathapi.event.PathStartEvent;
+import de.cubbossa.pathapi.event.PathStoppedEvent;
+import de.cubbossa.pathapi.event.PathTargetReachedEvent;
+import de.cubbossa.pathapi.event.PlayerDiscoverLocationEvent;
+import de.cubbossa.pathapi.event.PlayerDiscoverProgressEvent;
+import de.cubbossa.pathapi.event.PlayerForgetLocationEvent;
+import de.cubbossa.pathapi.group.DiscoverProgressModifier;
+import de.cubbossa.pathapi.group.DiscoverableModifier;
+import de.cubbossa.pathapi.misc.PathPlayer;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.command.CmdTagResolver;
 import de.cubbossa.pathfinder.command.CommandPlaceholderProcessor;
@@ -20,63 +32,64 @@ import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.Translator;
 import java.util.List;
+import de.cubbossa.tinytranslations.util.FormattableBuilder;
+import java.util.List;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class BukkitEffects {
 
-  private final CommandPlaceholderProcessor processor;
-
   @Setter
   @Getter
   private MiniMessage miniMessage;
-  private final GsonComponentSerializer gsonComponentSerializer;
+  private final PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
 
   public BukkitEffects(EventDispatcher<Player> dispatcher, PathFinderConfigImpl.EffectsConfigImpl config) {
 
-    processor = new CommandPlaceholderProcessorImpl();
-
     miniMessage = MiniMessage.miniMessage();
-    gsonComponentSerializer = GsonComponentSerializer.gson();
 
     dispatcher.listen(PathStartEvent.class, e -> {
-      runCommands(e.getPath().getTargetViewer(), config.onPathStart,
-          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
+      runCommands(e.getPath().getTargetViewer(), config.onPathStart, FormattableBuilder.builder()
+          .insertObject("player", e.getPath().getTargetViewer())
+          .toResolver()
       );
     });
 
     dispatcher.listen(PathTargetReachedEvent.class, e -> {
-      runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach,
-          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
+      runCommands(e.getPath().getTargetViewer(), config.onPathTargetReach, FormattableBuilder.builder()
+          .insertObject("player", e.getPath().getTargetViewer())
+          .toResolver()
       );
     });
 
     dispatcher.listen(PathCancelledEvent.class, e -> {
-      runCommands(e.getPath().getTargetViewer(), config.onPathCancel,
-          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
+      runCommands(e.getPath().getTargetViewer(), config.onPathCancel, FormattableBuilder.builder()
+          .insertObject("player", e.getPath().getTargetViewer())
+          .toResolver()
       );
     });
 
     dispatcher.listen(PathStoppedEvent.class, e -> {
-      runCommands(e.getPath().getTargetViewer(), config.onPathStop,
-          Placeholder.component("player", e.getPath().getTargetViewer().displayName)
+      runCommands(e.getPath().getTargetViewer(), config.onPathStop, FormattableBuilder.builder()
+          .insertObject("player", e.getPath().getTargetViewer())
+          .toResolver()
       );
     });
 
     dispatcher.listen(PlayerDiscoverLocationEvent.class, e -> {
-      runCommands(e.getPlayer(), config.onDiscover,
-          Placeholder.component("player", e.getPlayer().displayName),
-          Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+      runCommands(e.getPlayer(), config.onDiscover, FormattableBuilder.builder()
+          .insertObject("player", e.getPlayer())
+          .insertObject("discoverable", e.getPlayer().getDisplayName())
+          .insertObject("group", e.getGroup())
+          .toResolver()
       );
     });
 
@@ -90,7 +103,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onDiscoverProgress, //"player", "discoverable", "group", "name", "percent", "ratio", "count-found", "count-all"
           Placeholder.component("player", e.getPlayer().displayName),
           Placeholder.component("discoverable", discoverableModifier.getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getProgressObserverGroup().getKey()),
+          Placeholder.parsed("group", e.getProgressObserverGroup().getKey().toString()),
           Placeholder.component("name", discoverProgressModifier.getDisplayName()),
           Formatter.number("percentage", discoverProgressModifier.calculateProgress(e.getPlayer().uniqueId).join() * 100)
       );
@@ -100,7 +113,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onForget,
           Placeholder.component("player", e.getPlayer().displayName),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+          Placeholder.parsed("group", e.getGroup().getKey().toString())
       );
     });
   }
@@ -170,6 +183,7 @@ public class BukkitEffects {
     }
     commands.stream()
         .map(s -> this.prepareCmd(s, player, msgResolvers))
+        .peek(System.out::println)
         .forEach(r -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), r));
   }
 }

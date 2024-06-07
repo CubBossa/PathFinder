@@ -1,6 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.base.Preconditions;
+import de.cubbossa.pathapi.misc.Pagination;
+import de.cubbossa.pathapi.node.Node;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.command.util.CommandUtils;
@@ -22,6 +24,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 public class NodeUtils {
 
   /**
@@ -36,6 +43,9 @@ public class NodeUtils {
       selector = "@n";
     }
 
+    BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_LIST
+        .insertList("nodes", selection)
+        .insertString("selector", selector));
     TagResolver resolver = Placeholder.parsed("selector", selector);
 
     CommandUtils.printList(

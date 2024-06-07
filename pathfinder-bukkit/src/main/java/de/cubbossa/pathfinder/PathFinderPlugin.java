@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import de.cubbossa.pathapi.dump.DumpWriter;
+import de.cubbossa.pathapi.dump.DumpWriterProvider;
+import de.cubbossa.tinytranslations.BukkitTinyTranslations;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -39,6 +42,7 @@ public class PathFinderPlugin extends JavaPlugin {
 
   @Override
   public void onEnable() {
+    pathFinder.translations = BukkitTinyTranslations.application(this);
     pathFinder.onEnable();
   }
 

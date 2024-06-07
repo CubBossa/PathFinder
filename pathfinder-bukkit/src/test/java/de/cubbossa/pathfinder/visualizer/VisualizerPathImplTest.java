@@ -30,7 +30,6 @@ class VisualizerPathImplTest extends PathFinderTest {
 
   public VisualizerPathImplTest() {
     groupMap = new HashMap<>();
-    setupMiniMessage();
     setupWorldMock();
   }
 

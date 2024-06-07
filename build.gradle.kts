@@ -54,6 +54,7 @@ subprojects {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
         implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.16.0")
         implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.16.0")
+        maven("https://jitpack.io")
     }
 
     tasks {

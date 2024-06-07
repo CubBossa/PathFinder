@@ -30,7 +30,7 @@ public class PermissionModifierType implements ModifierType<PermissionModifier>,
 
   @Override
   public ComponentLike toComponents(PermissionModifier modifier) {
-    return Messages.CMD_NG_MOD_PERM.formatted(Messages.formatter().permission("permission", modifier.permission()));
+    return Messages.CMD_NG_MOD_PERM.insertString("permission", modifier.permission());
   }
 
   @Override

@@ -3,21 +3,20 @@ package de.cubbossa.pathfinder.command.util;
 import de.cubbossa.pathfinder.PathFinder;
 import java.util.ArrayList;
 import java.util.List;
+import de.cubbossa.tinytranslations.MessageTranslator;
+import de.cubbossa.tinytranslations.util.FormattableBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public class CommandHelpBuilder {
 
-    private final String format;
-    private final List<Entry> entries;
+  private final String format;
+  private final List<Entry> entries;
 
-    public CommandHelpBuilder(String format) {
-        this.format = format;
-        this.entries = new ArrayList<>();
-    }
+  public CommandHelpBuilder(String format) {
+    this.format = format;
+    this.entries = new ArrayList<>();
+  }
 
   public CommandHelpBuilder withCmd(String cmd, String desc) {
     this.entries.add(new Entry(cmd, desc, null, ""));
@@ -45,15 +44,13 @@ public class CommandHelpBuilder {
   }
 
   public List<Component> build() {
-    MiniMessage mm = PathFinder.get().getMiniMessage();
+    MessageTranslator mm = PathFinder.get().getTranslations();
     List<Component> result = new ArrayList<>();
     for (Entry entry : entries) {
-      TagResolver resolver = TagResolver.builder()
-          .resolver(Placeholder.component("cmd", Component.text(entry.cmd())
-              .clickEvent(ClickEvent.clickEvent(entry.action(), entry.actionInput()))))
-          .resolver(Placeholder.parsed("desc", entry.desc()))
-          .build();
-      result.add(mm.deserialize(format, resolver));
+      result.add(mm.translate(format, FormattableBuilder.builder()
+          .insertString("cmd", entry.cmd())
+          .insertString("desc", entry.desc())
+          .toResolver()));
     }
     return result;
   }

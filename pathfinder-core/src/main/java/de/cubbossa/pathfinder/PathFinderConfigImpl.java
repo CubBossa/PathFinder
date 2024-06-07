@@ -187,25 +187,25 @@ public class PathFinderConfigImpl implements PathFinderConfig {
   @ToString
   public static class EffectsConfigImpl {
     public ArrayList<String> onPathStart = Lists.newArrayList(
-        "tellraw ${player} ${translation.commands.find.success.gson}"
+        "tellraw {player} {msg:commands.find.success}"
     );
     public ArrayList<String> onPathTargetReach = Lists.newArrayList(
-        "tellraw ${player} ${translation.general.target_reached.gson}"
+        "tellraw {player} {msg:general.target_reached}"
     );
     public ArrayList<String> onPathStop;
     public ArrayList<String> onPathCancel = Lists.newArrayList(
-        "tellraw ${player} ${translation.commands.cancel_path.gson}"
+        "tellraw {player} {msg:commands.cancel_path}"
     );
     public ArrayList<String> onDiscover = Lists.newArrayList(
-        "title ${player} subtitle ${translation.discovery.discover.json}",
-        "title ${player} title {\"text\":\"\"}",
-        "playsound minecraft:entity.villager.work_cartographer neutral ${player} ${player.location} 1 1"
+        "title {player} subtitle {msg:translation.discovery.discover}",
+        "title {player} title {\"text\":\"\"}",
+        "playsound minecraft:entity.villager.work_cartographer neutral {player} {player:loc:x} {player:loc:y} {player:loc:z} 1 1"
     );
     public ArrayList<String> onDiscoverProgress = Lists.newArrayList(
-        "title ${player} actionbar ${translation.discovery.progress.json}"
+        "title {player} actionbar {msg:discovery.progress}"
     );
     public ArrayList<String> onForget = Lists.newArrayList(
-        "tellraw ${player} ${translation.discovery.forget.gson}"
+        "tellraw {player} {msg:discovery.forget}"
     );
   }
 
