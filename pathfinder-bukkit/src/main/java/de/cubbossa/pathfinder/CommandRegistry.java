@@ -37,6 +37,9 @@ public class CommandRegistry implements Disposable {
   public void loadCommands() {
     CommandAPI.onLoad(new CommandAPIBukkitConfig(PathFinderPlugin.getInstance())
         .shouldHookPaperReload(true)
+//        .verboseOutput(true)
+//        .dispatcherFile(new File(PathFinderPlugin.getInstance().getDataFolder(), "cmds.json"))
+        .usePluginNamespace()
         .missingExecutorImplementationMessage("Wrong command usage, use /help."));
   }
 

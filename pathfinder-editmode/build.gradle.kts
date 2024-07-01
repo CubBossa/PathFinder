@@ -50,7 +50,7 @@ dependencies {
     implementation("xyz.xenondevs:particle:1.8.4")
 
     // Client ArmorStands
-    implementation("de.cubbossa:ClientEntities:1.3.2")
+    implementation("de.cubbossa:ClientEntities:1.3.3")
 }
 
 tasks {

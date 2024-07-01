@@ -45,7 +45,7 @@ dependencies {
     testImplementation("com.mojang:brigadier:1.0.18")
 
     // Commands
-    api("dev.jorel:commandapi-bukkit-shade:9.5.0-SNAPSHOT")
+    api("dev.jorel:commandapi-bukkit-shade:9.5.1")
 
     // Statistics
     implementation("org.bstats:bstats-bukkit:3.0.1")
@@ -82,7 +82,6 @@ bukkit {
     description = null
     website = "https://docs.leonardbausenwein.de"
     author = "CubBossa"
-    authors = listOf("LooFifteen")
 
     main = "de.cubbossa.pathfinder.PathFinderPlugin"
 
@@ -223,7 +222,6 @@ tasks {
 
         relocate("org.bstats", "bstats")
         relocate("net.kyori", "kyori")
-        relocate("com.google.gson", "gson")
         relocate("xyz.xenondevs.particle", "particle")
         relocate("dev.jorel.commandapi", "commandapi")
         relocate("de.cubbossa.translations", "translations")

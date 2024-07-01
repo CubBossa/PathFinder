@@ -39,7 +39,7 @@ dependencies {
     api("de.exlll:configlib-yaml:4.5.0")
 
     // Commands
-    api("dev.jorel:commandapi-bukkit-shade:9.2.0")
+    api("dev.jorel:commandapi-bukkit-shade:9.5.1")
 
     // Other
     api("org.jooq:jooq:3.18.4")
