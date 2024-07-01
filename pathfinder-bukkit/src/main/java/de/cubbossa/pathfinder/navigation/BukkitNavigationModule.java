@@ -60,7 +60,7 @@ public class BukkitNavigationModule extends AbstractNavigationModule<Player> imp
     PathPlayer<Player> pathPlayer = PathPlayer.wrap(p);
 
     AbstractNavigationModule<Player>.NavigationContext info = activePaths.get(pathPlayer.getUniqueId());
-    if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), info.dist())) {
+    if (info != null && pathPlayer.getLocation().distanceSquared(info.target().getLocation()) < Math.pow(info.dist(), 2)) {
       reach(info.playerId());
     }
   }
