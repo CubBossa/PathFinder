@@ -1,7 +1,6 @@
 package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderPlugin;
@@ -19,6 +18,7 @@ import de.cubbossa.pathfinder.command.impl.ListNodesCmd;
 import de.cubbossa.pathfinder.command.impl.ListVisualizersCmd;
 import de.cubbossa.pathfinder.command.impl.NavigateCmd;
 import de.cubbossa.pathfinder.command.impl.NodesCmd;
+import de.cubbossa.pathfinder.command.impl.ReloadCmd;
 import de.cubbossa.pathfinder.command.impl.VisualizerCmd;
 import de.cubbossa.pathfinder.discovery.AbstractDiscoveryModule;
 import de.cubbossa.pathfinder.dump.DumpWriterProvider;
@@ -30,7 +30,6 @@ import de.cubbossa.pathfinder.node.GraphEditorRegistry;
 import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.nodegroup.NodeGroupImpl;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.translations.MessageBundle;
 import dev.jorel.commandapi.CommandTree;
 import java.io.File;
 import java.io.IOException;
@@ -39,14 +38,11 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -157,96 +153,7 @@ public class PathFinderCommand extends CommandTree {
           BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_HELP);
         }));
 
-    then(Arguments.literal("reload")
-        .withPermission(PathPerms.PERM_CMD_PF_RELOAD)
-
-        .executes((sender, objects) -> {
-          long now = System.currentTimeMillis();
-
-          CompletableFuture.runAsync(() -> {
-            AbstractPathFinder pf = BukkitPathFinder.getInstance();
-            pf.getConfigFileLoader().loadConfig();
-
-            MessageBundle translations = pf.getTranslations();
-
-            Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
-            translations.clearCache();
-            translations.writeLocale(fallback);
-            translations.loadLocale(fallback);
-          }).whenComplete((unused, throwable) -> {
-            if (throwable != null) {
-              BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(Placeholder.component("error", Component.text(throwable.getMessage()
-                  .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
-              );
-              PathFinder.get().getLogger()
-                  .log(Level.SEVERE, "Error occured while reloading files: ", throwable);
-            } else {
-              BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS.formatted(
-                  Messages.formatter().number("ms", System.currentTimeMillis() - now)
-              ));
-            }
-          });
-        })
-
-        .then(Arguments.literal("language")
-            .executes((sender, objects) -> {
-              long now = System.currentTimeMillis();
-
-              CompletableFuture.runAsync(() -> {
-                AbstractPathFinder pf = BukkitPathFinder.getInstance();
-                MessageBundle translations = pf.getTranslations();
-
-                Locale fallback = pf.getConfiguration().getLanguage().getFallbackLanguage();
-                translations.clearCache();
-                translations.writeLocale(fallback);
-                translations.loadLocale(fallback);
-              }).whenComplete((unused, throwable) -> {
-                if (throwable != null) {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(
-                      Placeholder.component("error", Component.text(throwable.getMessage()
-                          .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", "")))
-                  ));
-                  PathFinder.get().getLogger()
-                      .log(Level.SEVERE, "Error occured while reloading files: ", throwable);
-                } else {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS_LANG.formatted(
-                      Messages.formatter().number("ms", System.currentTimeMillis() - now)
-                  ));
-                }
-              });
-            })
-        )
-
-        .then(Arguments.literal("config")
-            .executes((sender, objects) -> {
-              long now = System.currentTimeMillis();
-
-              CompletableFuture.runAsync(() -> {
-                try {
-                  // TODO bah
-                  ((AbstractPathFinder) PathFinder.get()).getConfigFileLoader().loadConfig();
-                } catch (Throwable t) {
-                  throw new RuntimeException(t);
-                }
-              }).whenComplete((unused, throwable) -> {
-                if (throwable != null) {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_ERROR.formatted(TagResolver.builder()
-                      .resolver(Placeholder.component("error", Component.text(
-                          throwable.getMessage()
-                              .replaceFirst("java\\.lang\\.RuntimeException: [^:]*: ", ""))))
-                      .build()));
-                  PathFinder.get().getLogger()
-                      .log(Level.SEVERE, "Error occured while reloading configuration: ",
-                          throwable);
-                } else {
-                  BukkitUtils.wrap(sender).sendMessage(Messages.RELOAD_SUCCESS_CFG.formatted(
-                      Messages.formatter().number("ms", System.currentTimeMillis() - now)
-                  ));
-                }
-              });
-            })
-        )
-    );
+    then(new ReloadCmd(pathFinder));
 
     then(Arguments.literal("forcefind")
         .withGeneratedHelp()

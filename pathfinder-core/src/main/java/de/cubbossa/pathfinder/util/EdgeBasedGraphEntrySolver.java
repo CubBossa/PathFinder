@@ -15,8 +15,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
+
+  private final Float maxDistance;
+
+  public EdgeBasedGraphEntrySolver() {
+    this(null);
+  }
+
+  public EdgeBasedGraphEntrySolver(@Nullable Float maxDistance) {
+    this.maxDistance = maxDistance;
+  }
 
   @Override
   public MutableValueGraph<Node, Double> solve(Node node, MutableValueGraph<Node, Double> scope)
@@ -45,9 +56,29 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
     List<WeightedEdge> sortedEdges = new LinkedList<>();
     scope.edges().forEach((e) -> {
-      double d = VectorUtils.distancePointToSegment(node.getLocation().asVector(), e.nodeU().getLocation().asVector(),
+      // If a max distance is specified, first check if the edge is valid for distance check
+      if (maxDistance != null) {
+        float md = maxDistance;
+        // if x of both start and end is bigger than x of node, the edge cant be within distance.
+        if (e.nodeU().getLocation().getX() - node.getLocation().getX() > md && e.nodeV().getLocation().getX() - node.getLocation().getX() > md
+            || node.getLocation().getX() - e.nodeU().getLocation().getX() > md && node.getLocation().getX() - e.nodeV().getLocation().getX() > md
+            || e.nodeU().getLocation().getY() - node.getLocation().getY() > md && e.nodeV().getLocation().getY() - node.getLocation().getY() > md
+            || node.getLocation().getY() - e.nodeU().getLocation().getY() > md && node.getLocation().getY() - e.nodeV().getLocation().getY() > md
+            || e.nodeU().getLocation().getZ() - node.getLocation().getZ() > md && e.nodeV().getLocation().getZ() - node.getLocation().getZ() > md
+            || node.getLocation().getZ() - e.nodeU().getLocation().getZ() > md && node.getLocation().getZ() - e.nodeV().getLocation().getZ() > md
+        ) {
+          // Not close enough, skip this edge without doing expensive maths
+          return;
+        }
+      }
+      // find the closest point on this edge to the node and check if its distance is smaller than maxDist
+      Vector p = VectorUtils.closestPointOnSegment(node.getLocation().asVector(), e.nodeU().getLocation().asVector(),
           e.nodeV().getLocation().asVector());
-      sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), d));
+      double d = p.distanceSquared(node.getLocation());
+      if (maxDistance != null && Math.pow(maxDistance, 2) < d) {
+        return;
+      }
+      sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), p, d));
     });
     Collections.sort(sortedEdges);
     if (sortedEdges.isEmpty()) {
@@ -62,6 +93,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
         result.add(first);
         continue;
       }
+      // Not clean since weight is distance squared, but good enough trade for performance
       if (Math.abs(edge.weight - first.weight) > .01) {
         break;
       }
@@ -87,7 +119,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
     return graph;
   }
 
-  private record WeightedEdge(Node start, Node end, double weight)
+  private record WeightedEdge(Node start, Node end, Vector closest, double weight)
       implements Comparable<WeightedEdge> {
 
     @Override

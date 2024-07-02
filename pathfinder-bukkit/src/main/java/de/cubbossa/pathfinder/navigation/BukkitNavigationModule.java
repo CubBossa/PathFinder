@@ -7,6 +7,7 @@ import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.command.CancelPathCommand;
 import de.cubbossa.pathfinder.command.FindCommand;
 import de.cubbossa.pathfinder.command.FindLocationCommand;
+import de.cubbossa.pathfinder.command.PathFinderReloadListener;
 import de.cubbossa.pathfinder.event.PathStartEvent;
 import de.cubbossa.pathfinder.event.PathStoppedEvent;
 import de.cubbossa.pathfinder.misc.PathPlayer;
@@ -17,7 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.pf4j.Extension;
 
-@Extension(points = PathFinderExtension.class)
+@Extension(points = {PathFinderExtension.class, PathFinderReloadListener.class})
 public class BukkitNavigationModule extends AbstractNavigationModule<Player> implements Listener {
 
   private FindCommand findCommand;
