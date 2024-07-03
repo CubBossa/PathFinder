@@ -17,6 +17,10 @@ public final class GroupedNodeImpl implements GroupedNode {
   private final Collection<NodeGroup> groups;
 
   public GroupedNodeImpl(Node node, Collection<NodeGroup> groups) {
+    if (node instanceof GroupedNode) {
+      throw new IllegalArgumentException("Cannot make a grouped node of another grouped node.");
+    }
+
     this.node = node;
     this.groups = new LinkedList<>(groups);
   }

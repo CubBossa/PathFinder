@@ -3,22 +3,28 @@ package de.cubbossa.pathfinder.navigation;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedExternalNode;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
+import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -198,7 +204,33 @@ class RouteTest {
     assertEquals(1, results.size());
     assertEquals(results.get(0).getPath().get(1), a);
     assertEquals(3, results.get(0).getPath().size());
-    System.out.println(results.get(0).getCost());
+  }
+
+  @Test
+  void testGroupedNodePreservance() throws NoPathFoundException {
+    Node a = new GroupedTestNode(new TestNode("a", new Location(0, -5, 0, null)), new ArrayList<>());
+    Node b = new GroupedTestNode(new TestNode("b", new Location(10, -5, 0, null)), new ArrayList<>());
+    Node c = new GroupedTestNode(new TestNode("c", new Location(10, 5, 0, null)), new ArrayList<>());
+    Node d = new GroupedTestNode(new TestNode("d", new Location(0, 5, 0, null)), new ArrayList<>());
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(a);
+    graph.addNode(b);
+    graph.addNode(c);
+    graph.addNode(d);
+    graph.putEdgeValue(a, b, 10d);
+    graph.putEdgeValue(b, c, 10d);
+    graph.putEdgeValue(c, d, 10d);
+
+    var results = Route
+        .from(fixedExternalNode(new TestNode("start", new Location(0, -10, 0, null))))
+        .to(fixedExternalNode(new TestNode("end", new Location(0, 10, 0, null))))
+        .calculatePaths(graph);
+    assertEquals(1, results.size());
+    assertEquals(results.get(0).getPath().get(1), a);
+    assertEquals(6, results.get(0).getPath().size());
+    assertEquals(40, results.get(0).getCost());
+
+    assertInstanceOf(GroupedNode.class, results.get(0).getPath().get(0));
   }
 
   @Getter
@@ -247,6 +279,96 @@ class RouteTest {
     @Override
     public String toString() {
       return name;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      if (this == object) return true;
+      if (object == null) return false;
+      Node testNode = (Node) object;
+      return Objects.equals(getNodeId(), testNode.getNodeId());
+    }
+
+    @Override
+    public int hashCode() {
+      return getNodeId().hashCode();
+    }
+  }
+
+  @RequiredArgsConstructor
+  class GroupedTestNode implements GroupedNode {
+
+    private final Node domain;
+    private final Collection<NodeGroup> groups;
+
+    @Override
+    public boolean equals(Object obj) {
+      return domain.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+      return domain.hashCode();
+    }
+
+    @Override
+    public String toString() {
+      return "GroupedNode{domain=" + domain.toString() + "}";
+    }
+
+    @Override
+    public Node node() {
+      return domain;
+    }
+
+    @Override
+    public Collection<NodeGroup> groups() {
+      return groups;
+    }
+
+    @Override
+    public GroupedNode merge(GroupedNode other) {
+      return null;
+    }
+
+    @Override
+    public UUID getNodeId() {
+      return domain.getNodeId();
+    }
+
+    @Override
+    public Location getLocation() {
+      return domain.getLocation();
+    }
+
+    @Override
+    public void setLocation(Location location) {
+      domain.setLocation(location);
+    }
+
+    @Override
+    public Changes<Edge> getEdgeChanges() {
+      return domain.getEdgeChanges();
+    }
+
+    @Override
+    public Collection<Edge> getEdges() {
+      return domain.getEdges();
+    }
+
+    @Override
+    public Optional<Edge> connect(UUID other, double weight) {
+      return domain.connect(other, weight);
+    }
+
+    @Override
+    public Node clone() {
+      return new GroupedTestNode(domain.clone(), groups);
+    }
+
+    @Override
+    public Node clone(UUID id) {
+      return new GroupedTestNode(domain.clone(id), groups);
     }
   }
 }

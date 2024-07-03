@@ -103,7 +103,7 @@ class RouteImpl implements Route {
     }
 
     double finalCost = cost;
-    checkPoints.add(List.of(new RouteEl(route.get(0), route.get(route.size() - 1)) {
+    checkPoints.add(List.of(new RouteSegment(route.get(0), route.get(route.size() - 1)) {
       @Override
       PathSolverResult<Node, Double> solve() {
         return new PathSolverResultImpl<>(route, edges, finalCost);
@@ -164,12 +164,12 @@ class RouteImpl implements Route {
 
   private List<PathSolverResult<Node, Double>> calculatePaths(@NotNull Iterable<ValueGraph<Node, Double>> environments) throws NoPathFoundException {
 
-    // convert all checkpoint values into RouteEl instances
-    List<Collection<RouteEl>> routeElCheckPoints = new ArrayList<>();
+    // convert all checkpoint values into RouteSegment instances
+    List<Collection<RouteSegment>> routeElCheckPoints = new ArrayList<>();
     for (Collection<Object> target : checkPoints) {
-      Collection<RouteEl> inner = new HashSet<>();
+      Collection<RouteSegment> inner = new HashSet<>();
       for (Object o : target) {
-        inner.addAll(newElement(o, environments));
+        inner.addAll(newSegment(o, environments));
       }
       routeElCheckPoints.add(inner);
     }
@@ -177,21 +177,21 @@ class RouteImpl implements Route {
     modifiedBaseGraph = prepareBaseGraph(environments);
     baseGraphSolver.setGraph(modifiedBaseGraph);
 
-    MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
+    MutableValueGraph<RouteSegment, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
         .directed()
         .allowsSelfLoops(false)
         .expectedNodeCount(checkPoints.stream().mapToInt(Collection::size).sum())
         .build();
 
     // Create n*m relation edges from each checkpoint to the next
-    Collection<RouteEl> prev = new HashSet<>();
-    for (Collection<RouteEl> checkPoint : routeElCheckPoints) {
-      for (RouteEl checkPointElement : checkPoint) {
+    Collection<RouteSegment> prev = new HashSet<>();
+    for (Collection<RouteSegment> checkPoint : routeElCheckPoints) {
+      for (RouteSegment checkPointElement : checkPoint) {
         // each end point will be its own node on the abstract graph
         abstractGraph.addNode(checkPointElement);
 
         // Make an edge from each previous checkpoint point to this point
-        for (RouteEl previousCheckPointElement : prev) {
+        for (RouteSegment previousCheckPointElement : prev) {
           if (previousCheckPointElement.equals(checkPointElement)) {
             continue;
           }
@@ -206,18 +206,18 @@ class RouteImpl implements Route {
       prev = checkPoint;
     }
 
-    DynamicDijkstra<RouteEl, PathSolverResult<Node, Double>> abstractSolver = new DynamicDijkstra<>(PathSolverResult::getCost);
+    DynamicDijkstra<RouteSegment, PathSolverResult<Node, Double>> abstractSolver = new DynamicDijkstra<>(PathSolverResult::getCost);
     abstractSolver.setGraph(abstractGraph);
 
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
     var start = routeElCheckPoints.get(0).iterator().next();
-    for (RouteEl end : routeElCheckPoints.get(routeElCheckPoints.size() - 1)) {
-      PathSolverResult<RouteEl, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
+    for (RouteSegment end : routeElCheckPoints.get(routeElCheckPoints.size() - 1)) {
+      PathSolverResult<RouteSegment, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
           start,
           end
       );
       try {
-        results.add(join(res));
+        results.add(flatMapAbstractResult(res));
       } catch (Throwable t) {
         PathFinder.get().getLogger().log(Level.WARNING, "Error while finding shortest path", t);
       }
@@ -229,7 +229,7 @@ class RouteImpl implements Route {
     return results;
   }
 
-  private PathSolverResult<Node, Double> merge(Iterable<PathSolverResult<Node, Double>> iterable) {
+  private PathSolverResult<Node, Double> mergeResults(Iterable<PathSolverResult<Node, Double>> iterable) {
     boolean first = true;
 
     List<Node> nodePath = new ArrayList<>();
@@ -248,14 +248,15 @@ class RouteImpl implements Route {
     return new PathSolverResultImpl<>(nodePath, edges, cost);
   }
 
-  private PathSolverResult<Node, Double> join(PathSolverResult<RouteEl, PathSolverResult<Node, Double>> els) throws NoPathFoundException {
+
+  private PathSolverResult<Node, Double> flatMapAbstractResult(PathSolverResult<RouteSegment, PathSolverResult<Node, Double>> els) throws NoPathFoundException {
     List<PathSolverResult<Node, Double>> results = new LinkedList<>();
-    Iterator<RouteEl> nit = els.getPath().iterator();
+    Iterator<RouteSegment> nit = els.getPath().iterator();
     Iterator<PathSolverResult<Node, Double>> eit = els.getEdges().iterator();
     if (!nit.hasNext()) {
       throw new IllegalStateException();
     }
-    RouteEl el;
+    RouteSegment el;
     while (nit.hasNext()) {
       el = nit.next();
       results.add(el.solve());
@@ -263,10 +264,10 @@ class RouteImpl implements Route {
         results.add(eit.next());
       }
     }
-    return merge(results);
+    return mergeResults(results);
   }
 
-  private PathSolverResult<Node, Double> solveForSection(RouteEl a, RouteEl b) throws NoPathFoundException {
+  private PathSolverResult<Node, Double> solveForSection(RouteSegment a, RouteSegment b) throws NoPathFoundException {
     Node start;
     if (!(a.end instanceof GroupedNode)) {
       start = modifiedBaseGraph.nodes().stream().filter(node -> node.getNodeId().equals(a.end.getNodeId())).findAny().get();
@@ -282,22 +283,22 @@ class RouteImpl implements Route {
     return baseGraphSolver.solvePath(start, end);
   }
 
-  private Collection<RouteEl> newElement(Object o, Iterable<ValueGraph<Node, Double>> environments) throws NoPathFoundException {
-    if (o instanceof RouteEl el) {
+  private Collection<RouteSegment> newSegment(Object o, Iterable<ValueGraph<Node, Double>> environments) throws NoPathFoundException {
+    if (o instanceof RouteSegment el) {
       return List.of(el);
     } else if (o instanceof NavigationLocation loc) {
       Node n = loc.getNode();
-      return Collections.singleton(new RouteEl(n, n) {
+      return Collections.singleton(new RouteSegment(n, n) {
         @Override
         PathSolverResult<Node, Double> solve() {
           return new PathSolverResultImpl<>(Collections.singletonList(n), Collections.emptyList(), 0);
         }
       });
     } else if (o instanceof Route route) {
-      Collection<RouteEl> els = new LinkedList<>();
+      Collection<RouteSegment> els = new LinkedList<>();
       for (ValueGraph<Node, Double> environment : environments) {
         for (PathSolverResult<Node, Double> result : route.calculatePaths(environment)) {
-          els.add(new RouteEl(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1)) {
+          els.add(new RouteSegment(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1)) {
             @Override
             PathSolverResult<Node, Double> solve() {
               return result;
@@ -307,7 +308,7 @@ class RouteImpl implements Route {
       }
       return els;
     }
-    throw new IllegalStateException("Don't know how to convert object into RouteEl");
+    throw new IllegalStateException("Don't know how to convert object into RouteSegment");
   }
 
   private ValueGraph<Node, Double> prepareBaseGraph(Iterable<ValueGraph<Node, Double>> islands) {
@@ -334,11 +335,11 @@ class RouteImpl implements Route {
     return GraphUtils.merge(list);
   }
 
-  private static abstract class RouteEl {
+  private static abstract class RouteSegment {
     private final Node start;
     private final Node end;
 
-    private RouteEl(Node start, Node end) {
+    private RouteSegment(Node start, Node end) {
       this.start = start;
       this.end = end;
     }
@@ -355,7 +356,7 @@ class RouteImpl implements Route {
 
     @Override
     public String toString() {
-      return "RouteEl[" +
+      return "RouteSegment[" +
           "start=" + start + ", " +
           "end=" + end + ']';
     }

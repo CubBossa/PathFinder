@@ -8,10 +8,8 @@ import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -22,13 +20,18 @@ public class NodeGraphUtil {
     if (a instanceof GroupedNode startGrouped && b instanceof GroupedNode endGrouped) {
       Collection<NodeGroup> groups = new ArrayList<>(startGrouped.groups());
       groups.addAll(endGrouped.groups());
-      result = new GroupedNodeImpl(into, groups);
+      if (into instanceof GroupedNode intoGrouped) {
+        intoGrouped.groups().addAll(groups);
+        result = into;
+      } else {
+        result = new GroupedNodeImpl(into, groups);
+      }
     } else if (a instanceof GroupedNode startGrouped) {
-      result = new GroupedNodeImpl(new Waypoint(UUID.randomUUID()), startGrouped.groups());
+      result = new GroupedNodeImpl(into, startGrouped.groups());
     } else if (b instanceof GroupedNode endGrouped) {
-      result = new GroupedNodeImpl(new Waypoint(UUID.randomUUID()), endGrouped.groups());
+      result = new GroupedNodeImpl(into, endGrouped.groups());
     } else {
-      result = new Waypoint(UUID.randomUUID());
+      result = into;
     }
     return result;
   }
