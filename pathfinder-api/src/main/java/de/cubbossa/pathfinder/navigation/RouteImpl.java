@@ -1,11 +1,12 @@
 package de.cubbossa.pathfinder.navigation;
 
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.GraphUtils;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnstableApiUsage")
 class RouteImpl implements Route {
 
   private final List<Collection<Object>> checkPoints;
@@ -156,7 +158,23 @@ class RouteImpl implements Route {
 
   @Override
   public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    modifiedBaseGraph = prepareBaseGraph(environment);
+
+    return calculatePaths(GraphUtils.islands(environment));
+  }
+
+  private List<PathSolverResult<Node, Double>> calculatePaths(@NotNull Iterable<ValueGraph<Node, Double>> environments) throws NoPathFoundException {
+
+    // convert all checkpoint values into RouteEl instances
+    List<Collection<RouteEl>> routeElCheckPoints = new ArrayList<>();
+    for (Collection<Object> target : checkPoints) {
+      Collection<RouteEl> inner = new HashSet<>();
+      for (Object o : target) {
+        inner.addAll(newElement(o, environments));
+      }
+      routeElCheckPoints.add(inner);
+    }
+
+    modifiedBaseGraph = prepareBaseGraph(environments);
     baseGraphSolver.setGraph(modifiedBaseGraph);
 
     MutableValueGraph<RouteEl, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
@@ -164,16 +182,6 @@ class RouteImpl implements Route {
         .allowsSelfLoops(false)
         .expectedNodeCount(checkPoints.stream().mapToInt(Collection::size).sum())
         .build();
-
-    // convert all checkpoint values into RouteEl instances
-    List<Collection<RouteEl>> routeElCheckPoints = new ArrayList<>();
-    for (Collection<Object> target : checkPoints) {
-      Collection<RouteEl> inner = new HashSet<>();
-      for (Object o : target) {
-        inner.addAll(newElement(o, environment));
-      }
-      routeElCheckPoints.add(inner);
-    }
 
     // Create n*m relation edges from each checkpoint to the next
     Collection<RouteEl> prev = new HashSet<>();
@@ -274,7 +282,7 @@ class RouteImpl implements Route {
     return baseGraphSolver.solvePath(start, end);
   }
 
-  private Collection<RouteEl> newElement(Object o, ValueGraph<Node, Double> environment) throws NoPathFoundException {
+  private Collection<RouteEl> newElement(Object o, Iterable<ValueGraph<Node, Double>> environments) throws NoPathFoundException {
     if (o instanceof RouteEl el) {
       return List.of(el);
     } else if (o instanceof NavigationLocation loc) {
@@ -287,39 +295,43 @@ class RouteImpl implements Route {
       });
     } else if (o instanceof Route route) {
       Collection<RouteEl> els = new LinkedList<>();
-      for (PathSolverResult<Node, Double> result : route.calculatePaths(environment)) {
-        els.add(new RouteEl(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1)) {
-          @Override
-          PathSolverResult<Node, Double> solve() {
-            return result;
-          }
-        });
+      for (ValueGraph<Node, Double> environment : environments) {
+        for (PathSolverResult<Node, Double> result : route.calculatePaths(environment)) {
+          els.add(new RouteEl(result.getPath().get(0), result.getPath().get(result.getPath().size() - 1)) {
+            @Override
+            PathSolverResult<Node, Double> solve() {
+              return result;
+            }
+          });
+        }
       }
       return els;
     }
     throw new IllegalStateException("Don't know how to convert object into RouteEl");
   }
 
-  private ValueGraph<Node, Double> prepareBaseGraph(ValueGraph<Node, Double> graph) {
-    MutableValueGraph<Node, Double> g;
-    if (graph instanceof MutableValueGraph<Node, Double> mGraph) {
-      g = mGraph;
-    } else {
-      g = ValueGraphBuilder.from(graph).build();
-      graph.nodes().forEach(g::addNode);
-      for (EndpointPair<Node> e : graph.edges()) {
-        g.putEdgeValue(e.nodeU(), e.nodeV(), g.edgeValue(e.nodeU(), e.nodeV()).orElse(0d));
-      }
-    }
-
+  private ValueGraph<Node, Double> prepareBaseGraph(Iterable<ValueGraph<Node, Double>> islands) {
+    List<ValueGraph<Node, Double>> list = new ArrayList<>();
+    islands.forEach(list::add);
     for (Collection<Object> target : checkPoints) {
       for (Object o : target) {
         if (o instanceof NavigationLocation navLoc) {
-          g = navLoc.connect(g);
+          boolean notThrown = false;
+          for (int i = 0; i < list.size(); i++) {
+            try {
+              var res = navLoc.connect(GraphUtils.mutable(list.get(i)));
+              list.set(i, res);
+              notThrown = true;
+            } catch (GraphEntryNotEstablishedException e) {
+            }
+          }
+          if (!notThrown) {
+            throw new GraphEntryNotEstablishedException();
+          }
         }
       }
     }
-    return g;
+    return GraphUtils.merge(list);
   }
 
   private static abstract class RouteEl {

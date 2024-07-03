@@ -12,7 +12,7 @@ java {
 dependencies {
     compileOnlyApi("org.jetbrains:annotations:24.0.0")
 
-    api("com.google.guava:guava:31.1-jre") // this shouldn't be needed
+    api("com.google.guava:guava:32.1.2-jre") // this shouldn't be needed
 
     // Tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")

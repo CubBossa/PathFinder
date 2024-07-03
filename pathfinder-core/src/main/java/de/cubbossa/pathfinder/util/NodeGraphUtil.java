@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnstableApiUsage")
 public class NodeGraphUtil {
 
   public static Node mergeGroupedNodes(Node a, Node b, Node into) {
@@ -60,27 +61,27 @@ public class NodeGraphUtil {
     return g;
   }
 
-  public static ValueGraph<Node, Double> extrude(ValueGraph<Node, Double> graph, Node node, Node factory, @Nullable Double entryWeight, @Nullable Double exitWeight) {
+  public static ValueGraph<Node, Double> extrude(ValueGraph<Node, Double> graph, Node base, Node newNode, @Nullable Double entryWeight, @Nullable Double exitWeight) {
 
-    if (!(factory instanceof GroupedNode) && node instanceof GroupedNode gn) {
-      factory = new GroupedNodeImpl(factory, gn.groups());
+    if (!(newNode instanceof GroupedNode) && base instanceof GroupedNode gn) {
+      newNode = new GroupedNodeImpl(newNode, gn.groups());
     }
 
     MutableValueGraph<Node, Double> g = mutable(graph);
-    g.addNode(factory);
-    if (!g.nodes().contains(node)) {
-      g.addNode(node);
+    g.addNode(newNode);
+    if (!g.nodes().contains(base)) {
+      g.addNode(base);
     }
     if (entryWeight == null && exitWeight == null) {
       return g;
     }
 
-    double dist = factory.getLocation().distance(node.getLocation());
+    double dist = newNode.getLocation().distance(base.getLocation());
     if (entryWeight != null) {
-      g.putEdgeValue(factory, node, dist * entryWeight);
+      g.putEdgeValue(newNode, base, dist * entryWeight);
     }
     if (exitWeight != null) {
-      g.putEdgeValue(node, factory, dist * exitWeight);
+      g.putEdgeValue(base, newNode, dist * exitWeight);
     }
     return g;
   }

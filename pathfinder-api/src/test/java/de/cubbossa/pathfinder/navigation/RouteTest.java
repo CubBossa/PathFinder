@@ -18,12 +18,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("UnstableApiUsage")
 class RouteTest {
 
   @BeforeAll
@@ -61,8 +61,8 @@ class RouteTest {
 
   @Test
   void testA() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
+    Node a = new TestNode("a", new Location(0, 0, 0, null));
+    Node b = new TestNode("b", new Location(10, 0, 0, null));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(a);
     graph.addNode(b);
@@ -82,9 +82,9 @@ class RouteTest {
 
   @Test
   void testB() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
-    Node c = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, null));
+    Node a = new TestNode("a", new Location(0, 0, 0, null));
+    Node b = new TestNode("b", new Location(10, 0, 0, null));
+    Node c = new TestNode("c", new Location(20, 0, 0, null));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(a);
     graph.addNode(b);
@@ -123,10 +123,10 @@ class RouteTest {
 
   @Test
   void testC() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
-    Node d = new TestNode(UUID.randomUUID(), new Location(20, 0, 0, null));
+    Node a = new TestNode("a", new Location(-10, 0, 0, null));
+    Node b = new TestNode("b", new Location(0, 0, 0, null));
+    Node c = new TestNode("c", new Location(10, 0, 0, null));
+    Node d = new TestNode("d", new Location(20, 0, 0, null));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(b);
     graph.addNode(c);
@@ -144,10 +144,10 @@ class RouteTest {
 
   @Test
   void testD() throws NoPathFoundException {
-    Node a = new TestNode(UUID.randomUUID(), new Location(-10, 0, 0, null));
-    Node b = new TestNode(UUID.randomUUID(), new Location(0, 0, 0, null));
-    Node c = new TestNode(UUID.randomUUID(), new Location(10, 0, 0, null));
-    Node d = new TestNode(UUID.randomUUID(), new Location(0, 15, 0, null));
+    Node a = new TestNode("a", new Location(-10, 0, 0, null));
+    Node b = new TestNode("b", new Location(0, 0, 0, null));
+    Node c = new TestNode("c", new Location(10, 0, 0, null));
+    Node d = new TestNode("d", new Location(0, 15, 0, null));
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
     graph.addNode(a);
     graph.addNode(b);
@@ -177,13 +177,47 @@ class RouteTest {
     assertEquals(20, result.getCost());
   }
 
+  @Test
+  void testIslands() throws NoPathFoundException {
+    Node a = new TestNode("a", new Location(0, -5, 0, null));
+    Node b = new TestNode("b", new Location(10, -5, 0, null));
+    Node c = new TestNode("c", new Location(0, 5, 0, null));
+    Node d = new TestNode("d", new Location(10, 5, 0, null));
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(a);
+    graph.addNode(b);
+    graph.addNode(c);
+    graph.addNode(d);
+    graph.putEdgeValue(a, b, 10d);
+    graph.putEdgeValue(c, d, 10d);
+
+    var results = Route
+        .from(fixedExternalNode(new TestNode("start", new Location(5, -10, 0, null))))
+        .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, null))))
+        .calculatePaths(graph);
+    assertEquals(1, results.size());
+    assertEquals(results.get(0).getPath().get(1), a);
+    assertEquals(3, results.get(0).getPath().size());
+    System.out.println(results.get(0).getCost());
+  }
+
   @Getter
   @Setter
-  @AllArgsConstructor
   private class TestNode implements Node {
 
-    private UUID nodeId;
+    private final String name;
+    private final UUID nodeId;
     private Location location;
+
+    public TestNode(String name, Location location) {
+      this(name, UUID.randomUUID(), location);
+    }
+
+    public TestNode(String name, UUID uuid, Location location) {
+      this.name = name;
+      this.nodeId = uuid;
+      this.location = location;
+    }
 
     @Override
     public Changes<Edge> getEdgeChanges() {
@@ -202,17 +236,17 @@ class RouteTest {
 
     @Override
     public Node clone() {
-      return new TestNode(nodeId, location);
+      return new TestNode(name, location);
     }
 
     @Override
     public Node clone(UUID id) {
-      return new TestNode(id, location);
+      return new TestNode(name, id, location);
     }
 
     @Override
     public String toString() {
-      return nodeId.toString().substring(0, 8);
+      return name;
     }
   }
 }

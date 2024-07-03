@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.navigation;
 
+import com.google.common.base.Preconditions;
 import com.google.common.graph.MutableValueGraph;
 import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.node.Node;
@@ -15,6 +16,8 @@ public class NavigationLocationImpl implements NavigationLocation {
   private final boolean external;
 
   NavigationLocationImpl(Node node, boolean fixed, boolean external) {
+    Preconditions.checkNotNull(node);
+
     this.node = node;
     this.fixed = fixed;
     this.external = external;
@@ -28,7 +31,7 @@ public class NavigationLocationImpl implements NavigationLocation {
     MutableValueGraph<Node, Double> g = GRAPH_ENTRY_SOLVER.solve(node, graph);
     this.node = g.nodes().stream()
         .filter(n -> n.getNodeId().equals(node.getNodeId())).findAny()
-        .orElse(null);
+        .orElseThrow();
     return g;
   }
 

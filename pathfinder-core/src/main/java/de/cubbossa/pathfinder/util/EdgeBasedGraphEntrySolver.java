@@ -1,10 +1,12 @@
 package de.cubbossa.pathfinder.util;
 
+import com.google.common.base.Preconditions;
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.GraphEntrySolver;
+import de.cubbossa.pathfinder.graph.GraphUtils;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
@@ -17,6 +19,7 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnstableApiUsage")
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
   private final Float maxDistance;
@@ -50,6 +53,8 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
   private MutableValueGraph<Node, Double> solve(Node node, boolean entry, boolean exit, MutableValueGraph<Node, Double> scope)
       throws GraphEntryNotEstablishedException {
 
+    Preconditions.checkNotNull(node);
+
     if (scope.nodes().contains(node)) {
       return scope;
     }
@@ -82,8 +87,9 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
     });
     Collections.sort(sortedEdges);
     if (sortedEdges.isEmpty()) {
-      return scope;
+      throw new GraphEntryNotEstablishedException();
     }
+
     WeightedEdge first = null;
     Collection<WeightedEdge> result = new HashSet<>();
     // Edges are already sorted, but we want to fetch all edges of similar distance
@@ -103,19 +109,20 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
     // make copy of graph
     MutableValueGraph<Node, Double> graph = ValueGraphBuilder.from(scope).build();
     scope.nodes().forEach(graph::addNode);
-    scope.edges().forEach(e -> graph.putEdgeValue(e, scope.edgeValue(e).orElseThrow()));
+    for (EndpointPair<Node> e : scope.edges()) {
+      graph.putEdgeValue(e, scope.edgeValue(e).orElseThrow());
+    }
 
     // Add node via split and extrude
-    result.forEach(edge -> {
+    for (WeightedEdge edge : result) {
       Node inject = NodeGraphUtil.mergeGroupedNodes(edge.start, edge.end, new Waypoint(UUID.randomUUID()));
 
       Vector closest = VectorUtils.closestPointOnSegment(node.getLocation(), edge.start.getLocation(), edge.end.getLocation());
       inject.setLocation(closest.toLocation(edge.start.getLocation().getWorld()));
 
-      ValueGraph<Node, Double> g = graph;
-      g = NodeGraphUtil.split(g, edge.start, edge.end, inject);
-      NodeGraphUtil.extrude(g, inject, node, entry ? 0d : null, exit ? 0d : null);
-    });
+      graph = GraphUtils.mutable(NodeGraphUtil.split(graph, edge.start, edge.end, inject));
+      graph = GraphUtils.mutable(NodeGraphUtil.extrude(graph, inject, node, entry ? 0d : null, exit ? 0d : null));
+    }
     return graph;
   }
 
