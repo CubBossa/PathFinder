@@ -16,6 +16,7 @@ import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,7 +121,10 @@ class IntegrationRouteTest extends PathFinderTest {
         .calculatePath(graph);
 
     assertEquals(30, result.getCost());
-    assertEquals(List.of(a, b, c, d), result.getPath());
+    assertEquals(
+        Stream.of(a, b, c, d).map(Node::getLocation).toList(),
+        result.getPath().stream().map(Node::getLocation).toList()
+    );
   }
 
   @Test
@@ -196,8 +200,8 @@ class IntegrationRouteTest extends PathFinderTest {
     graph.putEdgeValue(c, d, 10d);
 
     var results = Route
-        .from(fixedExternalNode(new TestNode("start", new Location(0, -10, 0, world))))
-        .to(fixedExternalNode(new TestNode("end", new Location(0, 10, 0, world))))
+        .from(fixedExternalNode(new TestNode("start", new Location(5, -10, 0, world))))
+        .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, world))))
         .calculatePaths(graph);
     assertEquals(1, results.size());
     assertEquals(6, results.get(0).getPath().size());

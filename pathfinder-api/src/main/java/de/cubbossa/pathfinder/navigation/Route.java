@@ -79,63 +79,63 @@ public interface Route {
    * @param solver A new solver instance
    * @return this Route instance.
    */
-  Route withSolver(final @NotNull PathSolver<Node, Double> solver);
+  @NotNull Route withSolver(final @NotNull PathSolver<Node, Double> solver);
 
   /**
    * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
    * @param route A route object to embed. Its variation will be picked so that the upmost Route will provide the shortest path.
    * @return this Route instance.
    */
-  Route to(final @NotNull Route route);
+  @NotNull Route to(final @NotNull Route route);
 
   /**
    * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
    * @param nodes A list of nodes. They will be treated as path segment as is.
    * @return this Route instance.
    */
-  Route to(final @NotNull List<Node> nodes);
+  @NotNull Route to(final @NotNull List<Node> nodes);
 
   /**
    * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
    * @param node A node to visit.
    * @return this Route instance.
    */
-  Route to(final @NotNull Node node);
+  @NotNull Route to(final @NotNull Node node);
 
   /**
    * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
    * @param location A location to visit.
    * @return this Route instance.
    */
-  Route to(final @NotNull NavigationLocation location);
+  @NotNull Route to(final @NotNull NavigationLocation location);
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
    * @param nodes A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
-  Route toAny(final @NotNull Node... nodes);
+  @NotNull Route toAny(final @NotNull Node... nodes);
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
    * @param nodes A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
-  Route toAny(final @NotNull Collection<Node> nodes);
+  @NotNull Route toAny(final @NotNull Collection<Node> nodes);
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
    * @param locations A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
-  Route toAny(final @NotNull NavigationLocation... locations);
+  @NotNull Route toAny(final @NotNull NavigationLocation... locations);
 
   /**
    * Adds a collection of objects to the route. At least one of these objects must be visited when finding the shortest path.
    * @param routes A collection of objects of which one must be visited in the solve process.
    * @return this Route instance.
    */
-  Route toAny(final @NotNull Route... routes);
+  @NotNull Route toAny(final @NotNull Route... routes);
 
   /**
    * Uses an environment graph to find the shortest path of the start point of this route to any of the target nodes of the

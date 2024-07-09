@@ -8,7 +8,9 @@ import com.google.common.graph.ValueGraphBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -26,7 +28,7 @@ public class GraphUtils {
     return g;
   }
 
-  public static <N, V> ValueGraph<N, V> merge(Iterable<ValueGraph<N, V>> islands) {
+  public static <N, V> ValueGraph<N, V> merge(Iterable<? extends ValueGraph<N, V>> islands) {
     var iterator = islands.iterator();
     MutableValueGraph<N, V> g = mutable(iterator.next());
     while (iterator.hasNext()) {
@@ -55,6 +57,39 @@ public class GraphUtils {
   }
 
   public static <N, V> Collection<ValueGraph<N, V>> islands(ValueGraph<N, V> graph) {
+    Collection<ValueGraph<N, V>> results = new ArrayList<>();
+    Collection<N> graphNodes = new HashSet<>(graph.nodes());
+
+    while (!graphNodes.isEmpty()) {
+      N startNode = graphNodes.stream().findAny().get();
+      graphNodes.remove(startNode);
+
+      HashSet<N> islandNodes = new HashSet<>();
+      Queue<N> queue = new LinkedList<>();
+      queue.add(startNode);
+      while (!queue.isEmpty()) {
+        var n = queue.poll();
+        islandNodes.add(n);
+        graphNodes.remove(n);
+        var pre = graph.predecessors(n);
+        var suc = graph.successors(n);
+        for (N p : pre) {
+          if (graphNodes.contains(p)) {
+            queue.add(p);
+          }
+        }
+        for (N s : suc) {
+          if (graphNodes.contains(s)) {
+            queue.add(s);
+          }
+        }
+      }
+      results.add(Graphs.inducedSubgraph(graph, islandNodes));
+    }
+    return results;
+  }
+
+  public static <N, V> Collection<ValueGraph<N, V>> islands1(ValueGraph<N, V> graph) {
     Set<N> all = new HashSet<>(graph.nodes());
     Collection<ValueGraph<N, V>> results = new ArrayList<>();
 
@@ -64,7 +99,13 @@ public class GraphUtils {
         return List.of(graph);
       }
       Set<N> island = Graphs.reachableNodes(graph.asGraph(), any);
-      all.removeAll(island);
+      all.removeIf(n -> {
+        var pre = graph.predecessors(n);
+        if (pre.isEmpty()) {
+          return true;
+        }
+        return island.containsAll(pre);
+      });
       results.add(Graphs.inducedSubgraph(graph, island));
     }
     return results;

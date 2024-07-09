@@ -1,6 +1,6 @@
 package de.cubbossa.pathfinder.navigation;
 
-import com.google.common.graph.MutableValueGraph;
+import com.google.common.graph.ValueGraph;
 import de.cubbossa.pathfinder.node.Node;
 
 public interface NavigationLocation {
@@ -23,7 +23,7 @@ public interface NavigationLocation {
 
   Node getNode();
 
-  MutableValueGraph<Node, Double> connect(MutableValueGraph<Node, Double> graph);
+  ValueGraph<Node, Double> connect(ValueGraph<Node, Double> graph);
 
   boolean isFixedPosition();
 }

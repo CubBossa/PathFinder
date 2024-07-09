@@ -77,7 +77,7 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
   public PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(start);
-    Preconditions.checkState(targets.size() > 0);
+    Preconditions.checkState(!targets.isEmpty());
     Preconditions.checkState(targets.size() == targets.stream().filter(Objects::nonNull).toList().size());
 
     nodeMapping.values().forEach(node -> {
@@ -121,7 +121,7 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
         .orElse(null);
 
     if (nearest == null || !nearest.settled) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(start, targets);
     }
     return extractResult(nearest);
   }

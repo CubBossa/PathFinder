@@ -115,13 +115,20 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
     // Add node via split and extrude
     for (WeightedEdge edge : result) {
-      Node inject = NodeGraphUtil.mergeGroupedNodes(edge.start, edge.end, new Waypoint(UUID.randomUUID()));
 
-      Vector closest = VectorUtils.closestPointOnSegment(node.getLocation(), edge.start.getLocation(), edge.end.getLocation());
-      inject.setLocation(closest.toLocation(edge.start.getLocation().getWorld()));
+      Node inject;
+      // We can skip the complex injection part if one of the end nodes is the closest point
+      if (edge.closest.distanceSquared(edge.start.getLocation().asVector()) < 0.001f) {
+        inject = edge.start;
+      } else if (edge.closest.distanceSquared(edge.end.getLocation().asVector()) < 0.001f) {
+        inject = edge.end;
+      } else {
+        inject = NodeGraphUtil.mergeGroupedNodes(edge.start, edge.end, new Waypoint(UUID.randomUUID()));
+        inject.setLocation(edge.closest.toLocation(edge.start.getLocation().getWorld()));
 
-      graph = GraphUtils.mutable(NodeGraphUtil.split(graph, edge.start, edge.end, inject));
-      graph = GraphUtils.mutable(NodeGraphUtil.extrude(graph, inject, node, entry ? 0d : null, exit ? 0d : null));
+        graph = GraphUtils.mutable(NodeGraphUtil.split(graph, edge.start, edge.end, inject));
+      }
+      graph = GraphUtils.mutable(NodeGraphUtil.extrude(graph, inject, node, entry ? 1d : null, exit ? 1d : null));
     }
     return graph;
   }

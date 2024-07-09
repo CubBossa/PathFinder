@@ -20,7 +20,7 @@ class GraphUtilsTest {
     MutableValueGraph<String, Double> bToA = ValueGraphBuilder.directed().build();
     bToA.addNode("a");
     bToA.addNode("b");
-    bToA.putEdgeValue("a", "b", 1.5);
+    bToA.putEdgeValue("b", "a", 1.5);
     Assertions.assertEquals(1, GraphUtils.islands(bToA).size());
 
     MutableValueGraph<String, Double> aAndB = ValueGraphBuilder.directed().build();
