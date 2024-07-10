@@ -8,10 +8,18 @@ import org.jetbrains.annotations.Nullable;
 public class NoPathFoundException extends Exception {
 
   public NoPathFoundException() {
-    this(null, null);
+    this(null, null, null);
   }
 
   public NoPathFoundException(@Nullable Object from, @Nullable Object to) {
-    super((from == null ? "" : "\n - Start Node: " + from + " ") + (to == null ? "" : "\n - End Node: " + to));
+    this(from, to, null);
+  }
+
+  public NoPathFoundException(@Nullable Object from, @Nullable Object to, @Nullable Exception cause) {
+    super(
+        (from == null ? "" : "\n - Start Node: " + from + " ")
+            + (to == null ? "" : "\n - End Node: " + to),
+        cause
+    );
   }
 }

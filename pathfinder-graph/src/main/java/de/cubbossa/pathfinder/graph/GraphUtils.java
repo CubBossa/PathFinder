@@ -88,26 +88,4 @@ public class GraphUtils {
     }
     return results;
   }
-
-  public static <N, V> Collection<ValueGraph<N, V>> islands1(ValueGraph<N, V> graph) {
-    Set<N> all = new HashSet<>(graph.nodes());
-    Collection<ValueGraph<N, V>> results = new ArrayList<>();
-
-    while (!all.isEmpty()) {
-      N any = all.stream().findFirst().orElse(null);
-      if (any == null) {
-        return List.of(graph);
-      }
-      Set<N> island = Graphs.reachableNodes(graph.asGraph(), any);
-      all.removeIf(n -> {
-        var pre = graph.predecessors(n);
-        if (pre.isEmpty()) {
-          return true;
-        }
-        return island.containsAll(pre);
-      });
-      results.add(Graphs.inducedSubgraph(graph, island));
-    }
-    return results;
-  }
 }

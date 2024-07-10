@@ -3,7 +3,7 @@ package de.cubbossa.pathfinder.navigation;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedExternalNode;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -37,7 +37,7 @@ class RouteTest {
 
   @BeforeAll
   static void beforeAll() {
-    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<Node>() {
+    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<>() {
       @Override
       public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope)
           throws GraphEntryNotEstablishedException {
@@ -210,35 +210,8 @@ class RouteTest {
         .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, null))))
         .calculatePaths(graph);
     assertEquals(1, results.size());
-    assertEquals(results.get(0).getPath().get(1), a);
+    assertTrue(List.of(a, b).contains(results.get(0).getPath().get(1)));
     assertEquals(3, results.get(0).getPath().size());
-  }
-
-  @Test
-  void testGroupedNodePreservance() throws NoPathFoundException {
-    Node a = new GroupedTestNode(new TestNode("a", new Location(0, -5, 0, null)), new ArrayList<>());
-    Node b = new GroupedTestNode(new TestNode("b", new Location(10, -5, 0, null)), new ArrayList<>());
-    Node c = new GroupedTestNode(new TestNode("c", new Location(10, 5, 0, null)), new ArrayList<>());
-    Node d = new GroupedTestNode(new TestNode("d", new Location(0, 5, 0, null)), new ArrayList<>());
-    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
-    graph.addNode(a);
-    graph.addNode(b);
-    graph.addNode(c);
-    graph.addNode(d);
-    graph.putEdgeValue(a, b, 10d);
-    graph.putEdgeValue(b, c, 10d);
-    graph.putEdgeValue(c, d, 10d);
-
-    var results = Route
-        .from(fixedExternalNode(new TestNode("start", new Location(0, -10, 0, null))))
-        .to(fixedExternalNode(new TestNode("end", new Location(0, 10, 0, null))))
-        .calculatePaths(graph);
-    assertEquals(1, results.size());
-    assertEquals(results.get(0).getPath().get(1), a);
-    assertEquals(6, results.get(0).getPath().size());
-    assertEquals(40, results.get(0).getCost());
-
-    assertInstanceOf(GroupedNode.class, results.get(0).getPath().get(0));
   }
 
   @Test

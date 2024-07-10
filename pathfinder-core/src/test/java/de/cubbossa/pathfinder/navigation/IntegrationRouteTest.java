@@ -174,14 +174,16 @@ class IntegrationRouteTest extends PathFinderTest {
     graph.addNode(c);
     graph.addNode(d);
     graph.putEdgeValue(a, b, 10d);
+    graph.putEdgeValue(b, a, 10d);
     graph.putEdgeValue(c, d, 10d);
+    graph.putEdgeValue(d, c, 10d);
 
     var results = Route
         .from(fixedExternalNode(new TestNode("start", new Location(5, -10, 0, world))))
         .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, world))))
         .calculatePaths(graph);
     assertEquals(1, results.size());
-    assertEquals(3, results.get(0).getPath().size());
+    assertEquals(5, results.get(0).getPath().size());
   }
 
   @Test

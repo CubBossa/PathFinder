@@ -12,6 +12,7 @@ import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,8 +55,26 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       throws GraphEntryNotEstablishedException {
 
     Preconditions.checkNotNull(node);
+    Preconditions.checkArgument(entry || exit, "Either entry or exit or both must be true.");
 
+    if (scope.nodes().isEmpty()) {
+      throw new GraphEntryNotEstablishedException();
+    }
     if (scope.nodes().contains(node)) {
+      return scope;
+    }
+    if (scope.edges().isEmpty()) {
+      Node nearest = scope.nodes().stream()
+          .min(Comparator.comparingDouble(n -> n.getLocation().distanceSquared(node.getLocation())))
+          .orElseThrow();
+      double dist = node.getLocation().distance(nearest.getLocation());
+      scope.addNode(node);
+      if (entry) {
+        scope.putEdgeValue(node, nearest, dist);
+      }
+      if (exit) {
+        scope.putEdgeValue(nearest, node, dist);
+      }
       return scope;
     }
 

@@ -178,7 +178,7 @@ class RouteImpl implements Route {
     // We rely on the fact that the list is sorted and return the first and therefore shortest route.
     var res = calculatePaths(environment);
     if (res.isEmpty()) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(getStart(), getEnd());
     }
     return res.iterator().next();
   }
@@ -234,21 +234,24 @@ class RouteImpl implements Route {
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
     // Let's iterate all possible end points and solve the shortest path to them.
     for (Route end : segmentOrder.get(segmentOrder.size() - 1)) {
-      // We find the shortest path on the abstract graph here to this particularly end.
-      PathSolverResult<Route, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
-          startSegment,
-          end
-      );
+      try {
+        // We find the shortest path on the abstract graph here to this particularly end.
+        PathSolverResult<Route, PathSolverResult<Node, Double>> res = abstractSolver.solvePath(
+            startSegment,
+            end
+        );
 
-      var paths = end.calculatePaths(modifiedBaseGraph);
+        var paths = end.calculatePaths(modifiedBaseGraph);
 
-      // Since we want to return every possible path we need to iterate all ends of the end route object too
-      for (PathSolverResult<Node, Double> calculatedPath : paths) {
-        // We combine them into one and append them to our result list.
-        results.add(mergeResults(
-            flatMapAbstractResult(res),
-            calculatedPath
-        ));
+        // Since we want to return every possible path we need to iterate all ends of the end route object too
+        for (PathSolverResult<Node, Double> calculatedPath : paths) {
+          // We combine them into one and append them to our result list.
+          results.add(mergeResults(
+              flatMapAbstractResult(res),
+              calculatedPath
+          ));
+        }
+      } catch (NoPathFoundException ignored) {
       }
     }
     // Now we have all shortest paths to each possible end point of this route, including all end points
@@ -256,7 +259,10 @@ class RouteImpl implements Route {
 
     // Now we can tell that there is no possible outcome, if there are no results.
     if (results.isEmpty()) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(
+          getStart(),
+          getEnd()
+      );
     }
     // Otherwise sort by costs and return.
     results.sort(Comparator.comparingDouble(PathSolverResult::getCost));
@@ -295,10 +301,10 @@ class RouteImpl implements Route {
     var islands = GraphUtils.islands(modifiedBaseGraph);
     modifiedBaseGraph = GraphUtils.merge(
         GraphUtils.merge(
-            a.getEnd().stream().flatMap(n -> islands.stream().map(n::connect)).toList()
+            islands.stream().map(island -> b.getStart().connect(GraphUtils.mutable(island))).toList()
         ),
         GraphUtils.merge(
-            islands.stream().map(island -> b.getStart().connect(GraphUtils.mutable(island))).toList()
+            a.getEnd().stream().flatMap(n -> islands.stream().map(n::connect)).toList()
         )
     );
     baseGraphSolver.setGraph(modifiedBaseGraph);
@@ -319,7 +325,7 @@ class RouteImpl implements Route {
 
     }
     if (results.isEmpty()) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(a, b);
     }
     results.sort(Comparator.comparingDouble(PathSolverResult::getCost));
     return results.get(0);

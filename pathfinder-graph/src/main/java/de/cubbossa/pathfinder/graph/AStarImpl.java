@@ -56,7 +56,7 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
       throws NoPathFoundException {
 
     if (target.isEmpty()) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(start, target);
     }
 
     TreeSet<Node> open = new TreeSet<>();
@@ -99,7 +99,7 @@ public class AStarImpl<N, E> implements PathSolver<N, E> {
     }
 
     if (matchedTarget == null) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(start, target);
     }
 
     List<N> path = new ArrayList<>();

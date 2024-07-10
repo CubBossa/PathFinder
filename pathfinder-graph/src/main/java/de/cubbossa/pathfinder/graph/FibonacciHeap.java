@@ -72,9 +72,9 @@ public final class FibonacciHeap<T> {
    * private.
    */
   public static final class Entry<T> {
+
     private int mDegree = 0;       // Number of children
     private boolean mIsMarked = false; // Whether this node is marked
-
     private Entry<T> mNext;   // Next and previous elements in the list
     private Entry<T> mPrev;
 
@@ -83,6 +83,7 @@ public final class FibonacciHeap<T> {
     private Entry<T> mChild;  // Child node, if any.
 
     private T mElem;     // Element being stored here
+
     private double mPriority; // Its priority
 
     /**

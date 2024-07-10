@@ -111,7 +111,7 @@ public class StaticDijkstra<N, E> implements PathSolver<N, E> {
         .orElse(null);
 
     if (nearest == null || !nearest.settled) {
-      throw new NoPathFoundException();
+      throw new NoPathFoundException(start, targets);
     }
     return extractResult(nearest);
   }
