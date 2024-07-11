@@ -63,6 +63,8 @@ public interface NavigationModule<PlayerT> extends Disposable {
 
   void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path);
 
+  void makePathPersistent(VisualizerPath<PlayerT> path);
+
   void reach(UUID viewer);
 
   void unset(UUID viewer);

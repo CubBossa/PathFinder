@@ -11,6 +11,7 @@ sequenceOf(
         "graph",
         "editmode",
         "papi",
+        "quests-module",
         "scripted-visualizer",
 ).forEach {
     val name = "${rootProject.name}-$it"
