@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.navigation;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.List;
 
@@ -24,6 +23,8 @@ public interface Navigation<PlayerT> extends Disposable {
   void cancel();
 
   Navigation<PlayerT> persist();
+
+  Navigation<PlayerT> cancelWhenTargetInRange();
 
   Navigation<PlayerT> cancelWhenTargetInRange(double range);
 

@@ -6,6 +6,7 @@ rootProject.name = "pathfinder"
 
 sequenceOf(
         "api",
+    "citizens",
         "core",
         "bukkit",
         "graph",

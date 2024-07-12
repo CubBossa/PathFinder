@@ -5,6 +5,7 @@ import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNod
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import com.google.common.graph.MutableValueGraph;
+import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestNode;
@@ -16,6 +17,8 @@ import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -163,6 +166,23 @@ class IntegrationRouteTest extends PathFinderTest {
   }
 
   @Test
+  void testE() throws NoPathFoundException {
+    Node a = new TestNode("a", new Location(0, 0, 0, world));
+    Node b = new TestNode("b", new Location(10, 0, 0, world));
+    Node start = new TestNode("start", new Location(20, 0, 0, world));
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(a);
+    graph.addNode(b);
+    graph.putEdgeValue(a, b, 10d);
+    var result = Route
+        .from(NavigationLocation.movingExternalNode(start))
+        .to(b)
+        .calculatePath(graph);
+    assertEquals(List.of(start, b), result.getPath());
+    assertEquals(10, result.getCost());
+  }
+
+  @Test
   void testIslands() throws NoPathFoundException {
     Node a = new TestNode("a", new Location(0, -5, 0, world));
     Node b = new TestNode("b", new Location(10, -5, 0, world));
@@ -210,5 +230,72 @@ class IntegrationRouteTest extends PathFinderTest {
     assertEquals(30, results.get(0).getCost());
 
     assertInstanceOf(GroupedNode.class, results.get(0).getPath().get(0));
+  }
+
+  @Test
+  void testPerformance() {
+
+    var graph = generateGraph(10_000);
+
+    Node startNode = new TestNode("start", new Location(-500, -500, -500, world));
+    Node endNode = new TestNode("end", new Location(500, 500, 500, world));
+
+    System.out.println("Beginn navigation on graph with " + graph.edges().size() + " edges.");
+    long now = System.currentTimeMillis();
+    System.out.println(now);
+    try {
+      Route
+          .from(NavigationLocation.fixedExternalNode(startNode))
+          .to(NavigationLocation.fixedExternalNode(endNode))
+          .calculatePath(graph);
+    } catch (NoPathFoundException e) {
+      throw new RuntimeException(e);
+    }
+    System.out.println("Complete!");
+    long after = System.currentTimeMillis();
+    System.out.println("Time taken: " + (after - now));
+  }
+
+  private ValueGraph<Node, Double> generateGraph(int size) {
+    long seed = System.currentTimeMillis();
+    System.out.println("Seed = " + seed);
+    Random r = new Random(seed);
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+
+    List<Node> nodes = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      var n = new TestNode(UUID.randomUUID(), new Location(
+          r.nextDouble(-1000, 1000),
+          r.nextDouble(-1000, 1000),
+          r.nextDouble(-1000, 1000),
+          world
+      ));
+      graph.addNode(n);
+      nodes.add(n);
+    }
+    int prog = 0;
+    for (Node node : new ArrayList<>(nodes)) {
+      int edgeCount = r.nextDouble() > .9 ? r.nextInt(0, 6) : r.nextInt(2, 3);
+      for (int i = 0; i < edgeCount; i++) {
+
+//        nodes.sort(Comparator.comparingDouble(n -> n.getLocation().distanceSquared(node.getLocation())));
+        int edgeTargetIndex = (int) Math.pow(r.nextDouble(), 4) * graph.nodes().size();
+        Node target = nodes.get(edgeTargetIndex);
+        if (target.getNodeId() == node.getNodeId()) {
+          continue;
+        }
+
+        double dist = node.getLocation().distanceSquared(target.getLocation());
+        graph.putEdgeValue(node, target, dist);
+        if (r.nextDouble() > 0.05f) {
+          graph.putEdgeValue(target, node, dist);
+        }
+      }
+      prog++;
+      if (prog % 50 == 0) {
+        System.out.println(prog + "/" + size);
+      }
+    }
+    return graph;
   }
 }

@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -86,29 +87,31 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
       node.distance = Integer.MAX_VALUE;
     });
 
-    FibonacciHeap<Node> unsettled = new FibonacciHeap<>();
+    TreeSet<Node> unsettled = new TreeSet<>(Comparator.comparingDouble(Node::getDistance));
     Node startNode = node(start);
     Collection<Node> targetNodes = targets.stream()
         .filter(Objects::nonNull)
         .map(this::node).collect(Collectors.toCollection(HashSet::new));
     startNode.distance = 0;
-    unsettled.enqueue(startNode, 0);
+    unsettled.add(startNode);
 
     while (!unsettled.isEmpty()) {
-      Node current = unsettled.dequeueMin().getValue();
+      var it = unsettled.iterator();
+      Node current = it.next();
+      it.remove();
 
-      graph.successors(current.node).forEach(adjacent -> {
+      for (N adjacent : graph.successors(current.node)) {
         Node adjacentNode = node(adjacent);
-        if (adjacentNode.equals(current)) return;
-        if (adjacentNode.settled) return;
+        if (adjacentNode.equals(current)) continue;
+        if (adjacentNode.settled) continue;
 
         double d = current.distance + getEdgeValue(graph.edgeValue(current.node, adjacent).orElseThrow());
         if (d < adjacentNode.distance) {
           adjacentNode.distance = d;
           adjacentNode.parent = current;
         }
-        unsettled.enqueue(adjacentNode, adjacentNode.distance);
-      });
+        unsettled.add(adjacentNode);
+      }
       current.settled = true;
 
       if (targetNodes.contains(current)) {

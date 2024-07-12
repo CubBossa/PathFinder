@@ -34,10 +34,10 @@ public class NavigateCmd extends PathFinderSubCommand {
 
               NavigationModule<Player> navigationModule = NavigationModule.get();
               for (PathPlayer<Player> player : players) {
-                navigationModule.navigate(player, Route
+                navigationModule.setFindCommandPath(player, Route
                         .from(NavigationLocation.movingExternalNode(new PlayerNode(player)))
                         .to(target))
-                    .whenComplete((path, throwable) -> {
+                    .whenComplete((nav, throwable) -> {
                       if (throwable != null) {
                         if (throwable instanceof CompletionException) {
                           throwable = throwable.getCause();
@@ -52,9 +52,8 @@ public class NavigateCmd extends PathFinderSubCommand {
                         }
                         return;
                       }
-                      navigationModule.cancelPathWhenTargetReached(path);
+                      nav.persist().cancelWhenTargetInRange();
                     });
-                ;
               }
             })
         )

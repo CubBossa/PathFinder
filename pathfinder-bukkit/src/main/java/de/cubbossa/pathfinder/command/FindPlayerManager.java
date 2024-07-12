@@ -152,10 +152,10 @@ public class FindPlayerManager implements Disposable {
 
     PathPlayer<Player> requesterPathPlayer = BukkitUtils.wrap(requesterPlayer);
     NavigationModule<Player> module = NavigationModule.get();
-    module.navigate(requesterPathPlayer, Route
+    module.setFindCommandPath(requesterPathPlayer, Route
         .from(NavigationLocation.movingExternalNode(new PlayerNode(requesterPathPlayer)))
         .to(NavigationLocation.movingExternalNode(new PlayerNode(PathPlayer.wrap(target))))
-    ).whenComplete((path, throwable) -> {
+    ).whenComplete((nav, throwable) -> {
       if (throwable != null) {
         if (throwable instanceof CompletionException) {
           throwable = throwable.getCause();
@@ -170,7 +170,7 @@ public class FindPlayerManager implements Disposable {
         }
         return;
       }
-      module.cancelPathWhenTargetReached(path);
+      nav.cancelWhenTargetInRange();
     });
   }
 

@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -54,20 +53,18 @@ public class AbstractNavigationModule<PlayerT>
 
   protected Cache<UUID, Navigator> navigators;
 
-  protected final Map<UUID, NavigationContext> activePaths;
+  protected final Map<UUID, Navigation<PlayerT>> activeFindCommandPaths;
   protected final List<NavigationConstraint> navigationConstraints;
 
   public AbstractNavigationModule() {
     NavigationModuleProvider.set(this);
 
-    this.activePaths = new HashMap<>();
+    this.activeFindCommandPaths = new HashMap<>();
     this.pathFinder = PathFinder.get();
     this.pathFinder.getDisposer().register(this.pathFinder, this);
     this.navigationConstraints = new ArrayList<>();
 
-    navigators = Caffeine.newBuilder()
-        .maximumSize(128)
-        .build();
+    navigators = Caffeine.newBuilder().build();
 
     ExtensionPoint<NavigationConstraint> extensionPoint = new ExtensionPoint<>(NavigationConstraint.class);
     extensionPoint.getExtensions().forEach(this::registerNavigationConstraint);
@@ -121,13 +118,8 @@ public class AbstractNavigationModule<PlayerT>
   }
 
   @Override
-  public CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route) {
+  public CompletableFuture<Navigation<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route) {
     return CompletableFuture.supplyAsync(() -> {
-
-      var current = activePaths.get(viewer.getUniqueId());
-      if (current != null) {
-        unset(current);
-      }
 
       VisualizerPath<PlayerT> path;
       try {
@@ -141,90 +133,14 @@ public class AbstractNavigationModule<PlayerT>
       } catch (NoPathFoundException noPathFoundException) {
         throw new CompletionException(noPathFoundException);
       }
+      NavigationLocation start = route.getStart();
+      NavigationLocation end = route.getEnd().stream().filter(l -> l.getNode().equals(path.getPath().get(path.getPath().size() - 1))).findAny().orElseThrow();
 
-      NavigationContext ctx;
-      try {
-        ctx = context(viewer.getUniqueId(), path);
-      } catch (IllegalStateException t) {
-        throw new CompletionException(new NoPathFoundException());
-      }
-
-      boolean result = eventDispatcher.dispatchPathStart(viewer, path);
-      if (!result) {
+      if (!eventDispatcher.dispatchPathStart(viewer, path)) {
         throw new EventCancelledException();
       }
-
-      activePaths.put(viewer.getUniqueId(), ctx);
-      return path;
+      return new NavigationImpl(start, end, path);
     });
-  }
-
-  private NavigationContext context(UUID playerId, VisualizerPath<PlayerT> path) {
-
-    if (path.getPath().isEmpty()) {
-      throw new IllegalStateException("Path containing no nodes");
-    }
-    Node last = path.getPath().get(path.getPath().size() - 1);
-    if (last == null) {
-      throw new IllegalStateException("Path containing no nodes");
-    }
-
-    double dist = 1.5;
-
-    if (last instanceof GroupedNode gn) {
-      NodeGroup highest = gn.groups().stream()
-          .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
-          .max(NodeGroup::compareTo).orElse(null);
-
-      if (highest != null) {
-        dist = highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
-            .map(FindDistanceModifier::distance)
-            .orElse(1.5);
-      }
-    }
-    return new NavigationContext(playerId, path, last, dist);
-  }
-
-  private void unset(NavigationContext context) {
-    if (activePaths.remove(context.playerId) != null) {
-      eventDispatcher.dispatchPathStopped(PathPlayer.wrap(context.playerId), context.path);
-      PathFinder.get().getDisposer().dispose(context.path);
-    }
-    context.path.removeViewer(PathPlayer.wrap(context.playerId));
-  }
-
-  @Override
-  public void unset(UUID viewer) {
-    var context = activePaths.get(viewer);
-    if (context != null) {
-      unset(context);
-    }
-  }
-
-  @Override
-  public void cancel(UUID viewer) {
-    var context = activePaths.get(viewer);
-    if (context == null) {
-      return;
-    }
-    var path = context.path();
-    if (!eventDispatcher.dispatchPathCancel(path.getTargetViewer(), path)) {
-      return;
-    }
-    unset(context);
-  }
-
-  @Override
-  public void reach(UUID viewer) {
-    var context = activePaths.get(viewer);
-    if (context == null) {
-      return;
-    }
-    var path = context.path();
-    if (!eventDispatcher.dispatchPathTargetReached(path.getTargetViewer(), path)) {
-      return;
-    }
-    unset(context);
   }
 
   @Override
@@ -248,12 +164,19 @@ public class AbstractNavigationModule<PlayerT>
 
   @Override
   public @Nullable Navigation<PlayerT> getActiveFindCommandPath(@NotNull PathPlayer<PlayerT> player) {
-    var ctx = activePaths.get(player.getUniqueId());
-    return ctx == null ? null : ctx.path;
+    return activeFindCommandPaths.get(player.getUniqueId());
   }
 
-  public void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path) {
-
+  @Override
+  public CompletableFuture<Navigation<PlayerT>> setFindCommandPath(PathPlayer<PlayerT> viewer, Route route) {
+    var current = activeFindCommandPaths.get(viewer.getUniqueId());
+    if (current != null) {
+      current.cancel();
+    }
+    return navigate(viewer, route).thenApply(n -> {
+      activeFindCommandPaths.put(viewer.getUniqueId(), n);
+      return n;
+    });
   }
 
   @Getter
@@ -269,8 +192,16 @@ public class AbstractNavigationModule<PlayerT>
     private HashSet<Runnable> onCancel = null;
     private HashSet<Runnable> onComplete = null;
 
-    public NavigationImpl(VisualizerPath<PlayerT> path) {
+    public NavigationImpl(
+        NavigationLocation start,
+        NavigationLocation end,
+        VisualizerPath<PlayerT> path
+    ) {
+      this.startLocation = start;
+      this.endLocation = end;
+      this.renderer = path;
 
+      PathFinder.get().getDisposer().register(this, renderer);
     }
 
     @Override
@@ -295,15 +226,21 @@ public class AbstractNavigationModule<PlayerT>
 
     @Override
     public List<Location> pathControlPoints() {
-      return null;
+      return renderer.getPath().stream().map(Node::getLocation).toList();
     }
 
     private void stop() {
+      eventDispatcher.dispatchPathStopped(viewer(), renderer());
       renderer.stopUpdater();
+      renderer.removeAllViewers();
+      PathFinder.get().getDisposer().dispose(this);
     }
 
     @Override
     public void complete() {
+      if (!eventDispatcher.dispatchPathTargetReached(viewer(), renderer())) {
+        return;
+      }
       stop();
       if (onComplete != null) {
         onComplete.forEach(Runnable::run);
@@ -315,6 +252,9 @@ public class AbstractNavigationModule<PlayerT>
 
     @Override
     public void cancel() {
+      if (!eventDispatcher.dispatchPathCancel(viewer(), renderer())) {
+        return;
+      }
       stop();
       if (onCancel != null) {
         onCancel.forEach(Runnable::run);
@@ -326,7 +266,24 @@ public class AbstractNavigationModule<PlayerT>
 
     @Override
     public Navigation<PlayerT> persist() {
-      return null;
+      return this;
+    }
+
+    public Navigation<PlayerT> cancelWhenTargetInRange() {
+      double dist = 1.5;
+
+      if (endLocation.getNode() instanceof GroupedNode gn) {
+        NodeGroup highest = gn.groups().stream()
+            .filter(g -> g.hasModifier(FindDistanceModifier.KEY))
+            .max(NodeGroup::compareTo).orElse(null);
+
+        if (highest != null) {
+          dist = highest.<FindDistanceModifier>getModifier(FindDistanceModifier.KEY)
+              .map(FindDistanceModifier::distance)
+              .orElse(1.5);
+        }
+      }
+      return cancelWhenTargetInRange(dist);
     }
 
     @Override
@@ -361,64 +318,14 @@ public class AbstractNavigationModule<PlayerT>
       }
       onCancel.add(runnable);
     }
-  }
-
-  protected final class NavigationContext {
-    private final UUID playerId;
-    private final VisualizerPath<PlayerT> path;
-    private final Node target;
-    private final double dist;
-
-    private NavigationContext(UUID playerId, VisualizerPath<PlayerT> path, Node target, double dist) {
-      this.playerId = playerId;
-      this.path = path;
-      this.target = target;
-      this.dist = dist;
-    }
-
-    public UUID playerId() {
-      return playerId;
-    }
-
-    public VisualizerPath<PlayerT> path() {
-      return path;
-    }
-
-    public Node target() {
-      return target;
-    }
-
-    public double dist() {
-      return dist;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (obj == null || obj.getClass() != this.getClass()) {
-        return false;
-      }
-      var that = (NavigationContext) obj;
-      return Objects.equals(this.playerId, that.playerId) &&
-          Objects.equals(this.path, that.path) &&
-          Objects.equals(this.target, that.target) &&
-          Double.doubleToLongBits(this.dist) == Double.doubleToLongBits(that.dist);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(playerId, path, target, dist);
-    }
 
     @Override
     public String toString() {
-      return "NavigationContext[" +
-          "playerId=" + playerId + ", " +
-          "path=" + path + ", " +
-          "target=" + target + ", " +
-          "dist=" + dist + ']';
+      return "NavigationImpl{" +
+          "startLocation=" + startLocation +
+          ", endLocation=" + endLocation +
+          ", renderer=" + renderer +
+          '}';
     }
   }
 }

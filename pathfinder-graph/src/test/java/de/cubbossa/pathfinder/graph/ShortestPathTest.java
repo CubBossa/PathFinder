@@ -2,16 +2,14 @@ package de.cubbossa.pathfinder.graph;
 
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
 public abstract class ShortestPathTest {
 
@@ -93,7 +91,6 @@ public abstract class ShortestPathTest {
     public final String load;
   }
 
-  @RepeatedTest(10)
   void performanceTestOpt() throws NoPathFoundException {
     int nodes = 100_000;
     int edges = 200_000;

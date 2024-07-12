@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.navigation;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
-import de.cubbossa.pathfinder.visualizer.VisualizerPath;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -57,7 +56,7 @@ public interface NavigationModule<PlayerT> extends Disposable {
    */
   @Nullable Navigation<PlayerT> getActiveFindCommandPath(final @NotNull PathPlayer<PlayerT> player);
 
-  void setFindCommandPath(Navigation<PlayerT> navigation);
+  CompletableFuture<Navigation<PlayerT>> setFindCommandPath(PathPlayer<PlayerT> viewer, Route route);
 
-  Navigation<PlayerT> navigate(PathPlayer<PlayerT> viewer, Route route);
+  CompletableFuture<Navigation<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route);
 }

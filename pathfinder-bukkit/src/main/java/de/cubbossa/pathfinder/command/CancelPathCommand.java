@@ -15,10 +15,13 @@ public class CancelPathCommand extends CommandTree {
 
     withPermission(PathPerms.PERM_CMD_CANCELPATH);
     withRequirement(sender -> sender instanceof Player player
-        && module.getActivePath(PathPlayer.wrap(player)) != null);
+        && module.getActiveFindCommandPath(PathPlayer.wrap(player)) != null);
 
     executesPlayer((player, args) -> {
-      module.cancel(player.getUniqueId());
+      var nav = module.getActiveFindCommandPath(PathPlayer.wrap(player));
+      if (nav != null) {
+        nav.cancel();
+      }
     });
   }
 

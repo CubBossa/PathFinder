@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.graph;
 import com.google.common.graph.ValueGraph;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An algorithm to find a path on a graph. This might be the shortest possible path, but
@@ -45,4 +47,18 @@ public interface PathSolver<N, E> {
    * @throws NoPathFoundException if the solver could not find any path from start to any target node.
    */
   PathSolverResult<N, E> solvePath(N start, Collection<N> targets) throws NoPathFoundException;
+
+  default Map<N, PathSolverResult<N, E>> solvePaths(N start, Collection<N> targets) throws NoPathFoundException {
+    Map<N, PathSolverResult<N, E>> results = new HashMap<>();
+    for (N target : targets) {
+      try {
+        results.put(target, solvePath(start, targets));
+      } catch (NoPathFoundException ignored) {
+      }
+    }
+    if (results.isEmpty()) {
+      throw new NoPathFoundException(start, targets);
+    }
+    return results;
+  }
 }
