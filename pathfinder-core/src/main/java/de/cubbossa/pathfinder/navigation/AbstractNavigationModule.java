@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.group.PermissionModifier;
+import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.GroupedNode;
@@ -33,7 +34,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.experimental.Accessors;
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class AbstractNavigationModule<PlayerT>
     extends PathFinderExtensionBase
@@ -240,13 +247,120 @@ public class AbstractNavigationModule<PlayerT>
   }
 
   @Override
-  public VisualizerPath<PlayerT> getActivePath(final @NotNull PathPlayer<PlayerT> player) {
+  public @Nullable Navigation<PlayerT> getActiveFindCommandPath(@NotNull PathPlayer<PlayerT> player) {
     var ctx = activePaths.get(player.getUniqueId());
     return ctx == null ? null : ctx.path;
   }
 
   public void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path) {
 
+  }
+
+  @Getter
+  @Accessors(fluent = true)
+  class NavigationImpl implements Navigation<PlayerT>, Listener {
+
+    private final NavigationLocation startLocation;
+    private final NavigationLocation endLocation;
+    private final VisualizerPath<PlayerT> renderer;
+    private Double rangeSquared = null;
+
+    private HashSet<Runnable> onEnd = null;
+    private HashSet<Runnable> onCancel = null;
+    private HashSet<Runnable> onComplete = null;
+
+    public NavigationImpl(VisualizerPath<PlayerT> path) {
+
+    }
+
+    @Override
+    public void dispose() {
+      if (rangeSquared != null) {
+        PlayerMoveEvent.getHandlerList().unregister(this);
+      }
+    }
+
+    @EventHandler
+    void onMove(PlayerMoveEvent e) {
+      if (e.getPlayer().getUniqueId().equals(viewer().getUniqueId())
+          && viewer().getLocation().distanceSquared(endLocation.getNode().getLocation()) < rangeSquared) {
+        complete();
+      }
+    }
+
+    @Override
+    public PathPlayer<PlayerT> viewer() {
+      return renderer.getTargetViewer();
+    }
+
+    @Override
+    public List<Location> pathControlPoints() {
+      return null;
+    }
+
+    private void stop() {
+      renderer.stopUpdater();
+    }
+
+    @Override
+    public void complete() {
+      stop();
+      if (onComplete != null) {
+        onComplete.forEach(Runnable::run);
+      }
+      if (onEnd != null) {
+        onEnd.forEach(Runnable::run);
+      }
+    }
+
+    @Override
+    public void cancel() {
+      stop();
+      if (onCancel != null) {
+        onCancel.forEach(Runnable::run);
+      }
+      if (onEnd != null) {
+        onEnd.forEach(Runnable::run);
+      }
+    }
+
+    @Override
+    public Navigation<PlayerT> persist() {
+      return null;
+    }
+
+    @Override
+    public Navigation<PlayerT> cancelWhenTargetInRange(double range) {
+      if (rangeSquared == null) {
+        Bukkit.getPluginManager().registerEvents(this, Bukkit.getPluginManager().getPlugin("PathFinder"));
+      }
+      rangeSquared = range * range;
+      return this;
+    }
+
+    @Override
+    public void onEnd(Runnable runnable) {
+      if (onEnd == null) {
+        onEnd = new HashSet<>();
+      }
+      onEnd.add(runnable);
+    }
+
+    @Override
+    public void onComplete(Runnable runnable) {
+      if (onComplete == null) {
+        onComplete = new HashSet<>();
+      }
+      onComplete.add(runnable);
+    }
+
+    @Override
+    public void onCancel(Runnable runnable) {
+      if (onCancel == null) {
+        onCancel = new HashSet<>();
+      }
+      onCancel.add(runnable);
+    }
   }
 
   protected final class NavigationContext {

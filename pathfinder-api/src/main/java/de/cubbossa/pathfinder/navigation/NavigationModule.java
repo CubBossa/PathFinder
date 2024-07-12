@@ -55,17 +55,9 @@ public interface NavigationModule<PlayerT> extends Disposable {
    * @param player The player to search active paths for.
    * @return
    */
-  @Nullable VisualizerPath<PlayerT> getActivePath(final @NotNull PathPlayer<PlayerT> player);
+  @Nullable Navigation<PlayerT> getActiveFindCommandPath(final @NotNull PathPlayer<PlayerT> player);
 
-  CompletableFuture<VisualizerPath<PlayerT>> navigate(PathPlayer<PlayerT> viewer, Route route);
+  void setFindCommandPath(Navigation<PlayerT> navigation);
 
-  void cancel(UUID viewer);
-
-  void cancelPathWhenTargetReached(VisualizerPath<PlayerT> path);
-
-  void makePathPersistent(VisualizerPath<PlayerT> path);
-
-  void reach(UUID viewer);
-
-  void unset(UUID viewer);
+  Navigation<PlayerT> navigate(PathPlayer<PlayerT> viewer, Route route);
 }
