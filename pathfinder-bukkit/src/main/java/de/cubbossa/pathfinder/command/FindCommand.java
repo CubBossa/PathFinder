@@ -35,10 +35,10 @@ public class FindCommand extends CommandTree {
             return;
           }
           NavigationModule<Player> navigationModule = NavigationModule.get();
-          navigationModule.navigate(p, Route
+          navigationModule.setFindCommandPath(p, Route
                   .from(NavigationLocation.movingExternalNode(new PlayerNode(p)))
                   .toAny(targets))
-              .whenComplete((path, throwable) -> {
+              .whenComplete((nav, throwable) -> {
                 if (throwable != null) {
                   if (throwable instanceof CompletionException) {
                     throwable = throwable.getCause();
@@ -53,7 +53,7 @@ public class FindCommand extends CommandTree {
                   }
                   return;
                 }
-                navigationModule.cancelPathWhenTargetReached(path);
+                nav.persist().cancelWhenTargetInRange();
               });
         })
     );

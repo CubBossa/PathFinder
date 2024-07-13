@@ -6,11 +6,13 @@ rootProject.name = "pathfinder"
 
 sequenceOf(
         "api",
+    "citizens",
         "core",
         "bukkit",
         "graph",
         "editmode",
         "papi",
+        "quests-module",
         "scripted-visualizer",
 ).forEach {
     val name = "${rootProject.name}-$it"

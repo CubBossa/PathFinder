@@ -122,7 +122,7 @@ public abstract class EdgeBasedVisualizer<ViewT extends EdgeBasedVisualizer<View
   }
 
 
-  protected record Edge(int index, Location support, Location target) {
+  public record Edge(int index, Location support, Location target) {
 
   }
 }

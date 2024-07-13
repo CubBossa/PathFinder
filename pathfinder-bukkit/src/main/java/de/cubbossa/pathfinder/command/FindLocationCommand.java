@@ -34,10 +34,10 @@ public class FindLocationCommand extends CommandTree {
           waypoint.setLocation(target);
 
           PathPlayer<Player> p = BukkitUtils.wrap(player);
-          module.navigate(p, Route
+          module.setFindCommandPath(p, Route
               .from(NavigationLocation.movingExternalNode(new PlayerNode(p)))
               .to(NavigationLocation.movingExternalNode(waypoint))
-          ).whenComplete((path, throwable) -> {
+          ).whenComplete((nav, throwable) -> {
             if (throwable != null) {
               if (throwable instanceof CompletionException) {
                 throwable = throwable.getCause();
@@ -51,7 +51,7 @@ public class FindLocationCommand extends CommandTree {
                 PathFinder.get().getLogger().log(Level.SEVERE, "Unknown error while finding path.", throwable);
               }
             }
-            module.cancelPathWhenTargetReached(path);
+            nav.persist().cancelWhenTargetInRange();
           });
         })
     );

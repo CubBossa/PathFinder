@@ -74,7 +74,12 @@ class SingletonRoute implements Route {
 
   @Override
   public PathSolverResult<Node, Double> calculatePath(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    return new PathSolverResultImpl<>(Collections.singletonList(location.getNode()), Collections.emptyList(), 0);
+
+    Node graphRepresentation = environment.nodes().stream()
+        .filter(node -> node.getNodeId().equals(location.getNode().getNodeId()))
+        .findAny().orElse(location.getNode());
+
+    return new PathSolverResultImpl<>(Collections.singletonList(graphRepresentation), Collections.emptyList(), 0);
   }
 
   @Override

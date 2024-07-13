@@ -4,6 +4,7 @@ import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
+import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.GraphUtils;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
@@ -18,6 +19,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -185,7 +187,6 @@ class RouteImpl implements Route {
 
   @Override
   public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-
     //TODO dont actually
     modifiedBaseGraph = environment;
     // Feed the modified graph to the solver.
@@ -299,12 +300,27 @@ class RouteImpl implements Route {
    */
   private PathSolverResult<Node, Double> findShortestPathBetweenSegments(Route a, Route b) throws NoPathFoundException {
     var islands = GraphUtils.islands(modifiedBaseGraph);
+
+    AtomicInteger inSuccessInc = new AtomicInteger(0);
+    var inGraph = GraphUtils.merge(
+        islands.stream().map(island -> connect(b.getStart(), island, inSuccessInc)).toList()
+    );
+    if (inSuccessInc.get() == 0) {
+      throw new GraphEntryNotEstablishedException();
+    }
     modifiedBaseGraph = GraphUtils.merge(
+        inGraph,
         GraphUtils.merge(
-            islands.stream().map(island -> b.getStart().connect(GraphUtils.mutable(island))).toList()
-        ),
-        GraphUtils.merge(
-            a.getEnd().stream().flatMap(n -> islands.stream().map(n::connect)).toList()
+            a.getEnd().stream().map(n -> {
+              AtomicInteger outSuccessInc = new AtomicInteger(0);
+              var outGraph = GraphUtils.merge(
+                  islands.stream().map(island -> connect(n, island, outSuccessInc)).toList()
+              );
+              if (outSuccessInc.get() == 0) {
+                throw new GraphEntryNotEstablishedException();
+              }
+              return outGraph;
+            }).toList()
         )
     );
     baseGraphSolver.setGraph(modifiedBaseGraph);
@@ -331,6 +347,15 @@ class RouteImpl implements Route {
     return results.get(0);
   }
 
+  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, AtomicInteger successInc) {
+    try {
+      graph = location.connect(graph);
+      successInc.getAndIncrement();
+    } catch (GraphEntryNotEstablishedException ignored) {
+    }
+    return graph;
+  }
+
   @SafeVarargs
   private PathSolverResult<Node, Double> mergeResults(PathSolverResult<Node, Double>... results) {
     return mergeResults(Arrays.stream(results).toList());
@@ -352,6 +377,8 @@ class RouteImpl implements Route {
       edges.addAll(result.getEdges());
       cost += result.getCost();
     }
-    return new PathSolverResultImpl<>(nodePath, edges, cost);
+    return new PathSolverResultImpl<>(nodePath.stream()
+        .map(n -> modifiedBaseGraph.nodes().stream().filter(o -> n.getNodeId().equals(o.getNodeId())).findAny().orElseThrow())
+        .toList(), edges, cost);
   }
 }

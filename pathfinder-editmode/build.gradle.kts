@@ -9,11 +9,6 @@ java {
     }
 }
 
-repositories {
-    mavenCentral()
-    maven("https://repo.codemc.org/repository/maven-snapshots/")
-}
-
 val minecraftVersion = project.property("minecraft_version") as String
 
 repositories {
@@ -24,6 +19,7 @@ repositories {
     maven("https://repo.dmulloy2.net/repository/public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.codemc.org/repository/maven-public/")
+    maven("https://repo.codemc.org/repository/maven-snapshots/")
     maven("https://repo.codemc.io/repository/maven-snapshots/")
 }
 

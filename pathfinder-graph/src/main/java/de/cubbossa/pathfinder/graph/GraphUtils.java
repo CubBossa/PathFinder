@@ -8,10 +8,8 @@ import com.google.common.graph.ValueGraphBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 
 @SuppressWarnings("UnstableApiUsage")
 public class GraphUtils {
@@ -58,17 +56,19 @@ public class GraphUtils {
 
   public static <N, V> Collection<ValueGraph<N, V>> islands(ValueGraph<N, V> graph) {
     Collection<ValueGraph<N, V>> results = new ArrayList<>();
-    Collection<N> graphNodes = new HashSet<>(graph.nodes());
+    Set<N> graphNodes = new HashSet<>(graph.nodes());
 
     while (!graphNodes.isEmpty()) {
-      N startNode = graphNodes.stream().findAny().get();
-      graphNodes.remove(startNode);
+      var it = graphNodes.iterator();
+      N startNode = it.next();
+      it.remove();
 
       HashSet<N> islandNodes = new HashSet<>();
-      Queue<N> queue = new LinkedList<>();
+      TreeSet<N> queue = new TreeSet<>();
       queue.add(startNode);
       while (!queue.isEmpty()) {
-        var n = queue.poll();
+        var n = queue.first();
+        queue.remove(n);
         islandNodes.add(n);
         graphNodes.remove(n);
         var pre = graph.predecessors(n);
