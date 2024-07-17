@@ -115,8 +115,8 @@ class RouteTest {
         .to(Route.from(b).to(a).to(b))
         .to(c)
         .calculatePath(graph);
-    assertEquals(40, result.getCost());
     assertEquals(List.of(a, b, a, b, c), result.getPath());
+    assertEquals(40, result.getCost());
 
     result = Route
         .from(a)

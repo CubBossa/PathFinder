@@ -27,6 +27,21 @@ public class NavigationLocationImpl implements NavigationLocation {
 
   @Override
   public ValueGraph<Node, Double> connect(ValueGraph<Node, Double> graph) {
+    return connect(graph, true, true);
+  }
+
+  @Override
+  public ValueGraph<Node, Double> connectAsEntry(ValueGraph<Node, Double> graph) {
+    return connect(graph, true, false);
+  }
+
+  @Override
+  public ValueGraph<Node, Double> connectAsExit(ValueGraph<Node, Double> graph) {
+    return connect(graph, false, true);
+  }
+
+  public ValueGraph<Node, Double> connect(ValueGraph<Node, Double> graph, boolean entry, boolean exit) {
+    Preconditions.checkArgument(entry || exit, "Either entry or exit must be true.");
     if (!external) {
       return graph;
     }

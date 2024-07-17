@@ -16,14 +16,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * The logic within this class is quite complex, so read the provided comments carefully.
@@ -49,10 +50,6 @@ class RouteImpl implements Route {
    * You can set any solver, by default {@link DynamicDijkstra}
    */
   private @NotNull PathSolver<Node, Double> baseGraphSolver;
-
-  // We cache the base graph on which we navigate to access while navigating.
-  // Cache is being rewritten for each navigation request on this Route object.
-  private @Nullable ValueGraph<Node, Double> modifiedBaseGraph = null;
 
   RouteImpl(@NotNull Route other) {
     this.startSegment = other;
@@ -178,19 +175,87 @@ class RouteImpl implements Route {
   public PathSolverResult<Node, Double> calculatePath(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
     // calculatePaths is an effort that has to be done and returns a sorted list of possible paths.
     // We rely on the fact that the list is sorted and return the first and therefore shortest route.
+    // To reduce the performance impact significantly we can do a separate search on the last bit by removing it
+    // before calling #calculatePaths. We only need to call #calculatePath on the last bit.
+
+    // First of all, if segmentOrder is empty this is only a wrapper route for another route in startSegment
+    if (segmentOrder.isEmpty()) {
+      return startSegment.calculatePath(environment);
+    }
+    // Get the second last segment (might be the start segment for a simple a->b route)
+    var secondLastSegment = segmentOrder.size() == 1 ? Collections.singleton(startSegment) : segmentOrder.get(segmentOrder.size() - 2);
+    // Get the last segment
+    var lastSegment = segmentOrder.remove(segmentOrder.size() - 1);
+    var lastSegmentLocations = lastSegment.stream().flatMap(r -> r.getEnd().stream()).toList();
+
+    // Connect all target points to a temporary graph
+    var islands = GraphUtils.islands(environment);
+    var outGraph = GraphUtils.merge(
+        lastSegmentLocations.stream().map(n -> {
+          AtomicInteger outSuccessInc = new AtomicInteger(0);
+          var out = GraphUtils.merge(
+              islands.stream().map(island -> connect(n, island, outSuccessInc, false, true)).toList()
+          );
+          if (outSuccessInc.get() == 0) {
+            throw new GraphEntryNotEstablishedException();
+          }
+          return out;
+        }).toList()
+    );
+
+    // Create a cache for all the resolved end point routes
+    Map<Node, PathSolverResult<Node, Double>> shortestFromEachLast = new HashMap<>();
+    for (Route route : lastSegment) {
+      var r = route.calculatePath(environment);
+      shortestFromEachLast.put(r.getPath().get(0), r);
+    }
+    // Create a list of nodes to reuse in each iteration
+    var lastBitNodes = lastSegmentLocations.stream().map(NavigationLocation::getNode).toList();
+
+    var ends = secondLastSegment.stream().map(Route::getEnd).flatMap(Collection::stream).toList();
+    Map<Node, PathSolverResult<Node, Double>> shortestFromEachSecondLast = new HashMap<>();
+    for (NavigationLocation start : ends) {
+      AtomicInteger inSuccessInc = new AtomicInteger(0);
+      var inGraph = GraphUtils.merge(
+          islands.stream().map(island -> connect(start, island, inSuccessInc, true, false)).toList()
+      );
+      if (inSuccessInc.get() == 0) {
+        throw new GraphEntryNotEstablishedException();
+      }
+      var combinedGraph = GraphUtils.merge(
+          inGraph,
+          outGraph
+      );
+      // Solve from end point of second last to start point of last and store result
+      baseGraphSolver.setGraph(combinedGraph);
+      var r = baseGraphSolver.solvePath(start.getNode(), lastBitNodes);
+      shortestFromEachSecondLast.put(start.getNode(), r);
+    }
+
+    // After we have successfully mapped all shortest paths for the last bit, lets do the first bit
     var res = calculatePaths(environment);
+    segmentOrder.add(lastSegment);
     if (res.isEmpty()) {
       throw new NoPathFoundException(getStart(), getEnd());
     }
-    return res.iterator().next();
+    // We need to merge first bit of variable size + the interspace between last and second last route + the recursive result of last
+    var result = res.iterator().next();
+    var con = shortestFromEachSecondLast.get(result.getPath().get(result.getPath().size() - 1));
+    return mergeResults(result, con, shortestFromEachLast.get(con.getPath().get(con.getPath().size() - 1)));
   }
 
   @Override
   public List<PathSolverResult<Node, Double>> calculatePaths(@NotNull ValueGraph<Node, Double> environment) throws NoPathFoundException {
-    //TODO dont actually
-    modifiedBaseGraph = environment;
-    // Feed the modified graph to the solver.
-    baseGraphSolver.setGraph(modifiedBaseGraph);
+
+    if (segmentOrder.isEmpty()) {
+      // Special case: The start route is actually al there is. Let's return it then.
+      // THis case occurs because we occasionally remove the last segments group in #calculatePath
+      return startSegment.calculatePaths(environment);
+    }
+
+    // Feed the graph to the solver.
+    baseGraphSolver.setGraph(environment);
+
 
     // An abstracted graph will be used to find the shortest route across all sub-steps.
     MutableValueGraph<Route, PathSolverResult<Node, Double>> abstractGraph = ValueGraphBuilder
@@ -218,7 +283,7 @@ class RouteImpl implements Route {
           }
           // Only make edge in abstract graph if it can actually be used. Otherwise skip
           try {
-            var solved = findShortestPathBetweenSegments(prevSegment, segment);
+            var solved = findShortestPathBetweenSegments(environment, prevSegment, segment);
             abstractGraph.putEdgeValue(prevSegment, segment, solved);
           } catch (NoPathFoundException ignored) {
             // Ignore -> edge cannot be traversed but maybe another way is still possible.
@@ -242,7 +307,7 @@ class RouteImpl implements Route {
             end
         );
 
-        var paths = end.calculatePaths(modifiedBaseGraph);
+        var paths = end.calculatePaths(environment);
 
         // Since we want to return every possible path we need to iterate all ends of the end route object too
         for (PathSolverResult<Node, Double> calculatedPath : paths) {
@@ -298,23 +363,23 @@ class RouteImpl implements Route {
    * This is necessary because we otherwise cannot tell which possible route of a has been taken.
    * @throws NoPathFoundException If no path was found.
    */
-  private PathSolverResult<Node, Double> findShortestPathBetweenSegments(Route a, Route b) throws NoPathFoundException {
-    var islands = GraphUtils.islands(modifiedBaseGraph);
+  private PathSolverResult<Node, Double> findShortestPathBetweenSegments(ValueGraph<Node, Double> environment, Route a, Route b) throws NoPathFoundException {
+    var islands = GraphUtils.islands(environment);
 
     AtomicInteger inSuccessInc = new AtomicInteger(0);
     var inGraph = GraphUtils.merge(
-        islands.stream().map(island -> connect(b.getStart(), island, inSuccessInc)).toList()
+        islands.stream().map(island -> connect(b.getStart(), island, inSuccessInc, false, true)).toList()
     );
     if (inSuccessInc.get() == 0) {
       throw new GraphEntryNotEstablishedException();
     }
-    modifiedBaseGraph = GraphUtils.merge(
+    environment = GraphUtils.merge(
         inGraph,
         GraphUtils.merge(
             a.getEnd().stream().map(n -> {
               AtomicInteger outSuccessInc = new AtomicInteger(0);
               var outGraph = GraphUtils.merge(
-                  islands.stream().map(island -> connect(n, island, outSuccessInc)).toList()
+                  islands.stream().map(island -> connect(n, island, outSuccessInc, true, false)).toList()
               );
               if (outSuccessInc.get() == 0) {
                 throw new GraphEntryNotEstablishedException();
@@ -323,9 +388,9 @@ class RouteImpl implements Route {
             }).toList()
         )
     );
-    baseGraphSolver.setGraph(modifiedBaseGraph);
+    baseGraphSolver.setGraph(environment);
 
-    List<PathSolverResult<Node, Double>> resolvedPathsOfA = a.calculatePaths(modifiedBaseGraph);
+    List<PathSolverResult<Node, Double>> resolvedPathsOfA = a.calculatePaths(environment);
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
 
     Node end = b.getStart().getNode();
@@ -347,9 +412,21 @@ class RouteImpl implements Route {
     return results.get(0);
   }
 
-  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, AtomicInteger successInc) {
+  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, AtomicInteger successInc, boolean entry, boolean exit) {
     try {
-      graph = location.connect(graph);
+      if (entry) {
+        if (exit) {
+          graph = location.connect(graph);
+        } else {
+          graph = location.connectAsEntry(graph);
+        }
+      } else {
+        if (exit) {
+          graph = location.connectAsExit(graph);
+        } else {
+          throw new IllegalStateException("Either entry or exit must be true");
+        }
+      }
       successInc.getAndIncrement();
     } catch (GraphEntryNotEstablishedException ignored) {
     }
@@ -378,7 +455,7 @@ class RouteImpl implements Route {
       cost += result.getCost();
     }
     return new PathSolverResultImpl<>(nodePath.stream()
-        .map(n -> modifiedBaseGraph.nodes().stream().filter(o -> n.getNodeId().equals(o.getNodeId())).findAny().orElseThrow())
+//        .map(n -> modifiedBaseGraph.nodes().stream().filter(o -> n.getNodeId().equals(o.getNodeId())).findAny().orElseThrow())
         .toList(), edges, cost);
   }
 }

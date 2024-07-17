@@ -25,5 +25,9 @@ public interface NavigationLocation {
 
   ValueGraph<Node, Double> connect(ValueGraph<Node, Double> graph);
 
+  ValueGraph<Node, Double> connectAsExit(ValueGraph<Node, Double> graph);
+
+  ValueGraph<Node, Double> connectAsEntry(ValueGraph<Node, Double> graph);
+
   boolean isFixedPosition();
 }
