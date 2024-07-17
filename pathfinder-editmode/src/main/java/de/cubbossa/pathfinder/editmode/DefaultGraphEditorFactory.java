@@ -34,7 +34,8 @@ public class DefaultGraphEditorFactory implements GraphEditorFactory {
         editor.addRenderer(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      editor.addRenderer(new NodeArmorStandRenderer(PathFinderPlugin.getInstance()));
+      editor.addRenderer(new EdgeArmorStandRenderer(PathFinderPlugin.getInstance()));
     }
 
     return editor;

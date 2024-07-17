@@ -2,6 +2,7 @@ package de.cubbossa.pathfinder.editmode.renderer;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
 import de.cubbossa.cliententities.PlayerSpace;
 import de.cubbossa.cliententities.entity.ClientArmorStand;
 import de.cubbossa.cliententities.entity.ClientEntity;
@@ -49,7 +50,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
 
   public AbstractArmorstandRenderer(JavaPlugin plugin) {
     playerSpaces = new HashMap<>();
-    entityNodeMap = HashBiMap.create();
+    entityNodeMap = Maps.synchronizedBiMap(HashBiMap.create());
     players = new HashSet<>();
     hiddenNodes = new ConcurrentHashMap<>();
 
