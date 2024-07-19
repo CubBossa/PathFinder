@@ -13,6 +13,7 @@ import de.cubbossa.pathfinder.event.NodeGroupSaveEvent;
 import de.cubbossa.pathfinder.event.NodeSaveEvent;
 import de.cubbossa.pathfinder.event.PathCancelledEvent;
 import de.cubbossa.pathfinder.event.PathFinderEvent;
+import de.cubbossa.pathfinder.event.PathFinderReloadEvent;
 import de.cubbossa.pathfinder.event.PathStoppedEvent;
 import de.cubbossa.pathfinder.event.PathTargetReachedEvent;
 import de.cubbossa.pathfinder.event.PlayerDiscoverLocationEvent;
@@ -72,6 +73,8 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
 
   private void setEventMapping() {
     classMapping.clear();
+    classMapping.put(PathFinderReloadEvent.class, PathFinderReloadEventImpl.class);
+
     classMapping.put(NodeCreateEvent.class, NodeCreatedEvent.class);
     classMapping.put(NodeSaveEvent.class, NodeSavedEvent.class);
     classMapping.put(NodeDeleteEvent.class, NodeDeletedEvent.class);
@@ -113,6 +116,11 @@ public class BukkitEventDispatcher implements EventDispatcher<Player> {
   private boolean dispatchEventInMainThread(Event event) {
     Bukkit.getPluginManager().callEvent(event);
     return !(event instanceof Cancellable cancellable && cancellable.isCancelled());
+  }
+
+  @Override
+  public void dispatchReloadEvent(boolean config, boolean locale) {
+    dispatchEvent(new PathFinderReloadEventImpl(config, locale));
   }
 
   @Override

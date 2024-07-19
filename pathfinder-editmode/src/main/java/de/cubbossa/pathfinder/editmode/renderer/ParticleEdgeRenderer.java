@@ -3,9 +3,9 @@ package de.cubbossa.pathfinder.editmode.renderer;
 import de.cubbossa.cliententities.lib.packetevents.api.protocol.particle.type.ParticleTypes;
 import de.cubbossa.cliententities.lib.packetevents.impl.util.SpigotConversionUtil;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderConfig;
 import de.cubbossa.pathfinder.PathFinderConfigImpl;
 import de.cubbossa.pathfinder.editor.GraphRenderer;
+import de.cubbossa.pathfinder.event.PathFinderReloadEvent;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Edge;
@@ -50,18 +50,20 @@ public class ParticleEdgeRenderer implements GraphRenderer<Player> {
   private final Collection<UUID> rendered;
   private final MultiMap<UUID, UUID, ParticleEdge> edges;
   private final Collection<Integer> editModeTasks;
-  private final PathFinderConfigImpl.EditModeConfig config;
+  private PathFinderConfigImpl.EditModeConfig config;
 
   public ParticleEdgeRenderer() {
-    this(new PathFinderConfigImpl.EditModeConfigImpl());
-  }
-
-  public ParticleEdgeRenderer(PathFinderConfig.EditModeConfig editModeConfig) {
     pathFinder = PathFinder.get();
     rendered = new HashSet<>();
     edges = new MultiMap<>();
     editModeTasks = ConcurrentHashMap.newKeySet();
-    config = editModeConfig;
+    config = PathFinder.get().getConfiguration().getEditMode();
+
+    PathFinder.get().getEventDispatcher().listen(this, PathFinderReloadEvent.class, e -> {
+      if (e.reloadsConfig()) {
+        config = PathFinder.get().getConfiguration().getEditMode();
+      }
+    });
   }
 
   @Override

@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.editmode;
 
-import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeArmorStandRenderer;
 import de.cubbossa.pathfinder.editmode.renderer.EdgeEntityRenderer;
@@ -20,10 +19,9 @@ public class DefaultGraphEditorFactory implements GraphEditorFactory {
 
   @Override
   public GraphEditor<Player> createGraphEditor(NodeGroup group) {
-    PathFinder pathFinder = PathFinder.get();
     DefaultGraphEditor editor = new DefaultGraphEditor(group);
 
-    editor.getRenderers().add(new ParticleEdgeRenderer(pathFinder.getConfiguration().getEditMode()));
+    editor.getRenderers().add(new ParticleEdgeRenderer());
     try {
       if (new Version(PathFinderPlugin.getInstance().getServer().getBukkitVersion().split("-")[0]).compareTo(new Version("1.19.4")) >= 0) {
         editor.addRenderer(new NodeGroupListRenderer(PathFinderPlugin.getInstance(), 15, 8));

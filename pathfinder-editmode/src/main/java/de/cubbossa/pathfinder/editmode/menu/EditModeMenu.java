@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.editmode.menu;
 
+import de.cubbossa.disposables.Disposable;
 import de.cubbossa.menuframework.inventory.Action;
 import de.cubbossa.menuframework.inventory.Button;
 import de.cubbossa.menuframework.inventory.MenuPresets;
@@ -11,11 +12,11 @@ import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.PathFinderConfig;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultGraphEditor;
 import de.cubbossa.pathfinder.editmode.utils.ItemStackUtils;
 import de.cubbossa.pathfinder.event.NodeDeleteEvent;
+import de.cubbossa.pathfinder.event.PathFinderReloadEvent;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Named;
@@ -52,7 +53,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 
-public class EditModeMenu {
+public class EditModeMenu implements Disposable {
 
 
   private static Material[] GROUP_ITEM_LIST = new Material[]{
@@ -89,16 +90,19 @@ public class EditModeMenu {
 
   private final AtomicBoolean lock = new AtomicBoolean();
 
-  public EditModeMenu(StorageAdapter storage, NamespacedKey group, Collection<NodeType<?>> types, PathFinderConfig.EditModeConfig config) {
+  public EditModeMenu(StorageAdapter storage, NamespacedKey group, Collection<NodeType<?>> types) {
     this.storage = storage;
     this.key = group;
     this.types = types;
-    this.undirectedEdgesMode = !config.isDirectedEdgesByDefault();
+    this.undirectedEdgesMode = !PathFinder.get().getConfiguration().getEditMode().isDirectedEdgesByDefault();
 
-    PathFinder.get().getEventDispatcher().listen(NodeDeleteEvent.class, e -> {
+    PathFinder.get().getEventDispatcher().listen(this, NodeDeleteEvent.class, e -> {
       if (Objects.equals(chainEdgeStart, e.getNode().getNodeId())) {
         chainEdgeStart = null;
       }
+    });
+    PathFinder.get().getEventDispatcher().listen(this, PathFinderReloadEvent.class, e -> {
+      this.undirectedEdgesMode = !PathFinder.get().getConfiguration().getEditMode().isDirectedEdgesByDefault();
     });
   }
 

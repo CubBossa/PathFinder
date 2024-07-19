@@ -6,9 +6,9 @@ import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderExtension;
 import de.cubbossa.pathfinder.PathFinderExtensionBase;
-import de.cubbossa.pathfinder.command.PathFinderReloadListener;
 import de.cubbossa.pathfinder.event.EventCancelledException;
 import de.cubbossa.pathfinder.event.EventDispatcher;
+import de.cubbossa.pathfinder.event.PathFinderReloadEvent;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.FindDistanceModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
@@ -43,7 +43,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class AbstractNavigationModule<PlayerT>
     extends PathFinderExtensionBase
-    implements PathFinderExtension, PathFinderReloadListener, NavigationModule<PlayerT> {
+    implements PathFinderExtension, NavigationModule<PlayerT> {
 
   @Getter
   private final NamespacedKey key = AbstractPathFinder.pathfinder("navigation");
@@ -70,16 +70,16 @@ public class AbstractNavigationModule<PlayerT>
     extensionPoint.getExtensions().forEach(this::registerNavigationConstraint);
 
     setEdgeEntrySolver();
+    pathFinder.getEventDispatcher().listen(this, PathFinderReloadEvent.class, e -> {
+      if (e.reloadsConfig()) {
+        setEdgeEntrySolver();
+      }
+    });
   }
 
   private void setEdgeEntrySolver() {
     NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver(pathFinder
         .getConfiguration().getNavigation().getFindLocation().getMaxDistance());
-  }
-
-  @Override
-  public void onReloadConfig() {
-    setEdgeEntrySolver();
   }
 
   public void onLoad(PathFinder pathPlugin) {

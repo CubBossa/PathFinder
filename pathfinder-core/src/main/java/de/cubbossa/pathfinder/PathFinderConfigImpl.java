@@ -147,41 +147,6 @@ public class PathFinderConfigImpl implements PathFinderConfig {
     public float maxDistance = 20.f;
   }
 
-  @Configuration
-  @Getter
-  @ToString
-  public static class SimpleLocationWeightSolverConfigImpl implements SimpleLocationWeightSolverConfig {
-    @Comment("""
-        Finds the closest n amount of nodes and connects them to a virtual node at the players position.
-        Default is 1, but it can also be increased to let the pathfinding algorithm find the shortest
-        of the n connections.""")
-    public int connectionCount = 1;
-  }
-
-  @Configuration
-  @Getter
-  @ToString
-  public static class RaycastLocationWeightSolverConfigImpl implements RaycastLocationWeightSolverConfig {
-    @Comment("""
-        The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
-        nodes. Default: 10""")
-    public int raycastCount = 10;
-    @Comment("""
-        If nodes in the players view direction should be preferred.
-        1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1""")
-    public float startLocationDirectionWeight = 1;
-    @Comment("""
-        If the node location direction should have an effect on its closeness to the player. Similar
-        to start-direction-weight but for nodes instead of player. Default: 0""")
-    public float scopeLocationDirectionWeight = 0;
-    @Comment("""
-        Each block between the player/a node and another node will count as the given amount of
-        distance in blocks. Default of 10.000 means that two blocks between a player and a node
-        will count as a distance of 20.000 blocks. While another node that is further away from the
-        player but not obstructed will have 0 extra weight and will therefore be prioritized.""")
-    public float blockCollisionWeight = 10_000f;
-  }
-
   // <player> <player-loc> <player-loc-x>
   @Configuration
   @ToString

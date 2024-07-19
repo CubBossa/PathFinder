@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.event;
 
 import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
@@ -13,6 +14,8 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 public interface EventDispatcher<PlayerT> extends Disposable {
+
+  void dispatchReloadEvent(boolean config, boolean locale);
 
   <N extends Node> void dispatchNodeCreate(N node);
 
@@ -51,6 +54,12 @@ public interface EventDispatcher<PlayerT> extends Disposable {
   boolean dispatchPathCancel(PathPlayer<PlayerT> player, VisualizerPath<PlayerT> path);
 
   <E extends PathFinderEvent> Listener<E> listen(Class<E> eventType, Consumer<? super E> event);
+
+  default <E extends PathFinderEvent> Listener<E> listen(Disposable owner, Class<E> eventType, Consumer<? super E> event) {
+    var listener = listen(eventType, event);
+    PathFinder.get().getDisposer().register(owner, listener);
+    return listener;
+  }
 
   void drop(Listener<?> listener);
 }

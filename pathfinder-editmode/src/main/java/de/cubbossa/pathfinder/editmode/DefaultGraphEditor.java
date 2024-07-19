@@ -14,6 +14,7 @@ import de.cubbossa.pathfinder.event.NodeCreateEvent;
 import de.cubbossa.pathfinder.event.NodeDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeGroupDeleteEvent;
 import de.cubbossa.pathfinder.event.NodeSaveEvent;
+import de.cubbossa.pathfinder.event.PathFinderReloadEvent;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
@@ -96,6 +97,13 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
     });
 
     Bukkit.getPluginManager().registerEvents(this, PathFinderPlugin.getInstance());
+
+    PathFinder.get().getEventDispatcher().listen(this, PathFinderReloadEvent.class, e -> {
+      for (PathPlayer<Player> playerPathPlayer : new HashSet<>(editingPlayers.keySet())) {
+        setEditMode(playerPathPlayer, false);
+        setEditMode(playerPathPlayer, true);
+      }
+    });
   }
 
   public void addRenderer(GraphRenderer<Player> renderer) {
@@ -179,13 +187,16 @@ public class DefaultGraphEditor implements GraphEditor<Player>, GraphRenderer<Pl
         return;
       }
 
-      BottomInventoryMenu menu = new EditModeMenu(
+      var emMenuControl = new EditModeMenu(
           pathFinder.getStorage(), groupKey,
-          pathFinder.getNodeTypeRegistry().getTypes(),
-          pathFinder.getConfiguration().getEditMode()
-      ).createHotbarMenu(this, bukkitPlayer);
+          pathFinder.getNodeTypeRegistry().getTypes()
+      );
+      PathFinder.get().getDisposer().register(this, emMenuControl);
+
+      BottomInventoryMenu menu = emMenuControl.createHotbarMenu(this, bukkitPlayer);
       editingPlayers.put(player, menu);
       menu.openSync(bukkitPlayer);
+
 
       preservedGameModes.put(player, bukkitPlayer.getGameMode());
       bukkitPlayer.setGameMode(GameMode.CREATIVE);

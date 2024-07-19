@@ -136,43 +136,6 @@ public interface PathFinderConfig {
     float getMaxDistance();
   }
 
-  interface SimpleLocationWeightSolverConfig {
-    /**
-     * Finds the closest n amount of nodes and connects them to a virtual node at the players position.
-     * Default is 1, but it can also be increased to let the pathfinding algorithm find the shortest
-     * of the n connections.
-     */
-    int getConnectionCount();
-  }
-
-  interface RaycastLocationWeightSolverConfig {
-    /**
-     * The algorithm finds the n nearest nodes and sends a raycast to each. Set the amount of
-     * nodes. Default: 10
-     */
-    int getRaycastCount();
-
-    /**
-     * If nodes in the players view direction should be preferred.
-     * 1 means that a node counts as 1 block closer to the player if it is in its view direction. Default: 1
-     */
-    float getStartLocationDirectionWeight();
-
-    /**
-     * If the node location direction should have an effect on its closeness to the player. Similar
-     * to start-direction-weight but for nodes instead of player. Default: 0
-     */
-    float getScopeLocationDirectionWeight();
-
-    /**
-     * Each block between the player/a node and another node will count as the given amount of
-     * distance in blocks. Default of 10.000 means that two blocks between a player and a node
-     * will count as a distance of 20.000 blocks. While another node that is further away from the
-     * player but not obstructed will have 0 extra weight and will therefore be prioritized.
-     */
-    float getBlockCollisionWeight();
-  }
-
   interface EditModeConfig {
     /**
      * If the edit mode should start with the edges tool set to directed edges or undirected edges.
