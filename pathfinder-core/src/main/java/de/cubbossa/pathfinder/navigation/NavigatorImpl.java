@@ -104,13 +104,7 @@ public class NavigatorImpl implements Navigator {
       PathPlayer<PlayerT> viewer, Route route
   ) throws NoPathFoundException {
 
-    VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, () -> {
-      try {
-        return createPath(route);
-      } catch (NoPathFoundException ignored) {
-        return new ArrayList<>();
-      }
-    });
+    VisualizerPath<PlayerT> path = new GroupedVisualizerPathImpl<>(viewer, () -> createPath(route));
     path.addViewer(viewer);
 
     // load config value

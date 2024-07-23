@@ -76,6 +76,9 @@ class RouteImpl implements Route {
 
   @Override
   public @NotNull Collection<NavigationLocation> getEnd() {
+    if (segmentOrder.isEmpty()) {
+      return Collections.emptyList();
+    }
     return segmentOrder.get(segmentOrder.size() - 1).stream()
         .map(Route::getEnd)
         .flatMap(Collection::stream)
@@ -206,8 +209,13 @@ class RouteImpl implements Route {
     // Create a cache for all the resolved end point routes
     Map<Node, PathSolverResult<Node, Double>> shortestFromEachLast = new HashMap<>();
     for (Route route : lastSegment) {
-      var r = route.calculatePath(environment);
-      shortestFromEachLast.put(r.getPath().get(0), r);
+      try {
+        var r = route.calculatePath(environment);
+        shortestFromEachLast.put(r.getPath().get(0), r);
+      } catch (Throwable t) {
+        segmentOrder.add(lastSegment);
+        throw t;
+      }
     }
     // Create a list of nodes to reuse in each iteration
     var lastBitNodes = lastSegmentLocations.stream().map(NavigationLocation::getNode).toList();
@@ -220,6 +228,7 @@ class RouteImpl implements Route {
           islands.stream().map(island -> connect(start, island, inSuccessInc, true, false)).toList()
       );
       if (inSuccessInc.get() == 0) {
+        segmentOrder.add(lastSegment);
         throw new GraphEntryNotEstablishedException();
       }
       var combinedGraph = GraphUtils.merge(
@@ -228,13 +237,22 @@ class RouteImpl implements Route {
       );
       // Solve from end point of second last to start point of last and store result
       baseGraphSolver.setGraph(combinedGraph);
-      var r = baseGraphSolver.solvePath(start.getNode(), lastBitNodes);
-      shortestFromEachSecondLast.put(start.getNode(), r);
+      try {
+        var r = baseGraphSolver.solvePath(start.getNode(), lastBitNodes);
+        shortestFromEachSecondLast.put(start.getNode(), r);
+      } catch (Throwable t) {
+        segmentOrder.add(lastSegment);
+        throw t;
+      }
     }
 
     // After we have successfully mapped all shortest paths for the last bit, lets do the first bit
-    var res = calculatePaths(environment);
-    segmentOrder.add(lastSegment);
+    List<PathSolverResult<Node, Double>> res;
+    try {
+      res = calculatePaths(environment);
+    } finally {
+      segmentOrder.add(lastSegment);
+    }
     if (res.isEmpty()) {
       throw new NoPathFoundException(getStart(), getEnd());
     }

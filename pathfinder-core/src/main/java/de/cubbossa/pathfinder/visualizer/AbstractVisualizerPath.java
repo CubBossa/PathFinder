@@ -34,13 +34,9 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
   }
 
   @Override
-  public void update() {
+  public void update() throws NoPathFoundException {
     pathCache.clear();
-    try {
-      pathCache.addAll(path.getNodes());
-    } catch (NoPathFoundException e) {
-      throw new RuntimeException(e);
-    }
+    pathCache.addAll(path.getNodes());
   }
 
   public void setTargetViewer(PathPlayer<PlayerT> targetViewer) {
@@ -95,7 +91,11 @@ public abstract class AbstractVisualizerPath<PlayerT> implements VisualizerPath<
     timer.scheduleAtFixedRate(new TimerTask() {
       @Override
       public void run() {
-        update();
+        try {
+          update();
+        } catch (NoPathFoundException ignored) {
+          //TODO
+        }
       }
     }, 0, interval);
   }

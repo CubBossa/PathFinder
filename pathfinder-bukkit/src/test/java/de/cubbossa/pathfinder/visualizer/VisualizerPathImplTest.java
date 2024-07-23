@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestPlayer;
 import de.cubbossa.pathfinder.TestVisualizer;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
@@ -66,7 +67,7 @@ class VisualizerPathImplTest extends PathFinderTest {
   }
 
   @Test
-  void prepare1() {
+  void prepare1() throws NoPathFoundException {
     TestVisualizer vis = visualizer("a");
     List<GroupedNode> path = List.of(
         pathNode(vis),
@@ -84,7 +85,7 @@ class VisualizerPathImplTest extends PathFinderTest {
   }
 
   @Test
-  void prepare2() {
+  void prepare2() throws NoPathFoundException {
     TestVisualizer a = visualizer("a");
     TestVisualizer b = visualizer("b");
     List<GroupedNode> path = List.of(
@@ -105,7 +106,7 @@ class VisualizerPathImplTest extends PathFinderTest {
   }
 
   @Test
-  void prepare3() {
+  void prepare3() throws NoPathFoundException {
     TestVisualizer a = visualizer("a");
     TestVisualizer b = visualizer("b");
     List<GroupedNode> path = List.of(
@@ -129,7 +130,7 @@ class VisualizerPathImplTest extends PathFinderTest {
   }
 
   @Test
-  void prepare4() {
+  void prepare4() throws NoPathFoundException {
     TestVisualizer vis = visualizer("a");
     List<GroupedNode> path = List.of(
         pathNode(vis),

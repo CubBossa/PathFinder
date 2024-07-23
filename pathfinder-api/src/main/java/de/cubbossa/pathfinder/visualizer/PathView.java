@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.visualizer;
 
 import de.cubbossa.disposables.Disposable;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.node.Node;
 import java.util.Collection;
@@ -22,5 +23,5 @@ public interface PathView<PlayerT> extends Disposable {
 
   Collection<PathPlayer<PlayerT>> getViewers();
 
-  void update();
+  void update() throws NoPathFoundException;
 }

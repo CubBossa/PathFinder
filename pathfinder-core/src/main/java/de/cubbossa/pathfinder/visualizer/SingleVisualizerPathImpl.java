@@ -1,5 +1,6 @@
 package de.cubbossa.pathfinder.visualizer;
 
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
 
@@ -7,7 +8,7 @@ public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> 
 
   private final ViewT view;
 
-  public SingleVisualizerPathImpl(UpdatingPath route, PathVisualizer<ViewT, PlayerT> visualizer, PathPlayer<PlayerT> targetViewer) {
+  public SingleVisualizerPathImpl(UpdatingPath route, PathVisualizer<ViewT, PlayerT> visualizer, PathPlayer<PlayerT> targetViewer) throws NoPathFoundException {
     super(route);
     setTargetViewer(targetViewer);
     this.view = visualizer.createView(route, targetViewer);
@@ -39,7 +40,7 @@ public class SingleVisualizerPathImpl<PlayerT, ViewT extends PathView<PlayerT>> 
   }
 
   @Override
-  public void update() {
+  public void update() throws NoPathFoundException {
     super.update();
     this.view.update();
   }

@@ -3,6 +3,7 @@ package de.cubbossa.pathfinder.visualizer;
 import com.google.common.util.concurrent.AtomicDouble;
 import de.cubbossa.disposables.Disposable;
 import de.cubbossa.pathfinder.PathFinder;
+import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.group.VisualizerModifier;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.navigation.UpdatingPath;
@@ -26,7 +27,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
 
   protected final Collection<SubPath<?>> paths;
 
-  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, UpdatingPath route) {
+  public GroupedVisualizerPathImpl(PathPlayer<PlayerT> target, UpdatingPath route) throws NoPathFoundException {
     super(route);
     this.paths = new HashSet<>();
     setTargetViewer(target);
@@ -34,7 +35,7 @@ public class GroupedVisualizerPathImpl<PlayerT> extends AbstractVisualizerPath<P
   }
 
   @Override
-  public void update() {
+  public void update() throws NoPathFoundException {
     super.update();
     if (!this.paths.isEmpty()) {
       for (SubPath<?> subPath : this.paths) {

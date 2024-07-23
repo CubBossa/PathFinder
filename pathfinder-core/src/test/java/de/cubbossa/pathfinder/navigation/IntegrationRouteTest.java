@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.navigation;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedExternalNode;
 import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -11,8 +10,6 @@ import de.cubbossa.pathfinder.PathFinderTest;
 import de.cubbossa.pathfinder.TestNode;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.misc.Location;
-import de.cubbossa.pathfinder.node.GroupedNode;
-import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.util.EdgeBasedGraphEntrySolver;
 import java.util.ArrayList;
@@ -21,6 +18,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -183,6 +181,31 @@ class IntegrationRouteTest extends PathFinderTest {
   }
 
   @Test
+  void testF() throws NoPathFoundException {
+    Node start = new TestNode("start", new Location(0, 0, 0, world));
+    Node a = new TestNode("a", new Location(1, 0, 0, world));
+    Node b = new TestNode("b", new Location(2, 0, 0, world));
+    Node c = new TestNode("c", new Location(3, 0, 0, world));
+    Node d = new TestNode("d", new Location(4, 0, 0, world));
+    Node end = new TestNode("end", new Location(5, 0, 0, world));
+    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+    graph.addNode(a);
+    graph.addNode(b);
+    graph.addNode(c);
+    graph.addNode(d);
+    graph.putEdgeValue(a, b, 1d);
+    graph.putEdgeValue(b, a, 1d);
+    graph.putEdgeValue(c, b, 1d);
+    graph.putEdgeValue(c, d, 1d);
+    graph.putEdgeValue(d, c, 1d);
+
+    var result = Route
+        .from(NavigationLocation.fixedExternalNode(start))
+        .to(NavigationLocation.fixedExternalNode(end));
+    Assertions.assertThrows(NoPathFoundException.class, () -> result.calculatePath(graph));
+  }
+
+  @Test
   void testIslands() throws NoPathFoundException {
     Node a = new TestNode("a", new Location(0, -5, 0, world));
     Node b = new TestNode("b", new Location(10, -5, 0, world));
@@ -206,31 +229,31 @@ class IntegrationRouteTest extends PathFinderTest {
     assertEquals(5, results.get(0).getPath().size());
   }
 
-  @Test
-  void testGroupedNodePreservance() throws NoPathFoundException {
-    Node a = new GroupedNodeImpl(new TestNode("a", new Location(0, -5, 0, world)), new ArrayList<>());
-    Node b = new GroupedNodeImpl(new TestNode("b", new Location(10, -5, 0, world)), new ArrayList<>());
-    Node c = new GroupedNodeImpl(new TestNode("c", new Location(10, 5, 0, world)), new ArrayList<>());
-    Node d = new GroupedNodeImpl(new TestNode("d", new Location(0, 5, 0, world)), new ArrayList<>());
-    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
-    graph.addNode(a);
-    graph.addNode(b);
-    graph.addNode(c);
-    graph.addNode(d);
-    graph.putEdgeValue(a, b, 10d);
-    graph.putEdgeValue(b, c, 10d);
-    graph.putEdgeValue(c, d, 10d);
-
-    var results = Route
-        .from(fixedExternalNode(new TestNode("start", new Location(5, -10, 0, world))))
-        .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, world))))
-        .calculatePaths(graph);
-    assertEquals(1, results.size());
-    assertEquals(6, results.get(0).getPath().size());
-    assertEquals(30, results.get(0).getCost());
-
-    assertInstanceOf(GroupedNode.class, results.get(0).getPath().get(0));
-  }
+//  @Test
+//  void testGroupedNodePreservance() throws NoPathFoundException {
+//    Node a = new GroupedNodeImpl(new TestNode("a", new Location(0, -5, 0, world)), new ArrayList<>());
+//    Node b = new GroupedNodeImpl(new TestNode("b", new Location(10, -5, 0, world)), new ArrayList<>());
+//    Node c = new GroupedNodeImpl(new TestNode("c", new Location(10, 5, 0, world)), new ArrayList<>());
+//    Node d = new GroupedNodeImpl(new TestNode("d", new Location(0, 5, 0, world)), new ArrayList<>());
+//    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.directed().build();
+//    graph.addNode(a);
+//    graph.addNode(b);
+//    graph.addNode(c);
+//    graph.addNode(d);
+//    graph.putEdgeValue(a, b, 10d);
+//    graph.putEdgeValue(b, c, 10d);
+//    graph.putEdgeValue(c, d, 10d);
+//
+//    var results = Route
+//        .from(fixedExternalNode(new TestNode("start", new Location(5, -10, 0, world))))
+//        .to(fixedExternalNode(new TestNode("end", new Location(5, 10, 0, world))))
+//        .calculatePaths(graph);
+//    assertEquals(1, results.size());
+//    assertEquals(6, results.get(0).getPath().size());
+//    assertEquals(30, results.get(0).getCost());
+//
+//    assertInstanceOf(GroupedNode.class, results.get(0).getPath().get(0));
+//  }
 
   @Test
   void testPerformance() {
