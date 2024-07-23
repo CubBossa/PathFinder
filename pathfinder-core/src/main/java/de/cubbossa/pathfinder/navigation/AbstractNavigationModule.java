@@ -70,11 +70,6 @@ public class AbstractNavigationModule<PlayerT>
     extensionPoint.getExtensions().forEach(this::registerNavigationConstraint);
 
     setEdgeEntrySolver();
-    pathFinder.getEventDispatcher().listen(this, PathFinderReloadEvent.class, e -> {
-      if (e.reloadsConfig()) {
-        setEdgeEntrySolver();
-      }
-    });
   }
 
   private void setEdgeEntrySolver() {
@@ -91,6 +86,12 @@ public class AbstractNavigationModule<PlayerT>
   }
 
   public void onEnable(PathFinder pathPlugin) {
+
+    this.eventDispatcher.listen(this, PathFinderReloadEvent.class, e -> {
+      if (e.reloadsConfig()) {
+        setEdgeEntrySolver();
+      }
+    });
 
     registerNavigationConstraint((playerId, scope) -> {
       PathPlayer<?> player = PathPlayer.wrap(playerId);
