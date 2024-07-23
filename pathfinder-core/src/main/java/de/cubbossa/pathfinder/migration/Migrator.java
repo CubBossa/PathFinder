@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.attribute.DosFileAttributeView;
+
+import de.cubbossa.pathfinder.PathFinder;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.migration.JavaMigration;
 import org.sqlite.SQLiteConfig;
@@ -23,7 +27,12 @@ public class Migrator implements Disposable {
         if (!file.createNewFile()) {
           throw new IOException("Could not create Flyway storage file.");
         }
-        Files.setAttribute(file.toPath(), "dos:hidden", Boolean.TRUE, LinkOption.NOFOLLOW_LINKS);
+        Path path = file.toPath();
+        if (Files.getFileStore(path).supportsFileAttributeView(DosFileAttributeView.class)) {
+          Files.setAttribute(path, "dos:hidden", Boolean.TRUE, LinkOption.NOFOLLOW_LINKS);
+        } else {
+          PathFinder.get().getLogger().warning("DOS file attributes not supported.");
+        }
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
