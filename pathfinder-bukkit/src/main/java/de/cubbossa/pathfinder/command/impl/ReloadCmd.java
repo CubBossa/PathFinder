@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.translations.MessageBundle;
+import de.cubbossa.tinytranslations.MessageBundle;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;

@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder.editmode.utils;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import de.tr7zw.changeme.nbtapi.NBTItem;
 import java.lang.reflect.Field;

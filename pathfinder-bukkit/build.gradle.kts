@@ -204,7 +204,7 @@ tasks {
             include(project(":pathfinder-scripted-visualizer"))
             include(dependency("de.cubbossa:disposables-api:.*"))
             include(dependency("de.cubbossa:disposables-bukkit:.*"))
-            include(dependency("de.cubbossa:Translations:.*"))
+            include(dependency("de.cubbossa:TinyTranslations:.*"))
             include(dependency("de.cubbossa:splinelib:.*"))
             include(dependency("net.kyori:.*"))
             include(dependency("org.bstats:.*"))

@@ -3,11 +3,10 @@ package de.cubbossa.pathfinder;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.BukkitTinyTranslations;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -80,13 +79,6 @@ public class BukkitPathPlayer implements PathPlayer<Player> {
 
   @Override
   public void sendMessage(ComponentLike message) {
-    Audience audience = PathFinder.get().getAudiences().player(unwrap().getUniqueId());
-    if (message instanceof Message msg) {
-      message = msg.asComponent(audience);
-    }
-    if (message.asComponent().compact().equals(Component.empty())) {
-      return;
-    }
-    audience.sendMessage(message);
+    BukkitTinyTranslations.sendMessageIfNotEmpty(unwrap(), message);
   }
 }

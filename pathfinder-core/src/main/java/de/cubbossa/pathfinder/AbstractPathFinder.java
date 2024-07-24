@@ -26,8 +26,10 @@ import de.cubbossa.pathfinder.util.VectorSplineLib;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.splinelib.SplineLib;
-import de.cubbossa.translations.GlobalMessageBundle;
-import de.cubbossa.translations.MessageBundle;
+import de.cubbossa.tinytranslations.BukkitTinyTranslations;
+import de.cubbossa.tinytranslations.MessageTranslator;
+import de.cubbossa.tinytranslations.storage.properties.PropertiesMessageStorage;
+import de.cubbossa.tinytranslations.storage.properties.PropertiesStyleStorage;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -68,7 +70,7 @@ public abstract class AbstractPathFinder implements PathFinder {
   @Setter
   protected PathFinderConfig configuration;
   protected EventDispatcher<?> eventDispatcher;
-  protected MessageBundle translations;
+  protected MessageTranslator translations;
   protected DumpWriter dumpWriter;
 
 
@@ -208,24 +210,14 @@ public abstract class AbstractPathFinder implements PathFinder {
 
   private void setupMessages() {
 
-    translations = GlobalMessageBundle.applicationTranslationsBuilder("PathFinder", getDataFolder())
-        .withDefaultLocale(getConfiguration().getLanguage().getFallbackLanguage())
-        .withEnabledLocales(Locale.getAvailableLocales())
-        .withPreferClientLanguage(getConfiguration().getLanguage().isClientLanguage())
-        .withLogger(getLogger())
-        .withPropertiesStorage(new File(getDataFolder(), "lang"))
-        .withPropertiesStyles(new File(getDataFolder(), "lang/styles.properties"))
-        .build();
+    translations = BukkitTinyTranslations.application("PathFinder");
+    translations.defaultLocale(getConfiguration().getLanguage().getFallbackLanguage());
+    translations.setUseClientLocale(getConfiguration().getLanguage().isClientLanguage());
+    translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "lang")));
+    translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "lang/styles.properties")));
 
-    miniMessage = MiniMessage.builder()
-        .editTags(builder -> builder
-            .resolvers(translations.getBundleResolvers())
-            .resolvers(translations.getStylesResolver())
-        )
-        .build();
-
-    translations.addMessagesClass(Messages.class);
-    translations.writeLocale(Locale.ENGLISH);
+    translations.addMessages(BukkitTinyTranslations.messageFieldsFromClass(Messages.class));
+    translations.saveLocale(Locale.ENGLISH);
 
     Messages.formatter().setMiniMessage(miniMessage);
     Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));

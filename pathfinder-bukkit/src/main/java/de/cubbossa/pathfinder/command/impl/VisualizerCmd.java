@@ -12,7 +12,7 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.visualizer.PathVisualizer;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;

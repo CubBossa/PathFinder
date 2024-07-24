@@ -2,7 +2,7 @@ package de.cubbossa.pathfinder;
 
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import java.util.Objects;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;

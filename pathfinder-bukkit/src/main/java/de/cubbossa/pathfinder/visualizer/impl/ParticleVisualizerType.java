@@ -11,7 +11,7 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.YamlUtils;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.ParticleArgument;

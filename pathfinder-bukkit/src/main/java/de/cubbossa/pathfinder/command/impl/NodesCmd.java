@@ -17,7 +17,7 @@ import de.cubbossa.pathfinder.storage.StorageUtil;
 import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.BukkitVectorUtils;
 import de.cubbossa.pathfinder.util.NodeUtils;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.LocationType;
 import java.util.Collection;
 import java.util.HashSet;

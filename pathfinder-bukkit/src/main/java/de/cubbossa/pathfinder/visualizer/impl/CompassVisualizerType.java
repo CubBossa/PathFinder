@@ -8,7 +8,7 @@ import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.visualizer.VisualizerType;
-import de.cubbossa.translations.Message;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import java.util.Map;
 import net.kyori.adventure.bossbar.BossBar;

@@ -1,19 +1,19 @@
 package de.cubbossa.pathfinder.module.papi;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import de.cubbossa.pathfinder.misc.NamespacedKey;
-import de.cubbossa.pathfinder.misc.PathPlayer;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.VisualizerTypeCommandExtension;
 import de.cubbossa.pathfinder.command.VisualizerTypeMessageExtension;
 import de.cubbossa.pathfinder.messages.Messages;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.storage.DataStorageException;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizer;
 import de.cubbossa.pathfinder.visualizer.AbstractVisualizerType;
-import de.cubbossa.translations.Message;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
+import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
