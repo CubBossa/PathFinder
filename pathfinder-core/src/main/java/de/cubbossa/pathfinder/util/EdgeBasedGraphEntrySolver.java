@@ -1,9 +1,8 @@
 package de.cubbossa.pathfinder.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.graph.EndpointPair;
+import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
 import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.GraphUtils;
@@ -12,7 +11,6 @@ import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,13 +22,17 @@ import org.jetbrains.annotations.Nullable;
 public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
   private final Float maxDistance;
+  private final double maxDistanceSq;
+  private final Float weightFactor;
 
   public EdgeBasedGraphEntrySolver() {
-    this(null);
+    this(null, 1f);
   }
 
-  public EdgeBasedGraphEntrySolver(@Nullable Float maxDistance) {
+  public EdgeBasedGraphEntrySolver(@Nullable Float maxDistance, @Nullable Float weightFactor) {
     this.maxDistance = maxDistance;
+    this.maxDistanceSq = maxDistance == null ? Double.MAX_VALUE : Math.pow(maxDistance, 2);
+    this.weightFactor = weightFactor == null ? 1f : weightFactor;
   }
 
   @Override
@@ -64,16 +66,23 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       return scope;
     }
     if (scope.edges().isEmpty()) {
-      Node nearest = scope.nodes().stream()
-          .min(Comparator.comparingDouble(n -> n.getLocation().distanceSquared(node.getLocation())))
-          .orElseThrow();
-      double dist = node.getLocation().distance(nearest.getLocation());
+      // if no edges but more than one node this cannot be one island!
+      if (scope.nodes().size() != 1) {
+        throw new IllegalArgumentException("Invalid graph to inject node into.");
+      }
+      // Its just one node, fetch it by iterator.next
+      Node nearest = scope.nodes().iterator().next();
+      double distSq = node.getLocation().distanceSquared(nearest.getLocation());
+      if (distSq >= maxDistanceSq) {
+        throw new GraphEntryNotEstablishedException();
+      }
+      double dist = Math.sqrt(distSq);
       scope.addNode(node);
       if (entry) {
-        scope.putEdgeValue(node, nearest, dist);
+        scope.putEdgeValue(node, nearest, dist * weightFactor);
       }
       if (exit) {
-        scope.putEdgeValue(nearest, node, dist);
+        scope.putEdgeValue(nearest, node, dist * weightFactor);
       }
       return scope;
     }
@@ -104,10 +113,11 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       }
       sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), p, d));
     });
-    Collections.sort(sortedEdges);
     if (sortedEdges.isEmpty()) {
+      // None of the edges was close enough to the target point
       throw new GraphEntryNotEstablishedException();
     }
+    Collections.sort(sortedEdges);
 
     WeightedEdge first = null;
     Collection<WeightedEdge> result = new HashSet<>();
@@ -126,11 +136,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
     }
 
     // make copy of graph
-    MutableValueGraph<Node, Double> graph = ValueGraphBuilder.from(scope).build();
-    scope.nodes().forEach(graph::addNode);
-    for (EndpointPair<Node> e : scope.edges()) {
-      graph.putEdgeValue(e, scope.edgeValue(e).orElseThrow());
-    }
+    MutableValueGraph<Node, Double> graph = Graphs.copyOf(scope);
 
     // Add node via split and extrude
     for (WeightedEdge edge : result) {

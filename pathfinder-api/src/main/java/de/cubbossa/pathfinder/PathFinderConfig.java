@@ -76,6 +76,8 @@ public interface PathFinderConfig {
      */
     boolean isRequireDiscovery();
 
+    float getExternalNodeEdgeConnectionWeight();
+
     FindLocationCommandConfig getFindLocation();
 
     /**

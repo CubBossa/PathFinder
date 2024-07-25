@@ -5,7 +5,6 @@ import static de.cubbossa.pathfinder.navigation.NavigationLocation.fixedGraphNod
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.Changes;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
@@ -17,7 +16,6 @@ import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,7 +34,7 @@ class RouteTest {
 
   @BeforeAll
   static void beforeAll() {
-    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new GraphEntrySolver<>() {
+    RouteImpl.DEFAULT_GRAPH_ENTRY_SOLVER = new GraphEntrySolver<>() {
       @Override
       public MutableValueGraph<Node, Double> solveEntry(Node in, MutableValueGraph<Node, Double> scope)
           throws GraphEntryNotEstablishedException {
@@ -52,22 +50,29 @@ class RouteTest {
       private MutableValueGraph<Node, Double> solveBoth(Node node, MutableValueGraph<Node, Double> scope)
           throws GraphEntryNotEstablishedException {
 
-        List<ValueGraph<Node, Double>> islands = new ArrayList<>();
-        for (ValueGraph<Node, Double> island : GraphUtils.islands(scope)) {
-          var mutableIsland = GraphUtils.mutable(island);
-          Node nearest = mutableIsland.nodes().stream()
-              .filter(n -> !n.getNodeId().equals(node.getNodeId()))
-              .min(Comparator.comparingDouble(o -> o.getLocation().distance(node.getLocation())))
-              .orElse(null);
-          if (!mutableIsland.nodes().contains(node)) {
-            mutableIsland.addNode(node);
-          }
-          double d = node.getLocation().distance(nearest.getLocation());
-          mutableIsland.putEdgeValue(nearest, node, d);
-          mutableIsland.putEdgeValue(node, nearest, d);
-          islands.add(mutableIsland);
+        var mutableScope = GraphUtils.mutable(scope);
+        Node nearest = mutableScope.nodes().stream()
+            .filter(n -> !n.getNodeId().equals(node.getNodeId()))
+            .min(Comparator.comparingDouble(o -> o.getLocation().distance(node.getLocation())))
+            .orElse(null);
+        if (nearest == null) {
+          return scope;
         }
-        return GraphUtils.mutable(GraphUtils.merge(islands));
+        if (!mutableScope.nodes().contains(node)) {
+          mutableScope.addNode(node);
+        }
+        double d = node.getLocation().distance(nearest.getLocation()) * 10;
+        mutableScope.edgeValue(nearest, node).ifPresentOrElse(aDouble -> {
+          if (aDouble > d) {
+            mutableScope.putEdgeValue(nearest, node, d);
+          }
+        }, () -> mutableScope.putEdgeValue(nearest, node, d));
+        mutableScope.edgeValue(node, nearest).ifPresentOrElse(aDouble -> {
+          if (aDouble > d) {
+            mutableScope.putEdgeValue(node, nearest, d);
+          }
+        }, () -> mutableScope.putEdgeValue(node, nearest, d));
+        return mutableScope;
       }
     };
   }
@@ -151,7 +156,7 @@ class RouteTest {
         .to(fixedExternalNode(d))
         .calculatePath(graph);
 
-    assertEquals(30, result.getCost());
+    assertEquals(210, result.getCost());
     assertEquals(List.of(a, b, c, d), result.getPath());
   }
 
@@ -172,7 +177,7 @@ class RouteTest {
 
     var results = Route
         .from(fixedGraphNode(a))
-        .toAny(fixedExternalNode(c), fixedGraphNode(d))
+        .toAny(fixedGraphNode(c), fixedGraphNode(d))
         .calculatePaths(graph);
     assertEquals(2, results.size());
     assertEquals(results.get(0).getPath().get(0), a);

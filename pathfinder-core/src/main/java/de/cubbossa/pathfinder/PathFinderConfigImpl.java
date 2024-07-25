@@ -88,6 +88,16 @@ public class PathFinderConfigImpl implements PathFinderConfig {
         <filter> command. If set to false, one can always navigate to every group, even if it hasn't
         been discovered first.""")
     public boolean requireDiscovery = false;
+
+    @Comment("""
+        Factor to mutliply edge values with that connect external nodes to the graph.
+        It is suggested to keep this value > 1 so that the navigation algorithm will prefer routes that
+        have their path on the actual graph.
+        10 means that an edge from the player to the graph with a length of 3 blocks will have a weight
+        of 30. The navigation algorithm tries to keep weight down and if the player node is connected
+        to multiple subgraphs, it will in average prefer the shorter edges.""")
+    public float externalNodeEdgeConnectionWeight = 10f;
+
     public FindLocationCommandConfigImpl findLocation = new FindLocationCommandConfigImpl();
     @Comment("""
         This setting decides whether a player has to have all permissions of all groups of a node

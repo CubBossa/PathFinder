@@ -28,7 +28,7 @@ class IntegrationRouteTest extends PathFinderTest {
 
   @BeforeAll
   static void beforeAll() {
-    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver();
+    RouteImpl.DEFAULT_GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver();
   }
 
   @BeforeEach
@@ -145,7 +145,7 @@ class IntegrationRouteTest extends PathFinderTest {
 
     var results = Route
         .from(fixedGraphNode(a))
-        .toAny(fixedExternalNode(c), fixedGraphNode(d))
+        .toAny(fixedGraphNode(c), fixedGraphNode(d))
         .calculatePaths(graph);
     assertEquals(2, results.size());
     assertEquals(results.get(0).getPath().get(0), a);
@@ -156,7 +156,7 @@ class IntegrationRouteTest extends PathFinderTest {
 
     var result = Route
         .from(fixedGraphNode(a))
-        .toAny(fixedExternalNode(c), fixedGraphNode(d))
+        .toAny(fixedGraphNode(c), fixedGraphNode(d))
         .calculatePath(graph);
 
     assertEquals(List.of(a, b, c), result.getPath());
@@ -202,7 +202,10 @@ class IntegrationRouteTest extends PathFinderTest {
     var result = Route
         .from(NavigationLocation.fixedExternalNode(start))
         .to(NavigationLocation.fixedExternalNode(end));
-    Assertions.assertThrows(NoPathFoundException.class, () -> result.calculatePath(graph));
+    Assertions.assertTrue(List.of(
+        List.of(start, c, d, end),
+        List.of(start, a, b, end)
+    ).contains(result.calculatePath(graph).getPath()));
   }
 
   @Test
