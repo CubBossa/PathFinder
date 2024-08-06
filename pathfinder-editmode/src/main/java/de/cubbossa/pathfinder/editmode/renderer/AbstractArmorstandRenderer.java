@@ -30,6 +30,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -37,7 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 @Getter
 @Setter
-public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Player> {
+public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Player>, Listener {
 
 
   protected final Collection<PathPlayer<Player>> players;
@@ -137,7 +138,7 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
 
   protected PlayerSpace ps(Player player) {
     return playerSpaces.computeIfAbsent(player.getUniqueId(), uuid -> {
-      PlayerSpace playerSpace = PlayerSpace.create().withPlayer(uuid).build();
+      PlayerSpace playerSpace = PlayerSpace.create().withPlayer(uuid).withEventSupport().build();
       playerSpace.registerListener(PlayerInteractEntityEvent.class, this::onClick);
       playerSpace.registerListener(EntityDamageByEntityEvent.class, this::onHit);
       return playerSpace;
