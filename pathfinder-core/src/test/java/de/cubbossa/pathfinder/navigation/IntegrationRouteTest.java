@@ -28,7 +28,7 @@ class IntegrationRouteTest extends PathFinderTest {
 
   @BeforeAll
   static void beforeAll() {
-    RouteImpl.DEFAULT_GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver();
+    RouteImpl.DEFAULT_GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver(null, 1000f);
   }
 
   @BeforeEach
@@ -121,7 +121,7 @@ class IntegrationRouteTest extends PathFinderTest {
         .to(fixedExternalNode(d))
         .calculatePath(graph);
 
-    assertEquals(30, result.getCost());
+    assertEquals(20_010, result.getCost());
     assertEquals(
         Stream.of(a, b, c, d).map(Node::getLocation).toList(),
         result.getPath().stream().map(Node::getLocation).toList()
@@ -177,7 +177,7 @@ class IntegrationRouteTest extends PathFinderTest {
         .to(b)
         .calculatePath(graph);
     assertEquals(List.of(start, b), result.getPath());
-    assertEquals(10, result.getCost());
+    assertEquals(10_000, result.getCost());
   }
 
   @Test
@@ -202,6 +202,7 @@ class IntegrationRouteTest extends PathFinderTest {
     var result = Route
         .from(NavigationLocation.fixedExternalNode(start))
         .to(NavigationLocation.fixedExternalNode(end));
+    System.out.println(result.calculatePath(graph).getPath());
     Assertions.assertTrue(List.of(
         List.of(start, c, d, end),
         List.of(start, a, b, end)
@@ -304,7 +305,6 @@ class IntegrationRouteTest extends PathFinderTest {
       int edgeCount = r.nextDouble() > .9 ? r.nextInt(0, 6) : r.nextInt(2, 3);
       for (int i = 0; i < edgeCount; i++) {
 
-//        nodes.sort(Comparator.comparingDouble(n -> n.getLocation().distanceSquared(node.getLocation())));
         int edgeTargetIndex = (int) Math.pow(r.nextDouble(), 4) * graph.nodes().size();
         Node target = nodes.get(edgeTargetIndex);
         if (target.getNodeId() == node.getNodeId()) {

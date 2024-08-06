@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.navigation;
 
-import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -23,8 +22,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -202,19 +199,8 @@ class RouteImpl implements Route {
     var lastSegmentLocations = lastSegment.stream().flatMap(r -> r.getEnd().stream()).toList();
 
     // Connect all target points to a temporary graph
-    var islands = islands(environment);
-    var outGraph = GraphUtils.merge(
-        lastSegmentLocations.stream().map(n -> {
-          AtomicInteger outSuccessInc = new AtomicInteger(0);
-          var out = GraphUtils.merge(
-              islands.stream().map(island -> connect(n, island, outSuccessInc, false, true)).toList()
-          );
-          System.out.println("Connected to " + outSuccessInc.get() + " islands as exit.");
-          if (outSuccessInc.get() == 0) {
-            throw new GraphEntryNotEstablishedException();
-          }
-          return out;
-        }).toList()
+    var outGraph = GraphUtils.merge(lastSegmentLocations.stream().map(n -> connect(n, environment, false, true))
+        .toList()
     );
 
     // Create a cache for all the resolved end point routes
@@ -234,15 +220,7 @@ class RouteImpl implements Route {
     var ends = secondLastSegment.stream().map(Route::getEnd).flatMap(Collection::stream).toList();
     Map<Node, PathSolverResult<Node, Double>> shortestFromEachSecondLast = new HashMap<>();
     for (NavigationLocation start : ends) {
-      AtomicInteger inSuccessInc = new AtomicInteger(0);
-      var inGraph = GraphUtils.merge(
-          islands.stream().map(island -> connect(start, island, inSuccessInc, true, false)).toList()
-      );
-      System.out.println("Connected to " + inSuccessInc.get() + " islands as entry.");
-      if (inSuccessInc.get() == 0) {
-        segmentOrder.add(lastSegment);
-        throw new GraphEntryNotEstablishedException();
-      }
+      var inGraph = connect(start, environment, true, false);
       var combinedGraph = GraphUtils.merge(
           inGraph,
           outGraph
@@ -394,31 +372,13 @@ class RouteImpl implements Route {
    * @throws NoPathFoundException If no path was found.
    */
   private PathSolverResult<Node, Double> findShortestPathBetweenSegments(ValueGraph<Node, Double> environment, Route a, Route b) throws NoPathFoundException {
-    var islands = islands(environment);
 
-    AtomicInteger inSuccessInc = new AtomicInteger(0);
-    var inGraph = GraphUtils.merge(
-        islands.stream().map(island -> connect(b.getStart(), island, inSuccessInc, false, true)).toList()
-    );
-    if (inSuccessInc.get() == 0) {
-      throw new GraphEntryNotEstablishedException();
-    }
-    environment = GraphUtils.merge(
-        inGraph,
-        GraphUtils.merge(
-            a.getEnd().stream().map(n -> {
-              AtomicInteger outSuccessInc = new AtomicInteger(0);
-              var outGraph = GraphUtils.merge(
-                  islands.stream().map(island -> connect(n, island, outSuccessInc, true, false)).toList()
-              );
-              if (outSuccessInc.get() == 0) {
-                throw new GraphEntryNotEstablishedException();
-              }
-              return outGraph;
-            }).toList()
-        )
-    );
-    baseGraphSolver.setGraph(environment);
+    var inGraph = connect(b.getStart(), environment, false, true);
+    var outGraph = GraphUtils.merge(a.getEnd().stream()
+        .map(e -> connect(e, environment, true, false))
+        .toList());
+
+    baseGraphSolver.setGraph(GraphUtils.merge(inGraph, outGraph));
 
     List<PathSolverResult<Node, Double>> resolvedPathsOfA = a.calculatePaths(environment);
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
@@ -442,10 +402,9 @@ class RouteImpl implements Route {
     return results.get(0);
   }
 
-  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, AtomicInteger successInc, boolean entry, boolean exit) {
+  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, boolean entry, boolean exit) {
     try {
       if (!location.isExternal()) {
-        successInc.getAndIncrement();
         return graph;
       }
       MutableValueGraph<Node, Double> g;
@@ -465,7 +424,6 @@ class RouteImpl implements Route {
       location.setNode(g.nodes().stream()
           .filter(n -> n.getNodeId().equals(location.getNode().getNodeId())).findAny()
           .orElseThrow());
-      successInc.getAndIncrement();
       return g;
     } catch (GraphEntryNotEstablishedException ignored) {
     }
@@ -497,38 +455,4 @@ class RouteImpl implements Route {
 //        .map(n -> modifiedBaseGraph.nodes().stream().filter(o -> n.getNodeId().equals(o.getNodeId())).findAny().orElseThrow())
         .toList(), edges, cost);
   }
-
-  /**
-   * Creates a list of sub-graphs of the given environment, where each subgraph describes the
-   * reachable area for each node within the graph.
-   *
-   * @param environment
-   * @return
-   */
-  private static List<? extends ValueGraph<Node, Double>> islands(ValueGraph<Node, Double> environment) {
-
-    // We have to remember which node was reachable by which
-    Map<Node, Set<Node>> graphs = new HashMap<>();
-
-    mainLoop:
-    for (Node node : environment.nodes()) {
-      var reachable = Graphs.reachableNodes(Graphs.transpose(environment).asGraph(), node);
-      if (reachable.isEmpty()) {
-        continue;
-      }
-      for (Map.Entry<Node, Set<Node>> entry : graphs.entrySet()) {
-        if (reachable.contains(entry.getKey())) {
-          if (entry.getValue().contains(node)) {
-            // We already have an island that describes this node.
-            continue mainLoop;
-          }
-        }
-      }
-      graphs.put(node, reachable);
-    }
-    return graphs.values().stream()
-        .map(s -> Graphs.inducedSubgraph(environment, s))
-        .toList();
-  }
-
 }

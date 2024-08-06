@@ -9,9 +9,7 @@ import de.cubbossa.pathfinder.graph.GraphUtils;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -87,7 +85,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       return scope;
     }
 
-    List<WeightedEdge> sortedEdges = new LinkedList<>();
+    List<WeightedEdge> edges = new LinkedList<>();
     scope.edges().forEach((e) -> {
       // If a max distance is specified, first check if the edge is valid for distance check
       if (maxDistance != null) {
@@ -111,35 +109,19 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
       if (maxDistance != null && Math.pow(maxDistance, 2) < d) {
         return;
       }
-      sortedEdges.add(new WeightedEdge(e.nodeU(), e.nodeV(), p, d));
+      edges.add(new WeightedEdge(e.nodeU(), e.nodeV(), p, d));
     });
-    if (sortedEdges.isEmpty()) {
+    if (edges.isEmpty()) {
       // None of the edges was close enough to the target point
       throw new GraphEntryNotEstablishedException();
     }
-    Collections.sort(sortedEdges);
-
-    WeightedEdge first = null;
-    Collection<WeightedEdge> result = new HashSet<>();
-    // Edges are already sorted, but we want to fetch all edges of similar distance
-    for (WeightedEdge edge : sortedEdges) {
-      if (first == null) {
-        first = edge;
-        result.add(first);
-        continue;
-      }
-      // Not clean since weight is distance squared, but good enough trade for performance
-      if (Math.abs(edge.weight - first.weight) > .01) {
-        break;
-      }
-      result.add(edge);
-    }
+    Collections.sort(edges);
 
     // make copy of graph
     MutableValueGraph<Node, Double> graph = Graphs.copyOf(scope);
 
     // Add node via split and extrude
-    for (WeightedEdge edge : result) {
+    for (WeightedEdge edge : edges) {
 
       Node inject;
       // We can skip the complex injection part if one of the end nodes is the closest point
@@ -153,7 +135,7 @@ public class EdgeBasedGraphEntrySolver implements GraphEntrySolver<Node> {
 
         graph = GraphUtils.mutable(NodeGraphUtil.split(graph, edge.start, edge.end, inject));
       }
-      graph = GraphUtils.mutable(NodeGraphUtil.extrude(graph, inject, node, entry ? 1d : null, exit ? 1d : null));
+      graph = GraphUtils.mutable(NodeGraphUtil.extrude(graph, inject, node, entry ? weightFactor.doubleValue() : null, exit ? weightFactor.doubleValue() : null));
     }
     return graph;
   }
