@@ -5,6 +5,7 @@ import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import de.cubbossa.pathfinder.graph.DynamicDijkstra;
 import de.cubbossa.pathfinder.graph.GraphEntryNotEstablishedException;
+import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.GraphUtils;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
@@ -21,16 +22,19 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The logic within this class is quite complex, so read the provided comments carefully.
  */
 @SuppressWarnings("UnstableApiUsage")
 class RouteImpl implements Route {
+
+  public static GraphEntrySolver<Node> DEFAULT_GRAPH_ENTRY_SOLVER;
+  public static @Nullable Double DEFAULT_CONNECTION_DISTANCE = null;
 
   /**
    * The starting point of the route. It itself must be a route, which can be
@@ -44,28 +48,31 @@ class RouteImpl implements Route {
    * All route sub-steps except from the starting point. A substep must be a Route by itself,
    * in simple cases this might be a SingletonRoute that only contains a location.
    */
-  private final @NotNull List<Collection<Route>> segmentOrder;
+  private final @NotNull List<Collection<Route>> segmentOrder = new ArrayList<>();
   /**
    * The solver that is responsible for finding the shortest path on the node graph.
    * You can set any solver, by default {@link DynamicDijkstra}
    */
-  private @NotNull PathSolver<Node, Double> baseGraphSolver;
+  private @NotNull PathSolver<Node, Double> baseGraphSolver = new DynamicDijkstra<>(Function.identity());
+  private @NotNull GraphEntrySolver<Node> graphEntrySolver = DEFAULT_GRAPH_ENTRY_SOLVER;
 
   RouteImpl(@NotNull Route other) {
     this.startSegment = other;
-    this.segmentOrder = new ArrayList<>();
-    this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
   RouteImpl(@NotNull NavigationLocation start) {
     this.startSegment = new SingletonRoute(start);
-    this.segmentOrder = new ArrayList<>();
-    this.baseGraphSolver = new DynamicDijkstra<>(Function.identity());
   }
 
   @Override
-  public @NotNull Route withSolver(@NotNull PathSolver<Node, Double> solver) {
+  public @NotNull Route withPathSolver(@NotNull PathSolver<Node, Double> solver) {
     this.baseGraphSolver = solver;
+    return this;
+  }
+
+  @Override
+  public @NotNull Route withEntrySolver(@NotNull GraphEntrySolver<Node> solver) {
+    this.graphEntrySolver = solver;
     return this;
   }
 
@@ -192,18 +199,8 @@ class RouteImpl implements Route {
     var lastSegmentLocations = lastSegment.stream().flatMap(r -> r.getEnd().stream()).toList();
 
     // Connect all target points to a temporary graph
-    var islands = GraphUtils.islands(environment);
-    var outGraph = GraphUtils.merge(
-        lastSegmentLocations.stream().map(n -> {
-          AtomicInteger outSuccessInc = new AtomicInteger(0);
-          var out = GraphUtils.merge(
-              islands.stream().map(island -> connect(n, island, outSuccessInc, false, true)).toList()
-          );
-          if (outSuccessInc.get() == 0) {
-            throw new GraphEntryNotEstablishedException();
-          }
-          return out;
-        }).toList()
+    var outGraph = GraphUtils.merge(lastSegmentLocations.stream().map(n -> connect(n, environment, false, true))
+        .toList()
     );
 
     // Create a cache for all the resolved end point routes
@@ -223,14 +220,7 @@ class RouteImpl implements Route {
     var ends = secondLastSegment.stream().map(Route::getEnd).flatMap(Collection::stream).toList();
     Map<Node, PathSolverResult<Node, Double>> shortestFromEachSecondLast = new HashMap<>();
     for (NavigationLocation start : ends) {
-      AtomicInteger inSuccessInc = new AtomicInteger(0);
-      var inGraph = GraphUtils.merge(
-          islands.stream().map(island -> connect(start, island, inSuccessInc, true, false)).toList()
-      );
-      if (inSuccessInc.get() == 0) {
-        segmentOrder.add(lastSegment);
-        throw new GraphEntryNotEstablishedException();
-      }
+      var inGraph = connect(start, environment, true, false);
       var combinedGraph = GraphUtils.merge(
           inGraph,
           outGraph
@@ -382,31 +372,13 @@ class RouteImpl implements Route {
    * @throws NoPathFoundException If no path was found.
    */
   private PathSolverResult<Node, Double> findShortestPathBetweenSegments(ValueGraph<Node, Double> environment, Route a, Route b) throws NoPathFoundException {
-    var islands = GraphUtils.islands(environment);
 
-    AtomicInteger inSuccessInc = new AtomicInteger(0);
-    var inGraph = GraphUtils.merge(
-        islands.stream().map(island -> connect(b.getStart(), island, inSuccessInc, false, true)).toList()
-    );
-    if (inSuccessInc.get() == 0) {
-      throw new GraphEntryNotEstablishedException();
-    }
-    environment = GraphUtils.merge(
-        inGraph,
-        GraphUtils.merge(
-            a.getEnd().stream().map(n -> {
-              AtomicInteger outSuccessInc = new AtomicInteger(0);
-              var outGraph = GraphUtils.merge(
-                  islands.stream().map(island -> connect(n, island, outSuccessInc, true, false)).toList()
-              );
-              if (outSuccessInc.get() == 0) {
-                throw new GraphEntryNotEstablishedException();
-              }
-              return outGraph;
-            }).toList()
-        )
-    );
-    baseGraphSolver.setGraph(environment);
+    var inGraph = connect(b.getStart(), environment, false, true);
+    var outGraph = GraphUtils.merge(a.getEnd().stream()
+        .map(e -> connect(e, environment, true, false))
+        .toList());
+
+    baseGraphSolver.setGraph(GraphUtils.merge(inGraph, outGraph));
 
     List<PathSolverResult<Node, Double>> resolvedPathsOfA = a.calculatePaths(environment);
     List<PathSolverResult<Node, Double>> results = new ArrayList<>();
@@ -430,25 +402,28 @@ class RouteImpl implements Route {
     return results.get(0);
   }
 
-  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, AtomicInteger successInc, boolean entry, boolean exit) {
-    try {
-      if (entry) {
-        if (exit) {
-          graph = location.connect(graph);
-        } else {
-          graph = location.connectAsEntry(graph);
-        }
-      } else {
-        if (exit) {
-          graph = location.connectAsExit(graph);
-        } else {
-          throw new IllegalStateException("Either entry or exit must be true");
-        }
-      }
-      successInc.getAndIncrement();
-    } catch (GraphEntryNotEstablishedException ignored) {
+  private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, boolean entry, boolean exit) {
+    if (!location.isExternal()) {
+      return graph;
     }
-    return graph;
+    MutableValueGraph<Node, Double> g;
+    if (entry) {
+      if (exit) {
+        g = graphEntrySolver.solve(location.getNode(), GraphUtils.mutable(graph));
+      } else {
+        g = graphEntrySolver.solveEntry(location.getNode(), GraphUtils.mutable(graph));
+      }
+    } else {
+      if (exit) {
+        g = graphEntrySolver.solveExit(location.getNode(), GraphUtils.mutable(graph));
+      } else {
+        throw new GraphEntryNotEstablishedException();
+      }
+    }
+    location.setNode(g.nodes().stream()
+        .filter(n -> n.getNodeId().equals(location.getNode().getNodeId())).findAny()
+        .orElseThrow());
+    return g;
   }
 
   @SafeVarargs

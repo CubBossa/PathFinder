@@ -123,7 +123,7 @@ public class DynamicDijkstra<N, E> implements PathSolver<N, E> {
         .min(Comparator.comparingDouble(Node::getDistance))
         .orElse(null);
 
-    if (nearest == null || !nearest.settled) {
+    if (nearest == null) {
       throw new NoPathFoundException(start, targets);
     }
     return extractResult(nearest);

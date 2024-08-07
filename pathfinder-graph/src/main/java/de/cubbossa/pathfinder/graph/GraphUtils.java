@@ -26,7 +26,7 @@ public class GraphUtils {
     return g;
   }
 
-  public static <N, V> ValueGraph<N, V> merge(Iterable<? extends ValueGraph<N, V>> islands) {
+  public static <N, V extends Comparable<V>> ValueGraph<N, V> merge(Iterable<? extends ValueGraph<N, V>> islands) {
     var iterator = islands.iterator();
     MutableValueGraph<N, V> g = mutable(iterator.next());
     while (iterator.hasNext()) {
@@ -36,20 +36,36 @@ public class GraphUtils {
       }
       for (EndpointPair<N> edge : other.edges()) {
         V val = other.edgeValue(edge.nodeU(), edge.nodeV()).orElseThrow();
-        g.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+
+        if (g.hasEdgeConnecting(edge.nodeU(), edge.nodeV())) {
+          V present = g.edgeValue(edge.nodeU(), edge.nodeV()).orElseThrow();
+          if (present.compareTo(val) > 0) {
+            g.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+          }
+        } else {
+          g.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+        }
+
       }
     }
     return g;
   }
 
-  public static <N, V> ValueGraph<N, V> merge(ValueGraph<N, V> a, ValueGraph<N, V> b) {
+  public static <N, V extends Comparable<V>> ValueGraph<N, V> merge(ValueGraph<N, V> a, ValueGraph<N, V> b) {
     MutableValueGraph<N, V> ma = mutable(a);
     for (N node : b.nodes()) {
       ma.addNode(node);
     }
     for (EndpointPair<N> edge : b.edges()) {
       V val = b.edgeValue(edge.nodeU(), edge.nodeV()).orElseThrow();
-      ma.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+      if (ma.hasEdgeConnecting(edge.nodeU(), edge.nodeV())) {
+        V present = ma.edgeValue(edge.nodeU(), edge.nodeV()).orElseThrow();
+        if (present.compareTo(val) > 0) {
+          ma.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+        }
+      } else {
+        ma.putEdgeValue(edge.nodeU(), edge.nodeV(), val);
+      }
     }
     return ma;
   }

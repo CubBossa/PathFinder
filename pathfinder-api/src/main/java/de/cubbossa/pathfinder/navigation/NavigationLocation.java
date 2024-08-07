@@ -1,6 +1,5 @@
 package de.cubbossa.pathfinder.navigation;
 
-import com.google.common.graph.ValueGraph;
 import de.cubbossa.pathfinder.node.Node;
 
 public interface NavigationLocation {
@@ -23,11 +22,9 @@ public interface NavigationLocation {
 
   Node getNode();
 
-  ValueGraph<Node, Double> connect(ValueGraph<Node, Double> graph);
-
-  ValueGraph<Node, Double> connectAsExit(ValueGraph<Node, Double> graph);
-
-  ValueGraph<Node, Double> connectAsEntry(ValueGraph<Node, Double> graph);
+  void setNode(Node node);
 
   boolean isFixedPosition();
+
+  boolean isExternal();
 }

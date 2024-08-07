@@ -73,8 +73,12 @@ public class AbstractNavigationModule<PlayerT>
   }
 
   private void setEdgeEntrySolver() {
-    NavigationLocationImpl.GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver(pathFinder
-        .getConfiguration().getNavigation().getFindLocation().getMaxDistance());
+    RouteImpl.DEFAULT_GRAPH_ENTRY_SOLVER = new EdgeBasedGraphEntrySolver(
+        pathFinder.getConfiguration().getNavigation().getFindLocation().getMaxDistance(),
+        pathFinder.getConfiguration().getNavigation().getExternalNodeEdgeConnectionWeight()
+    );
+    RouteImpl.DEFAULT_CONNECTION_DISTANCE = (double) pathFinder.getConfiguration().getNavigation()
+        .getFindLocation().getMaxDistance();
   }
 
   public void onLoad(PathFinder pathPlugin) {

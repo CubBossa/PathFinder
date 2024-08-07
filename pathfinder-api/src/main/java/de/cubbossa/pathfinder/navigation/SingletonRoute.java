@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.navigation;
 
 import com.google.common.graph.ValueGraph;
+import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
@@ -28,7 +29,11 @@ class SingletonRoute implements Route {
   }
 
   @Override
-  public @NotNull Route withSolver(@NotNull PathSolver<Node, Double> solver) {
+  public @NotNull Route withPathSolver(@NotNull PathSolver<Node, Double> solver) {
+    throw new UnsupportedOperationException("Cannot set solver for SingletonRoute.");
+  }
+
+  public @NotNull Route withEntrySolver(@NotNull GraphEntrySolver<Node> solver) {
     throw new UnsupportedOperationException("Cannot set solver for SingletonRoute.");
   }
 

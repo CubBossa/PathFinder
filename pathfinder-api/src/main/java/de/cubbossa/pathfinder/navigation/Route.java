@@ -1,6 +1,7 @@
 package de.cubbossa.pathfinder.navigation;
 
 import com.google.common.graph.ValueGraph;
+import de.cubbossa.pathfinder.graph.GraphEntrySolver;
 import de.cubbossa.pathfinder.graph.NoPathFoundException;
 import de.cubbossa.pathfinder.graph.PathSolver;
 import de.cubbossa.pathfinder.graph.PathSolverResult;
@@ -79,7 +80,9 @@ public interface Route {
    * @param solver A new solver instance
    * @return this Route instance.
    */
-  @NotNull Route withSolver(final @NotNull PathSolver<Node, Double> solver);
+  @NotNull Route withPathSolver(final @NotNull PathSolver<Node, Double> solver);
+
+  @NotNull Route withEntrySolver(final @NotNull GraphEntrySolver<Node> solver);
 
   /**
    * Adds an object to the route. All added objects will be visited in insertion order when calculating a shortest path.
