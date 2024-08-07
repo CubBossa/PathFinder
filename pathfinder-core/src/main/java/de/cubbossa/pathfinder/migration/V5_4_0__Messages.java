@@ -1,6 +1,13 @@
 package de.cubbossa.pathfinder.migration;
 
-import static de.cubbossa.pathfinder.messages.Messages.*;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_FORCE_FIND;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_FORCE_FORGET;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_NG_INFO;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_NG_LIST_LINE;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_N_CREATE;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_N_DELETE;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_N_INFO;
+import static de.cubbossa.pathfinder.messages.Messages.CMD_N_UPDATED;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.tinytranslations.Message;
 import de.cubbossa.tinytranslations.MessageTranslator;
@@ -58,8 +65,14 @@ public class V5_4_0__Messages extends BaseJavaMigration {
         "<position>", "{node.loc}",
         "<world>", "{node.loc.world}",
         "<edges>", "{node.edges}",
-        "<groups>", "{node.groups}",
+        "<groups>", "{node.groups}"
         ));
+    MESSAGE_REPLACEMENTS.put(CMD_NG_INFO, Map.of(
+        "<key>", "{group.key}",
+        "<nodes>", "{group.nodes}",
+        "<weight>", "{group.weight}"
+    ));
+    MESSAGE_REPLACEMENTS.put(CMD_NG_LIST_LINE, Map.of("<key>", "{group.key}", "<weight>", "{group.weight}"));
   }
 
   @Override

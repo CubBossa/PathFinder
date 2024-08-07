@@ -68,12 +68,7 @@ public class GroupCmd extends PathFinderSubCommand {
   }
 
   private void showGroup(CommandSender sender, NodeGroupImpl group) {
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.formatted(
-        Messages.formatter().namespacedKey("key", group.getKey()),
-        Messages.formatter().nodeSelection("nodes", () -> group.resolve().join()),
-        Messages.formatter().number("weight", group.getWeight()),
-        Messages.formatter().modifiers("modifiers", group.getModifiers())
-    ));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.insertObject("group", group));
   }
 
   private void addModifier(CommandSender sender, NodeGroupImpl group, Modifier modifier) {

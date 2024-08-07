@@ -41,7 +41,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -379,15 +378,9 @@ public class EditModeMenu implements Disposable {
   private LocalizedItem.Builder groupItem(NodeGroup group) {
     int mod = group.getKey().hashCode();
 
-    TagResolver resolver = TagResolver.builder()
-        .resolver(Messages.formatter().namespacedKey("key", group.getKey()))
-        .resolver(Messages.formatter().number("weight", group.getWeight()))
-        .resolver(Messages.formatter().modifiers("modifiers", group.getModifiers()))
-        .build();
-
     return new LocalizedItem.Builder(new ItemStack(GROUP_ITEM_LIST[Math.floorMod(mod, 16)]))
-        .withName(Messages.E_SUB_GROUP_ENTRY_N.formatted(resolver))
-        .withLore(Messages.E_SUB_GROUP_ENTRY_L.formatted(resolver));
+        .withName(Messages.E_SUB_GROUP_ENTRY_N.insertObject("group", group))
+        .withLore(Messages.E_SUB_GROUP_ENTRY_L.insertObject("group", group));
   }
 
   private void openGroupMenu(Player player, Node node) {

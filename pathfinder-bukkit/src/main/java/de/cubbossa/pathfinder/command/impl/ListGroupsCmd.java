@@ -33,12 +33,7 @@ public class ListGroupsCmd extends PathFinderSubCommand {
           pagination,
           new ArrayList<>(nodeGroups),
           group -> {
-            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_LIST_LINE.formatted(
-                Messages.formatter().namespacedKey("key", group.getKey()),
-                Messages.formatter().number("size", group.size()),
-                Messages.formatter().number("weight", group.getWeight()),
-                Messages.formatter().modifiers("modifiers", group.getModifiers())
-            ));
+            BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_LIST_LINE.insertObject("group", group));
           },
           Messages.CMD_NG_LIST_HEADER,
           Messages.CMD_NG_LIST_FOOTER

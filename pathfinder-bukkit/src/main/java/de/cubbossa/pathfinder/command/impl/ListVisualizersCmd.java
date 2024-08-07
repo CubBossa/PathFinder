@@ -12,7 +12,6 @@ import de.cubbossa.pathfinder.util.BukkitUtils;
 import de.cubbossa.pathfinder.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 public class ListVisualizersCmd extends PathFinderSubCommand {
@@ -39,12 +38,9 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
         CommandUtils.printList(sender, pagination,
             CollectionUtils.subList(new ArrayList<>(pathVisualizers), pagination),
             visualizer -> {
-              TagResolver r = TagResolver.builder()
-                  .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
-                  .resolver(Messages.formatter().namespacedKey("type", map.get(visualizer.getKey()).getKey()))
-                  .build();
-
-              BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_LIST_ENTRY.formatted(r));
+              BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_LIST_ENTRY
+                  .insertObject("vis", visualizer)
+                  .insertObject("visualizer", visualizer));
             },
             Messages.CMD_VIS_LIST_HEADER,
             Messages.CMD_VIS_LIST_FOOTER);

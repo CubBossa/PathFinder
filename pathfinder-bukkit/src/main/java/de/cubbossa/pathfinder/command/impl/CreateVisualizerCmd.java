@@ -13,8 +13,6 @@ import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import dev.jorel.commandapi.arguments.StringArgument;
 import java.util.Optional;
 import java.util.logging.Level;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 public class CreateVisualizerCmd extends PathFinderSubCommand {
@@ -42,10 +40,9 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
       return;
     }
     getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey()),
-          Placeholder.component("type", Component.text(type.getCommandName()))
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS
+          .insertObject("visualizer_key", visualizer.getKey())
+          .insertObject("type", type.getCommandName()));
     }).exceptionally(throwable -> {
       getPathfinder().getLogger().log(Level.SEVERE, "Error while creating new visualizer", throwable);
       return null;
