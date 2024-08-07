@@ -403,31 +403,27 @@ class RouteImpl implements Route {
   }
 
   private ValueGraph<Node, Double> connect(NavigationLocation location, ValueGraph<Node, Double> graph, boolean entry, boolean exit) {
-    try {
-      if (!location.isExternal()) {
-        return graph;
-      }
-      MutableValueGraph<Node, Double> g;
-      if (entry) {
-        if (exit) {
-          g = graphEntrySolver.solve(location.getNode(), GraphUtils.mutable(graph));
-        } else {
-          g = graphEntrySolver.solveEntry(location.getNode(), GraphUtils.mutable(graph));
-        }
-      } else {
-        if (exit) {
-          g = graphEntrySolver.solveExit(location.getNode(), GraphUtils.mutable(graph));
-        } else {
-          throw new GraphEntryNotEstablishedException();
-        }
-      }
-      location.setNode(g.nodes().stream()
-          .filter(n -> n.getNodeId().equals(location.getNode().getNodeId())).findAny()
-          .orElseThrow());
-      return g;
-    } catch (GraphEntryNotEstablishedException ignored) {
+    if (!location.isExternal()) {
+      return graph;
     }
-    return graph;
+    MutableValueGraph<Node, Double> g;
+    if (entry) {
+      if (exit) {
+        g = graphEntrySolver.solve(location.getNode(), GraphUtils.mutable(graph));
+      } else {
+        g = graphEntrySolver.solveEntry(location.getNode(), GraphUtils.mutable(graph));
+      }
+    } else {
+      if (exit) {
+        g = graphEntrySolver.solveExit(location.getNode(), GraphUtils.mutable(graph));
+      } else {
+        throw new GraphEntryNotEstablishedException();
+      }
+    }
+    location.setNode(g.nodes().stream()
+        .filter(n -> n.getNodeId().equals(location.getNode().getNodeId())).findAny()
+        .orElseThrow());
+    return g;
   }
 
   @SafeVarargs
