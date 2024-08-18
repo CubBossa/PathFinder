@@ -3,18 +3,11 @@ package de.cubbossa.pathfinder.command.util;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.CollectionUtils;
-import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.Argument;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 @UtilityClass
@@ -76,27 +69,5 @@ public class CommandUtils {
         .collect(Collectors.toList());
 
     return Suggestions.create(command, result);
-  }
-
-  public <T> void printList(CommandSender sender, Pagination pagination, List<T> elements,
-                            Consumer<T> print, Message header, Message footer) {
-
-    int page = pagination.getPage() + 1;
-    int maxPage = pagination.getPageCount(elements.size());
-    int prevPage = Integer.max(page - 1, 1);
-    int nextPage = Integer.min(page + 1, maxPage);
-
-    TagResolver resolver = TagResolver.resolver(
-        Placeholder.parsed("page", page + ""),
-        Placeholder.parsed("prev-page", prevPage + ""),
-        Placeholder.parsed("next-page", nextPage + ""),
-        Placeholder.parsed("pages", maxPage + "")
-    );
-
-    BukkitUtils.wrap(sender).sendMessage(header.formatted(resolver));
-    for (T element : CollectionUtils.subList(elements, pagination)) {
-      print.accept(element);
-    }
-    BukkitUtils.wrap(sender).sendMessage(footer.formatted(resolver));
   }
 }

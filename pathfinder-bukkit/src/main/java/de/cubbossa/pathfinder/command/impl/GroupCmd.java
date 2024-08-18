@@ -74,10 +74,9 @@ public class GroupCmd extends PathFinderSubCommand {
   private void addModifier(CommandSender sender, NodeGroupImpl group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET.formatted(
-          Messages.formatter().namespacedKey("group", group.getKey()),
-          Messages.formatter().namespacedKey("type", modifier.getKey())
-      ));
+      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET
+          .insertObject("group", group)
+          .insertObject("type", modifier.getKey()));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
@@ -87,10 +86,9 @@ public class GroupCmd extends PathFinderSubCommand {
   private void removeModifier(CommandSender sender, NodeGroupImpl group, NamespacedKey mod) {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
-      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE.formatted(
-          Messages.formatter().namespacedKey("group", group.getKey()),
-          Messages.formatter().namespacedKey("type", mod)
-      ));
+      PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE
+          .insertObject("group", group)
+          .insertObject("type", mod));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;

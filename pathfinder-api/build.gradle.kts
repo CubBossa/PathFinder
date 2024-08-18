@@ -18,10 +18,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 
     // Adventure
-    api("net.kyori:adventure-api:4.13.0")
-    api("net.kyori:adventure-platform-bukkit:4.3.0")
-    api("net.kyori:adventure-text-minimessage:4.13.0")
-    api("net.kyori:adventure-text-serializer-plain:4.13.0")
+    api("net.kyori:adventure-api:4.17.0")
+    api("net.kyori:adventure-platform-bukkit:4.3.4")
+    api("net.kyori:adventure-text-minimessage:4.17.0")
+    api("net.kyori:adventure-text-serializer-plain:4.17.0")
 }
 
 tasks.getByName<Test>("test") {

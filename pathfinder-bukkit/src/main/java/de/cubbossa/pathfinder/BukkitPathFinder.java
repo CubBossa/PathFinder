@@ -6,6 +6,7 @@ import de.cubbossa.pathfinder.event.EventDispatcher;
 import de.cubbossa.pathfinder.events.BukkitEventDispatcher;
 import de.cubbossa.pathfinder.listener.BukkitEffects;
 import de.cubbossa.pathfinder.listener.PlayerListener;
+import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.migration.V5_0_0__Config;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.PathPlayer;
@@ -17,6 +18,7 @@ import de.cubbossa.pathfinder.node.selection.BukkitNodeSelectionParser;
 import de.cubbossa.pathfinder.util.BukkitMainThreadExecutor;
 import de.cubbossa.pathfinder.util.WorldImpl;
 import de.cubbossa.pathfinder.util.YamlUtils;
+import de.cubbossa.tinytranslations.BukkitTinyTranslations;
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -100,6 +102,9 @@ public class BukkitPathFinder extends AbstractPathFinder {
 
   @Override
   public void onEnable() {
+    translations = BukkitTinyTranslations.application(PathFinderPlugin.getInstance());
+    translations.addAll(Messages.objectResolvers());
+
     super.onEnable();
     bstatsLoader.registerStatistics(javaPlugin);
 

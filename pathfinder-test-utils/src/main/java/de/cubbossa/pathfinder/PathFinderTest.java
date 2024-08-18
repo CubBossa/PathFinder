@@ -9,28 +9,28 @@ import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.misc.Task;
 import de.cubbossa.pathfinder.misc.World;
 import de.cubbossa.pathfinder.node.Edge;
+import de.cubbossa.pathfinder.node.EdgeImpl;
 import de.cubbossa.pathfinder.node.GroupedNode;
+import de.cubbossa.pathfinder.node.GroupedNodeImpl;
 import de.cubbossa.pathfinder.node.Node;
+import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.node.NodeType;
 import de.cubbossa.pathfinder.node.NodeTypeRegistry;
-import de.cubbossa.pathfinder.storage.StorageAdapter;
-import de.cubbossa.pathfinder.storage.StorageImplementation;
-import de.cubbossa.pathfinder.storage.WorldLoader;
-import de.cubbossa.pathfinder.visualizer.PathVisualizer;
-import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
-import de.cubbossa.pathfinder.node.EdgeImpl;
-import de.cubbossa.pathfinder.node.GroupedNodeImpl;
-import de.cubbossa.pathfinder.node.NodeSelectionImpl;
 import de.cubbossa.pathfinder.node.NodeTypeRegistryImpl;
 import de.cubbossa.pathfinder.node.implementation.Waypoint;
 import de.cubbossa.pathfinder.nodegroup.ModifierRegistryImpl;
 import de.cubbossa.pathfinder.nodegroup.modifier.VisualizerModifierImpl;
 import de.cubbossa.pathfinder.storage.InternalVisualizerStorageImplementation;
+import de.cubbossa.pathfinder.storage.StorageAdapter;
 import de.cubbossa.pathfinder.storage.StorageAdapterImpl;
+import de.cubbossa.pathfinder.storage.StorageImplementation;
 import de.cubbossa.pathfinder.storage.StorageUtil;
+import de.cubbossa.pathfinder.storage.WorldLoader;
 import de.cubbossa.pathfinder.storage.cache.CacheLayerImpl;
 import de.cubbossa.pathfinder.storage.implementation.SqlStorage;
 import de.cubbossa.pathfinder.storage.implementation.VisualizerStorageImplementationWrapper;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import java.io.File;
 import java.util.Collection;
@@ -173,11 +173,6 @@ public abstract class PathFinderTest {
       }
 
       @Override
-      public MiniMessage getMiniMessage() {
-        return miniMessage;
-      }
-
-      @Override
       public AudienceProvider getAudiences() {
         return null;
       }
@@ -189,6 +184,16 @@ public abstract class PathFinderTest {
 
       @Override
       public void cancelTask(Task task) {
+
+      }
+
+      @Override
+      public void reloadLocale() {
+
+      }
+
+      @Override
+      public void reloadConfigs() {
 
       }
     };

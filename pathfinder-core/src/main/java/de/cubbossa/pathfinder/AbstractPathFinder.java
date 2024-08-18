@@ -40,7 +40,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.flywaydb.core.api.migration.JavaMigration;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,7 +64,6 @@ public abstract class AbstractPathFinder implements PathFinder {
   protected ExtensionsRegistry extensionRegistry;
   protected ConfigFileLoader configFileLoader;
   protected AudienceProvider audiences;
-  protected MiniMessage miniMessage;
   protected StorageAdapter storage;
   @Setter
   protected PathFinderConfig configuration;
@@ -117,7 +115,7 @@ public abstract class AbstractPathFinder implements PathFinder {
 
     configFileLoader = new ConfigFileLoader(getDataFolder());
     disposer.register(this, configFileLoader);
-    configuration = configFileLoader.loadConfig();
+    reloadConfigs();
 
     dumpWriter.addProperty("config", () -> {
       try {
@@ -146,17 +144,10 @@ public abstract class AbstractPathFinder implements PathFinder {
 
   @SneakyThrows
   public void onEnable() {
-    miniMessage = MiniMessage.miniMessage();
-
-    audiences = createAudiences();
-    Messages.setAudiences(audiences);
-
-    if (!new File(getDataFolder(), "lang/styles.properties").exists()) {
-      saveResource("lang/styles.properties", false);
-    }
 
     // Data
-    setupMessages();
+    reloadConfigs();
+    reloadLocale();
 
     new File(getDataFolder(), "data/").mkdirs();
     StorageImplementation impl = getStorageImplementation();
@@ -208,9 +199,12 @@ public abstract class AbstractPathFinder implements PathFinder {
     state = ApplicationState.EXCEPTIONALLY;
   }
 
-  private void setupMessages() {
+  @Override
+  public void reloadLocale() {
+    if (!new File(getDataFolder(), "lang/styles.properties").exists()) {
+      saveResource("lang/styles.properties", false);
+    }
 
-    translations = BukkitTinyTranslations.application("PathFinder");
     translations.defaultLocale(getConfiguration().getLanguage().getFallbackLanguage());
     translations.setUseClientLocale(getConfiguration().getLanguage().isClientLanguage());
     translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "lang")));
@@ -218,11 +212,13 @@ public abstract class AbstractPathFinder implements PathFinder {
 
     translations.addMessages(BukkitTinyTranslations.messageFieldsFromClass(Messages.class));
     translations.saveLocale(Locale.ENGLISH);
+    translations.loadLocales();
+    translations.loadStyles();
+  }
 
-    Messages.formatter().setMiniMessage(miniMessage);
-    Messages.formatter().setNullStyle(translations.getStyles().get("c-offset-dark"));
-    Messages.formatter().setTextStyle(translations.getStyles().get("c-offset"));
-    Messages.formatter().setNumberStyle(translations.getStyles().get("c-offset-light"));
+  @Override
+  public void reloadConfigs() {
+    configuration = configFileLoader.loadConfig();
   }
 
   @NotNull

@@ -15,8 +15,6 @@ import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistryImpl;
 import de.cubbossa.tinytranslations.Message;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 
 public class VisualizerCmd extends PathFinderSubCommand {
@@ -48,13 +46,12 @@ public class VisualizerCmd extends PathFinderSubCommand {
                   visualizer.setPermission(perm);
 
                   pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
-                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-                        Messages.formatter().namespacedKey("key", visualizer.getKey()),
-                        Messages.formatter().namespacedKey("type", type.getKey()),
-                        Placeholder.parsed("property", "permission"),
-                        Messages.formatter().permission("old-value", old),
-                        Messages.formatter().permission("value", perm)
-                    ));
+                    BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP
+                        .insertObject("visualizer", visualizer)
+                        .insertObject("vis", visualizer)
+                        .insertObject("property", "permission")
+                        .insertObject("old-value", old)
+                        .insertObject("value", perm));
                   });
                 }
               })));
@@ -86,11 +83,10 @@ public class VisualizerCmd extends PathFinderSubCommand {
         return;
       }
 
-      Message message = ext.getInfoMessage(visualizer).formatted(TagResolver.builder()
-          .resolver(Messages.formatter().namespacedKey("key", visualizer.getKey()))
-          .resolver(Messages.formatter().namespacedKey("type", type.get().getKey()))
-          .resolver(Messages.formatter().permission("permission", visualizer.getPermission()))
-          .build());
+      Message message = ext.getInfoMessage(visualizer)
+          .insertObject("visualizer", visualizer)
+          .insertObject("vis", visualizer)
+          .insertString("permission", visualizer.getPermission());
       p.sendMessage(message);
     });
   }

@@ -11,7 +11,6 @@ import de.cubbossa.pathfinder.visualizer.VisualizerTypeRegistry;
 import java.io.File;
 import java.util.logging.Logger;
 import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * The main handler of the PathFinder application.
@@ -126,8 +125,6 @@ public interface PathFinder extends Disposable {
 
   ClassLoader getClassLoader();
 
-  MiniMessage getMiniMessage();
-
   AudienceProvider getAudiences();
 
   Task repeatingTask(Runnable runnable, long delay, long interval);
@@ -137,4 +134,8 @@ public interface PathFinder extends Disposable {
   default Object[] getMigrations() {
     return new Object[0];
   }
+
+  void reloadLocale();
+
+  void reloadConfigs();
 }

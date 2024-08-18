@@ -3,7 +3,6 @@ package de.cubbossa.pathfinder.migration;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_FORCE_FIND;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_FORCE_FORGET;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_NG_INFO;
-import static de.cubbossa.pathfinder.messages.Messages.CMD_NG_LIST_LINE;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_N_CREATE;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_N_DELETE;
 import static de.cubbossa.pathfinder.messages.Messages.CMD_N_INFO;
@@ -72,7 +71,6 @@ public class V5_4_0__Messages extends BaseJavaMigration {
         "<nodes>", "{group.nodes}",
         "<weight>", "{group.weight}"
     ));
-    MESSAGE_REPLACEMENTS.put(CMD_NG_LIST_LINE, Map.of("<key>", "{group.key}", "<weight>", "{group.weight}"));
   }
 
   @Override

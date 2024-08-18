@@ -129,30 +129,28 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
                                Consumer<T2> setter, BiFunction<String, T2, TagResolver> formatter) {
     T2 old = getter.get();
     if (!PathFinder.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
-      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-          Messages.formatter().namespacedKey("key", visualizer.getKey()),
-          Placeholder.parsed("property", property)
-      ));
+      sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+          .insertObject("visualizer", visualizer)
+          .insertObject("vis", visualizer)
+          .insertString("property", property));
       return;
     }
     setter.accept(value);
     PathFinder.get().getStorage()
         .saveVisualizer(visualizer)
         .thenCompose(unused -> PathFinder.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.component("type", Component.text(
-                  optType.map(VisualizerType::getCommandName).orElse("unknown"))),
-              Placeholder.parsed("property", property),
-              formatter.apply("old-value", old),
-              formatter.apply("value", value)
-          ));
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP
+              .insertObject("vis", visualizer)
+              .insertObject("visualizer", visualizer)
+              .insertString("property", property)
+              .insertObject("old-value", old)
+              .insertObject("value", value));
         }))
         .exceptionally(throwable -> {
-          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR.formatted(
-              Messages.formatter().namespacedKey("key", visualizer.getKey()),
-              Placeholder.parsed("property", property)
-          ));
+          sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
+              .insertObject("visualizer", visualizer)
+              .insertObject("vis", visualizer)
+              .insertString("property", property));
           throwable.printStackTrace();
           return null;
         });

@@ -10,7 +10,6 @@ import de.cubbossa.menuframework.inventory.context.TargetContext;
 import de.cubbossa.menuframework.inventory.implementations.BottomInventoryMenu;
 import de.cubbossa.menuframework.inventory.implementations.ListMenu;
 import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.BukkitPathFinder;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathFinderPlugin;
 import de.cubbossa.pathfinder.editmode.DefaultGraphEditor;
@@ -36,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -115,16 +115,14 @@ public class EditModeMenu implements Disposable {
 
     menu.setButton(4, Button.builder()
         .withItemStack(() -> new LocalizedItem.Builder(new ItemStack(undirectedEdgesMode ? Material.RED_DYE : Material.LIGHT_BLUE_DYE))
-            .withName(Messages.E_EDGEDIR_TOOL_N.formatted(Messages.formatter().choice("value", !undirectedEdgesMode)))
+            .withName(Messages.E_EDGEDIR_TOOL_N.insertBool("value", !undirectedEdgesMode))
             .withLore(Messages.E_EDGEDIR_TOOL_L)
             .createItem(editingPlayer))
         .withClickHandler(c -> {
           undirectedEdgesMode = !undirectedEdgesMode;
           Player player = c.getPlayer();
 
-          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.formatted(
-              Messages.formatter().choice("value", !undirectedEdgesMode)
-          ));
+          BukkitUtils.wrap(player).sendMessage(Messages.E_NODE_TOOL_DIR_TOGGLE.insertBool("value", !undirectedEdgesMode));
           c.getMenu().refresh(c.getSlot());
         }, Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK));
 
@@ -389,7 +387,7 @@ public class EditModeMenu implements Disposable {
       ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
       nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      ListMenu menu = new ListMenu(AbstractPathFinder.getInstance().getTranslations().translate(Messages.E_SUB_GROUP_TITLE, Locale.forLanguageTag(player.getLocale())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), 3)); //TODO extract icon
       menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));
       for (NodeGroup group : nodeGroupList) {
@@ -473,7 +471,7 @@ public class EditModeMenu implements Disposable {
       ArrayList<NodeGroup> nodeGroupList = new ArrayList<>(nodeGroups);
       nodeGroupList.sort(Comparator.comparing(g -> g.getKey().toString()));
 
-      ListMenu menu = new ListMenu(Messages.E_SUB_GROUP_TITLE.asComponent(BukkitPathFinder.getInstance().getAudiences().player(player.getUniqueId())), 4);
+      ListMenu menu = new ListMenu(AbstractPathFinder.getInstance().getTranslations().translate(Messages.E_SUB_GROUP_TITLE, Locale.forLanguageTag(player.getLocale())), 4);
       menu.addPreset(MenuPresets.fillRow(new ItemStack(Material.BLACK_STAINED_GLASS_PANE),
               3)); //TODO extract icon
       menu.addPreset(MenuPresets.paginationRow(3, 0, 1, false, Action.LEFT));

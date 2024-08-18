@@ -2,9 +2,9 @@ package de.cubbossa.pathfinder.util;
 
 import de.cubbossa.pathfinder.AbstractPathFinder;
 import de.cubbossa.pathfinder.BukkitPathFinder;
-import de.cubbossa.tinytranslations.ComponentSplit;
 import de.cubbossa.tinytranslations.Message;
-import net.kyori.adventure.audience.Audience;
+import de.cubbossa.tinytranslations.util.ComponentSplit;
+import java.util.Locale;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,9 +36,9 @@ public class LocalizedItem {
     AbstractPathFinder pf = BukkitPathFinder.getInstance();
 
     ItemMeta meta = stack.getItemMeta();
-    Audience audience = pf.getAudiences().player(player.getUniqueId());
-    meta.setDisplayName(serializer.serialize(name.getTranslator().translate(name, audience)));
-    meta.setLore(ComponentSplit.split(pf.getTranslations().translate(lore, audience), "\n").stream()
+    Locale locale = Locale.forLanguageTag(player.getLocale());
+    meta.setDisplayName(serializer.serialize(pf.getTranslations().translate(name, locale)));
+    meta.setLore(ComponentSplit.split(pf.getTranslations().translate(lore, locale), "\n").stream()
         .map(serializer::serialize).toList());
     stack.setItemMeta(meta);
     return stack;

@@ -1,22 +1,26 @@
 package de.cubbossa.pathfinder.messages;
 
+import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.Location;
 import de.cubbossa.pathfinder.misc.Vector;
+import de.cubbossa.pathfinder.misc.World;
+import de.cubbossa.pathfinder.node.GroupedNode;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeSelection;
+import de.cubbossa.pathfinder.visualizer.PathVisualizer;
+import de.cubbossa.pathfinder.visualizer.VisualizerType;
 import de.cubbossa.tinytranslations.Message;
 import de.cubbossa.tinytranslations.MessageBuilder;
-import de.cubbossa.tinytranslations.tinyobject.TinyObjectResolver;
+import de.cubbossa.tinytranslations.tinyobject.TinyObjectMapping;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @SuppressWarnings("checkstyle:LineLength")
 public class Messages {
 
   public static final Message PREFIX = new MessageBuilder("prefix")
-      .withDefault("<primary>PathFinder</primary><bg> › </bg><text>")
+      .withDefault("PathFinder")
       .build();
   public static final Message GEN_TOO_FAST = new MessageBuilder("general.response_pending")
       .withDefault("<prefix>Better slow down, your database is out of breath.")
@@ -48,15 +52,15 @@ public class Messages {
       .withDefault("<text_hl>null</text_hl>")
       .build();
   public static final Message GEN_NODE = new MessageBuilder("general.node")
-      .withDefault("({world}; {location})")
-      .withPlaceholders("id", "world", "location")
+      .withDefault("({node.world}; {node.location})")
+      .withPlaceholders("node")
       .build();
   public static final Message GEN_NODE_SEL = new MessageBuilder("general.selection.nodes")
-      .withDefault("<white><u>{amount} Nodes</u></white>")
+      .withDefault("<white><u>{sel.size} Nodes</u></white>")
       .withPlaceholders("amount")
       .build();
   public static final Message GEN_GROUP_SEL = new MessageBuilder("general.selection.groups")
-      .withDefault("<text_hl><u>{amount} Groups</u></text_hl>")
+      .withDefault("<text_hl><u>{sel.size} Groups</u></text_hl>")
       .withPlaceholders("amount")
       .build();
   public static final Message RELOAD_ERROR = new MessageBuilder("command.reload.error")
@@ -130,7 +134,7 @@ public class Messages {
   public static final Message MODULES = new MessageBuilder("commands.modules")
       .withDefault("""
           <offset>Active Modules:</offset>
-          {modules:"\n":"<bg>» </bg>"}""")
+          {modules:"<newline>":"<bg>» </bg>"}""")
       .withPlaceholder("modules")
       .build();
 
@@ -144,8 +148,7 @@ public class Messages {
       .build();
 
   public static final Message CMD_N_CREATE = new MessageBuilder("commands.node.create")
-      .withDefault("<prefix>Successfully created Node #{node}.")
-      .withTranslation(Locale.GERMAN, "<prefix>Wegpunkt #{node} erfolgreich erstellt.")
+      .withDefault("<prefix>Successfully created Node at {node.loc}.")
       .withPlaceholders("node")
       .build();
   public static final Message CMD_N_DELETE = new MessageBuilder("commands.node.delete")
@@ -181,18 +184,14 @@ public class Messages {
       .withPlaceholders("nodes")
       .build();
 
-  public static final Message CMD_N_LIST_HEADER = new MessageBuilder("commands.node.list.header")
-      .withDefault("<header><primary_l>Waypoints</primary_l></header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
+  public static final Message CMD_N_LIST = new MessageBuilder("commands.node.list")
+      .withDefault("""
+          <header><primary_l>Waypoints</primary_l></header>
+          <nodes><hover:show_text:'<text>Groups: {el.groups}<newline><text>Edges to: {el.edges}<newline><text>Click for more information'><click:run_command:'/pf nodes "@n[id={node.id}]" info'><text>at {el.loc} ({el.loc.world})</nodes>
+          <footer:'/pf listnodes "<selector>"'/>""")
+      .withPlaceholders("nodes", "selector", "page", "next-page", "prev-page", "pages")
       .build();
-  public static final Message CMD_N_LIST_ELEMENT = new MessageBuilder("commands.node.list.element")
-      .withDefault("<bg>» </bg><hover:show_text:'<text>Groups: {groups}<newline><text>Edges to: <edges><newline><text>Click for more information'><click:run_command:'/pf nodes \"@n[id=<id>]\" info'><text>at {node.loc} (<world>)")
-      .withPlaceholders("node")
-      .build();
-  public static final Message CMD_N_LIST_FOOTER = new MessageBuilder("commands.node.list.footer")
-      .withDefault("<header><click:run_command:'/pf listnodes \"<selector>\" {prev-page}'>←</click> {page}/{pages} <click:run_command:'/pf listnodes \"<selector>\" {next-page}'>→</click></header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
-      .build();
+
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
       .withDefault("<prefix>Connected {start} to {end}.")
       .withPlaceholders("start", "end")
@@ -219,7 +218,6 @@ public class Messages {
       .build();
   public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
       .withDefault("<prefix_negative>You cannot delete the global node group.</prefix_negative>")
-      .withTranslation(Locale.GERMAN, "<prefix_negative>Du kannst die globale Wegpunktgruppe nicht löschen.</prefix_negative>")
       .withComment("Indicates, that the global nodegroup cannot be deleted by command.")
       .build();
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
@@ -227,21 +225,17 @@ public class Messages {
           <primary_l>Group '{group.key}'</primary_l>
           <bg>» </bg><text>Size: {group.nodes}
           <bg>» </bg><text>Weight: <text_hl>{group.weight}</text_hl>
-          <group.modifiers:'\n'><bg>» </bg><text></group.modifiers>
+          <group.modifiers:'<newline>'><bg>» </bg><text></group.modifiers>
           """)
       .withPlaceholders("group")
       .build();
-  public static final Message CMD_NG_LIST_HEADER = new MessageBuilder("commands.node_group.list.header")
-      .withDefault("<header>Node-Groups</header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
-      .build();
-  public static final Message CMD_NG_LIST_LINE = new MessageBuilder("commands.node_group.list.line")
-      .withDefault("<bg> » </bg>{group.key} <text>(Weight: {group.weight})</text>")
-      .withPlaceholders("page", "group")
-      .build();
-  public static final Message CMD_NG_LIST_FOOTER = new MessageBuilder("commands.node_group.list.footer")
-      .withDefault("<header><text><click:run_command:/pf listgroups <prev-page>>←</click> {page}/{pages} <click:run_command:/pf listgroups <next-page>>→</click></text></header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
+  public static final Message CMD_NG_LIST = new MessageBuilder("commands.node_group.list")
+      .withDefault("""
+          <header>Node-Groups</header>
+          <groups:'<newline>'><bg> » </bg>{el.key} <text>(Weight: {el.weight})</text></groups>
+          <footer:'/pf listgroups'/>
+          """)
+      .withPlaceholders("groups", "page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_NG_MODIFY_SET = new MessageBuilder("commands.node_group.modify.set")
       .withDefault("<prefix>Added modifier <text_hl>{type}</text_hl> to group <text_hl>{group}</text_hl>.")
@@ -268,8 +262,8 @@ public class Messages {
       .withPlaceholder("distance", "Use java number formatting to provide custom formatting.")
       .build();
   public static final Message CMD_NG_MOD_SEARCH = new MessageBuilder("commands.node_group.modifier.navigable")
-      .withDefault("Search terms: {terms:\"<text>, </text>\"}")
-      .withPlaceholder("terms", "A list tag for all search terms, use <terms:between:beforeeach>")
+      .withDefault("Search terms: <terms:', '>{el}</terms>")
+      .withPlaceholder("terms", "A list tag for all search terms, use <terms[:between]>", List.class)
       .build();
   public static final Message CMD_NG_MOD_PERM = new MessageBuilder("commands.node_group.modifier.permission")
       .withDefault("Permission: {permission}")
@@ -283,17 +277,12 @@ public class Messages {
   public static final Message CMD_FIND = new MessageBuilder("commands.find.success")
       .withDefault("<prefix>Navigation started.  <click:run_command:/cancelpath><button>/cancelpath</button></click>")
       .build();
-  public static final Message CMD_DISCOVERIES_ENTRY = new MessageBuilder("commands.discoveries.list.entry")
-      .withDefault("<bg>» </bg>{name}: {percentage:#.##}%")
-      .withPlaceholders("name", "percentage", "ratio")
-      .build();
-  public static final Message CMD_DISCOVERIES_HEADER = new MessageBuilder("commands.discoveries.list.header")
-      .withDefault("<header><primary_l>Discoveries</primary_l></header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
-      .build();
-  public static final Message CMD_DISCOVERIES_FOOTER = new MessageBuilder("commands.discoveries.list.footer")
-      .withDefault("<header><text><click:run_command:/discoveries <prev-page>>←</click> {page}/{pages} <click:run_command:/discoveries <next-page>>→</click></header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
+  public static final Message CMD_DISCOVERIES_LIST = new MessageBuilder("commands.discoveries.list")
+      .withDefault("""
+          <header><primary_l>Discoveries</primary_l></header>
+          <discoveries:'<newline>'><bg>» </bg>{el.name}: {el.percentage:#.##}%</discoveries>
+          <footer:'/discoveries'/>""")
+      .withPlaceholders("discoveries", "page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_FIND_EMPTY = new MessageBuilder("commands.find.no_nodes_found")
       .withDefault("<prefix>No matching waypoints could be found.")
@@ -351,7 +340,6 @@ public class Messages {
       .build();
   public static final Message DISCOVERY_DISCOVER = new MessageBuilder("discovery.discover")
       .withDefault("You discovered: {discoverable}")
-      .withTranslation(Locale.GERMAN, "Entdeckt: {discoverable}")
       .withPlaceholders("player", "discoverable", "group")
       .build();
   public static final Message DISCOVERY_PROG = new MessageBuilder("discovery.progress")
@@ -364,25 +352,18 @@ public class Messages {
       .build();
 
 
-  public static final Message CMD_VIS_LIST_HEADER = new MessageBuilder("commands.path_visualizer.list.header")
-      .withDefault("<header>Visualizer</header>")
-      .withPlaceholders("page", "next-page", "prev-page", "pages")
-      .build();
-  public static final Message CMD_VIS_LIST_ENTRY = new MessageBuilder("commands.path_visualizer.list.entry")
-      .withDefault("<bg> » </bg>{vis.key} <text>({vis.type})</text>")
-      .withPlaceholders("vis", "visualizer")
-      .build();
-  public static final Message CMD_VIS_LIST_FOOTER = new MessageBuilder("commands.path_visualizer.list.footer")
-      .withDefault("<header><text><click:run_command:/pf listvisualizers <prev-page>>←</click> {page}/{pages} <click:run_command:/pf listvisualizers <next-page>>→</click></text></header>")
+  public static final Message CMD_VIS_LIST = new MessageBuilder("commands.path_visualizer.list")
+      .withDefault("""
+          <header>Visualizer</header>
+          <visualizers:'<newline>'><bg> » </bg><primary_l>{el.key}</primary_l> <text>({el.type})</text></visualizers>
+          <footer:'/pf listvisualizers'/>""")
       .withPlaceholders("page", "next-page", "prev-page", "pages")
       .build();
   public static final Message CMD_VIS_NO_TYPE_FOUND = new MessageBuilder("commands.path_visualizer.info.no_type")
       .withDefault("<prefix_negative>Could not show information to visualizer. Type could not be resolved.</prefix_negative>")
-      .withTranslation(Locale.GERMAN, "<prefix_negative>Konnte Visualizer nicht anzeigen. Keine Typ-Information gefunden.</prefix_negative>")
       .build();
   public static final Message CMD_VIS_NO_INFO = new MessageBuilder("commands.path_visualizer.info.no_info")
       .withDefault("<prefix_negative>Could not show information to visualizer. No message layout provided.</prefix_negative>")
-      .withTranslation(Locale.GERMAN, "<prefix_negative>Konnte Visualizer nicht anzeigen. Kein Nachrichtenformat gefunden.</prefix_negative>")
       .build();
 
   public static final Message CMD_VIS_CREATE_SUCCESS = new MessageBuilder("commands.path_visualizer.create.success")
@@ -400,12 +381,12 @@ public class Messages {
       .withDefault("<prefix_negative>An unknown error occurred while deleting a visualizer. Please check the console for more information.")
       .build();
   public static final Message CMD_VIS_SET_PROP = new MessageBuilder("commands.path_visualizer.set_property")
-      .withDefault("<prefix>Changed {property} for <text_hl><key></text_hl> from <text_hl>{old-value}</text_hl> to <text_hl>{value}</text_hl>.")
-      .withPlaceholders("key", "type", "property", "value", "old-value")
+      .withDefault("<prefix>Changed {property} for <text_hl>{vis.key}</text_hl> from <text_hl>{old-value}</text_hl> to <text_hl>{value}</text_hl>.")
+      .withPlaceholders("vis", "visualizer", "property", "value", "old-value")
       .build();
   public static final Message CMD_VIS_SET_PROP_ERROR = new MessageBuilder("commands.path_visualizer.set_property_error")
       .withDefault("<prefix_negative>Could not set property {property} for visualizer.")
-      .withPlaceholders("key", "property")
+      .withPlaceholders("vis", "visualizer", "property")
       .build();
   public static final Message CMD_VIS_IMPORT_EXISTS = new MessageBuilder("commands.path_visualizer.import.already_exists")
       .withDefault("<prefix_negative>Could not import file, another visualizer with this key already exists.</prefix_negative>")
@@ -414,15 +395,17 @@ public class Messages {
       .withDefault("<prefix_negative>Could not import file, there is no example file with this name.</prefix_negative>")
       .build();
   public static final Message CMD_VIS_IMPORT_SUCCESS = new MessageBuilder("commands.path_visualizer.import.successful")
-      .withDefault("<prefix>Successfully imported Visualizer <text_hl><key></text_hl>")
-      .withPlaceholders("key")
+      .withDefault("<prefix>Successfully imported Visualizer <text_hl>{visualizer}</text_hl>")
+      .withPlaceholders("vis", "visualizer")
       .build();
   public static final Message CMD_VIS_COMBINED_INFO = new MessageBuilder("commands.path_visualizer.type.combined.info")
       .withDefault("""
-          <primary_l>Visualizer: <key></primary_l>
+          <primary_l>Visualizer: {vis.key}</primary_l>
           <bg>» </bg><text>Permission: <text_hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission">{permission}</click></hover></text_hl>
-          <bg>» </bg><text>Children:{entries:"":"<br><bg>  » </bg>"}""")
-      .withPlaceholder("entries[:separator][:prefix][:suffix]")
+          <bg>» </bg><text>Children:
+          <entries:"<newline>"><br><bg>  » </bg>{el}</entries>""")
+      .withPlaceholders("vis", "visualizer")
+      .withPlaceholder("entries[:separator]")
       .build();
   public static final Message CMD_VIS_COMBINED_ADD = new MessageBuilder("commands.path_visualizer.type.combined.add")
       .withDefault("<prefix>Added {child} as child to {visualizer}.")
@@ -436,7 +419,7 @@ public class Messages {
       .build();
   public static final Message CMD_VIS_INFO_PARTICLES = new MessageBuilder("commands.path_visualizer.type.particle_visualizer.info")
       .withDefault("""
-          <primary_l>Visualizer: <key></primary_l>
+          <primary_l>Visualizer: {vis.key}</primary_l>
           <bg>» </bg><text>Permission: <text_hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit particle <key> permission">{permission}</click></hover></text_hl>
           <bg>» </bg><text>Interval: <text_hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit particle <key> interval">{interval}</click></hover></text_hl>
           <bg>» </bg><text>Point-Distance: <text_hl><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit particle <key> point-distance">{point-distance}</click></hover></text_hl>
@@ -446,14 +429,14 @@ public class Messages {
           <bg>» </bg><text>Speed: <text_hl><hover:show_text:"Click to change speed"><click:suggest_command:"/pathvisualizer edit particle <key> speed">{speed}</click></hover></text_hl>
           <bg>» </bg><text>Offset: <text_hl><hover:show_text:"Click to change offset"><click:suggest_command:"/pathvisualizer edit particle <key> particle">{offset}</click></hover></text_hl>""")
       .withPlaceholders(
-          "key", "type", "permission", "interval", "point-distance",
+          "vis", "visualizer", "interval", "point-distance",
           "particle", "particle-steps", "amount", "speed", "offset")
       .build();
 
 
   public static final Message CMD_VIS_COMPASS_INFO = new MessageBuilder("commands.path_visualizer.type.compass.info")
       .withDefault("""
-          <primary_l>Visualizer: <key></primary_l>
+          <primary_l>Visualizer: {vis.key}</primary_l>
           <bg>» </bg><text>Permission: <text_hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission">{permission}</click></hover></text_hl>
           <bg>» </bg><text>Interval: <text_hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval">{interval}</click></hover></text_hl>
           <bg>» </bg><text>Marker:
@@ -463,15 +446,15 @@ public class Messages {
               <bg>» </bg><text>South: {marker-south}
               <bg>» </bg><text>West: {marker-west}
           <bg>» </bg><text>Background: {background}
-          <bg>» </bg><text>Color: {color}
+          <bg>» </bg><text>Color: {color_value}
           <bg>» </bg><text>Overlay: {overlay}""")
-      .withPlaceholders("marker-north", "marker-south", "marker-east", "marker-west",
-          "marker-target", "background", "color", "overlay")
+      .withPlaceholders("vis", "visualizer", "marker-north", "marker-south", "marker-east", "marker-west",
+          "marker-target", "background", "color_value", "overlay")
       .build();
 
   public static final Message CMD_ADV_VIS_INFO_PARTICLES = new MessageBuilder("commands.path_visualizer.type.advanced_particle_visualizer.info")
       .withDefault("""
-          <primary_l>Visualizer: <key></primary_l>
+          <primary_l>Visualizer: {vis.key}</primary_l>
           <bg>» </bg><text>Permission: <text_hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission">{permission}</click></hover></text_hl>
           <bg>» </bg><text>Interval: <text_hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval">{interval}</click></hover></text_hl>
           <bg>» </bg><text>Point-Distance: <text_hl><hover:show_text:"Click to change point-distance"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> point-distance">{point-distance}</click></hover></text_hl>
@@ -487,14 +470,14 @@ public class Messages {
               <bg>» </bg><text>X: <text_hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-x">{path-x}</click></hover></text_hl>
               <bg>» </bg><text>Y: <text_hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-y">{path-y}</click></hover></text_hl>
               <bg>» </bg><text>Z: <text_hl><hover:show_text:"Click to change path offset"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> path-z">{path-z}</click></hover></text_hl>""")
-      .withPlaceholders("key", "type", "permission", "interval", "point-distance",
+      .withPlaceholders("vis", "visualizer", "interval", "point-distance",
           "particle", "particle-steps", "amount", "speed", "offset-x", "offset-y", "offset-z",
           "path-x", "path-y", "path-z")
       .build();
 
   public static final Message CMD_VIS_PAPI_INFO = new MessageBuilder("commands.path_visualizer.type.placeholder_api.info")
       .withDefault("""
-          <primary_l>Visualizer: <key></primary_l>
+          <primary_l>Visualizer: {vis.key}</primary_l>
           <bg>» </bg><text>Permission: <text_hl><hover:show_text:"Click to change permission"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> permission">{permission}</click></hover></text_hl>
           <bg>» </bg><text>Interval: <text_hl><hover:show_text:"Click to change interval"><click:suggest_command:"/pathvisualizer edit advanced-particle <key> interval">{interval}</click></hover></text_hl>
           <bg>» </bg><text>Placeholder:</text>
@@ -508,7 +491,7 @@ public class Messages {
               <bg>» </bg><text>North-West: <text_hl><hover:show_text:"Click to change format-northwest"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-northwest">{format-northwest}</click></hover></text_hl>
               <bg>» </bg><text>Distance: <text_hl><hover:show_text:"Click to change format-distance"><click:suggest_command:"/pathvisualizer edit placeholderapi <key> format-distance">{format-distance}</click></hover></text_hl>""")
       .withPlaceholders(
-          "key", "name", "name-format", "type", "permission", "interval", "format-north", "format-north-east",
+          "vis", "visualizer", "interval", "format-north", "format-north-east",
           "format-east", "format-south-east", "format-south", "format-south-west", "format-west", "format-north-west",
           "format-distance"
       )
@@ -541,7 +524,7 @@ public class Messages {
       .withDefault("<prefix>Chain started.")
       .build();
   public static final Message E_NODE_TOOL_DIR_TOGGLE = new MessageBuilder("editor.toolbar.node_tool.directed")
-      .withDefault("<prefix>Edges directed: <text_hl>{value:true:false}<text_hl>")
+      .withDefault("<prefix>Edges directed: <text_hl>{value}<text_hl>")
       .withPlaceholders("value")
       .build();
   public static final Message E_GROUP_TOOL_N = new MessageBuilder("editor.toolbar.group_tool.name")
@@ -566,7 +549,7 @@ public class Messages {
       .withDefault("<text_l><u>Teleport Tool</u></text_l>")
       .build();
   public static final Message E_TP_TOOL_L = new MessageBuilder("editor.toolbar.teleport_tool.lore")
-      .withDefault("<text>Teleports you to the\n<text>nearest node.")
+      .withDefault("<text>Teleports you to the<newline><text>nearest node.")
       .build();
   public static final Message E_SUB_GROUP_TITLE = new MessageBuilder("editor.groups.title")
       .withDefault("Assign Node Groups")
@@ -575,13 +558,13 @@ public class Messages {
       .withDefault("<accent>Info</accent>")
       .build();
   public static final Message E_SUB_GROUP_INFO_L = new MessageBuilder("editor.groups.info.lore")
-      .withDefault("<text>Click to toggle groups on or off.</text>\n<text>Create a new nodegroup with\n<text>» <accent>/pf creategroup <key>")
+      .withDefault("<text>Click to toggle groups on or off.</text><newline><text>Create a new nodegroup with<newline><text>» <accent>/pf creategroup <key>")
       .build();
   public static final Message E_SUB_GROUP_RESET_N = new MessageBuilder("editor.groups.reset.name")
       .withDefault("<prefix_negative>Reset Groups</prefix_negative>")
       .build();
   public static final Message E_SUB_GROUP_RESET_L = new MessageBuilder("editor.groups.reset.lore")
-      .withDefault("<text>Reset all groups for the\n<text>selected node.")
+      .withDefault("<text>Reset all groups for the<newline><text>selected node.")
       .build();
   public static final Message E_SUB_GROUP_ENTRY_N = new MessageBuilder("editor.groups.entry.name")
       .withDefault("<primary_l>{group.key}</primary_l>")
@@ -590,7 +573,7 @@ public class Messages {
   public static final Message E_SUB_GROUP_ENTRY_L = new MessageBuilder("editor.groups.entry.lore")
       .withDefault("""
           <bg>» </bg><text>Weight: </text><text_hl>{group.weight:#.##}</text_hl>
-          <group.modifiers:"\n"><bg>» </bg><el/></group.modifiers>""")
+          <group.modifiers:"<newline>"><bg>» </bg><el/></group.modifiers>""")
       .withPlaceholders("group")
       .build();
   public static final Message TARGET_FOUND = new MessageBuilder("general.target_reached")
@@ -601,36 +584,55 @@ public class Messages {
       .withDefault("<prefix_negative>Your currently edited group was deleted by another user.")
       .build();
 
-  public static List<TinyObjectResolver> objectResolvers() {
+  public static List<TinyObjectMapping> objectResolvers() {
 
-    ArrayList<TinyObjectResolver> result = new ArrayList<>();
+    ArrayList<TinyObjectMapping> result = new ArrayList<>();
 
-    result.add(TinyObjectResolver.builder(NodeSelection.class)
-        .withFallback(n -> GEN_NODE_SEL.insertObject("sel", n))
+    result.add(TinyObjectMapping.builder(PathVisualizer.class)
+        .withFallbackConversion(PathVisualizer::getKey)
+        .with("key", PathVisualizer::getKey)
+        .with("type", v -> PathFinder.get().getStorage().loadVisualizerType(v.getKey()).join())
+        .with("permission", PathVisualizer::getPermission)
+        .build());
+
+    result.add(TinyObjectMapping.builder(VisualizerType.class)
+        .withFallbackConversion(VisualizerType::getKey)
+        .with("key", VisualizerType::getKey)
+        .with("command", VisualizerType::getCommandName)
+        .build());
+
+    result.add(TinyObjectMapping.builder(NodeSelection.class)
+        .withFallbackConversion(n -> GEN_NODE_SEL.insertObject("sel", n))
         .with("size", NodeSelection::size)
         .with("ids", NodeSelection::getIds)
         .build());
 
-    result.add(TinyObjectResolver.builder(NodeGroup.class)
-        .withFallback(NodeGroup::getKey)
+    result.add(TinyObjectMapping.builder(NodeGroup.class)
+        .withFallbackConversion(NodeGroup::getKey)
         .with("key", NodeGroup::getKey)
         .with("weight", NodeGroup::getWeight)
         .with("nodes", ArrayList::new)
         .build());
 
-    result.add(TinyObjectResolver.builder(Node.class)
-        .withFallback(Node::getNodeId)
+    result.add(TinyObjectMapping.builder(Node.class)
+        .withFallbackConversion(Node::getNodeId)
         .with("edges", Node::getEdges)
         .with("loc", Node::getLocation)
         .with("location", Node::getLocation)
+        .with("groups", n -> n instanceof GroupedNode gn ? gn.groups() : new ArrayList<>())
         .build());
 
-    result.add(TinyObjectResolver.builder(Location.class)
-        .withFallback(e -> GEN_LOC.insertObject("loc", e))
-        .with("world", Location::getX)
+    result.add(TinyObjectMapping.builder(World.class)
+        .withFallbackConversion(World::getName)
+        .with("name", World::getName)
+        .with("id", World::getUniqueId)
         .build());
-    result.add(TinyObjectResolver.builder(Vector.class)
-        .withFallback(e -> GEN_VECTOR.insertObject("vector", e))
+    result.add(TinyObjectMapping.builder(Location.class)
+        .withFallbackConversion(e -> GEN_LOC.insertObject("loc", e))
+        .with("world", Location::getWorld)
+        .build());
+    result.add(TinyObjectMapping.builder(Vector.class)
+        .withFallbackConversion(e -> GEN_VECTOR.insertObject("vector", e))
         .with("x", Vector::getX)
         .with("y", Vector::getY)
         .with("z", Vector::getZ)

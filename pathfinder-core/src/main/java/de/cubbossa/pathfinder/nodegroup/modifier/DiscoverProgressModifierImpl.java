@@ -8,6 +8,7 @@ import de.cubbossa.pathfinder.group.Modifier;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.NamespacedKey;
 import de.cubbossa.pathfinder.storage.StorageAdapter;
+import de.cubbossa.tinytranslations.nanomessage.NanoMessage;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -18,6 +19,7 @@ import org.bukkit.entity.Player;
 @Getter
 public class DiscoverProgressModifierImpl implements DiscoverProgressModifier {
 
+  private static final NanoMessage NM = NanoMessage.nanoMessage();
   private final NamespacedKey owningGroup;
   private final String nameFormat;
   private final Component displayName;
@@ -25,7 +27,7 @@ public class DiscoverProgressModifierImpl implements DiscoverProgressModifier {
   public DiscoverProgressModifierImpl(NamespacedKey ownerGroup, String nameFormat) {
     this.owningGroup = ownerGroup;
     this.nameFormat = nameFormat;
-    this.displayName = PathFinder.get().getMiniMessage().deserialize(nameFormat);
+    this.displayName = NM.deserialize(nameFormat);
   }
 
   @Override

@@ -45,9 +45,7 @@ public class CreateNodeCmd extends PathFinderSubCommand {
 
   private void createNode(CommandSender sender, NodeType<?> type, Location location) {
     getPathfinder().getStorage().createAndLoadNode(type, location).thenAccept(n -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CREATE.formatted(
-          Messages.formatter().uuid("id", n.getNodeId())
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_CREATE.insertObject("node", n));
     });
   }
 }

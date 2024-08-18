@@ -30,7 +30,7 @@ public class FindDistanceModifierType implements ModifierType<FindDistanceModifi
 
   @Override
   public ComponentLike toComponents(FindDistanceModifier modifier) {
-    return Messages.CMD_NG_MOD_FINDDIST.formatted(Messages.formatter().number("distance", modifier.distance()));
+    return Messages.CMD_NG_MOD_FINDDIST.insertNumber("distance", modifier.distance());
   }
 
   @Override

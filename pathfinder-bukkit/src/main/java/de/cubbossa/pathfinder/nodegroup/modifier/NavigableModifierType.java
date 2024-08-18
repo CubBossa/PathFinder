@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.pf4j.Extension;
 
@@ -53,9 +52,7 @@ public class NavigableModifierType implements ModifierType<NavigableModifier>,
 
   @Override
   public ComponentLike toComponents(NavigableModifier modifier) {
-    return Messages.CMD_NG_MOD_SEARCH.formatted(
-        Messages.formatter().list("terms", modifier.getSearchTermStrings(), Component::text)
-    );
+    return Messages.CMD_NG_MOD_SEARCH.insertList("terms", modifier.getSearchTermStrings());
   }
 
   @Override

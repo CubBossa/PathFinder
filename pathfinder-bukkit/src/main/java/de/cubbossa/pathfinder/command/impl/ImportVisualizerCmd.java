@@ -46,7 +46,7 @@ public class ImportVisualizerCmd extends PathFinderSubCommand {
               .thenApply(files -> files.stream().filter(f -> f.name().equalsIgnoreCase(objects.getUnchecked(0))).findFirst())
               .thenCompose(exampleFile -> importVisualizer(commandSender, exampleFile.orElse(null)))
               .exceptionally(throwable -> {
-                BukkitUtils.wrap(commandSender).sendMessage(Messages.throwable(throwable));
+                BukkitUtils.wrap(commandSender).sendMessage(Messages.GEN_ERROR.insertObject("cause", throwable));
                 return null;
               });
         })
@@ -68,14 +68,13 @@ public class ImportVisualizerCmd extends PathFinderSubCommand {
           .loadVisualizer(exampleFile)
           .thenCompose(v -> save(v.getValue(), v.getKey()))
           .thenAccept(visualizer -> {
-            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS.formatted(
-                Messages.formatter().namespacedKey("key", key)
-            ));
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_IMPORT_SUCCESS
+                .insertObject("vis", visualizer)
+                .insertObject("visualizer", visualizer));
           })
           .exceptionally(throwable -> {
-            BukkitUtils.wrap(commandSender).sendMessage(Messages.GEN_ERROR.formatted(
-                Messages.formatter().throwable(throwable)
-            ));
+            BukkitUtils.wrap(commandSender).sendMessage(Messages.GEN_ERROR
+                .insertObject("cause", throwable));
             return null;
           });
     });

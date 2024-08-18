@@ -2,19 +2,20 @@ package de.cubbossa.pathfinder.command;
 
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.PathPerms;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.util.BukkitUtils;
-import de.cubbossa.pathfinder.util.CollectionUtils;
+import de.cubbossa.tinytranslations.tinyobject.TinyObjectMapping;
+import de.cubbossa.tinytranslations.util.ListSection;
 import dev.jorel.commandapi.CommandTree;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -49,17 +50,24 @@ public class DiscoveriesCommand extends CommandTree {
           .toList();
 
       PathPlayer<CommandSender> p = BukkitUtils.wrap(sender);
-      CommandUtils.printList(sender, pagination,
-          CollectionUtils.subList(l, pagination),
-          e -> {
-            p.sendMessage(Messages.CMD_DISCOVERIES_ENTRY.formatted(
-                    Placeholder.component("name", e.getKey().getDisplayName()),
-                    Messages.formatter().number("percentage", e.getValue() * 100),
-                    Messages.formatter().number("ratio", e.getValue())
-            ));
-          },
-          Messages.CMD_DISCOVERIES_HEADER,
-          Messages.CMD_DISCOVERIES_FOOTER);
+      p.sendMessage(Messages.CMD_DISCOVERIES_LIST
+          .insertList("discoveries", l.stream()
+                  .map(e -> new Discovery(e.getKey().getDisplayName(), e.getValue()))
+                  .toList(),
+              ListSection.paged(pagination.getPage(), pagination.getSize()),
+              Collections.emptyList(),
+              List.of(MAPPING)
+          ));
     });
+  }
+
+  private static final TinyObjectMapping MAPPING = TinyObjectMapping.builder(Discovery.class)
+      .withFallbackConversion(Discovery::name)
+      .with("name", Discovery::name)
+      .with("ratio", Discovery::ratio)
+      .with("percentage", d -> d.ratio * 100)
+      .build();
+
+  private record Discovery(Component name, double ratio) {
   }
 }

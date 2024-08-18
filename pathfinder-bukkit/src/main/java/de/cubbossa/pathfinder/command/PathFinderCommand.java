@@ -131,9 +131,8 @@ public class PathFinderCommand extends CommandTree {
                   .map(PathFinderExtension::getKey)
                   .map(NamespacedKey::toString).toList();
 
-          BukkitUtils.wrap(commandSender).sendMessage(Messages.MODULES.formatted(
-              Messages.formatter().list("modules", list, Component::text)
-          ));
+          BukkitUtils.wrap(commandSender).sendMessage(Messages.MODULES
+              .insertList("modules", list));
         }));
 
     then(Arguments.literal("editmode")

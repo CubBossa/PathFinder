@@ -23,9 +23,7 @@ public class DeleteNodesCmd extends PathFinderSubCommand {
 
   private void deleteNode(CommandSender sender, NodeSelectionImpl nodes) {
     getPathfinder().getStorage().deleteNodes(nodes.getIds()).thenRun(() -> {
-      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.formatted(
-          Messages.formatter().nodeSelection("selection", () -> nodes)
-      ));
+      BukkitUtils.wrap(sender).sendMessage(Messages.CMD_N_DELETE.insertObject("selection", nodes));
     });
   }
 }

@@ -2,24 +2,16 @@ package de.cubbossa.pathfinder.util;
 
 import com.google.common.base.Preconditions;
 import de.cubbossa.pathfinder.AbstractPathFinder;
-import de.cubbossa.pathfinder.PathFinder;
-import de.cubbossa.pathfinder.command.util.CommandUtils;
 import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.Pagination;
-import de.cubbossa.pathfinder.node.Edge;
 import de.cubbossa.pathfinder.node.Node;
 import de.cubbossa.pathfinder.node.NodeSelection;
 import de.cubbossa.splinelib.util.BezierVector;
-import java.util.ArrayList;
-import java.util.Collection;
+import de.cubbossa.tinytranslations.util.ListSection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import javax.annotation.Nullable;
-import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
 public class NodeUtils {
@@ -36,25 +28,9 @@ public class NodeUtils {
       selector = "@n";
     }
 
-    TagResolver resolver = Placeholder.parsed("selector", selector);
-
-    CommandUtils.printList(
-        player, pagination, new ArrayList<>(selection),
-        n -> {
-          Collection<UUID> neighbours = n.getEdges().stream().map(Edge::getEnd).toList();
-          Collection<Node> resolvedNeighbours =
-              PathFinder.get().getStorage().loadNodes(neighbours).join();
-
-          TagResolver r = TagResolver.builder()
-              .tag("id", Tag.preProcessParsed(n.getNodeId() + ""))
-              .resolvers(Messages.formatter().vector("position", n.getLocation()))
-              .resolver(Placeholder.unparsed("world", n.getLocation().getWorld().getName()))
-              .resolvers(Messages.formatter().nodeSelection("edges", () -> resolvedNeighbours))
-              .build();
-          BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_LIST_ELEMENT.formatted(r));
-        },
-        Messages.CMD_N_LIST_HEADER.formatted(resolver),
-        Messages.CMD_N_LIST_FOOTER.formatted(resolver));
+    BukkitUtils.wrap(player).sendMessage(Messages.CMD_N_LIST
+        .insertString("selector", selector)
+        .insertList("nodes", selection, ListSection.paged(pagination.getPage(), pagination.getLimit())));
   }
 
   public static List<BezierVector> toSpline(LinkedHashMap<Node, Double> path, boolean preventLoopsFromHighWeights) {

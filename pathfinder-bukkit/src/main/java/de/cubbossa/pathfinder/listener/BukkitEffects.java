@@ -15,11 +15,11 @@ import de.cubbossa.pathfinder.event.PlayerDiscoverProgressEvent;
 import de.cubbossa.pathfinder.event.PlayerForgetLocationEvent;
 import de.cubbossa.pathfinder.group.DiscoverProgressModifier;
 import de.cubbossa.pathfinder.group.DiscoverableModifier;
-import de.cubbossa.pathfinder.messages.Messages;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.tinytranslations.Message;
-import de.cubbossa.tinytranslations.Translator;
+import de.cubbossa.tinytranslations.MessageTranslator;
 import java.util.List;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -76,7 +76,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onDiscover,
           Placeholder.component("player", e.getPlayer().getDisplayName()),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+          Placeholder.parsed("group", e.getGroup().getKey().toString())
       );
     });
 
@@ -90,7 +90,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onDiscoverProgress, //"player", "discoverable", "group", "name", "percent", "ratio", "count-found", "count-all"
           Placeholder.component("player", e.getPlayer().getDisplayName()),
           Placeholder.component("discoverable", discoverableModifier.getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getProgressObserverGroup().getKey()),
+          Placeholder.parsed("group", e.getProgressObserverGroup().getKey().toString()),
           Placeholder.component("name", discoverProgressModifier.getDisplayName()),
           Formatter.number("percentage", discoverProgressModifier.calculateProgress(e.getPlayer().getUniqueId()).join() * 100)
       );
@@ -100,7 +100,7 @@ public class BukkitEffects {
       runCommands(e.getPlayer(), config.onForget,
           Placeholder.component("player", e.getPlayer().getDisplayName()),
           Placeholder.component("discoverable", e.getModifier().getDisplayName()),
-          Messages.formatter().namespacedKey("group", e.getGroup().getKey())
+          Placeholder.parsed("group", e.getGroup().getKey().toString())
       );
     });
   }
@@ -150,11 +150,9 @@ public class BukkitEffects {
           messageKey = messageKey.substring(1);
           String serializer = strings.poll();
 
-          Translator translator = AbstractPathFinder.getInstance().getTranslations();
+          MessageTranslator translator = AbstractPathFinder.getInstance().getTranslations();
 
-          Component cmp = translator.translate(new Message(messageKey, translator).formatted(
-              msgResolvers
-          ), AbstractPathFinder.getInstance().getAudiences().player(player.getUniqueId()));
+          Component cmp = translator.translate(Message.message(messageKey).formatted(msgResolvers), Locale.forLanguageTag(player.unwrap().getLocale()));
 
           return (switch (serializer) {
             case "miniMessage", "mini" -> miniMessage;
