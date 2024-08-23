@@ -85,7 +85,7 @@ bukkit {
 
     main = "de.cubbossa.pathfinder.PathFinderPlugin"
 
-    apiVersion = "1.18"
+    apiVersion = "1.17"
 
     softDepend = listOf(
             "PlaceholderAPI",

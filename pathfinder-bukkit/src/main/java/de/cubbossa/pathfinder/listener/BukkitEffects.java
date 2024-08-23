@@ -152,7 +152,7 @@ public class BukkitEffects {
 
           MessageTranslator translator = AbstractPathFinder.getInstance().getTranslations();
 
-          Component cmp = translator.translate(Message.message(messageKey).formatted(msgResolvers), Locale.forLanguageTag(player.unwrap().getLocale()));
+          Component cmp = translator.translate(Message.unowned(messageKey).formatted(msgResolvers), Locale.forLanguageTag(player.unwrap().getLocale()));
 
           return (switch (serializer) {
             case "miniMessage", "mini" -> miniMessage;

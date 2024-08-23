@@ -223,7 +223,7 @@ public class Messages {
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
       .withDefault("""
           <primary_l>Group '{group.key}'</primary_l>
-          <bg>» </bg><text>Size: {group.nodes}
+          <bg>» </bg><text>Size: {group.nodes.size}
           <bg>» </bg><text>Weight: <text_hl>{group.weight}</text_hl>
           <group.modifiers:'<newline>'><bg>» </bg><text></group.modifiers>
           """)
@@ -507,8 +507,8 @@ public class Messages {
           <text>» <accent>left-click air:</accent> Activate chain mode</text>""")
       .build();
   public static final Message E_EDGEDIR_TOOL_N = new MessageBuilder("editor.toolbar.edge_directed_toggle.name")
-      .withDefault("<text_l><u>Edges Directed: <text_hl><value:true:false></text_hl></u></text_l>")
-      .withPlaceholder("value", "Choice Placeholder, usage: <value:show-this-if-true:show-this-if-false>")
+      .withDefault("<text_l><u>Edges Directed: <text_hl>{value}</text_hl></u></text_l>")
+      .withPlaceholder("value")
       .build();
   public static final Message E_EDGEDIR_TOOL_L = new MessageBuilder("editor.toolbar.edge_directed_toggle.lore")
       .withDefault("""

@@ -5,11 +5,10 @@ import de.cubbossa.pathfinder.PathPerms;
 import de.cubbossa.pathfinder.command.Arguments;
 import de.cubbossa.pathfinder.command.PathFinderSubCommand;
 import de.cubbossa.pathfinder.messages.Messages;
-import de.cubbossa.pathfinder.misc.Keyed;
 import de.cubbossa.pathfinder.misc.Pagination;
 import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.tinytranslations.util.ListSection;
-import java.util.stream.Collectors;
+import java.util.Comparator;
 import org.bukkit.command.CommandSender;
 
 public class ListVisualizersCmd extends PathFinderSubCommand {
@@ -29,12 +28,10 @@ public class ListVisualizersCmd extends PathFinderSubCommand {
 
   public void onList(CommandSender sender, Pagination pagination) {
     getPathfinder().getStorage().loadVisualizers().thenAccept(pathVisualizers -> {
-      getPathfinder().getStorage().loadVisualizerTypes(pathVisualizers.stream()
-          .map(Keyed::getKey).collect(Collectors.toList())).thenAccept(map -> {
-
-        PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_LIST
-            .insertList("visualizers", pathVisualizers, ListSection.paged(pagination.getPage(), pagination.getSize())));
-      });
+      PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_LIST
+          .insertList("visualizers", pathVisualizers.stream()
+              .sorted(Comparator.comparing(o -> o.getKey().toString()))
+              .toList(), ListSection.paged(pagination.getPage(), pagination.getSize())));
     });
   }
 }
