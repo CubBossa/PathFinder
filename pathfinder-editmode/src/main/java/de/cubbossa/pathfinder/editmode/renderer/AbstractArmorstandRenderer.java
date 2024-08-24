@@ -60,15 +60,18 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
         Collection<CompletableFuture<?>> futures = new HashSet<>();
         HashSet<T> show = new HashSet<>();
         HashSet<T> hide = new HashSet<>();
-        for (T node : entityNodeMap.values()) {
+        for (T node : new HashSet<>(entityNodeMap.values())) {
           futures.add(retrieveFrom(node).thenAccept(location -> {
-            if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) >= renderDistanceSquared) {
+            if (location.getWorld() == null || BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) >= renderDistanceSquared) {
               hide.add(node);
             }
           }));
         }
         for (T node : hiddenNodes.getOrDefault(player.unwrap(), new HashSet<>())) {
           futures.add(retrieveFrom(node).thenAccept(location -> {
+            if (location.getWorld() == null) {
+              return;
+            }
             if (BukkitVectorUtils.toInternal(location).distanceSquared(player.getLocation()) < renderDistanceSquared) {
               show.add(node);
             }
@@ -117,6 +120,9 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
       return;
     }
     retrieveFrom(element).thenAccept(location -> {
+      if (location.getWorld() == null) {
+        return;
+      }
       if (location.distanceSquared(player.getLocation()) > renderDistanceSquared) {
         hiddenNodes.computeIfAbsent(player, player1 -> new HashSet<>()).add(element);
         return;
@@ -149,6 +155,10 @@ public abstract class AbstractArmorstandRenderer<T> implements GraphRenderer<Pla
     T prev = entityNodeMap.values().stream().filter(e -> equals(element, e)).findAny().orElseThrow();
     retrieveFrom(prev).thenAccept(prevLoc -> {
       retrieveFrom(element).thenAccept(loc -> {
+        if (loc.getWorld() == null) {
+          hideElements(Set.of(element), player);
+          return;
+        }
         // update position if position changed
         if (!prevLoc.equals(loc)) {
           Entity entity = entityNodeMap.inverse().get(element);

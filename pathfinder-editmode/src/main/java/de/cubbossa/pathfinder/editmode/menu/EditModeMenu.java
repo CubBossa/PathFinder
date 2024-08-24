@@ -287,7 +287,7 @@ public class EditModeMenu implements Disposable {
               .thenCompose(group -> storage.loadNodes(group.map(g -> (Collection<UUID>) g).orElseGet(HashSet::new)))
               .thenAccept(nodes -> {
                 Player p = context.getPlayer();
-                if (nodes.size() == 0) {
+                if (nodes.isEmpty()) {
                   // no nodes in the current editing
                   p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                   return;
@@ -296,14 +296,24 @@ public class EditModeMenu implements Disposable {
                 double dist = -1;
                 Node nearest = null;
                 Location pLoc = context.getPlayer().getLocation();
+                de.cubbossa.pathfinder.misc.Location iPLoc = BukkitVectorUtils.toInternal(pLoc);
                 for (Node node : nodes) {
-                  double d = node.getLocation().distance(BukkitVectorUtils.toInternal(pLoc));
+                  if (Bukkit.getWorld(node.getLocation().getWorld().getUniqueId()) == null) {
+                    continue;
+                  }
+                  if (!node.getLocation().getWorld().getUniqueId().equals(pLoc.getWorld().getUID())) {
+                    continue;
+                  }
+                  double d = node.getLocation().distance(iPLoc);
                   if (dist == -1 || d < dist) {
                     nearest = node;
                     dist = d;
                   }
                 }
-
+                if (nearest == null) {
+                  BukkitUtils.wrap(context.getPlayer()).sendMessage(Messages.GEN_TOO_FAST);
+                  return;
+                }
                 Location newLoc = BukkitVectorUtils.toBukkit(nearest.getLocation()).setDirection(p.getLocation().getDirection());
                 Bukkit.getScheduler().runTask(PathFinderPlugin.getInstance(), () -> {
                   p.teleport(newLoc);
