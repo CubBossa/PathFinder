@@ -551,6 +551,9 @@ public class Messages {
   public static final Message E_TP_TOOL_L = new MessageBuilder("editor.toolbar.teleport_tool.lore")
       .withDefault("<text>Teleports you to the<newline><text>nearest node.")
       .build();
+  public static final Message E_TP_TOOL_NO_NODE_FOUND = new MessageBuilder("editor.toolbar.teleport_tool.no_node_found")
+      .withDefault("<prefix_negative>Could not find any nodes in this world to teleport to.</prefix_negative>")
+      .build();
   public static final Message E_SUB_GROUP_TITLE = new MessageBuilder("editor.groups.title")
       .withDefault("Assign Node Groups")
       .build();

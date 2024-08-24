@@ -8,7 +8,7 @@ plugins {
     `java-test-fixtures`
     id("com.github.johnrengelman.shadow") version "8.1.0"
     id("io.freefair.lombok") version "6.6.2"
-    id("nu.studer.jooq") version "8.1"
+    id("nu.studer.jooq") version "7.0"
 }
 
 val minecraftVersion = project.property("minecraft_version") as String
@@ -42,7 +42,7 @@ dependencies {
     api("dev.jorel:commandapi-bukkit-shade:9.5.1")
 
     // Other
-    api("org.jooq:jooq:3.18.4")
+    api("org.jooq:jooq:3.16.23")
     jooqGenerator("org.xerial:sqlite-jdbc:3.41.2.1")
     implementation("org.xerial:sqlite-jdbc:3.41.2.1")
     implementation("org.reactivestreams:reactive-streams:1.0.4")
@@ -127,7 +127,7 @@ publishing {
 }
 
 jooq {
-    version.set("3.17.8")
+    version.set("3.16.23")
     edition.set(JooqEdition.OSS)
 
     configurations {

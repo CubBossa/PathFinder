@@ -101,7 +101,7 @@ bukkit {
             "org.snakeyaml:snakeyaml-engine:2.0",
             "com.zaxxer:HikariCP:5.0.1",
             "org.antlr:antlr4-runtime:4.12.0",
-            "org.jooq:jooq:3.18.4",
+        "org.jooq:jooq:3.16.23",
             "com.github.ben-manes.caffeine:caffeine:3.1.6"
     )
 
