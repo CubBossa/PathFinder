@@ -58,9 +58,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           CombinedVisualizerChangedEvent.Action.ADD,
                           Collections.singleton(target))));
                   PathPlayer.wrap(sender).sendMessage(Messages.CMD_VIS_COMBINED_ADD
-                      .insertObject("visualizer", vis)
-                      .insertObject("vis", vis)
-                      .insertObject("child", target));
+                      .insert("visualizer", vis)
+                      .insert("vis", vis)
+                      .insert("child", target));
                 })))
         .then(Arguments.literal("remove")
             .then(Arguments.pathVisualizerArgument("child")
@@ -74,9 +74,9 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                           Collections.singleton(target))));
                   PathPlayer.wrap(sender)
                       .sendMessage(Messages.CMD_VIS_COMBINED_REMOVE
-                          .insertObject("visualizer", vis)
-                          .insertObject("vis", vis)
-                          .insertObject("child", target));
+                          .insert("visualizer", vis)
+                          .insert("vis", vis)
+                          .insert("child", target));
                 })))
         .then(Arguments.literal("clear")
             .executes((commandSender, args) -> {
@@ -87,8 +87,8 @@ public class CombinedVisualizerType extends AbstractVisualizerType<CombinedVisua
                   Bukkit.getPluginManager().callEvent(new CombinedVisualizerChangedEvent(vis,
                       CombinedVisualizerChangedEvent.Action.REMOVE, targets)));
               BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_COMBINED_CLEAR
-                  .insertObject("visualizer", vis)
-                  .insertObject("vis", vis));
+                  .insert("visualizer", vis)
+                  .insert("vis", vis));
             }));
   }
 

@@ -47,11 +47,11 @@ public class VisualizerCmd extends PathFinderSubCommand {
 
                   pathFinder.getStorage().saveVisualizer(visualizer).thenRun(() -> {
                     BukkitUtils.wrap(commandSender).sendMessage(Messages.CMD_VIS_SET_PROP
-                        .insertObject("visualizer", visualizer)
-                        .insertObject("vis", visualizer)
-                        .insertObject("property", "permission")
-                        .insertObject("old-value", old)
-                        .insertObject("value", perm));
+                        .insert("visualizer", visualizer)
+                        .insert("vis", visualizer)
+                        .insert("property", "permission")
+                        .insert("old-value", old)
+                        .insert("value", perm));
                   });
                 }
               })));
@@ -84,8 +84,8 @@ public class VisualizerCmd extends PathFinderSubCommand {
       }
 
       Message message = ext.getInfoMessage(visualizer)
-          .insertObject("visualizer", visualizer)
-          .insertObject("vis", visualizer)
+          .insert("visualizer", visualizer)
+          .insert("vis", visualizer)
           .insertString("permission", visualizer.getPermission());
       p.sendMessage(message);
     });

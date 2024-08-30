@@ -68,15 +68,15 @@ public class GroupCmd extends PathFinderSubCommand {
   }
 
   private void showGroup(CommandSender sender, NodeGroupImpl group) {
-    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.insertObject("group", group));
+    BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_INFO.insert("group", group));
   }
 
   private void addModifier(CommandSender sender, NodeGroupImpl group, Modifier modifier) {
     group.addModifier(modifier);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_SET
-          .insertObject("group", group)
-          .insertObject("type", modifier.getKey()));
+          .insert("group", group)
+          .insert("type", modifier.getKey()));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;
@@ -87,8 +87,8 @@ public class GroupCmd extends PathFinderSubCommand {
     group.removeModifier(mod);
     getPathfinder().getStorage().saveGroup(group).thenRun(() -> {
       PathPlayer.wrap(sender).sendMessage(Messages.CMD_NG_MODIFY_REMOVE
-          .insertObject("group", group)
-          .insertObject("type", mod));
+          .insert("group", group)
+          .insert("type", mod));
     }).exceptionally(throwable -> {
       throwable.printStackTrace();
       return null;

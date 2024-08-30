@@ -39,7 +39,7 @@ public class CreateGroupCmd extends PathFinderSubCommand {
           .createAndLoadGroup(AbstractPathFinder.pathfinder(name))
           .thenAccept(group -> {
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE
-                .insertObject("group", group));
+                .insert("group", group));
           })
           .exceptionally(throwable -> {
             BukkitUtils.wrap(sender).sendMessage(Messages.CMD_NG_CREATE_FAIL);

@@ -387,8 +387,8 @@ public class EditModeMenu implements Disposable {
     int mod = group.getKey().hashCode();
 
     return new LocalizedItem.Builder(new ItemStack(GROUP_ITEM_LIST[Math.floorMod(mod, 16)]))
-        .withName(Messages.E_SUB_GROUP_ENTRY_N.insertObject("group", group))
-        .withLore(Messages.E_SUB_GROUP_ENTRY_L.insertObject("group", group));
+        .withName(Messages.E_SUB_GROUP_ENTRY_N.insert("group", group))
+        .withLore(Messages.E_SUB_GROUP_ENTRY_L.insert("group", group));
   }
 
   private void openGroupMenu(Player player, Node node) {

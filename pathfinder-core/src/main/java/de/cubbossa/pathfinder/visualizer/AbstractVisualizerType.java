@@ -130,8 +130,8 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
     T2 old = getter.get();
     if (!PathFinder.get().getEventDispatcher().dispatchVisualizerChangeEvent(visualizer)) {
       sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
-          .insertObject("visualizer", visualizer)
-          .insertObject("vis", visualizer)
+          .insert("visualizer", visualizer)
+          .insert("vis", visualizer)
           .insertString("property", property));
       return;
     }
@@ -140,16 +140,16 @@ public abstract class AbstractVisualizerType<VisualizerT extends AbstractVisuali
         .saveVisualizer(visualizer)
         .thenCompose(unused -> PathFinder.get().getStorage().loadVisualizerType(visualizer.getKey()).thenAccept(optType -> {
           sender.sendMessage(Messages.CMD_VIS_SET_PROP
-              .insertObject("vis", visualizer)
-              .insertObject("visualizer", visualizer)
+              .insert("vis", visualizer)
+              .insert("visualizer", visualizer)
               .insertString("property", property)
-              .insertObject("old-value", old)
-              .insertObject("value", value));
+              .insert("old-value", old)
+              .insert("value", value));
         }))
         .exceptionally(throwable -> {
           sender.sendMessage(Messages.CMD_VIS_SET_PROP_ERROR
-              .insertObject("visualizer", visualizer)
-              .insertObject("vis", visualizer)
+              .insert("visualizer", visualizer)
+              .insert("vis", visualizer)
               .insertString("property", property));
           throwable.printStackTrace();
           return null;

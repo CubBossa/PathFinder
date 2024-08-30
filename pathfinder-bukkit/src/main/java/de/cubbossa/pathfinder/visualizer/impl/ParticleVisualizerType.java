@@ -39,15 +39,15 @@ public class ParticleVisualizerType extends BezierVisualizerType<ParticleVisuali
   @Override
   public Message getInfoMessage(ParticleVisualizer element) {
     return Messages.CMD_VIS_INFO_PARTICLES
-        .insertObject("particle", element.getParticle())
-        .insertObject("particle-data", element.getParticleData())
-        .insertObject("particle-steps", element.getSchedulerSteps())
-        .insertObject("sampling-rate", element.getBezierSamplingRate())
-        .insertObject("interval", element.getInterval())
-        .insertObject("amount", element.getAmount())
-        .insertObject("speed", element.getSpeed())
-        .insertObject("offset", BukkitVectorUtils.toInternal(element.getOffset()))
-        .insertObject("point-distance", element.getPointDistance());
+        .insert("particle", element.getParticle())
+        .insert("particle-data", element.getParticleData())
+        .insert("particle-steps", element.getSchedulerSteps())
+        .insert("sampling-rate", element.getBezierSamplingRate())
+        .insert("interval", element.getInterval())
+        .insert("amount", element.getAmount())
+        .insert("speed", element.getSpeed())
+        .insert("offset", BukkitVectorUtils.toInternal(element.getOffset()))
+        .insert("point-distance", element.getPointDistance());
   }
 
   @Override

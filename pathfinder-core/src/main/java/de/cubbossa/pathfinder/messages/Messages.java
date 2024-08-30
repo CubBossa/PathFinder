@@ -3,6 +3,8 @@ package de.cubbossa.pathfinder.messages;
 import de.cubbossa.pathfinder.PathFinder;
 import de.cubbossa.pathfinder.group.NodeGroup;
 import de.cubbossa.pathfinder.misc.Location;
+import de.cubbossa.pathfinder.misc.NamespacedKey;
+import de.cubbossa.pathfinder.misc.PathPlayer;
 import de.cubbossa.pathfinder.misc.Vector;
 import de.cubbossa.pathfinder.misc.World;
 import de.cubbossa.pathfinder.node.GroupedNode;
@@ -15,6 +17,7 @@ import de.cubbossa.tinytranslations.MessageBuilder;
 import de.cubbossa.tinytranslations.tinyobject.TinyObjectMapping;
 import java.util.ArrayList;
 import java.util.List;
+import net.kyori.adventure.text.ComponentLike;
 
 @SuppressWarnings("checkstyle:LineLength")
 public class Messages {
@@ -27,16 +30,16 @@ public class Messages {
       .build();
   public static final Message GEN_ERROR = new MessageBuilder("general.error")
       .withDefault("<prefix_negative>{cause}</prefix_negative>")
-      .withPlaceholders("cause")
+      .withPlaceholder("cause", Throwable.class)
       .build();
   public static final Message GEN_VECTOR = new MessageBuilder("general.vector")
       .withDefault("<text_hl>{vector.x:#.##}<text>,</text> {vector.y:#.##}<text>,</text> {vector.z:#.##}</text_hl>")
-      .withPlaceholders("vector")
+      .withPlaceholder("vector", Vector.class)
       .withComment("The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
       .build();
   public static final Message GEN_LOC = new MessageBuilder("general.location")
       .withDefault("<text_hl>{loc.x:#.##}<text>,</text> {loc.y:#.##}<text>,</text> {loc.z:#.##}</text_hl>")
-      .withPlaceholders("loc")
+      .withPlaceholder("loc", Location.class)
       .withComment("The numberformat can be specified as argument for x, y and z. Check out https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html for more information on number formatting.")
       .build();
   public static final Message GEN_PARTICLE = new MessageBuilder("general.particle")
@@ -53,35 +56,31 @@ public class Messages {
       .build();
   public static final Message GEN_NODE = new MessageBuilder("general.node")
       .withDefault("({node.world}; {node.location})")
-      .withPlaceholders("node")
+      .withPlaceholder("node", Node.class)
       .build();
   public static final Message GEN_NODE_SEL = new MessageBuilder("general.selection.nodes")
       .withDefault("<white><u>{sel.size} Nodes</u></white>")
-      .withPlaceholders("amount")
-      .build();
-  public static final Message GEN_GROUP_SEL = new MessageBuilder("general.selection.groups")
-      .withDefault("<text_hl><u>{sel.size} Groups</u></text_hl>")
-      .withPlaceholders("amount")
+      .withPlaceholder("sel", NodeSelection.class)
       .build();
   public static final Message RELOAD_ERROR = new MessageBuilder("command.reload.error")
       .withDefault("<prefix_negative>An error occurred while reloading: {error}</prefix_negative>")
-      .withPlaceholder("error")
+      .withPlaceholder("error", Throwable.class)
       .build();
   public static final Message RELOAD_SUCCESS = new MessageBuilder("command.reload.success.general")
       .withDefault("<prefix>Successfully reloaded in <offset_l>{ms}</offset_l><offset>ms</offset>.")
-      .withPlaceholders("ms")
+      .withPlaceholder("ms", Number.class)
       .build();
   public static final Message RELOAD_SUCCESS_LANG = new MessageBuilder("command.reload.success.language")
       .withDefault("<prefix>Successfully reloaded language in <offset_l>{ms}</offset_l><offset>ms</offset>.")
-      .withPlaceholders("ms")
+      .withPlaceholder("ms", Number.class)
       .build();
   public static final Message RELOAD_SUCCESS_FX = new MessageBuilder("command.reload.success.effects")
       .withDefault("<prefix>Successfully reloaded effects in <offset_l>{ms}</offset_l><offset>ms</offset>.")
-      .withPlaceholders("ms")
+      .withPlaceholder("ms", Number.class)
       .build();
   public static final Message RELOAD_SUCCESS_CFG = new MessageBuilder("command.reload.success.config")
       .withDefault("<prefix>Successfully reloaded config files in <offset_l>{ms}</offset_l><offset>ms</offset>.")
-      .withPlaceholders("ms")
+      .withPlaceholder("ms", Number.class)
       .build();
 
   public static final Message HELP = new MessageBuilder("general.help")
@@ -140,24 +139,27 @@ public class Messages {
 
   public static final Message CMD_FORCE_FIND = new MessageBuilder("commands.force_find")
       .withDefault("<prefix>Player {target} discovered <text_hl>{discovery}</text_hl>.")
-      .withPlaceholder("target", "discovery")
+      .withPlaceholder("target", PathPlayer.class)
+      .withPlaceholder("discovery", ComponentLike.class)
       .build();
   public static final Message CMD_FORCE_FORGET = new MessageBuilder("commands.force_forget")
       .withDefault("<prefix>Player {target} forgot about <text_hl>{discovery}</text_hl>.")
-      .withPlaceholders("target", "discovery")
+      .withPlaceholder("target", PathPlayer.class)
+      .withPlaceholder("discovery", ComponentLike.class)
       .build();
 
   public static final Message CMD_N_CREATE = new MessageBuilder("commands.node.create")
       .withDefault("<prefix>Successfully created Node at {node.loc}.")
-      .withPlaceholders("node")
+      .withPlaceholder("node", Node.class)
       .build();
   public static final Message CMD_N_DELETE = new MessageBuilder("commands.node.delete")
       .withDefault("<prefix>Successfully deleted {selection}.")
-      .withPlaceholders("selection")
+      .withPlaceholder("selection", NodeSelection.class)
       .build();
   public static final Message CMD_N_UPDATED = new MessageBuilder("commands.node.moved")
       .withDefault("<prefix>Updated {selection}.")
-      .withPlaceholders("selection", "location")
+      .withPlaceholder("location", Location.class)
+      .withPlaceholder("selection", NodeSelection.class)
       .build();
   public static final Message CMD_N_INFO = new MessageBuilder("commands.node.info")
       .withDefault("""
@@ -166,39 +168,43 @@ public class Messages {
           <bg>» </bg><text>Edges: {node.edges}
           <bg>» </bg><text>Groups: {node.groups}
           """)
-      .withPlaceholders("id", "groups", "position", "world", "edges")
+      .withPlaceholder("node", Node.class)
       .build();
   public static final Message CMD_N_INFO_NO_SEL = new MessageBuilder("commands.node.info_no_selection")
       .withDefault("<prefix_negative>No nodes found to display. Check your selection query.</prefix_negative>")
       .build();
   public static final Message CMD_N_ADD_GROUP = new MessageBuilder("commands.node.add_group")
       .withDefault("<prefix>Added {nodes} to group <text_hl>{group}</text_hl>.")
-      .withPlaceholders("nodes", "group")
+      .withPlaceholder("nodes", NodeSelection.class)
+      .withPlaceholder("group", NodeGroup.class)
       .build();
   public static final Message CMD_N_REMOVE_GROUP = new MessageBuilder("commands.node.remove_groups")
       .withDefault("<prefix>Removed {nodes} from group <text_hl>{group}</text_hl>.")
-      .withPlaceholders("nodes", "group")
+      .withPlaceholder("nodes", NodeSelection.class)
+      .withPlaceholder("group", NodeGroup.class)
       .build();
   public static final Message CMD_N_CLEAR_GROUPS = new MessageBuilder("commands.node.clear_groups")
       .withDefault("<prefix>Cleared all groups for {nodes}.")
-      .withPlaceholders("nodes")
+      .withPlaceholder("nodes", NodeSelection.class)
       .build();
 
   public static final Message CMD_N_LIST = new MessageBuilder("commands.node.list")
       .withDefault("""
           <header><primary_l>Waypoints</primary_l></header>
           <nodes><hover:show_text:'<text>Groups: {el.groups}<newline><text>Edges to: {el.edges}<newline><text>Click for more information'><click:run_command:'/pf nodes "@n[id={node.id}]" info'><text>at {el.loc} ({el.loc.world})</nodes>
-          <footer:'/pf listnodes "<selector>"'/>""")
-      .withPlaceholders("nodes", "selector", "page", "next-page", "prev-page", "pages")
+          <footer:'/pf listnodes "{nodes.selector}"'/>""")
+      .withPlaceholder("nodes", NodeSelection.class)
       .build();
 
   public static final Message CMD_N_CONNECT = new MessageBuilder("commands.node.connect.success")
       .withDefault("<prefix>Connected {start} to {end}.")
-      .withPlaceholders("start", "end")
+      .withPlaceholder("start", NodeSelection.class)
+      .withPlaceholder("end", NodeSelection.class)
       .build();
   public static final Message CMD_N_DISCONNECT = new MessageBuilder("commands.node.disconnect.success")
       .withDefault("<prefix>Disconnected {start} from {end}.")
-      .withPlaceholders("start", "end")
+      .withPlaceholder("start", NodeSelection.class)
+      .withPlaceholder("end", NodeSelection.class)
       .build();
 
   public static final Message CMD_NG_CREATE_FAIL = new MessageBuilder("commands.node_group.create_fail")
@@ -206,19 +212,18 @@ public class Messages {
       .build();
   public static final Message CMD_NG_ALREADY_EXISTS = new MessageBuilder("commands.node_group.already_exists")
       .withDefault("<prefix_negative>A node group {group_key} already exists.</prefix_negative>")
-      .withPlaceholders("group_key")
+      .withPlaceholder("group_key", NamespacedKey.class)
       .build();
   public static final Message CMD_NG_CREATE = new MessageBuilder("commands.node_group.create")
       .withDefault("<prefix>Node group <text_hl>{group.key}</text_hl> created.")
-      .withPlaceholders("group")
+      .withPlaceholder("group", NodeGroup.class)
       .build();
   public static final Message CMD_NG_DELETE = new MessageBuilder("commands.node_group.delete")
       .withDefault("<prefix>Node group <text_hl>{group_key}</text_hl> deleted.")
-      .withPlaceholders("group_key")
+      .withPlaceholder("group_key", NamespacedKey.class)
       .build();
   public static final Message CMD_NG_DELETE_GLOBAL = new MessageBuilder("commands_node_group.delete_fail_global")
       .withDefault("<prefix_negative>You cannot delete the global node group.</prefix_negative>")
-      .withComment("Indicates, that the global nodegroup cannot be deleted by command.")
       .build();
   public static final Message CMD_NG_INFO = new MessageBuilder("commands.node_group.info")
       .withDefault("""
@@ -227,7 +232,7 @@ public class Messages {
           <bg>» </bg><text>Weight: <text_hl>{group.weight}</text_hl>
           <group.modifiers:'<newline>'><bg>» </bg><text></group.modifiers>
           """)
-      .withPlaceholders("group")
+      .withPlaceholder("group", NodeGroup.class)
       .build();
   public static final Message CMD_NG_LIST = new MessageBuilder("commands.node_group.list")
       .withDefault("""
@@ -605,9 +610,10 @@ public class Messages {
         .build());
 
     result.add(TinyObjectMapping.builder(NodeSelection.class)
-        .withFallbackConversion(n -> GEN_NODE_SEL.insertObject("sel", n))
+        .withFallbackConversion(n -> GEN_NODE_SEL.insert("sel", n))
         .with("size", NodeSelection::size)
         .with("ids", NodeSelection::getIds)
+        .with("selector", NodeSelection::getSelectionString)
         .build());
 
     result.add(TinyObjectMapping.builder(NodeGroup.class)
@@ -631,11 +637,11 @@ public class Messages {
         .with("id", World::getUniqueId)
         .build());
     result.add(TinyObjectMapping.builder(Location.class)
-        .withFallbackConversion(e -> GEN_LOC.insertObject("loc", e))
+        .withFallbackConversion(e -> GEN_LOC.insert("loc", e))
         .with("world", Location::getWorld)
         .build());
     result.add(TinyObjectMapping.builder(Vector.class)
-        .withFallbackConversion(e -> GEN_VECTOR.insertObject("vector", e))
+        .withFallbackConversion(e -> GEN_VECTOR.insert("vector", e))
         .with("x", Vector::getX)
         .with("y", Vector::getY)
         .with("z", Vector::getZ)

@@ -41,8 +41,8 @@ public class CreateVisualizerCmd extends PathFinderSubCommand {
     }
     getPathfinder().getStorage().createAndLoadVisualizer(type, key).thenAccept(visualizer -> {
       BukkitUtils.wrap(sender).sendMessage(Messages.CMD_VIS_CREATE_SUCCESS
-          .insertObject("visualizer_key", visualizer.getKey())
-          .insertObject("type", type.getCommandName()));
+          .insert("visualizer_key", visualizer.getKey())
+          .insert("type", type.getCommandName()));
     }).exceptionally(throwable -> {
       getPathfinder().getLogger().log(Level.SEVERE, "Error while creating new visualizer", throwable);
       return null;

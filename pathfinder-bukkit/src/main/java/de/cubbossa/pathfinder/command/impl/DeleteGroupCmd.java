@@ -31,7 +31,7 @@ public class DeleteGroupCmd extends PathFinderSubCommand {
     }
     getPathfinder().getStorage().deleteGroup(group).thenRun(() -> {
       p.sendMessage(Messages.CMD_NG_DELETE
-          .insertObject("group_key", group.getKey()));
+          .insert("group_key", group.getKey()));
     });
   }
 }
