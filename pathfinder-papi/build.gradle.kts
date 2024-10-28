@@ -40,7 +40,7 @@ dependencies {
     implementation("com.google.auto.service:auto-service:1.0")
 
     // PAPI
-    compileOnly("me.clip:placeholderapi:2.11.2")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
 tasks {
